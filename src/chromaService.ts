@@ -1,9 +1,10 @@
 import { ChromaClient, Collection, TransformersEmbeddingFunction } from "chromadb";
-import LMStudioService from "./lmstudioService";
+import LMStudioService from "./llm/lmstudioService";
 import crypto from 'crypto';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import dotenv from 'dotenv';
 import { CHROMADB_URL } from "./config";
+import Logger from "src/helpers/logger";
 
 dotenv.config();
 
@@ -52,10 +53,10 @@ class ChromaDBService {
             chunkOverlap: 100,
         });
 
-        console.log("Saving content to db: ${url}");
+        // Logger.info(`Saving content to db: ${url}`);
         const chunks = await splitter.createDocuments([content]);
 
-        // console.log(chunks);
+        (chunks);
 
         const addCollection: { ids: string[], metadatas: any[], documents: string[] } = {
             ids: [],
@@ -66,6 +67,8 @@ class ChromaDBService {
         chunks.forEach(c => {
             const chunkContent = c.pageContent;
             const hashId = this.computeHash(chunkContent);
+            if (addCollection.ids.includes(hashId)) return;
+
             addCollection.ids.push(hashId);
 
             const metadata = {
@@ -79,7 +82,7 @@ class ChromaDBService {
                 metadata.type = type;
             }
 
-            //console.log(metadata);
+            (metadata);
             addCollection.metadatas.push(metadata);
             addCollection.documents.push(chunkContent);
         });

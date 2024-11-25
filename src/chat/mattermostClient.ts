@@ -2,14 +2,9 @@ import M from '@mattermost/client';
 import WebSocket from 'ws';
 import JSON5 from 'json5';
 import { Post } from '@mattermost/types/posts';
+import { ChatClient } from './chatClient';
 
-interface ProjectChainResponse {
-    posts : Post[];
-    projectId: string;
-}
-
-
-export default class MattermostClient {
+export default class MattermostClient implements ChatClient {
     private client: M.Client4;
     private token: string;
     private ws: WebSocket | null = null;
@@ -28,8 +23,8 @@ export default class MattermostClient {
         const postIds = postsList.order;
         const posts = postIds.map((id) => postsList.posts[id]).reverse();
 
-        console.log(`Fetched ${posts.length} previous messages from channel: ${channelId}`);
-        console.log(posts.map(p => p.message));
+        Logger.info(`Fetched ${posts.length} previous messages from channel: ${channelId}`);
+        Logger.info(posts.map(p => p.message));
 
         return posts;
     }
@@ -46,22 +41,25 @@ export default class MattermostClient {
 
         if (match) {
             const uuid = match[0];
-            console.log("Extracted UUID:", uuid);
-            // const response = await this.client.searchChannels(team.id, `research`);
+            Logger.info("Extracted UUID:", uuid);
+            // Extract activity type from message
+            Logger.info('Message Props: ', post.props);
+            const activityType = post.props['activity-type'];
             const response = await this.client.searchPosts(team.id, "PROJECT ID", false);
             const projectPost = response.order.map(id => response.posts[id]).find(p => p.message.includes(uuid));
 
             if (projectPost) {
-                console.log("Found project in channel:", projectPost.id);
+                Logger.info("Found project in channel:", projectPost.id);
 
-                // console.log(response);
+                (response);
                 const thread = await this.client.getPostThread(projectPost.id);
 
-                // console.log(thread);
-                console.log(`Found ${thread.posts.total} projects in channel: ${channelId}`);
-                // console.log(thread.order.map((id) => thread.posts[id].message));
+                (thread);
+                Logger.info(`Found ${thread.order.length} threads for post: ${projectPost.id}`);
+                (thread.order.map((id) => thread.posts[id].message));
 
                 return {
+                    activityType,
                     posts: thread.order.map((id) => thread.posts[id]),
                     projectId: uuid
                 };
@@ -69,7 +67,7 @@ export default class MattermostClient {
                 throw new Error("No project found in channel.");
             }
         } else {
-            throw new Error("No UUID found in the message.");
+            throw new Error("No UUID found in the message: " + post.message);
         }
     }
 
@@ -77,7 +75,24 @@ export default class MattermostClient {
         return await this.client.createPost({
             channel_id: channelId,
             message: message,
-            props: props
+            props: props,
+            metadata: {
+                embeds: [
+                    {
+                        type: 'message_attachment',
+                        data: {
+                            text: "AI Bot",
+                            fields: [
+                                {
+                                    title: "Bot 1",
+                                    value: "Test",
+                                    short: true
+                                }
+                            ]
+                        }
+                    },
+                ],
+            }
         });
     }
 
@@ -86,6 +101,11 @@ export default class MattermostClient {
     }
 
     public initializeWebSocket(callback: (data: Post) => void): void {
+        Logger.info(`Connectng to WebSocket: ${this.getWebSocketUrl()}`);
+        Logger.info(`Using token: ${this.token}`)
+
+        
+
         const wsClient = new WebSocket(this.getWebSocketUrl(), {
             headers: {
                 Authorization: `Bearer ${this.token}`
@@ -94,7 +114,6 @@ export default class MattermostClient {
 
         wsClient.on('message', async (data) => {
             try {
-                console.log('Received message:', data.toString());
                 const messageData = JSON5.parse(data.toString());
 
                 if (messageData.event === 'posted' &&
@@ -102,24 +121,35 @@ export default class MattermostClient {
                     messageData.data.post.user_id !== this.userId &&
                     messageData.data.post) {
                     const post = JSON5.parse(messageData.data.post);
-                    console.log(`New post received [${post.id}]: ${post.message}`);
+                    Logger.info(`New post received [${post.id}]: ${post.message}`);
                     callback(post);
                 } else if (messageData.event === 'thread_updated' && messageData.data.thread) {
                     const thread = JSON5.parse(messageData.data.thread);
                     const threadPosts = await this.client.getPostThread(thread.post.id, true);
-                    console.log(threadPosts);
+                    Logger.info(`Found ${threadPosts.order.length} thread posts`);
                     const lastThreadPost = threadPosts.posts[threadPosts.order[threadPosts.order.length-1]];
                     if (lastThreadPost.user_id !== this.userId) {
-                        console.log(`New thread received [${lastThreadPost.id}]: ${lastThreadPost.message}`);
+                        Logger.info(`New thread received [${lastThreadPost.id}]: ${lastThreadPost.message}`);
                         callback(lastThreadPost);
                     }
                 }
             } catch (error) {
-                console.error('Error processing incoming message:', error);
+                Logger.error('Error processing incoming message:', error);
             }
         });
 
-        // Handle other events like 'open', 'close', and 'error' if needed
+        wsClient.on('open', () => {
+            Logger.info('WebSocket connection opened');
+        });
+
+        wsClient.on('close', () => {
+            Logger.info('WebSocket connection closed');
+        });
+
+        wsClient.on('error', (err) => {
+            Logger.error('WebSocket error:', err);
+        });
+
         this.ws = wsClient;
     }
 

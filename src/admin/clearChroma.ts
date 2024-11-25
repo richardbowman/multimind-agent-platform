@@ -1,5 +1,6 @@
-import { CHROMA_COLLECTION } from "./config";
-import ChromaDBService from './chromaService';
+import { CHROMA_COLLECTION } from "../config";
+import ChromaDBService from '../chromaService';
+import Logger from "src/helpers/logger";
 
 async function deleteCollection(collectionName: string) {
     try {
@@ -10,12 +11,12 @@ async function deleteCollection(collectionName: string) {
 
         if (chromaDBService) {
             await chromaDBService.chromaDB.deleteCollection({name: collectionName});
-            console.log(`Collection "${collectionName}" has been successfully deleted.`);
+            Logger.info(`Collection "${collectionName}" has been successfully deleted.`);
         } else {
-            console.log(`Collection "${collectionName}" does not exist.`);
+            Logger.info(`Collection "${collectionName}" does not exist.`);
         }
     } catch (error) {
-        console.error('Error deleting collection:', error);
+        Logger.error('Error deleting collection:', error);
     }
 }
 

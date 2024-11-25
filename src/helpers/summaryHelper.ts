@@ -1,4 +1,4 @@
-import LMStudioService from "./lmstudioService";
+import LMStudioService from "../llm/lmstudioService";
 
 class SummaryHelper {
     async summarizeContent(task: string, content: string, lmStudioService: LMStudioService): Promise<string> {
