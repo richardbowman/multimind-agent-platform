@@ -1,11 +1,12 @@
 import { MainOrchestrator } from "./orchestrator";
-import { ORCHESTRATOR_TOKEN_ID, ORCHESTRATOR_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_TOKEN, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID } from "./config";
+import { CHAT_MODEL, EMBEDDING_MODEL, ORCHESTRATOR_TOKEN_ID, ORCHESTRATOR_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_TOKEN, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID } from "./config";
 import LMStudioService from "./llm/lmstudioService";
 import ResearchAssistant from "./assistant";
 import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from "./chat/testClient";
 import blessed from 'blessed';
 import { ChatPost } from "./chat/chatClient";
 import Logger from "./helpers/logger";
+import { formatMarkdownForTerminal } from "./helpers/formatters";
 
 
 // Create a screen object.
@@ -21,6 +22,7 @@ const chatBox = blessed.log({
     width: '50%',
     height: '90%',
     content: '',
+    tags: true,
     scrollable: true,
     mouse: true,
     border: {
@@ -87,10 +89,11 @@ inputBox.key('enter', async (ch, key) => {
         return;
     }
     await sendMessage(message);
-    //new blessed.Text({ content: `You: ${message}\n`, style: { fg: 'yellow' } })
-    chatBox.log(`You: ${message}`);
+    chatBox.log(`{bold}{green-fg}You{green-fg}{/bold}: ${blessed.escape(message)}\n`);
     chatBox.setScrollPerc(100);
+
     inputBox.setValue('');
+    inputBox.focus();
     screen.render();
 });
 
@@ -104,7 +107,12 @@ inputBox.focus();
 // Refresh the screen.
 screen.render();
 
-const lmstudioService = new LMStudioService();
+const lmStudioService = new LMStudioService();
+
+// Initialize the embedding and LLaMA models
+await lmStudioService.initializeEmbeddingModel(EMBEDDING_MODEL);
+await lmStudioService.initializeLlamaModel(CHAT_MODEL);
+
 
 const USER_ID = "test";
 
@@ -115,10 +123,10 @@ const UserClient = new InMemoryTestClient(USER_ID, "test", storage);
 
 let currentThreadId: string | null = null;
 
-const researcher = new ResearchAssistant(ORCHESTRATOR_TOKEN_ID, RESEARCHER_USER_ID, researchClient, WEB_RESEARCH_CHANNEL_ID);
+const researcher = new ResearchAssistant(ORCHESTRATOR_TOKEN_ID, RESEARCHER_USER_ID, researchClient, WEB_RESEARCH_CHANNEL_ID, lmStudioService);
 await researcher.initialize();
 
-const orchestrator = new MainOrchestrator(ORCHESTRATOR_TOKEN_ID, ORCHESTRATOR_USER_ID, client, researcher, PROJECTS_CHANNEL_ID, lmstudioService);
+const orchestrator = new MainOrchestrator(ORCHESTRATOR_TOKEN_ID, ORCHESTRATOR_USER_ID, client, researcher, PROJECTS_CHANNEL_ID, lmStudioService);
 await orchestrator.initialize();
 
 async function sendMessage(message: string) {
@@ -160,8 +168,7 @@ UserClient.initializeWebSocket(async (post: ChatPost) => {
         if (post.getActivityType() === 'web-research') {
             currentThreadId = post.id;
         }
-        chatBox.log(`${userId}: ${post.message}`);
-        //new blessed.Text({ content: `${userId}: ${post.message}\n`, style: { fg: 'white' } })
+        chatBox.log(`{bold}{red-fg}${userId}{/red-fg}{/bold}: ${formatMarkdownForTerminal(blessed.escape(post.message))}\n`);
         chatBox.setScrollPerc(100);
         screen.render();
     }

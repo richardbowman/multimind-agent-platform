@@ -1,9 +1,10 @@
 import puppeteer, { Page } from 'puppeteer';
 import { load } from 'cheerio';
 import TurndownService from 'turndown';
+import Logger from './logger';
 
 class ScrapeHelper {
-    async scrapePageWithPuppeteer(url: string): Promise<{ content: string, links: { href: string, text: string }[] }> {
+    async scrapePageWithPuppeteer(url: string): Promise<{ content: string, links: { href: string, text: string }[], title: string }> {
         let browser, page : Page, actualUrl: string;
         try {
             browser = await puppeteer.launch({ headless: true });
@@ -32,6 +33,9 @@ class ScrapeHelper {
 
             // Extract HTML content
             const htmlContent = await page.content();
+
+            // Extract the title of the page
+            const title = await page.title();
 
             // Load the HTML content into Cheerio
             const $ = load(htmlContent);
@@ -101,7 +105,7 @@ class ScrapeHelper {
                 }
             });
 
-            return { content: markdownContent, links };
+            return { content: markdownContent, links, title };
         } catch (error) {
             Logger.error(`Error scraping page "${url}":`, error);
             throw error;
@@ -110,6 +114,16 @@ class ScrapeHelper {
             if (browser) await browser.close();
         }
     }
+
+    public normalizeUrl(baseUrl: string, childUrl: string): string {
+        try {
+            return new URL(childUrl, baseUrl).href;
+        } catch (error) {
+            Logger.error(`Error normalizing URL "${childUrl}" with base "${baseUrl}":`, error);
+            throw error;
+        }
+    }
+    
 }
 
 export default ScrapeHelper;

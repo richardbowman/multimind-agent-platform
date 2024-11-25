@@ -1,5 +1,5 @@
 import { CHROMA_COLLECTION } from "../config";
-import ChromaDBService from '../chromaService';
+import ChromaDBService from '../llm/chromaService';
 import Logger from "src/helpers/logger";
 
 async function deleteCollection(collectionName: string) {

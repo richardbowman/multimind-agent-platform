@@ -1,6 +1,6 @@
 import LMStudioService from "./llm/lmstudioService";
 import ResearchAssistant from "./assistant";
-import ChromaDBService from "./chromaService";
+import ChromaDBService from "./llm/chromaService";
 import Logger from "src/helpers/logger";
 import { CHAT_MODEL, CHROMA_COLLECTION, ORCHESTRATOR_USER_ID } from './config';
 import { ChatPost } from "./chat/chatClient";

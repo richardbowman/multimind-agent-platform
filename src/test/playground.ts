@@ -1,4 +1,4 @@
-import ChromaDBService from "../chromaService";
+import ChromaDBService from "../llm/chromaService";
 import { ORCHESTRATOR_TOKEN_ID, ORCHESTRATOR_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_TOKEN, RESEARCHER_USER_ID } from "../config";
 import MattermostClient from "../chat/mattermostClient";
 

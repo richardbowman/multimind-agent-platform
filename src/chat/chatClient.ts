@@ -14,13 +14,17 @@ export interface ProjectChainResponse {
     projectId: string;
 }
 
+export interface ConversationContext extends Record<string, any> {
+    "project-id"?: string;
+    "conversation-root"?: string;
+}
 
 export interface ChatPost {
     id: string;
     channel_id: string;
     message: string;
     user_id: string;
-    props: Record<string, any>;
+    props: ConversationContext;
     create_at: number;
     
     getRootId(): string | null;

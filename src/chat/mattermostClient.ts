@@ -3,6 +3,7 @@ import WebSocket from 'ws';
 import JSON5 from 'json5';
 import { Post } from '@mattermost/types/posts';
 import { ChatClient } from './chatClient';
+import Logger from 'src/helpers/logger';
 
 export default class MattermostClient implements ChatClient {
     private client: M.Client4;

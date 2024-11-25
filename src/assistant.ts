@@ -1,43 +1,29 @@
 import LMStudioService from './llm/lmstudioService';
 import Logger from "src/helpers/logger";
-import ChromaDBService from './chromaService';
 import JSON5 from 'json5';
 import SearchHelper from './helpers/searchHelper';
 import ScrapeHelper from './helpers/scrapeHelper';
 import SummaryHelper from './helpers/summaryHelper';
 import { RESEARCHER_TOKEN, CHAT_MODEL, CHROMA_COLLECTION, WEB_RESEARCH_CHANNEL_ID, MAX_SEARCHES, RESEARCHER_USER_ID, PROJECTS_CHANNEL_ID } from './config';
-import { URL } from 'url';
 import { ChatClient, ChatPost } from './chat/chatClient';
+import { Agent, HandleActivity, ResponseType } from './agents/agents';
 
-function normalizeUrl(baseUrl: string, childUrl: string): string {
-    try {
-        return new URL(childUrl, baseUrl).href;
-    } catch (error) {
-        Logger.error(`Error normalizing URL "${childUrl}" with base "${baseUrl}":`, error);
-        throw error;
-    }
-}
-
-class ResearchAssistant {
+class ResearchAssistant extends Agent {
     private tasks: { task: string, taskId: string }[] = []; // Store tasks with their unique IDs
     private results: string[] = [];
-    private chromaDBService: ChromaDBService;
-    private lmStudioService: LMStudioService;
-    private chatClient: ChatClient;
     private primaryGoal: string;
     private projectId: string;
 
     private searchHelper: SearchHelper;
     private scrapeHelper: ScrapeHelper;
     private summaryHelper: SummaryHelper;
-    private userId: string;
 
-    constructor(projectId: string, userId: string, chatClient: ChatClient, primaryGoal: string) {
-        this.chromaDBService = new ChromaDBService();
-        this.lmStudioService = new LMStudioService();
+    constructor(userToken: string, userId: string, chatClient: ChatClient, primaryGoal: string, lmStudioService: LMStudioService) {
+        super(chatClient, lmStudioService, userId);
+
+        this.lmStudioService = lmStudioService;
         this.chatClient = chatClient;
         this.primaryGoal = primaryGoal;
-        this.projectId = projectId;
         this.userId = userId;
 
         this.searchHelper = new SearchHelper();
@@ -46,35 +32,13 @@ class ResearchAssistant {
     }
     
     public async initialize(): Promise<void> {
-
-        try {
-            await this.lmStudioService.initializeLlamaModel(CHAT_MODEL);
-            await this.chromaDBService.initializeCollection(CHROMA_COLLECTION);
-        } catch (error) {
-            Logger.error('Error initializing LMStudio and ChromaDB:', error);
-            throw error;
-        }
-
         Logger.info(`Initialized Research Assistant ${RESEARCHER_TOKEN}`);
-    
-
-        // Initialize the WebSocket client for real-time message listening
-        await this.chatClient.initializeWebSocket(async (post: ChatPost) => {
-            const channelId = post.channel_id;
-            const userId = post.user_id;
-
-            if (channelId === WEB_RESEARCH_CHANNEL_ID && userId !== this.userId) {
-                Logger.info(`Received assistant message: ${post.message} in ${channelId} from ${userId}`);
-
-                // Handle the incoming message
-                await this.handleAssistantMessage(post);
-            } else {
-                // Logger.info(`Research Assistant skipping message in ${channelId} from ${userId}`);
-            }
-        });
+        await this.chromaDBService.initializeCollection(CHROMA_COLLECTION);
+        super.setupChatMonitor(WEB_RESEARCH_CHANNEL_ID);
     }
 
-    private async handleAssistantMessage(post: ChatPost): Promise<void> {
+    @HandleActivity("process-research-request", "Process research request list", ResponseType.CHANNEL)
+    private async handleAssistantMessage(channelId: string, post: ChatPost): Promise<void> {
         // Process the incoming message from the assistant
         const projectId = post.props['project-id'];
         const activityType = post.props['activity-type'];
@@ -85,7 +49,8 @@ class ResearchAssistant {
         }
 
         // Grab any new tasks from the message
-        this.tasks = this.parseMarkdownList(post.message).map(parsedTask => ({ task: parsedTask, taskId: "" }));
+        this.projectId = projectId; //TODO: this doesn't make sense to make global
+        this.tasks = this.promptBuilder.parseMarkdownList(post.message).map(parsedTask => ({ task: parsedTask, taskId: "" }));
 
         // Continue conversation
         await this.performSearchAndScrape();
@@ -96,37 +61,13 @@ class ResearchAssistant {
                 'project-id': projectId
             }
         );
-
-        // switch (activityType.trim()) {
-        //     case ActivityType.WebResearch:
-        //         await this.handleWebResearch(projectId, post);
-        //         break;
-        //     case ActivityType.DraftEmail:
-        //         await this.handleDraftEmail(projectId, post);
-        //         break;
-        //     default:
-        //         Logger.info('Unsupported activity type:', activityType);
-        //         return;
-        // }
-    }
-
-    private parseMarkdownList(markdown: string): string[] {
-        const regex = /^-\s+(.*)$/gm;
-        let match;
-        const tasks: string[] = [];
-
-        while ((match = regex.exec(markdown)) !== null) {
-            tasks.push(match[1].trim());
-        }
-
-        return tasks;
     }
 
     private formatTaskMessage(taskId: string, message: string): string {
         return `${message}\n\n### Project ID: **${this.projectId}**\n\n### Task ID: **${taskId}**`;
     }
     
-    receiveTask(    task: string, taskId: string) {
+    public receiveTask(task: string, taskId: string) {
         // Assign a unique ID to each task
         this.tasks.push({ task, taskId });
     }
@@ -172,7 +113,7 @@ class ResearchAssistant {
         try {
             await this.chatClient.createPost(channelId, message);
         } catch (error) {
-            Logger.error(error, message);
+            Logger.error("Couldn't create post.", error);
         }
     }
 
@@ -196,10 +137,10 @@ class ResearchAssistant {
     }
 
     private async handleTask(task: string, taskId: string) {
-        const searchQuery = await this.generateSearchQuery(task);
+        const { searchQuery, category } = await this.generateSearchQuery(task);
         Logger.info(`Performing search for: ${searchQuery}`);
 
-        const searchResults = await this.performWebSearch(searchQuery);
+        const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
         Logger.info(`Search Results Count: ${searchResults.length}`);
 
         if (searchResults.length === 0) {
@@ -221,7 +162,7 @@ class ResearchAssistant {
             try {
                 await this.processPage(taskId, task, searchUrl, pageSummaries);
             } catch (error) {
-                Logger.error(`Error processing page ${searchUrl}:`, error);
+                Logger.error(`Error processing page ${searchUrl}.`, error);
             }
         }
 
@@ -232,9 +173,17 @@ class ResearchAssistant {
         }
     }
 
-    private async generateSearchQuery(task: string): Promise<string> {
+    private async generateSearchQuery(task: string): Promise<{ searchQuery: string, category: string}> {
         const systemPrompt = `You are a research assistant. Our overall goal is ${this.primaryGoal}.
-Generate a broad web search query without special keywords or operators based on the task we've been asked to research. Respond ONLY with the search query to run.`;
+Generate a broad web search query without special keywords or operators based on the task we've been asked to research.
+Respond ONLY with the JSON specified. You can perform a news search by setting the category to "news". Otherwise, specify "general":
+
+{
+  "searchQuery": "YOUR_SEARCH_QUERY",
+  "category": "general" | "news"
+}
+`;
+
 
         const history = [
             { role: "system", content: systemPrompt },
@@ -242,23 +191,15 @@ Generate a broad web search query without special keywords or operators based on
 
         const userPrompt = `Task: ${task}`;
 
-        let optimizedQuery = await this.lmStudioService.sendMessageToLLM(userPrompt, history);
+        let llmResponse = await this.lmStudioService.sendMessageToLLM(userPrompt, history, "{");
+        const response : { searchQuery: string, category: string} = JSON5.parse(llmResponse);
 
-        // Remove leading and trailing quotes
-        if (optimizedQuery.startsWith('"') && optimizedQuery.endsWith('"')) {
-            optimizedQuery = optimizedQuery.slice(1, -1);
-        }
-
-        return optimizedQuery;
-    }
-
-    private async performWebSearch(searchQuery: string): Promise<any> {
-        return await this.searchHelper.searchOnSearXNG(searchQuery);
+        return response;
     }
 
     private async selectRelevantSearchResults(task: string, searchResults: { title: string, url: string, description: string }[]): Promise<string[]> {
         const systemPrompt = `You are a research assistant. Our overall goal was ${this.primaryGoal}, and we're currently working on researching ${task}.
-Given the following web search results, select 1 - ${MAX_SEARCHES} URLs that are most relevant to our goal. Don't pick PDFs, we can't scrape them.
+Given the following web search results, select 1 to ${MAX_SEARCHES} URLs that are most relevant to our goal. Don't pick PDFs, we can't scrape them.
 Return ONLY the selected URLs as a valid JSON array of strings like this:
 [
     "https://www.google.com/search?q=hello", 
@@ -283,37 +224,37 @@ ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}
         const visitedUrls = new Set<string>();
         visitedUrls.add(searchUrl);
 
-        const { content, links } = await this.scrapeHelper.scrapePageWithPuppeteer(searchUrl);
+        const { content, links, title } = await this.scrapeHelper.scrapePageWithPuppeteer(searchUrl);
 
         await this.publishChildLinks(WEB_RESEARCH_CHANNEL_ID, taskId, searchUrl, links, []);
 
         // save the full website
-        await this.chromaDBService.handleContentChunks(content, searchUrl, task, this.projectId, this.primaryGoal);
+        await this.chromaDBService.handleContentChunks(content, searchUrl, task, this.projectId, this.primaryGoal, title);
 
-        // const selectedLinks = await this.selectRelevantLinks(task, content, links);
-        // await this.publishChildLinks(WEB_RESEARCH_CHANNEL_ID, taskId, searchUrl, links, selectedLinks);
+        const selectedLinks = await this.selectRelevantLinks(task, content, links);
+        await this.publishChildLinks(WEB_RESEARCH_CHANNEL_ID, taskId, searchUrl, links, selectedLinks);
 
-        // if (selectedLinks.length > 0) {
-        //     Logger.info(`Following selected links: ${selectedLinks.map(l => l.href).join(', ')}`);
-        //     for (const link of selectedLinks) {
-        //         try {
-        //             const normalizedUrl = normalizeUrl(searchUrl, link.href);
-        //             visitedUrls.add(normalizedUrl);
+        if (selectedLinks.length > 0) {
+            Logger.info(`Following selected links: ${selectedLinks.map(l => l.href).join(', ')}`);
+            for (const link of selectedLinks) {
+                try {
+                    const normalizedUrl = this.scrapeHelper.normalizeUrl(searchUrl, link.href);
+                    visitedUrls.add(normalizedUrl);
 
-        //             const followContent = await this.scrapeHelper.scrapePageWithPuppeteer(normalizedUrl, visitedUrls);
-        //             await this.chromaDBService.handleContentChunks(followContent.content, normalizedUrl, task, this.projectId, this.primaryGoal);
-        //         } catch (error) {
-        //             Logger.error(`Error summarizing followed page ${link.href}:`, error);
-        //         }
-        //     }
-        // }
+                    const { content:followContent, links:followLinks, title:followTitle } = await this.scrapeHelper.scrapePageWithPuppeteer(normalizedUrl);
+                    await this.chromaDBService.handleContentChunks(followContent, normalizedUrl, task, this.projectId, this.primaryGoal, followTitle);
+                } catch (error) {
+                    Logger.error(`Error summarizing followed page ${link.href}`, error);
+                }
+            }
+        }
 
         // save summary(s)
         const results = await this.searchDoc(searchUrl, task);
         const summary = await this.summaryHelper.summarizeContent(task, results.documents.join("\n\n"), this.lmStudioService);
         pageSummaries.push(summary);
 
-        await this.chromaDBService.handleContentChunks(summary, searchUrl, task, this.projectId, this.primaryGoal, 'summary');
+        await this.chromaDBService.handleContentChunks(summary, searchUrl, task, this.projectId, this.primaryGoal, `Summary Report for ${searchUrl}`, "summary");
 
         await this.publishResult(WEB_RESEARCH_CHANNEL_ID, taskId, `Summary of ${searchUrl}: ${summary}`);
     }
@@ -325,7 +266,7 @@ ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}
     async selectRelevantLinks(task: string, content: string, links: { href: string, text: string }[]): Promise<{ href: string, text: string }[]> {
         try {
             const systemPrompt = `You are a research assistant. Our overall goal was ${this.primaryGoal}, and we're currently working on researching ${task}.
-Given the content of a page and a list of internal links, select up to 3 URLs that are most relevant to our goal. Don't pick PDFs, we can't scrape them.
+Given the content of a page and a list of internal links, select up to ${process.env.MAX_FOLLOWS} URLs that are most relevant to our goal. Don't pick PDFs, we can't scrape them.
 Return ONLY the selected URLs as a valid JSON array of objects like this:
 [
     { "href": "https://www.google.com/search?q=hello", "text": "Hello World" }, 
@@ -346,35 +287,9 @@ ${links.slice(0, 30).map((l, index) => `${index + 1}. URL: ${l.href}\nText: ${l.
 
             const selectedLinksJson = await this.lmStudioService.sendMessageToLLM(message, history, "[");
 
-            (selectedLinksJson);
             return JSON5.parse(selectedLinksJson);
         } catch (error) {
             Logger.error('Error selecting relevant links:', error);
-            throw error;
-        }
-    }
-
-    async generateOptimizedSearchQuery(task: string): Promise<string> {
-        try {
-            const systemPrompt = `You are a research assistant. Our overall goal is ${this.primaryGoal}.
-Generate a broad web search query without special keywords or operators based on the task we've been asked to research. Respond ONLY with the search query to run.`;
-
-            const history = [
-                { role: "system", content: systemPrompt },
-            ];
-
-            const userPrompt = `Task: ${task}`;
-
-            let optimizedQuery = await this.lmStudioService.sendMessageToLLM(userPrompt, history);
-
-            // Remove leading and trailing quotes
-            if (optimizedQuery.startsWith('"') && optimizedQuery.endsWith('"')) {
-                optimizedQuery = optimizedQuery.slice(1, -1);
-            }
-
-            return optimizedQuery;
-        } catch (error) {
-            Logger.error('Error generating optimized search query:', error);
             throw error;
         }
     }

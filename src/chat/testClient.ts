@@ -1,12 +1,12 @@
 import Logger from "src/helpers/logger";
-import { ChatClient, ChatPost, ProjectChainResponse } from "./chatClient";
+import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "./chatClient";
 
 export class InMemoryPost implements ChatPost {
     public id: string;
     public channel_id: string;
     public message: string;
     public user_id: string;
-    public props: Record<string, any>;
+    public props: ConversationContext;
     public create_at: number;
 
     constructor(channel_id: string, message: string, user_id: string, props?: Record<string, any>, create_at?: number) {
