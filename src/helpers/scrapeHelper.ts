@@ -1,15 +1,25 @@
-import puppeteer, { Page } from 'puppeteer';
-import { load } from 'cheerio';
+import { chromium, devices } from 'playwright-extra';
 import TurndownService from 'turndown';
+import { load } from 'cheerio';
+
+// Load the stealth plugin and use defaults (all tricks to hide playwright usage)
+// Note: playwright-extra is compatible with most puppeteer-extra plugins
+import stealth from 'puppeteer-extra-plugin-stealth';
 import Logger from './logger';
 
+// Add the plugin to p@laywright (any number of plugins can be added)
+chromium.use(stealth())
+
 class ScrapeHelper {
-    async scrapePageWithPuppeteer(url: string): Promise<{ content: string, links: { href: string, text: string }[], title: string }> {
-        let browser, page : Page, actualUrl: string;
+    async scrapePage(url: string): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot: Buffer }> {
+        let browser, page;
         try {
-            browser = await puppeteer.launch({ headless: true });
-            page = await browser.newPage();
-            // await page.goto(url, { waitUntil: 'networkidle2' });
+            // Launch the browser in headless mode
+            browser = await chromium.launch({ headless: true });
+            const context = await browser.newContext(); //devices['iPhone 11']
+            page = await context.newPage();
+
+            // Navigate to the URL and wait until the DOM content is loaded
             try {
                 await page.goto(url, { waitUntil: 'domcontentloaded' });
             } catch (error) {
@@ -19,13 +29,20 @@ class ScrapeHelper {
             // Wait for additional content to load after scrolling
             await new Promise(resolve => setTimeout(resolve, 1000));
 
-            actualUrl = await page.url();
-        
+            // Take a full-page screenshot
+            let screenshot: Buffer;
+            try {
+                screenshot = await page.screenshot({ fullPage: true });
+            } catch (error) {
+                Logger.warn(`Couldn't get a screenshot.`);
+            }
+
+
+            const actualUrl = page.url();
 
             // Scroll to the bottom of the page
             await page.evaluate(() => {
                 window.scrollTo(0, document.body.scrollHeight);
-                // actualUrl = document.baseURI;
             });
 
             // Wait for additional content to load after scrolling
@@ -41,41 +58,20 @@ class ScrapeHelper {
             const $ = load(htmlContent);
 
             // Remove script tags from the body
-            // $('body').find('script').remove();
-
-            // Extract main content (excluding boilerplate elements)
-            // let content = $('body').text();
-
-            // Remove all script and style elements
-            $('script, style').remove();
-
-            // Remove style attributes from all elements
+            $('script, style, img, iframe').remove();
             $('*').removeAttr('style');
 
             // Convert all relative URLs to absolute
             $('[src], [href]').each((i, element) => {
-                ['src', 'href', 'srcset'].forEach(attr => {
-                    const value = element.attribs[attr];
+                ['src', 'href'].forEach(attr => {
+                    const value = $(element).attr(attr);
                     if (!value) return;
 
-                    if (attr === 'srcset') {
-                        const newSrcset = value.split(',').map(src => {
-                            const [url, size] = src.trim().split(' ');
-                            try {
-                                const absoluteUrl = new URL(url, actualUrl).href;
-                                return `${absoluteUrl}${size ? ' ' + size : ''}`;
-                            } catch (e) {
-                                return src;
-                            }
-                        }).join(', ');
-                        element.attribs[attr] = newSrcset;
-                    } else if (!value.startsWith('http') && !value.startsWith('data:') && !value.startsWith('#') && !value.startsWith('//')) {
-                        try {
-                            const absoluteUrl = new URL(value, actualUrl).href;
-                            element.attribs[attr] = absoluteUrl;
-                        } catch (e) {
-                            Logger.warn(`Failed to process ${attr} URL:`, value, e);
-                        }
+                    try {
+                        const absoluteUrl = new URL(value, actualUrl).href;
+                        $(element).attr(attr, absoluteUrl);
+                    } catch (e) {
+                        Logger.warn(`Failed to process ${attr} URL:`, value, e);
                     }
                 });
             });
@@ -88,12 +84,7 @@ class ScrapeHelper {
                 .replace(/^[ \t]+/gm, ''); // Remove leading spaces and tabs from each line
 
             const turndownService = new TurndownService();
-
             let markdownContent = turndownService.turndown(fullHtmlWithoutIndentation);
-
-
-            // Remove extra newlines
-            // content = content.replace(/\n\s*\n/g, '\n');
 
             // Extract links
             const links: { href: string, text: string }[] = [];
@@ -105,7 +96,7 @@ class ScrapeHelper {
                 }
             });
 
-            return { content: markdownContent, links, title };
+            return { content: markdownContent, links, title, screenshot };
         } catch (error) {
             Logger.error(`Error scraping page "${url}":`, error);
             throw error;
@@ -123,7 +114,6 @@ class ScrapeHelper {
             throw error;
         }
     }
-    
 }
 
 export default ScrapeHelper;

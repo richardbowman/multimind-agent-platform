@@ -37,9 +37,11 @@ export class InMemoryPost implements ChatPost {
 }
 
 export class InMemoryChatStorage {
+    channelNames: Record<string, string> = {};
     posts: ChatPost[] = [];
     callbacks: Function[] = [];
-    
+    userIdToHandleName: Record<string, string> = {}; // New mapping for user IDs to handle names
+
     public addPost(post: ChatPost) {
         if (!post.message) {
             try {
@@ -53,6 +55,20 @@ export class InMemoryChatStorage {
         // Logger.info(JSON.stringify(this.posts, null, 2))
         this.callbacks.forEach(c => c(post));
     }
+
+    public registerChannel(channelId: string, channelName: string) {
+        this.channelNames[channelId] = channelName;
+    }
+
+    // New method to map user IDs to handle names
+    public mapUserIdToHandleName(userId: string, handleName: string) {
+        this.userIdToHandleName[userId] = handleName;
+    }
+
+    // Optional: Method to get the handle name for a given user ID
+    public getHandleNameForUserId(userId: string): string | undefined {
+        return this.userIdToHandleName[userId];
+    }
 }
 
 export class InMemoryTestClient implements ChatClient {
@@ -65,6 +81,10 @@ export class InMemoryTestClient implements ChatClient {
         this.userId = userId;
         this.webSocketUrl = webSocketUrl;
         this.storage = storage;
+    }
+
+    public registerHandle(handleName: string) {
+        this.storage.mapUserIdToHandleName(this.userId, handleName);
     }
 
     public getPosts() {
@@ -85,7 +105,7 @@ export class InMemoryTestClient implements ChatClient {
 
         return Promise.resolve({
             activityType: projectPost.getActivityType() || 'unknown',
-            posts: this.getPosts().filter(p => p.getRootId() === projectPost.id),
+            posts: [projectPost, ...this.getPosts().filter(p => p.getRootId() === projectPost.id)],
             projectId: projectPost.props["project-id"]
         });
     }
@@ -117,12 +137,15 @@ export class InMemoryTestClient implements ChatClient {
         Logger.info('Simulated WebSocket connection closed');
     }
 
-    public postReply(rootId: string, channelId: string, message: string): Promise<ChatPost> {
+    public postReply(rootId: string, channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost> {
+        const replyProps = props||{};
+        replyProps['root-id'] = rootId;
+        
         const replyPost = new InMemoryPost(
             channelId,
             message,
             this.userId,
-            { 'root-id': rootId }
+            replyProps
         );
         this.pushPost(replyPost);
         return Promise.resolve(replyPost);

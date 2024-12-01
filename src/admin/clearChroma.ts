@@ -1,4 +1,4 @@
-import { CHROMA_COLLECTION } from "../config";
+import { CHROMA_COLLECTION } from "../helpers/config";
 import ChromaDBService from '../llm/chromaService';
 import Logger from "src/helpers/logger";
 

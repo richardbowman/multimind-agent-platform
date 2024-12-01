@@ -55,7 +55,7 @@ export default class LMStudioService {
                 this.chatModel = await this.lmStudioClient.llm.get(modelPath);
                 Logger.info("Connected to existing LLaMA model.");
             } else {
-                this.chatModel = await this.lmStudioClient.llm.load(modelPath);
+                this.chatModel = await this.lmStudioClient.llm.load(modelPath, {verbose: false});
                 Logger.info("LLaMA model loaded.");
             }
         } catch (error) {
@@ -64,7 +64,8 @@ export default class LMStudioService {
         }
     }
 
-    async sendMessageToLLM(message: string, history: any[], seedAssistant?: string, contextWindowLength?: number, maxTokens?: number): Promise<string> {
+    async sendMessageToLLM(message: string, history: any[], seedAssistant?: string, 
+        contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string> {
         if (!this.chatModel) {
             throw new Error("LLaMA model is not initialized.");
         }
@@ -93,8 +94,13 @@ export default class LMStudioService {
         //     }
         // }
 
+        const opts = { maxPredictedTokens: maxTokens  };
+        if (schema) {
+            opts.structured = { type: "json", jsonSchema: schema }; 
+        }
+
         // Set the maxTokens parameter for the LLaMA model
-        const prediction = this.chatModel.respond(history, { maxPredictedTokens: maxTokens });
+        const prediction = this.chatModel.respond(history, opts);
         const finalResult = await prediction;
         const resultBody = finalResult.content;
 

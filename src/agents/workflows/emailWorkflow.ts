@@ -1,20 +1,15 @@
 import LMStudioService from "./llm/lmstudioService";
 import Logger from "src/helpers/logger";
 import JSON5 from 'json5';
-import { CHAT_MODEL, CHROMA_COLLECTION, ORCHESTRATOR_USER_ID } from './config';
+import { CHAT_MODEL, CHROMA_COLLECTION, ORCHESTRATOR_USER_ID } from './helpers/config';
 import { randomUUID } from 'crypto';
 import Workflow from "./workflow";
 import { ChatPost } from "./chat/chatClient";
 
-const lmstudioService = new LMStudioService();
-lmstudioService.initializeLlamaModel(CHAT_MODEL).catch(err => {
-    Logger.error("Failed to initialize LLaMA model:", err);
-});
-
 export default class EmailWorkflow extends Workflow {
 
-    constructor(projectId: string, researchActivity: string) {
-        super(projectId, researchActivity)
+    constructor(projectId: string, researchActivity: string, lmStudioService: LMStudioService) {
+        super(projectId, researchActivity, lmStudioService)
     }
 
     async decomposeTask(task: string) {
@@ -80,7 +75,7 @@ You've already designed the overall goals for the email.
         return this.tasks;
     }
 
-    public getStrategy() {
+    public getGoal() {
         return this.goal;
     }
 }

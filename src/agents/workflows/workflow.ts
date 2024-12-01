@@ -1,40 +1,38 @@
-import LMStudioService from "./llm/lmstudioService";
-import ResearchAssistant from "./assistant";
-import ChromaDBService from "./llm/chromaService";
+import LMStudioService from "../../llm/lmstudioService";
+import ChromaDBService from "../../llm/chromaService";
 import Logger from "src/helpers/logger";
-import { CHAT_MODEL, CHROMA_COLLECTION, ORCHESTRATOR_USER_ID } from './config';
-import { ChatPost } from "./chat/chatClient";
+import { ORCHESTRATOR_USER_ID } from '../../helpers/config';
+import { ChatPost } from "../../chat/chatClient";
+import { TaskManager } from "src/tools/taskManager";
 
-const lmstudioService = new LMStudioService();
-lmstudioService.initializeLlamaModel(CHAT_MODEL).catch(err => {
-    Logger.error("Failed to initialize LLaMA model:", err);
-});
-
-export interface Task {
-    description: string;
-    taskId: string;
-}
-
-class Workflow {
-    protected chromaDBService: ChromaDBService;
+class Workflow<Project, Task, Agent> {
+    protected lmStudioService: LMStudioService;
 
     protected goal: string;
     protected tasks: Task[] = [];
     protected projectId: string;
 
-    constructor(projectId: string, researchActivity: string) {
-        this.chromaDBService = new ChromaDBService();
+    protected taskManager: TaskManager;
+    protected chromaDBService: ChromaDBService;
+
+    constructor(
+            projectId: string,
+            researchActivity: string,
+            lmStudioService: LMStudioService,
+            taskManager: TaskManager,
+            chromaDBService: ChromaDBService
+        ) {
+        this.taskManager = taskManager;
 
         this.projectId = Math.random().toString();
         this.goal = researchActivity;
         this.projectId = projectId;
+        this.lmStudioService = lmStudioService;
+        this.chromaDBService = chromaDBService;
     }
 
     protected async generateReply(systemPrompt: string, chatHistory: ChatPost[]): Promise<string> {
         try {
-            await this.chromaDBService.initializeCollection(CHROMA_COLLECTION);
-
-    
             // Query ChromaDB for related documents
             const queryTexts = chatHistory.map(h => h.message.slice(0, 100));
             Logger.info(`QUERY TEXTS: ${chatHistory.length}`, queryTexts)
@@ -65,7 +63,7 @@ class Workflow {
                 //     history[history.length-1].content = `${history[history.length-1].content}`;
                 // }
 
-                const response = await lmstudioService.sendMessageToLLM(history.slice(-1)[0].content, history.slice(0, -1), undefined, 4096);
+                const response = await this.lmStudioService.sendMessageToLLM(history.slice(-1)[0].content, history.slice(0, -1), undefined, 4096);
 
                 // Return the generated report
                 return response;
@@ -79,18 +77,18 @@ class Workflow {
         }
     }
 
-    distributeTasks(assistant: ResearchAssistant) {
+    distributeTasks(assistant: Agent) {
         Logger.info(`Distributing ${this.tasks.length} tasks`);
         for (const { description: prompt, taskId } of this.tasks) {
             assistant.receiveTask(prompt, taskId); // Pass the task ID to the ResearchAssistant
         }
     }
     
-    public getTasks() {
+    public getTasks() : Task[] {
         return this.tasks;
     }
 
-    public getStrategy() {
+    public getGoal() {
         return this.goal;
     }
 }

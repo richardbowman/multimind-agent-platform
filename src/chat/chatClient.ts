@@ -5,7 +5,7 @@ export interface ChatClient {
     getWebSocketUrl(): string;
     initializeWebSocket(callback: (data: ChatPost) => void): void;
     closeWebSocket(): void;
-    postReply(rootId: string, channelId: string, message: string): Promise<ChatPost>;
+    postReply(rootId: string, channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost>;
 }
 
 export interface ProjectChainResponse {

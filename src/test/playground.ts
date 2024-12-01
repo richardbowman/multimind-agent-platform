@@ -1,5 +1,5 @@
 import ChromaDBService from "../llm/chromaService";
-import { ORCHESTRATOR_TOKEN_ID, ORCHESTRATOR_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_TOKEN, RESEARCHER_USER_ID } from "../config";
+import { ORCHESTRATOR_TOKEN_ID, ORCHESTRATOR_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_TOKEN, RESEARCHER_USER_ID } from "../helpers/config";
 import MattermostClient from "../chat/mattermostClient";
 
 const CHROMA_COLLECTION = "webpage_scrapes";

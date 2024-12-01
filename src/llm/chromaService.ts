@@ -1,29 +1,29 @@
-import { ChromaClient, Collection, TransformersEmbeddingFunction } from "chromadb";
+import { ChromaClient, CollectionType } from "chromadb";
 import LMStudioService from "./lmstudioService";
 import crypto from 'crypto';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import dotenv from 'dotenv';
-import { CHROMADB_URL } from "../config";
+import { CHROMADB_URL } from "../helpers/config";
 import Logger from "src/helpers/logger";
 import { ConversationContext } from "../chat/chatClient";
+import { saveToFile } from "src/tools/storeToFile";
 
 dotenv.config();
 
 class ChromaDBService {
     private chromaDB: ChromaClient;
-    private collection: Collection | null = null;
+    private collection: CollectionType | null = null;
     private lmStudioService: LMStudioService;
 
-    constructor() {
+    constructor(lmStudioService: LMStudioService) {
         this.chromaDB = new ChromaClient({ path: CHROMADB_URL! });
-        this.lmStudioService = new LMStudioService();
+        this.lmStudioService = lmStudioService;
+    
     }
 
     async initializeCollection(name: string): Promise<void> {
         const collections = await this.chromaDB.listCollections();
         const existingCollection = collections.find(c => c.name === name);
-
-        await this.lmStudioService.initializeEmbeddingModel(process.env.EMBEDDING_MODEL!);
 
         if (existingCollection) {
             this.collection = await this.chromaDB.getCollection({
@@ -50,11 +50,16 @@ class ChromaDBService {
         return await this.collection.query({ queryTexts, where, nResults });
     }
 
-    async handleContentChunks(content: string, url: string, task: string, projectId: string, primaryGoal: string, title: string, type = 'content') {
+    async handleContentChunks(content: string, url: string, task: string, projectId: string, title: string, type = 'content') {
         const splitter = new RecursiveCharacterTextSplitter({
             chunkSize: 2000,
             chunkOverlap: 100,
         });
+
+
+        // Save the page to a file
+        const docId = crypto.randomUUID(); 
+        await saveToFile(projectId, "webpage", docId, content);
 
         // Logger.info(`Saving content to db: ${url}`);
         const chunks = await splitter.createDocuments([content]);
@@ -67,10 +72,9 @@ class ChromaDBService {
             documents: []
         };
 
-        chunks.forEach((c, index) => {
+        chunks.forEach(async (c, index) => {
             const chunkContent = c.pageContent;
             const hashId = this.computeHash(chunkContent);
-            const docId = crypto.randomUUID(); 
 
             if (addCollection.ids.includes(hashId)) return;
 
@@ -79,7 +83,6 @@ class ChromaDBService {
             const metadata : ConversationContext = {
                 url,
                 projectId,
-                primaryGoal,
                 title,
                 docId,
                 chunkId: index + 1,

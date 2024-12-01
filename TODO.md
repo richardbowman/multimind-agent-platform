@@ -1,5 +1,16 @@
 # TODO List
 
+## 2024-11-27
+
+- [ ] need a tool to define a desired conversation flow
+  - [ ] there should be “stages”
+  - [ ] \
+
+## 2024-11-26
+
+- [x] show user names and channel names instead of IDs
+- [ ] add content sections to RAG, include context in writing process
+
 ## 2024-11-25
 
 - [ ] page summaries i dont see in ChromaDB (!!!!)

@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { SEARXNG_URL } from '../config';
+import { SEARXNG_URL } from './config';
 import Logger from "src/helpers/logger";
 
 class SearchHelper {

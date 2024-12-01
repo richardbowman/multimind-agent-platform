@@ -1,10 +1,18 @@
 // logger.ts
+import { appendFileSync } from 'fs';
+
+
 class Logger {
     static logBox: Log;
+    private static logFilePath = `./.output/output-${new Date().toISOString().split('T')[0]}.log`;
 
     static log(level: string, message: string): void {
         const timestamp = new Date().toISOString();
-        // console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
+        const formattedMessage = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
+
+        // Append to log file
+        appendFileSync(Logger.logFilePath, formattedMessage);
+        
         if (this.logBox) this.logBox.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
     }
 
@@ -18,7 +26,7 @@ class Logger {
 
     static error(message: string, error?: any): void {
         this.log('error', message);
-        if (error) this.log('error', error.toString());
+        if (error) this.log('error', `Error:${error.message}\nStack:${error.stack}`);
     }
 }
 

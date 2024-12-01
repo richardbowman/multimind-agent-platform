@@ -1,5 +1,6 @@
 node_modules
 chrome
 .env*
+.output
 src/playground.ts
 TODO
