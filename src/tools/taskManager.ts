@@ -18,12 +18,13 @@ export interface Project<Task> {
 }
 
 export interface TaskManager extends EventEmitter {
-    completeTask(id: string): Task;
+    completeTask(id: string): Promise<Task>;
     addProject(project: Project<Task>): void;
     addTask(project: Project<Task>, task: Task): void;
     getProject(projectId: string): Project<Task>;
     newProjectId(): string;
     save(): Promise<void>;
     load(): Promise<void>;
-    assignTaskToAgent(taskId: string, agentId: string): void; // New method to assign a task to an agent
+    assignTaskToAgent(taskId: string, agentId: string): void;
+    getNextTaskForUser(userId: string): Promise<Task | null>;
 }

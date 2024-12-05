@@ -1,4 +1,4 @@
-import LMStudioService from '../llm/lmstudioService';
+import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
 import Logger from "src/helpers/logger";
 import JSON5 from 'json5';
 import SearchHelper from '../helpers/searchHelper';
@@ -38,6 +38,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
     private searchHelper: SearchHelper;
     private scrapeHelper: ScrapeHelper;
     private summaryHelper: SummaryHelper;
+    private isWorking: boolean = false;
 
     constructor(userToken: string, userId: string, chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager) {
         super(chatClient, lmStudioService, userId, projects);
@@ -51,12 +52,40 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         Logger.info(`Initialized Research Assistant ${RESEARCHER_TOKEN}`);
         await this.chromaDBService.initializeCollection(CHROMA_COLLECTION);
         await super.setupChatMonitor(WEB_RESEARCH_CHANNEL_ID, "@researchteam");
+
+        // asynchronously check for old tasks and keep working on them
+        this.processTaskQueue();
     }
     
     protected async taskNotification(task: ResearchTask): Promise<void> {
-        Logger.info(`Notification for task ${task.id}: ${task.description}`);
-        await this.scrapeUrl(task.projectId, task.description, task.description, task.id, []);
-        this.projects.completeTask(task.id);
+        await this.processTask(task);
+    }
+
+    async processTaskQueue(): Promise<void> {
+        const task : ResearchTask = await this.projects.getNextTaskForUser(this.userId);
+        if (!task) {
+            Logger.info("No more tasks for user.");
+            return;
+        }
+
+        await this.processTask(task);
+    }
+
+    async processTask(task: ResearchTask) {
+        try {
+            if (this.isWorking) return;
+
+            this.isWorking = true;
+            Logger.info(`Notification for task ${task.id}: ${task.description}`);
+            await this.scrapeUrl(task.projectId, task.description, task.description, task.id, []);
+            await this.projects.completeTask(task.id);
+        } catch (error) {
+            Logger.error(`Error processing task "${task.task}":`, error);
+        } finally {
+            this.isWorking = false;
+            // Recursively process the next task
+            await this.processTaskQueue();
+        }
     }
 
     protected projectCompleted(project: ResearchProject): void {
@@ -311,37 +340,53 @@ ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}
     }
 
     async selectRelevantLinks(task: string, goal: string, title: string, links: { href: string, text: string }[]): Promise<{ href: string, text: string }[]> {
-        const MAX_FOLLOWS = parseInt(process.env.MAX_FOLLOWS||"0");
-        try {
-            if (MAX_FOLLOWS === 0) {
-                return [];
-            }
+    const MAX_FOLLOWS = parseInt(process.env.MAX_FOLLOWS || "0");
+    try {
+        if (MAX_FOLLOWS === 0) {
+            return [];
+        }
 
-            const systemPrompt = `You are a research assistant. Our overall goal is ${goal}, and we're currently working on
-researching ${task}. Given a list of links from the page entitied "${title}", decide IF there are any relevant links on the page.
-You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but should only pick links that will
-help solve the original goal and task. Don't pick PDFs, we can't scrape them. Return ONLY the selected URLs as a valid
-JSON array of objects like this:
+        const systemPrompt = `You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}. 
+Given a list of links from the page entitled "${title}", decide IF there are any relevant links on the page.
+You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but should only pick links that will help solve the original goal and task. Don't pick PDFs, we can't scrape them.
+Return ONLY the selected URLs as a valid JSON array of objects like this:
 [
     { "href": "https://www.abc.com/about-link" }, 
     { "href": "https://www.xyz.com/relevant-link" }
 ]
 `;
 
-            const history = [
-                { role: "system", content: systemPrompt },
-            ];
+        const schema = {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    href: {
+                        type: "string"
+                    },
+                    text: {
+                        type: "string"
+                    }
+                },
+                required: ["href"]
+            }
+        };
 
-            const message = `${links.slice(0, 30).map((l, index) => `${index + 1}. URL: ${l.href}\nText: ${l.text}`).join("\n\n")}`;
+        const history = [
+            { role: "system", content: systemPrompt },
+        ];
 
-            const selectedLinksJson = await this.lmStudioService.sendMessageToLLM(message, history, "[");
+        const message = `${links.slice(0, 30).map((l, index) => `${index + 1}. URL: ${l.href}\nText: ${l.text}`).join("\n\n")}`;
 
-            return JSON5.parse(selectedLinksJson);
-        } catch (error) {
-            Logger.error('Error selecting relevant links:', error);
-            throw error;
-        }
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+
+        const selectedLinks = await this.lmStudioService.sendStructuredRequest(message, instructions, history);
+        return selectedLinks;
+    } catch (error) {
+        Logger.error('Error selecting relevant links:', error);
+        throw error;
     }
+}
 
     getResults(): string[] {
         return this.results;

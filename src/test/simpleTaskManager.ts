@@ -1,8 +1,7 @@
-// \home\rick\Projects\multi-agent\src\test\simpleTaskManager.ts
-
-import fs from 'fs';
+import fs from 'fs/promises';
 import EventEmitter from 'events';
 import { Project, Task, TaskManager } from '../tools/taskManager';
+import Logger from 'src/helpers/logger';
 
 class SimpleTaskManager extends EventEmitter implements TaskManager {
     private projects: { [projectId: string]: Project<Task> } = {};
@@ -13,16 +12,18 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         this.filePath = filePath;
     }
 
-    addTask(project: Project<Task>, task: Task) {
+    async addTask(project: Project<Task>, task: Task) {
         this.projects[project.id].tasks[task.id] = task;
+        await this.save();
     }
 
     newProjectId(): string {
         return `project_${Date.now()}`;
     }
 
-    addProject(project: Project<Task>): void {
+    async addProject(project: Project<Task>): Promise<void> {
         this.projects[project.id] = project;
+        await this.save();
     }
 
     getProject(projectId: string): Project<Task> {
@@ -31,18 +32,19 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
 
     async save(): Promise<void> {
         try {
-            await fs.promises.writeFile(this.filePath, JSON.stringify(this.projects, null, 2));
+            await fs.writeFile(this.filePath, JSON.stringify(this.projects, null, 2));
         } catch (error) {
-            console.error('Failed to save tasks:', error);
+            Logger.error('Failed to save tasks:', error);
         }
     }
 
     async load(): Promise<void> {
         try {
-            const data = await fs.promises.readFile(this.filePath, 'utf-8');
+            const data = await fs.readFile(this.filePath, 'utf-8');
             this.projects = JSON.parse(data);
+            Logger.info(`Loaded ${Object.keys(this.projects).length} projects from disk`);
         } catch (error) {
-            console.error('Failed to load tasks:', error);
+            Logger.error('Failed to load tasks:', error);
         }
     }
 
@@ -50,7 +52,7 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         let taskFound = false;
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
-            if (project.tasks.hasOwnProperty(taskId)) {
+            if (project.tasks?.hasOwnProperty(taskId)) {
                 const task = project.tasks[taskId];
                 task.assignee = assignee;
                 taskFound = true;
@@ -64,11 +66,23 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         }
     }
 
-    completeTask(id: string): Task {
+    async getNextTaskForUser(userId: string): Promise<Task | null> {
+        for (const projectId in this.projects) {
+            const project = this.projects[projectId];
+            const task = Object.values(project.tasks).find(t => t.assignee === userId && !t.complete);
+            if (task) {
+                return task;
+            }
+        }
+        Logger.info(`No tasks assigned to user ${userId} found.`);
+        return null;
+    }
+
+    async completeTask(id: string): Promise<Task> {
         let taskFound = false;
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
-            if (project.tasks.hasOwnProperty(id)) {
+            if (project.tasks?.hasOwnProperty(id)) {
                 const task = project.tasks[id];
                 task.complete = true;
                 taskFound = true;
@@ -85,6 +99,7 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         if (!taskFound) {
             throw new Error(`Task with ID ${id} not found.`);
         }
+        await this.save();
         return this.getProjectByTaskId(id).tasks[id];
     }
 
@@ -101,7 +116,7 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
     getProjectByTaskId(taskId: string): Project<Task> {
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
-            if (project.tasks.hasOwnProperty(taskId)) {
+            if (project.tasks?.hasOwnProperty(taskId)) {
                 return project;
             }
         }

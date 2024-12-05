@@ -1,13 +1,14 @@
 // lmstudioService.ts
 
-import LMStudio from "@lmstudio/sdk";
+import { EmbeddingSpecificModel,LLMSpecificModel,LMStudioClient } from "@lmstudio/sdk";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
+import JSON5 from "json5";
 
 class MyEmbedder implements IEmbeddingFunction {
-    private embeddingModel: LMStudio.EmbeddingSpecificModel;
+    private embeddingModel: EmbeddingSpecificModel;
 
-    constructor(embeddingModel: LMStudio.EmbeddingSpecificModel) {
+    constructor(embeddingModel: EmbeddingSpecificModel) {
         this.embeddingModel = embeddingModel;
     }   
 
@@ -21,13 +22,31 @@ class MyEmbedder implements IEmbeddingFunction {
     }
 }
 
+export class StructuredOutputPrompt {
+    private schema: any;
+    private prompt: string;
+
+    constructor(schema: any, prompt: string) {
+        this.schema = schema;
+        this.prompt = prompt;
+    }
+
+    public getSchema(): any {
+        return this.schema;
+    }
+
+    public getPrompt(): string {
+        return this.prompt;
+    }
+}
+
 export default class LMStudioService {
-    private lmStudioClient: LMStudio.LMStudioClient;
+    private lmStudioClient: LMStudioClient;
     private embeddingModel: IEmbeddingFunction;
-    private chatModel: LMStudio.LLMSpecificModel;
+    private chatModel: LLMSpecificModel;
 
     constructor() {
-        this.lmStudioClient = new LMStudio.LMStudioClient({
+        this.lmStudioClient = new LMStudioClient({
             baseUrl: process.env.LMSTUDIO_BASEURL!
         });
     }
@@ -81,18 +100,17 @@ export default class LMStudioService {
         }
 
         // If contextWindowLength is provided, truncate the history
-        // if (contextWindowLength !== undefined && contextWindowLength > 0) {
-        //     let tokenCount = 0;
-        //     for (let i = history.length - 1; i >= 0; i--) {
-        //         const messageTokens = await this.chatModel.unstable_countTokens(history[i].content);
-        //         tokenCount += messageTokens;
+        const contextLength = parseInt(process.env.CONTEXT_SIZE||"") || contextWindowLength || 4096;
+        let tokenCount = 0;
+        for (let i = history.length - 1; i >= 0; i--) {
+            const messageTokens = await this.chatModel.unstable_countTokens(history[i].content);
+            tokenCount += messageTokens;
 
-        //         if (tokenCount > contextWindowLength) {
-        //             history = history.slice(i + 1);
-        //             break;
-        //         }
-        //     }
-        // }
+            if (tokenCount > contextLength) {
+                history = history.slice(i + 1);
+                break;
+            }
+        }
 
         const opts = { maxPredictedTokens: maxTokens  };
         if (schema) {
@@ -108,6 +126,41 @@ export default class LMStudioService {
 
         // Remove the last message from the history (user's message)
         return inclSeed;
+    }
+
+    async sendStructuredRequest(message: string, instructions: StructuredOutputPrompt, history?: any[],  
+        contextWindowLength?: number, maxTokens?: number): Promise<any> {
+        if (!this.chatModel) {
+            throw new Error("LLaMA model is not initialized.");
+        }
+
+        // Add the current message to the history
+        const systemMessage = { role: "system", content: instructions.getPrompt() };
+        const userMessage = { role: "user", content: message };
+        let messageChain = [
+            systemMessage, ...history||[], userMessage
+        ];
+
+        const opts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens  };
+
+        // If contextWindowLength is provided, truncate the history
+        const contextLength = parseInt(process.env.CONTEXT_SIZE||"") || contextWindowLength || 4096;
+        let tokenCount = 0;
+        for (let i = messageChain.length - 1; i >= 0; i--) {
+            const messageTokens = await this.chatModel.unstable_countTokens(messageChain[i].content);
+            tokenCount += messageTokens;
+
+            if (tokenCount > contextLength) {
+                messageChain = messageChain.slice(i + 1);
+                break;
+            }
+        }
+        
+        // Set the maxTokens parameter for the LLaMA model
+        const prediction = this.chatModel.respond(messageChain, opts);
+        const finalResult = await prediction;
+        const resultBody = finalResult.content;
+        return JSON5.parse(resultBody);
     }
 
     getEmbeddingModel() {

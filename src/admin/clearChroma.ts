@@ -1,10 +1,13 @@
-import { CHROMA_COLLECTION } from "../helpers/config";
+import LMStudioService from "src/llm/lmstudioService";
+import { CHROMA_COLLECTION, EMBEDDING_MODEL } from "../helpers/config";
 import ChromaDBService from '../llm/chromaService';
 import Logger from "src/helpers/logger";
 
 async function deleteCollection(collectionName: string) {
     try {
-        const chromaDBService = new ChromaDBService();
+        const lmStudioService = new LMStudioService();
+        await lmStudioService.initializeEmbeddingModel(EMBEDDING_MODEL);
+        const chromaDBService = new ChromaDBService(lmStudioService);
         
         // Initialize the collection to ensure it exists and load the embedding model
         await chromaDBService.initializeCollection(collectionName);

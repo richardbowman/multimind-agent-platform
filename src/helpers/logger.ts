@@ -13,7 +13,7 @@ class Logger {
         // Append to log file
         appendFileSync(Logger.logFilePath, formattedMessage);
         
-        if (this.logBox) this.logBox.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
+        if (this.logBox && level !== "verbose") this.logBox.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
     }
 
     static info(message: string): void {
@@ -21,6 +21,10 @@ class Logger {
     }
 
     static warn(message: string): void {
+        this.log('warn', message);
+    }
+
+    static verbose(message: string): void {
         this.log('warn', message);
     }
 

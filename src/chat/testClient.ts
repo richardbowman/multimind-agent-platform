@@ -1,7 +1,18 @@
 import Logger from "src/helpers/logger";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "./chatClient";
+import fs from "fs/promises";
 
 export class InMemoryPost implements ChatPost {
+    static fromLoad(postData: any) : InMemoryPost {
+        return new InMemoryPost(
+            postData.channel_id,
+            postData.message,
+            postData.user_id,
+            postData.props,
+            postData.create_at
+        );
+    }
+
     public id: string;
     public channel_id: string;
     public message: string;
@@ -42,7 +53,13 @@ export class InMemoryChatStorage {
     callbacks: Function[] = [];
     userIdToHandleName: Record<string, string> = {}; // New mapping for user IDs to handle names
 
-    public addPost(post: ChatPost) {
+    private storagePath: string;
+
+    constructor(storagePath: string) {
+        this.storagePath = storagePath;
+    }
+
+    public async addPost(post: ChatPost) : Promise<void> {
         if (!post.message) {
             try {
                 throw new Error("Empty message.")
@@ -52,6 +69,7 @@ export class InMemoryChatStorage {
             return;
         }
         this.posts.push(post);
+        await this.save();
         // Logger.info(JSON.stringify(this.posts, null, 2))
         this.callbacks.forEach(c => c(post));
     }
@@ -68,6 +86,35 @@ export class InMemoryChatStorage {
     // Optional: Method to get the handle name for a given user ID
     public getHandleNameForUserId(userId: string): string | undefined {
         return this.userIdToHandleName[userId];
+    }
+
+    public async save(): Promise<void> {
+        const data = {
+            channelNames: this.channelNames,
+            posts: this.posts,
+            userIdToHandleName: this.userIdToHandleName
+        };
+
+        await fs.writeFile(this.storagePath, JSON.stringify(data, null, 2), 'utf8');
+    }
+
+    public async load(): Promise<void> {
+        try {
+            const data = await fs.readFile(this.storagePath, 'utf8');
+            const parsedData = JSON.parse(data);
+            this.channelNames = parsedData.channelNames;
+            this.posts = parsedData.posts.map(p => InMemoryPost.fromLoad(p));
+            this.userIdToHandleName = parsedData.userIdToHandleName;
+            Logger.info(`Loaded ${this.posts.length} chat posts from disk`);
+        } catch (error) {
+            // If the file doesn't exist or is invalid, initialize with default values
+            if (error.code === 'ENOENT') {
+                Logger.info('No saved data found. Starting with a fresh storage.');
+                return;
+            }
+
+            Logger.error('Error loading chat storage:', error);
+        }
     }
 }
 

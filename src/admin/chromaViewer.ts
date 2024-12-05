@@ -1,10 +1,10 @@
 import Blessed from 'blessed';
-import { exec } from 'child_process';
-
 import ChromaDBService from '../llm/chromaService'; // Adjust the import path accordingly
 import Logger from 'src/helpers/logger';
 import clipboard from 'clipboardy';
 import { formatMarkdownForTerminal } from 'src/helpers/formatters';
+import LMStudioService from 'src/llm/lmstudioService';
+import { EMBEDDING_MODEL } from 'src/helpers/config';
 
 async function runSearchTool() {
     const screen = Blessed.screen({
@@ -47,9 +47,12 @@ async function runSearchTool() {
     });
     screen.append(Logger.logBox);
 
-    const chromaDBService = new ChromaDBService();
+    const lmStudioService = new LMStudioService();
+    // Initialize the embedding and LLaMA models
+    await lmStudioService.initializeEmbeddingModel(EMBEDDING_MODEL);
+    const chromaDBService = new ChromaDBService(lmStudioService);
 
-    await chromaDBService.initializeCollection('my-collection');
+
 
     // Create a list box for collections on the left side
     const listBoxCollections = Blessed.list({

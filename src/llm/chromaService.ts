@@ -59,12 +59,10 @@ class ChromaDBService {
 
         // Save the page to a file
         const docId = crypto.randomUUID(); 
-        await saveToFile(projectId, "webpage", docId, content);
+        await saveToFile(projectId, type, docId, content);
 
         // Logger.info(`Saving content to db: ${url}`);
         const chunks = await splitter.createDocuments([content]);
-
-        (chunks);
 
         const addCollection: { ids: string[], metadatas: any[], documents: string[] } = {
             ids: [],
