@@ -62,4 +62,4 @@ const pmAssistant = new ProjectManager(PROJECT_MANAGER_USER_ID, "@pm", pmClient,
 const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
 const onboardingAssistant = new OnboardingConsultant(ONBOARDING_CONSULTANT_USER_ID, "@onboarding", onboardingClient, lmStudioService, chromaService, tasks);
 
-setupUserAgent(storage, chatBox, inputBox, artifactManager);
+setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
