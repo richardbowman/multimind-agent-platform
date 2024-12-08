@@ -6,7 +6,7 @@ import ScrapeHelper from '../helpers/scrapeHelper';
 import SummaryHelper from '../helpers/summaryHelper';
 import { RESEARCHER_TOKEN, CHAT_MODEL, CHROMA_COLLECTION, WEB_RESEARCH_CHANNEL_ID, MAX_SEARCHES, RESEARCHER_USER_ID, PROJECTS_CHANNEL_ID } from '../helpers/config';
 import { ChatClient, ChatPost } from '../chat/chatClient';
-import { Agent, HandleActivity, ResponseType } from './agents';
+import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
 import { Project, Task, TaskManager } from 'src/tools/taskManager';
 
 
@@ -72,9 +72,8 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
     }
 
     async processTask(task: ResearchTask) {
+        if (this.isWorking) return;
         try {
-            if (this.isWorking) return;
-
             this.isWorking = true;
             Logger.info(`Notification for task ${task.id}: ${task.description}`);
             await this.scrapeUrl(task.projectId, task.description, task.description, task.id, []);
@@ -93,25 +92,26 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
     }
 
     @HandleActivity("process-research-request", "Process research request list", ResponseType.CHANNEL)
-    private async handleAssistantMessage(channelId: string, post: ChatPost): Promise<void> {
+    private async handleAssistantMessage(params: HandlerParams): Promise<void> {
         // Process the incoming message from the assistant
-        const projectId = post.props['project-id'];
-        const activityType = post.props['activity-type'];
+        const { userPost } = params;
+        const projectId = userPost.props['project-id'];
+        const activityType = userPost.props['activity-type'];
 
         if (!projectId || !activityType) {
             Logger.error('Invalid message received. Missing project ID or activity type.');
             return;
         }
 
-        const primaryGoalMatch = post.message.match("Goal:\s*(.*?)(?=\n)");
-        const tasks = this.promptBuilder.parseMarkdownList(post.message).map(parsedTask => ({ task: parsedTask, taskId: "" }));
+        const primaryGoalMatch = userPost.message.match("Goal:\s*(.*?)(?=\n)");
+        const tasks = this.promptBuilder.parseMarkdownList(userPost.message).map(parsedTask => ({ task: parsedTask, taskId: "" }));
 
         if (primaryGoalMatch?.length && primaryGoalMatch.length > 0 && tasks.length > 0) {
             const goal = primaryGoalMatch[1];
 
             await this.performSearchAndScrape(goal, projectId, tasks);
 
-            await this.chatClient.createPost(PROJECTS_CHANNEL_ID, 
+            await this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, 
                 `@research Research team completed the search and scraping for project ${projectId} to help accomplish: ${goal}.`,
                 {
                     'project-id': projectId
@@ -128,7 +128,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
 
     async publishResult(projectId: string, channelId: string, taskId: string, result: string): Promise<void> {
         const message = this.formatTaskMessage(projectId, taskId, result);
-        await this.chatClient.createPost(channelId, message);
+        await this.chatClient.postInChannel(channelId, message);
     }
 
     async publishSelectedUrls(projectId: string, channelId: string, taskId: string, searchQuery: string, searchResults: { title: string, url: string, description: string }[], selectedUrls: string[]): Promise<void> {
@@ -147,7 +147,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
 
         const message = this.formatTaskMessage(projectId, taskId, `Search Query: **${searchQuery}**\n\nConsidered URLs:\n${formattedResults}`);
 
-        await this.chatClient.createPost(channelId, message);
+        await this.chatClient.postInChannel(channelId, message);
     }
 
     async publishChildLinks(projectId: string, channelId: string, taskId: string, parentUrl: string, childLinks: { href: string }[], selectedLinks: { href: string }[]): Promise<void> {
@@ -165,7 +165,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         const message = this.formatTaskMessage(projectId, taskId, `Parent URL: **${parentUrl}**\n\nChild Links:\n${formattedChildLinks}`);
 
         try {
-            await this.chatClient.createPost(channelId, message);
+            await this.chatClient.postInChannel(channelId, message);
         } catch (error) {
             Logger.error("Couldn't create post.", error);
         }
@@ -173,7 +173,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
 
     async searchDoc(url: string, query: string, limit = 3): Promise<any> {
         try {
-            return await this.chromaDBService.query([query], { "url": { "$eq": url } }, limit);
+            return await this.chromaDBService.queryOld([query], { "url": { "$eq": url } }, limit);
         } catch (error) {
             Logger.error('Error searching documents:', error);
             throw error;

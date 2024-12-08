@@ -1,16 +1,20 @@
 import Logger from "src/helpers/logger";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "./chatClient";
 import fs from "fs/promises";
+import { ID } from "chromadb";
 
 export class InMemoryPost implements ChatPost {
     static fromLoad(postData: any) : InMemoryPost {
-        return new InMemoryPost(
+        const post = new InMemoryPost(
             postData.channel_id,
             postData.message,
             postData.user_id,
             postData.props,
             postData.create_at
         );
+        // override back to original ID
+        post.id = postData.id;
+        return post;
     }
 
     public id: string;
@@ -19,6 +23,7 @@ export class InMemoryPost implements ChatPost {
     public user_id: string;
     public props: ConversationContext;
     public create_at: number;
+    public directed_at: string;
 
     constructor(channel_id: string, message: string, user_id: string, props?: Record<string, any>, create_at?: number) {
         this.id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -27,6 +32,7 @@ export class InMemoryPost implements ChatPost {
         this.user_id = user_id;
         this.props = props || {};
         this.create_at = create_at || Date.now();
+        this.directed_at = props?.directed_at;
     }
 
     public getRootId(): string | null {
@@ -102,9 +108,9 @@ export class InMemoryChatStorage {
         try {
             const data = await fs.readFile(this.storagePath, 'utf8');
             const parsedData = JSON.parse(data);
-            this.channelNames = parsedData.channelNames;
-            this.posts = parsedData.posts.map(p => InMemoryPost.fromLoad(p));
-            this.userIdToHandleName = parsedData.userIdToHandleName;
+            if (parsedData.channelNames) this.channelNames = parsedData.channelNames;
+            if (parsedData.posts) this.posts = parsedData.posts.map(p => InMemoryPost.fromLoad(p));
+            if (parsedData.userIdToHandleName) this.userIdToHandleName = parsedData.userIdToHandleName;
             Logger.info(`Loaded ${this.posts.length} chat posts from disk`);
         } catch (error) {
             // If the file doesn't exist or is invalid, initialize with default values
@@ -142,22 +148,31 @@ export class InMemoryTestClient implements ChatClient {
         return Promise.resolve(this.getPosts().filter(p => p.channel_id === channelId).slice(-limit));
     }
 
-    public findProjectChain(channelId: string, postRootId: string): Promise<ProjectChainResponse> {
-        Logger.info(`searching ${this.getPosts().length} posts for ${postRootId}`);
+    public async findProjectChain(channelId: string, postRootId: string): Promise<ProjectChainResponse> {
+        Logger.verbose(`searching ${this.getPosts().length} posts for ${postRootId}`);
         
-        const projectPost = this.getPosts().find(p => p.id === postRootId);
-        if (!projectPost) {
-            throw new Error("No root post found.");
+        const rootPost = this.getPosts().find(p => p.id == postRootId);
+
+        const projectPost = this.getPosts().find(p => (p.getRootId() === postRootId || p.id == postRootId) && p.getActivityType() && p.props["project-id"]);
+        if (!rootPost || !projectPost) {
+            Logger.info(`Either root or project post found for ${postRootId}`);
+            return null;
         }
 
-        return Promise.resolve({
-            activityType: projectPost.getActivityType() || 'unknown',
-            posts: [projectPost, ...this.getPosts().filter(p => p.getRootId() === projectPost.id)],
+        return {
+            activityType: projectPost.getActivityType(),
+            posts: [rootPost, ...this.getPosts().filter(p => p.getRootId() === postRootId)],
             projectId: projectPost.props["project-id"]
-        });
+        };
     }
 
-    public createPost(channelId: string, message: string, props?: Record<string, any>): Promise<Post> {
+    getPost(id: string): Promise<ChatPost> {
+        const post = this.storage.posts.find(p => p.id === id);
+        if (!post) throw new Error(`Could not find post ${id}`);
+        return Promise.resolve(post);
+    }
+
+    public postInChannel(channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost> {
         const post = new InMemoryPost(
             channelId,
             message,
@@ -172,33 +187,69 @@ export class InMemoryTestClient implements ChatClient {
         return this.webSocketUrl;
     }
 
-    public initializeWebSocket(callback: (data: ChatPost) => void): void {
+    public receiveMessages(callback: (data: ChatPost) => void): void {
         this.callback = callback;
         this.storage.callbacks.push(this.callback)
 
         // Simulate WebSocket connection
-        Logger.info(`Simulating WebSocket connection to: ${this.getWebSocketUrl()}`);
+        Logger.verbose(`Simulating WebSocket connection to: ${this.getWebSocketUrl()}`);
     }
 
-    public closeWebSocket(): void {
-        Logger.info('Simulated WebSocket connection closed');
+    public closeCallback(): void {
+        Logger.verbose('Simulated WebSocket connection closed');
+    }
+
+    public async getThreadChain(post: ChatPost): Promise<ChatPost[]> {
+        const posts = await this.getPosts();
+        const rootId = post.getRootId() || post.id;
+
+        const rootPost = posts.find(p => p.id === rootId);
+        if (!rootPost) throw new Error(`Thread chain not found for root post ID ${rootId}`);
+
+        const threadPosts = posts.filter(p => p.getRootId() === rootId);
+        return [rootPost, ...threadPosts];
     }
 
     public postReply(rootId: string, channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost> {
         const replyProps = props||{};
         replyProps['root-id'] = rootId;
         
-        const replyPost = new InMemoryPost(
-            channelId,
-            message,
-            this.userId,
-            replyProps
-        );
-        this.pushPost(replyPost);
-        return Promise.resolve(replyPost);
+        const rootPost = this.getPosts().find(p => p.id === rootId);
+        if (rootPost && !rootPost.getRootId()) {
+            const replyPost = new InMemoryPost(
+                channelId,
+                message,
+                this.userId,
+                replyProps
+            );
+            this.pushPost(replyPost);
+            return Promise.resolve(replyPost);
+        } else {
+            throw new Error("Coudln't find post or post wasn't a root post to reply to.")
+        }
     }
 
-    public pushPost(post: ChatPost): void {
+    public replyThreaded(post: ChatPost, response: string, props?: Record<string, any>): Promise<ChatPost> {
+        const rootId = post.getRootId()||post.id;
+        const replyProps : Record<string, any>= props||{};
+        replyProps['root-id'] = rootId;
+        
+        const rootPost = this.getPosts().find(p => p.id === rootId);
+        if (rootPost && !rootPost.getRootId()) {
+            const replyPost = new InMemoryPost(
+                post.channel_id,
+                response,
+                this.userId,
+                replyProps
+            );
+            this.pushPost(replyPost);
+            return Promise.resolve(replyPost);
+        } else {
+            throw new Error("Coudln't find post or post wasn't a root post to reply to.")
+        }    
+    }
+
+    private pushPost(post: ChatPost): void {
         this.storage.addPost(post);
     }
 }

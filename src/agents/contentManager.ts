@@ -1,24 +1,24 @@
 import { randomUUID } from 'crypto';
-import JSON5 from 'json5';
 import Logger from '../helpers/logger';
-import { Agent, HandleActivity, ResponseType } from './agents';
+import { Agent, HandleActivity, HandlerParams, ProjectHandlerParams, ResponseType } from './agents';
 import { Project, TaskManager } from "src/tools/taskManager";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from 'src/chat/chatClient';
-import LMStudioService, { StructuredOutputPrompt } from 'src/llm/lmstudioService';
+import LMStudioService from 'src/llm/lmstudioService';
 import { CHROMA_COLLECTION, CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID, PROJECTS_CHANNEL_ID } from 'src/helpers/config';
 import { Task } from "src/tools/taskManager";
-import { saveToFile } from 'src/tools/storeToFile';
-import { CONTENT_DECOMPOSITION_SCHEMA, CONTENT_DECOMPOSITION_SYSTEM_PROMPT, ContentDecompositionPrompt, LOOKUP_RESEARCH_SCHEMA, LOOKUP_RESEARCH_SYSTEM_PROMPT, LookupResearchPrompt } from './schemas/contentSchemas';
+import { CONTENT_DECOMPOSITION_SYSTEM_PROMPT, ContentDecompositionPrompt, LookupResearchPrompt } from './schemas/contentSchemas';
+import { ArtifactManager } from 'src/tools/artifactManager';
+import { Artifact } from 'src/tools/artifact';
 
 export enum ContentManagerActivityType {
-    CreateBlogPost = "create-blog-post",
+    CreateDocument = "create-document",
     CreateOutline = "create-outline",
     
     ReceivedSection = "received-content-section",
-    UpdateContent = "update-blog-post",
+    UpdateDocument = "update-document",
     CombineContent = "received-all-content",
-    ConfirmCreateBlogPost = "confirm-create-blog-post",
-    ReviseOutline = "ReviseOutline"
+    ConfirmCreateFullContent = "confirm-create-full-content",
+    ReviseOutline = "revise-content-outline"
 }
 
 
@@ -36,15 +36,88 @@ export interface ContentTask extends Task {
 }
 
 export class ContentManager extends Agent<ContentProject, ContentTask> {
-    protected taskNotification(task: ContentTask): void {
-        throw new Error('Method not implemented.');
+    private artifactManager: ArtifactManager;
+
+    public async taskNotification(task: ContentTask): Promise<void> {
+        try {
+            const instructions = task.description;
+
+            if (!instructions) {
+                throw new Error('No original post found for the task.');
+            }
+
+            // Step 1: Begin content project
+            const interpretationJSON = await this.lmStudioService.sendStructuredRequest(
+                task.description,
+                LookupResearchPrompt
+            );
+
+            const queryTexts = [interpretationJSON.query.trim()];
+            const where: any = undefined;
+            const nResults = 5;
+
+            const searchResults = await this.chromaDBService.query(queryTexts, where, nResults);
+
+            const researchSummaryInput = `Search results from knowledge base:\n${searchResults.map(s => `Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}\n\n`)}`;
+
+            const responsePrompt = `
+                You are an assistant helping to create content. Here are some research findings:
+
+                ${researchSummaryInput}
+
+                Write a conversational chat message reply to the user including a summary of the research, and ask if we can proceed with creating a content outline.
+            `;
+
+            const response = await this.lmStudioService.generate(responsePrompt, { message: instructions });
+
+            const project: ContentProject = {
+                // originalPost: instructions,
+                id: task.projectId || this.projects.newProjectId(),
+                name: interpretationJSON.reinterpreted_goal,
+                goal: interpretationJSON.reinterpreted_goal,
+                description: "Research for content creation",
+                research: searchResults
+            };
+
+            this.projects.addProject(project);
+
+            // Step 2: Generate content outline
+            const existingProject = this.projects.getProject(project.id);
+            const decomposedProject = await this.decomposeContent({ message: task.description }, existingProject);
+
+            project.tasks = decomposedProject.tasks;
+            this.projects.replaceProject(project);
+
+            // Step 3: Convert outline to full sections
+            if (project?.tasks) {
+                const taskIds = Object.keys(this.projects.getProject(project.id).tasks);
+                for (const taskId of taskIds) {
+                    await this.projects.assignTaskToAgent(taskId, CONTENT_WRITER_USER_ID);
+                }
+            } else {
+                Logger.error("Trying to start content writing, but no tasks found.");
+            }
+
+        } catch (error) {
+            Logger.error('Error handling task:', error);
+            throw error;
+        }
     }
 
     protected async projectCompleted(project: ContentProject): Promise<void> {
         const finalContent = Object.values(project.tasks).reduce((acc, task) => acc + task.content, '\n\n');
         const responseMessage = `The combined content has been shared:\n${finalContent}`;
-        await saveToFile(project.id, "content", "combined", finalContent)
-        this.chatClient.createPost(PROJECTS_CHANNEL_ID, responseMessage);
+        const content : Artifact = {
+            id: randomUUID(),
+            content: finalContent,
+            type: "content",
+            metadata: {
+                goal: project.goal,
+                projectId: project.id
+            }
+        }
+        this.artifactManager.saveArtifact(content);
+        this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, responseMessage);
     }
 
 
@@ -57,6 +130,7 @@ writers to develop content sections.`;
     constructor(chatUserToken: string, userId: string, chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager) {
         super(chatClient, lmStudioService, userId, projects);
         this.USER_TOKEN = chatUserToken;
+        this.artifactManager = new ArtifactManager(this.chromaDBService);
     }
 
     public async initialize() {
@@ -91,7 +165,7 @@ writers to develop content sections.`;
             const project: ContentProject = {
                 goal: responseJSON.goal,
                 originalPost: instructions,
-                id: this.projects.newProjectId(),
+                id: priorProject.id,
                 name: responseJSON.goal,
                 description: responseJSON.strategy,
                 tasks: {}
@@ -118,46 +192,52 @@ writers to develop content sections.`;
         }
     }
 
-    @HandleActivity(ContentManagerActivityType.CreateBlogPost, "STEP 1: Begin content project", ResponseType.CHANNEL)
-    private async handleBlogPostResearch(channelId: string, instructions: ChatPost) {
+    @HandleActivity(ContentManagerActivityType.CreateDocument, "STEP 1: Begin content project", ResponseType.CHANNEL)
+    private async handleBlogPostResearch(params: HandlerParams) {
         try {
             const interpretationJSON = await this.lmStudioService.sendStructuredRequest(
-                instructions.message,
+                params.userPost.message,
                 LookupResearchPrompt
             );
-
+    
             // Generate a query for the RAG system based on the interpreted goal
             const queryTexts = [interpretationJSON.query.trim()];
-
+    
             // Search for relevant documents using ChromaDBService
             const where: any = undefined; // Add any metadata filtering conditions here if needed
             const nResults = 5; // Number of results to fetch
-
+    
             const searchResults = await this.chromaDBService.query(queryTexts, where, nResults);
-
-            // Summarize the research and ask for user permission
-            const researchSummary = searchResults.documents.join('\n\n');
-            const permissionPrompt = `
-                Based on your request, here is the research I found:
-
-                ${researchSummary}
-
-                Can we proceed with creating a content outline?
+    
+            // Combine the research documents into a single string
+            const researchSummaryInput = `Search results from knowledge base:\n${params.searchResults.map(s => `Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}\n\n`)}`;
+    
+            // Generate a summary of the research and the permission prompt in one call using the LLM
+            const responsePrompt = `
+                You are an assistant helping to create content. Here are some research findings:
+    
+                ${researchSummaryInput}
+    
+                Write a conversational chat message reply to the user including a summary of the research, and ask if we can proceed with creating a content outline.
             `;
-
+    
+            const response = await this.lmStudioService.generate(responsePrompt, params.userPost);
+    
             const project: ContentProject = {
-                originalPost: instructions,
+                originalPost: params.userPost,
                 id: this.projects.newProjectId(),
                 name: interpretationJSON.reinterpreted_goal,
                 goal: interpretationJSON.reinterpreted_goal,
                 description: "Research for content creation",
                 research: searchResults.documents // Include the research in the project
             };
-            await this.chatClient.createPost(PROJECTS_CHANNEL_ID, permissionPrompt, {
+            
+            const chatResponse = await this.reply(params.userPost, response, {
                 'project-id': project.id,
-                'activity-type': ContentManagerActivityType.CreateBlogPost
+                'activity-type': ContentManagerActivityType.CreateDocument
             });
-
+            project.confirmationPostId = chatResponse.id;
+    
             this.projects.addProject(project);
         } catch (error) {
             Logger.error('Error decomposing content:', error);
@@ -166,29 +246,37 @@ writers to develop content sections.`;
     }
 
     @HandleActivity(ContentManagerActivityType.CreateOutline, "STEP 2: Generate content outline", ResponseType.RESPONSE)
-    private async handleCreateBlogPost(channelId: string, post: ChatPost, projectChain: ProjectChainResponse) {
-        const existingProject : ContentProject = this.projects.getProject(projectChain.projectId);
-        const project = await this.decomposeContent(post, existingProject);
-
-        const confirmationMessage = `${project.goal}\nHere is an outline. Want me to ask the writes to develop the sections? 
-${project.goal}?\n\n${Object.values(project.tasks).map(c => ` - ${c.description}`).join('\n')}`;
-
-        const confirmationPost = await this.chatClient.createPost(channelId, confirmationMessage, {
+    private async handleCreateBlogPost(params: ProjectHandlerParams) {
+        const existingProject : ContentProject = this.projects.getProject(params.projectChain.projectId);
+        const project = await this.decomposeContent(params.userPost, existingProject);
+    
+        // Prepare history for LLM
+        const instructions = `You are the content manager (@content). Help the user to confirm if they would like the writers to proceed in developing sections based on
+the outline you developed below. Summarize the outline and ask the user to confirm if they want the writers to flesh out the outline.
+Goal: ${project.goal}
+Writer Tasks: ${Object.values(project.tasks).map(c => ` - ${c.description}`).join('\n')}`;
+    
+        // Call LLM to generate response
+        const llmResponse = await this.generate(instructions, params);
+    
+        // Create the post with the LLM generated response
+        const confirmationPost = await this.reply(params.userPost, llmResponse, {
             'project-id': project.id,
-            'activity-type': ContentManagerActivityType.CreateBlogPost
+            'activity-type': ContentManagerActivityType.CreateDocument
         });
-
-        this.projects.addProject(project);
+        project.confirmationPostId = confirmationPost.id;
+    
+        this.projects.replaceProject(project);
     }
 
-    @HandleActivity(ContentManagerActivityType.ConfirmCreateBlogPost, "STEP 3: Convert outline to full sections", ResponseType.RESPONSE)
-    private async handleConfirmCreateBlogPost(channelId: string, post: ChatPost, projectChain: ProjectChainResponse) {
-        const projectId = projectChain.projectId;
+    @HandleActivity(ContentManagerActivityType.ConfirmCreateFullContent, "STEP 3: Convert outline to full sections", ResponseType.RESPONSE)
+    private async handleConfirmCreateBlogPost(params: ProjectHandlerParams) {
+        const projectId = params.projectChain.projectId;
         const project : ContentProject = this.projects.getProject(projectId);
 
-        if (projectId && project.tasks) {
-            const contentPost = await this.replyWithContentId(ContentManagerActivityType.CreateBlogPost, projectId, channelId, post);
-            await this.postContentDetails(projectId, channelId, contentPost);
+        if (projectId && project?.tasks) {
+            const contentPost = await this.replyWithContentId(ContentManagerActivityType.CreateDocument, projectId, params.userPost.channel_id, params.userPost);
+            await this.postContentDetails(projectId, params.userPost.channel_id, contentPost);
             const taskIds = Object.keys(this.projects.getProject(projectId).tasks);
             for (const taskId of taskIds) {
                 await this.projects.assignTaskToAgent(taskId, CONTENT_WRITER_USER_ID);
@@ -199,23 +287,30 @@ ${project.goal}?\n\n${Object.values(project.tasks).map(c => ` - ${c.description}
     }
 
     @HandleActivity(ContentManagerActivityType.ReviseOutline, "STEP 2b: Revise outline", ResponseType.RESPONSE)
-    private async handleReviseOutline(channelId: string, post: ChatPost, projectChain: ProjectChainResponse) {
-        const projectId = projectChain.projectId;
-        const projectDraft: ContentProject = this.projects.getProject(projectId);
+    private async handleReviseOutline(params: ProjectHandlerParams) {
+        const projectId = params.projectChain.projectId;
+        const existingProject : ContentProject = this.projects.getProject(projectId);
 
-        if (projectDraft) {
-            const newProject = await this.decomposeContent(post, projectDraft);
-
-            const confirmationMessage = `Here is the revised outline. Do you want to proceed with your original goal of 
-${newProject.goal}?\n\n${Object.values(newProject.tasks).map(c => ` - ${c.description}`).join('\n')}`;
-
-            const confirmationPost = await this.chatClient.postReply(projectChain.posts[0].id, channelId, confirmationMessage, {
-                'project-id': projectId,
-                'activity-type': ContentManagerActivityType.ReviseOutline
+        if (existingProject) {
+            const project = await this.decomposeContent(params.userPost, existingProject);
+        
+            // Prepare history for LLM
+            const instructions = `You are an assistant helping a user to confirm if they would like the writers to proceed in developing sections based on
+    the outline you developed below. Summarize the outline and ask the user to confirm if they want the writers to flesh out the outline.
+    Goal: ${project.goal}
+    Writer Tasks: ${Object.values(project.tasks).map(c => ` - ${c.description}`).join('\n')}`;
+        
+            // Call LLM to generate response
+            const llmResponse = await this.generate(instructions, params);
+        
+            // Create the post with the LLM generated response
+            const confirmationPost = await this.reply(params.userPost, llmResponse, {
+                'project-id': project.id,
+                'activity-type': ContentManagerActivityType.CreateDocument
             });
+            project.confirmationPostId = confirmationPost.id;
 
-            // Update the pending creation request with the new tasks
-            this.projects.addProject(newProject);
+            this.projects.replaceProject(project);
         } else {
             Logger.error("Received revise outline response without corresponding original project.");
         }
@@ -230,7 +325,7 @@ ${newProject.goal}?\n\n${Object.values(newProject.tasks).map(c => ` - ${c.descri
         const responseMessage = `I've received your request for creating/updating content!
 Content ID: **${contentId}**
 Activity Type: **${activityType}**`;
-        return this.chatClient.createPost(channelId, responseMessage, postProps);
+        return this.reply(post, { message: responseMessage }, postProps);
     }
 
     private async postContentDetails(projectId: string, channelId: string, contentPost: ChatPost): Promise<ChatPost> {
@@ -241,7 +336,7 @@ Strategy: ${project.description}
 Sections created successfully:
 ${Object.values(project.tasks).map(({ description }) => ` - ${description}`).join("\n")}`;
 
-        const contentTaskPost = await this.chatClient.postReply(contentPost.id, channelId, contentDetailsMessage);
+        const contentTaskPost = await this.chatClient.postReply(contentPost.getRootId(), channelId, contentDetailsMessage);
         return contentTaskPost;
     }
 

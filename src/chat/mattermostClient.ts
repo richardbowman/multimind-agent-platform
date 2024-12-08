@@ -72,7 +72,7 @@ export default class MattermostClient implements ChatClient {
         }
     }
 
-    public async createPost(channelId: string, message: string, props?: Record<string, any>): Promise<Post> {
+    public async postInChannel(channelId: string, message: string, props?: Record<string, any>): Promise<Post> {
         return await this.client.createPost({
             channel_id: channelId,
             message: message,
@@ -101,7 +101,7 @@ export default class MattermostClient implements ChatClient {
         return this.client.getWebSocketUrl();
     }
 
-    public initializeWebSocket(callback: (data: Post) => void): void {
+    public receiveMessages(callback: (data: Post) => void): void {
         Logger.info(`Connectng to WebSocket: ${this.getWebSocketUrl()}`);
         Logger.info(`Using token: ${this.token}`)
 
@@ -162,7 +162,7 @@ export default class MattermostClient implements ChatClient {
         });
     }
 
-    public closeWebSocket(): void {
+    public closeCallback(): void {
         if (this.ws) {
             this.ws.close();
             this.ws = null;

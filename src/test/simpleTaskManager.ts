@@ -2,6 +2,7 @@ import fs from 'fs/promises';
 import EventEmitter from 'events';
 import { Project, Task, TaskManager } from '../tools/taskManager';
 import Logger from 'src/helpers/logger';
+import { ContentProject } from 'src/agents/contentManager';
 
 class SimpleTaskManager extends EventEmitter implements TaskManager {
     private projects: { [projectId: string]: Project<Task> } = {};
@@ -69,7 +70,7 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
     async getNextTaskForUser(userId: string): Promise<Task | null> {
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
-            const task = Object.values(project.tasks).find(t => t.assignee === userId && !t.complete);
+            const task = Object.values(project.tasks||[]).find(t => t.assignee === userId && !t.complete);
             if (task) {
                 return task;
             }
@@ -121,6 +122,11 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
             }
         }
         throw new Error(`No project found with task ID ${taskId}.`);
+    }
+
+    async replaceProject(project: ContentProject): Promise<void> {
+        this.projects[project.id] = project;
+        await this.save();
     }
 }
 

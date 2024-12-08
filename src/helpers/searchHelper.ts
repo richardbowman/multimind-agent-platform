@@ -11,7 +11,9 @@ class SearchHelper {
         Logger.info(`Searching on SearXNG: ${searchUrl}`);
         try {
             const response = await axios.get(searchUrl);
-            return response.data.results.map((result: any) => ({
+            const { data } = response;
+            const { results } = data;
+            return results.map((result: any) => ({
                 title: result.title,
                 url: result.url,
                 description: result.content?.slice(0, 500)

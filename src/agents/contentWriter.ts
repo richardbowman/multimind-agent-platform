@@ -1,51 +1,67 @@
 import { randomUUID } from 'crypto';
-import { Agent, HandleActivity, ResponseType } from './agents';
+import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from 'src/chat/chatClient';
-import LMStudioService from 'src/llm/lmstudioService';
+import LMStudioService, { ModelMessageHistory } from 'src/llm/lmstudioService';
 import { CONTENT_CREATION_CHANNEL_ID, CONTENT_WRITER_USER_ID, PROJECTS_CHANNEL_ID } from 'src/helpers/config';
 import Logger from 'src/helpers/logger';
 import { TaskManager } from 'src/tools/taskManager';
 import { ContentProject, ContentTask } from './contentManager';
+import ChromaDBService from 'src/llm/chromaService';
 
 export class ContentWriter extends Agent<ContentProject, ContentTask> {
-    constructor(chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager) {
-        super(chatClient, lmStudioService, CONTENT_WRITER_USER_ID, projects);
-    }
+    private isWorking: boolean = false;
 
-    public async initialize() {
+    constructor(chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager, chromaDBService: ChromaDBService) {
+        super(chatClient, lmStudioService, CONTENT_WRITER_USER_ID, projects, chromaDBService);
         super.setupChatMonitor(CONTENT_CREATION_CHANNEL_ID, "@writer");
     }
 
     protected async taskNotification(task: ContentTask): Promise<void> {
-        const sectionDescription = task.description;
+        await this.processTask(task);
+    }
 
-        const sectionContent = await this.lmStudioService.sendMessageToLLM(`Write a section on ${task.name}: ${task.description}`, [], "", 8192);
+    async processTaskQueue(): Promise<void> {
+        const task : ContentTask = await this.projects.getNextTaskForUser(this.userId);
+        if (!task) {
+            Logger.info("No more tasks for user.");
+            return;
+        }
 
-        const project : ContentProject = this.projects.getProject(task.projectId);
-        task.content = sectionContent;
-        task.contentBlockId = randomUUID();
+        await this.processTask(task);
+    }
 
-        this.projects.completeTask(task.id);
-
-        await this.chatClient.postReply(project.confirmationPostId, PROJECTS_CHANNEL_ID, `Finished section: ${sectionDescription}`, {
+    async processTask(task: ContentTask) {
+        if (this.isWorking) return;
+        try {
+            this.isWorking = true;
             
-        });
+            const searchResults = await this.chromaDBService.query([task.description], undefined, 10);
+            const history : ModelMessageHistory[] = [
+                {
+                    "role": "system",
+                    "content": `Search results from knowledge base:\n
+                    ${searchResults.map(s => `Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}\n\n`)}`
+                }
+            ];
+
+            //todo: need to make this be able to pull in search queries
+            const sectionContent = await this.lmStudioService.sendMessageToLLM(`Write a section on ${task.title}: ${task.description}`, history);
+    
+            task.content = sectionContent;
+            task.contentBlockId = randomUUID();
+        } catch (error) {
+            //todo: remove failed tasks or mark completed, causes infinite loop right now
+            Logger.error(`Error processing task "${task.title} ${task.description}"`, error);
+        } finally {
+            //todo: remove failed tasks or mark completed, causes infinite loop right now
+            await this.projects.completeTask(task.id);
+            this.isWorking = false;
+            // Recursively process the next task
+            await this.processTaskQueue();
+        }
     }
 
     protected projectCompleted(project: ContentProject): void {
         throw new Error('Method not implemented.');
-    }
-
-    @HandleActivity('update-section', "Update an existing section of content.", ResponseType.RESPONSE)
-    private async handleUpdateSection(channelId: string, post: ChatPost) {
-        const contentId = post.props['content-id'];
-        const sectionDescription = post.message;
-        const updatedContent = post.reply;
-
-        // Update the section in workflow
-        const contentWorkflow = new ContentWorkflow(contentId, "update-section", this.lmStudioService, this.projects, this.chromaDBService);
-        contentWorkflow.updateSection(sectionDescription, updatedContent);
-
-        await this.chatClient.postReply(post.id, channelId, `Updated section: ${sectionDescription}`);
     }
 }

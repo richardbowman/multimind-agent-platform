@@ -1,5 +1,15 @@
 # TODO List
 
+@researchAssistant.ts right now, we store webpage summaries as just chunks without using our artifact manager. start using the @ArtifactManager to store the summaries. also use this to make sure we don't perform duplicative searches across research tasks by checking to see if we've summarized a certain site already
+
+
+
+## 2024-12-06
+
+- [ ] multi-step awareness
+- [ ] using projects for research manager / content manager to control flow
+- [ ] sub-projects? dependencies?
+
 ## 2024-11-27
 
 - [ ] need a tool to define a desired conversation flow

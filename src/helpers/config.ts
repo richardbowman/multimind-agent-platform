@@ -19,7 +19,12 @@ export const CHAT_MODEL = process.env.CHAT_MODEL!;
 export const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL!;
 export const MAX_SEARCHES = parseInt(process.env.MAX_SEARCHES!, 10);
 export const SEARXNG_URL = process.env.SEARXNG_URL!;
-export const ORCHESTRATOR_USER_ID = process.env.ORCHESTRATOR_USER_ID!;
-export const ORCHESTRATOR_TOKEN_ID = process.env.ORCHESTRATOR_TOKEN_ID!;
+export const RESEARCH_MANAGER_USER_ID = process.env.RESEARCH_MANAGER_USER_ID!;
+export const RESEARCH_MANAGER_TOKEN_ID = process.env.RESEARCH_MANAGER_TOKEN_ID!;
+
+export const ONBOARDING_CONSULTANT_USER_ID = process.env.ONBOARDING_CONSULTANT_USER_ID!;
+export const ONBOARDING_CHANNEL_ID = process.env.ONBOARDING_CHANNEL_ID!;
+
+export const PROJECT_MANAGER_USER_ID = process.env.PROJECT_MANAGER_USER_ID!;
 
 export const LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY;

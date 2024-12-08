@@ -1,4 +1,5 @@
 import { EventEmitter } from 'events';
+import { ContentProject } from 'src/agents/contentManager';
 
 export interface Task {
     contentBlockId: any;
@@ -18,6 +19,7 @@ export interface Project<Task> {
 }
 
 export interface TaskManager extends EventEmitter {
+    replaceProject(project: Project<Task>): unknown;
     completeTask(id: string): Promise<Task>;
     addProject(project: Project<Task>): void;
     addTask(project: Project<Task>, task: Task): void;

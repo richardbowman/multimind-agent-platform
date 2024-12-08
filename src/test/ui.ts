@@ -66,6 +66,15 @@ export const chatBox = blessed.log({
     tags: true,
     scrollable: true,
     mouse: true,
+    alwaysScroll: true,
+    scrollbar: {
+      style: {
+        bg:'blue'
+      },
+      track: {
+        bg: 'gray'
+      }
+    },
     border: {
         type: 'line',
         fg: 'green'
@@ -102,7 +111,7 @@ export const inputBox = blessed.textbox({
     width: '100%',
     height: 'shrink',
     keys: true,
-    // inputOnFocus: true,
+    inputOnFocus: true,
     mouse: true,
     border: {
         type: 'line',

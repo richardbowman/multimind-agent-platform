@@ -1,7 +1,7 @@
 import LMStudioService from "../../llm/lmstudioService";
 import ChromaDBService from "../../llm/chromaService";
 import Logger from "src/helpers/logger";
-import { ORCHESTRATOR_USER_ID } from '../../helpers/config';
+import { RESEARCH_MANAGER_USER_ID } from '../../helpers/config';
 import { ChatPost } from "../../chat/chatClient";
 import { TaskManager } from "src/tools/taskManager";
 
@@ -46,14 +46,14 @@ class Workflow<Project, Task, Agent> {
             try {
                 Logger.info(`Querying ChromaDB filter ${JSON.stringify(where)} for ${JSON.stringify(queryTexts)} queries`);
                 
-                const query = await this.chromaDBService.query(queryTexts, where, 3);
+                const query = await this.chromaDBService.queryOld(queryTexts, where, 3);
 
                 let history = [
                     { role: "system", content: `${systemPrompt} Context:\n\n${query.documents.join("\n\n")} `  }
                 ];
     
                 // Append existing chat history
-                history = [...history, ...(chatHistory.map((chat) => (chat.user_id === ORCHESTRATOR_USER_ID ?
+                history = [...history, ...(chatHistory.map((chat) => (chat.user_id === RESEARCH_MANAGER_USER_ID ?
                     { role: "assistant", content: chat.message } :
                     { role: "user", content: chat.message })))
                 ];

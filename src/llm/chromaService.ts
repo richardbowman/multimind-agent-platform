@@ -10,6 +10,13 @@ import { saveToFile } from "src/tools/storeToFile";
 
 dotenv.config();
 
+export interface SearchResult {
+    id: string;
+    text: string;
+    metadata: Record<string, any>;
+    score: number;
+}
+
 class ChromaDBService {
     private chromaDB: ChromaClient;
     private collection: CollectionType | null = null;
@@ -45,9 +52,25 @@ class ChromaDBService {
         await this.collection.add(addCollection);
     }
 
-    async query(queryTexts: string[], where: any, nResults: number): Promise<any> {
+    /**
+     * @deprecated
+     */
+    async queryOld(queryTexts: string[], where: any, nResults: number): Promise<any> {
         if (!this.collection) throw new Error("Collection not initialized");
         return await this.collection.query({ queryTexts, where, nResults });
+    }
+
+    async query(queryTexts: string[], where: any, nResults: number): Promise<SearchResult[]> {
+        if (!this.collection) throw new Error("Collection not initialized");
+        
+        const rawResults = await this.collection.query({ queryTexts, where, nResults });
+
+        return rawResults.ids[0].map((result, index) => ({
+            id: result,
+            metadata: rawResults.metadatas[0][index ],
+            text: rawResults.documents[0][index],
+            score: rawResults.distances[0] ? rawResults.distances[0][index] : undefined
+        }));
     }
 
     async handleContentChunks(content: string, url: string, task: string, projectId: string, title: string, type = 'content') {

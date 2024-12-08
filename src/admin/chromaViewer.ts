@@ -88,6 +88,14 @@ async function runSearchTool() {
                 bg: 'red'
             }
         },
+        scrollbar: {
+            style: {
+              bg:'blue'
+            },
+            track: {
+              bg: 'gray'
+            }
+          },
         border: {
             type: 'line'
         },
@@ -150,7 +158,7 @@ async function runSearchTool() {
         const items = await chromaDBService.collection.get({});
 
         // Extract the title from each item's metadata
-        const itemTitles = items.metadatas.map(metadata => metadata.title);
+        const itemTitles = items.metadatas.map((metadata, index) => metadata.title||items.ids[index]);
 
         listBoxItems.setItems(itemTitles);
 

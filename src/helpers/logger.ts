@@ -25,7 +25,7 @@ class Logger {
     }
 
     static verbose(message: string): void {
-        this.log('warn', message);
+        this.log('verbose', message);
     }
 
     static error(message: string, error?: any): void {

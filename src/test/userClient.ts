@@ -3,14 +3,14 @@ import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from "src/chat/
 import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
-import blessed, { input } from 'blessed';
+import blessed from 'blessed';
 import { artifactDetail, artifactList, logBox, screen, channelList, threadList } from "./ui";
-import ChromaDBService from "src/llm/chromaService";
 import { ArtifactManager } from "src/tools/artifactManager";
 
 export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager) {
     const USER_ID = "test";
     const UserClient = new InMemoryTestClient(USER_ID, "test", storage);
+    let artifacts = [];
 
     let currentThreadId: string | null = null;
     let currentChannelId: string | null = null;
@@ -60,17 +60,13 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             }
 
             // Update the threadList with new items
-            threadList.setItems(items.map(item => item.content));
+            threadList.setItems(items.map(item => item.content.slice(0, 30)));
             // Store the corresponding threadIds in a separate array for later use
             threadIds = items.map(item => item.threadId);
 
         } else {
-            const channelIds = Array.from(new Set(storage.posts.map(post => post.channel_id)))
-                .filter(channelId => !!channelId); // Filter out null or undefined values
-
             // Fetch the channel names from storage
-            const items = channelIds.map(channelId => storage.channelNames[channelId] || channelId);
-
+            const items = Object.values(storage.channelNames);
             channelList.setItems(items);
         }
         screen.render();
@@ -81,9 +77,11 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     await refreshLists(PROJECTS_CHANNEL_ID, null);
 
     channelList.on('select', async (item, index) => {
-        const channelIds = Array.from(new Set(storage.posts.map(post => post.channel_id)))
-            .filter(channelId => !!channelId); // Filter out null or undefined values
-        const selectedChannelId = channelIds.find(channelId => storage.channelNames[channelId] === item.content);
+        await pickChannel(item, index);
+    });
+
+    async function pickChannel(item, index) {
+        const selectedChannelId = Object.keys(storage.channelNames)[index];
         if (!selectedChannelId) return;
 
         currentChannelId = selectedChannelId;
@@ -93,7 +91,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         // Populate the thread list with threads under the selected channel and "(root)" entry
         await refreshLists(selectedChannelId, null);
-    });
+    }
 
     // Attach an event listener to handle thread selection
     threadList.on('select', async (item, index) => {
@@ -109,20 +107,6 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         }
     });
 
-    // Render existing posts in the chatBox
-    for (const post of storage.posts) {
-        if (post.channel_id === PROJECTS_CHANNEL_ID) {
-            const handleName = storage.getHandleNameForUserId(post.user_id);
-            const displayName = handleName ? `{bold}{red-fg}${handleName}{/red-fg}{/bold}` : `{bold}{red-fg}${post.user_id}{/red-fg}{/bold}`;
-
-            if (!post.getRootId()) currentThreadId = post.id;
-
-            // Determine the color for user and other users
-            const messageColor = (USER_ID === post.user_id) ? "{green-fg}" : "{red-fg}";
-
-            chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(blessed.escape(post.message))}\n`);
-        }
-    }
 
     inputBox.key('enter', async (ch, key) => {
         const message = inputBox.getValue().trim();
@@ -141,8 +125,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         await sendMessage(message);
 
-        chatBox.log(`{bold}{green-fg}You{green-fg}{/bold}: ${blessed.escape(message)}\n`);
-        chatBox.setScrollPerc(100);
+
 
         inputBox.setValue('');
         inputBox.focus();
@@ -162,24 +145,19 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
             // Determine if this is a channel-level message or not
             const threadId = isChannelMessage ? null : currentThreadId;
+            const channelId = currentChannelId || PROJECTS_CHANNEL_ID;
 
-            const post = new InMemoryPost(
-                currentChannelId || PROJECTS_CHANNEL_ID,
-                actualMessage,
-                USER_ID,
-                {
-                    'root-id': threadId || null // Use currentThreadId if set, otherwise null
-                }
-            );
+            if (threadId) {
+                await UserClient.postReply(threadId, channelId, actualMessage);
+            } else {
+                await UserClient.postInChannel(channelId, actualMessage)
+            }
 
-            await UserClient.pushPost(post);
             Logger.info(`Message sent successfully: ${actualMessage.slice(0, 20)}...`);
 
             if (isChannelMessage) {
-                // If it's a channel-level message and no thread is selected, we don't need to update currentThreadId
-            } else if (!currentThreadId) {
-                // If this is the first message in a thread, set the currentThreadId to the post's ID
-                currentThreadId = post.id;
+                currentThreadId = null;
+                threadList.select(0);
             }
 
             await loadMessagesForThread(currentThreadId);
@@ -188,7 +166,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         }
     }
 
-    UserClient.initializeWebSocket(async (post: ChatPost) => {
+    UserClient.receiveMessages(async (post: ChatPost) => {
         // Get the channel ID and user ID
         const channelId = post.channel_id;
         const userId = post.user_id;
@@ -198,20 +176,24 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             const handleName = storage.getHandleNameForUserId(userId);
             const displayName = handleName ? `{bold}{red-fg}${handleName}{/red-fg}{/bold}` : `{bold}{red-fg}${userId}{/red-fg}{/bold}`;
 
-            // stay in the latest main thread
-            if (!post.getRootId()) currentThreadId = post.id;
-
-            chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(blessed.escape(post.message))}\n`);
-            chatBox.setScrollPerc(100);
+            // stay in the latest thread
+            if (post.getRootId()) currentThreadId = post.getRootId();
         }
 
         // Refresh the channel and thread lists when a new message is received
+        await refreshLists(null, null);
         await refreshLists(currentChannelId, currentThreadId);
+
+        if (currentThreadId) {
+            threadList.select(threadIds.indexOf(currentThreadId));
+        }
+
+        await loadMessagesForThread(currentThreadId);
+
     });
 
-    // Function to load artifacts and populate the list
     async function loadArtifacts() {
-        const artifacts = await artifactManager.listArtifacts();
+        artifacts = await artifactManager.listArtifacts();
 
         logBox.hide();
         inputBox.hide();
@@ -219,15 +201,12 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         artifactList.show();
         artifactDetail.show();
+        artifactList.focus();
 
-        // Populate the list pane with artifact IDs
-        artifactList.setItems(artifacts.map(artifact => artifact.id));
+        // Populate the list pane with artifact IDs or titles if they exist
+        artifactList.setItems(artifacts.map(artifact => artifact.metadata?.title || artifact.id));
+        
         screen.render();
-
-        setTimeout(() => {
-            artifactList.focus();
-            screen.render();
-        }, 500);
     }
 
     async function hideArtifacts() {
@@ -246,10 +225,12 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         if (!selectedArtifactId) return;
 
         try {
-            const artifact = await artifactManager.loadArtifact(selectedArtifactId, 'report');
-
+            const artifact = artifacts.find(a => a.id === selectedArtifactId || a.metadata?.title === selectedArtifactId);
+            
             if (artifact) {
-                artifactDetail.setContent(artifact.content.toString());
+                // Use the title if it exists, otherwise use the ID
+                const contentToShow = `Title: ${artifact.metadata?.title || selectedArtifactId}\n\nContent:\n${artifact.content.toString()}`;
+                artifactDetail.setContent(contentToShow);
             } else {
                 artifactDetail.setContent('Artifact not found.');
             }
@@ -283,17 +264,11 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         }
     });
 
-
-    threadList.on('mousedown', async (data) => {
-        threadList.focus();
+    chatBox.on("mousedown", () => {
+        Logger.info('Chat box clicked');
+        chatBox.focus();
+        screen.render();
     });
 
-    channelList.on('mousedown', async (data) => {
-        channelList.focus();
-    });
-
-    inputBox.on('mousedown', async (data) => {
-        inputBox.focus();
-        inputBox.input();
-    });
+    await pickChannel(channelList.getItem(0), 0);
 }
