@@ -24,7 +24,7 @@ export interface OnboardingTask extends Task {
 export interface OnboardingProject extends Project<OnboardingTask> {
     businessDescription?: string;
     businessGoals?: string[];
-    serviceRequirements?: string;   
+    serviceRequirements?: string;
 }
 
 export class OnboardingConsultant extends Agent<OnboardingProject, Task> {
@@ -93,20 +93,30 @@ Respond to the user's request, explaining to them the other available options.`;
     private async understandBusiness(params: ProjectHandlerParams) {
         const instructions = `
             Understand the user's specific business goals.
-            Respond with a list of the gathered business goals.
+            Respond with a detailed description of the user's business.
         `;
 
+        // Generate the response
         const response = await this.generate(instructions, params);
-        await this.reply(params.userPost, response);
 
-        // Update the project with the business description
-        const updatedProject: OnboardingProject = {
-            ...params.projects?.[0],
-            businessDescription: response.message
+        // Prepare the artifact
+        const artifact: Artifact = {
+            id: randomUUID(),
+            type: 'markdown',
+            content: response.message,
+            metadata: {
+                title: "Business Description"
+            }
         };
 
-        // Save the updated project
-        this.projects.replaceProject(updatedProject);
+        // Save the artifact using ArtifactManager
+        await this.artifactManager.saveArtifact(artifact);
+
+        // Reply to the user with confirmation message and artifact details
+        await this.reply(params.userPost, {
+            message: `Your business description has been generated and saved. You can find it under ID: ${artifact.id}`,
+            artifactIds: [artifact.id]
+        });
 
         // Create a task for developing strategy
         const taskId = randomUUID();
@@ -115,24 +125,43 @@ Respond to the user's request, explaining to them the other available options.`;
             description: "Develop strategy based on business goals",
             contentBlockId: undefined,
             creator: this.userId,
-            projectId: updatedProject.id,
+            projectId: params.projects[0].id,
             type: OnboardingActivities.DevelopStrategy,
             complete: false
         };
 
         // Add the task to the project
-        this.projects.addTask(updatedProject, task);
+        this.projects.addTask(params.projects[0], task);
     }
 
     @HandleActivity(OnboardingActivities.UnderstandGoals, "Understand the user's business goals", ResponseType.RESPONSE)
     private async understandBusinessGoals(params: ProjectHandlerParams) {
         const instructions = `
-            Understand the user's specific business goals.
-            Respond with a list of the gathered business goals.
-        `;
+        Understand the user's specific business goals.
+        Respond with a list of the gathered business goals.
+    `;
 
+        // Generate the response
         const response = await this.generate(instructions, params);
-        await this.reply(params.userPost, response);
+
+        // Prepare the artifact
+        const artifact: Artifact = {
+            id: randomUUID(),
+            type: 'markdown',
+            content: response.message,
+            metadata: {
+                title: "Business Goals"
+            }
+        };
+
+        // Save the artifact using ArtifactManager
+        await this.artifactManager.saveArtifact(artifact);
+
+        // Reply to the user with confirmation message and artifact details
+        await this.reply(params.userPost, {
+            message: `Your business goals have been generated and saved. You can find them under ID: ${artifact.id}`,
+            artifactIds: [artifact.id]
+        });
 
         // Update the project with the business goals
         const updatedProject: OnboardingProject = {

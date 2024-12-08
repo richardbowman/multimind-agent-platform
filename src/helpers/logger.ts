@@ -3,7 +3,7 @@ import { appendFileSync } from 'fs';
 
 
 class Logger {
-    static logBox: Log;
+    static logBox: Blessed.Log;
     private static logFilePath = `./.output/output-${new Date().toISOString().split('T')[0]}.log`;
 
     static log(level: string, message: string): void {

@@ -1,16 +1,109 @@
 import blessed from 'blessed';
-import * as Logger from './helpers/logger';
+import { markdown } from 'blessed-contrib';
+import Logger from 'src/helpers/logger';
 
 // Create a screen object.
 export const screen = blessed.screen({
     autoPadding: true,
     smartCSR: true,
+    dockBorders: true,
     title: 'Chat Client'
 });
 
-screen.key(['escape', 'q', 'C-c'], function (ch, key) {
-    return process.exit(0);
+// Create a main container box
+const mainBox = blessed.box({
+  top: 0,
+  left: 0,
+  width: '100%',
+  height: '100%',
+  style: {
+      fg: 'white',
+      bg: 'black'
+  }
 });
+
+screen.append(mainBox);
+
+// Create a tab container
+const tabContainer = blessed.box({
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: 4,
+});
+
+mainBox.append(tabContainer);
+
+// Create tab buttons
+const tabButton1 = blessed.button({
+    parent: tabContainer,
+    top: 0,
+    left: 0,
+    width: '50%',
+    height: 3,
+    content: 'Chat',
+    mouse: true,
+    keys: true,
+    border: {
+        type: 'line'
+    },
+    style: {
+        bg: 'black',
+        fg: 'white'
+    }
+});
+tabContainer.append(tabButton1);
+
+const showTab1 = () => {
+  tabButton1.style.bg = 'blue';
+  tabButton2.style.bg = 'gray';
+
+  channelList.show();
+  threadList.show();
+  chatBox.show();
+  inputBox.show();
+  taskList.show();
+  artifactList.show();
+  logBox.hide();
+
+  screen.render();
+};
+tabButton1.on('click', showTab1);
+
+const tabButton2 = blessed.button({
+    parent: tabContainer,
+    top: 0,
+    left: '50%',
+    width: '50%',
+    height: 3,
+    content: ' Logs',
+    mouse: true,
+    keys: true,
+    border: {
+        type: 'line'
+    },
+    style: {
+        bg: 'black',
+        fg: 'white'
+    }
+});
+tabContainer.append(tabButton2);
+
+const showTab2 = () => {
+  tabButton2.style.bg = 'blue';
+  tabButton1.style.bg = 'gray';
+
+  channelList.hide();
+  threadList.hide();
+  chatBox.hide();
+  inputBox.hide();
+  taskList.hide();
+  artifactList.hide();
+  logBox.show();
+
+  screen.render();
+};
+tabButton2.on('click', showTab2);
 
 // Create a box to select channels.
 export const channelList = blessed.list({
@@ -31,11 +124,11 @@ export const channelList = blessed.list({
     },
     left: '0%',
     width: '30%',
-    top: '0%',
+    top: 3,
     height: '35%'
 });
 
-screen.append(channelList);
+mainBox.append(channelList);
 
 // Create a box to select threads.
 export const threadList = blessed.list({
@@ -56,18 +149,19 @@ export const threadList = blessed.list({
     },
     left: '0%',
     width: '30%',
-    top: '35%',
-    height: '45%'
+    top: '35%+3',
+    height: '65%-5'
 });
 
-screen.append(threadList);
+mainBox.append(threadList);
 
 // Create a box to display chat messages.
 export const chatBox = blessed.log({
-    top: 0,
+    top: 3,
     left: '30%',
     width: '40%',
-    height: '90%',
+    height: '100%-6',
+    label: 'Chat',
     content: '',
     tags: true,
     scrollable: true,
@@ -91,14 +185,14 @@ export const chatBox = blessed.log({
     }
 });
 
-screen.append(chatBox);
+mainBox.append(chatBox);
 
 // Create a box to enter messages.
 export const inputBox = blessed.textbox({
-    top: '90%',
+    top: '100%-3',
     left: 0,
     width: '100%',
-    height: 'shrink',
+    height: 3,
     keys: true,
     inputOnFocus: true,
     mouse: true,
@@ -112,7 +206,7 @@ export const inputBox = blessed.textbox({
     }
 });
 
-screen.append(inputBox);
+mainBox.append(inputBox);
 
 // Create a list for tasks related to the projects in the current thread.
 export const taskList = blessed.list({
@@ -132,13 +226,13 @@ export const taskList = blessed.list({
             bg: 'blue'
         }
     },
-    left: '70%',
-    width: '30%',
+    left: '70%-1',
+    width: '30%+1',
     top: '50%',
-    height: '50%-3',
+    height: '50%-2',
 });
 
-screen.append(taskList);
+mainBox.append(taskList);
 
 // Create a list for artifacts related to the current thread.
 export const artifactList = blessed.list({
@@ -158,13 +252,89 @@ export const artifactList = blessed.list({
             bg: 'blue'
         }
     },
-    left: '70%',
-    width: '30%',
-    height: '50%'
+    top: 3, 
+    left: '70%-1',
+    width: '30%+1',
+    height: '50%-3'
 });
 
-screen.append(artifactList);
+mainBox.append(artifactList);
+
+// Create a log box
+export const logBox = blessed.log({
+    top: 3,
+    left: 0,
+    width: '100%',
+    height: '100%-3',
+    tags: true,
+    scrollable: true,
+    mouse: true,
+    alwaysScroll: true,
+    scrollbar: {
+        style: {
+            bg: 'blue'
+        },
+        track: {
+            bg: 'gray'
+        }
+    },
+    border: {
+        type: 'line',
+        fg: 'green'
+    },
+    style: {
+        fg: 'white',
+        bg: 'black'
+    }
+});
+
+mainBox.append(logBox);
 
 // Focus on the input box and refresh the screen.
 inputBox.focus();
 screen.render();
+
+// Initially show chat tab
+showTab1();
+
+tabButton1.on('click', () => {
+  showTab1();
+});
+tabButton2.on('click', () => {
+  showTab2();
+});
+
+Logger.logBox = logBox;
+
+export const artifactDetailViewer = markdown({
+  top: '10%',
+  left: '10%',
+  width: '80%',
+  height: '80%',
+  mouse: true,
+  keys: true,
+  scrollable: true,
+  label: 'Artifact Viewer',
+  focusable: true,
+  scrollbar: {
+    style: {
+        bg: 'blue'
+    },
+    track: {
+        bg: 'gray'
+    }
+},
+  border: {
+      type: 'line',
+      fg: 'green'
+  },
+  style: {
+      bg: 'black',
+      fg: 'white'
+  },
+  shadow: true,
+  draggable: true,
+  hidden: true
+});
+
+screen.append(artifactDetailViewer);

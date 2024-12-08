@@ -4,7 +4,7 @@ import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
 import blessed from 'blessed';
-import { artifactList, taskList, chatBox, inputBox, channelList, threadList } from "./ui";
+import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer } from "./ui";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { screen } from './ui'
 import { Task, TaskManager } from "src/tools/taskManager";
@@ -202,10 +202,10 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     async function loadArtifacts() {
         const posts = storage.posts.filter(post => post.channel_id === currentChannelId && (post.getRootId() === currentThreadId || post.id === currentThreadId || (currentThreadId === null && !post.getRootId())));
 
-        const artifactIds = posts.map(p => p.props['artifact-ids']).flat();
+        const artifactIds = [...new Set(posts.map(p => p.props['artifact-ids']).flat())];
 
         const fullArtifactList = await artifactManager.listArtifacts();
-        const artifacts = fullArtifactList.filter(a => artifactIds.includes(a.id));
+        artifacts = fullArtifactList.filter(a => artifactIds.includes(a.id));
 
         // Populate the list pane with artifact IDs or titles if they exist
         artifactList.setItems(artifacts.map(artifact => artifact.metadata?.title || artifact.id));
@@ -279,52 +279,44 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         screen.render();
     });
 
-    // Quit on Escape, q, or Control-C.
-    inputBox.key(['escape'], function (ch, key) {
-        if (!taskList.hidden && !artifactList.hidden) {
-            hideTaskAndArtifactLists();
-            inputBox.setValue('');
-            inputBox.focus();
-        } else {
-            return process.exit(0);
-        }
-    });
-
-    taskList.key(['escape'], function (ch, key) {
-        if (!taskList.hidden && !artifactList.hidden) {
-            hideTaskAndArtifactLists();
-            inputBox.setValue('');
-            inputBox.focus();
-        } else {
-            return process.exit(0);
-        }
-    });
-
-    artifactList.key(['escape'], function (ch, key) {
-        if (!taskList.hidden && !artifactList.hidden) {
-            hideTaskAndArtifactLists();
-            inputBox.setValue('');
-            inputBox.focus();
-        } else {
-            return process.exit(0);
-        }
-    });
-
-    async function hideTaskAndArtifactLists() {
-        artifactList.hide();
-        taskList.hide();
-
-        chatBox.show();
-        inputBox.show();
-
-        screen.render();
-    }
-
-    chatBox.on("mousedown", () => {
-        Logger.info('Chat box clicked');
-        chatBox.focus();
-        screen.render();
-    });
-
     await pickChannel(channelList.getItem(0), 0);
+
+    artifactList.on('select', async (item, index) => {
+        const selectedArtifactId = item.content;
+        if (!selectedArtifactId) return;
+    
+        try {
+            const artifact = artifacts.find(a => a.id === selectedArtifactId || a.metadata?.title === selectedArtifactId);
+            
+            if (artifact) {
+                // Use the title if it exists, otherwise use the ID
+                const contentToShow = `Title: ${artifact.metadata?.title || selectedArtifactId}\n\nContent:\n${artifact.content.toString()}`;
+                
+                inputBox.hide();
+                artifactDetailViewer.setMarkdown(contentToShow);
+                artifactDetailViewer.show();
+                artifactDetailViewer.focus();
+            } else {
+                Logger.info('Artifact not found.');
+            }
+        } catch (error) {
+            console.error('Error loading artifact:', error);
+            Logger.info('Failed to load artifact. Please try again later.');
+        }
+    
+        screen.render();
+    });
+
+    screen.key(['escape', 'q', 'C-c'], function (ch, key) {
+        if (!artifactDetailViewer.hidden) {
+            artifactDetailViewer.hide();
+
+            inputBox.setValue('');
+            inputBox.show();
+            inputBox.focus();
+            screen.render();
+        } else {
+            return process.exit(0);
+        }
+    });
 }
