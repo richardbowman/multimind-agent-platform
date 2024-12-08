@@ -222,7 +222,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             const project = await taskManager.getProject(projectId);
             if(!project) continue
             projects.push(project);
-            tasks = [...Object.values(project.tasks)];
+            tasks = [...Object.values(project.tasks).filter(t => !t.complete)];
         }
 
         // Populate the list pane with tasks
@@ -319,4 +319,9 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             return process.exit(0);
         }
     });
+
+    inputBox.on("focus", () => { 
+        inputBox.input();
+        screen.render();
+    })
 }

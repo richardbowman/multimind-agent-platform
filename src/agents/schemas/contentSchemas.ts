@@ -1,34 +1,23 @@
 import { StructuredOutputPrompt } from "src/llm/lmstudioService";
+import { definitions } from "./schema.json";
 
-export const CONTENT_DECOMPOSITION_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Content Decomposition Response",
-    "type": "object",
-    "properties": {
-        "goal": {
-            "type": "string"
-        },
-        "strategy": {
-            "type": "string"
-        },
-        "sections": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "title": {
-                        "type": "string"
-                    },
-                    "overview": {
-                        "type": "string"
-                    }
-                },
-                "required": ["title", "overview"]
-            }
-        }
-    },
-    "required": ["goal", "strategy", "sections"]
-};
+const { ContentDecompositionResponse : CONTENT_DECOMPOSITION_SCHEMA, LookupResearchResponse : LOOKUP_RESEARCH_SCHEMA } = definitions;
+
+// Define the interface for Content Decomposition Response
+export interface ContentDecompositionResponse {
+    goal: string;
+    strategy: string;
+    sections: Array<{
+        title: string;
+        overview: string;
+    }>;
+}
+
+// Define the interface for Lookup Research Response
+export interface LookupResearchResponse {
+    reinterpreted_goal: string;
+    query: string;
+}
 
 export const CONTENT_DECOMPOSITION_SYSTEM_PROMPT = `
 You are a content orchestrator. Your task is to analyze the user's request and break it down into manageable sections.
@@ -50,20 +39,6 @@ You are a content orchestrator. Your task is to analyze the user's request and b
 }
 `;
 
-export const LOOKUP_RESEARCH_SCHEMA = {
-    "$schema": "http://json-schema.org/draft-07/schema#",
-    "title": "Lookup Research Response",
-    "type": "object",
-    "properties": {
-        "reinterpreted_goal": {
-            "type": "string"
-        },
-        "query": {
-            "type": "string"
-        }
-    },
-    "required": ["reinterpreted_goal", "query"]
-};
 
 export const LOOKUP_RESEARCH_SYSTEM_PROMPT = `
     You are an assistant. Your task is to interpret the user's request and restate it.

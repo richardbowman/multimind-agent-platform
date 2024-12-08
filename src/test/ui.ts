@@ -25,39 +25,29 @@ const mainBox = blessed.box({
 screen.append(mainBox);
 
 // Create a tab container
-const tabContainer = blessed.box({
+const tabContainer = blessed.listbar({
     top: 0,
     left: 0,
     width: '100%',
     height: 4,
+    keys: true,
+    items: {
+        "Chat": {
+            key: "Chat", 
+            keys: ["C-a"],
+            callback: () => { showTab1(); }
+        },
+        "Log": {
+            key: "Log", 
+            keys: ["C-b"],
+            callback: () => { showTab2(); }
+        }
+    }
 });
 
 mainBox.append(tabContainer);
 
-// Create tab buttons
-const tabButton1 = blessed.button({
-    parent: tabContainer,
-    top: 0,
-    left: 0,
-    width: '50%',
-    height: 3,
-    content: 'Chat',
-    mouse: true,
-    keys: true,
-    border: {
-        type: 'line'
-    },
-    style: {
-        bg: 'black',
-        fg: 'white'
-    }
-});
-tabContainer.append(tabButton1);
-
 const showTab1 = () => {
-  tabButton1.style.bg = 'blue';
-  tabButton2.style.bg = 'gray';
-
   channelList.show();
   threadList.show();
   chatBox.show();
@@ -68,31 +58,9 @@ const showTab1 = () => {
 
   screen.render();
 };
-tabButton1.on('click', showTab1);
 
-const tabButton2 = blessed.button({
-    parent: tabContainer,
-    top: 0,
-    left: '50%',
-    width: '50%',
-    height: 3,
-    content: ' Logs',
-    mouse: true,
-    keys: true,
-    border: {
-        type: 'line'
-    },
-    style: {
-        bg: 'black',
-        fg: 'white'
-    }
-});
-tabContainer.append(tabButton2);
 
 const showTab2 = () => {
-  tabButton2.style.bg = 'blue';
-  tabButton1.style.bg = 'gray';
-
   channelList.hide();
   threadList.hide();
   chatBox.hide();
@@ -103,7 +71,6 @@ const showTab2 = () => {
 
   screen.render();
 };
-tabButton2.on('click', showTab2);
 
 // Create a box to select channels.
 export const channelList = blessed.list({
@@ -194,7 +161,6 @@ export const inputBox = blessed.textbox({
     width: '100%',
     height: 3,
     keys: true,
-    inputOnFocus: true,
     mouse: true,
     border: {
         type: 'line',
@@ -296,13 +262,6 @@ screen.render();
 
 // Initially show chat tab
 showTab1();
-
-tabButton1.on('click', () => {
-  showTab1();
-});
-tabButton2.on('click', () => {
-  showTab2();
-});
 
 Logger.logBox = logBox;
 

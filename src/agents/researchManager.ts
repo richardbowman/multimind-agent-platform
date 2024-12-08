@@ -50,8 +50,10 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
         // Assign tasks to researchers
         await this.assignResearcherTasks(project.id);
 
+        const post = await this.getMessage(project.originalPostId);
+
         // Post the task list to the channel
-        const projectPost = await this.replyWithProjectId(task.type as ResearchActivityType, project.id, PROJECTS_CHANNEL_ID, { id: project.originalPostId } as ChatPost);
+        const projectPost = await this.replyWithProjectId(task.type as ResearchActivityType, project.id, PROJECTS_CHANNEL_ID, post);
         await this.postTaskList(project.id, PROJECTS_CHANNEL_ID, projectPost);
     }
 
@@ -282,7 +284,7 @@ Project Type: Web Research
 Tasks distributed successfully:
 ${tasks.map(({ description }) => ` - ${description}`).join("\n")}`;
 
-        const taskPost = await this.chatClient.postReply(projectPost.id, channelId, taskListMessage);
+        const taskPost = await this.chatClient.replyThreaded(projectPost, taskListMessage);
         return taskPost;
     }
 

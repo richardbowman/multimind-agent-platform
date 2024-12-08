@@ -1,13 +1,19 @@
+import { randomUUID } from 'crypto';
 import JSON5 from "json5";
 import { Handler } from "puppeteer";
 import { ChatClient, ChatPost, ConversationContext, Message, ProjectChainResponse } from "src/chat/chatClient";
 import Logger from "src/helpers/logger";
 import { SystemPromptBuilder } from "src/helpers/systemPrompt";
 import ChromaDBService, { SearchResult } from "src/llm/chromaService";
-import LMStudioService, { ModelResponse, StructuredOutputPrompt } from "src/llm/lmstudioService";
+import LMStudioService, { StructuredOutputPrompt } from "src/llm/lmstudioService";
+import { CreateArtifact, ModelResponse, RequestArtifacts } from "src/agents/schemas/ModelResponse";
+import { StructuredInputPrompt } from "src/prompts/structuredInputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Project, Task, TaskManager } from "src/tools/taskManager";
+import { ArtifactResponseSchema } from './schemas/artifactSchema';
+import schemas from './schemas/schema.json';
+import { ArtifactInputPrompt } from 'src/prompts/artifactInputPrompt';
 
 export interface ActionMetadata {
     activityType: string;
@@ -97,9 +103,11 @@ export abstract class Agent<Project, Task> {
     }
 
     protected async reply(post: ChatPost, response: ModelResponse, postProps?: ConversationContext): Promise<ChatPost> {
+        const artifactIds = [...postProps?.["artifact-ids"] || [], ...response.artifactIds || [], ...response.artifactId?[response.artifactId]:[]];
+
         const reply = await this.chatClient.replyThreaded(post, response.message, {
             ...postProps,
-            "artifact-ids": [...postProps?.["artifact-ids"]||[], ...response.artifactIds || []]
+            "artifact-ids": artifactIds
         });
 
 
@@ -181,7 +189,7 @@ export abstract class Agent<Project, Task> {
 
                             const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifact-ids"] || [])].flat())];
                             const artifacts = await this.mapRequestedArtifacts(allArtifacts);
-    
+
                             const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
                             const projects = [];
                             for (const projectId of projectIds) {
@@ -215,37 +223,76 @@ export abstract class Agent<Project, Task> {
         });
     }
 
-    protected async generate(instructions: string, params: HandlerParams): Promise<ModelResponse> {
+    protected async generateStructured(structure: StructuredOutputPrompt, params: HandlerParams): Promise<ModelResponse> {
         // Fetch the latest memory artifact for the channel
-        let augmentedInstructions = instructions;
+        let augmentedInstructions = structure.getPrompt();
         if (this.isMemoryEnabled) {
             const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
-    
+
             // Append the memory content to the instructions if it exists
             if (memoryArtifact && memoryArtifact.content) {
                 const memoryContent = memoryArtifact.content.toString();
                 augmentedInstructions += `\n\nContext from previous interactions:\n${memoryContent}`;
             }
         }
-    
+
         // Deduplicate artifacts first, then search results
-        const deduplicatedArtifacts = this.deduplicateArtifacts(params.artifacts);
-        const deduplicatedSearchResults = this.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts);
-    
+        const deduplicatedArtifacts = params.artifacts ? this.deduplicateArtifacts(params.artifacts) : [];
+        const deduplicatedSearchResults = params.searchResults ? this.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
+
         if (deduplicatedSearchResults) {
             augmentedInstructions += `\n\nSearch results from knowledge base:\n${deduplicatedSearchResults.map(s => `<searchresult>Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}</searchresult>\n\n`)}`;
         }
-    
+
         if (deduplicatedArtifacts) {
             for (const artifact of deduplicatedArtifacts) {
                 const artifactContent = artifact.content ? artifact.content.toString() : 'No content available';
                 augmentedInstructions += `\n\n<artifact>Artifact ID: ${artifact.id}\nTitle: ${artifact.metadata?.title || 'No title'}\nContent:\n${artifactContent}</artifact>`;
             }
         }
-    
+
         // Augment instructions with context and generate a response
         const history = params.threadPosts || params.projectChain?.posts.slice(0, -1) || [];
-    
+
+        const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
+
+        const response = await this.lmStudioService.generateStructured(params.userPost, augmentedStructuredInstructions, history);
+        response.artifactIds = params.artifacts?.map(a => a.id);
+        return response;
+    }
+
+    protected async generate(instructions: string, params: HandlerParams): Promise<ModelResponse> {
+        // Fetch the latest memory artifact for the channel
+        let augmentedInstructions = `AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`;
+
+        if (this.isMemoryEnabled) {
+            const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
+
+            // Append the memory content to the instructions if it exists
+            if (memoryArtifact && memoryArtifact.content) {
+                const memoryContent = memoryArtifact.content.toString();
+                augmentedInstructions += `\n\nContext from previous interactions:\n${memoryContent}`;
+            }
+        }
+
+        // Deduplicate artifacts first, then search results
+        const deduplicatedArtifacts = params.artifacts ? this.deduplicateArtifacts(params.artifacts) : [];
+        const deduplicatedSearchResults = params.searchResults ? this.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
+
+        if (deduplicatedSearchResults) {
+            augmentedInstructions += `\n\nSearch results from knowledge base:\n${deduplicatedSearchResults.map(s => `<searchresult>Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}</searchresult>\n\n`)}`;
+        }
+
+        if (deduplicatedArtifacts) {
+            for (const artifact of deduplicatedArtifacts) {
+                const artifactContent = artifact.content ? artifact.content.toString() : 'No content available';
+                augmentedInstructions += `\n\n<artifact>Artifact ID: ${artifact.id}\nTitle: ${artifact.metadata?.title || 'No title'}\nContent:\n${artifactContent}</artifact>`;
+            }
+        }
+
+        // Augment instructions with context and generate a response
+        const history = params.threadPosts || params.projectChain?.posts.slice(0, -1) || [];
+
         const response = await this.lmStudioService.generate(augmentedInstructions, params.userPost, history);
         response.artifactIds = params.artifacts?.map(a => a.id);
         return response;
@@ -262,11 +309,11 @@ export abstract class Agent<Project, Task> {
             return true;
         });
     }
-    
+
     private deduplicateSearchResults(searchResults: SearchResult[], artifacts: Artifact[]): SearchResult[] {
         const seenChunks = new Set<string>();
         const artifactUrls = new Set<string>(artifacts.map(a => `artifact://${a.id}`));
-    
+
         return searchResults.filter(result => {
             if (seenChunks.has(result.id)) {
                 return false;
@@ -286,10 +333,10 @@ export abstract class Agent<Project, Task> {
         return filteredArtifacts.map(artifact => ` - ${artifact.id}: ${artifact.metadata?.title}`).join('\n');
     }
 
-    private async classifyResponse(post: ChatPost, channelType: ResponseType, history?: ChatPost[]): Promise<{ activityType: string, requestedArtifacts: string[], searchQuery: string, searchResults: SearchResult[]  }> {
+    private async classifyResponse(post: ChatPost, channelType: ResponseType, history?: ChatPost[]): Promise<{ activityType: string, requestedArtifacts: string[], searchQuery: string, searchResults: SearchResult[] }> {
         const artifactList = await this.getArtifactList();
         const availableActions = history ? this.getAvailableActions(ResponseType.RESPONSE) : this.getAvailableActions(ResponseType.CHANNEL);
-    
+
         const jsonSchema =
         {
             "type": "object",
@@ -303,7 +350,7 @@ export abstract class Agent<Project, Task> {
             },
             "required": ["reasoning", "activityType", "searchQuery"]
         };
-    
+
         let prompt = `Follow these steps:
             1. Consider the ${channelType === ResponseType.RESPONSE ? `thread response` : `new channel message`} you've received 
                ${channelType === ResponseType.RESPONSE ? `and any preceding messages in the thread (if applicable)` : ``}. What is it asking for or confirming?
@@ -323,25 +370,25 @@ export abstract class Agent<Project, Task> {
             "searchQuery": ""
             }
         `;
-    
+
         let llmMessages: { role: string, content: string }[] = [];
         llmMessages.push({ role: "system", content: prompt });
-    
+
         if (history) {
             history.forEach((chatPost, index) => {
                 const role = chatPost.user_id === this.userId ? "assistant" : "user";
                 llmMessages.push({ role: role, content: `${index + 1}. ${chatPost.message}` });
             });
         }
-    
+
         // Add the current post to the history
         llmMessages.push({ role: "user", content: post.message });
-    
+
         const rawResponse = await this.lmStudioService.sendMessageToLLM(post.message, llmMessages, undefined, 8192, 256, jsonSchema);
         const response = JSON5.parse(rawResponse);
-    
+
         Logger.info(`Model chose ${response.activityType} because ${response.reasoning}`);
-    
+
         const searchResults = await this.chromaDBService.query([response.searchQuery], undefined, 10);
 
         return {
@@ -489,5 +536,101 @@ export abstract class Agent<Project, Task> {
         Logger.info(`Revised memory for channel ${channelId} with important points:`, importantPoints);
     }
 
+    // Convenience method to add a new project
+    public async addNewProject({ projectName, tasks }: {
+        projectName: string, tasks: {
+            description: string;
+            type: string;
+        }[]
+    }): Promise<{ projectId: string, taskIds: string[]}> {
+        const projectId = randomUUID();
+        const project = {
+            id: projectId,
+            name: projectName,
+            tasks: {}
+        };
 
+        this.projects.addProject(project);
+
+        let taskIds : string[] = [];
+        if (tasks) {
+            for(let task of tasks) {
+                const { description, type } = task;
+                taskIds.push(await this.addTaskToProject({projectId, description, type}));
+            }
+        }
+
+        return { projectId, taskIds };
+    }
+
+    // Convenience method to add a task to a project
+    public async addTaskToProject({
+        projectId,
+        description,
+        type,
+        skipForSameType = true
+    }: {
+        projectId: string;
+        description: string;
+        type: string;
+        skipForSameType?: boolean;
+    }): Promise<string> {
+        const project = this.projects.getProject(projectId);
+
+        if (!project) {
+            throw new Error(`Project with ID ${projectId} not found.`);
+        }
+
+        const existingTask = Object.values(project.tasks).find(t => t.type === type);
+        if (!existingTask || !skipForSameType) {
+            const taskId = randomUUID();
+            const task: Task = {
+                id: taskId,
+                description: description,
+                creator: this.userId,
+                projectId: projectId,
+                type: type,
+                complete: false
+            };
+            this.projects.addTask(project, task);
+            return taskId;
+        } else {
+            return existingTask.id;
+        }
+    }
+
+    // Convenience method to save an artifact based on ArtifactResponseSchema
+    public async generateArtifactResponse(
+        instructions: string,
+        params: HandlerParams
+    ): Promise<CreateArtifact> {
+        // Generate the response
+        const response: ArtifactResponseSchema = await this.generateStructured(new StructuredOutputPrompt(
+            schemas.definitions.ArtifactResponseSchema,
+            new ArtifactInputPrompt(instructions).toString()
+        ), params);
+
+        // Prepare the artifact
+        const artifact: Artifact = {
+            id: randomUUID(),
+            type: 'business-goals',
+            content: response.artifactContent,
+            metadata: {
+                title: response.artifactTitle
+            }
+        };
+
+        // Save the artifact using ArtifactManager
+        await this.artifactManger.saveArtifact(artifact);
+
+        return {
+            artifactId: artifact.id,
+            ...response,
+            message:  `${response.message} [Document titled "${response.artifactTitle}" has been saved. ID: ${artifact.id}]`
+        };
+    }
+
+    protected async getMessage(messageId: string) : Promise<ChatPost> {
+        return this.chatClient.getPost(messageId);
+    }
 }

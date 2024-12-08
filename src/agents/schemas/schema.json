@@ -1,0 +1,130 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "ArtifactResponseSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactContent": {
+          "type": "string"
+        },
+        "artifactTitle": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactContent",
+        "artifactTitle",
+        "message"
+      ],
+      "type": "object"
+    },
+    "ContentDecompositionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "goal": {
+          "type": "string"
+        },
+        "sections": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "overview": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "overview"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "strategy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "goal",
+        "strategy",
+        "sections"
+      ],
+      "type": "object"
+    },
+    "LookupResearchResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "reinterpreted_goal": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "reinterpreted_goal",
+        "query"
+      ],
+      "type": "object"
+    },
+    "ModelResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
+    "OnboardingConsultantResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "completedTasks": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "message": {
+          "type": "string"
+        },
+        "responseMessage": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "completedTasks",
+        "message",
+        "responseMessage"
+      ],
+      "type": "object"
+    },
+    "RequestArtifacts": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    }
+  }
+}

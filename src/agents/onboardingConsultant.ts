@@ -1,20 +1,23 @@
-import { randomUUID } from 'crypto';
 import Logger from '../helpers/logger';
 import { Agent, HandleActivity, HandlerParams, ProjectHandlerParams, ResponseType } from './agents';
 import { Project, TaskManager } from "src/tools/taskManager";
-import { ChatClient, ChatPost, ProjectChainResponse } from 'src/chat/chatClient';
+import { ChatClient } from 'src/chat/chatClient';
 import LMStudioService, { StructuredOutputPrompt } from 'src/llm/lmstudioService';
 import { ONBOARDING_CHANNEL_ID } from 'src/helpers/config';
 import { Task } from "src/tools/taskManager";
 import { ArtifactManager } from 'src/tools/artifactManager';
-import { Artifact } from 'src/tools/artifact';
 import ChromaDBService from 'src/llm/chromaService';
+import { StructuredInputPrompt, TaskInputPrompt } from 'src/prompts/structuredInputPrompt';
+import schemas from './schemas/schema.json';
+import { OnboardingConsultantResponse } from './schemas/onboarding';
+import { ModelResponse } from './schemas/ModelResponse';
 
 export enum OnboardingActivities {
-    UnderstandBusiness = "understand-business",
-    UnderstandGoals = "understand-goals",
-    DevelopStrategy = "develop-strategy",
-    SetExpectations = "set-expectations"
+    UnderstandGoals = "understand-business-goals",
+    SaveGoals = "save-business-goals",
+    UnderstandService = "understand-service-usage",
+    SaveRequirements = "save-service-requirements",
+    ReviewDocuments = "review-documents"
 }
 
 export interface OnboardingTask extends Task {
@@ -45,7 +48,7 @@ export class OnboardingConsultant extends Agent<OnboardingProject, Task> {
         this.artifactManager = new ArtifactManager(this.chromaDBService);
     }
 
-    @HandleActivity("initial-inquiry", "Initial conversation about the user's business", ResponseType.CHANNEL)
+    @HandleActivity("initial-inquiry", "Kickoff conversation about the user's business", ResponseType.CHANNEL)
     private async startOnboarding(params: HandlerParams) {
         const instructions = `Here are the ways you can help when the user posts in the channel:
 ${this.getAvailableActions(ResponseType.CHANNEL).map(a => ` - ${a.activityType}: ${a.usage}`).join('\n')}
@@ -57,205 +60,91 @@ Respond to the user's request, explaining to them the other available options.`;
 
         const response = await this.generate(instructions, params);
 
-        // Create a new onboarding project
-        const projectId = randomUUID();
-        const project: OnboardingProject = {
-            id: projectId,
-            name: "Onboarding Project",
-            tasks: {}
-        };
-
-        // Create a task for understanding goals
-        const taskId = randomUUID();
-        const task: Task = {
-            id: taskId,
-            description: "Understand user's business goals",
-            contentBlockId: undefined,
-            creator: this.userId,
-            projectId: projectId,
-            type: OnboardingActivities.UnderstandGoals,
-            complete: false
-        };
-
-        // Add the new onboarding project
-        this.projects.addProject(project);
-
-        // Add the task to the onboarding project
-        this.projects.addTask(project, task);
+        // Adding a new project
+        const { projectId, taskIds } = await this.addNewProject({
+            projectName: "New Onboarding Project",
+            tasks: [{
+                description: "Understand user's business goals",
+                type: OnboardingActivities.UnderstandGoals
+            }]
+        });
 
         await this.reply(params.userPost, response, {
             "project-id": projectId,
-            "task-id": taskId
+            "task-id": taskIds[0]
         });
     }
 
-    @HandleActivity(OnboardingActivities.UnderstandBusiness, "Understand the user's business", ResponseType.RESPONSE)
+    @HandleActivity(OnboardingActivities.UnderstandGoals, "Ask questions to refine the user's business goals", ResponseType.RESPONSE)
     private async understandBusiness(params: ProjectHandlerParams) {
         const instructions = `
-            Understand the user's specific business goals.
-            Respond with a detailed description of the user's business.
+            Understand the user's specific business goals. Ask questions to refine the business plan.
+            When you think the plan is done, ask the user if they want to have you create a document.
+
+            Response in the format { message : "Your message here" }
         `;
 
         // Generate the response
-        const response = await this.generate(instructions, params);
-
-        // Prepare the artifact
-        const artifact: Artifact = {
-            id: randomUUID(),
-            type: 'markdown',
-            content: response.message,
-            metadata: {
-                title: "Business Description"
-            }
-        };
-
-        // Save the artifact using ArtifactManager
-        await this.artifactManager.saveArtifact(artifact);
-
-        // Reply to the user with confirmation message and artifact details
-        await this.reply(params.userPost, {
-            message: `Your business description has been generated and saved. You can find it under ID: ${artifact.id}`,
-            artifactIds: [artifact.id]
-        });
-
-        // Create a task for developing strategy
-        const taskId = randomUUID();
-        const task: Task = {
-            id: taskId,
-            description: "Develop strategy based on business goals",
-            contentBlockId: undefined,
-            creator: this.userId,
-            projectId: params.projects[0].id,
-            type: OnboardingActivities.DevelopStrategy,
-            complete: false
-        };
-
-        // Add the task to the project
-        this.projects.addTask(params.projects[0], task);
-    }
-
-    @HandleActivity(OnboardingActivities.UnderstandGoals, "Understand the user's business goals", ResponseType.RESPONSE)
-    private async understandBusinessGoals(params: ProjectHandlerParams) {
-        const instructions = `
-        Understand the user's specific business goals.
-        Respond with a list of the gathered business goals.
-    `;
-
-        // Generate the response
-        const response = await this.generate(instructions, params);
-
-        // Prepare the artifact
-        const artifact: Artifact = {
-            id: randomUUID(),
-            type: 'markdown',
-            content: response.message,
-            metadata: {
-                title: "Business Goals"
-            }
-        };
-
-        // Save the artifact using ArtifactManager
-        await this.artifactManager.saveArtifact(artifact);
-
-        // Reply to the user with confirmation message and artifact details
-        await this.reply(params.userPost, {
-            message: `Your business goals have been generated and saved. You can find them under ID: ${artifact.id}`,
-            artifactIds: [artifact.id]
-        });
-
-        // Update the project with the business goals
-        const updatedProject: OnboardingProject = {
-            ...params.projects?.[0],
-            businessGoals: response.message.split('\n').map(goal => goal.trim())
-        };
-
-        // Save the updated project
-        this.projects.replaceProject(updatedProject);
-
-        // Create a task for developing strategy
-        const taskId = randomUUID();
-        const task: Task = {
-            id: taskId,
-            description: "Develop strategy based on business goals",
-            contentBlockId: undefined,
-            creator: this.userId,
-            projectId: updatedProject.id,
-            type: OnboardingActivities.DevelopStrategy,
-            complete: false
-        };
-
-        // Add the task to the project
-        this.projects.addTask(updatedProject, task);
-    }
-
-    @HandleActivity(OnboardingActivities.DevelopStrategy, "Develop strategy based on business goals", ResponseType.RESPONSE)
-    private async developStrategy(params: ProjectHandlerParams) {
-        const instructions = `
-            Develop a strategy that aligns with the user's business goals and how the service can help.
-            Respond with a detailed strategy document.
-        `;
-
-        // Create a structured prompt
-        const structuredPrompt = new StructuredOutputPrompt(
-            {
-                type: 'object',
-                properties: {
-                    title: { type: 'string' },
-                    content: { type: 'string' }
-                }
-            },
+        const response: ModelResponse = await this.generateStructured(new StructuredOutputPrompt(
+            schemas.definitions.ModelResponse,
             instructions
+        ), params);
+
+        // Reply to the user with confirmation message and artifact details
+        await this.reply(params.userPost, {
+            message: response.message
+        });
+
+        this.addTaskToProject({
+            projectId: params.projects[0].id,
+            description: "Develop strategy based on business goals",
+            type: OnboardingActivities.UnderstandService
+        });
+    }
+
+    @HandleActivity(OnboardingActivities.SaveGoals, "Create a document representing a completed business goal document.", ResponseType.RESPONSE)
+    private async understandBusinessGoals(params: ProjectHandlerParams) {
+        const response = await this.generateArtifactResponse(
+            `Create a document representing business goals. The document's sections to write are:
+            - Company Overview
+            - Mission and Vision
+            - Key Business Goals
+            - Action Plans
+            - Metrics and KPIs
+            - Timeline
+            If you feel some sections need more work, explain areas where you'd like to improve`,
+            params
         );
 
-        try {
-            // Send the structured request to LMStudioService
-            const responseJSON = await this.lmStudioService.generateStructured(params.userPost, structuredPrompt, params.threadPosts);
+        this.addTaskToProject({
+            projectId: params.projects[0].id,
+            description: "Develop strategy based on business goals",
+            type: OnboardingActivities.UnderstandService,
+        });
 
-            // Extract title and content from the response
-            const { title, content } = responseJSON;
-
-            // Prepare the artifact
-            const artifact: Artifact = {
-                id: randomUUID(),
-                type: 'markdown',
-                content: content,
-                metadata: {
-                    title: title
-                }
-            };
-
-            // Save the artifact using ArtifactManager
-            await this.artifactManager.saveArtifact(artifact);
-
-            // Reply to the user with confirmation message and artifact details
-            await this.reply(params.userPost, {
-                message: `Your strategy document titled "${title}" has been generated and saved. You can find it under ID: ${artifact.id}`,
-                artifactIds: [artifact.id]
-            });
-
-            // Create a task for setting expectations
-            const taskId = randomUUID();
-            const task: Task = {
-                id: taskId,
-                description: "Set service expectations and requirements",
-                contentBlockId: undefined,
-                creator: this.userId,
-                projectId: params.projects[0].id,
-                type: OnboardingActivities.SetExpectations,
-                complete: false
-            };
-
-            // Add the task to the project
-            this.projects.addTask(params.projects[0], task);
-        } catch (error) {
-            Logger.error('Error developing strategy:', error);
-            await this.reply(params.userPost, {
-                message: 'Failed to develop the strategy. Please try again later.'
-            });
-        }
+        // Reply to the user with confirmation message and artifact details
+        await this.reply(params.userPost, response);
     }
 
-    @HandleActivity(OnboardingActivities.SetExpectations, "Set service expectations and requirements", ResponseType.RESPONSE)
+    @HandleActivity(OnboardingActivities.UnderstandService, "After finishing a business plan, work with user on how our agents can help solve them.", ResponseType.RESPONSE)
+    private async developStrategy(params: ProjectHandlerParams) {
+        const response = await this.generateArtifactResponse(
+            "Develop a strategy that aligns with the user's business goals and how the service can help. Our @research Reserrch Manager agent can do web research, and our @content Content Manager can help write various kinds of content like blog posts, marketing plans, etc.",
+            params
+        );
+        
+        // Reply to the user with confirmation message and artifact details
+        await this.reply(params.userPost, response);
+
+        // Create a task for setting expectations
+        this.addTaskToProject({
+            projectId: params.projects[0].id,
+            description: "Set service expectations and requirements",
+            type: OnboardingActivities.SaveRequirements,
+        });
+    }
+
+    @HandleActivity(OnboardingActivities.SaveRequirements, "Save requirements document for how the service should work for this user.", ResponseType.RESPONSE)
     private async setServiceExpectations(params: HandlerParams) {
         const instructions = `
             Gather and document user's expectations and requirements from the service.
@@ -297,29 +186,107 @@ Respond to the user's request, explaining to them the other available options.`;
         await this.reply(params.userPost, { message: statusMessage });
     }
 
-    // @HandleActivity("mark-complete", "Mark a specific task as complete", ResponseType.RESPONSE)
-    // private async markComplete(params: HandlerParams) {
-    //     const project = params.projects?.[0];
+    @HandleActivity("mark-complete", "Mark a specific task as complete", ResponseType.RESPONSE)
+    private async markComplete(params: HandlerParams) {
+        const project = params.projects?.[0];
 
-    //     if (!project) {
-    //         await this.reply(params.userPost, { message: `No project found. Please start a new onboarding process or provide the correct thread ID.` });
-    //         return;
-    //     }
+        if (!project) {
+            await this.reply(params.userPost, { message: `No project found. Please start a new onboarding process or provide the correct thread ID.` });
+            return;
+        }
 
-    //     const projectId = project.id;
+        // Create a structured prompt
+        const instructions = `
+        Review the list of tasks and identify which ones should be marked as complete based on the context provided.
+        Respond with a JSON object containing an array of task IDs to mark as complete and a user-friendly response message.
 
-    //     // Mark the task as complete
-    //     task.complete = true;
-    //     this.projects.updateTask(task);
+        Example response: { "completedTasks": ["task-id-1", "task-id-2"], "message": "Task 1 and Task 2 have been marked as complete." }`;
 
-    //     await this.reply(params.userPost, { message: `Task "${task.description}" has been marked as complete.` });
+        try {
+            // Prepare the input for the LLM
+            const tasks = Object.values(project.tasks);
+            const taskList = tasks.map(task => ({ id: task.id, description: task.description }));
 
-    //     // Check if all tasks are complete to finalize the project
-    //     const allTasksCompleted = this.projects.getAllTasksForProject(task.projectId).every(t => t.complete);
-    //     if (allTasksCompleted) {
-    //         task.complete = true;
-    //         this.projects.updateTask(task);
-    //         await this.replyToChannel({ message: `Your onboarding process is now complete. Thank you for your cooperation!` }, ONBOARDING_CHANNEL_ID);
-    //     }
-    // }
+            const instructionsWithTasks = new TaskInputPrompt(instructions, taskList);
+
+            // Create a structured prompt
+            const structuredPrompt = new StructuredOutputPrompt(
+                schemas.definitions.OnboardingConsultantResponse,
+                instructionsWithTasks.toString()
+            );
+
+            // Send the structured request to LMStudioService
+            const response: OnboardingConsultantResponse = await this.lmStudioService.generateStructured(params.userPost, structuredPrompt, params.threadPosts);
+
+            // Extract completed task IDs and response message from the response
+            const { completedTasks, message } = response;
+
+            // Mark the identified tasks as complete
+            for (const taskId of completedTasks) {
+                const task = tasks.find(t => t.id === taskId);
+                if (task) {
+                    await this.projects.completeTask(task.id);
+                }
+            }
+
+            await this.reply(params.userPost, { message });
+
+        } catch (error) {
+            Logger.error('Error marking tasks as complete:', error);
+            await this.reply(params.userPost, { message: 'Failed to mark tasks as complete. Please try again later.' });
+        }
+    }
+
+    @HandleActivity(OnboardingActivities.ReviewDocuments, "Review existing documents and generate outstanding tasks list", ResponseType.RESPONSE)
+    private async reviewDocuments(params: ProjectHandlerParams) {
+        const instructions = `
+        Review the existing documents in the project.
+        Identify any missing tasks based on the business goals and strategy development process.
+        Respond with a JSON object containing an array of task descriptions for any missing tasks.
+
+        Example response: { "missingTasks": ["Understand user's specific business requirements", "Develop marketing plan"] }
+    `;
+
+        try {
+            // Generate the response
+            const responseJSON = await this.generate(instructions, params);
+
+            // Extract missing tasks from the response
+            const { missingTasks } = responseJSON;
+
+            if (missingTasks && missingTasks.length > 0) {
+                const project = params.projects?.[0];
+                if (!project) {
+                    await this.reply(params.userPost, { message: `No project found. Please start a new onboarding process or provide the correct thread ID.` });
+                    return;
+                }
+
+                // Generate tasks for each missing task description
+                const newTasks = missingTasks.map(description => ({
+                    id: randomUUID(),
+                    description: description,
+                    contentBlockId: undefined,
+                    creator: this.userId,
+                    projectId: project.id,
+                    type: OnboardingActivities.UnderstandBusiness, // Use a default activity type
+                    complete: false
+                }));
+
+                // Add the new tasks to the project
+                for (const task of newTasks) {
+                    this.projects.addTask(project, task);
+                }
+
+                await this.reply(params.userPost, {
+                    message: `The following missing tasks have been added to your project:
+${newTasks.map(task => `- ${task.description}`).join('\n')}
+Please proceed with these tasks.` });
+            } else {
+                await this.reply(params.userPost, { message: `All required tasks are already accounted for in the project. No additional tasks need to be added.` });
+            }
+        } catch (error) {
+            Logger.error('Error reviewing documents:', error);
+            await this.reply(params.userPost, { message: 'Failed to review the documents and generate the outstanding tasks list. Please try again later.' });
+        }
+    }
 }

@@ -5,6 +5,7 @@ import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { ChatPost } from "src/chat/chatClient";
+import { ModelResponse } from "../agents/schemas/ModelResponse";
 
 class MyEmbedder implements IEmbeddingFunction {
     private embeddingModel: EmbeddingSpecificModel;
@@ -53,11 +54,6 @@ export interface ModelMessageHistory {
 
 export interface MessageOpts {
     contextWindowLength?: number;
-}
-
-export interface ModelResponse {
-    message: string;
-    artifactIds?: string[];
 }
 
 export default class LMStudioService {
