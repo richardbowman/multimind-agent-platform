@@ -1,16 +1,23 @@
 // logger.ts
-import { appendFileSync } from 'fs';
+import { appendFileSync, mkdirSync } from 'fs';
+import { dirname } from 'path';
 
 
 class Logger {
     static logBox: Blessed.Log;
     private static logFilePath = `./.output/output-${new Date().toISOString().split('T')[0]}.log`;
 
+    private static ensureLogDirectoryExists(): void {
+        const dir = dirname(Logger.logFilePath);
+        mkdirSync(dir, { recursive: true });
+    }
+
     static log(level: string, message: string): void {
         const timestamp = new Date().toISOString();
         const formattedMessage = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
 
-        // Append to log file
+        // Ensure directory exists and append to log file
+        this.ensureLogDirectoryExists();
         appendFileSync(Logger.logFilePath, formattedMessage);
         
         if (this.logBox && level !== "verbose") this.logBox.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
