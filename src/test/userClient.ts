@@ -19,7 +19,6 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     let currentThreadId: string | null = null;
     let currentChannelId: string | null = null;
     let threadIds: string[] = [];
-    let lastMessage: string | null = null;
 
     // Function to load messages from a specific thread
     async function loadMessagesForThread(threadId: string | null) {
@@ -134,6 +133,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         }
 
         if (message === "/retry") {
+            const lastMessage = getLastUserMessage();
             if (lastMessage) {
                 await sendMessage(lastMessage);
             } else {
@@ -142,12 +142,22 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             return;
         }
 
-        lastMessage = message;
         await sendMessage(message);
 
         inputBox.setValue('');
         inputBox.focus();
     });
+
+    function getLastUserMessage(): string | null {
+        const posts = storage.posts.filter(post => 
+            post.channel_id === currentChannelId && 
+            (post.getRootId() === currentThreadId || post.id === currentThreadId || (currentThreadId === null && !post.getRootId())) &&
+            post.user_id === USER_ID
+        );
+        
+        if (posts.length === 0) return null;
+        return posts[posts.length - 1].message;
+    }
 
     async function sendMessage(message: string) {
         try {
