@@ -57,10 +57,15 @@ export class ArtifactManager {
     await fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content));
 
     // Update or add the artifact metadata
+    // Calculate token count using GPT tokenizer
+    const content = artifact.content.toString();
+    const tokenCount = await this.chromaService.getTokenCount(content);
+
     metadata[artifact.id] = {
       contentPath: filePath,
       type: artifact.type,
       version,
+      tokenCount,
       ...artifact.metadata // Include additional metadata attributes if any
     };
 

@@ -310,7 +310,9 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     // Load all artifacts for global viewer
     async function loadGlobalArtifacts() {
         const allArtifacts = await artifactManager.listArtifacts();
-        globalArtifactList.setItems(allArtifacts.map(artifact => artifact.metadata?.title || artifact.id));
+        globalArtifactList.setItems(allArtifacts.map(artifact => 
+          `${artifact.metadata?.title || artifact.id} (${artifact.metadata?.tokenCount || '?'} tokens)`
+        ));
         screen.render();
         return allArtifacts;
     }
@@ -321,7 +323,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         const selectedArtifact = allArtifacts[index];
         
         if (selectedArtifact) {
-            const contentToShow = `# ${selectedArtifact.metadata?.title || selectedArtifact.id}\n\n${selectedArtifact.content.toString()}`;
+            const contentToShow = `# ${selectedArtifact.metadata?.title || selectedArtifact.id}\n*${selectedArtifact.metadata?.tokenCount || '?'} tokens*\n\n${selectedArtifact.content.toString()}`;
             globalArtifactViewer.setMarkdown(contentToShow);
             screen.render();
         }
