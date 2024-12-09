@@ -30,7 +30,7 @@ class ScrapeHelper {
             try {
                 await page.goto(url, { 
                     waitUntil: 'networkidle',
-                    timeout: 30000 
+                    timeout: 3000 
                 });
             } catch (error) {
                 Logger.warn(`Element 'body' did not load within the specified timeout. Continuing with the current content.`);
