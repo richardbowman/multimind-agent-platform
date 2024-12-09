@@ -188,8 +188,49 @@ export class BedrockService implements ILLMService {
     }
 
     async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<any> {
-        // Implement structured generation for Bedrock
-        throw new Error("Structured generation not yet implemented for Bedrock");
+        const schema = instructions.getSchema();
+        const prompt = instructions.getPrompt();
+        
+        const systemPrompt = `You are a structured data generator. 
+You MUST return a valid JSON object matching this schema:
+${JSON.stringify(schema, null, 2)}
+
+Additional instructions:
+${prompt}`;
+
+        const command = new InvokeModelCommand({
+            modelId: this.modelId,
+            body: JSON.stringify({
+                anthropic_version: "bedrock-2023-05-31",
+                max_tokens: 2048,
+                temperature: 0.1, // Lower temperature for more deterministic structured output
+                system: systemPrompt,
+                messages: [{
+                    role: "user",
+                    content: userPost.message
+                }]
+            })
+        });
+
+        try {
+            const response = await this.client.send(command);
+            const result = JSON.parse(new TextDecoder().decode(response.body));
+            const content = result.content[0].text;
+
+            // Extract JSON from the response
+            const jsonMatch = content.match(/```json\n([\s\S]*?)\n```/) || 
+                            content.match(/\{[\s\S]*\}/);
+                
+            if (!jsonMatch) {
+                throw new Error("No valid JSON found in response");
+            }
+
+            const jsonStr = jsonMatch[1] || jsonMatch[0];
+            return JSON.parse(jsonStr);
+        } catch (error) {
+            Logger.error("Structured generation error:", error);
+            throw error;
+        }
     }
 
     getEmbeddingModel(): IEmbeddingFunction {
