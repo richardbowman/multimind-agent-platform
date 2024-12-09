@@ -376,10 +376,12 @@ ${task.description || '*No description available*'}`;
         artifactTypeFilter.setItems(commands);
     }
 
+    let filteredArtifacts: Artifact[] = [];
+
     // Load all artifacts for global viewer
     async function loadGlobalArtifacts(filterType: string = 'All Types') {
         // Filter artifacts by type
-        const filteredArtifacts = filterType === 'All Types'
+        filteredArtifacts = filterType === 'All Types'
             ? allArtifacts
             : allArtifacts.filter(a => a.type === filterType);
 
@@ -392,7 +394,7 @@ ${task.description || '*No description available*'}`;
 
     // Handle global artifact list selection
     globalArtifactList.on('select', async (item, index) => {
-        const selectedArtifact = allArtifacts[index];
+        const selectedArtifact = filteredArtifacts[index];
 
         if (selectedArtifact) {
             // Format metadata section
