@@ -424,7 +424,7 @@ export abstract class Agent<Project, Task> {
         // Add the current post to the history
         llmMessages.push({ role: "user", content: post.message });
 
-        const rawResponse = await this.lmStudioService.sendMessageToLLM(post.message, llmMessages, undefined, 8192, 256, jsonSchema);
+        const rawResponse = await this.lmStudioService.sendMessageToLLM(post.message, llmMessages, undefined, 8192, 1024, jsonSchema);
         const response = JSON5.parse(rawResponse);
 
         Logger.info(`Model chose ${response.activityType} because ${response.reasoning}`);
