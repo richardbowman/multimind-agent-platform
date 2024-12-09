@@ -1,4 +1,5 @@
 import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import LMStudioService from "./lmstudioService";
 import { ILLMService } from "./ILLMService";
 import { ChatPost } from "src/chat/chatClient";
 import { ModelResponse } from "../agents/schemas/ModelResponse";
@@ -10,15 +11,21 @@ export class BedrockService implements ILLMService {
     private client: BedrockRuntimeClient;
     private modelId: string;
     private embeddingModel?: IEmbeddingFunction;
+    private lmStudioService?: LMStudioService;
 
-    constructor(modelId: string = "anthropic.claude-v2") {
+    constructor(modelId: string = "anthropic.claude-v2", lmStudioService?: LMStudioService) {
         this.client = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
         this.modelId = modelId;
+        this.lmStudioService = lmStudioService;
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
-        // Implement embedding using Bedrock's embedding models
-        throw new Error("Embedding not yet implemented for Bedrock");
+        if (!this.lmStudioService) {
+            this.lmStudioService = new LMStudioService();
+        }
+        await this.lmStudioService.initializeEmbeddingModel(modelPath);
+        this.embeddingModel = this.lmStudioService.getEmbeddingModel();
+        Logger.info("Using LMStudio for embeddings as Bedrock fallback");
     }
 
     async initializeLlamaModel(modelPath: string): Promise<void> {

@@ -13,7 +13,8 @@ export class LLMServiceFactory {
             case LLMProvider.LMSTUDIO:
                 return new LMStudioService();
             case LLMProvider.BEDROCK:
-                return new BedrockService();
+                const lmStudioService = new LMStudioService();
+                return new BedrockService("anthropic.claude-v2", lmStudioService);
             default:
                 throw new Error(`Unsupported LLM provider: ${provider}`);
         }
