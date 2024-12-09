@@ -19,6 +19,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     let currentThreadId: string | null = null;
     let currentChannelId: string | null = null;
     let threadIds: string[] = [];
+    let lastMessage: string | null = null;
 
     // Function to load messages from a specific thread
     async function loadMessagesForThread(threadId: string | null) {
@@ -132,6 +133,16 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             return;
         }
 
+        if (message === "/retry") {
+            if (lastMessage) {
+                await sendMessage(lastMessage);
+            } else {
+                Logger.info("No previous message to retry.");
+            }
+            return;
+        }
+
+        lastMessage = message;
         await sendMessage(message);
 
         inputBox.setValue('');
