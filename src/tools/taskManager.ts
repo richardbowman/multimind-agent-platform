@@ -14,6 +14,7 @@ export interface Task {
     creator: string;
     assignee?: string;
     complete?: boolean;
+    inProgress?: boolean;
     order?: number;  // Lower numbers come first
     dependsOn?: string;  // ID of the task that must complete before this one can start
 }
@@ -43,4 +44,5 @@ export interface TaskManager extends EventEmitter {
     assignTaskToAgent(taskId: string, agentId: string): void;
     getNextTaskForUser(userId: string): Promise<Task | null>;
     getProjects(): Project<Task>[];
+    markTaskInProgress(task: Task): Promise<Task>;
 }

@@ -118,6 +118,25 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         return null;
     }
 
+    async markTaskInProgress(task: Task): Promise<Task> {
+        let taskFound = false;
+        for (const projectId in this.projects) {
+            const project = this.projects[projectId];
+            if (project.tasks?.hasOwnProperty(task.id)) {
+                const existingTask = project.tasks[task.id];
+                existingTask.inProgress = true;
+                taskFound = true;
+                this.emit('taskInProgress', { task: existingTask });
+                break;
+            }
+        }
+        if (!taskFound) {
+            throw new Error(`Task with ID ${task.id} not found.`);
+        }
+        await this.save();
+        return this.getProjectByTaskId(task.id).tasks[task.id];
+    }
+
     async completeTask(id: string): Promise<Task> {
         let taskFound = false;
         for (const projectId in this.projects) {
