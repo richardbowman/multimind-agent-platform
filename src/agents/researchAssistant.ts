@@ -273,8 +273,15 @@ ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}
     }
 
     // returns summary
+    private async getScrapedUrls(): Promise<Set<string>> {
+        const artifacts = await this.artifactManager.getArtifacts({ type: 'webpage' });
+        return new Set(artifacts.map(a => a.metadata.url));
+    }
+
     private async processPage(projectId: string, taskId: string, task: string, goal: string, searchUrl: string, pageSummaries: any[], visitedUrls: string[]) : Promise<string> {
-        if (visitedUrls.includes(searchUrl)) {
+        const scrapedUrls = await this.getScrapedUrls();
+        
+        if (visitedUrls.includes(searchUrl) || scrapedUrls.has(searchUrl)) {
             Logger.info(`Skipping already processed URL: ${searchUrl}`);
             return "";
         }
@@ -306,7 +313,7 @@ ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}
                 try {
                     const normalizedUrl = this.scrapeHelper.normalizeUrl(searchUrl, link.href);
     
-                    if (!visitedUrls.includes(normalizedUrl)) {
+                    if (!visitedUrls.includes(normalizedUrl) && !scrapedUrls.has(normalizedUrl)) {
                         visitedUrls.push(normalizedUrl);
     
                         const { content:followContent, links:followLinks, title:followTitle } = await this.scrapeHelper.scrapePage(normalizedUrl);
