@@ -12,7 +12,7 @@ export const screen = blessed.screen({
 
 // Create a main container box
 export const tab1Box = blessed.box({
-    top: 3,
+    top: 8,
     left: 0,
     width: '100%',
     height: '100%-3',
@@ -269,6 +269,28 @@ export const artifactDetailViewer = markdown({
 });
 
 screen.append(artifactDetailViewer);
+
+// Create type filter dropdown
+export const artifactTypeFilter = blessed.list({
+    keys: true,
+    mouse: true,
+    label: 'Filter by Type',
+    border: {
+        type: 'line'
+    },
+    style: {
+        selected: {
+            bg: 'blue',
+            fg: 'white'
+        }
+    },
+    left: 0,
+    width: '30%',
+    top: 3,
+    height: 5,
+    items: ['All Types'],
+    hidden: true
+});
 
 // Create global artifact list and viewer
 export const globalArtifactList = blessed.list({

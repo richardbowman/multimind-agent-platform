@@ -338,13 +338,25 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     });
 
     // Load all artifacts for global viewer
-    async function loadGlobalArtifacts() {
+    async function loadGlobalArtifacts(filterType: string = 'All Types') {
         const allArtifacts = await artifactManager.listArtifacts();
-        globalArtifactList.setItems(allArtifacts.map(artifact =>
-            `${artifact.metadata?.title || artifact.id} (${artifact.metadata?.tokenCount || '?'} tokens)`
+        
+        // Update type filter options if needed
+        const types = ['All Types', ...new Set(allArtifacts.map(a => a.type))];
+        if (JSON.stringify(types) !== JSON.stringify(artifactTypeFilter.items)) {
+            artifactTypeFilter.setItems(types);
+        }
+
+        // Filter artifacts by type
+        const filteredArtifacts = filterType === 'All Types' 
+            ? allArtifacts
+            : allArtifacts.filter(a => a.type === filterType);
+
+        globalArtifactList.setItems(filteredArtifacts.map(artifact =>
+            `${artifact.metadata?.title || artifact.id} (${artifact.type}) [${artifact.metadata?.tokenCount || '?'} tokens]`
         ));
         screen.render();
-        return allArtifacts;
+        return filteredArtifacts;
     }
 
     // Handle global artifact list selection
@@ -419,8 +431,14 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         // Initial load of global artifacts
         await loadGlobalArtifacts();
 
+        artifactTypeFilter.show();
         globalArtifactList.show();
         globalArtifactViewer.show();
+
+        // Handle type filter selection
+        artifactTypeFilter.on('select', async (item) => {
+            await loadGlobalArtifacts(item.content);
+        });
 
         screen.render();
     };
