@@ -93,7 +93,25 @@ class ScrapeHelper {
                 .replace(/\t/g, '') // Remove tabs
                 .replace(/^[ \t]+/gm, ''); // Remove leading spaces and tabs from each line
 
-            const turndownService = new TurndownService();
+            const turndownService = new TurndownService({
+                linkStyle: 'referenced',
+                linkReferenceStyle: 'collapsed'
+            });
+            
+            // Configure link formatting
+            turndownService.addRule('links', {
+                filter: 'a',
+                replacement: function(content, node, options) {
+                    const href = node.getAttribute('href');
+                    const title = node.getAttribute('title');
+                    if (href === null) {
+                        return content;
+                    }
+                    const titlePart = title ? ` "${title}"` : '';
+                    return `[${content}](${href}${titlePart})`;
+                }
+            });
+
             let markdownContent = turndownService.turndown(fullHtmlWithoutIndentation);
 
             // Extract links
