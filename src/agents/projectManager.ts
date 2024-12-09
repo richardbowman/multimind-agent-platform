@@ -18,7 +18,8 @@ export enum ProjectManagerActivities {
     AnswerQuestions = "answer-questions",
     GenerateArtifact = "generate-artifact",
     KickoffResearch = "kickoff-research-project",
-    KickoffContentDevelopment = "kickoff-content-development"
+    KickoffContentDevelopment = "kickoff-content-development",
+    KickoffComplexProject = "kickoff-complex-project"
 }
 
 export interface PlanningProject extends Project<Task> {
@@ -279,6 +280,102 @@ Respond to the user's request, explaining to them the other available options.`;
             Logger.error('Error kicking off content development project:', error);
             await this.reply(params.userPost, {
                 message: 'Failed to kickoff the content development project. Please try again later.'
+            });
+        }
+    }
+
+    @HandleActivity(ProjectManagerActivities.KickoffComplexProject, "Kickoff a complex project involving both research and content development", ResponseType.RESPONSE)
+    private async kickoffComplexProject(params: HandlerParams) {
+        const instructions = `
+            Create a new project with multiple tasks for both research and content teams based on user's request.
+            Respond in JSON format with these keys:
+            - "projectName": The name of the project
+            - "projectGoal": The goal of the project
+            - "researchTasks": An array of research task descriptions
+            - "contentTasks": An array of content development task descriptions that depend on the research
+            - "responseMessage": A user-friendly response message to inform the user about the new project and assigned tasks
+        `;
+
+        const structuredPrompt = new StructuredOutputPrompt(
+            {
+                type: 'object',
+                properties: {
+                    projectName: { type: 'string' },
+                    projectGoal: { type: 'string' },
+                    researchTasks: { 
+                        type: 'array',
+                        items: { type: 'string' }
+                    },
+                    contentTasks: {
+                        type: 'array',
+                        items: { type: 'string' }
+                    },
+                    responseMessage: { type: 'string' }
+                }
+            },
+            instructions
+        );
+
+        try {
+            const responseJSON = await this.lmStudioService.generateStructured(params.userPost, structuredPrompt, params.threadPosts);
+            const { projectName, projectGoal, researchTasks, contentTasks, responseMessage } = responseJSON;
+
+            // Create a new project
+            const projectId = randomUUID();
+            const tasks: Record<string, Task> = {};
+            
+            // Create research tasks first
+            const researchTaskIds: string[] = [];
+            for (const taskDesc of researchTasks) {
+                const taskId = randomUUID();
+                researchTaskIds.push(taskId);
+                tasks[taskId] = {
+                    id: taskId,
+                    description: taskDesc,
+                    contentBlockId: undefined,
+                    creator: this.userId,
+                    projectId: projectId,
+                    type: ResearchActivityType.WebResearch,
+                    complete: false
+                };
+                this.projects.assignTaskToAgent(taskId, RESEARCH_MANAGER_USER_ID);
+            }
+
+            // Create content tasks that depend on research completion
+            for (const taskDesc of contentTasks) {
+                const taskId = randomUUID();
+                tasks[taskId] = {
+                    id: taskId,
+                    description: taskDesc,
+                    contentBlockId: undefined,
+                    creator: this.userId,
+                    projectId: projectId,
+                    type: ContentManagerActivityType.ConfirmCreateFullContent,
+                    complete: false,
+                    dependsOn: researchTaskIds[0] // Make content tasks depend on first research task
+                };
+                this.projects.assignTaskToAgent(taskId, CONTENT_MANAGER_USER_ID);
+            }
+
+            // Create and add the project
+            const newProject: PlanningProject = {
+                id: projectId,
+                name: projectName,
+                goal: projectGoal,
+                tasks: tasks,
+                originalPostId: params.userPost.id,
+                description: 'A complex project involving both research and content development.'
+            };
+
+            this.projects.addProject(newProject);
+
+            await this.reply(params.userPost, {
+                message: responseMessage
+            });
+        } catch (error) {
+            Logger.error('Error kicking off complex project:', error);
+            await this.reply(params.userPost, {
+                message: 'Failed to kickoff the complex project. Please try again later.'
             });
         }
     }
