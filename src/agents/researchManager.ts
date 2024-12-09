@@ -22,6 +22,10 @@ interface ResearchManagerContext extends ConversationContext {
     activityType: ResearchActivityType;
 }
 
+export interface ResearchProject extends Project<ResearchTask> {
+    parentTaskId?: string;  // ID of the task that spawned this research project
+}
+
 export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
     private USER_TOKEN: string;
     private artifactManager: ArtifactManager;
@@ -38,29 +42,39 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
     }
 
     protected async processTask(task: ResearchTask): Promise<void> {
-        const project = await this.projects.getProject(task.projectId);
-        if (!project) {
+        const parentProject = await this.projects.getProject(task.projectId);
+        if (!parentProject) {
             Logger.error(`Could not find project with ID ${task.projectId}`);
             return;
         }
 
-        Logger.info(`Starting research for project ${project.id}`);
+        Logger.info(`Starting research for task ${task.id} in project ${parentProject.id}`);
+
+        // Create a new research project for this task
+        const researchProject = this.addProject();
+        researchProject.name = task.description;
+        researchProject.parentTaskId = task.id;  // Link back to original task
 
         // Decompose the task into sub-tasks
-        await this.decomposeTask(project.id, task.description);
+        await this.decomposeTask(researchProject.id, task.description);
 
         // Assign tasks to researchers
-        await this.assignResearcherTasks(project.id);
+        await this.assignResearcherTasks(researchProject.id);
 
-        const post = await this.getMessage(project.originalPostId);
+        const post = await this.getMessage(parentProject.originalPostId);
 
         // Post the task list to the channel
-        const projectPost = await this.replyWithProjectId(task.type as ResearchActivityType, project.id, PROJECTS_CHANNEL_ID, post);
-        await this.postTaskList(project.id, PROJECTS_CHANNEL_ID, projectPost);
+        const projectPost = await this.replyWithProjectId(task.type as ResearchActivityType, researchProject.id, PROJECTS_CHANNEL_ID, post);
+        await this.postTaskList(researchProject.id, PROJECTS_CHANNEL_ID, projectPost);
     }
 
     protected async projectCompleted(project: ResearchProject): Promise<void> {
         const aggregatedData = await this.aggregateResults(project);
+
+        // If this project was created for a task, mark that task as complete
+        if (project.parentTaskId) {
+            await this.projects.completeTask(project.parentTaskId);
+        }
 
         const artifactResponse = await this.createFinalReport(project, aggregatedData);
 
