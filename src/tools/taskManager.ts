@@ -14,6 +14,7 @@ export interface Task {
     creator: string;
     assignee?: string;
     complete?: boolean;
+    order?: number;  // Lower numbers come first
 }
 
 export interface RecurringTask extends Task {

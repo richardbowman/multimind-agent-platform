@@ -15,6 +15,12 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
     }
 
     async addTask(project: Project<Task>, task: Task) : Promise<Task> {
+        // Set order to be after existing tasks if not specified
+        if (task.order === undefined) {
+            const existingTasks = Object.values(this.projects[project.id].tasks || {});
+            const maxOrder = Math.max(...existingTasks.map(t => t.order ?? 0), 0);
+            task.order = maxOrder + 1;
+        }
         this.projects[project.id].tasks[task.id] = task;
         await this.save();
         return task;
@@ -72,9 +78,12 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
     async getNextTaskForUser(userId: string): Promise<Task | null> {
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
-            const task = Object.values(project.tasks || []).find(t => t.assignee === userId && !t.complete);
-            if (task) {
-                return task;
+            const userTasks = Object.values(project.tasks || [])
+                .filter(t => t.assignee === userId && !t.complete)
+                .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
+            
+            if (userTasks.length > 0) {
+                return userTasks[0];
             }
         }
         Logger.info(`No tasks assigned to user ${userId} found.`);
