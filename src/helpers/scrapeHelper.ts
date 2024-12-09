@@ -107,8 +107,13 @@ class ScrapeHelper {
                     if (href === null) {
                         return content;
                     }
-                    const titlePart = title ? ` "${title}"` : '';
-                    return `[${content}](${href}${titlePart})`;
+                    // Normalize the content: remove newlines and excessive spaces
+                    const normalizedContent = content
+                        .replace(/\s+/g, ' ')  // Replace multiple spaces/newlines with single space
+                        .trim();               // Remove leading/trailing whitespace
+                    
+                    const titlePart = title ? ` "${title.replace(/\s+/g, ' ').trim()}"` : '';
+                    return `[${normalizedContent}](${href}${titlePart})`;
                 }
             });
 
