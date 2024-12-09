@@ -7,7 +7,8 @@ import SummaryHelper from '../helpers/summaryHelper';
 import { RESEARCHER_TOKEN, CHAT_MODEL, CHROMA_COLLECTION, WEB_RESEARCH_CHANNEL_ID, MAX_SEARCHES, RESEARCHER_USER_ID, PROJECTS_CHANNEL_ID } from '../helpers/config';
 import { ChatClient, ChatPost } from '../chat/chatClient';
 import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
-import { Project, Task, TaskManager } from 'src/tools/taskManager';
+import { Project, RecurrencePattern, Task, TaskManager } from 'src/tools/taskManager';
+import { ArtifactManager } from 'src/tools/artifactManager';
 
 
 export class ResearchTask implements Task {
@@ -56,35 +57,11 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         // asynchronously check for old tasks and keep working on them
         this.processTaskQueue();
     }
-    
-    protected async taskNotification(task: ResearchTask): Promise<void> {
-        await this.processTask(task);
-    }
-
-    async processTaskQueue(): Promise<void> {
-        const task : ResearchTask = await this.projects.getNextTaskForUser(this.userId);
-        if (!task) {
-            Logger.info("No more tasks for user.");
-            return;
-        }
-
-        await this.processTask(task);
-    }
 
     async processTask(task: ResearchTask) {
-        if (this.isWorking) return;
-        try {
-            this.isWorking = true;
-            Logger.info(`Notification for task ${task.id}: ${task.description}`);
-            await this.scrapeUrl(task.projectId, task.description, task.description, task.id, []);
-            await this.projects.completeTask(task.id);
-        } catch (error) {
-            Logger.error(`Error processing task "${task.task}":`, error);
-        } finally {
-            this.isWorking = false;
-            // Recursively process the next task
-            await this.processTaskQueue();
-        }
+        Logger.info(`Notification for task ${task.id}: ${task.description}`);
+        await this.scrapeUrl(task.projectId, task.description, task.description, task.id, []);
+        await this.projects.completeTask(task.id);
     }
 
     protected projectCompleted(project: ResearchProject): void {
@@ -142,7 +119,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
                 url = `**${url}**`;
             }
 
-            return `Title: ${title}\nURL: ${url}\nDescription: ${sr.description.slice(0, 200)}\n\n`;
+            return `Title: ${title}\nURL: ${url}\nDescription: ${sr.description?.slice(0, 200)||"n/a"}\n\n`;
         }).join('');
 
         const message = this.formatTaskMessage(projectId, taskId, `Search Query: **${searchQuery}**\n\nConsidered URLs:\n${formattedResults}`);
@@ -301,42 +278,79 @@ ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}
             return "";
         }
         visitedUrls.push(searchUrl);
-
+    
         const { content, links, title } = await this.scrapeHelper.scrapePage(searchUrl);
-
+    
         await this.publishChildLinks(projectId, WEB_RESEARCH_CHANNEL_ID, taskId, searchUrl, links, []);
-
-        // save the full website
-        await this.chromaDBService.handleContentChunks(content, searchUrl, task, projectId, title);
-
+    
+        // Save the full website as an artifact
+        await this.artifactManager.saveArtifact({
+            id: crypto.randomUUID(),
+            type: 'webpage',
+            content,
+            metadata: {
+                title,
+                url: searchUrl,
+                task,
+                projectId
+            }
+        });
+    
         const selectedLinks = await this.selectRelevantLinks(task, goal, title, links);
         await this.publishChildLinks(projectId, WEB_RESEARCH_CHANNEL_ID, taskId, searchUrl, links, selectedLinks);
-
+    
         if (selectedLinks.length > 0) {
             Logger.info(`Following selected links: ${selectedLinks.map(l => l.href).join(', ')}`);
             for (const link of selectedLinks) {
                 try {
                     const normalizedUrl = this.scrapeHelper.normalizeUrl(searchUrl, link.href);
-
+    
                     if (!visitedUrls.includes(normalizedUrl)) {
                         visitedUrls.push(normalizedUrl);
-
+    
                         const { content:followContent, links:followLinks, title:followTitle } = await this.scrapeHelper.scrapePage(normalizedUrl);
-                        await this.chromaDBService.handleContentChunks(followContent, normalizedUrl, task, projectId, followTitle, "webpage");
+                        
+                        // Save followed pages as artifacts
+                        await this.artifactManager.saveArtifact({
+                            id: crypto.randomUUID(),
+                            type: 'webpage',
+                            content: followContent,
+                            metadata: {
+                                title: followTitle,
+                                url: searchUrl,
+                                task,
+                                projectId
+                            }
+                        });
                     }
                 } catch (error) {
                     Logger.error(`Error summarizing followed page ${link.href}`, error);
                 }
             }
         }
-
-        // save summary(s)
+    
+        // Save summary(s)
         const results = await this.searchDoc(searchUrl, task);
-        const summary = await this.summaryHelper.summarizeContent(task, results.documents.join("\n\n"), this.lmStudioService);
-        pageSummaries.push(summary);
-
-        await this.chromaDBService.handleContentChunks(summary, searchUrl, task, projectId, `Summary Report for ${searchUrl}`, "summary");
-        return summary;
+        if (results.documents.length > 0) {
+            const summary = await this.summaryHelper.summarizeContent(task, results.documents.join("\n\n"), this.lmStudioService);
+            pageSummaries.push(summary);
+    
+            // Save summary as an artifact
+            await this.artifactManager.saveArtifact({
+                id: crypto.randomUUID(),
+                type: 'summary',
+                content: summary,
+                metadata: {
+                    title: `Summary Report for ${searchUrl}`,
+                    url: searchUrl,
+                    task,
+                    projectId
+                }
+            });
+            return summary;
+        } else {
+            return "";
+        }
     }
 
     async selectRelevantLinks(task: string, goal: string, title: string, links: { href: string, text: string }[]): Promise<{ href: string, text: string }[]> {
