@@ -16,12 +16,17 @@ class ScrapeHelper {
         try {
             // Launch the browser in headless mode
             browser = await chromium.launch({ headless: true });
-            const context = await browser.newContext(); //devices['iPhone 11']
+            const context = await browser.newContext({
+                javaScriptEnabled: true,
+            });
             page = await context.newPage();
 
-            // Navigate to the URL and wait until the DOM content is loaded
+            // Navigate to the URL and wait for network idle
             try {
-                await page.goto(url, { waitUntil: 'domcontentloaded' });
+                await page.goto(url, { 
+                    waitUntil: 'networkidle',
+                    timeout: 30000 
+                });
             } catch (error) {
                 Logger.warn(`Element 'body' did not load within the specified timeout. Continuing with the current content.`);
             }
