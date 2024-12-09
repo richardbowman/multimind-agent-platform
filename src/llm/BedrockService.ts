@@ -34,7 +34,7 @@ export class BedrockService implements ILLMService {
     }
 
     async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelResponse> {
-        const messages = this.formatMessages(instructions, userPost.message, history);
+        const messages = this.formatMessages(userPost.message, history);
         
         const command = new InvokeModelCommand({
             modelId: this.modelId,
@@ -42,6 +42,7 @@ export class BedrockService implements ILLMService {
                 anthropic_version: "bedrock-2023-05-31",
                 max_tokens: 2048,
                 temperature: 0.7,
+                system: instructions,
                 messages: messages
             })
         });
@@ -58,14 +59,8 @@ export class BedrockService implements ILLMService {
         }
     }
 
-    private formatMessages(instructions: string, message: string, history?: ChatPost[]): any[] {
+    private formatMessages(message: string, history?: ChatPost[]): any[] {
         const messages = [];
-        
-        // Add system instructions
-        messages.push({
-            role: "system",
-            content: instructions
-        });
 
         // Add chat history if present
         if (history) {
@@ -87,7 +82,14 @@ export class BedrockService implements ILLMService {
     }
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string): Promise<string> {
-        const messages = [...history, { role: "user", content: message }];
+        let messages = [...history];
+        
+        // Only add the user message if it's not empty
+        if (message.trim()) {
+            messages.push({ role: "user", content: message });
+        }
+        
+        // Add seed assistant message if provided
         if (seedAssistant) {
             messages.push({ role: "assistant", content: seedAssistant });
         }
