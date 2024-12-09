@@ -14,6 +14,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     const USER_ID = "test";
     const UserClient = new InMemoryTestClient(USER_ID, "test", storage);
     let tasks: Task[] = [];
+    let taskIds: string[] = [];
     let artifacts: Artifact[] = [];
 
     let currentThreadId: string | null = null;
@@ -246,8 +247,9 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             tasks = [...tasks, ...Object.values(project.tasks)].sort((a, b) => Number(a.complete) - Number(b.complete));
         }
 
-        // Populate the list pane with tasks including completion status and assignee
-        taskList.setItems(tasks.map(task => {
+        // Store task IDs in order and create display items
+        taskIds = tasks.map(task => task.id);
+        const displayItems = tasks.map(task => {
             let checkbox = '[ ]';  // default incomplete
             if (task.complete) {
                 checkbox = '[x]';  // completed
@@ -256,7 +258,9 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             }
             const assignee = task.assignee ? ` (${storage.getHandleNameForUserId(task.assignee)})` : '';
             return `${checkbox} ${task.description || task.id}${assignee}`;
-        }));
+        });
+        
+        taskList.setItems(displayItems);
 
         screen.render();
     }
@@ -289,11 +293,11 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     });
 
     taskList.on('select', async (item, index) => {
-        const selectedTaskId = item.content;
+        const selectedTaskId = taskIds[index];
         if (!selectedTaskId) return;
 
         try {
-            const task = tasks.find(t => t.id === selectedTaskId || t.title === selectedTaskId);
+            const task = tasks.find(t => t.id === selectedTaskId);
 
             if (task) {
                 const status = task.complete ? 'Completed' : (task.inProgress ? 'In Progress' : 'Not Started');
