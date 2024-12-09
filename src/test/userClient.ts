@@ -375,7 +375,21 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         const selectedArtifact = allArtifacts[index];
 
         if (selectedArtifact) {
-            const contentToShow = `# ${selectedArtifact.metadata?.title || selectedArtifact.id}\n*${selectedArtifact.metadata?.tokenCount || '?'} tokens*\n\n${selectedArtifact.content.toString()}`;
+            // Format metadata section
+            const metadataSection = selectedArtifact.metadata ? 
+                Object.entries(selectedArtifact.metadata)
+                    .map(([key, value]) => `- **${key}**: ${value}`)
+                    .join('\n') :
+                '*No metadata available*';
+
+            const contentToShow = `# ${selectedArtifact.metadata?.title || selectedArtifact.id}
+
+## Metadata
+${metadataSection}
+
+## Content
+${selectedArtifact.content.toString()}`;
+            
             globalArtifactViewer.setContent(contentToShow);
             screen.render();
         }
