@@ -257,7 +257,7 @@ Goal: ${project.goal}
 Writer Tasks: ${Object.values(project.tasks).map(c => ` - ${c.description}`).join('\n')}`;
     
         // Call LLM to generate response
-        const llmResponse = await this.generate(instructions, params);
+        const llmResponse = await this.generateOld(instructions, params);
     
         // Create the post with the LLM generated response
         const confirmationPost = await this.reply(params.userPost, llmResponse, {
@@ -301,7 +301,7 @@ Writer Tasks: ${Object.values(project.tasks).map(c => ` - ${c.description}`).joi
     Writer Tasks: ${Object.values(project.tasks).map(c => ` - ${c.description}`).join('\n')}`;
         
             // Call LLM to generate response
-            const llmResponse = await this.generate(instructions, params);
+            const llmResponse = await this.generateOld(instructions, params);
         
             // Create the post with the LLM generated response
             const confirmationPost = await this.reply(params.userPost, llmResponse, {

@@ -64,4 +64,28 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
     protected projectCompleted(project: ContentProject): void {
         throw new Error('Method not implemented.');
     }
+
+    @HandleActivity('draft-email', "Perform copy-editing to create an email draft.", ResponseType.CHANNEL)
+    private async handleDraftEmail(params: HandlerParams) {
+        const { userPost } = params;
+        const projectId = randomUUID();
+        Logger.info("Kicking off draft email workflow");
+
+        await this.decomposeTask(projectId, userPost.message);
+
+        const projectPost = await this.replyWithProjectId(ResearchActivityType.DraftEmail, projectId, userPost.channel_id, userPost);
+
+        const taskListMessage = await this.postTaskList(projectId, userPost.channel_id, projectPost);
+    }
+
+    @HandleActivity('draft-email', "Alter the original email based on comments", ResponseType.RESPONSE)
+    private async continueDraftEmail(params: ProjectHandlerParams): Promise<void> {
+        const { projectChain, userPost } = params;
+        const workflow = new EmailWorkflow(projectChain.projectId, userPost.message, this.lmStudioService);
+        const response = await workflow.generateEmailReply(projectChain.posts);
+
+        // Send the draft email back to the user
+        await this.chatClient.postReply(userPost.getRootId(), userPost.channel_id, `Here is your draft email:\n\n${response}`);
+    }
+
 }

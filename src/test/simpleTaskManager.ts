@@ -7,6 +7,7 @@ import { ContentProject } from 'src/agents/contentManager';
 class SimpleTaskManager extends EventEmitter implements TaskManager {
     private projects: { [projectId: string]: Project<Task> } = {};
     private filePath: string;
+    private saveQueued: boolean = false;
 
     constructor(filePath: string) {
         super();
@@ -33,9 +34,16 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
 
     async save(): Promise<void> {
         try {
-            await fs.writeFile(this.filePath, JSON.stringify(this.projects, null, 2));
+            if (this.saveQueued) return;
+            this.saveQueued = true;
+            const updateTasks = () => {
+                return fs.writeFile(this.filePath, JSON.stringify(this.projects, null, 2));
+            };
+            await updateTasks();
         } catch (error) {
             Logger.error('Failed to save tasks:', error);
+        } finally {
+            this.saveQueued = false;
         }
     }
 

@@ -1,7 +1,6 @@
 import Logger from "src/helpers/logger";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "./chatClient";
 import fs from "fs/promises";
-import { ID } from "chromadb";
 
 export class InMemoryPost implements ChatPost {
     static fromLoad(postData: any) : InMemoryPost {
@@ -60,6 +59,7 @@ export class InMemoryChatStorage {
     userIdToHandleName: Record<string, string> = {}; // New mapping for user IDs to handle names
 
     private storagePath: string;
+    saveQueued: any;
 
     constructor(storagePath: string) {
         this.storagePath = storagePath;
@@ -95,13 +95,24 @@ export class InMemoryChatStorage {
     }
 
     public async save(): Promise<void> {
-        const data = {
-            channelNames: this.channelNames,
-            posts: this.posts,
-            userIdToHandleName: this.userIdToHandleName
-        };
-
-        await fs.writeFile(this.storagePath, JSON.stringify(data, null, 2), 'utf8');
+        try {
+            if (this.saveQueued) return;
+            this.saveQueued = true;
+            const updateTasks = () => {
+                const data = {
+                    channelNames: this.channelNames,
+                    posts: this.posts,
+                    userIdToHandleName: this.userIdToHandleName
+                };
+    
+                return fs.writeFile(this.storagePath, JSON.stringify(data, null, 2), 'utf8');
+            };
+            await updateTasks();
+        } catch (error) {
+            Logger.error('Failed to save tasks:', error);
+        } finally {
+            this.saveQueued = false;
+        }
     }
 
     public async load(): Promise<void> {

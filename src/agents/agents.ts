@@ -7,7 +7,7 @@ import { SystemPromptBuilder } from "src/helpers/systemPrompt";
 import ChromaDBService, { SearchResult } from "src/llm/chromaService";
 import LMStudioService, { StructuredOutputPrompt } from "src/llm/lmstudioService";
 import { CreateArtifact, ModelResponse, RequestArtifacts } from "src/agents/schemas/ModelResponse";
-import { StructuredInputPrompt } from "src/prompts/structuredInputPrompt";
+import { InputPrompt, StructuredInputPrompt } from "src/prompts/structuredInputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Project, Task, TaskManager } from "src/tools/taskManager";
@@ -25,13 +25,20 @@ export enum ResponseType {
     CHANNEL
 }
 
-export interface HandlerParams {
+export interface HandlerParams extends GenerateParams {
     userPost: ChatPost;
-    artifacts?: Artifact[];
-    projects?: Project<Task>[];
     rootPost?: ChatPost;
     threadPosts?: ChatPost[];
-    searchResults: SearchResult[]
+}
+
+export interface GenerateInputParams extends GenerateParams {
+    instructions: string | InputPrompt;
+}
+
+export interface GenerateParams {
+    artifacts?: Artifact[];
+    projects?: Project<Task>[];
+    searchResults?: SearchResult[]
 }
 
 export interface ProjectHandlerParams extends HandlerParams {
@@ -261,12 +268,19 @@ export abstract class Agent<Project, Task> {
         return response;
     }
 
-    protected async generate(instructions: string, params: HandlerParams): Promise<ModelResponse> {
+    protected async generate(params: GenerateInputParams): Promise<ModelResponse> {
+        return this.generateOld(params.instructions.toString(), params);
+    }
+
+    /**
+     * @deprecated
+     */
+    protected async generateOld(instructions: string, params: GenerateParams): Promise<ModelResponse> {
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = `AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`;
 
-        if (this.isMemoryEnabled) {
-            const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
+        if (this.isMemoryEnabled && (params as HandlerParams).userPost) {
+            const memoryArtifact = await this.fetchLatestMemoryArtifact((params as HandlerParams).userPost.channel_id);
 
             // Append the memory content to the instructions if it exists
             if (memoryArtifact && memoryArtifact.content) {
@@ -291,10 +305,10 @@ export abstract class Agent<Project, Task> {
         }
 
         // Augment instructions with context and generate a response
-        const history = params.threadPosts || params.projectChain?.posts.slice(0, -1) || [];
-
-        const response = await this.lmStudioService.generate(augmentedInstructions, params.userPost, history);
-        response.artifactIds = params.artifacts?.map(a => a.id);
+        const history = (params as HandlerParams).threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
+        const response = await this.lmStudioService.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:""}, history);
+        (response as RequestArtifacts).artifactIds = params.artifacts?.map(a => a.id);
+        
         return response;
     }
 

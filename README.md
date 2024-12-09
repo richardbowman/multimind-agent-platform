@@ -1,72 +1,143 @@
-# Webpage Scraping and Research Assistant
+# AI Research Assistant Platform
 
-## Overview
+A sophisticated platform that combines web scraping, AI-powered research, and content management capabilities through a Mattermost-based chat interface.
 
-This project is designed to assist in scraping webpage content and performing research tasks using various machine learning models. It leverages Puppeteer for web scraping, a Mattermost client for communication, and ChromaDB for storing embeddings of the scraped data. The core components include an orchestrator that manages the workflow of tasks and multiple assistant classes that handle specific research activities.
+## Features
 
-## Key Components
+- **Web Research Automation**
+  - Automated web scraping with Puppeteer
+  - Smart content summarization
+  - Semantic search using ChromaDB for stored research
+  - Configurable search depth and limits
 
-### Main Logic
+- **Content Development**
+  - Blog post outline generation
+  - Content structure recommendations
+  - Iterative outline revision
+  - Section-by-section content development
 
-1. **orchestrator.ts**:
-   - The main orchestrator class initializes and manages communication via Mattermost.
-   - It fetches researcher messages from a specified channel and uses them to start the research workflow.
+- **Project Management**
+  - Task decomposition and distribution
+  - Multi-agent collaboration
+  - Progress tracking
+  - Artifact management and storage
 
-2. **orchestratorWorkflow.ts**:
-    - This class handles the workflow of a research task, including decomposing tasks into smaller parts, distributing them among assistants, aggregating results, and generating final reports or replies.
-    - It interacts with `ChromaDBService` to store and retrieve embeddings of the data.
+- **Email Draft Assistance**
+  - Email draft generation
+  - Iterative refinement based on feedback
+  - Copy-editing capabilities
 
-3. **assistant.ts**:
-   - Represents an assistant class that performs research tasks.
-   - Specific implementations and methods are not detailed in the provided code.
+## System Architecture
 
+### Core Components
 
-### Helpers
+1. **Agent System**
+   - Research Manager
+   - Content Manager
+   - Project Manager
+   - Custom workflow engine
 
-1. **ScrapeHelper.ts**:
-   - This module uses Puppeteer to scrape web pages and extract their text content.
-   - It provides a method `scrapePageWithPuppeteer` that takes a URL, launches a headless browser, navigates to the page, and returns the cleaned text.
+2. **Services**
+   - ChromaDB for vector storage
+   - LLM integration (supports multiple models)
+   - Mattermost client for chat interface
 
-2. **LMStudioService.ts**:
-   - This service class likely interacts with a language modeling studio or API.
-   - Its specific functionalities are not detailed in the provided code, but it could be involved in text processing tasks.
+3. **Helpers**
+   - ScrapeHelper for web content extraction
+   - SummaryHelper for content summarization
+   - SystemPromptBuilder for LLM interactions
 
-3. **ChromaDBService.ts**:
-   - This service class provides methods for interacting with ChromaDB.
-   - It is used to manage embeddings and their storage/retrieval, including adding documents and querying related content.
+## Setup
 
-4. **searchHelper.ts**:
-   - This helper class likely performs search operations using the stored embeddings.
-   - Specific implementations and methods are not detailed in the provided code.
+### Prerequisites
 
-5. **summaryHelper.ts**:
-   - This helper class likely generates summaries of research findings or scraped content.
-   - Specific implementations and methods are not detailed in the provided code.
+- Node.js
+- Mattermost server (for chat interface)
+- ChromaDB instance
+- Access to LLM API (supports multiple models)
+
+### Environment Configuration
+
+Create a `.env` file based on `env.defaults`:
+
+```env
+CHROMA_COLLECTION=webpage_scrapes
+MAX_SEARCHES=1
+MAX_FOLLOWS=0
+MAX_RESEARCH_REQUESTS=1
+EMBEDDING_MODEL=text-embedding-nomic-embed-text-v1.5
+CHAT_MODEL=qwen2.5-coder-14b-instruct
+CONTEXT_SIZE=16384
+```
+
+### Installation
+
+1. Clone the repository:
+```bash
+git clone [repository-url]
+```
+
+2. Install dependencies:
+```bash
+npm install
+```
+
+3. Configure your environment variables
+
+4. Start the service:
+```bash
+npm start
+```
 
 ## Usage
 
-### Prerequisites
-- Node.js installed on your machine.
-- Required packages: puppeteer, mattermost-client, chromadb (or compatible DB).
+### Chat Commands
 
-### Setup
-1. Clone the repository to your local machine.
-2. Install dependencies using `npm install`.
-3. Configure environment variables as needed in `env.defaults`.
+- Start new conversations with `/new`
+- Request research with natural language queries
+- Generate content outlines
+- Request email drafts
+- Manage projects and tasks through chat interface
 
-### Running the Project
-1. Start the main orchestrator by running a command like `npm start`.
-2. The orchestrator will fetch messages from the specified Mattermost channel, decompose tasks, and manage the research workflow.
+### Project Workflows
 
-## Dependencies
+1. **Research Workflow**
+   - Submit research request
+   - Automated web scraping
+   - Content summarization
+   - Final report generation
 
-This project relies on several key dependencies:
+2. **Content Development Workflow**
+   - Submit content request
+   - Outline generation
+   - Revision and refinement
+   - Section development
 
-- **puppeteer**: For web scraping.
-- **mattermost-client**: To interact with Mattermost servers.
-- **chromadb** (or compatible DB): For storing embeddings of scraped data.
-- **other dependencies**: Refer to `package.json` for a full list.
+3. **Email Drafting Workflow**
+   - Submit draft request
+   - Initial draft generation
+   - Iterative refinement
 
-To install these dependencies, run:
-```bash
-npm install
+## Development
+
+### Project Structure
+
+- `/src`
+  - `/agents` - Agent implementations
+  - `/llm` - LLM service integrations
+  - `/helpers` - Utility classes
+  - `/workflows` - Custom workflow definitions
+
+### Contributing
+
+1. Fork the repository
+2. Create a feature branch
+3. Submit a pull request
+
+## License
+
+[Your License Here]
+
+## Support
+
+[Your Support Information Here]

@@ -13,6 +13,7 @@ import { OnboardingConsultantResponse } from './schemas/onboarding';
 import { ModelResponse } from './schemas/ModelResponse';
 
 export enum OnboardingActivities {
+    Welcome = "welcome",
     UnderstandGoals = "understand-business-goals",
     SaveGoals = "save-business-goals",
     UnderstandService = "understand-service-usage",
@@ -38,7 +39,16 @@ export class OnboardingConsultant extends Agent<OnboardingProject, Task> {
     }
 
     protected async projectCompleted(project: OnboardingProject): Promise<void> {
-        await this.send({ message: `Your onboarding process is now complete. Thank you for your cooperation!` }, ONBOARDING_CHANNEL_ID);
+        const taskList = Object.values(project.tasks);
+        const onboardingTask = taskList.find(task => 
+            task.type === OnboardingActivities.UnderstandGoals
+        );
+        const instructions = `The user's onboarding process is now complete. Included is a list of tasks
+you worked on together which you can summarize with the user, and then encourage them to reach out to the @pm in #projects!`
+        if (onboardingTask?.complete) {
+            const response = await this.generate({ instructions: new TaskInputPrompt(instructions, taskList) });
+            await this.send({ message: response.message }, ONBOARDING_CHANNEL_ID);
+        }
     }
 
     constructor(userId: string, messagingHandle: string, chatClient: ChatClient, lmStudioService: LMStudioService, chromaDBService: ChromaDBService, projects: TaskManager) {
@@ -46,6 +56,51 @@ export class OnboardingConsultant extends Agent<OnboardingProject, Task> {
         this.setPurpose(`My name is Onboarding Consultant. My goal is to help you understand the service and how it can benefit your business.`);
         this.setupChatMonitor(ONBOARDING_CHANNEL_ID, messagingHandle);
         this.artifactManager = new ArtifactManager(this.chromaDBService);
+    }
+
+    public async initialize(): Promise<void> {
+        // Find any existing onboarding projects
+        const allProjects = Object.values(this.projects.getProjects());
+        const welcomeTask = Object.values(allProjects)
+            .flatMap(project => Object.values(project.tasks))
+            .find(task => 
+                task.type === OnboardingActivities.Welcome
+            );
+
+        if (!welcomeTask || !welcomeTask.complete) {
+            const welcomeMessage = {
+                message: `👋 Welcome! I'm your Onboarding Consultant, and I'm here to help you understand our service and how it can benefit your business.
+
+I can help you with:
+- Understanding your business goals
+- Creating a customized strategy
+- Setting up your service requirements
+- Documenting your needs
+
+Feel free to start by telling me about your business, or type "help" to see all available commands.`
+            };
+
+            await this.send(welcomeMessage, ONBOARDING_CHANNEL_ID);
+
+            // If no welcome task exists, create a new project with the welcome task
+            if (!welcomeTask) {
+                const { projectId, taskIds } = await this.addNewProject({
+                    projectName: "Initial Onboarding",
+                    tasks: [{
+                        description: "Initial welcome and user engagement",
+                        type: OnboardingActivities.Welcome
+                    }]
+                });
+
+                // Mark the welcome task as complete
+                if (taskIds.length > 0) {
+                    await this.projects.completeTask(taskIds[0]);
+                }
+            } else {
+                // If task exists but wasn't complete, mark it complete
+                await this.projects.completeTask(welcomeTask.id);
+            }
+        }
     }
 
     @HandleActivity("initial-inquiry", "Kickoff conversation about the user's business", ResponseType.CHANNEL)
@@ -58,7 +113,7 @@ ${this.getAvailableActions(ResponseType.RESPONSE).map(a => ` - ${a.activityType}
 
 Respond to the user's request, explaining to them the other available options.`;
 
-        const response = await this.generate(instructions, params);
+        const response = await this.generateOld(instructions, params);
 
         // Adding a new project
         const { projectId, taskIds } = await this.addNewProject({
@@ -151,7 +206,7 @@ Respond to the user's request, explaining to them the other available options.`;
             Respond with a summary of the gathered expectations and requirements.
         `;
 
-        const response = await this.generate(instructions, params);
+        const response = await this.generateOld(instructions, params);
         await this.reply(params.userPost, response);
 
         // Update the project with the service requirements
@@ -249,7 +304,7 @@ Respond to the user's request, explaining to them the other available options.`;
 
         try {
             // Generate the response
-            const responseJSON = await this.generate(instructions, params);
+            const responseJSON = await this.generateOld(instructions, params);
 
             // Extract missing tasks from the response
             const { missingTasks } = responseJSON;

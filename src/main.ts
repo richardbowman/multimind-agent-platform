@@ -6,7 +6,7 @@ import { chatBox, inputBox } from "./test/ui";
 import { ContentManager } from "src/agents/contentManager";
 import { setupUserAgent } from './test/userClient';
 import { CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID } from "./helpers/config";
-import { InMemoryChatStorage, InMemoryTestClient } from "./chat/testClient";
+import { InMemoryChatStorage, InMemoryTestClient } from "./chat/inMemoryChatClient";
 import { ContentWriter } from "./agents/contentWriter";
 import SimpleTaskManager from "./test/simpleTaskManager";
 import { ArtifactManager } from "./tools/artifactManager";
@@ -61,5 +61,6 @@ const pmAssistant = new ProjectManager(PROJECT_MANAGER_USER_ID, "@pm", pmClient,
 
 const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
 const onboardingAssistant = new OnboardingConsultant(ONBOARDING_CONSULTANT_USER_ID, "@onboarding", onboardingClient, lmStudioService, chromaService, tasks);
+await onboardingAssistant.initialize();
 
 setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);

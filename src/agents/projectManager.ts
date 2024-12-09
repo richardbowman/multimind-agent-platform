@@ -58,7 +58,7 @@ ${this.getAvailableActions(ResponseType.RESPONSE).map(a => ` - ${a.activityType}
 
 Respond to the user's request, explaining to them the other available options.`;
 
-        const response = await this.generate(instructions, params);
+        const response = await this.generateOld(instructions, params);
         await this.reply(params.userPost, response);
     }
 
@@ -73,7 +73,7 @@ ${this.getAvailableActions(ResponseType.RESPONSE).map(a => ` - ${a.activityType}
 
 Respond to the user's request, explaining to them the other available options.`;
 
-        const response = await this.generate(instructions, params);
+        const response = await this.generateOld(instructions, params);
         await this.reply(params.userPost, response);
     }
 
@@ -82,7 +82,7 @@ Respond to the user's request, explaining to them the other available options.`;
     private async startBrainstorming(params: HandlerParams) {
         const instructions = `Generate ideas for the user based on their concept or starting point. Try not to rule out ideas and focus on being creative.`;
 
-        const response = await this.generate(instructions, params);
+        const response = await this.generateOld(instructions, params);
         await this.reply(params.userPost, response);
     }
 
@@ -90,7 +90,7 @@ Respond to the user's request, explaining to them the other available options.`;
     private async continueBrainstorming(params: HandlerParams) {
         const instructions = `Generate ideas for the user based on their concept or starting point. Try not to rule out ideas and focus on being creative.`;
 
-        const response = await this.generate(instructions, params);
+        const response = await this.generateOld(instructions, params);
         await this.reply(params.userPost, response);
     }
 

@@ -15,6 +15,7 @@ export interface Task {
 export interface Project<Task> {
     id: string;
     name: string;
+    props?: Record<string, any>;
     tasks: Record<string, Task>;
 }
 

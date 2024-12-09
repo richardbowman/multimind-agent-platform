@@ -1,5 +1,5 @@
 import { ChatPost } from "src/chat/chatClient";
-import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from "src/chat/testClient";
+import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from "src/chat/inMemoryChatClient";
 import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";

@@ -6,10 +6,12 @@ import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from 
 import 'reflect-metadata';
 import { Agent, HandleActivity, HandlerParams, ResponseType } from "./agents";
 import EmailWorkflow from "./workflows/emailWorkflow";
+import schema from './schemas/schema.json';
 import { TaskManager } from "src/tools/taskManager";
 import { ResearchProject, ResearchTask } from "./researchAssistant";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
+import { ArtifactResponseSchema } from "./schemas/artifactSchema";
 
 export enum ResearchActivityType {
     DraftEmail = "draft-email",
@@ -60,8 +62,7 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
     protected async projectCompleted(project: ResearchProject): Promise<void> {
         const aggregatedData = await this.aggregateResults(project);
 
-        const { content, title } = await this.createFinalReport(project, aggregatedData);
-        const overallSummary = content;
+        const artifactResponse = await this.createFinalReport(project, aggregatedData);
 
         // find my original post
         const posts = await this.chatClient.fetchPreviousMessages(PROJECTS_CHANNEL_ID);
@@ -69,25 +70,24 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
 
         if (post) {
             await this.reply(post, {
-                message: overallSummary
+                message: artifactResponse.message
             });
-
         } else {
-            await this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, overallSummary);
+            await this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, artifactResponse.message);
         }
 
         // Save the report to an artifact
         const artifact: Artifact = {
             id: project.id,
             type: 'report',
-            content: overallSummary,
+            content: artifactResponse.artifactContent,
             metadata: {
-                title: title
+                title: artifactResponse.artifactTitle
             }
         };
 
         await this.artifactManager.saveArtifact(artifact);
-        Logger.info(`Report saved as artifact with ID ${project.id} and title "${title}"`);
+        Logger.info(`Report saved as artifact with ID ${project.id} and title "${artifactResponse.artifactTitle}"`);
     }
 
     private async replyWithProjectId(activityType: ResearchActivityType, projectId: string, channelId: string, post: ChatPost): Promise<ChatPost> {
@@ -106,54 +106,6 @@ Activity Type: **${activityType}**`;
             return this.chatClient.postInChannel(channelId, responseMessage, postProps);
         }
     }
-
-    // @HandleActivity('web-research', "Initiate research for user request", ResponseType.CHANNEL)
-    // private async handleWebResearch(params: HandlerParams) {
-    //     const project = this.addProject();
-
-    //     await this.decomposeTask(project.id, post.message);
-
-    //     const projectPost = await this.replyWithProjectId(ActivityType.WebResearch, project.id, channelId, post);
-
-    //     // tell the user
-    //     await this.postTaskList(project.id, channelId, projectPost);
-
-    //     // post each task to researchers in research channel
-    //     await this.assignResearcherTasks(project.id);
-    // }
-
-    // @HandleActivity('web-research', "Response to initial web research", ResponseType.RESPONSE)
-    // private async continueWebResearch(projectChain: ProjectChainResponse, post: ChatPost): Promise<void> {
-    //     if (post.getRootId()) {
-    //         const reply = await this.generateResearchReply(post.getRootId() || "", projectChain.posts);
-    //         await this.chatClient.postReply(post.getRootId() || "", post.channel_id, reply);
-    //     } else {
-    //         Logger.error("No root ID found in the project chain.")
-    //     }
-    // }
-
-
-
-    // @HandleActivity('draft-email', "Perform copy-editing to create an email draft.", ResponseType.CHANNEL)
-    // private async handleDraftEmail(channelId: string, post: ChatPost) {
-    //     const projectId = randomUUID();
-    //     Logger.info("Kicking off draft email workflow");
-
-    //     await this.decomposeTask(projectId, post.message);
-
-    //     const projectPost = await this.replyWithProjectId(ActivityType.DraftEmail, projectId, channelId, post);
-
-    //     const taskListMessage = await this.postTaskList(projectId, channelId, projectPost);
-    // }
-
-    // @HandleActivity('draft-email', "Alter the original email based on comments", ResponseType.RESPONSE)
-    // private async continueDraftEmail(projectChain: ProjectChainResponse, post: ChatPost): Promise<void> {
-    //     const workflow = new EmailWorkflow(projectChain.projectId, post.message, this.lmStudioService);
-    //     const response = await workflow.generateEmailReply(projectChain.posts);
-
-    //     // Send the draft email back to the user
-    //     await this.chatClient.postReply(post.getRootId(), post.channel_id, `Here is your draft email:\n\n${response}`);
-    // }
     @HandleActivity('web-research', "Initiate research for user request", ResponseType.CHANNEL)
     private async handleWebResearch(params: HandlerParams) {
         const { userPost } = params;
@@ -179,29 +131,6 @@ Activity Type: **${activityType}**`;
         } else {
             Logger.error("No root ID found in the project chain.")
         }
-    }
-
-    @HandleActivity('draft-email', "Perform copy-editing to create an email draft.", ResponseType.CHANNEL)
-    private async handleDraftEmail(params: HandlerParams) {
-        const { userPost } = params;
-        const projectId = randomUUID();
-        Logger.info("Kicking off draft email workflow");
-
-        await this.decomposeTask(projectId, userPost.message);
-
-        const projectPost = await this.replyWithProjectId(ResearchActivityType.DraftEmail, projectId, userPost.channel_id, userPost);
-
-        const taskListMessage = await this.postTaskList(projectId, userPost.channel_id, projectPost);
-    }
-
-    @HandleActivity('draft-email', "Alter the original email based on comments", ResponseType.RESPONSE)
-    private async continueDraftEmail(params: ProjectHandlerParams): Promise<void> {
-        const { projectChain, userPost } = params;
-        const workflow = new EmailWorkflow(projectChain.projectId, userPost.message, this.lmStudioService);
-        const response = await workflow.generateEmailReply(projectChain.posts);
-
-        // Send the draft email back to the user
-        await this.chatClient.postReply(userPost.getRootId(), userPost.channel_id, `Here is your draft email:\n\n${response}`);
     }
 
     private async fetchResearcherMessages(): Promise<ChatPost[]> {
@@ -335,7 +264,7 @@ Content Excerpt: ${r.text}
         }
     }
 
-    private async createFinalReport(project: ResearchProject, aggregatedData: string): Promise<{ content: string, title: string }> {
+    private async createFinalReport(project: ResearchProject, aggregatedData: string): Promise<ArtifactResponseSchema> {
         try {
             const systemPrompt = `
 You are a research manager. Your team of research assistants have completed web searches to look up information
@@ -343,27 +272,13 @@ based on your original requests list. Generate a comprehensive report based on t
 Make sure to include sources back to the results. Do not make up information missing in the search results.
 `;
 
-            const schema = {
-                type: 'object',
-                properties: {
-                    title: { type: 'string' },
-                    content: { type: 'string' }
-                },
-                required: ['title', 'content']
-            };
 
             const userPrompt = `Original Prompt: ${project.name}\nAggregated Data:\n${aggregatedData}`;
 
-
             // Use StructuredOutputPrompt to generate the report
-            const structuredPrompt = new StructuredOutputPrompt(schema, systemPrompt);
-            const responseJSON = await this.lmStudioService.sendStructuredRequest(userPrompt, structuredPrompt, undefined, undefined, 32000);
-
-            if (responseJSON.title && responseJSON.content) {
-                return { content: responseJSON.content, title: responseJSON.title };
-            } else {
-                throw new Error('Invalid response from LM Studio API');
-            }
+            const structuredPrompt = new StructuredOutputPrompt(schema.definitions.ArtifactResponseSchema, systemPrompt);
+            const responseJSON : ArtifactResponseSchema = await this.lmStudioService.sendStructuredRequest(userPrompt, structuredPrompt, undefined, undefined, 32000);
+            return responseJSON;
         } catch (error) {
             Logger.error('Error generating final report:', error);
             throw error;

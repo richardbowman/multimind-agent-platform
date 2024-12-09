@@ -1,8 +1,12 @@
 import { Task } from "src/tools/taskManager";
 
-export class StructuredInputPrompt {
-    private instructions: string;
+export interface InputPrompt {
+    getInstructions(): string;
+}
+
+export class StructuredInputPrompt implements InputPrompt {
     private inputData: any;
+    private instructions: string;
 
     constructor(instructions: string, inputData: any) {
         this.instructions = instructions;
@@ -22,7 +26,7 @@ export class StructuredInputPrompt {
     }
 }
 
-export class TaskInputPrompt {
+export class TaskInputPrompt implements InputPrompt {
     private instructions: string;
     private tasks: Task[];
 

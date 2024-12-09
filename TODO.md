@@ -3,6 +3,15 @@
 @researchAssistant.ts right now, we store webpage summaries as just chunks without using our artifact manager. start using the @ArtifactManager to store the summaries. also use this to make sure we don't perform duplicative searches across research tasks by checking to see if we've summarized a certain site already
 
 
+## 2024-12-08
+
+- [ ] structured artifacts
+  - [ ] content sections
+  - [ ] lists / requirements documents
+  - [ ] tables / spreadsheets
+- [ ] onboarding agent
+  - [ ] welcoming users
+  - [ ] understanding when onboarding is complete
 
 ## 2024-12-06
 

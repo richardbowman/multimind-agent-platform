@@ -4,3 +4,5 @@ chrome
 .output
 src/playground.ts
 TODO
+.aider*
+.env
