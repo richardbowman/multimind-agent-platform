@@ -65,6 +65,7 @@ export abstract class Agent<Project, Task> {
     protected projects: TaskManager;
     protected purpose: String = 'You are a helpful agent.';
     protected artifactManager: ArtifactManager;
+    protected isWorking: boolean = false;
 
     protected abstract projectCompleted(project: Project): void;
     protected abstract processTask(task: Task) : Promise<void>;
@@ -102,18 +103,28 @@ export abstract class Agent<Project, Task> {
     }
 
     async processTaskQueue(): Promise<void> {
+        if (this.isWorking) {
+            Logger.info('Task queue is already being processed');
+            return;
+        }
+
+        this.isWorking = true;
         let processedCount = 0;
         
-        while (true) {
-            const task: Task = await this.projects.getNextTaskForUser(this.userId);
-            if (!task) {
-                Logger.info(`Task queue processing complete. Processed ${processedCount} tasks.`);
-                return;
-            }
+        try {
+            while (true) {
+                const task: Task = await this.projects.getNextTaskForUser(this.userId);
+                if (!task) {
+                    Logger.info(`Task queue processing complete. Processed ${processedCount} tasks.`);
+                    return;
+                }
 
-            Logger.info(`Processing task ${task.id}: ${task.description}`);
-            await this.processTask(task);
-            processedCount++;
+                Logger.info(`Processing task ${task.id}: ${task.description}`);
+                await this.processTask(task);
+                processedCount++;
+            }
+        } finally {
+            this.isWorking = false;
         }
     }
 
