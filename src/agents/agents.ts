@@ -102,18 +102,18 @@ export abstract class Agent<Project, Task> {
     }
 
     async processTaskQueue(): Promise<void> {
-        const task : Task = await this.projects.getNextTaskForUser(this.userId);
-        if (!task) {
-            Logger.info("No more tasks for user.");
-            return;
-        }
+        let processedCount = 0;
+        
+        while (true) {
+            const task: Task = await this.projects.getNextTaskForUser(this.userId);
+            if (!task) {
+                Logger.info(`Task queue processing complete. Processed ${processedCount} tasks.`);
+                return;
+            }
 
-        await this.processTask(task);
-
-        // check for more tasks
-        const moreTasks : Task = await this.projects.getNextTaskForUser(this.userId);
-        if (moreTasks) {
-            await this.processTaskQueue();
+            Logger.info(`Processing task ${task.id}: ${task.description}`);
+            await this.processTask(task);
+            processedCount++;
         }
     }
 
