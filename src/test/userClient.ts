@@ -307,10 +307,32 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         screen.render();
     });
 
+    // Load all artifacts for global viewer
+    async function loadGlobalArtifacts() {
+        const allArtifacts = await artifactManager.listArtifacts();
+        globalArtifactList.setItems(allArtifacts.map(artifact => artifact.metadata?.title || artifact.id));
+        screen.render();
+        return allArtifacts;
+    }
+
+    // Handle global artifact list selection
+    globalArtifactList.on('select', async (item, index) => {
+        const allArtifacts = await loadGlobalArtifacts();
+        const selectedArtifact = allArtifacts[index];
+        
+        if (selectedArtifact) {
+            const contentToShow = `# ${selectedArtifact.metadata?.title || selectedArtifact.id}\n\n${selectedArtifact.content.toString()}`;
+            globalArtifactViewer.setMarkdown(contentToShow);
+            screen.render();
+        }
+    });
+
+    // Initial load of global artifacts
+    await loadGlobalArtifacts();
+
     screen.key(['escape', 'q', 'C-c'], function (ch, key) {
         if (!artifactDetailViewer.hidden) {
             artifactDetailViewer.hide();
-
             inputBox.setValue('');
             inputBox.show();
             inputBox.focus();

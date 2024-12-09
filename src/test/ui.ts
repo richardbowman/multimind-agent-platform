@@ -42,6 +42,11 @@ const tabContainer = blessed.listbar({
             key: "Log", 
             keys: ["C-b"],
             callback: () => { showTab2(); }
+        },
+        "Artifacts": {
+            key: "Artifacts",
+            keys: ["C-c"],
+            callback: () => { showTab3(); }
         }
     }
 });
@@ -69,6 +74,22 @@ const showTab2 = () => {
   taskList.hide();
   artifactList.hide();
   logBox.show();
+  globalArtifactList.hide();
+  globalArtifactViewer.hide();
+
+  screen.render();
+};
+
+const showTab3 = () => {
+  channelList.hide();
+  threadList.hide();
+  chatBox.hide();
+  inputBox.hide();
+  taskList.hide();
+  artifactList.hide();
+  logBox.hide();
+  globalArtifactList.show();
+  globalArtifactViewer.show();
 
   screen.render();
 };
@@ -298,3 +319,60 @@ export const artifactDetailViewer = markdown({
 });
 
 screen.append(artifactDetailViewer);
+
+// Create global artifact list and viewer
+export const globalArtifactList = blessed.list({
+    keys: true,
+    fg: 'green',
+    selectedFg: 'white',
+    selectedBg: 'blue',
+    interactive: true,
+    mouse: true,
+    focusable: true,
+    label: 'All Artifacts',
+    border: {
+        type: 'line'
+    },
+    style: {
+        header: {
+            bg: 'blue'
+        }
+    },
+    left: 0,
+    width: '30%',
+    top: 3,
+    height: '100%-3',
+    hidden: true
+});
+
+export const globalArtifactViewer = markdown({
+    top: 3,
+    left: '30%',
+    width: '70%',
+    height: '100%-3',
+    mouse: true,
+    keys: true,
+    scrollable: true,
+    label: 'Artifact Content',
+    focusable: true,
+    scrollbar: {
+        style: {
+            bg: 'blue'
+        },
+        track: {
+            bg: 'gray'
+        }
+    },
+    border: {
+        type: 'line',
+        fg: 'green'
+    },
+    style: {
+        bg: 'black',
+        fg: 'white'
+    },
+    hidden: true
+});
+
+screen.append(globalArtifactList);
+screen.append(globalArtifactViewer);
