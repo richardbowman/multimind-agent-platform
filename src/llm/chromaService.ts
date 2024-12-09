@@ -122,6 +122,10 @@ class ChromaDBService {
         await this.addDocuments(addCollection);
     }
 
+    async getTokenCount(text: string): Promise<number> {
+        return await this.lmStudioService.getTokenCount(text);
+    }
+
     computeHash(content: string): string {
         const hash = crypto.createHash('sha256');
         hash.update(content);
