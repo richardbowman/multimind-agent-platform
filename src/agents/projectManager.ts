@@ -338,7 +338,6 @@ Respond to the user's request, explaining to them the other available options.`;
                     type: ResearchActivityType.WebResearch,
                     complete: false
                 };
-                this.projects.assignTaskToAgent(taskId, RESEARCH_MANAGER_USER_ID);
             }
 
             // Create content tasks that depend on research completion
@@ -354,7 +353,6 @@ Respond to the user's request, explaining to them the other available options.`;
                     complete: false,
                     dependsOn: researchTaskIds[0] // Make content tasks depend on first research task
                 };
-                this.projects.assignTaskToAgent(taskId, CONTENT_MANAGER_USER_ID);
             }
 
             // Create and add the project
@@ -368,6 +366,16 @@ Respond to the user's request, explaining to them the other available options.`;
             };
 
             this.projects.addProject(newProject);
+
+            // Now assign tasks to agents after project is created
+            for (const taskId of Object.keys(tasks)) {
+                const task = tasks[taskId];
+                if (task.type === ResearchActivityType.WebResearch) {
+                    this.projects.assignTaskToAgent(taskId, RESEARCH_MANAGER_USER_ID);
+                } else if (task.type === ContentManagerActivityType.ConfirmCreateFullContent) {
+                    this.projects.assignTaskToAgent(taskId, CONTENT_MANAGER_USER_ID);
+                }
+            }
 
             await this.reply(params.userPost, {
                 message: responseMessage
