@@ -403,6 +403,7 @@ ${task.description || '*No description available*'}`;
                 '*No metadata available*';
 
             const contentToShow = `# ${selectedArtifact.metadata?.title || selectedArtifact.id}
+Type: ${selectedArtifact.type}
 
 ## Metadata
 ${metadataSection}
