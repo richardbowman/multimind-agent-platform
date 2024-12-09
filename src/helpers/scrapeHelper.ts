@@ -1,4 +1,4 @@
-import { chromium, devices } from 'playwright-extra';
+import { chromium, devices, Browser } from 'playwright-extra';
 import TurndownService from 'turndown';
 import { load } from 'cheerio';
 
@@ -11,12 +11,28 @@ import Logger from './logger';
 chromium.use(stealth())
 
 class ScrapeHelper {
+    private browser: Browser | null = null;
+
+    async initialize(): Promise<void> {
+        if (!this.browser) {
+            this.browser = await chromium.launch({ headless: false });
+        }
+    }
+
+    async cleanup(): Promise<void> {
+        if (this.browser) {
+            await this.browser.close();
+            this.browser = null;
+        }
+    }
     async scrapePage(url: string): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot: Buffer }> {
-        let browser, page;
+        if (!this.browser) {
+            await this.initialize();
+        }
+
+        let page;
         try {
-            // Launch the browser in headless mode
-            browser = await chromium.launch({ headless: false });
-            const context = await browser.newContext({
+            const context = await this.browser!.newContext({
                 javaScriptEnabled: true,
                 userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                 viewport: { width: 1920, height: 1080 },
@@ -135,7 +151,6 @@ class ScrapeHelper {
             throw error;
         } finally {
             if (page) await page.close();
-            if (browser) await browser.close();
         }
     }
 

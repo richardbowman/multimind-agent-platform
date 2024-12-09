@@ -52,6 +52,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Research Assistant ${RESEARCHER_TOKEN}`);
         await this.chromaDBService.initializeCollection(CHROMA_COLLECTION);
+        await this.scrapeHelper.initialize();
         await super.setupChatMonitor(WEB_RESEARCH_CHANNEL_ID, "@researchteam");
 
         // asynchronously check for old tasks and keep working on them
@@ -405,6 +406,10 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 
     getResults(): string[] {
         return this.results;
+    }
+
+    async cleanup(): Promise<void> {
+        await this.scrapeHelper.cleanup();
     }
 }
 
