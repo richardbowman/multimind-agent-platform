@@ -324,7 +324,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         
         if (selectedArtifact) {
             const contentToShow = `# ${selectedArtifact.metadata?.title || selectedArtifact.id}\n*${selectedArtifact.metadata?.tokenCount || '?'} tokens*\n\n${selectedArtifact.content.toString()}`;
-            globalArtifactViewer.setMarkdown(contentToShow);
+            globalArtifactViewer.setContent(contentToShow);
             screen.render();
         }
     });
