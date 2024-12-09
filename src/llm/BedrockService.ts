@@ -34,14 +34,15 @@ export class BedrockService implements ILLMService {
     }
 
     async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelResponse> {
-        const prompt = this.formatPrompt(instructions, userPost.message, history);
+        const messages = this.formatMessages(instructions, userPost.message, history);
         
         const command = new InvokeModelCommand({
             modelId: this.modelId,
             body: JSON.stringify({
-                prompt: prompt,
-                max_tokens_to_sample: 2048,
-                temperature: 0.7
+                anthropic_version: "bedrock-2023-05-31",
+                max_tokens: 2048,
+                temperature: 0.7,
+                messages: messages
             })
         });
 
@@ -49,7 +50,7 @@ export class BedrockService implements ILLMService {
             const response = await this.client.send(command);
             const result = JSON.parse(new TextDecoder().decode(response.body));
             return {
-                message: result.completion
+                message: result.content[0].text
             };
         } catch (error) {
             Logger.error("Bedrock API error:", error);
@@ -57,24 +58,52 @@ export class BedrockService implements ILLMService {
         }
     }
 
-    private formatPrompt(instructions: string, message: string, history?: ChatPost[]): string {
-        // Format prompt according to Bedrock's expected format
-        let prompt = `\n\nHuman: ${instructions}\n\nAssistant: I understand. I'll help with that.\n\nHuman: ${message}\n\nAssistant:`;
-        return prompt;
+    private formatMessages(instructions: string, message: string, history?: ChatPost[]): any[] {
+        const messages = [];
+        
+        // Add system instructions
+        messages.push({
+            role: "system",
+            content: instructions
+        });
+
+        // Add chat history if present
+        if (history) {
+            for (const post of history) {
+                messages.push({
+                    role: post.user_id === "assistant" ? "assistant" : "user",
+                    content: post.message
+                });
+            }
+        }
+
+        // Add the current message
+        messages.push({
+            role: "user",
+            content: message
+        });
+
+        return messages;
     }
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string): Promise<string> {
+        const messages = [...history, { role: "user", content: message }];
+        if (seedAssistant) {
+            messages.push({ role: "assistant", content: seedAssistant });
+        }
+
         const command = new InvokeModelCommand({
             modelId: this.modelId,
             body: JSON.stringify({
-                prompt: message,
-                max_tokens_to_sample: 2048
+                anthropic_version: "bedrock-2023-05-31",
+                max_tokens: 2048,
+                messages: messages
             })
         });
 
         const response = await this.client.send(command);
         const result = JSON.parse(new TextDecoder().decode(response.body));
-        return result.completion;
+        return result.content[0].text;
     }
 
     async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<any> {
