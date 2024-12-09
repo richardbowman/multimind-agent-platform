@@ -10,29 +10,15 @@ export const screen = blessed.screen({
     title: 'Chat Client'
 });
 
-// Create a main container box
-export const tab1Box = blessed.box({
-    top: 8,
-    left: 0,
-    width: '100%',
-    height: '100%-3',
-    style: {
-        fg: 'white',
-        bg: 'black'
-    }
-});
-
-screen.append(tab1Box);
-
 // Create a tab container
 export const tabContainer = blessed.listbar({
     top: 0,
     left: 0,
     width: '100%',
-    height: 4,
+    height: 1,
     keys: true,
     mouse: true,
-    items: {
+    commands: {
         "Chat": {
             key: "Chat",
             keys: ["C-a"],
@@ -53,6 +39,19 @@ export const tabContainer = blessed.listbar({
 
 screen.append(tabContainer);
 
+// Create a container for Tab 1
+export const tab1Box = blessed.box({
+    top: 2,
+    left: 0,
+    width: '100%',
+    height: '100%-3',
+    style: {
+        fg: 'white',
+        bg: 'black'
+    }
+});
+
+screen.append(tab1Box);
 // Create a box to select channels.
 export const channelList = blessed.list({
     keys: true,
@@ -70,9 +69,9 @@ export const channelList = blessed.list({
             bg: 'blue'
         }
     },
-    left: '0%',
+    left: 0,
     width: '30%',
-    top: 3,
+    top: 0,
     height: '35%'
 });
 
@@ -97,8 +96,8 @@ export const threadList = blessed.list({
     },
     left: '0%',
     width: '30%',
-    top: '35%+3',
-    height: '65%-5'
+    top: '35%',
+    height: '65%-2'
 });
 
 tab1Box.append(threadList);
@@ -270,8 +269,23 @@ export const artifactDetailViewer = markdown({
 
 screen.append(artifactDetailViewer);
 
+// Create a main container box
+export const tab3Box = blessed.box({
+    top: 2,
+    left: 0,
+    width: '100%',
+    height: '100%-2',
+    style: {
+        fg: 'white',
+        bg: 'black'
+    },
+    hidden: true
+});
+
+screen.append(tab3Box);
+
 // Create type filter dropdown
-export const artifactTypeFilter = blessed.list({
+export const artifactTypeFilter = blessed.listbar({
     keys: true,
     mouse: true,
     label: 'Filter by Type',
@@ -285,12 +299,18 @@ export const artifactTypeFilter = blessed.list({
         }
     },
     left: 0,
-    width: '30%',
-    top: 3,
-    height: 5,
-    items: ['All Types'],
-    hidden: true
+    width: '100%',
+    top: 0,
+    height: 3,
+    commands: {
+        'allitems': {
+            key: 'All Items',
+            callback: () => { artifactTypeFilter.emit('filter', 'allitems')}
+        }
+    }
 });
+
+tab3Box.append(artifactTypeFilter)
 
 // Create global artifact list and viewer
 export const globalArtifactList = blessed.list({
@@ -313,8 +333,7 @@ export const globalArtifactList = blessed.list({
     left: 0,
     width: '30%',
     top: 3,
-    height: '100%-3',
-    hidden: true
+    height: '100%-3'
 });
 
 export const globalArtifactViewer = markdown({
@@ -342,12 +361,11 @@ export const globalArtifactViewer = markdown({
     style: {
         bg: 'black',
         fg: 'white'
-    },
-    hidden: true
+    }
 });
 
-screen.append(globalArtifactList);
-screen.append(globalArtifactViewer);
+tab3Box.append(globalArtifactList);
+tab3Box.append(globalArtifactViewer);
 
 screen.render();
 
