@@ -56,7 +56,9 @@ export interface MessageOpts {
     contextWindowLength?: number;
 }
 
-export default class LMStudioService {
+import { ILLMService } from "./ILLMService";
+
+export default class LMStudioService implements ILLMService {
     private lmStudioClient: LMStudioClient;
     private embeddingModel?: IEmbeddingFunction;
     private chatModel?: LLMSpecificModel;
