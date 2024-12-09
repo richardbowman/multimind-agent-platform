@@ -61,37 +61,112 @@ export class BedrockService implements ILLMService {
 
     private formatMessages(message: string, history?: ChatPost[]): any[] {
         const messages = [];
+        let currentRole: string | null = null;
+        let currentContent: string[] = [];
 
-        // Add chat history if present
+        // Process history first
         if (history) {
             for (const post of history) {
-                messages.push({
-                    role: post.user_id === "assistant" ? "assistant" : "user",
-                    content: post.message
-                });
+                const role = post.user_id === "assistant" ? "assistant" : "user";
+                
+                if (role === currentRole) {
+                    // Merge consecutive messages of the same role
+                    currentContent.push(post.message);
+                } else {
+                    // Save previous message group if it exists
+                    if (currentRole) {
+                        messages.push({
+                            role: currentRole,
+                            content: currentContent.join("\n\n")
+                        });
+                    }
+                    // Start new message group
+                    currentRole = role;
+                    currentContent = [post.message];
+                }
             }
         }
 
-        // Add the current message
-        messages.push({
-            role: "user",
-            content: message
-        });
+        // Handle the current message
+        if (currentRole === "user") {
+            // Merge with previous user message if exists
+            currentContent.push(message);
+            messages.push({
+                role: "user",
+                content: currentContent.join("\n\n")
+            });
+        } else {
+            // Save previous message group if it exists
+            if (currentRole) {
+                messages.push({
+                    role: currentRole,
+                    content: currentContent.join("\n\n")
+                });
+            }
+            // Add the current message
+            messages.push({
+                role: "user",
+                content: message
+            });
+        }
 
         return messages;
     }
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string): Promise<string> {
-        let messages = [...history];
-        
-        // Only add the user message if it's not empty
-        if (message.trim()) {
-            messages.push({ role: "user", content: message });
+        let mergedMessages = [];
+        let currentRole: string | null = null;
+        let currentContent: string[] = [];
+
+        // Process history
+        for (const msg of history) {
+            if (msg.role === currentRole) {
+                currentContent.push(msg.content);
+            } else {
+                if (currentRole) {
+                    mergedMessages.push({
+                        role: currentRole,
+                        content: currentContent.join("\n\n")
+                    });
+                }
+                currentRole = msg.role;
+                currentContent = [msg.content];
+            }
         }
-        
-        // Add seed assistant message if provided
+
+        // Handle the current message if not empty
+        if (message.trim()) {
+            if (currentRole === "user") {
+                currentContent.push(message);
+            } else {
+                if (currentRole) {
+                    mergedMessages.push({
+                        role: currentRole,
+                        content: currentContent.join("\n\n")
+                    });
+                }
+                currentRole = "user";
+                currentContent = [message];
+            }
+        }
+
+        // Handle seed assistant message
         if (seedAssistant) {
-            messages.push({ role: "assistant", content: seedAssistant });
+            if (currentRole) {
+                mergedMessages.push({
+                    role: currentRole,
+                    content: currentContent.join("\n\n")
+                });
+            }
+            mergedMessages.push({
+                role: "assistant",
+                content: seedAssistant
+            });
+        } else if (currentRole) {
+            mergedMessages.push({
+                role: currentRole,
+                content: currentContent.join("\n\n")
+            });
         }
 
         const command = new InvokeModelCommand({
