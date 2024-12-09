@@ -17,8 +17,8 @@ export enum ProjectManagerActivities {
     ContinueBrainstorm = "continue-brainstorm",
     AnswerQuestions = "answer-questions",
     GenerateArtifact = "generate-artifact",
-    KickoffResearch = "kickoff-research-project",
-    KickoffContentDevelopment = "kickoff-content-development",
+    // KickoffResearch = "kickoff-research-project",
+    // KickoffContentDevelopment = "kickoff-content-development",
     KickoffComplexProject = "kickoff-complex-project"
 }
 
