@@ -15,7 +15,7 @@ class ScrapeHelper {
         let browser, page;
         try {
             // Launch the browser in headless mode
-            browser = await chromium.launch({ headless: true });
+            browser = await chromium.launch({ headless: false });
             const context = await browser.newContext({
                 javaScriptEnabled: true,
                 userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
