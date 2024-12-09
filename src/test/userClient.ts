@@ -4,7 +4,7 @@ import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
 import blessed from 'blessed';
-import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer } from "./ui";
+import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box } from "./ui";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { screen } from './ui'
 import { Task, TaskManager } from "src/tools/taskManager";
@@ -340,15 +340,13 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     // Load all artifacts for global viewer
     async function loadGlobalArtifacts(filterType: string = 'All Types') {
         const allArtifacts = await artifactManager.listArtifacts();
-        
+
         // Update type filter options if needed
         const types = ['All Types', ...new Set(allArtifacts.map(a => a.type))];
-        if (JSON.stringify(types) !== JSON.stringify(artifactTypeFilter.items)) {
-            artifactTypeFilter.setItems(types);
-        }
+        //artifactTypeFilter.setItems(types);
 
         // Filter artifacts by type
-        const filteredArtifacts = filterType === 'All Types' 
+        const filteredArtifacts = filterType === 'All Types'
             ? allArtifacts
             : allArtifacts.filter(a => a.type === filterType);
 
@@ -406,8 +404,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         tab1Box.show();
         logBox.hide();
 
-        globalArtifactList.hide();
-        globalArtifactViewer.hide();
+        tab3Box.hide();
 
         screen.render();
     };
@@ -431,17 +428,15 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         // Initial load of global artifacts
         await loadGlobalArtifacts();
 
-        artifactTypeFilter.show();
-        globalArtifactList.show();
-        globalArtifactViewer.show();
-
-        // Handle type filter selection
-        artifactTypeFilter.on('select', async (item) => {
-            await loadGlobalArtifacts(item.content);
-        });
+        tab3Box.show();
 
         screen.render();
     };
+
+    // Handle type filter selection
+    artifactTypeFilter.on('select', async (item) => {
+        await loadGlobalArtifacts(item.content);
+    });
 
     // Initially show chat tab
     showTab1();
