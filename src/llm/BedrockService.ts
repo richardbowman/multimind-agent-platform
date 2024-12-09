@@ -117,11 +117,14 @@ export class BedrockService implements ILLMService {
         let mergedMessages = [];
         let currentRole: string | null = null;
         let currentContent: string[] = [];
+        let systemPrompt = "You are a helpful assistant";
 
         // Process history
         for (const msg of history) {
             if (msg.role === currentRole) {
                 currentContent.push(msg.content);
+            } else if (msg.role === "system") {
+                systemPrompt = msg.content;
             } else {
                 if (currentRole) {
                     mergedMessages.push({
@@ -174,7 +177,8 @@ export class BedrockService implements ILLMService {
             body: JSON.stringify({
                 anthropic_version: "bedrock-2023-05-31",
                 max_tokens: 2048,
-                messages: messages
+                system: systemPrompt,
+                messages: mergedMessages
             })
         });
 
