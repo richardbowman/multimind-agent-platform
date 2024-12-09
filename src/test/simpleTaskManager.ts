@@ -128,6 +128,10 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         this.projects[project.id] = project;
         await this.save();
     }
+
+    getProjects(): Project<Task>[] {
+        return Object.values(this.projects);
+    }
 }
 
 export default SimpleTaskManager;

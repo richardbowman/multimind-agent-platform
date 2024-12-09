@@ -29,4 +29,5 @@ export interface TaskManager extends EventEmitter {
     load(): Promise<void>;
     assignTaskToAgent(taskId: string, agentId: string): void;
     getNextTaskForUser(userId: string): Promise<Task | null>;
+    getProjects(): Project<Task>[];
 }
