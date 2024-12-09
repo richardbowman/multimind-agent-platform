@@ -1,6 +1,6 @@
 // lmstudioService.ts
 
-import { EmbeddingSpecificModel,LLMSpecificModel,LMStudioClient } from "@lmstudio/sdk";
+import { EmbeddingSpecificModel,LLMPredictionOpts,LLMSpecificModel,LMStudioClient } from "@lmstudio/sdk";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
@@ -58,8 +58,8 @@ export interface MessageOpts {
 
 export default class LMStudioService {
     private lmStudioClient: LMStudioClient;
-    private embeddingModel: IEmbeddingFunction;
-    private chatModel: LLMSpecificModel;
+    private embeddingModel?: IEmbeddingFunction;
+    private chatModel?: LLMSpecificModel;
 
     constructor() {
         this.lmStudioClient = new LMStudioClient({
@@ -111,7 +111,7 @@ export default class LMStudioService {
                 content: userPost.message
             }            
         ];
-        const result = await this.chatModel.respond(messageChain, {});
+        const result = await this.getChatModel().respond(messageChain, {});
         return {
             message: result.content
         };
@@ -146,7 +146,7 @@ export default class LMStudioService {
         //     }
         // }
 
-        const opts = { maxPredictedTokens: maxTokens  };
+        const opts : LLMPredictionOpts = { maxPredictedTokens: maxTokens  };
         if (schema) {
             opts.structured = { type: "json", jsonSchema: schema }; 
         }
@@ -183,7 +183,7 @@ export default class LMStudioService {
             systemMessage, ...history||[], userMessage
         ];
 
-        const opts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens  };
+        const opts : LLMPredictionOpts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens  };
 
         // If contextWindowLength is provided, truncate the history
         const contextLength = parseInt(process.env.CONTEXT_SIZE||"") || contextWindowLength || 4096;
@@ -219,7 +219,7 @@ export default class LMStudioService {
             systemMessage, ...this.mapPosts(userPost, history), userMessage
         ];
 
-        const opts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens  };
+        const opts : LLMPredictionOpts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens  };
         
         // Set the maxTokens parameter for the LLaMA model
         const prediction = this.chatModel.respond(messageChain, opts);
@@ -228,11 +228,13 @@ export default class LMStudioService {
         return JSON5.parse(resultBody);
     }
 
-    getEmbeddingModel() {
+    getEmbeddingModel() : IEmbeddingFunction {
+        if (!this.embeddingModel) throw new Error("LMStudioService not initalized");
         return this.embeddingModel;
     }
 
-    getLlamaModel() {
+    getChatModel() : LLMSpecificModel {
+        if (!this.chatModel) throw new Error("LMStudioService not initalized");
         return this.chatModel;
     }
 }
