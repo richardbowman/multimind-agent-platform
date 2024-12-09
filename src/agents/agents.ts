@@ -127,9 +127,22 @@ export abstract class Agent<Project, Task> {
                 }
 
                 Logger.info(`Processing task ${task.id}: ${task.description}`);
-                await this.processTask(task);
-                await this.projects.completeTask(task);
-                processedCount++;
+                try {
+                    // Mark task as in progress before starting
+                    await this.projects.markTaskInProgress(task);
+                    
+                    // Attempt to process the task
+                    await this.processTask(task);
+                    
+                    // If we get here, task completed successfully
+                    await this.projects.completeTask(task);
+                    processedCount++;
+                } catch (error) {
+                    // If task fails, leave it in progress but log the error
+                    Logger.error(`Failed to process task ${task.id}:`, error);
+                    // Re-throw to stop processing queue on error
+                    throw error;
+                }
             }
         } finally {
             this.isWorking = false;
