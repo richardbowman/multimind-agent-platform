@@ -343,7 +343,18 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         // Update type filter options if needed
         const types = ['All Types', ...new Set(allArtifacts.map(a => a.type))];
-        //artifactTypeFilter.setItems(types);
+        
+        // Create commands object for listbar
+        const commands = types.reduce((acc, type) => {
+            const key = type.toLowerCase().replace(/\s+/g, '-');
+            acc[key] = {
+                key: type,
+                callback: () => loadGlobalArtifacts(type)
+            };
+            return acc;
+        }, {});
+
+        artifactTypeFilter.setItems(commands);
 
         // Filter artifacts by type
         const filteredArtifacts = filterType === 'All Types'
@@ -433,10 +444,6 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         screen.render();
     };
 
-    // Handle type filter selection
-    artifactTypeFilter.on('select', async (item) => {
-        await loadGlobalArtifacts(item.content);
-    });
 
     // Initially show chat tab
     showTab1();
