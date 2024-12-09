@@ -54,9 +54,16 @@ export function HandleActivity(activityType: string, usage: string, responseType
     };
 }
 
+interface ThreadSummary {
+    summary: string;
+    lastProcessedMessageId: string;
+    messageCount: number;
+}
+
 export abstract class Agent<Project, Task> {
     private chatClient: ChatClient;
     private isMemoryEnabled: boolean = false;
+    private threadSummaries: Map<string, ThreadSummary> = new Map();
 
     protected lmStudioService: LMStudioService;
     protected userId: string;
@@ -384,6 +391,82 @@ export abstract class Agent<Project, Task> {
         return filteredArtifacts.map(artifact => ` - ${artifact.id}: ${artifact.metadata?.title}`).join('\n');
     }
 
+    private async getThreadSummary(posts: ChatPost[]): Promise<string> {
+        // If thread is short enough, no need to summarize
+        if (posts.length <= 3) {
+            return posts.map(p => `${p.user_id === this.userId ? 'Assistant' : 'User'}: ${p.message}`).join('\n');
+        }
+
+        const threadId = posts[0].getRootId() || posts[0].id;
+        const existingSummary = this.threadSummaries.get(threadId);
+        
+        // Find index of last processed message
+        let startIndex = 0;
+        if (existingSummary) {
+            startIndex = posts.findIndex(p => p.id === existingSummary.lastProcessedMessageId) + 1;
+            if (startIndex <= 0) {
+                // If we can't find the last processed message, start fresh
+                startIndex = 0;
+            }
+        }
+
+        // If no new messages to process, return existing summary
+        if (startIndex === posts.length && existingSummary) {
+            return existingSummary.summary;
+        }
+
+        // Get new messages that need to be processed
+        const newMessages = posts.slice(startIndex);
+
+        const llmMessages = [{
+            role: "system",
+            content: existingSummary 
+                ? `Given this existing conversation summary:
+                   "${existingSummary.summary}"
+                   
+                   Update it to include these new messages, maintaining the same concise style.
+                   Focus on how the new messages advance or change the conversation.
+                   Keep the total summary under 200 words.`
+                : `Summarize this conversation thread concisely, focusing on:
+                   1. The main topic or request
+                   2. Key decisions or information shared
+                   3. The current state of the discussion
+                   Keep the summary under 200 words.`
+        }];
+
+        // Add only new messages as context
+        newMessages.forEach(post => {
+            llmMessages.push({
+                role: post.user_id === this.userId ? "assistant" : "user",
+                content: post.message
+            });
+        });
+
+        const updatedSummary = await this.lmStudioService.sendMessageToLLM(
+            "Please update/create the conversation summary.",
+            llmMessages
+        );
+
+        // Store the updated summary
+        this.threadSummaries.set(threadId, {
+            summary: updatedSummary,
+            lastProcessedMessageId: posts[posts.length - 1].id,
+            messageCount: posts.length
+        });
+
+        return `Thread Summary:\n${updatedSummary}\n\nLatest message:\n${posts[posts.length - 1].message}`;
+    }
+
+    private cleanupOldSummaries(maxAge: number = 1000 * 60 * 60) { // default 1 hour
+        const now = Date.now();
+        for (const [threadId, summary] of this.threadSummaries.entries()) {
+            const message = this.getMessage(summary.lastProcessedMessageId);
+            if (now - message.create_at > maxAge) {
+                this.threadSummaries.delete(threadId);
+            }
+        }
+    }
+
     private async classifyResponse(post: ChatPost, channelType: ResponseType, history?: ChatPost[]): Promise<{ activityType: string, requestedArtifacts: string[], searchQuery: string, searchResults: SearchResult[] }> {
         const artifactList = await this.getArtifactList();
         const availableActions = history ? this.getAvailableActions(ResponseType.RESPONSE) : this.getAvailableActions(ResponseType.CHANNEL);
@@ -402,9 +485,12 @@ export abstract class Agent<Project, Task> {
             "required": ["reasoning", "activityType", "searchQuery"]
         };
 
+        // Get thread summary if there's history
+        const threadContext = history ? await this.getThreadSummary(history) : undefined;
+
         let prompt = `Follow these steps:
-            1. Consider the ${channelType === ResponseType.RESPONSE ? `thread response` : `new channel message`} you've received 
-               ${channelType === ResponseType.RESPONSE ? `and any preceding messages in the thread (if applicable)` : ``}. What is it asking for or confirming?
+            1. Consider the ${channelType === ResponseType.RESPONSE ? `thread response` : `new channel message`} you've received.
+               ${threadContext ? `\nThread Context:\n${threadContext}` : ''}
             2. Generate a specific query that should be used to retrieve relevant information for this request.
             3. Here are the possible follow-up activity types to consider:
                     ${availableActions.map(a => ` - ${a.activityType}: ${a.usage}`).join('\n')}
@@ -424,15 +510,6 @@ export abstract class Agent<Project, Task> {
 
         let llmMessages: { role: string, content: string }[] = [];
         llmMessages.push({ role: "system", content: prompt });
-
-        if (history) {
-            history.forEach((chatPost, index) => {
-                const role = chatPost.user_id === this.userId ? "assistant" : "user";
-                llmMessages.push({ role: role, content: `${index + 1}. ${chatPost.message}` });
-            });
-        }
-
-        // Add the current post to the history
         llmMessages.push({ role: "user", content: post.message });
 
         const rawResponse = await this.lmStudioService.sendMessageToLLM(post.message, llmMessages, undefined, 8192, 1024, jsonSchema);
