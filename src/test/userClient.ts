@@ -337,10 +337,9 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         screen.render();
     });
 
-    // Load all artifacts for global viewer
-    async function loadGlobalArtifacts(filterType: string = 'All Types') {
-        const allArtifacts = await artifactManager.listArtifacts();
+    let allArtifacts : Artifact[];
 
+    async function loadArtifactFilter() {
         // Update type filter options if needed
         const types = ['All Types', ...new Set(allArtifacts.map(a => a.type))];
         
@@ -355,7 +354,10 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         }, {});
 
         artifactTypeFilter.setItems(commands);
+    }
 
+    // Load all artifacts for global viewer
+    async function loadGlobalArtifacts(filterType: string = 'All Types') {
         // Filter artifacts by type
         const filteredArtifacts = filterType === 'All Types'
             ? allArtifacts
@@ -370,7 +372,6 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
     // Handle global artifact list selection
     globalArtifactList.on('select', async (item, index) => {
-        const allArtifacts = await loadGlobalArtifacts();
         const selectedArtifact = allArtifacts[index];
 
         if (selectedArtifact) {
@@ -437,6 +438,8 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         logBox.hide();
 
         // Initial load of global artifacts
+        allArtifacts = await artifactManager.listArtifacts();
+        await loadArtifactFilter();
         await loadGlobalArtifacts();
 
         tab3Box.show();
