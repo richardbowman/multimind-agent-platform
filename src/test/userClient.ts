@@ -296,8 +296,24 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             const task = tasks.find(t => t.id === selectedTaskId || t.title === selectedTaskId);
 
             if (task) {
-                // Use the title if it exists, otherwise use the ID
-                Logger.info(`Title: ${task.title || selectedTaskId}\n\nDescription:\n${task.description}`);
+                const status = task.complete ? 'Completed' : (task.inProgress ? 'In Progress' : 'Not Started');
+                const assignee = task.assignee ? storage.getHandleNameForUserId(task.assignee) : 'Unassigned';
+                
+                const contentToShow = `# ${task.title || task.id}
+
+## Status
+- **State**: ${status}
+- **Assignee**: ${assignee}
+${task.dependsOn ? `- **Depends On**: ${task.dependsOn}` : ''}
+${task.order !== undefined ? `- **Order**: ${task.order}` : ''}
+
+## Description
+${task.description || '*No description available*'}`;
+
+                inputBox.hide();
+                taskDetailViewer.setMarkdown(contentToShow);
+                taskDetailViewer.show();
+                taskDetailViewer.focus();
             } else {
                 Logger.info('Task not found.');
             }
@@ -396,8 +412,9 @@ ${selectedArtifact.content.toString()}`;
     });
 
     screen.key(['escape', 'q', 'C-c'], function (ch, key) {
-        if (!artifactDetailViewer.hidden) {
+        if (!artifactDetailViewer.hidden || !taskDetailViewer.hidden) {
             artifactDetailViewer.hide();
+            taskDetailViewer.hide();
             inputBox.setValue('');
             inputBox.show();
             inputBox.focus();

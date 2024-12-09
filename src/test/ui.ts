@@ -269,6 +269,39 @@ export const artifactDetailViewer = markdown({
 
 screen.append(artifactDetailViewer);
 
+export const taskDetailViewer = markdown({
+    top: '10%',
+    left: '10%',
+    width: '80%',
+    height: '80%',
+    mouse: true,
+    keys: true,
+    scrollable: true,
+    label: 'Task Viewer',
+    focusable: true,
+    scrollbar: {
+        style: {
+            bg: 'blue'
+        },
+        track: {
+            bg: 'gray'
+        }
+    },
+    border: {
+        type: 'line',
+        fg: 'green'
+    },
+    style: {
+        bg: 'black',
+        fg: 'white'
+    },
+    shadow: true,
+    draggable: true,
+    hidden: true
+});
+
+screen.append(taskDetailViewer);
+
 // Create a main container box
 export const tab3Box = blessed.box({
     top: 2,
