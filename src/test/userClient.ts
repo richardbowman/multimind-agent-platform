@@ -248,7 +248,12 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         // Populate the list pane with tasks including completion status and assignee
         taskList.setItems(tasks.map(task => {
-            const checkbox = task.complete ? '[x]' : '[ ]';
+            let checkbox = '[ ]';  // default incomplete
+            if (task.complete) {
+                checkbox = '[x]';  // completed
+            } else if (task.assignee) {
+                checkbox = '[~]';  // in progress (assigned but not complete)
+            }
             const assignee = task.assignee ? ` (${storage.getHandleNameForUserId(task.assignee)})` : '';
             return `${checkbox} ${task.description || task.id}${assignee}`;
         }));
