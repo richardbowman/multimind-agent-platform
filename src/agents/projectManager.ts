@@ -2,16 +2,15 @@ import { randomUUID } from 'crypto';
 import Logger from '../helpers/logger';
 import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
 import { Project, TaskManager } from "src/tools/taskManager";
-import { ChatClient, ChatPost, ProjectChainResponse } from 'src/chat/chatClient';
+import { ChatClient } from 'src/chat/chatClient';
 import LMStudioService, { StructuredOutputPrompt } from 'src/llm/lmstudioService';
-import { CONTENT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCH_MANAGER_USER_ID, RESEARCHER_USER_ID } from 'src/helpers/config';
+import { CONTENT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCH_MANAGER_USER_ID } from 'src/helpers/config';
 import { Task } from "src/tools/taskManager";
-import { CONTENT_DECOMPOSITION_SYSTEM_PROMPT, ContentDecompositionPrompt } from './schemas/contentSchemas';
-import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
 import ChromaDBService from 'src/llm/chromaService';
 import { ResearchActivityType } from './researchManager';
 import { ContentManagerActivityType } from './contentManager';
+import { RequestArtifacts } from './schemas/ModelResponse';
 
 export enum ProjectManagerActivities {
     InitateBrainstorm = "initiate-brainstorm",
@@ -30,9 +29,7 @@ export interface PlanningProject extends Project<Task> {
 }
 
 export class ProjectManager extends Agent<PlanningProject, Task> {
-    private artifactManager: ArtifactManager;
-
-    protected taskNotification(task: Task): void {
+    protected processTask(task: Task): Promise<void> {
         throw new Error('Method not implemented.');
     }
 
@@ -44,7 +41,6 @@ export class ProjectManager extends Agent<PlanningProject, Task> {
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
         this.setPurpose(`My name is Mesa. My goal is to help develop standardized processes for your business.`)
         this.setupChatMonitor(PROJECTS_CHANNEL_ID, messagingHandle);
-        this.artifactManager = new ArtifactManager(this.chromaDBService);
     }
 
     
@@ -140,7 +136,7 @@ Respond to the user's request, explaining to them the other available options.`;
             await this.reply(params.userPost, {
                 message: `${confirmationMessage} Your artifact titled "${title}" has been generated and saved. You can find it under ID: ${artifact.id}`,
                 artifactIds: [artifact.id]
-            });
+            } as RequestArtifacts);
         } catch (error) {
             Logger.error('Error generating artifact:', error);
             await this.reply(params.userPost, {
