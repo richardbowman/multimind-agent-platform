@@ -332,7 +332,8 @@ ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}
         // Save summary(s)
         const results = await this.searchDoc(searchUrl, task);
         if (results.documents.length > 0) {
-            const summary = await this.summaryHelper.summarizeContent(task, results.documents.join("\n\n"), this.lmStudioService);
+            const contentWithMetadata = `Page Title: ${title}\nURL: ${searchUrl}\n\n${results.documents.join("\n\n")}`;
+            const summary = await this.summaryHelper.summarizeContent(task, contentWithMetadata, this.lmStudioService);
             pageSummaries.push(summary);
     
             // Save summary as an artifact
