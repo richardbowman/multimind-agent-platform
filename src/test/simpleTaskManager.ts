@@ -21,6 +21,19 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
             const maxOrder = Math.max(...existingTasks.map(t => t.order ?? 0), 0);
             task.order = maxOrder + 1;
         }
+
+        // If not explicitly set, make this task depend on the task with the next lowest order
+        if (task.dependsOn === undefined) {
+            const existingTasks = Object.values(this.projects[project.id].tasks || {});
+            const previousTask = existingTasks
+                .filter(t => (t.order ?? Infinity) < (task.order ?? Infinity))
+                .sort((a, b) => (b.order ?? 0) - (a.order ?? 0))[0];
+            
+            if (previousTask) {
+                task.dependsOn = previousTask.id;
+            }
+        }
+
         this.projects[project.id].tasks[task.id] = task;
         await this.save();
         return task;
@@ -79,14 +92,29 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
             const userTasks = Object.values(project.tasks || [])
-                .filter(t => t.assignee === userId && !t.complete)
+                .filter(t => {
+                    // Task must be assigned to user and not complete
+                    if (t.assignee !== userId || t.complete) {
+                        return false;
+                    }
+                    
+                    // If task depends on another task, check if dependency is complete
+                    if (t.dependsOn) {
+                        const dependentTask = project.tasks[t.dependsOn];
+                        if (!dependentTask?.complete) {
+                            return false;
+                        }
+                    }
+                    
+                    return true;
+                })
                 .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
             
             if (userTasks.length > 0) {
                 return userTasks[0];
             }
         }
-        Logger.info(`No tasks assigned to user ${userId} found.`);
+        Logger.info(`No available tasks for user ${userId} found.`);
         return null;
     }
 

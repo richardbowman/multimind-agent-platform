@@ -15,6 +15,7 @@ export interface Task {
     assignee?: string;
     complete?: boolean;
     order?: number;  // Lower numbers come first
+    dependsOn?: string;  // ID of the task that must complete before this one can start
 }
 
 export interface RecurringTask extends Task {
