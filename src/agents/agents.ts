@@ -128,6 +128,7 @@ export abstract class Agent<Project, Task> {
 
                 Logger.info(`Processing task ${task.id}: ${task.description}`);
                 await this.processTask(task);
+                await this.projects.completeTask(task);
                 processedCount++;
             }
         } finally {
