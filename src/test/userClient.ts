@@ -4,7 +4,7 @@ import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
 import blessed from 'blessed';
-import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer } from "./ui";
+import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer } from "./ui";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { screen } from './ui'
 import { Task, TaskManager } from "src/tools/taskManager";
@@ -13,8 +13,8 @@ import { Artifact } from "src/tools/artifact";
 export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager, taskManager: TaskManager) {
     const USER_ID = "test";
     const UserClient = new InMemoryTestClient(USER_ID, "test", storage);
-    let tasks : Task[] = [];
-    let artifacts : Artifact[] = [];
+    let tasks: Task[] = [];
+    let artifacts: Artifact[] = [];
 
     let currentThreadId: string | null = null;
     let currentChannelId: string | null = null;
@@ -149,12 +149,12 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     });
 
     function getLastUserMessage(): string | null {
-        const posts = storage.posts.filter(post => 
-            post.channel_id === currentChannelId && 
+        const posts = storage.posts.filter(post =>
+            post.channel_id === currentChannelId &&
             (post.getRootId() === currentThreadId || post.id === currentThreadId || (currentThreadId === null && !post.getRootId())) &&
             post.user_id === USER_ID
         );
-        
+
         if (posts.length === 0) return null;
         return posts[posts.length - 1].message;
     }
@@ -230,7 +230,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         // Populate the list pane with artifact IDs or titles if they exist
         artifactList.setItems(artifacts.map(artifact => artifact.metadata?.title || artifact.id));
-        
+
         screen.render();
     }
 
@@ -239,11 +239,11 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
         let projects = [];
         tasks = [];
-        for(let projectId of projectIds) {
+        for (let projectId of projectIds) {
             const project = await taskManager.getProject(projectId);
-            if(!project) continue
+            if (!project) continue
             projects.push(project);
-            tasks = [...Object.values(project.tasks).filter(t => !t.complete)];
+            tasks = [...tasks, ...Object.values(project.tasks)].sort((a, b) => Number(a.complete) - Number(b.complete));
         }
 
         // Populate the list pane with tasks including completion status and assignee
@@ -251,13 +251,13 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             let checkbox = '[ ]';  // default incomplete
             if (task.complete) {
                 checkbox = '[x]';  // completed
-            } else if (task.assignee) {
+            } else if (task.inProgress) {
                 checkbox = '[~]';  // in progress (assigned but not complete)
             }
             const assignee = task.assignee ? ` (${storage.getHandleNameForUserId(task.assignee)})` : '';
             return `${checkbox} ${task.description || task.id}${assignee}`;
         }));
-        
+
         screen.render();
     }
 
@@ -272,7 +272,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         try {
             const artifact = artifacts.find(a => a.id === selectedArtifactId || a.metadata?.title === selectedArtifactId);
-            
+
             if (artifact) {
                 // Use the title if it exists, otherwise use the ID
                 const contentToShow = `Title: ${artifact.metadata?.title || selectedArtifactId}\n\nContent:\n${artifact.content.toString()}`;
@@ -294,7 +294,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         try {
             const task = tasks.find(t => t.id === selectedTaskId || t.title === selectedTaskId);
-            
+
             if (task) {
                 // Use the title if it exists, otherwise use the ID
                 Logger.info(`Title: ${task.title || selectedTaskId}\n\nDescription:\n${task.description}`);
@@ -314,14 +314,14 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     artifactList.on('select', async (item, index) => {
         const selectedArtifactId = item.content;
         if (!selectedArtifactId) return;
-    
+
         try {
             const artifact = artifacts.find(a => a.id === selectedArtifactId || a.metadata?.title === selectedArtifactId);
-            
+
             if (artifact) {
                 // Use the title if it exists, otherwise use the ID
                 const contentToShow = `Title: ${artifact.metadata?.title || selectedArtifactId}\n\nContent:\n${artifact.content.toString()}`;
-                
+
                 inputBox.hide();
                 artifactDetailViewer.setMarkdown(contentToShow);
                 artifactDetailViewer.show();
@@ -333,15 +333,15 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             console.error('Error loading artifact:', error);
             Logger.info('Failed to load artifact. Please try again later.');
         }
-    
+
         screen.render();
     });
 
     // Load all artifacts for global viewer
     async function loadGlobalArtifacts() {
         const allArtifacts = await artifactManager.listArtifacts();
-        globalArtifactList.setItems(allArtifacts.map(artifact => 
-          `${artifact.metadata?.title || artifact.id} (${artifact.metadata?.tokenCount || '?'} tokens)`
+        globalArtifactList.setItems(allArtifacts.map(artifact =>
+            `${artifact.metadata?.title || artifact.id} (${artifact.metadata?.tokenCount || '?'} tokens)`
         ));
         screen.render();
         return allArtifacts;
@@ -351,16 +351,13 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     globalArtifactList.on('select', async (item, index) => {
         const allArtifacts = await loadGlobalArtifacts();
         const selectedArtifact = allArtifacts[index];
-        
+
         if (selectedArtifact) {
             const contentToShow = `# ${selectedArtifact.metadata?.title || selectedArtifact.id}\n*${selectedArtifact.metadata?.tokenCount || '?'} tokens*\n\n${selectedArtifact.content.toString()}`;
             globalArtifactViewer.setContent(contentToShow);
             screen.render();
         }
     });
-
-    // Initial load of global artifacts
-    await loadGlobalArtifacts();
 
     screen.key(['escape', 'q', 'C-c'], function (ch, key) {
         if (!artifactDetailViewer.hidden) {
@@ -374,8 +371,62 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         }
     });
 
-    inputBox.on("focus", () => { 
+    inputBox.on("focus", () => {
         inputBox.input();
         screen.render();
     })
+
+    tabContainer.on('menu', (key) => {
+        switch (key) {
+            case 'chat':
+                showTab1()
+                break;
+            case 'log':
+                showTab2()
+                break;
+            case 'artifacts':
+                showTab3()
+                break;
+        }
+    });
+
+    const showTab1 = () => {
+        tab1Box.show();
+        logBox.hide();
+
+        globalArtifactList.hide();
+        globalArtifactViewer.hide();
+
+        screen.render();
+    };
+
+
+    const showTab2 = () => {
+        tab1Box.hide();
+        logBox.show();
+
+        globalArtifactList.hide();
+        globalArtifactViewer.hide();
+
+        screen.render();
+    };
+
+    const showTab3 = async () => {
+        tab1Box.hide();
+
+        logBox.hide();
+
+        // Initial load of global artifacts
+        await loadGlobalArtifacts();
+
+        globalArtifactList.show();
+        globalArtifactViewer.show();
+
+        screen.render();
+    };
+
+    // Initially show chat tab
+    showTab1();
+
+
 }

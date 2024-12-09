@@ -11,21 +11,21 @@ export const screen = blessed.screen({
 });
 
 // Create a main container box
-const mainBox = blessed.box({
-  top: 0,
-  left: 0,
-  width: '100%',
-  height: '100%',
-  style: {
-      fg: 'white',
-      bg: 'black'
-  }
+export const tab1Box = blessed.box({
+    top: 3,
+    left: 0,
+    width: '100%',
+    height: '100%-3',
+    style: {
+        fg: 'white',
+        bg: 'black'
+    }
 });
 
-screen.append(mainBox);
+screen.append(tab1Box);
 
 // Create a tab container
-const tabContainer = blessed.listbar({
+export const tabContainer = blessed.listbar({
     top: 0,
     left: 0,
     width: '100%',
@@ -34,65 +34,24 @@ const tabContainer = blessed.listbar({
     mouse: true,
     items: {
         "Chat": {
-            key: "Chat", 
+            key: "Chat",
             keys: ["C-a"],
-            callback: () => { showTab1(); }
+            callback: () => { tabContainer.emit("menu", "chat"); }
         },
         "Log": {
-            key: "Log", 
+            key: "Log",
             keys: ["C-b"],
-            callback: () => { showTab2(); }
+            callback: () => { tabContainer.emit("menu", "log"); }
         },
         "Artifacts": {
             key: "Artifacts",
-            keys: ["C-c"],
-            callback: () => { showTab3(); }
+            keys: ["C-d"],
+            callback: () => { tabContainer.emit("menu", "artifacts"); }
         }
     }
 });
 
-mainBox.append(tabContainer);
-
-const showTab1 = () => {
-  channelList.show();
-  threadList.show();
-  chatBox.show();
-  inputBox.show();
-  taskList.show();
-  artifactList.show();
-  logBox.hide();
-
-  screen.render();
-};
-
-
-const showTab2 = () => {
-  channelList.hide();
-  threadList.hide();
-  chatBox.hide();
-  inputBox.hide();
-  taskList.hide();
-  artifactList.hide();
-  logBox.show();
-  globalArtifactList.hide();
-  globalArtifactViewer.hide();
-
-  screen.render();
-};
-
-const showTab3 = () => {
-  channelList.hide();
-  threadList.hide();
-  chatBox.hide();
-  inputBox.hide();
-  taskList.hide();
-  artifactList.hide();
-  logBox.hide();
-  globalArtifactList.show();
-  globalArtifactViewer.show();
-
-  screen.render();
-};
+screen.append(tabContainer);
 
 // Create a box to select channels.
 export const channelList = blessed.list({
@@ -117,7 +76,7 @@ export const channelList = blessed.list({
     height: '35%'
 });
 
-mainBox.append(channelList);
+tab1Box.append(channelList);
 
 // Create a box to select threads.
 export const threadList = blessed.list({
@@ -142,7 +101,7 @@ export const threadList = blessed.list({
     height: '65%-5'
 });
 
-mainBox.append(threadList);
+tab1Box.append(threadList);
 
 // Create a box to display chat messages.
 export const chatBox = blessed.log({
@@ -174,7 +133,7 @@ export const chatBox = blessed.log({
     }
 });
 
-mainBox.append(chatBox);
+tab1Box.append(chatBox);
 
 // Create a box to enter messages.
 export const inputBox = blessed.textbox({
@@ -194,7 +153,7 @@ export const inputBox = blessed.textbox({
     }
 });
 
-mainBox.append(inputBox);
+tab1Box.append(inputBox);
 
 // Create a list for tasks related to the projects in the current thread.
 export const taskList = blessed.list({
@@ -220,7 +179,7 @@ export const taskList = blessed.list({
     height: '50%-2',
 });
 
-mainBox.append(taskList);
+tab1Box.append(taskList);
 
 // Create a list for artifacts related to the current thread.
 export const artifactList = blessed.list({
@@ -240,13 +199,13 @@ export const artifactList = blessed.list({
             bg: 'blue'
         }
     },
-    top: 3, 
+    top: 3,
     left: '70%-1',
     width: '30%+1',
     height: '50%-3'
 });
 
-mainBox.append(artifactList);
+tab1Box.append(artifactList);
 
 // Create a log box
 export const logBox = blessed.log({
@@ -276,46 +235,37 @@ export const logBox = blessed.log({
     }
 });
 
-mainBox.append(logBox);
-
-// Focus on the input box and refresh the screen.
-inputBox.focus();
-screen.render();
-
-// Initially show chat tab
-showTab1();
-
-Logger.logBox = logBox;
+screen.append(logBox);
 
 export const artifactDetailViewer = markdown({
-  top: '10%',
-  left: '10%',
-  width: '80%',
-  height: '80%',
-  mouse: true,
-  keys: true,
-  scrollable: true,
-  label: 'Artifact Viewer',
-  focusable: true,
-  scrollbar: {
-    style: {
-        bg: 'blue'
+    top: '10%',
+    left: '10%',
+    width: '80%',
+    height: '80%',
+    mouse: true,
+    keys: true,
+    scrollable: true,
+    label: 'Artifact Viewer',
+    focusable: true,
+    scrollbar: {
+        style: {
+            bg: 'blue'
+        },
+        track: {
+            bg: 'gray'
+        }
     },
-    track: {
-        bg: 'gray'
-    }
-},
-  border: {
-      type: 'line',
-      fg: 'green'
-  },
-  style: {
-      bg: 'black',
-      fg: 'white'
-  },
-  shadow: true,
-  draggable: true,
-  hidden: true
+    border: {
+        type: 'line',
+        fg: 'green'
+    },
+    style: {
+        bg: 'black',
+        fg: 'white'
+    },
+    shadow: true,
+    draggable: true,
+    hidden: true
 });
 
 screen.append(artifactDetailViewer);
@@ -376,3 +326,7 @@ export const globalArtifactViewer = markdown({
 
 screen.append(globalArtifactList);
 screen.append(globalArtifactViewer);
+
+screen.render();
+
+Logger.logBox = logBox;
