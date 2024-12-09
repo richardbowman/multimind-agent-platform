@@ -37,7 +37,7 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
         await super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@research");
     }
 
-    protected async taskNotification(task: ResearchTask): Promise<void> {
+    protected async processTask(task: ResearchTask): Promise<void> {
         const project = await this.projects.getProject(task.projectId);
         if (!project) {
             Logger.error(`Could not find project with ID ${task.projectId}`);
@@ -191,10 +191,12 @@ Activity Type: **${activityType}**`;
                 project.name = responseJSON.goal;
             }
             if (responseJSON.researchRequested) {
+                const researcherTasks : ResearchTask[] = [];
                 for (const task of responseJSON.researchRequested) {
                     const taskId = randomUUID();
-                    this.projects.addTask(project, new ResearchTask(taskId, projectId, task, RESEARCH_MANAGER_USER_ID));
+                    researcherTasks.push(await this.projects.addTask(project, new ResearchTask(taskId, projectId, task, RESEARCH_MANAGER_USER_ID)));
                 }
+                return 
             } else {
                 throw new Error('Invalid response from LM Studio API');
             }
@@ -219,7 +221,8 @@ ${tasks.map(({ description }) => ` - ${description}`).join("\n")}`;
 
     private async assignResearcherTasks(projectId: string) {
         const project = this.projects.getProject(projectId);
-        const tasks = Object.values(project.tasks);
+        // assign all unassigned tasks
+        const tasks = Object.values(project.tasks).filter(t => !t.assignee);
 
         Logger.info(`Distributing ${tasks.length} tasks`);
         for (const task of tasks) {
