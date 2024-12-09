@@ -31,6 +31,7 @@ const tabContainer = blessed.listbar({
     width: '100%',
     height: 4,
     keys: true,
+    mouse: true,
     items: {
         "Chat": {
             key: "Chat", 
