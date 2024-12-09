@@ -64,10 +64,10 @@ export abstract class Agent<Project, Task> {
     protected promptBuilder: SystemPromptBuilder;
     protected projects: TaskManager;
     protected purpose: String = 'You are a helpful agent.';
-    protected artifactManger: ArtifactManager;
+    protected artifactManager: ArtifactManager;
 
-    protected abstract taskNotification(task: Task): void;
     protected abstract projectCompleted(project: Project): void;
+    protected abstract processTask(task: Task) : Promise<void>;
 
 
     constructor(chatClient: ChatClient, lmStudioService: LMStudioService, userId: string, projects: TaskManager, chromaDBService?: ChromaDBService) {
@@ -76,7 +76,7 @@ export abstract class Agent<Project, Task> {
         this.userId = userId;
         this.chromaDBService = chromaDBService || new ChromaDBService(lmStudioService);
         this.promptBuilder = new SystemPromptBuilder();
-        this.artifactManger = new ArtifactManager(this.chromaDBService);
+        this.artifactManager = new ArtifactManager(this.chromaDBService);
         this.projects = projects;
 
         this.projects.on("taskAssigned", async (event) => {
@@ -84,11 +84,37 @@ export abstract class Agent<Project, Task> {
                 await this.taskNotification(event.task);
             }
         });
+        this.projects.on("taskCompleted", async (event) => {
+            if (event.assignee === this.userId) {
+                await this.taskNotification(event.task);
+            }
+        });
+
         this.projects.on("projectCompleted", async (event) => {
             if (event.creator === this.userId) {
                 await this.projectCompleted(event.project);
             }
         })
+    }
+
+    protected async taskNotification(task: Task): Promise<void> {
+        await this.processTaskQueue(task);
+    }
+
+    async processTaskQueue(): Promise<void> {
+        const task : Task = await this.projects.getNextTaskForUser(this.userId);
+        if (!task) {
+            Logger.info("No more tasks for user.");
+            return;
+        }
+
+        await this.processTask(task);
+
+        // check for more tasks
+        const moreTasks : Task = await this.projects.getNextTaskForUser(this.userId);
+        if (moreTasks) {
+            await this.processTaskQueue();
+        }
     }
 
     public setPurpose(purpose: string) {
@@ -342,7 +368,7 @@ export abstract class Agent<Project, Task> {
     }
 
     private async getArtifactList(): Promise<string> {
-        const artifacts = await this.artifactManger.listArtifacts();
+        const artifacts = await this.artifactManager.listArtifacts();
         const filteredArtifacts = artifacts.filter(a => a.metadata?.title?.length > 0 && !a.id.includes('memory'))
         return filteredArtifacts.map(artifact => ` - ${artifact.id}: ${artifact.metadata?.title}`).join('\n');
     }
@@ -417,7 +443,7 @@ export abstract class Agent<Project, Task> {
         const artifacts: Artifact[] = [];
         for (const artifactId of requestedArtifacts) {
             try {
-                const artifactData = await this.artifactManger.loadArtifact(artifactId);
+                const artifactData = await this.artifactManager.loadArtifact(artifactId);
                 if (artifactData) {
                     artifacts.push(artifactData);
                     Logger.info(`Retrieved artifact ${artifactId}: ${artifactData.metadata?.title}`);
@@ -490,7 +516,7 @@ export abstract class Agent<Project, Task> {
     }
 
     private async fetchLatestMemoryArtifact(channelId: string): Promise<Artifact | null> {
-        const artifact = await this.artifactManger.loadArtifact(`${channelId}-${this.userId}-memory`);
+        const artifact = await this.artifactManager.loadArtifact(`${channelId}-${this.userId}-memory`);
         return artifact;
     }
 
@@ -545,7 +571,7 @@ export abstract class Agent<Project, Task> {
             }
         };
 
-        await this.artifactManger.saveArtifact(artifact);
+        await this.artifactManager.saveArtifact(artifact);
 
         Logger.info(`Revised memory for channel ${channelId} with important points:`, importantPoints);
     }
@@ -635,7 +661,7 @@ export abstract class Agent<Project, Task> {
         };
 
         // Save the artifact using ArtifactManager
-        await this.artifactManger.saveArtifact(artifact);
+        await this.artifactManager.saveArtifact(artifact);
 
         return {
             artifactId: artifact.id,
