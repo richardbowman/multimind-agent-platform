@@ -1,22 +1,23 @@
+import cron from 'node-cron';
 import fs from 'fs/promises';
 import EventEmitter from 'events';
-import { Project, Task, TaskManager } from '../tools/taskManager';
+import { Project, RecurrencePattern, Task, TaskManager } from '../tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ContentProject } from 'src/agents/contentManager';
 
 class SimpleTaskManager extends EventEmitter implements TaskManager {
     private projects: { [projectId: string]: Project<Task> } = {};
     private filePath: string;
-    private saveQueued: boolean = false;
 
     constructor(filePath: string) {
         super();
         this.filePath = filePath;
     }
 
-    async addTask(project: Project<Task>, task: Task) {
+    async addTask(project: Project<Task>, task: Task) : Promise<Task> {
         this.projects[project.id].tasks[task.id] = task;
         await this.save();
+        return task;
     }
 
     newProjectId(): string {
@@ -34,16 +35,9 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
 
     async save(): Promise<void> {
         try {
-            if (this.saveQueued) return;
-            this.saveQueued = true;
-            const updateTasks = () => {
-                return fs.writeFile(this.filePath, JSON.stringify(this.projects, null, 2));
-            };
-            await updateTasks();
+            await fs.writeFile(this.filePath, JSON.stringify(this.projects, null, 2));
         } catch (error) {
             Logger.error('Failed to save tasks:', error);
-        } finally {
-            this.saveQueued = false;
         }
     }
 
@@ -78,7 +72,7 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
     async getNextTaskForUser(userId: string): Promise<Task | null> {
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
-            const task = Object.values(project.tasks||[]).find(t => t.assignee === userId && !t.complete);
+            const task = Object.values(project.tasks || []).find(t => t.assignee === userId && !t.complete);
             if (task) {
                 return task;
             }
@@ -139,6 +133,73 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
 
     getProjects(): Project<Task>[] {
         return Object.values(this.projects);
+    }
+
+    // Method to handle recurring tasks
+    async scheduleRecurringTask(taskId: string, nextRunDate?: Date): Promise<void> {
+        let taskFound = false;
+        for (const projectId in this.projects) {
+            const project = this.projects[projectId];
+            if (project.tasks?.hasOwnProperty(taskId)) {
+                const task = project.tasks[taskId];
+                if (!task.isRecurring) {
+                    throw new Error('Task is not marked as recurring.');
+                }
+                // Optionally update the next run date
+                if (nextRunDate) {
+                    task.lastRunDate = nextRunDate;
+                } else {
+                    task.lastRunDate = new Date();
+                }
+                taskFound = true;
+                await this.save();
+                break;
+            }
+        }
+
+        if (!taskFound) {
+            throw new Error(`Task with ID ${taskId} not found.`);
+        }
+    }
+
+    startScheduler() {
+        // Schedule a job every day at midnight
+        cron.schedule('0 0 * * *', async () => {
+            for (const projectId in this.projects) {
+                const project = this.projects[projectId];
+                for (const taskId in project.tasks) {
+                    const task = project.tasks[taskId];
+                    if (task.isRecurring) {
+                        const now = new Date();
+                        switch (task.recurrencePattern) {
+                            case RecurrencePattern.Daily:
+                                // If the last run was yesterday, schedule the task again
+                                if (new Date(task.lastRunDate!).setHours(0, 0, 0, 0) < new Date(now).setHours(0, 0, 0, 0)) {
+                                    await this.scheduleRecurringTask(taskId, now);
+                                }
+                                break;
+                            case RecurrencePattern.Weekly:
+                                // If the last run was more than a week ago, schedule the task again
+                                const weekFromLastRun = new Date(task.lastRunDate!);
+                                weekFromLastRun.setDate(weekFromLastRun.getDate() + 7);
+                                if (weekFromLastRun < now) {
+                                    await this.scheduleRecurringTask(taskId, now);
+                                }
+                                break;
+
+                            case RecurrencePattern.Monthly:
+                                // If the last run was more than a month ago, schedule the task again
+                                const monthFromLastRun = new Date(task.lastRunDate!);
+                                monthFromLastRun.setMonth(monthFromLastRun.getMonth() + 1);
+                                if (monthFromLastRun < now) {
+                                    await this.scheduleRecurringTask(taskId, now);
+                                }
+                                break;
+                        }
+                    }
+                }
+            }
+        });
     }
 }
 

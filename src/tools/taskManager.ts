@@ -1,15 +1,25 @@
 import { EventEmitter } from 'events';
 import { ContentProject } from 'src/agents/contentManager';
 
+// Define a RecurrencePattern enum
+export enum RecurrencePattern {
+    Daily,
+    Weekly,
+    Monthly,
+}
+
 export interface Task {
-    contentBlockId: any;
-    creator: any;
     id: string;
-    projectId: string;
-    type: string;
     description: string;
-    complete: boolean;
+    creator: string;
     assignee?: string;
+    complete?: boolean;
+}
+
+export interface RecurringTask extends Task {
+    isRecurring: boolean;
+    recurrencePattern: RecurrencePattern;
+    lastRunDate?: Date; // To keep track of the last run date
 }
 
 export interface Project<Task> {
@@ -23,7 +33,7 @@ export interface TaskManager extends EventEmitter {
     replaceProject(project: Project<Task>): unknown;
     completeTask(id: string): Promise<Task>;
     addProject(project: Project<Task>): void;
-    addTask(project: Project<Task>, task: Task): void;
+    addTask(project: Project<Task>, task: Task): Promise<Task>;
     getProject(projectId: string): Project<Task>;
     newProjectId(): string;
     save(): Promise<void>;
