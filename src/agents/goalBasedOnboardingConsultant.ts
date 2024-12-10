@@ -9,6 +9,7 @@ import ChromaDBService from '../llm/chromaService';
 import Logger from '../helpers/logger';
 import { Project, Task } from '../tools/taskManager';
 import crypto from 'crypto';
+import { Artifact } from 'src/tools/artifact';
 
 export interface OnboardingProject extends Project<Task> {
     businessDescription?: string;
@@ -23,8 +24,6 @@ class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Ta
     protected processTask(task: Task): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    
-    private businessPlanId?: string;
 
     constructor(
         userId: string,
@@ -120,7 +119,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         await this.executeStep(projectId, "analyze_goals", params.userPost);
     }
 
-    private async updateBusinessPlan(project: OnboardingProject, goals: OnboardingGoal[]): Promise<string> {
+    private async updateBusinessPlan(project: OnboardingProject, existingPlan?: Artifact): Promise<string> {
         const schema = {
             type: "object",
             properties: {
@@ -137,13 +136,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         };
 
         // Get the existing business plan content if it exists
-        let existingContent = "";
-        if (this.businessPlanId) {
-            const existingPlan = await this.artifactManager.loadArtifact(this.businessPlanId);
-            if (existingPlan) {
-                existingContent = existingPlan.content.toString();
-            }
-        }
+        let existingContent = existingPlan?.content.toString();
 
         const response = await this.generate({
             message: JSON.stringify({
@@ -168,7 +161,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         });
 
         // Create or update the business plan artifact
-        const artifactId = this.businessPlanId || crypto.randomUUID();
+        const artifactId = existingPlan?.id || crypto.randomUUID();
         await this.artifactManager.saveArtifact({
             id: artifactId,
             type: 'business-plan',
@@ -183,6 +176,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
     }
 
     private async executeAnalyzeGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
+        let existingPlan : Artifact; //TODO: how to get this sent in
+
         const schema = {
             type: "object",
             properties: {
@@ -228,8 +223,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         }
 
         // Create/update the business plan
-        const businessPlanId = await this.updateBusinessPlan(project as OnboardingProject, project.goals);
-        this.businessPlanId = businessPlanId;
+        const businessPlanId = await this.updateBusinessPlan(project as OnboardingProject, existingPlan);
 
         return {
             type: 'goals_analysis',
@@ -332,7 +326,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
         const response = await this.generate({
             message: JSON.stringify({
-                currentGoals: project.goals,
+                currentGoals: project.tasks,
                 userUpdate: params.userPost.message
             }),
             instructions: new StructuredOutputPrompt(schema,
@@ -368,8 +362,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
             const statusResponse = await this.generate({
                 message: JSON.stringify({
-                    goal: goal.description,
-                    completed: goal.completed,
+                    goal: task.description,
+                    completed: task.complete,
                     notes: response.notes,
                     projectId: project.id
                 }),
