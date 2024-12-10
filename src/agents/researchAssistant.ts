@@ -170,8 +170,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         } catch (error) {
             Logger.error("Error in research request:", error);
             await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
-                "Sorry, I encountered an error while processing this research request.",
-                { 'project-id': projectId }
+                "Sorry, I encountered an error while processing this research request."
             );
         }
     }
@@ -303,12 +302,8 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}.
 Generate a broad web search query without special keywords or operators based on the task we've been asked to research.`;
 
-        const history = [
-            { role: "system", content: systemPrompt }
-        ];
-
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const response = await this.lmStudioService.sendStructuredRequest(`Task: ${task}`, instructions, history);
+        const response = await this.lmStudioService.generateStructured({ message: `Task: ${task}` }, new StructuredOutputPrompt(schema, systemPrompt), []);
 
         return response;
     }
