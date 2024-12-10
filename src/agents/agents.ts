@@ -40,6 +40,8 @@ export interface GenerateParams {
     projects?: Project<Task>[];
     searchResults?: SearchResult[]
     message?: string;
+    contextWindow?: number;
+    maxTokens?: number;
 }
 
 export interface ProjectHandlerParams extends HandlerParams {
@@ -321,7 +323,9 @@ export abstract class Agent<Project, Task> {
 
         const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
 
-        const response = await this.lmStudioService.generateStructured(params.userPost?params.userPost:params.message?params.message:{ message: ""}, augmentedStructuredInstructions, history);
+        const { contextWindow, maxTokens } = params;
+
+        const response = await this.lmStudioService.generateStructured(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
         response.artifactIds = params.artifacts?.map(a => a.id);
         return response;
     }
