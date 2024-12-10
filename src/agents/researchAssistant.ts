@@ -117,12 +117,6 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
     @HandleActivity("process-research-request", "Process research request list", ResponseType.CHANNEL)
     private async handleAssistantMessage(params: HandlerParams): Promise<void> {
         const { userPost } = params;
-        const projectId = userPost.props['project-id'];
-        
-        if (!projectId) {
-            Logger.error('Invalid message received. Missing project ID.');
-            return;
-        }
 
         try {
             const { searchQuery, category } = await this.generateSearchQuery("Research the topic", userPost.message);
@@ -130,8 +124,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
 
             if (searchResults.length === 0) {
                 await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID, 
-                    "I couldn't find any relevant results for this research request.",
-                    { 'project-id': projectId }
+                    "I couldn't find any relevant results for this research request."
                 );
                 return;
             }
@@ -139,8 +132,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
             const selectedUrls = await this.selectRelevantSearchResults(userPost.message, userPost.message, searchResults);
             if (selectedUrls.length === 0) {
                 await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
-                    "I found some results but none seemed relevant to the research request.",
-                    { 'project-id': projectId }
+                    "I found some results but none seemed relevant to the research request."
                 );
                 return;
             }
@@ -169,21 +161,12 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
                     pageSummaries,
                     this.lmStudioService
                 );
-                await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
-                    finalSummary,
-                    { 'project-id': projectId }
-                );
+                await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID, finalSummary);
             } else {
                 await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
-                    "I found some pages but couldn't extract relevant information from them.",
-                    { 'project-id': projectId }
+                    "I found some pages but couldn't extract relevant information from them."
                 );
             }
-
-            await this.chatClient.postInChannel(PROJECTS_CHANNEL_ID,
-                `@research Research team completed the search and analysis for project ${projectId}.`,
-                { 'project-id': projectId }
-            );
         } catch (error) {
             Logger.error("Error in research request:", error);
             await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
@@ -193,12 +176,12 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         }
     }
 
-    private formatTaskMessage(projectId: string, taskId: string, message: string): string {
-        return `${message}\n\n### Project ID: **${projectId}**\n\n### Task ID: **${taskId}**`;
+    private formatTaskMessage(taskId: string, message: string): string {
+        return `${message}\n\n### Task ID: **${taskId}**`;
     }
 
-    async publishResult(projectId: string, channelId: string, taskId: string, result: string): Promise<void> {
-        const message = this.formatTaskMessage(projectId, taskId, result);
+    async publishResult(channelId: string, taskId: string, result: string): Promise<void> {
+        const message = this.formatTaskMessage(taskId, result);
         await this.chatClient.postInChannel(channelId, message);
     }
 
