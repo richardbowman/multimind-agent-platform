@@ -242,7 +242,7 @@ export class BedrockService implements ILLMService {
             body: JSON.stringify({
                 anthropic_version: "bedrock-2023-05-31",
                 prompt: text,
-                max_tokens: 0  // We don't need any tokens generated
+                max_tokens_to_sample: 1  // We don't need any tokens generated
             })
         });
 
