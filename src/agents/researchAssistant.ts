@@ -207,7 +207,7 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
 
         try {
             // Start new research
-            const researchPlan = await this.planResearchSteps(query);
+            const researchPlan = await this.planSteps(query);
             const newState: ResearchState = {
                 originalGoal: query,
                 currentStep: researchPlan.steps[0],
