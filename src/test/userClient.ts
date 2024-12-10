@@ -137,7 +137,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
     // Handle input changes for command and user handle autocomplete
     inputBox.on('keypress', (ch, key) => {
-        const currentInput = inputBox.getValue() + (key && key.name === "enter" ? "" : ch);
+        const currentInput = inputBox.getValue();
         
         if (currentInput.startsWith('/')) {
             // Filter commands based on current input
@@ -152,6 +152,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 if (key && key.name === 'enter' && filtered.length > 0) {
                     inputBox.setValue(filtered[0].command + ' ');
                     commandList.hide();
+                    return false; // Prevent default Enter behavior
                 }
                 screen.render();
             } else {
@@ -181,6 +182,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                     const beforeHandle = currentInput.substring(0, currentInput.lastIndexOf('@'));
                     inputBox.setValue(beforeHandle + handles[0].handle + ' ');
                     commandList.hide();
+                    return false; // Prevent default Enter behavior
                 }
                 screen.render();
             } else {
