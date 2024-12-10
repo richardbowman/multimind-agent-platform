@@ -97,23 +97,28 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
 
     @HandleActivity("response", "Handle user responses to questions", ResponseType.RESPONSE)
     private async handleResponse(params: HandlerParams): Promise<void> {
-        const state = this.activeStates.get(params.userPost.getRootId() || params.userPost.id);
+        const { userPost, projects } = params;
+        const projectId = userPost.props["project-id"];
         
-        if (!state) {
-            await this.reply(params.userPost, { 
+        if (!projectId || !projects?.length) {
+            await this.reply(userPost, { 
                 message: "I couldn't find our previous conversation. Could you start over with your question?" 
             });
             return;
         }
 
-        if (!state.needsUserInput) {
-            await this.reply(params.userPost, { 
+        const project = projects[0];
+        const currentTask = Object.values(project.tasks)
+            .find(t => t.inProgress);
+
+        if (!currentTask) {
+            await this.reply(userPost, { 
                 message: "I wasn't expecting a response right now. What would you like to know?" 
             });
             return;
         }
 
-        await this.handleUserInput(state, params.userPost);
+        await this.handleUserInput(projectId, currentTask.type, userPost);
     }
 
     @HandleActivity("followup", "Answer follow-up questions about previous search results", ResponseType.RESPONSE)
@@ -172,28 +177,35 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
     private async handleAssistantMessage(params: HandlerParams): Promise<void> {
         const { userPost } = params;
         const query = userPost.message;
-        const stateId = userPost.id;
 
         try {
-            // Start new research
+            // Start new research project
+            const { projectId } = await this.addNewProject({
+                projectName: query,
+                tasks: []
+            });
+
+            // Plan research steps
             const researchPlan = await this.planSteps(query);
-            const newState: ResearchState = {
-                originalGoal: query,
-                currentStep: researchPlan.steps[0],
-                intermediateResults: [],
-                needsUserInput: researchPlan.requiresUserInput,
-                userQuestion: researchPlan.userQuestion,
-                existingArtifacts: researchPlan.existingArtifacts
-            };
+            
+            // Store any existing artifacts in project props
+            if (researchPlan.existingArtifacts) {
+                const project = this.projects.getProject(projectId);
+                project.props = {
+                    ...project.props,
+                    existingArtifacts: researchPlan.existingArtifacts
+                };
+            }
 
-            this.activeStates.set(stateId, newState);
-
-            if (newState.needsUserInput) {
-                await this.reply(userPost, { message: `To help me research this better, could you please answer: ${newState.userQuestion}` });
+            if (researchPlan.requiresUserInput) {
+                await this.reply(userPost, { 
+                    message: `To help me research this better, could you please answer: ${researchPlan.userQuestion}`,
+                    projectId: projectId
+                });
                 return;
             }
 
-            await this.executeResearchStep(newState, userPost);
+            await this.executeResearchStep(projectId, researchPlan.steps[0], userPost);
         } catch (error) {
             Logger.error("Error in research request:", error);
             await this.reply(userPost, { message: "Sorry, I encountered an error while processing this research request." });
@@ -734,64 +746,68 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
         await this.scrapeHelper.cleanup();
     }
 
-    private async executeResearchStep(state: ResearchState, userPost: ChatPost): Promise<void> {
+    private async executeResearchStep(projectId: string, currentStep: string, userPost: ChatPost): Promise<void> {
         try {
+            const project = this.projects.getProject(projectId);
+            if (!project) {
+                throw new Error(`Project ${projectId} not found`);
+            }
+
             let stepResult;
             
             // Handle special knowledge-base steps
-            if (state.currentStep === "review_existing_knowledge") {
+            if (currentStep === "review_existing_knowledge") {
+                const existingArtifacts = project.props?.existingArtifacts || [];
                 stepResult = {
                     type: 'existing_knowledge',
-                    findings: state.existingArtifacts
+                    findings: existingArtifacts
                 };
-            } else if (state.currentStep === "synthesize_existing_knowledge") {
+            } else if (currentStep === "synthesize_existing_knowledge") {
                 // Generate response purely from existing knowledge
-                const finalResponse = await this.generateFinalResponse({
-                    ...state,
-                    intermediateResults: [{
-                        type: 'existing_knowledge',
-                        findings: state.existingArtifacts
-                    }]
-                });
+                const finalResponse = await this.generateFinalResponse(project);
                 
                 const response: RequestArtifacts = {
                     message: `Based on our existing knowledge:\n\n${finalResponse.message}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`,
-                    artifactIds: state.existingArtifacts?.map(a => a.id)
+                    artifactIds: project.props?.existingArtifacts?.map(a => a.id)
                 };
                 await this.reply(userPost, response);
                 return;
             } else {
                 // Execute normal research step
-                stepResult = await this.processResearchStep(state.currentStep, state.originalGoal);
+                stepResult = await this.processResearchStep(currentStep, project.name);
             }
 
-            state.intermediateResults.push(stepResult);
+            // Create a task for this step result
+            const task = {
+                id: crypto.randomUUID(),
+                description: `${currentStep}: ${stepResult.type}`,
+                creator: this.userId,
+                projectId: projectId,
+                type: currentStep,
+                complete: false
+            };
+            
+            await this.projects.addTask(project, task);
+            await this.projects.markTaskInProgress(task);
 
             // Determine next steps
-            const nextAction = await this.determineNextAction(state);
+            const nextAction = await this.determineNextAction(projectId, stepResult);
             
-            // Update goals based on step results
-            if (stepResult.type === 'goals_analysis') {
-                state.goals = stepResult.goals;
-            }
-            
-            if (nextAction.needsUserInput) {
-                state.needsUserInput = true;
-                state.userQuestion = nextAction.question;
-                if (nextAction.question) {
-                    await this.reply(userPost, { message: nextAction.question });
-                    return;
-                }
+            if (nextAction.needsUserInput && nextAction.question) {
+                await this.reply(userPost, { 
+                    message: nextAction.question,
+                    projectId: projectId
+                });
+                return;
             }
 
             if (nextAction.isComplete) {
-                await this.generateAndSendFinalResponse(state, userPost);
+                await this.generateAndSendFinalResponse(projectId, userPost);
                 return;
             }
 
             // Continue with next step
-            state.currentStep = nextAction.nextStep;
-            await this.executeResearchStep(state, userPost);
+            await this.executeResearchStep(projectId, nextAction.nextStep!, userPost);
 
         } catch (error) {
             Logger.error("Error in research step:", error);
