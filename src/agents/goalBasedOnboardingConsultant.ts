@@ -448,8 +448,13 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 instructions: new StructuredOutputPrompt(responseSchema,
                     `You are speaking directly to the user. Generate a natural, conversational response about their goal's status.
                     - Use "I" and "you" pronouns to make it personal
-                    - If the goal is completed, congratulate them directly and ask what they'd like to work on next
-                    - If the goal is in progress, acknowledge their update and offer direct help
+                    - If the goal is completed:
+                        - Congratulate them directly
+                        - If there's a next task, suggest working on that specific task next
+                        - If no next task, ask what new goal they'd like to work on
+                    - If the goal is in progress:
+                        - Acknowledge their update and offer direct help
+                        - Be specific about what aspects need more work
                     - Keep the tone friendly and supportive
                     - Write as if having a real conversation, not giving a status report
                     - Avoid phrases like "it looks like" or "the user" - speak directly to them`)
