@@ -114,7 +114,10 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         this.activeResearchStates.set(stateId, newState);
 
         try {
-            await this.executeResearchStep(newState, userPost);
+            await this.executeResearchStep(newState, userPost, {
+                artifactId: artifact.id,
+                artifactTitle: artifact.metadata?.title
+            });
         } catch (error) {
             Logger.error("Error in follow-up:", error);
             await this.reply(userPost, { message: "Sorry, I encountered an error while processing your follow-up question." });
@@ -756,7 +759,7 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
         await this.scrapeHelper.cleanup();
     }
 
-    private async executeResearchStep(state: ResearchState, userPost: ChatPost): Promise<void> {
+    private async executeResearchStep(state: ResearchState, userPost: ChatPost, existingArtifact?: { artifactId: string, artifactTitle: string }): Promise<void> {
         try {
             let stepResult;
             
@@ -776,9 +779,12 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
                     }]
                 });
                 
-                await this.reply(userPost, { 
-                    message: `Based on our existing knowledge:\n\n${finalResponse.message}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`
-                });
+                const response: CreateArtifact = {
+                    message: `Based on our existing knowledge:\n\n${finalResponse.message}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`,
+                    artifactId: existingArtifact?.artifactId || '',
+                    artifactTitle: existingArtifact?.artifactTitle || ''
+                };
+                await this.reply(userPost, response);
                 return;
             } else {
                 // Execute normal research step
