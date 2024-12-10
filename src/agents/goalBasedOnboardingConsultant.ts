@@ -138,11 +138,9 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                     items: {
                         type: "object",
                         properties: {
-                            id: { type: "string" },
-                            description: { type: "string" },
-                            completed: { type: "boolean" }
+                            description: { type: "string" }
                         },
-                        required: ["id", "description", "completed"]
+                        required: ["description"]
                     }
                 }
             },
@@ -156,13 +154,40 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         const response = await this.generate({
             message: userInput,
             instructions: new StructuredOutputPrompt(schema, 
-                `Analyze this business goal and break it down into distinct, manageable objectives.
-                For each objective, generate a unique ID and mark it as not completed.`)
+                `Analyze this business goal and break it down into distinct, manageable objectives.`)
         });
+
+        // Create a new project for these goals
+        const project: OnboardingProject = {
+            id: this.projects.newProjectId(),
+            name: "Onboarding Goals",
+            tasks: {},
+            goals: []
+        };
+
+        // Convert goals to tasks
+        for (const goalData of response.goals) {
+            const task: Task = {
+                id: crypto.randomUUID(),
+                description: goalData.description,
+                creator: this.userId,
+                complete: false
+            };
+            
+            await this.projects.addTask(project, task);
+            project.goals.push({
+                id: task.id,
+                description: task.description,
+                completed: false
+            });
+        }
+
+        await this.projects.addProject(project);
+        state.goals = project.goals;
 
         return {
             type: 'goals_analysis',
-            goals: response.goals
+            goals: project.goals
         };
     }
 
