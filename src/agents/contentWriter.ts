@@ -16,25 +16,8 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
         super.setupChatMonitor(CONTENT_CREATION_CHANNEL_ID, "@writer");
     }
 
-    protected async taskNotification(task: ContentTask): Promise<void> {
-        await this.processTask(task);
-    }
-
-    async processTaskQueue(): Promise<void> {
-        const task : ContentTask = await this.projects.getNextTaskForUser(this.userId);
-        if (!task) {
-            Logger.info("No more tasks for user.");
-            return;
-        }
-
-        await this.processTask(task);
-    }
-
     async processTask(task: ContentTask) {
-        if (this.isWorking) return;
         try {
-            this.isWorking = true;
-            
             const searchResults = await this.chromaDBService.query([task.description], undefined, 10);
             const history : ModelMessageHistory[] = [
                 {
@@ -55,9 +38,6 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
         } finally {
             //todo: remove failed tasks or mark completed, causes infinite loop right now
             await this.projects.completeTask(task.id);
-            this.isWorking = false;
-            // Recursively process the next task
-            await this.processTaskQueue();
         }
     }
 
