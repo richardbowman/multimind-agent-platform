@@ -176,7 +176,12 @@ Otherwise, plan concrete steps to help achieve the goal.`;
     }
 
     private async executeAnalyzeGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
-        let existingPlan : Artifact; //TODO: how to get this sent in
+        const project = this.projects.getProject(projectId) as OnboardingProject;
+        let existingPlan: Artifact | undefined;
+        
+        if (project.props?.businessPlanId) {
+            existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
+        }
 
         const schema = {
             type: "object",
@@ -224,6 +229,12 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
         // Create/update the business plan
         const businessPlanId = await this.updateBusinessPlan(project as OnboardingProject, existingPlan);
+        
+        // Store the business plan ID in project props
+        project.props = {
+            ...project.props,
+            businessPlanId
+        };
 
         return {
             type: 'goals_analysis',
@@ -306,12 +317,17 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
     @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
     private async handleGoalUpdate(params: HandlerParams): Promise<void> {
-        const project = params.projects?.[0];
+        const project = params.projects?.[0] as OnboardingProject;
         if (!project) {
             await this.reply(params.userPost, { 
                 message: "No active goal planning session found. Please start a new session." 
             });
             return;
+        }
+
+        // Initialize project props if needed
+        if (!project.props) {
+            project.props = {};
         }
 
         const schema = {
@@ -345,8 +361,9 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             }
 
             // Update the business plan with progress
-            if (this.businessPlanId) {
-                await this.updateBusinessPlan(project, project.goals);
+            if (project.props?.businessPlanId) {
+                const existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
+                await this.updateBusinessPlan(project as OnboardingProject, existingPlan);
             }
 
             const responseSchema = {
