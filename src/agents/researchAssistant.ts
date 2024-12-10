@@ -284,25 +284,31 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
     }
 
     private async generateSearchQuery(goal: string, task: string): Promise<{ searchQuery: string, category: string}> {
+        const schema = {
+            type: "object",
+            properties: {
+                searchQuery: {
+                    type: "string",
+                    description: "A broad web search query without special keywords or operators"
+                },
+                category: {
+                    type: "string",
+                    enum: ["general", "news"],
+                    description: "The search category - use 'news' for current events, otherwise 'general'"
+                }
+            },
+            required: ["searchQuery", "category"]
+        };
+
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}.
-Generate a broad web search query without special keywords or operators based on the task we've been asked to research.
-Respond ONLY with the JSON specified. You can perform a news search by setting the category to "news". Otherwise, specify "general":
-
-{
-  "searchQuery": "YOUR_SEARCH_QUERY",
-  "category": "general" | "news"
-}
-`;
-
+Generate a broad web search query without special keywords or operators based on the task we've been asked to research.`;
 
         const history = [
-            { role: "system", content: systemPrompt },
+            { role: "system", content: systemPrompt }
         ];
 
-        const userPrompt = `Task: ${task}`;
-
-        let llmResponse = await this.lmStudioService.sendMessageToLLM(userPrompt, history, "{");
-        const response : { searchQuery: string, category: string} = JSON5.parse(llmResponse);
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        const response = await this.lmStudioService.sendStructuredRequest(`Task: ${task}`, instructions, history);
 
         return response;
     }
