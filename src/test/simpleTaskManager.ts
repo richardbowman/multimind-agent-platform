@@ -127,12 +127,13 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         return null;
     }
 
-    async markTaskInProgress(task: Task): Promise<Task> {
+    async markTaskInProgress(task: Task | string): Promise<Task> {
         let taskFound = false;
+        const taskId = typeof (task) ==='string' ? task : task.id;
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
-            if (project.tasks?.hasOwnProperty(task.id)) {
-                const existingTask = project.tasks[task.id];
+            if (project.tasks?.hasOwnProperty(taskId)) {
+                const existingTask = project.tasks[taskId];
                 existingTask.inProgress = true;
                 taskFound = true;
                 this.emit('taskInProgress', { task: existingTask });
@@ -140,10 +141,10 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
             }
         }
         if (!taskFound) {
-            throw new Error(`Task with ID ${task.id} not found.`);
+            throw new Error(`Task with ID ${taskId} not found.`);
         }
         await this.save();
-        return this.getProjectByTaskId(task.id).tasks[task.id];
+        return this.getProjectByTaskId(taskId).tasks[taskId];
     }
 
     async completeTask(id: string): Promise<Task> {
