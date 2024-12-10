@@ -356,16 +356,23 @@ Previous search results:\n\n${pageSummaries.join("\n\n")}`;
             required: ["hasRelevantInfo", "needsAdditionalResearch"]
         };
 
-        // Get all summary artifacts
-        const artifacts = await this.artifactManager.getArtifacts({ type: 'summary' });
+        // Query the vector store for relevant summaries
+        const results = await this.chromaDBService.query([goal], { "type": "summary" }, 5);
         
-        if (artifacts.length === 0) {
+        if (!results || results.documents.length === 0) {
             return {
                 hasRelevantInfo: false,
                 existingArtifacts: [],
                 needsAdditionalResearch: true
             };
         }
+
+        // Get the full artifacts for the relevant results
+        const relevantIds = results.ids;
+        const artifacts = await this.artifactManager.getArtifacts({ 
+            ids: relevantIds,
+            type: 'summary'
+        });
 
         const systemPrompt = `You are a research assistant analyzing existing knowledge.
 Review these previous research summaries and determine if they contain relevant information for the current goal.
@@ -380,7 +387,7 @@ Query: ${a.metadata?.query}
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const response = await this.generate({
-            message: `Goal: ${goal}\n\nExisting Knowledge:\n${artifactsContext}`,
+            message: `Goal: ${goal}\n\nRelevant Existing Knowledge:\n${artifactsContext}`,
             instructions
         });
 
