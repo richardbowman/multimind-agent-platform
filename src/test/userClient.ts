@@ -4,7 +4,7 @@ import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
 import blessed from 'blessed';
-import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box, taskDetailViewer, screen, splashBox } from "./ui";
+import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box, taskDetailViewer, screen, splashBox, startSplashAnimation } from "./ui";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { screen } from './ui'
 import { Task, TaskManager } from "src/tools/taskManager";
