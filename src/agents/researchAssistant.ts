@@ -8,6 +8,7 @@ import { ChatClient, ChatPost } from '../chat/chatClient';
 import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
 import { Project, RecurrencePattern, Task, TaskManager } from 'src/tools/taskManager';
 import { CreateArtifact, ModelResponse } from './schemas/ModelResponse';
+import { ArtifactResponseSchema } from './schemas/artifactSchema';
 
 
 interface ResearchState {
@@ -89,17 +90,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         }
 
         // Find the original search result artifact
-        const artifacts = await this.artifactManager.getArtifacts({ type: 'summary' });
-        
-        if (!rootPost) {
-            await this.reply(userPost, { message : "Could not find the original search result." });
-            return;
-        }
-
-        const relevantArtifacts = artifacts.filter(a => 
-            a.metadata?.pageSummaries && 
-            (a.metadata?.query === rootPost.message || a.content.includes(rootPost.message))
-        );
+        const relevantArtifacts = params.artifacts?.filter(a => a.type === "summary")||[];
 
         if (relevantArtifacts.length === 0) {
             await this.reply(userPost, { message: "Could not find the original search results to answer your question." });
@@ -108,7 +99,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
 
         // Use the most recent relevant artifact
         const artifact = relevantArtifacts[0];
-        const pageSummaries = artifact.metadata?.pageSummaries || [];
+        const pageSummaries = artifact.metadata?.steps[0].summaries || [];
 
         const schema = {
             type: "object",
@@ -126,7 +117,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
             required: ["message", "confidence"]
         };
 
-        const systemPrompt = `You are a research assistant. Answer the follow-up question using ONLY the information from the previous search results provided. 
+        const systemPrompt = `You are a research assistant. Answer the follow-up question using ONLY the information from the previous search results and your former conversation history. 
 If you cannot answer the question from the available information, say so clearly.
 Rate your confidence as:
 - high: Direct information found in results
@@ -135,12 +126,10 @@ Rate your confidence as:
 
 Previous search results:\n\n${pageSummaries.join("\n\n")}`;
 
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const context = `\n\nFollow-up question: ${question}`;
-
         try {
             const response = await this.generate({
                 message: question, 
+                threadPosts: params.threadPosts,
                 instructions: new StructuredOutputPrompt(schema, systemPrompt)
             });
 
@@ -359,7 +348,7 @@ Previous search results:\n\n${pageSummaries.join("\n\n")}`;
         // Query the vector store for relevant summaries
         const results = await this.chromaDBService.query([goal], { "type": "summary" }, 5);
         
-        if (!results || results.documents.length === 0) {
+        if (results.length === 0) {
             return {
                 hasRelevantInfo: false,
                 existingArtifacts: [],
@@ -374,8 +363,8 @@ Previous search results:\n\n${pageSummaries.join("\n\n")}`;
         
         // Filter to artifacts that contain the matched chunks
         const relevantArtifacts = artifacts.filter(artifact => 
-            results.metadatas[0].some(metadata => 
-                metadata.docId === artifact.id
+            results.some(r => 
+                r.metadata.artifactId === artifact.id
             )
         );
 
@@ -383,7 +372,7 @@ Previous search results:\n\n${pageSummaries.join("\n\n")}`;
 Review these previous research summaries and determine if they contain relevant information for the current goal.
 Assess if additional research is needed or if existing information is sufficient.`;
 
-        const artifactsContext = artifacts.map(a => 
+        const artifactsContext = relevantArtifacts.map(a => 
             `Title: ${a.metadata?.title}
 Content: ${a.content}
 Query: ${a.metadata?.query}
@@ -548,7 +537,7 @@ Consider the original goal and what we've learned so far.`;
             properties: {
                 message: {
                     type: "string",
-                    description: "Final comprehensive response"
+                    description: "Final comprehensive response in Markdown format."
                 }
             },
             required: ["message"]
@@ -556,7 +545,8 @@ Consider the original goal and what we've learned so far.`;
 
         const systemPrompt = `You are a research assistant generating a final response.
 Synthesize all the intermediate results into a clear, comprehensive answer that addresses the original goal.
-Include relevant details from all research steps while maintaining clarity and coherence.`;
+Include relevant details from all research steps while maintaining clarity and coherence.
+You will respond inside of the message key in Markdown format. `;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const context = JSON.stringify({
@@ -566,7 +556,8 @@ Include relevant details from all research steps while maintaining clarity and c
 
         const response = await this.generate({
             message: context, 
-            instructions
+            instructions,
+            maxTokens: 16384
         });
 
         return response;
@@ -835,7 +826,7 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
                 
                 // Save the final response as an artifact
                 const artifactId = crypto.randomUUID();
-                await this.artifactManager.saveArtifact({
+                const artifact = await this.artifactManager.saveArtifact({
                     id: artifactId,
                     type: 'summary',
                     content: finalResponse.message,
@@ -847,8 +838,13 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
                     }
                 });
 
-                const response = `${finalResponse.message}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`;
-                await this.reply(userPost, { message: response });
+                const response : CreateArtifact = {
+                    message: `${finalResponse.message}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`,
+                    artifactId: artifact.id,
+                    artifactTitle: artifact.metadata?.title
+                }
+
+                await this.reply(userPost, response);
                 return;
             }
 
