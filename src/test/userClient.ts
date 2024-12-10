@@ -19,12 +19,16 @@ const COMMANDS = [
 ];
 
 export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager, taskManager: TaskManager) {
-    // Show splash screen
+    // Show splash screen with animation
     splashBox.show();
     screen.render();
     
-    // Hide splash after 1 second
+    // Start animation
+    const animation = startSplashAnimation();
+    
+    // Hide splash and stop animation after 3 seconds
     setTimeout(() => {
+        clearInterval(animation);
         splashBox.hide();
         screen.render();
     }, 3000);

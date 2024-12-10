@@ -10,6 +10,30 @@ export const screen = blessed.screen({
     title: 'Chat Client'
 });
 
+// Animation frames for the logo
+const logoFrames = [
+    `{green-fg}_   _ _____ _____ _  __
+| \\ | |_   _/ ____| |/ /
+|  \\| | | || |    | ' / 
+| . \` | | || |    |  <  
+| |\\  |_| || |____| . \\ 
+|_| \\_|___|\\_____||_|\\_\\{/green-fg}`,
+
+    `{blue-fg}_   _ _____ _____ _  __
+| \\ | |_   _/ ____| |/ /
+|  \\| | | || |    | ' / 
+| . \` | | || |    |  <  
+| |\\  |_| || |____| . \\ 
+|_| \\_|___|\\_____||_|\\_\\{/blue-fg}`,
+
+    `{cyan-fg}_   _ _____ _____ _  __
+| \\ | |_   _/ ____| |/ /
+|  \\| | | || |    | ' / 
+| . \` | | || |    |  <  
+| |\\  |_| || |____| . \\ 
+|_| \\_|___|\\_____||_|\\_\\{/cyan-fg}`
+];
+
 // Create splash screen box
 export const splashBox = blessed.box({
     top: '10%',
@@ -18,23 +42,24 @@ export const splashBox = blessed.box({
     height: '80%',
     align: 'center',
     valign: 'middle',
-    content: 
-`_   _ _____ _____ _  __
- | \\ | |_   _/ ____| |/ /
- |  \\| | | || |    | ' / 
- | . \` | | || |    |  <  
- | |\\  |_| || |____| . \\ 
- |_| \\_|___|\\_____||_|\\_\\
-  
- Neural Intelligence Collaboration Kit`,
+    content: logoFrames[0] + '\n\n{white-fg}Neural Intelligence Collaboration Kit{/white-fg}',
     style: {
-        fg: 'green',
         bg: 'black',
         transparent: true
     },
     tags: true,
     hidden: true
 });
+
+// Set up animation
+let currentFrame = 0;
+export const startSplashAnimation = () => {
+    return setInterval(() => {
+        currentFrame = (currentFrame + 1) % logoFrames.length;
+        splashBox.setContent(logoFrames[currentFrame] + '\n\n{white-fg}Neural Intelligence Collaboration Kit{/white-fg}');
+        screen.render();
+    }, 200); // Change frame every 200ms
+};
 
 
 // Create a tab container
