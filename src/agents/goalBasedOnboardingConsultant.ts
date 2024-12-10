@@ -43,8 +43,8 @@ class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Ta
         this.artifactManager = new ArtifactManager(chromaDBService);
 
         // Register step executors
-        this.registerStepExecutor('start_onboarding', {
-            execute: this.executeStartOnboarding.bind(this)
+        this.registerStepExecutor('understand_goals', {
+            execute: this.executeUnderstandGoals.bind(this)
         });
         this.registerStepExecutor('analyze_goals', {
             execute: this.executeAnalyzeGoals.bind(this)
@@ -73,17 +73,78 @@ Let's start by discussing your main business goals. What would you like to achie
         await this.send(welcomeMessage, ONBOARDING_CHANNEL_ID);
     }
 
-    protected async planSteps(goal: string): Promise<{
-        steps: string[];
+    @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
+    private async handleConversation(params: HandlerParams): Promise<void> {
+
+        const plan = await this.planSteps(params.message);
+
+        this.addNewProject({
+            name: "Onboarding",
+            tasks: plan.steps.map(s => ({
+                type: s.type,
+                description: s.description
+            }))
+        });
+        
+        await this.executeNextStep(projectId, params.userPost);
+    }
+
+    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
+    private async handleGoalUpdate(params: HandlerParams): Promise<void> {
+        const project = params.projects?.[0] as OnboardingProject;
+        if (!project) {
+            await this.reply(params.userPost, { 
+                message: "No active goal planning session found. Please start a new session." 
+            });
+            return;
+        }
+
+        // Find the current in-progress task
+        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
+        if (!currentTask) {
+            await this.reply(params.userPost, { 
+                message: "I wasn't expecting a response right now. What would you like to work on?" 
+            });
+            return;
+        }
+
+        // Handle the user's input using the base class method
+        await this.handleUserInput(project.id, currentTask.type, params.userPost);
+    }
+
+    protected async planSteps(projectId: string, latestGoal: string): Promise<{
+        steps: {
+            type: string;
+            description?: string;
+        }[];
         requiresUserInput: boolean;
         userQuestion?: string;
     }> {
+        const registeredSteps = Array.from(this.stepExecutors.keys());
+        
         const schema = {
             type: "object",
             properties: {
                 steps: {
                     type: "array",
-                    items: { type: "string" },
+                    items: {
+                        type: "object" ,
+                        properties: {
+                            type: {
+                                type: "string",
+                                enum: registeredSteps,
+                                description: "The type of step to execute"
+                            },
+                            description: {
+                                type: "string",
+                                description: "Description of what needs to be done"
+                            },
+                            order: {
+                                type: "number",
+                                description: "Order in which the step is executed"
+                            }
+                        }
+                    },
                     description: "List of steps needed"
                 },
                 requiresUserInput: {
@@ -98,30 +159,35 @@ Let's start by discussing your main business goals. What would you like to achie
             required: ["steps", "requiresUserInput"]
         };
 
-        const systemPrompt = `You are a business consultant planning how to help a client.
+        const tasks = this.projects.getAllTasks(projectId);
+
+        const mapper = (t: Task) => ({
+            type: t.type,
+            description: t.description,
+            order: t.order,
+        });
+        const completedSteps = `Completed Tasks:\n${JSON.stringify(tasks.filter(t => t.complete).map(mapper), undefined, " ")}\n\n`;
+        const currentSteps = `Current Plan:\n${JSON.stringify(tasks.filter(t => !t.complete).map(mapper), undefined, " ")}\n\n`;
+
+        const systemPrompt = 
+`You help on-board users into our AI Agent tool. This service is designed
+to help small businesses perform tasks automatically with regards to research and content creation.
 Break down the consultation process into specific steps.
-If the goal needs clarification, set requiresUserInput to true and ask relevant questions.
-Otherwise, plan concrete steps to help achieve the goal.`;
+If you need clarification or more information, add "ask-question" steps at the beginning of the plan.
+Otherwise, plan concrete steps to help achieve on-board the user and make sure the other agents
+will have sufficient context to help the business.
+
+${completedSteps}
+
+${currentSteps}`
+
 
         const response = await this.generate({
-            message: goal,
+            message: latestGoal,
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
 
         return response;
-    }
-
-    @HandleActivity("start-goal-planning", "Begin the goal planning process", ResponseType.CHANNEL)
-    private async handleStartGoalPlanning(params: HandlerParams): Promise<void> {
-        const { projectId } = await this.addNewProject({
-            projectName: "Craft a business overview that helps explain to the other agent's what we are trying to accomplish",
-            tasks: [{
-                description: `Kickoff understanding user's business: Respond to user's ${params.userPost.message} incoming channel message`,
-                type: "start_onboarding"
-            }]
-        });
-
-        await this.executeStep(projectId, "start_onboarding", params.userPost);
     }
 
     private async updateBusinessPlan(project: OnboardingProject, existingPlan?: Artifact): Promise<string> {
@@ -204,13 +270,9 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         return artifactId;
     }
 
-    private findNextIncompleteTask(project: OnboardingProject): Task | undefined {
-        return Object.values(project.tasks).find(t => !t.complete && !t.inProgress);
-    }
-
-    private async executeStartOnboarding(goal: string, step: string, projectId: string): Promise<StepResult> {
+    private async executeUnderstandGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
-        const analyzedGoals = await this.analyzeBusinessGoals(goal);
+        const analyzedGoals = await this.breakdownBusinessGoals(goal);
         const tasks = await this.createGoalTasks(project, analyzedGoals);
         const businessPlanId = await this.updateProjectBusinessPlan(project);
 
@@ -224,7 +286,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
     private async executeAnalyzeGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
-        const analyzedGoals = await this.analyzeBusinessGoals(goal);
+        const analyzedGoals = await this.breakdownBusinessGoals(goal);
         const tasks = await this.createGoalTasks(project, analyzedGoals);
         const businessPlanId = await this.updateProjectBusinessPlan(project);
 
@@ -249,7 +311,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         return project;
     }
 
-    private async analyzeBusinessGoals(userInput: string): Promise<Array<{ description: string }>> {
+    private async breakdownBusinessGoals(userInput: string): Promise<Array<{ description: string }>> {
         const schema = {
             type: "object",
             properties: {
@@ -270,7 +332,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         const response = await this.generate({
             message: userInput,
             instructions: new StructuredOutputPrompt(schema, 
-                `You are speaking directly to the user. Analyze their business goal and break it down into distinct, manageable objectives. Use a friendly, direct tone as if having a conversation.`)
+                `Restructure the information the user provided on business goals`)
         });
 
         return response.goals;
@@ -375,29 +437,6 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             type: 'progress_review',
             progress: response.progress
         };
-    }
-
-    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
-    private async handleGoalUpdate(params: HandlerParams): Promise<void> {
-        const project = params.projects?.[0] as OnboardingProject;
-        if (!project) {
-            await this.reply(params.userPost, { 
-                message: "No active goal planning session found. Please start a new session." 
-            });
-            return;
-        }
-
-        // Find the current in-progress task
-        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
-        if (!currentTask) {
-            await this.reply(params.userPost, { 
-                message: "I wasn't expecting a response right now. What would you like to work on?" 
-            });
-            return;
-        }
-
-        // Handle the user's input using the base class method
-        await this.handleUserInput(project.id, currentTask.type, params.userPost);
     }
 }
 

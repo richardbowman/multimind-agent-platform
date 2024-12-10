@@ -34,13 +34,24 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         this.stepExecutors.set(stepType, executor);
     }
 
-    protected abstract planSteps(goal: string): Promise<{
-        steps: string[];
+    protected async planSteps(projectId: string, latestGoal: string): Promise<{
+        steps: {
+            type: string;
+            description?: string;
+        }[];
         requiresUserInput: boolean;
         userQuestion?: string;
-        existingArtifacts?: AgentState['existingArtifacts'];
     }>;
 
+    protected async executeNextStep(projectId: string, userPost: ChatPost): Promise<void> {
+        const task = this.projects.getNextTask(projectId);
+        if (!task) {
+            throw new Error('No tasks found to execute');
+        }
+        this.projects.markTaskInProgress(task);
+        await this.executeStep(projectId, task.type, userPost);
+    }
+    
     protected async executeStep(projectId: string, currentStep: string, userPost: ChatPost): Promise<void> {
         try {
             const executor = this.stepExecutors.get(currentStep);
