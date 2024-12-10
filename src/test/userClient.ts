@@ -551,7 +551,27 @@ ${metadataSection}
 ${selectedArtifact.content.toString()}`;
             
             globalArtifactViewer.setContent(contentToShow);
+            deleteArtifactButton.show();
             screen.render();
+
+            // Handle delete button click
+            deleteArtifactButton.once('press', async () => {
+                try {
+                    await artifactManager.deleteArtifact(selectedArtifact.id);
+                    Logger.info(`Deleted artifact: ${selectedArtifact.id}`);
+                    
+                    // Refresh the artifacts list
+                    allArtifacts = await artifactManager.listArtifacts();
+                    await loadGlobalArtifacts();
+                    
+                    // Clear and hide the viewer and delete button
+                    globalArtifactViewer.setContent('');
+                    deleteArtifactButton.hide();
+                    screen.render();
+                } catch (error) {
+                    Logger.error('Failed to delete artifact:', error);
+                }
+            });
         }
     });
 

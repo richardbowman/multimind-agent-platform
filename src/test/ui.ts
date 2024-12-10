@@ -445,6 +445,30 @@ export const commandList = blessed.list({
 
 tab1Box.append(commandList);
 
+// Create delete button
+export const deleteArtifactButton = blessed.button({
+    content: 'Delete Artifact',
+    top: 3,
+    right: 0,
+    width: 'shrink',
+    height: 'shrink',
+    padding: {
+        left: 1,
+        right: 1
+    },
+    style: {
+        bg: 'red',
+        fg: 'white',
+        focus: {
+            bg: 'dark-red'
+        },
+        hover: {
+            bg: 'dark-red'
+        }
+    },
+    hidden: true
+});
+
 export const globalArtifactViewer = markdown({
     top: 3,
     left: '30%',
@@ -477,6 +501,7 @@ export const globalArtifactViewer = markdown({
 
 tab3Box.append(globalArtifactList);
 tab3Box.append(globalArtifactViewer);
+tab3Box.append(deleteArtifactButton);
 
 screen.append(splashBox);
 screen.render();
