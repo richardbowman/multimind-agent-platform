@@ -99,46 +99,25 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
 
         // Use the most recent relevant artifact
         const artifact = relevantArtifacts[0];
-        const pageSummaries = artifact.metadata?.steps[0].summaries || [];
+        const existingKnowledge = artifact.content;
+        const pageSummaries = artifact.metadata?.steps || [];
 
-        const schema = {
-            type: "object",
-            properties: {
-                message: {
-                    type: "string",
-                    description: "A clear, direct answer to the follow-up question"
-                },
-                confidence: {
-                    type: "string",
-                    enum: ["high", "medium", "low"],
-                    description: "Confidence level in the answer based on available information"
-                }
-            },
-            required: ["message", "confidence"]
+        // Create a research state for the follow-up
+        const stateId = userPost.id;
+        const newState: ResearchState = {
+            originalGoal: question,
+            currentStep: "review_existing_knowledge",
+            intermediateResults: [],
+            existingKnowledge
         };
 
-        const systemPrompt = `You are a research assistant. Answer the follow-up question using ONLY the information from the previous search results and your former conversation history. 
-If you cannot answer the question from the available information, say so clearly.
-Rate your confidence as:
-- high: Direct information found in results
-- medium: Answer inferred from results
-- low: Limited or partial information available
-
-Previous search results:\n\n${pageSummaries.join("\n\n")}`;
+        this.activeResearchStates.set(stateId, newState);
 
         try {
-            const response = await this.generate({
-                message: question, 
-                threadPosts: params.threadPosts,
-                instructions: new StructuredOutputPrompt(schema, systemPrompt)
-            });
-
-            const answer = `${response.message}\n\n*(Confidence: ${response.confidence})*`;
-
-            await this.reply(userPost, { message: answer });
+            await this.executeResearchStep(newState, userPost);
         } catch (error) {
-            Logger.error("Error generating follow-up answer:", error);
-            await this.reply(userPost, { message: "Sorry, I encountered an error while trying to answer your follow-up question." });
+            Logger.error("Error in follow-up:", error);
+            await this.reply(userPost, { message: "Sorry, I encountered an error while processing your follow-up question." });
         }
     }
 
