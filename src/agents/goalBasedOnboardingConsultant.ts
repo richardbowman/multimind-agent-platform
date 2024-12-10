@@ -109,7 +109,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
     @HandleActivity("start-goal-planning", "Begin the goal planning process", ResponseType.CHANNEL)
     private async handleStartGoalPlanning(params: HandlerParams): Promise<void> {
         const { projectId } = await this.addNewProject({
-            projectName: "Business Goals Analysis",
+            projectName: params.userPost.message,
             tasks: [{
                 description: "Understand the user's business and their desired business plan",
                 type: "analyze_goals"
