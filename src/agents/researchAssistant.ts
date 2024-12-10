@@ -367,12 +367,17 @@ Previous search results:\n\n${pageSummaries.join("\n\n")}`;
             };
         }
 
-        // Get the full artifacts for the relevant results
-        const relevantIds = results.ids;
+        // Get the full artifacts that contain these chunks
         const artifacts = await this.artifactManager.getArtifacts({ 
-            ids: relevantIds,
             type: 'summary'
         });
+        
+        // Filter to artifacts that contain the matched chunks
+        const relevantArtifacts = artifacts.filter(artifact => 
+            results.metadatas[0].some(metadata => 
+                metadata.docId === artifact.id
+            )
+        );
 
         const systemPrompt = `You are a research assistant analyzing existing knowledge.
 Review these previous research summaries and determine if they contain relevant information for the current goal.
