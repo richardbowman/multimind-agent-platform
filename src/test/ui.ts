@@ -104,10 +104,10 @@ tab1Box.append(threadList);
 
 // Create a box to display chat messages.
 export const chatBox = blessed.log({
-    top: 3,
+    top: 0,
     left: '30%',
     width: '40%',
-    height: '100%-6',
+    height: '100%-3',
     label: 'Chat',
     content: '',
     tags: true,
