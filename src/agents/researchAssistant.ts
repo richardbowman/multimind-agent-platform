@@ -842,7 +842,7 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
                     }
                 });
 
-                const response = `${finalResponse}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`;
+                const response = `${finalResponse.message}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`;
                 await this.reply(userPost, { message: response });
                 return;
             }
