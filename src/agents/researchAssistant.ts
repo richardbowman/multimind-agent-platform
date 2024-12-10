@@ -69,6 +69,51 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         Logger.info(`Project ${project.id} completed`);
     }
 
+    @HandleActivity("quick-search", "Perform a quick web search and return results", ResponseType.REPLY)
+    private async handleQuickSearch(params: HandlerParams): Promise<void> {
+        const { userPost } = params;
+        const query = userPost.message;
+
+        try {
+            const { searchQuery, category } = await this.generateSearchQuery("Answer the user's question", query);
+            const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
+
+            if (searchResults.length === 0) {
+                await this.chatClient.replyToPost(userPost.id, "I couldn't find any relevant results for your query.");
+                return;
+            }
+
+            const selectedUrls = await this.selectRelevantSearchResults(query, query, searchResults);
+            if (selectedUrls.length === 0) {
+                await this.chatClient.replyToPost(userPost.id, "I found some results but none seemed relevant to your query.");
+                return;
+            }
+
+            const pageSummaries: string[] = [];
+            for (const url of selectedUrls.slice(0, 2)) { // Limit to first 2 URLs for quick response
+                try {
+                    const { content, title } = await this.scrapeHelper.scrapePage(url);
+                    const summary = await this.summaryHelper.summarizeContent(query, `Page Title: ${title}\nURL: ${url}\n\n${content}`, this.lmStudioService);
+                    if (summary !== "NOT RELEVANT") {
+                        pageSummaries.push(summary);
+                    }
+                } catch (error) {
+                    Logger.error(`Error processing page ${url}`, error);
+                }
+            }
+
+            if (pageSummaries.length > 0) {
+                const finalSummary = await this.summaryHelper.createOverallSummary(query, query, pageSummaries, this.lmStudioService);
+                await this.chatClient.replyToPost(userPost.id, finalSummary);
+            } else {
+                await this.chatClient.replyToPost(userPost.id, "I found some pages but couldn't extract relevant information from them.");
+            }
+        } catch (error) {
+            Logger.error("Error in quick search:", error);
+            await this.chatClient.replyToPost(userPost.id, "Sorry, I encountered an error while searching.");
+        }
+    }
+
     @HandleActivity("process-research-request", "Process research request list", ResponseType.CHANNEL)
     private async handleAssistantMessage(params: HandlerParams): Promise<void> {
         // Process the incoming message from the assistant
