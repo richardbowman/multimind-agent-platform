@@ -191,41 +191,48 @@ export class BedrockService implements ILLMService {
         const schema = instructions.getSchema();
         const prompt = instructions.getPrompt();
 
+        const systemPrompt = `You are a structured data generator.
+You MUST return valid JSON matching this schema:
+${JSON.stringify(schema, null, 2)}
+
+Additional instructions:
+${prompt}
+
+IMPORTANT: Return ONLY the JSON object, no other text.`;
+
         const command = new InvokeModelCommand({
             modelId: this.modelId,
             body: JSON.stringify({
                 anthropic_version: "bedrock-2023-05-31",
                 max_tokens: 2048,
                 temperature: 0.1,
-                system: prompt,
+                system: systemPrompt,
                 messages: [{
-                    role: "user",
+                    role: "user", 
                     content: userPost.message
-                }],
-                tools: [{
-                    type: "function",
-                    function: {
-                        name: "generate_structured_output",
-                        description: "Generate a structured response according to the schema",
-                        parameters: schema
-                    }
-                }],
-                tool_choice: {
-                    type: "function",
-                    function: { name: "generate_structured_output" }
-                }
+                }]
             })
         });
 
         try {
             const response = await this.client.send(command);
             const result = JSON.parse(new TextDecoder().decode(response.body));
+            const content = result.content[0].text;
             
-            if (!result.tool_calls?.[0]?.function?.arguments) {
-                throw new Error("No structured output received from model");
-            }
+            try {
+                return JSON.parse(content);
+            } catch (parseError) {
+                // If direct parse fails, try to extract JSON from markdown blocks
+                const jsonMatch = content.match(/```(?:json)?\n([\s\S]*?)\n```/) || 
+                                content.match(/\{[\s\S]*\}/);
+                
+                if (!jsonMatch) {
+                    throw new Error("No valid JSON found in response");
+                }
 
-            return JSON.parse(result.tool_calls[0].function.arguments);
+                const jsonStr = jsonMatch[1] || jsonMatch[0];
+                return JSON.parse(jsonStr);
+            }
         } catch (error) {
             Logger.error("Structured generation error:", error);
             throw error;
