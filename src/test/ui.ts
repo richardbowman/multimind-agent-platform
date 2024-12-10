@@ -2,6 +2,30 @@ import blessed from 'blessed';
 import { markdown } from 'blessed-contrib';
 import Logger from 'src/helpers/logger';
 
+// Create splash screen box
+export const splashBox = blessed.box({
+    top: 'center',
+    left: 'center',
+    width: '50%',
+    height: '30%',
+    content: `
+     _   _ _____ _____ _  __
+    | \\ | |_   _/ ____| |/ /
+    |  \\| | | || |    | ' / 
+    | . \` | | || |    |  <  
+    | |\\  |_| || |____| . \\ 
+    |_| \\_|___|\\_____||_|\\_\\
+    
+    Neural Intelligence Collaboration Kit
+    `,
+    style: {
+        fg: 'green',
+        bg: 'black'
+    },
+    tags: true,
+    hidden: true
+});
+
 // Create a screen object.
 export const screen = blessed.screen({
     autoPadding: true,
@@ -415,6 +439,7 @@ export const globalArtifactViewer = markdown({
 tab3Box.append(globalArtifactList);
 tab3Box.append(globalArtifactViewer);
 
+screen.append(splashBox);
 screen.render();
 
 Logger.logBox = logBox;

@@ -19,6 +19,15 @@ const COMMANDS = [
 ];
 
 export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager, taskManager: TaskManager) {
+    // Show splash screen
+    splashBox.show();
+    screen.render();
+    
+    // Hide splash after 1 second
+    setTimeout(() => {
+        splashBox.hide();
+        screen.render();
+    }, 1000);
     // Create command popup list
     const commandList = blessed.list({
         parent: screen,
