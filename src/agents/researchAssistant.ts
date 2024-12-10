@@ -7,7 +7,7 @@ import { RESEARCHER_TOKEN, CHAT_MODEL, CHROMA_COLLECTION, WEB_RESEARCH_CHANNEL_I
 import { ChatClient, ChatPost } from '../chat/chatClient';
 import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
 import { Project, RecurrencePattern, Task, TaskManager } from 'src/tools/taskManager';
-import { CreateArtifact } from './schemas/ModelResponse';
+import { CreateArtifact, ModelResponse } from './schemas/ModelResponse';
 
 
 interface ResearchState {
@@ -112,7 +112,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         const schema = {
             type: "object",
             properties: {
-                answer: {
+                message: {
                     type: "string",
                     description: "A clear, direct answer to the follow-up question"
                 },
@@ -122,7 +122,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
                     description: "Confidence level in the answer based on available information"
                 }
             },
-            required: ["answer", "confidence"]
+            required: ["message", "confidence"]
         };
 
         const systemPrompt = `You are a research assistant. Answer the follow-up question using ONLY the information from the previous search results provided. 
@@ -130,14 +130,21 @@ If you cannot answer the question from the available information, say so clearly
 Rate your confidence as:
 - high: Direct information found in results
 - medium: Answer inferred from results
-- low: Limited or partial information available`;
+- low: Limited or partial information available
+
+Previous search results:\n\n${pageSummaries.join("\n\n")}`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const context = `Previous search results:\n\n${pageSummaries.join("\n\n")}\n\nFollow-up question: ${question}`;
+        const context = `\n\nFollow-up question: ${question}`;
 
         try {
-            const response = await this.lmStudioService.sendStructuredRequest(context, instructions, []);
-            const answer = `${response.answer}\n\n*(Confidence: ${response.confidence})*`;
+            const response = await this.generate({
+                message: question, 
+                instructions: new StructuredOutputPrompt(schema, systemPrompt)
+            });
+
+            const answer = `${response.message}\n\n*(Confidence: ${response.confidence})*`;
+
             await this.reply(userPost, { message: answer });
         } catch (error) {
             Logger.error("Error generating follow-up answer:", error);
@@ -351,7 +358,10 @@ Break down the research goal into specific steps that will help achieve the best
 If you need to ask the user for clarification, set requiresUserInput to true and specify the question.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const response = await this.lmStudioService.sendStructuredRequest(goal, instructions, []);
+        const response = await this.generate({
+            message: goal, 
+            instructions
+        });
         
         return response;
     }
@@ -434,19 +444,22 @@ Consider the original goal and what we've learned so far.`;
             results: state.intermediateResults
         }, null, 2);
 
-        return await this.lmStudioService.sendStructuredRequest(context, instructions, []);
+        return await this.generate({
+            message: context, 
+            instructions
+        });
     }
 
-    private async generateFinalResponse(state: ResearchState): Promise<string> {
+    private async generateFinalResponse(state: ResearchState): Promise<ModelResponse> {
         const schema = {
             type: "object",
             properties: {
-                response: {
+                message: {
                     type: "string",
                     description: "Final comprehensive response"
                 }
             },
-            required: ["response"]
+            required: ["message"]
         };
 
         const systemPrompt = `You are a research assistant generating a final response.
@@ -459,8 +472,12 @@ Include relevant details from all research steps while maintaining clarity and c
             results: state.intermediateResults
         }, null, 2);
 
-        const response = await this.lmStudioService.sendStructuredRequest(context, instructions, []);
-        return response.response;
+        const response = await this.generate({
+            message: context, 
+            instructions
+        });
+
+        return response;
     }
 
     private async generateSearchQuery(goal: string, task: string): Promise<{ searchQuery: string, category: string}> {
@@ -704,7 +721,7 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
                 await this.artifactManager.saveArtifact({
                     id: artifactId,
                     type: 'summary',
-                    content: finalResponse,
+                    content: finalResponse.message,
                     metadata: {
                         title: `Research Summary: ${state.originalGoal}`,
                         query: state.originalGoal,
