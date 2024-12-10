@@ -384,10 +384,38 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 await this.projects.markTaskInProgress(task);
             }
 
-            // Update the business plan with progress and user's message
-            if (project.props?.businessPlanId) {
+            // Check if this update contains meaningful new information
+            const schema = {
+                type: "object",
+                properties: {
+                    hasNewInformation: { type: "boolean" },
+                    summary: { type: "string" }
+                },
+                required: ["hasNewInformation", "summary"]
+            };
+
+            const updateAnalysis = await this.generate({
+                message: JSON.stringify({
+                    currentUpdate: params.userPost.message,
+                    goalDescription: task.description,
+                    goalStatus: task.complete ? "completed" : (task.inProgress ? "in progress" : "not started")
+                }),
+                instructions: new StructuredOutputPrompt(schema,
+                    `Analyze this update and determine if it contains meaningful new information about the goal's progress or status.
+                    Consider:
+                    - Does it describe specific progress or achievements?
+                    - Does it provide new details about implementation?
+                    - Does it mention blockers or changes in direction?
+                    - Is it substantially different from just acknowledging the goal?
+                    
+                    Return hasNewInformation: true only if the update contains concrete new information.
+                    Provide a brief summary of what's new, or why the update isn't substantial.`)
+            });
+
+            // Only update the business plan if there's new information
+            if (updateAnalysis.hasNewInformation && project.props?.businessPlanId) {
                 const existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
-                project.props.latestUpdate = params.userPost.message; // Store the user's update message
+                project.props.latestUpdate = `${updateAnalysis.summary}\n\nUser's message: ${params.userPost.message}`; // Store analyzed update
                 await this.updateBusinessPlan(project as OnboardingProject, existingPlan);
             }
 
