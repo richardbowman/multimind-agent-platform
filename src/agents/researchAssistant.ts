@@ -120,12 +120,17 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         const artifact = relevantArtifacts[0];
         const pageSummaries = artifact.metadata?.steps || [];
 
+        // Plan research for the follow-up
+        const researchPlan = await this.planResearchSteps(question);
+        
         // Create a research state for the follow-up
         const stateId = userPost.id;
         const newState: ResearchState = {
             originalGoal: question,
             currentStep: "review_existing_knowledge",
             intermediateResults: [],
+            needsUserInput: researchPlan.requiresUserInput,
+            userQuestion: researchPlan.userQuestion,
             existingArtifacts: [{
                 id: artifact.id,
                 title: artifact.metadata?.title,
@@ -137,7 +142,11 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         this.activeResearchStates.set(stateId, newState);
 
         try {
-            await this.executeResearchStep(newState, userPost);
+            if (newState.needsUserInput && newState.userQuestion) {
+                await this.reply(userPost, { message: newState.userQuestion });
+            } else {
+                await this.executeResearchStep(newState, userPost);
+            }
         } catch (error) {
             Logger.error("Error in follow-up:", error);
             await this.reply(userPost, { message: "Sorry, I encountered an error while processing your follow-up question." });
