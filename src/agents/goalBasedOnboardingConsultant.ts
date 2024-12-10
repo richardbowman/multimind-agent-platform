@@ -148,16 +148,39 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 `Update the business plan based on the goals, previous results, and latest updates.
                 If there's an existing plan, use it as a base and incorporate new information.
                 
-                Include sections for:
-                - Executive Summary
-                - Goals and Objectives (with current status and progress)
-                - Implementation Strategy
-                - Progress Tracking
-                - Recent Updates and Developments
+                Include these sections in markdown format:
                 
-                Format the content in markdown.
-                Ensure all recent updates and progress are reflected in the appropriate sections.
-                Maintain consistency with previous versions while incorporating new information.`)
+                # Executive Summary
+                Brief overview of the business goals and current progress
+                
+                # Goals and Objectives
+                List each business goal with:
+                - Description
+                - Current status (Not Started/In Progress/Complete)
+                - Progress updates and achievements
+                - Next steps or blockers
+                
+                # Implementation Strategy
+                For each active goal:
+                - Specific action items
+                - Timeline and milestones
+                - Resources needed
+                
+                # Progress Tracking
+                - Overall completion status
+                - Recent achievements
+                - Areas needing attention
+                
+                # Recent Updates
+                - Latest status changes
+                - New developments
+                - Important decisions made
+                
+                Use the goals array to list each specific business goal.
+                Include detailed status updates for each goal.
+                Reference specific progress points from task updates.
+                Keep the tone professional but conversational.
+                Format all content in clean, readable markdown.`)
         });
 
         // Create or update the business plan artifact
