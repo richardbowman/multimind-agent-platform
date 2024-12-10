@@ -36,6 +36,7 @@ storage.registerChannel(ONBOARDING_CHANNEL_ID, "#onboarding");
 storage.registerChannel(PROJECTS_CHANNEL_ID, "#projects");
 storage.registerChannel(WEB_RESEARCH_CHANNEL_ID, "#research");
 storage.registerChannel(CONTENT_CREATION_CHANNEL_ID, "#content");
+storage.registerChannel(FACT_CHECK_CHANNEL_ID, "#fact-check");
 
 process.on("exit", async () => {
     console.log('Saving tasks before exiting...');
@@ -64,6 +65,10 @@ const pmAssistant = new ProjectManager(PROJECT_MANAGER_USER_ID, "@pm", pmClient,
 const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
 const onboardingAssistant = new OnboardingConsultant(ONBOARDING_CONSULTANT_USER_ID, "@onboarding", onboardingClient, llmService, chromaService, tasks);
 await onboardingAssistant.initialize();
+
+const factCheckerClient = new InMemoryTestClient(FACT_CHECKER_USER_ID, "test", storage);
+const factChecker = new FactChecker(factCheckerClient, llmService, tasks);
+factChecker.setupChatMonitor(FACT_CHECK_CHANNEL_ID, "@factcheck");
 
 setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
 

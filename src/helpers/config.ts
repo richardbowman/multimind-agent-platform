@@ -27,5 +27,8 @@ export const ONBOARDING_CHANNEL_ID = process.env.ONBOARDING_CHANNEL_ID!;
 
 export const PROJECT_MANAGER_USER_ID = process.env.PROJECT_MANAGER_USER_ID!;
 
+export const FACT_CHECKER_USER_ID = process.env.FACT_CHECKER_USER_ID!;
+export const FACT_CHECK_CHANNEL_ID = process.env.FACT_CHECK_CHANNEL_ID!;
+
 export const LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY;
 export const LLM_PROVIDER = process.env.LLM_PROVIDER || 'lmstudio';
