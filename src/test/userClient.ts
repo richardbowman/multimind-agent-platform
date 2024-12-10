@@ -4,7 +4,7 @@ import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
 import blessed from 'blessed';
-import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box, taskDetailViewer, screen, splashBox, startSplashAnimation } from "./ui";
+import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box, taskDetailViewer, screen, splashBox, startSplashAnimation, commandList } from "./ui";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { screen } from './ui'
 import { Task, TaskManager } from "src/tools/taskManager";
@@ -32,22 +32,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         splashBox.hide();
         screen.render();
     }, 3000);
-    // Create command popup list
-    const commandList = blessed.list({
-        parent: screen,
-        width: '30%',
-        height: 'shrink',
-        left: inputBox.left,
-        bottom: inputBox.height + 1,
-        border: 'line',
-        style: {
-            selected: {
-                bg: 'blue',
-                fg: 'white'
-            }
-        },
-        hidden: true
-    });
+
     const USER_ID = "test";
     const UserClient = new InMemoryTestClient(USER_ID, "test", storage);
     let tasks: Task[] = [];
