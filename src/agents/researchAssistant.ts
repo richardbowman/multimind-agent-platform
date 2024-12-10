@@ -466,55 +466,6 @@ Otherwise, plan concrete research steps that will help achieve the goal.`)
         };
     }
 
-    private async determineNextAction(state: ResearchState): Promise<{
-        needsUserInput: boolean;
-        question?: string;
-        isComplete: boolean;
-        nextStep?: string;
-    }> {
-        const schema = {
-            type: "object",
-            properties: {
-                needsUserInput: {
-                    type: "boolean",
-                    description: "Whether we need to ask the user a question"
-                },
-                question: {
-                    type: "string",
-                    description: "Question to ask the user if needed"
-                },
-                isComplete: {
-                    type: "boolean",
-                    description: "Whether we have enough information to generate final response"
-                },
-                nextStep: {
-                    type: "string",
-                    description: "Next research step if not complete"
-                }
-            },
-            required: ["needsUserInput", "isComplete"]
-        };
-
-        const systemPrompt = `You are a research assistant analyzing intermediate results.
-Based on the current state and results, determine if we:
-1. Need to ask the user a question
-2. Have enough information to generate a final response
-3. Should continue with another research step
-
-Consider the original goal and what we've learned so far.`;
-
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const context = JSON.stringify({
-            originalGoal: state.originalGoal,
-            currentStep: state.currentStep,
-            results: state.intermediateResults
-        }, null, 2);
-
-        return await this.generate({
-            message: context, 
-            instructions
-        });
-    }
 
     private async generateFinalResponse(state: ResearchState): Promise<ModelResponse> {
         const schema = {
