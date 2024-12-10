@@ -142,7 +142,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             message: JSON.stringify({
                 goals: Object.values(project.tasks).filter(t => t.type === 'business-goal'),
                 existingPlan: existingContent,
-                projectId: project.id
+                projectId: project.id,
+                latestUpdate: project.props?.latestUpdate || ''
             }),
             instructions: new StructuredOutputPrompt(schema,
                 `Update the business plan based on the goals, previous results, and latest updates.
@@ -383,9 +384,10 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 await this.projects.markTaskInProgress(task);
             }
 
-            // Update the business plan with progress
+            // Update the business plan with progress and user's message
             if (project.props?.businessPlanId) {
                 const existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
+                project.props.latestUpdate = params.userPost.message; // Store the user's update message
                 await this.updateBusinessPlan(project as OnboardingProject, existingPlan);
             }
 
