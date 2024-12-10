@@ -116,32 +116,80 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
 
     @HandleActivity("process-research-request", "Process research request list", ResponseType.CHANNEL)
     private async handleAssistantMessage(params: HandlerParams): Promise<void> {
-        // Process the incoming message from the assistant
         const { userPost } = params;
         const projectId = userPost.props['project-id'];
-        const activityType = userPost.props['activity-type'];
-
-        if (!projectId || !activityType) {
-            Logger.error('Invalid message received. Missing project ID or activity type.');
+        
+        if (!projectId) {
+            Logger.error('Invalid message received. Missing project ID.');
             return;
         }
 
-        const primaryGoalMatch = userPost.message.match("Goal:\s*(.*?)(?=\n)");
-        const tasks = this.promptBuilder.parseMarkdownList(userPost.message).map(parsedTask => ({ task: parsedTask, taskId: "" }));
+        try {
+            const { searchQuery, category } = await this.generateSearchQuery("Research the topic", userPost.message);
+            const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
 
-        if (primaryGoalMatch?.length && primaryGoalMatch.length > 0 && tasks.length > 0) {
-            const goal = primaryGoalMatch[1];
+            if (searchResults.length === 0) {
+                await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID, 
+                    "I couldn't find any relevant results for this research request.",
+                    { 'project-id': projectId }
+                );
+                return;
+            }
 
-            await this.performSearchAndScrape(goal, projectId, tasks);
+            const selectedUrls = await this.selectRelevantSearchResults(userPost.message, userPost.message, searchResults);
+            if (selectedUrls.length === 0) {
+                await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
+                    "I found some results but none seemed relevant to the research request.",
+                    { 'project-id': projectId }
+                );
+                return;
+            }
 
-            await this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, 
-                `@research Research team completed the search and scraping for project ${projectId} to help accomplish: ${goal}.`,
-                {
-                    'project-id': projectId
+            const pageSummaries: string[] = [];
+            for (const url of selectedUrls) {
+                try {
+                    const { content, title } = await this.scrapeHelper.scrapePage(url);
+                    const summary = await this.summaryHelper.summarizeContent(
+                        userPost.message,
+                        `Page Title: ${title}\nURL: ${url}\n\n${content}`,
+                        this.lmStudioService
+                    );
+                    if (summary !== "NOT RELEVANT") {
+                        pageSummaries.push(summary);
+                    }
+                } catch (error) {
+                    Logger.error(`Error processing page ${url}`, error);
                 }
+            }
+
+            if (pageSummaries.length > 0) {
+                const finalSummary = await this.summaryHelper.createOverallSummary(
+                    userPost.message,
+                    userPost.message,
+                    pageSummaries,
+                    this.lmStudioService
+                );
+                await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
+                    finalSummary,
+                    { 'project-id': projectId }
+                );
+            } else {
+                await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
+                    "I found some pages but couldn't extract relevant information from them.",
+                    { 'project-id': projectId }
+                );
+            }
+
+            await this.chatClient.postInChannel(PROJECTS_CHANNEL_ID,
+                `@research Research team completed the search and analysis for project ${projectId}.`,
+                { 'project-id': projectId }
             );
-        } else {
-            Logger.error("No goal specified. Can't start research project");
+        } catch (error) {
+            Logger.error("Error in research request:", error);
+            await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
+                "Sorry, I encountered an error while processing this research request.",
+                { 'project-id': projectId }
+            );
         }
     }
 
