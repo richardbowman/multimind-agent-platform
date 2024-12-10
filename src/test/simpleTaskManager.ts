@@ -8,6 +8,7 @@ import { ContentProject } from 'src/agents/contentManager';
 class SimpleTaskManager extends EventEmitter implements TaskManager {
     private projects: { [projectId: string]: Project<Task> } = {};
     private filePath: string;
+    private savePending: boolean = false;
 
     constructor(filePath: string) {
         super();
@@ -54,7 +55,12 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
 
     async save(): Promise<void> {
         try {
-            await fs.writeFile(this.filePath, JSON.stringify(this.projects, null, 2));
+            if (this.savePending) return;
+            this.savePending = true;
+            await (async () => {
+                await fs.writeFile(this.filePath, JSON.stringify(this.projects, null, 2));
+                this.savePending = false;
+            })();
         } catch (error) {
             Logger.error('Failed to save tasks:', error);
         }
@@ -94,7 +100,7 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
             const userTasks = Object.values(project.tasks || [])
                 .filter(t => {
                     // Task must be assigned to user and not complete
-                    if (t.assignee !== userId || t.complete) {
+                    if (t.assignee !== userId || t.complete || t.inProgress) {
                         return false;
                     }
                     

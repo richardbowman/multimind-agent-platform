@@ -237,14 +237,14 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
     async function loadTasks() {
         const posts = storage.posts.filter(post => post.channel_id === currentChannelId && (post.getRootId() === currentThreadId || post.id === currentThreadId || (currentThreadId === null && !post.getRootId())));
-        const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
+        const projectIds = [...new Set(posts.map(p => p.props["project-id"]).filter(id => id !== undefined))];
         let projects = [];
         tasks = [];
         for (let projectId of projectIds) {
             const project = await taskManager.getProject(projectId);
             if (!project) continue
             projects.push(project);
-            tasks = [...tasks, ...Object.values(project.tasks)].sort((a, b) => Number(a.complete) - Number(b.complete));
+            tasks = [...tasks, ...Object.values(project?.tasks||{})].sort((a, b) => Number(a.complete) - Number(b.complete));
         }
 
         // Store task IDs in order and create display items
