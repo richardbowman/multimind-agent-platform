@@ -4,7 +4,7 @@ import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService'
 import { TaskManager } from '../tools/taskManager';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { ONBOARDING_CHANNEL_ID } from '../helpers/config';
-import { ArtifactManager } from '../tools/artifact';
+import { ArtifactManager } from '../tools/artifactManager';
 import ChromaDBService from '../llm/chromaService';
 import Logger from '../helpers/logger';
 import { Project, Task } from '../tools/taskManager';
@@ -27,6 +27,13 @@ export interface OnboardingProject extends Project<Task> {
 }
 
 class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
+    protected projectCompleted(project: OnboardingProject): void {
+        throw new Error('Method not implemented.');
+    }
+    protected processTask(task: Task): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
+    
     constructor(
         userId: string,
         messagingHandle: string,
@@ -36,6 +43,8 @@ class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Ta
         projects: TaskManager
     ) {
         super(chatClient, lmStudioService, userId, projects);
+        this.chromaDBService = chromaDBService;
+
         this.setPurpose(`I am an Onboarding Consultant focused on helping you achieve your business goals with our service.`);
         this.setupChatMonitor(ONBOARDING_CHANNEL_ID, messagingHandle);
         this.artifactManager = new ArtifactManager(chromaDBService);
@@ -141,7 +150,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         };
 
         const response = await this.generate({
-            message: state.intermediateResults.map(r => r.type === 'user_input' ? r.answer : '').join('\n'),
+            message: state.intermediateResults.map(r => r.type === 'user_input' ? r.answer : goal).join('\n'),
             instructions: new StructuredOutputPrompt(schema, 
                 `Analyze the user's input and identify distinct business goals.
                 Break down complex goals into smaller, manageable objectives.`)
