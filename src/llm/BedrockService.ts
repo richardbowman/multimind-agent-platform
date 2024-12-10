@@ -235,4 +235,24 @@ export class BedrockService implements ILLMService {
         if (!this.embeddingModel) throw new Error("Embedding model not initialized");
         return this.embeddingModel;
     }
+
+    async getTokenCount(text: string): Promise<number> {
+        const command = new InvokeModelCommand({
+            modelId: this.modelId,
+            body: JSON.stringify({
+                anthropic_version: "bedrock-2023-05-31",
+                prompt: text,
+                max_tokens: 0  // We don't need any tokens generated
+            })
+        });
+
+        try {
+            const response = await this.client.send(command);
+            const result = JSON.parse(new TextDecoder().decode(response.body));
+            return result.usage.input_tokens;
+        } catch (error) {
+            Logger.error("Token count error:", error);
+            throw error;
+        }
+    }
 }
