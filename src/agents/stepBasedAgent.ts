@@ -96,6 +96,8 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         isComplete: boolean;
         nextStep?: string;
     }> {
+        const registeredSteps = Array.from(this.stepExecutors.keys());
+        
         const schema = {
             type: "object",
             properties: {
@@ -113,7 +115,8 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 },
                 nextStep: {
                     type: "string",
-                    description: "Next step if not complete"
+                    enum: registeredSteps,
+                    description: `Next step to execute. Must be one of: ${registeredSteps.join(', ')}`
                 }
             },
             required: ["needsUserInput", "isComplete"]
