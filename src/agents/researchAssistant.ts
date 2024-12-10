@@ -770,6 +770,11 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
             // Determine next steps
             const nextAction = await this.determineNextAction(state);
             
+            // Update goals based on step results
+            if (stepResult.type === 'goals_analysis') {
+                state.goals = stepResult.goals;
+            }
+            
             if (nextAction.needsUserInput) {
                 state.needsUserInput = true;
                 state.userQuestion = nextAction.question;

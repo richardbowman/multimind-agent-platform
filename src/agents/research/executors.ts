@@ -85,6 +85,9 @@ export class WebSearchExecutor implements StepExecutor {
         };
 
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}.
+Consider these specific goals we're trying to achieve:
+${state.goals?.map(g => `- ${g.description} (${g.completed ? 'completed' : 'pending'})`).join('\n')}
+
 Generate a broad web search query without special keywords or operators based on the task we've been asked to research.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);

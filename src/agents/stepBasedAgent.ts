@@ -188,6 +188,7 @@ You will respond inside of the message key in Markdown format.`;
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const context = JSON.stringify({
             originalGoal: state.originalGoal,
+            goals: state.goals,
             results: state.intermediateResults
         }, null, 2);
 
