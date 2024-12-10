@@ -10,22 +10,10 @@ import Logger from '../helpers/logger';
 import { Project, Task } from '../tools/taskManager';
 import crypto from 'crypto';
 
-export interface OnboardingGoal {
-    id: string;
-    description: string;
-    completed: boolean;
-    subgoals?: OnboardingGoal[];
-}
-
-export interface OnboardingGoal {
-    id: string;
-    description: string;
-    completed: boolean;
-    subgoals?: OnboardingGoal[];
-}
-
 export interface OnboardingProject extends Project<Task> {
-    goals: OnboardingGoal[];
+    businessDescription?: string;
+    businessGoals?: string[];
+    serviceRequirements?: string;
 }
 
 class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
@@ -159,7 +147,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
         const response = await this.generate({
             message: JSON.stringify({
-                goals: goals,
+                goals: Object.values(project.tasks).filter(t => t.type === 'business-goal'),
                 existingPlan: existingContent,
                 projectId: project.id
             }),
@@ -230,21 +218,17 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
         await this.projects.addProject(project);
 
-        // Convert goals to tasks
+        // Create tasks for each goal
         for (const goalData of response.goals) {
             const task: Task = {
                 id: crypto.randomUUID(),
                 description: goalData.description,
                 creator: this.userId,
-                complete: false
+                complete: false,
+                type: 'business-goal'
             };
             
             await this.projects.addTask(project, task);
-            project.goals.push({
-                id: task.id,
-                description: task.description,
-                completed: false
-            });
         }
 
         // Create/update the business plan
@@ -361,24 +345,13 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 The user's update message is in userUpdate.`)
         });
 
-        // Update goal status in project and task manager
-        const goal = project.goals.find(g => g.id === response.goalId);
-        if (goal) {
-            goal.completed = response.completed;
-            
-            // Get all projects and find the one containing our goals
-            const projects = this.projects.getProjects();
-            const project = projects.find(p => 'goals' in p && (p as OnboardingProject).goals.some(g => g.id === goal.id));
-            
-            if (project) {
-                const task = project.tasks[goal.id];
-                if (task) {
-                    if (response.completed) {
-                        await this.projects.completeTask(task.id);
-                    } else {
-                        await this.projects.markTaskInProgress(task);
-                    }
-                }
+        // Update task status
+        const task = Object.values(project.tasks).find(t => t.id === response.goalId);
+        if (task) {
+            if (response.completed) {
+                await this.projects.completeTask(task.id);
+            } else {
+                await this.projects.markTaskInProgress(task);
             }
 
             // Update the business plan with progress
