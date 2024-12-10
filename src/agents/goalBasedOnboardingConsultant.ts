@@ -200,6 +200,10 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         return artifactId;
     }
 
+    private findNextIncompleteTask(project: OnboardingProject): Task | undefined {
+        return Object.values(project.tasks).find(t => !t.complete && !t.inProgress);
+    }
+
     private async executeAnalyzeGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
         // Get the existing project
         const project = this.projects.getProject(projectId) as OnboardingProject;
@@ -350,6 +354,9 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             return;
         }
 
+        // Find next incomplete task before updating current one
+        const nextTask = this.findNextIncompleteTask(project);
+
         // Initialize project props if needed
         if (!project.props) {
             project.props = {};
@@ -435,7 +442,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 message: JSON.stringify({
                     goal: task.description,
                     completed: task.complete,
-                    projectId: project.id
+                    projectId: project.id,
+                    nextTask: nextTask?.description
                 }),
                 instructions: new StructuredOutputPrompt(responseSchema,
                     `You are speaking directly to the user. Generate a natural, conversational response about their goal's status.
