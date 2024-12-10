@@ -12,6 +12,14 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { CreateArtifact } from './schemas/ModelResponse';
 
 
+interface ResearchState {
+    originalGoal: string;
+    currentStep: string;
+    intermediateResults: any[];
+    needsUserInput?: boolean;
+    userQuestion?: string;
+}
+
 export class ResearchTask implements Task {
     projectId: string;
     type: string;
@@ -36,6 +44,7 @@ export interface ResearchProject extends Project<ResearchTask> {
 
 class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
     private results: string[] = [];
+    private activeResearchStates: Map<string, ResearchState> = new Map();
 
     private searchHelper: SearchHelper;
     private scrapeHelper: ScrapeHelper;
@@ -144,57 +153,37 @@ Rate your confidence as:
     private async handleQuickSearch(params: HandlerParams): Promise<void> {
         const { userPost } = params;
         const query = userPost.message;
+        const stateId = userPost.id;
+
+        // Check if this is a response to a previous question
+        const existingState = this.activeResearchStates.get(userPost.getRootId() || '');
+        if (existingState && existingState.needsUserInput) {
+            // Continue with existing research using the user's input
+            existingState.needsUserInput = false;
+            await this.continueResearch(existingState, userPost);
+            return;
+        }
 
         try {
-            const { searchQuery, category } = await this.generateSearchQuery("Answer the user's question", query);
-            const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
+            // Start new research
+            const researchPlan = await this.planResearchSteps(query);
+            const newState: ResearchState = {
+                originalGoal: query,
+                currentStep: researchPlan.steps[0],
+                intermediateResults: [],
+                needsUserInput: researchPlan.requiresUserInput,
+                userQuestion: researchPlan.userQuestion
+            };
 
-            if (searchResults.length === 0) {
-                await this.chatClient.replyThreaded(userPost, "I couldn't find any relevant results for your query.");
+            this.activeResearchStates.set(stateId, newState);
+
+            if (newState.needsUserInput) {
+                await this.chatClient.replyThreaded(userPost, 
+                    `To help me research this better, could you please answer: ${newState.userQuestion}`);
                 return;
             }
 
-            const selectedUrls = await this.selectRelevantSearchResults(query, query, searchResults);
-            if (selectedUrls.length === 0) {
-                await this.chatClient.replyThreaded(userPost, "I found some results but none seemed relevant to your query.");
-                return;
-            }
-
-            const pageSummaries: string[] = [];
-            for (const url of selectedUrls.slice(0, 2)) { // Limit to first 2 URLs for quick response
-                try {
-                    const { content, title } = await this.scrapeHelper.scrapePage(url);
-                    const summary = await this.summaryHelper.summarizeContent(query, `Page Title: ${title}\nURL: ${url}\n\n${content}`, this.lmStudioService);
-                    if (summary !== "NOT RELEVANT") {
-                        pageSummaries.push(summary);
-                    }
-                } catch (error) {
-                    Logger.error(`Error processing page ${url}`, error);
-                }
-            }
-
-            if (pageSummaries.length > 0) {
-                const finalSummary = await this.summaryHelper.createOverallSummary(query, query, pageSummaries, this.lmStudioService);
-                
-                // Save the summary as an artifact
-                const artifactId = crypto.randomUUID();
-                await this.artifactManager.saveArtifact({
-                    id: artifactId,
-                    type: 'summary',
-                    content: finalSummary,
-                    metadata: {
-                        title: `Quick Search Summary: ${query}`,
-                        query,
-                        type: 'quick-search',
-                        pageSummaries
-                    }
-                });
-
-                const response = `${finalSummary}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`;
-                await this.chatClient.replyThreaded(userPost, response);
-            } else {
-                await this.chatClient.replyThreaded(userPost, "I found some pages but couldn't extract relevant information from them.");
-            }
+            await this.executeResearchStep(newState, userPost);
         } catch (error) {
             Logger.error("Error in quick search:", error);
             await this.chatClient.replyToPost(userPost.id, "Sorry, I encountered an error while searching.");
@@ -372,6 +361,146 @@ Rate your confidence as:
             await this.publishResult(projectId, WEB_RESEARCH_CHANNEL_ID, taskId, `Summary for task ${task}: ${overallSummary}`);
             this.results.push(overallSummary);
         }
+    }
+
+    private async planResearchSteps(goal: string): Promise<any> {
+        const schema = {
+            type: "object",
+            properties: {
+                steps: {
+                    type: "array",
+                    items: {
+                        type: "string"
+                    },
+                    description: "List of research steps needed"
+                },
+                requiresUserInput: {
+                    type: "boolean",
+                    description: "Whether user input is needed before proceeding"
+                },
+                userQuestion: {
+                    type: "string",
+                    description: "Question to ask the user if input is needed"
+                }
+            },
+            required: ["steps"]
+        };
+
+        const systemPrompt = `You are a research assistant planning how to investigate a topic.
+Break down the research goal into specific steps that will help achieve the best result.
+If you need to ask the user for clarification, set requiresUserInput to true and specify the question.`;
+
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        const response = await this.lmStudioService.sendStructuredRequest(goal, instructions, []);
+        
+        return response;
+    }
+
+    private async processResearchStep(step: string, originalGoal: string): Promise<any> {
+        const { searchQuery, category } = await this.generateSearchQuery(originalGoal, step);
+        const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
+        
+        if (searchResults.length === 0) {
+            return { type: 'no_results' };
+        }
+
+        const selectedUrls = await this.selectRelevantSearchResults(step, originalGoal, searchResults);
+        if (selectedUrls.length === 0) {
+            return { type: 'no_relevant_results' };
+        }
+
+        const pageSummaries: string[] = [];
+        for (const url of selectedUrls.slice(0, 2)) {
+            try {
+                const { content, title } = await this.scrapeHelper.scrapePage(url);
+                const summary = await this.summaryHelper.summarizeContent(step, `Page Title: ${title}\nURL: ${url}\n\n${content}`, this.lmStudioService);
+                if (summary !== "NOT RELEVANT") {
+                    pageSummaries.push(summary);
+                }
+            } catch (error) {
+                Logger.error(`Error processing page ${url}`, error);
+            }
+        }
+
+        return {
+            type: 'step_results',
+            summaries: pageSummaries,
+            query: searchQuery,
+            urls: selectedUrls
+        };
+    }
+
+    private async determineNextAction(state: ResearchState): Promise<{
+        needsUserInput: boolean;
+        question?: string;
+        isComplete: boolean;
+        nextStep?: string;
+    }> {
+        const schema = {
+            type: "object",
+            properties: {
+                needsUserInput: {
+                    type: "boolean",
+                    description: "Whether we need to ask the user a question"
+                },
+                question: {
+                    type: "string",
+                    description: "Question to ask the user if needed"
+                },
+                isComplete: {
+                    type: "boolean",
+                    description: "Whether we have enough information to generate final response"
+                },
+                nextStep: {
+                    type: "string",
+                    description: "Next research step if not complete"
+                }
+            },
+            required: ["needsUserInput", "isComplete"]
+        };
+
+        const systemPrompt = `You are a research assistant analyzing intermediate results.
+Based on the current state and results, determine if we:
+1. Need to ask the user a question
+2. Have enough information to generate a final response
+3. Should continue with another research step
+
+Consider the original goal and what we've learned so far.`;
+
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        const context = JSON.stringify({
+            originalGoal: state.originalGoal,
+            currentStep: state.currentStep,
+            results: state.intermediateResults
+        }, null, 2);
+
+        return await this.lmStudioService.sendStructuredRequest(context, instructions, []);
+    }
+
+    private async generateFinalResponse(state: ResearchState): Promise<string> {
+        const schema = {
+            type: "object",
+            properties: {
+                response: {
+                    type: "string",
+                    description: "Final comprehensive response"
+                }
+            },
+            required: ["response"]
+        };
+
+        const systemPrompt = `You are a research assistant generating a final response.
+Synthesize all the intermediate results into a clear, comprehensive answer that addresses the original goal.
+Include relevant details from all research steps while maintaining clarity and coherence.`;
+
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        const context = JSON.stringify({
+            originalGoal: state.originalGoal,
+            results: state.intermediateResults
+        }, null, 2);
+
+        const response = await this.lmStudioService.sendStructuredRequest(context, instructions, []);
+        return response.response;
     }
 
     private async generateSearchQuery(goal: string, task: string): Promise<{ searchQuery: string, category: string}> {
@@ -586,6 +715,67 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 
     async cleanup(): Promise<void> {
         await this.scrapeHelper.cleanup();
+    }
+
+    private async executeResearchStep(state: ResearchState, userPost: ChatPost): Promise<void> {
+        try {
+            // Execute the current step
+            const stepResult = await this.processResearchStep(state.currentStep, state.originalGoal);
+            state.intermediateResults.push(stepResult);
+
+            // Determine next steps
+            const nextAction = await this.determineNextAction(state);
+            
+            if (nextAction.needsUserInput) {
+                state.needsUserInput = true;
+                state.userQuestion = nextAction.question;
+                await this.chatClient.replyThreaded(userPost, nextAction.question);
+                return;
+            }
+
+            if (nextAction.isComplete) {
+                // Generate final response using all intermediate results
+                const finalResponse = await this.generateFinalResponse(state);
+                
+                // Save the final response as an artifact
+                const artifactId = crypto.randomUUID();
+                await this.artifactManager.saveArtifact({
+                    id: artifactId,
+                    type: 'summary',
+                    content: finalResponse,
+                    metadata: {
+                        title: `Research Summary: ${state.originalGoal}`,
+                        query: state.originalGoal,
+                        type: 'multi-step-research',
+                        steps: state.intermediateResults
+                    }
+                });
+
+                const response = `${finalResponse}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`;
+                await this.chatClient.replyThreaded(userPost, response);
+                return;
+            }
+
+            // Continue with next step
+            state.currentStep = nextAction.nextStep;
+            await this.executeResearchStep(state, userPost);
+
+        } catch (error) {
+            Logger.error("Error in research step:", error);
+            await this.chatClient.replyThreaded(userPost, 
+                "Sorry, I encountered an error while researching your question.");
+        }
+    }
+
+    private async continueResearch(state: ResearchState, userPost: ChatPost): Promise<void> {
+        // Update the research state with user's input and continue
+        state.intermediateResults.push({
+            type: 'user_input',
+            question: state.userQuestion,
+            answer: userPost.message
+        });
+
+        await this.executeResearchStep(state, userPost);
     }
 }
 
