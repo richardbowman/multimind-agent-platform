@@ -270,6 +270,32 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         await loadArtifacts();
     }
 
+    // Listen for task events to update UI
+    taskManager.on('taskAdded', async () => {
+        await loadTasks();
+        screen.render();
+    });
+
+    taskManager.on('taskUpdated', async () => {
+        await loadTasks(); 
+        screen.render();
+    });
+
+    taskManager.on('taskAssigned', async () => {
+        await loadTasks();
+        screen.render();
+    });
+
+    taskManager.on('taskCompleted', async () => {
+        await loadTasks();
+        screen.render();
+    });
+
+    taskManager.on('taskInProgress', async () => {
+        await loadTasks();
+        screen.render();
+    });
+
     artifactList.on('select', async (item, index) => {
         const selectedArtifactId = item.content;
         if (!selectedArtifactId) return;

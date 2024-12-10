@@ -23,6 +23,9 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
             task.order = maxOrder + 1;
         }
 
+        // Emit taskAdded event before saving
+        this.emit('taskAdded', { task, project });
+
         // If not explicitly set, make this task depend on the task with the next lowest order
         if (task.dependsOn === undefined) {
             const existingTasks = Object.values(this.projects[project.id].tasks || {});
@@ -190,6 +193,10 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
 
     async replaceProject(project: ContentProject): Promise<void> {
         this.projects[project.id] = project;
+        // Emit taskUpdated for each task in the project
+        Object.values(project.tasks || {}).forEach(task => {
+            this.emit('taskUpdated', { task, project });
+        });
         await this.save();
     }
 
