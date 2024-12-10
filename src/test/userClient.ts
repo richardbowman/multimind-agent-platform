@@ -137,7 +137,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
     // Handle input changes for command and user handle autocomplete
     inputBox.on('keypress', (ch, key) => {
-        const currentInput = inputBox.getValue() + (ch || '');
+        const currentInput = inputBox.getValue() + (ch !== "\r" ? ch : "");
         
         if (currentInput.startsWith('/')) {
             // Filter commands based on current input
@@ -150,7 +150,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 
                 // If Enter is pressed, autocomplete with the first match
                 if ((key && key.name === 'enter') || ch === '\r') {
-                    inputBox.setValue(filtered[0].command + ' ');
+                    setTimeout(() => { inputBox.setValue(filtered[0].command + ' '); screen.render(); }, 0);
                     commandList.hide();
                     return false; // Prevent default Enter behavior
                 }
@@ -180,7 +180,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 if ((key && key.name === 'enter') || ch === '\r') {
                     // Replace the partial handle with the complete one
                     const beforeHandle = currentInput.substring(0, currentInput.lastIndexOf('@'));
-                    inputBox.setValue(beforeHandle + handles[0].handle + ' ');
+                    setTimeout(() => { inputBox.setValue(beforeHandle + handles[0].handle + ' '); screen.render(); }, 0);
                     commandList.hide();
                     return false; // Prevent default Enter behavior
                 }
@@ -591,8 +591,7 @@ ${selectedArtifact.content.toString()}`;
         tab1Box.hide();
         logBox.show();
 
-        globalArtifactList.hide();
-        globalArtifactViewer.hide();
+        tab3Box.hide();
 
         screen.render();
     };

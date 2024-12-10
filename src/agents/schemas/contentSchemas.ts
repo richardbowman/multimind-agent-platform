@@ -9,7 +9,7 @@ export interface ContentDecompositionResponse {
     strategy: string;
     sections: Array<{
         title: string;
-        overview: string;
+        description: string;
     }>;
 }
 
@@ -32,7 +32,7 @@ You are a content orchestrator. Your task is to analyze the user's request and b
     "sections": [
         {
             "title": "Section 1",
-            "overview": "High level overview of this section"
+            "description": "Specific details on what this section should include"
         },
         ...
     ]

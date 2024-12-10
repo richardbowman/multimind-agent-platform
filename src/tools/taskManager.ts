@@ -35,7 +35,7 @@ export interface Project<Task> {
 export interface TaskManager extends EventEmitter {
     replaceProject(project: Project<Task>): unknown;
     completeTask(id: string): Promise<Task>;
-    addProject(project: Project<Task>): void;
+    addProject(project: Project<Task>): Promise<void>;
     addTask(project: Project<Task>, task: Task): Promise<Task>;
     getProject(projectId: string): Project<Task>;
     newProjectId(): string;

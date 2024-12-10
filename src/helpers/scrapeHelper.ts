@@ -15,7 +15,7 @@ class ScrapeHelper {
 
     async initialize(): Promise<void> {
         if (!this.browser) {
-            this.browser = await chromium.launch({ headless: false });
+            this.browser = await chromium.launch({ headless: true });
         }
     }
 

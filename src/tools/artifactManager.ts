@@ -19,6 +19,16 @@ export class ArtifactManager {
     fs.mkdir(this.storageDir, { recursive: true }).catch(err => Logger.error('Error creating output directory:', err));
   }
 
+  async getArtifacts(filter: { type?: string } = {}): Promise<Artifact[]> {
+    const artifacts = await this.listArtifacts();
+    
+    if (filter.type) {
+      return artifacts.filter(artifact => artifact.type === filter.type);
+    }
+    
+    return artifacts;
+  }
+  
   private async loadArtifactMetadata(): Promise<Record<string, any>> {
     try {
       const data = await fs.readFile(this.artifactMetadataFile, 'utf-8');
@@ -36,7 +46,7 @@ export class ArtifactManager {
     await fs.writeFile(this.artifactMetadataFile, JSON.stringify(metadata, null, 2));
   }
 
-  async saveArtifact(artifact: Artifact): Promise<void> {
+  async saveArtifact(artifact: Artifact): Promise<Artifact> {
     const artifactDir = path.join(this.storageDir, artifact.id);
 
     // Load existing metadata
@@ -75,11 +85,14 @@ export class ArtifactManager {
     // Index the artifact into Chroma
     await this.chromaService.handleContentChunks(
       artifact.content.toString(),
-      `artifact://${artifact.id}`,
-      'summary',
+      artifact.metadata?.url,
+      artifact.metadata?.task,
+      artifact.metadata?.projectId,
       artifact.metadata?.title,
       artifact.type
     );
+
+    return artifact;
   }
 
   async loadArtifact(artifactId: string, version?: number): Promise<Artifact | null> {

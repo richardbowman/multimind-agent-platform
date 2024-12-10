@@ -18,7 +18,7 @@ const logoTemplate = `_   _ _____ _____ _  __
 | |\\  |_| || |____| . \\ 
 |_| \\_|___|\\_____||_|\\_\\`;
 
-// Colors for animation - rainbow order in hex
+// Colors for animation - rainbow order
 const logoColors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
 
 // Generate frames by wrapping the template in each color
@@ -425,6 +425,25 @@ export const globalArtifactList = blessed.list({
     top: 3,
     height: '100%-3'
 });
+
+// Create command popup list
+export const commandList = blessed.list({
+    parent: screen,
+    width: '30%',
+    height: 'shrink',
+    left: inputBox.left,
+    bottom: inputBox.height + 1,
+    border: 'line',
+    style: {
+        selected: {
+            bg: 'blue',
+            fg: 'white'
+        }
+    },
+    hidden: true
+});
+
+tab1Box.append(commandList);
 
 export const globalArtifactViewer = markdown({
     top: 3,

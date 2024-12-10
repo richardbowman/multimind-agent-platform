@@ -68,6 +68,10 @@ export default class LMStudioService implements ILLMService {
             baseUrl: process.env.LMSTUDIO_BASEURL!
         });
     }
+    getTokenCount(message: string): Promise<number> {
+        if (!this.chatModel) throw new Error("LM Studio not initalized");
+        return this.chatModel.unstable_countTokens(message);
+    }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
         try {

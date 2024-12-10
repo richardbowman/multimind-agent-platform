@@ -9,7 +9,6 @@ import { ContentProject, ContentTask } from './contentManager';
 import ChromaDBService from 'src/llm/chromaService';
 
 export class ContentWriter extends Agent<ContentProject, ContentTask> {
-    private isWorking: boolean = false;
 
     constructor(chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager, chromaDBService: ChromaDBService) {
         super(chatClient, lmStudioService, CONTENT_WRITER_USER_ID, projects, chromaDBService);

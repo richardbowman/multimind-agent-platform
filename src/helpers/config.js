@@ -1,0 +1,27 @@
+"use strict";
+Object.defineProperty(exports, "__esModule", { value: true });
+exports.LLM_PROVIDER = exports.LMSTUDIO_API_KEY = exports.PROJECT_MANAGER_USER_ID = exports.ONBOARDING_CHANNEL_ID = exports.ONBOARDING_CONSULTANT_USER_ID = exports.RESEARCH_MANAGER_TOKEN_ID = exports.RESEARCH_MANAGER_USER_ID = exports.SEARXNG_URL = exports.MAX_SEARCHES = exports.EMBEDDING_MODEL = exports.CHAT_MODEL = exports.LM_STUDIO_BASE_URL = exports.CHROMA_COLLECTION = exports.CHROMADB_URL = exports.CONTENT_WRITER_USER_ID = exports.CONTENT_MANAGER_USER_ID = exports.CONTENT_CREATION_CHANNEL_ID = exports.PROJECTS_CHANNEL_ID = exports.RESEARCHER_USER_ID = exports.RESEARCHER_TOKEN = exports.WEB_RESEARCH_CHANNEL_ID = void 0;
+// config.ts
+var dotenv_1 = require("dotenv");
+dotenv_1.default.config({ path: ['env.defaults', '.env.local', "./.env"] });
+exports.WEB_RESEARCH_CHANNEL_ID = process.env.WEB_RESEARCH_CHANNEL_ID;
+exports.RESEARCHER_TOKEN = process.env.RESEARCHER_TOKEN;
+exports.RESEARCHER_USER_ID = process.env.RESEARCHER_USER_ID;
+exports.PROJECTS_CHANNEL_ID = process.env.PROJECTS_CHANNEL_ID;
+exports.CONTENT_CREATION_CHANNEL_ID = process.env.CONTENT_CREATION_CHANNEL_ID;
+exports.CONTENT_MANAGER_USER_ID = process.env.CONTENT_MANAGER_USER_ID;
+exports.CONTENT_WRITER_USER_ID = process.env.CONTENT_WRITER_USER_ID;
+exports.CHROMADB_URL = process.env.CHROMADB_URL;
+exports.CHROMA_COLLECTION = process.env.CHROMA_COLLECTION;
+exports.LM_STUDIO_BASE_URL = process.env.LM_STUDIO_BASE_URL;
+exports.CHAT_MODEL = process.env.CHAT_MODEL;
+exports.EMBEDDING_MODEL = process.env.EMBEDDING_MODEL;
+exports.MAX_SEARCHES = parseInt(process.env.MAX_SEARCHES, 10);
+exports.SEARXNG_URL = process.env.SEARXNG_URL;
+exports.RESEARCH_MANAGER_USER_ID = process.env.RESEARCH_MANAGER_USER_ID;
+exports.RESEARCH_MANAGER_TOKEN_ID = process.env.RESEARCH_MANAGER_TOKEN_ID;
+exports.ONBOARDING_CONSULTANT_USER_ID = process.env.ONBOARDING_CONSULTANT_USER_ID;
+exports.ONBOARDING_CHANNEL_ID = process.env.ONBOARDING_CHANNEL_ID;
+exports.PROJECT_MANAGER_USER_ID = process.env.PROJECT_MANAGER_USER_ID;
+exports.LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY;
+exports.LLM_PROVIDER = process.env.LLM_PROVIDER || 'lmstudio';

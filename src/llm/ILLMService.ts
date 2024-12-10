@@ -10,4 +10,5 @@ export interface ILLMService {
     sendMessageToLLM(message: string, history: any[], seedAssistant?: string, contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string>;
     generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<any>;
     getEmbeddingModel(): IEmbeddingFunction;
+    getTokenCount(message: string): Promise<number>;
 }

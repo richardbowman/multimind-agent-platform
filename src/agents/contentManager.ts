@@ -6,7 +6,7 @@ import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from 
 import LMStudioService from 'src/llm/lmstudioService';
 import { CHROMA_COLLECTION, CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID, PROJECTS_CHANNEL_ID } from 'src/helpers/config';
 import { Task } from "src/tools/taskManager";
-import { CONTENT_DECOMPOSITION_SYSTEM_PROMPT, ContentDecompositionPrompt, LookupResearchPrompt } from './schemas/contentSchemas';
+import { CONTENT_DECOMPOSITION_SYSTEM_PROMPT, ContentDecompositionPrompt, LOOKUP_RESEARCH_SYSTEM_PROMPT, LookupResearchPrompt } from './schemas/contentSchemas';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
 
@@ -36,9 +36,7 @@ export interface ContentTask extends Task {
 }
 
 export class ContentManager extends Agent<ContentProject, ContentTask> {
-    private artifactManager: ArtifactManager;
-
-    public async taskNotification(task: ContentTask): Promise<void> {
+    protected async processTask(task: ContentTask): Promise<void> {
         try {
             const instructions = task.description;
 
@@ -47,10 +45,10 @@ export class ContentManager extends Agent<ContentProject, ContentTask> {
             }
 
             // Step 1: Begin content project
-            const interpretationJSON = await this.lmStudioService.sendStructuredRequest(
-                task.description,
-                LookupResearchPrompt
-            );
+            const interpretationJSON = await this.generate({
+                instructions: LookupResearchPrompt,
+                message: task.description
+            });
 
             const queryTexts = [interpretationJSON.query.trim()];
             const where: any = undefined;
@@ -61,21 +59,23 @@ export class ContentManager extends Agent<ContentProject, ContentTask> {
             const researchSummaryInput = `Search results from knowledge base:\n${searchResults.map(s => `Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}\n\n`)}`;
 
             const responsePrompt = `
-                You are an assistant helping to create content. Here are some research findings:
-
+                You are the research manager. Your goal is to develop content that addresses the user's goal they provide.
+                
+                Here are some research findings to help you develop the content structure:
                 ${researchSummaryInput}
 
-                Write a conversational chat message reply to the user including a summary of the research, and ask if we can proceed with creating a content outline.
+                Write a chat message reply to the user including a summary of the research, and ask if we can proceed with creating a content outline.
             `;
 
             const response = await this.lmStudioService.generate(responsePrompt, { message: instructions });
 
             const project: ContentProject = {
                 // originalPost: instructions,
-                id: task.projectId || this.projects.newProjectId(),
+                id: this.projects.newProjectId(),
                 name: interpretationJSON.reinterpreted_goal,
                 goal: interpretationJSON.reinterpreted_goal,
-                description: "Research for content creation",
+                description: task.description,
+                parentTaskId: task.id,
                 research: searchResults
             };
 
@@ -83,10 +83,17 @@ export class ContentManager extends Agent<ContentProject, ContentTask> {
 
             // Step 2: Generate content outline
             const existingProject = this.projects.getProject(project.id);
-            const decomposedProject = await this.decomposeContent({ message: task.description }, existingProject);
+            const decomposedProject = await this.decomposeContent({ message: task.description }, project);
 
             project.tasks = decomposedProject.tasks;
             this.projects.replaceProject(project);
+
+            // Post the task list to the channel
+            const parentProject = await this.projects.getProject(task.projectId);
+            const post = await this.getMessage(parentProject.originalPostId);
+            const projectPost = await this.reply(post, response, {
+                "project-id": project.id
+            });
 
             // Step 3: Convert outline to full sections
             if (project?.tasks) {
@@ -117,6 +124,8 @@ export class ContentManager extends Agent<ContentProject, ContentTask> {
             }
         }
         this.artifactManager.saveArtifact(content);
+
+        if (project.parentTaskId) this.projects.completeTask(project.parentTaskId);
         this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, responseMessage);
     }
 
@@ -136,6 +145,9 @@ writers to develop content sections.`;
     public async initialize() {
         await this.chromaDBService.initializeCollection(CHROMA_COLLECTION);
         super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@content");
+    
+        // asynchronously check for old tasks and keep working on them
+        this.processTaskQueue();
     }
 
     async decomposeContent(instructions: ChatPost, priorProject?: ContentProject): Promise<ContentProject> {
@@ -174,7 +186,7 @@ writers to develop content sections.`;
             for (const section of responseJSON.sections) {
                 const task: ContentTask = {
                     title: section.title,
-                    description: section.overview,
+                    description: `${section.description} [${project.goal}]`,
                     id: randomUUID(),
                     complete: false,
                     creator: CONTENT_MANAGER_USER_ID,

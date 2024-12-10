@@ -71,12 +71,21 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
     protected async projectCompleted(project: ResearchProject): Promise<void> {
         const aggregatedData = await this.aggregateResults(project);
 
-        // If this project was created for a task, mark that task as complete
-        if (project.parentTaskId) {
-            await this.projects.completeTask(project.parentTaskId);
-        }
-
         const artifactResponse = await this.createFinalReport(project, aggregatedData);
+
+        // Save the report to an artifact
+        const artifact: Artifact = {
+            id: crypto.randomUUID(),
+            type: 'report',
+            content: artifactResponse.artifactContent,
+            metadata: {
+                title: artifactResponse.artifactTitle,
+                projectName: project.name,
+                projectId: project.id
+            }
+        };
+
+        await this.artifactManager.saveArtifact(artifact);
 
         // find my original post
         const posts = await this.chatClient.fetchPreviousMessages(PROJECTS_CHANNEL_ID);
@@ -87,20 +96,16 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
                 message: artifactResponse.message
             });
         } else {
-            await this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, artifactResponse.message);
+            await this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, artifactResponse.message, {
+                "artifact-id": artifact.id
+            });
         }
 
-        // Save the report to an artifact
-        const artifact: Artifact = {
-            id: project.id,
-            type: 'report',
-            content: artifactResponse.artifactContent,
-            metadata: {
-                title: artifactResponse.artifactTitle
-            }
-        };
+        // If this project was created for a task, mark that task as complete
+        if (project.parentTaskId) {
+            await this.projects.completeTask(project.parentTaskId);
+        }
 
-        await this.artifactManager.saveArtifact(artifact);
         Logger.info(`Report saved as artifact with ID ${project.id} and title "${artifactResponse.artifactTitle}"`);
     }
 
@@ -113,7 +118,7 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
         const responseMessage = `I've received your request for a project!
 Project ID: **${projectId}**
 Activity Type: **${activityType}**`;
-        
+
         if (post.id) {
             return this.reply(post, { message: responseMessage }, postProps);
         } else {
@@ -205,12 +210,13 @@ Activity Type: **${activityType}**`;
                 project.name = responseJSON.goal;
             }
             if (responseJSON.researchRequested) {
-                const researcherTasks : ResearchTask[] = [];
+                const researcherTasks: ResearchTask[] = [];
                 for (const task of responseJSON.researchRequested) {
                     const taskId = randomUUID();
-                    researcherTasks.push(await this.projects.addTask(project, new ResearchTask(taskId, projectId, task, RESEARCH_MANAGER_USER_ID)));
+                    const taskDescription = `${task} [${responseJSON.goal}]`;
+                    researcherTasks.push(await this.projects.addTask(project, new ResearchTask(taskId, projectId, taskDescription, RESEARCH_MANAGER_USER_ID)));
                 }
-                return 
+                return
             } else {
                 throw new Error('Invalid response from LM Studio API');
             }
@@ -254,20 +260,20 @@ ${tasks.map(({ description }) => ` - ${description}`).join("\n")}`;
                 { "projectId": { "$eq": project.id } }
             ]
         };
-        const nResults = 15;
+        const nResults = 20;
 
         try {
             const response = await this.chromaDBService.query(queryTexts, where, nResults);
-            
+
             // Sort the results by score in descending order
             response.sort((a, b) => b.score - a.score);
 
-            const results = response.map((r, index) => 
-                `<search result="${index+1}">
+            const results = response.map((r, index) =>
+                `<search result="${index + 1}">
 Title: ${r.metadata.title}
 URL: ${r.metadata.url}
 Chunk: ${r.metadata.chunkId} of ${r.metadata.chunkTotal}
-Relevancy Score: ${Math.round(r.score*1000)/10}
+Relevancy Score: ${Math.round(r.score * 1000) / 10}
 Chunk ID: ${r.id}'
 Document ID: ${r.metadata.docId}
 Content Excerpt: ${r.text}
@@ -287,6 +293,14 @@ Content Excerpt: ${r.text}
 You are a research manager. Your team of research assistants have completed web searches to look up information
 based on your original requests list. Generate a comprehensive report based on the aggregated data and the user's original prompt.
 Make sure to include sources back to the results. Do not make up information missing in the search results.
+Make sure you put the entire report inside the artifactContent field in Markdown format.
+
+Your reponse should look like:
+{
+  "artifactTitle": "Report on X",
+  "artifactContent": "This is the report\n# Heading 1\nMore content here",
+  "message": "I've prepared a very interesting report including X, Y, and Z unique points."
+}
 `;
 
 
@@ -294,7 +308,7 @@ Make sure to include sources back to the results. Do not make up information mis
 
             // Use StructuredOutputPrompt to generate the report
             const structuredPrompt = new StructuredOutputPrompt(schema.definitions.ArtifactResponseSchema, systemPrompt);
-            const responseJSON : ArtifactResponseSchema = await this.lmStudioService.sendStructuredRequest(userPrompt, structuredPrompt, undefined, undefined, 32000);
+            const responseJSON: ArtifactResponseSchema = await this.lmStudioService.sendStructuredRequest(userPrompt, structuredPrompt, undefined, undefined, 32000);
             return responseJSON;
         } catch (error) {
             Logger.error('Error generating final report:', error);

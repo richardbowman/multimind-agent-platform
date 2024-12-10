@@ -31,7 +31,7 @@
           "items": {
             "additionalProperties": false,
             "properties": {
-              "overview": {
+              "description": {
                 "type": "string"
               },
               "title": {
@@ -40,7 +40,7 @@
             },
             "required": [
               "title",
-              "overview"
+              "description"
             ],
             "type": "object"
           },
@@ -54,6 +54,26 @@
         "goal",
         "strategy",
         "sections"
+      ],
+      "type": "object"
+    },
+    "CreateArtifact": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "artifactTitle": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactId",
+        "artifactTitle",
+        "message"
       ],
       "type": "object"
     },
@@ -96,15 +116,11 @@
         },
         "message": {
           "type": "string"
-        },
-        "responseMessage": {
-          "type": "string"
         }
       },
       "required": [
         "completedTasks",
-        "message",
-        "responseMessage"
+        "message"
       ],
       "type": "object"
     },

@@ -1,4 +1,4 @@
-import { ChromaClient, CollectionType } from "chromadb";
+import { ChromaClient, Collection } from "chromadb";
 import LMStudioService from "./lmstudioService";
 import crypto from 'crypto';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -19,13 +19,13 @@ export interface SearchResult {
 
 class ChromaDBService {
     private chromaDB: ChromaClient;
-    private collection: CollectionType | null = null;
+    private collection: Collection | null = null;
     private lmStudioService: LMStudioService;
 
     constructor(lmStudioService: LMStudioService) {
         this.chromaDB = new ChromaClient({ path: CHROMADB_URL! });
         this.lmStudioService = lmStudioService;
-    
+
     }
 
     async initializeCollection(name: string): Promise<void> {
@@ -37,7 +37,7 @@ class ChromaDBService {
                 name,
                 embeddingFunction: this.lmStudioService.getEmbeddingModel()
             });
-            Logger.info(`ChromaDB Collection found and loaded: ${name}`);   
+            Logger.info(`ChromaDB Collection found and loaded: ${name}`);
         } else {
             this.collection = await this.chromaDB.createCollection({
                 name,
@@ -62,15 +62,21 @@ class ChromaDBService {
 
     async query(queryTexts: string[], where: any, nResults: number): Promise<SearchResult[]> {
         if (!this.collection) throw new Error("Collection not initialized");
-        
+
         const rawResults = await this.collection.query({ queryTexts, where, nResults });
 
         return rawResults.ids[0].map((result, index) => ({
             id: result,
-            metadata: rawResults.metadatas[0][index ],
+            metadata: rawResults.metadatas[0][index],
             text: rawResults.documents[0][index],
             score: rawResults.distances[0] ? rawResults.distances[0][index] : undefined
         }));
+    }
+
+    computeHash(content: string): string {
+        const hash = crypto.createHash('sha256');
+        hash.update(content);
+        return hash.digest('hex');
     }
 
     async handleContentChunks(content: string, url: string, task: string, projectId: string, title: string, type = 'content') {
@@ -81,7 +87,7 @@ class ChromaDBService {
 
 
         // Save the page to a file
-        const docId = crypto.randomUUID(); 
+        const docId = crypto.randomUUID();
         await saveToFile(projectId, type, docId, content);
 
         // Logger.info(`Saving content to db: ${url}`);
@@ -101,7 +107,7 @@ class ChromaDBService {
 
             addCollection.ids.push(hashId);
 
-            const metadata : ConversationContext = {
+            const metadata: ConversationContext = {
                 url,
                 projectId,
                 title,
@@ -122,22 +128,12 @@ class ChromaDBService {
         await this.addDocuments(addCollection);
     }
 
-    async getTokenCount(text: string): Promise<number> {
-        return await this.lmStudioService.getTokenCount(text);
-    }
-
-    computeHash(content: string): string {
-        const hash = crypto.createHash('sha256');
-        hash.update(content);
-        return hash.digest('hex');
-    }
-
     async listCollectionsAndItems(): Promise<void> {
         const collections = await this.chromaDB.listCollections();
 
         for (const param of collections) {
             console.log(`Collection: ${param.name}`);
-            
+
             const collection = await this.chromaDB.getCollection(param);
             const items = await collection.get({});
             console.log(`Items in collection "${collection.name}":`);
@@ -148,6 +144,10 @@ class ChromaDBService {
                 console.log(`  Document: ${doc}`);
             });
         }
+    }
+
+    async getTokenCount(content: string) {
+        return this.lmStudioService.getTokenCount(content);
     }
 }
 

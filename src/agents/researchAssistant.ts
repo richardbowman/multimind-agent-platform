@@ -9,6 +9,7 @@ import { ChatClient, ChatPost } from '../chat/chatClient';
 import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
 import { Project, RecurrencePattern, Task, TaskManager } from 'src/tools/taskManager';
 import { ArtifactManager } from 'src/tools/artifactManager';
+import { CreateArtifact } from './schemas/ModelResponse';
 
 
 export class ResearchTask implements Task {
@@ -69,8 +70,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         Logger.info(`Project ${project.id} completed`);
     }
 
-    @HandleActivity("quick-search", "Perform a quick web search and return results", ResponseType.REPLY) 
-    @HandleActivity("followup", "Answer follow-up questions about previous search results", ResponseType.REPLY)
+    @HandleActivity("followup", "Answer follow-up questions about previous search results", ResponseType.RESPONSE)
     private async handleFollowup(params: HandlerParams): Promise<void> {
         const { userPost } = params;
         const question = userPost.message;
@@ -140,6 +140,7 @@ Rate your confidence as:
         }
     }
 
+    @HandleActivity("quick-search", "Perform a quick web search and return results", ResponseType.RESPONSE) 
     private async handleQuickSearch(params: HandlerParams): Promise<void> {
         const { userPost } = params;
         const query = userPost.message;
@@ -209,17 +210,13 @@ Rate your confidence as:
             const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
 
             if (searchResults.length === 0) {
-                await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID, 
-                    "I couldn't find any relevant results for this research request."
-                );
+                await this.reply(params.userPost, {message: "I couldn't find any relevant results for this research request." });
                 return;
             }
 
             const selectedUrls = await this.selectRelevantSearchResults(userPost.message, userPost.message, searchResults);
             if (selectedUrls.length === 0) {
-                await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
-                    "I found some results but none seemed relevant to the research request."
-                );
+                await this.reply(params.userPost, {message: "I found some results but none seemed relevant to the research request."});
                 return;
             }
 
@@ -249,7 +246,7 @@ Rate your confidence as:
                 );
 
                 // Save the summary as an artifact
-                await this.artifactManager.saveArtifact({
+                const artifact = await this.artifactManager.saveArtifact({
                     id: crypto.randomUUID(),
                     type: 'summary',
                     content: finalSummary,
@@ -260,17 +257,13 @@ Rate your confidence as:
                     }
                 });
 
-                await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID, finalSummary);
+                await this.reply(params.userPost, { message: finalSummary, artifactId: artifact.id, artifactTitle: artifact.metadata?.title} as CreateArtifact);
             } else {
-                await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
-                    "I found some pages but couldn't extract relevant information from them."
-                );
+                await this.reply(params.userPost, { message: "I found some pages but couldn't extract relevant information from them."});
             }
         } catch (error) {
             Logger.error("Error in research request:", error);
-            await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
-                "Sorry, I encountered an error while processing this research request."
-            );
+            await this.reply(params.userPost, { message: "Sorry, I encountered an error while processing this research request." });
         }
     }
 

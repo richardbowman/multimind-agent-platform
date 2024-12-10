@@ -32,11 +32,11 @@ export interface OnboardingProject extends Project<OnboardingTask> {
 }
 
 export class OnboardingConsultant extends Agent<OnboardingProject, Task> {
-    private artifactManager: ArtifactManager;
 
-    protected taskNotification(task: Task): void {
+    protected processTask(task: Task): Promise<void> {
         throw new Error('Method not implemented.');
     }
+
 
     protected async projectCompleted(project: OnboardingProject): Promise<void> {
         const taskList = Object.values(project.tasks);
@@ -62,7 +62,7 @@ you worked on together which you can summarize with the user, and then encourage
         // Find any existing onboarding projects
         const allProjects = Object.values(this.projects.getProjects());
         const welcomeTask = Object.values(allProjects)
-            .flatMap(project => Object.values(project.tasks))
+            .flatMap(project => Object.values(project.tasks||[]))
             .find(task => 
                 task.type === OnboardingActivities.Welcome
             );
