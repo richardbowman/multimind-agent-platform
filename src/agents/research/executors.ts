@@ -1,0 +1,140 @@
+import { StepExecutor, StepResult, AgentState } from '../stepBasedAgent';
+import SearchHelper from '../../helpers/searchHelper';
+import ScrapeHelper from '../../helpers/scrapeHelper';
+import SummaryHelper from '../../helpers/summaryHelper';
+import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import Logger from '../../helpers/logger';
+import { ArtifactManager } from '../../tools/artifact';
+import crypto from 'crypto';
+
+export class WebSearchExecutor implements StepExecutor {
+    constructor(
+        private searchHelper: SearchHelper,
+        private scrapeHelper: ScrapeHelper,
+        private summaryHelper: SummaryHelper,
+        private lmStudioService: LMStudioService,
+        private artifactManager: ArtifactManager
+    ) {}
+
+    async execute(goal: string, step: string, state: AgentState): Promise<StepResult> {
+        const { searchQuery, category } = await this.generateSearchQuery(goal, step);
+        const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
+        
+        if (searchResults.length === 0) {
+            return { type: 'no_results' };
+        }
+
+        const selectedUrls = await this.selectRelevantSearchResults(step, goal, searchResults);
+        if (selectedUrls.length === 0) {
+            return { type: 'no_relevant_results' };
+        }
+
+        const pageSummaries: string[] = [];
+        for (const url of selectedUrls.slice(0, 2)) {
+            try {
+                const { content, title } = await this.scrapeHelper.scrapePage(url);
+                const summary = await this.summaryHelper.summarizeContent(
+                    step, 
+                    `Page Title: ${title}\nURL: ${url}\n\n${content}`,
+                    this.lmStudioService
+                );
+                
+                if (summary !== "NOT RELEVANT") {
+                    pageSummaries.push(summary);
+                    
+                    // Save summary as artifact
+                    await this.artifactManager.saveArtifact({
+                        id: crypto.randomUUID(),
+                        type: 'summary',
+                        content: summary,
+                        metadata: {
+                            title: `Summary Report for ${url}`,
+                            url,
+                            query: step
+                        }
+                    });
+                }
+            } catch (error) {
+                Logger.error(`Error processing page ${url}`, error);
+            }
+        }
+
+        return {
+            type: 'web_search_results',
+            summaries: pageSummaries,
+            query: searchQuery,
+            urls: selectedUrls
+        };
+    }
+
+    private async generateSearchQuery(goal: string, task: string): Promise<{ searchQuery: string, category: string}> {
+        const schema = {
+            type: "object",
+            properties: {
+                searchQuery: {
+                    type: "string",
+                    description: "A broad web search query without special keywords or operators"
+                },
+                category: {
+                    type: "string",
+                    enum: ["general", "news"],
+                    description: "The search category - use 'news' for current events, otherwise 'general'"
+                }
+            },
+            required: ["searchQuery", "category"]
+        };
+
+        const systemPrompt = `You are a research assistant. Our overall goal is ${goal}.
+Generate a broad web search query without special keywords or operators based on the task we've been asked to research.`;
+
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        return await this.lmStudioService.generateStructured(
+            { message: `Task: ${task}` },
+            instructions,
+            []
+        );
+    }
+
+    private async selectRelevantSearchResults(
+        task: string,
+        goal: string,
+        searchResults: { title: string, url: string, description: string }[]
+    ): Promise<string[]> {
+        const schema = {
+            type: "array",
+            items: {
+                type: "object",
+                properties: {
+                    href: { type: "string" }
+                },
+                required: ["href"]
+            }
+        };
+
+        const systemPrompt = `You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
+Given the following web search results, select 1-3 URLs that are most relevant to our goal. Don't pick PDFs, we can't scrape them.`;
+
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        const message = searchResults
+            .slice(0, 8)
+            .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${sr.description.slice(0, 200)}`)
+            .join("\n\n");
+
+        const response = await this.lmStudioService.generateStructured(
+            { message },
+            instructions,
+            []
+        );
+
+        return response.map(r => r.href);
+    }
+}
+
+export class ExistingKnowledgeExecutor implements StepExecutor {
+    async execute(goal: string, step: string, state: AgentState): Promise<StepResult> {
+        return {
+            type: 'existing_knowledge',
+            findings: state.existingArtifacts
+        };
+    }
+}

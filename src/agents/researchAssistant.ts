@@ -1,16 +1,15 @@
-import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
-import Logger from "src/helpers/logger";
+import { StepBasedAgent } from './stepBasedAgent';
+import { HandleActivity, HandlerParams, ResponseType } from './agents';
+import { ChatClient } from '../chat/chatClient';
+import LMStudioService from '../llm/lmstudioService';
+import { TaskManager } from '../tools/taskManager';
+import { Project, Task } from '../tools/taskManager';
+import { WebSearchExecutor, ExistingKnowledgeExecutor } from './research/executors';
 import SearchHelper from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
 import SummaryHelper from '../helpers/summaryHelper';
-import { RESEARCHER_TOKEN, CHAT_MODEL, CHROMA_COLLECTION, WEB_RESEARCH_CHANNEL_ID, MAX_SEARCHES, RESEARCHER_USER_ID, PROJECTS_CHANNEL_ID } from '../helpers/config';
-import { ChatClient, ChatPost } from '../chat/chatClient';
-import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
-import { Project, RecurrencePattern, Task, TaskManager } from 'src/tools/taskManager';
-import { CreateArtifact, ModelResponse, RequestArtifacts } from './schemas/ModelResponse';
-import { ArtifactResponseSchema } from './schemas/artifactSchema';
-import { Artifact } from 'src/tools/artifact';
-import { ResponseStreamFilterSensitiveLog } from '@aws-sdk/client-bedrock-runtime';
+import Logger from '../helpers/logger';
+import { WEB_RESEARCH_CHANNEL_ID } from '../helpers/config';
 
 
 interface ResearchPlan extends ModelResponse {
@@ -61,20 +60,29 @@ export interface ResearchProject extends Project<ResearchTask> {
     postId: string;
 }
 
-class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
-    private results: string[] = [];
-    private activeResearchStates: Map<string, ResearchState> = new Map();
-
-    private searchHelper: SearchHelper;
-    private scrapeHelper: ScrapeHelper;
-    private summaryHelper: SummaryHelper;
-
-    constructor(userToken: string, userId: string, chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager) {
+class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
+    constructor(
+        userToken: string, 
+        userId: string, 
+        chatClient: ChatClient, 
+        lmStudioService: LMStudioService, 
+        projects: TaskManager
+    ) {
         super(chatClient, lmStudioService, userId, projects);
 
-        this.searchHelper = new SearchHelper();
-        this.scrapeHelper = new ScrapeHelper();
-        this.summaryHelper = new SummaryHelper();
+        const searchHelper = new SearchHelper();
+        const scrapeHelper = new ScrapeHelper();
+        const summaryHelper = new SummaryHelper();
+
+        // Register step executors
+        this.registerStepExecutor('web_search', new WebSearchExecutor(
+            searchHelper,
+            scrapeHelper,
+            summaryHelper,
+            lmStudioService,
+            this.artifactManager
+        ));
+        this.registerStepExecutor('review_existing_knowledge', new ExistingKnowledgeExecutor());
     }
     
     public async initialize(): Promise<void> {
@@ -410,14 +418,13 @@ Existing Knowledge:\n${artifactsContext}`;
         };
     }
 
-    private async planResearchSteps(goal: string): Promise<ResearchPlan> {
-        // First check existing knowledge
+    protected async planSteps(goal: string) {
+        // Check existing knowledge first
         const knowledgeCheck = await this.checkExistingKnowledge(goal);
 
         if (knowledgeCheck.hasRelevantInfo && !knowledgeCheck.needsAdditionalResearch) {
             return {
-                message: "Found relevant info and we don't need additional research",
-                steps: ["synthesize_existing_knowledge"],
+                steps: ["review_existing_knowledge"],
                 requiresUserInput: false,
                 existingArtifacts: knowledgeCheck.existingArtifacts.map(a => ({
                     id: a.id,
@@ -433,9 +440,7 @@ Existing Knowledge:\n${artifactsContext}`;
             properties: {
                 steps: {
                     type: "array",
-                    items: {
-                        type: "string"
-                    },
+                    items: { type: "string" },
                     description: "List of research steps needed"
                 },
                 requiresUserInput: {
@@ -450,19 +455,16 @@ Existing Knowledge:\n${artifactsContext}`;
             required: ["steps"]
         };
 
-        const systemPrompt = `You are a research assistant planning how to investigate a topic.
+        const response = await this.generate({
+            message: goal,
+            instructions: new StructuredOutputPrompt(schema, 
+                `You are a research assistant planning how to investigate a topic.
 ${knowledgeCheck.hasRelevantInfo ? 'We have some relevant existing knowledge but need additional research.' : 'We need to conduct new research.'}
 Break down the research goal into specific steps. Each step should be a clear research task.
 If the goal seems unclear or too broad, set requiresUserInput to true and ask for clarification.
-Otherwise, plan concrete research steps that will help achieve the goal.`;
-
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const response : ResearchPlan = await this.generate({
-            message: goal,
-            instructions
+Otherwise, plan concrete research steps that will help achieve the goal.`)
         });
 
-        // If we have existing knowledge, prepend a step to review it
         if (knowledgeCheck.hasRelevantInfo) {
             response.steps.unshift("review_existing_knowledge");
             response.existingArtifacts = knowledgeCheck.existingArtifacts.map(a => ({
@@ -473,11 +475,10 @@ Otherwise, plan concrete research steps that will help achieve the goal.`;
             }));
         }
 
-        // If no existing knowledge and no user input needed, add research steps
         if (!knowledgeCheck.hasRelevantInfo && !response.requiresUserInput && (!response.steps || response.steps.length === 0)) {
-            response.steps = ["research_topic"];
+            response.steps = ["web_search"];
         }
-        
+
         return response;
     }
 
