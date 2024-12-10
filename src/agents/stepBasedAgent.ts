@@ -73,7 +73,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 state.needsUserInput = true;
                 state.userQuestion = nextAction.question;
                 if (nextAction.question) {
-                    await this.reply(userPost, { message: nextAction.question });
+                    await this.reply(userPost, { message: nextAction.question, projectId: stepResult.projectId });
                     return;
                 }
             }
