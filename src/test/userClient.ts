@@ -113,7 +113,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         }
     });
 
-    inputBox.key(['C-s', 'C-c'], async (ch, key) => {
+    inputBox.key(['C-s'], async (ch, key) => {
         const message = inputBox.getValue().trim();
 
         if (!message) {
