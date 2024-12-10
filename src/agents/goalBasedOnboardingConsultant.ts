@@ -395,7 +395,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
             await this.reply(params.userPost, {
                 message: statusResponse.message,
-                artifactId: businessPlanId
+                artifactId: project.props?.businessPlanId
             });
         }
     }
