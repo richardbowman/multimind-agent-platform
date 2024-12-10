@@ -1,4 +1,5 @@
 import { ChromaClient, Collection } from "chromadb";
+import { EventEmitter } from "events";
 import LMStudioService from "./lmstudioService";
 import crypto from 'crypto';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -17,15 +18,15 @@ export interface SearchResult {
     score: number;
 }
 
-class ChromaDBService {
+class ChromaDBService extends EventEmitter {
     private chromaDB: ChromaClient;
     private collection: Collection | null = null;
     private lmStudioService: LMStudioService;
 
     constructor(lmStudioService: LMStudioService) {
+        super();
         this.chromaDB = new ChromaClient({ path: CHROMADB_URL! });
         this.lmStudioService = lmStudioService;
-
     }
 
     async initializeCollection(name: string): Promise<void> {
@@ -37,13 +38,22 @@ class ChromaDBService {
                 name,
                 embeddingFunction: this.lmStudioService.getEmbeddingModel()
             });
-            Logger.info(`ChromaDB Collection found and loaded: ${name}`);
+            
+            // Check if collection has any data
+            const count = (await this.collection.count());
+            if (count === 0) {
+                Logger.warn(`ChromaDB Collection ${name} is empty - needs reindexing`);
+                this.emit('needsReindex');
+            } else {
+                Logger.info(`ChromaDB Collection found and loaded: ${name} with ${count} items`);
+            }
         } else {
             this.collection = await this.chromaDB.createCollection({
                 name,
                 embeddingFunction: this.lmStudioService.getEmbeddingModel()
             });
-            Logger.info(`ChromaDB Collection created: ${name}`)
+            Logger.warn(`ChromaDB Collection created: ${name} - needs initial indexing`);
+            this.emit('needsReindex');
         }
     }
 
