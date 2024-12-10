@@ -147,7 +147,7 @@ export class ArtifactManager {
     for (const artifact of artifacts) {
       await this.chromaService.handleContentChunks(
         artifact.content.toString(),
-        `artifact://${artifact.id}`,
+        artifact.metadata?.url || '',
         'summary',
         artifact.id,
         artifact.type
