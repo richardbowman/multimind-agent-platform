@@ -9,29 +9,16 @@ import crypto from 'crypto';
 
 export interface StepResult {
     type: string;
+    projectId?: string;
+    taskId?: string;
     [key: string]: any;
 }
 
-export interface AgentState {
-    originalGoal: string;
-    currentStep: string;
-    intermediateResults: StepResult[];
-    needsUserInput?: boolean;
-    userQuestion?: string;
-    existingArtifacts?: {
-        id: string;
-        title?: string;
-        content: string;
-        underlyingData?: any;
-    }[];
-}
-
 export interface StepExecutor {
-    execute(goal: string, step: string, state: AgentState): Promise<StepResult>;
+    execute(goal: string, step: string, projectId: string): Promise<StepResult>;
 }
 
 export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
-    protected activeStates: Map<string, AgentState> = new Map();
     protected stepExecutors: Map<string, StepExecutor> = new Map();
 
     constructor(
@@ -54,38 +41,48 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         existingArtifacts?: AgentState['existingArtifacts'];
     }>;
 
-    protected async executeStep(state: AgentState, userPost: ChatPost): Promise<void> {
+    protected async executeStep(projectId: string, currentStep: string, userPost: ChatPost): Promise<void> {
         try {
-            let stepResult: StepResult;
-            const executor = this.stepExecutors.get(state.currentStep);
-
+            const executor = this.stepExecutors.get(currentStep);
             if (!executor) {
-                throw new Error(`No executor found for step type: ${state.currentStep}`);
+                throw new Error(`No executor found for step type: ${currentStep}`);
             }
 
-            stepResult = await executor.execute(state.originalGoal, state.currentStep, state);
-            state.intermediateResults.push(stepResult);
+            const project = this.projects.getProject(projectId);
+            if (!project) {
+                throw new Error(`Project ${projectId} not found`);
+            }
+
+            const stepResult = await executor.execute(project.name, currentStep, projectId);
+            
+            // Create a task for this step result if one was returned
+            if (stepResult.taskId) {
+                await this.projects.markTaskInProgress({
+                    id: stepResult.taskId,
+                    description: `${currentStep}: ${stepResult.description || 'Step completed'}`,
+                    creator: this.userId,
+                    projectId: projectId
+                });
+            }
 
             // Determine next steps
-            const nextAction = await this.determineNextAction(state);
+            const nextAction = await this.determineNextAction(projectId, stepResult);
             
-            if (nextAction.needsUserInput) {
-                state.needsUserInput = true;
-                state.userQuestion = nextAction.question;
-                if (nextAction.question) {
-                    await this.reply(userPost, { message: nextAction.question, projectId: stepResult.projectId });
-                    return;
-                }
+            if (nextAction.needsUserInput && nextAction.question) {
+                await this.reply(userPost, { 
+                    message: nextAction.question, 
+                    projectId: projectId
+                });
+                return;
             }
 
             if (nextAction.isComplete) {
-                await this.generateAndSendFinalResponse(state, userPost);
+                await this.generateAndSendFinalResponse(projectId, userPost);
                 return;
             }
 
             // Continue with next step
-            state.currentStep = nextAction.nextStep!;
-            await this.executeStep(state, userPost);
+            await this.executeStep(projectId, nextAction.nextStep!, userPost);
 
         } catch (error) {
             Logger.error("Error in step execution:", error);
@@ -93,7 +90,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         }
     }
 
-    private async determineNextAction(state: AgentState): Promise<{
+    private async determineNextAction(projectId: string, lastStepResult: StepResult): Promise<{
         needsUserInput: boolean;
         question?: string;
         isComplete: boolean;
@@ -143,8 +140,9 @@ Consider the original goal and what we've learned so far.`;
         });
     }
 
-    protected async generateAndSendFinalResponse(state: AgentState, userPost: ChatPost): Promise<void> {
-        const finalResponse = await this.generateFinalResponse(state);
+    protected async generateAndSendFinalResponse(projectId: string, userPost: ChatPost): Promise<void> {
+        const project = this.projects.getProject(projectId);
+        const finalResponse = await this.generateFinalResponse(project);
         
         const artifactId = crypto.randomUUID();
         const artifact = await this.artifactManager.saveArtifact({
@@ -168,7 +166,7 @@ Consider the original goal and what we've learned so far.`;
         await this.reply(userPost, response);
     }
 
-    private async generateFinalResponse(state: AgentState): Promise<ModelResponse> {
+    private async generateFinalResponse(project: Project<Task>): Promise<ModelResponse> {
         const schema = {
             type: "object",
             properties: {
@@ -199,14 +197,21 @@ You will respond inside of the message key in Markdown format.`;
         });
     }
 
-    protected async handleUserInput(state: AgentState, userPost: ChatPost): Promise<void> {
-        state.intermediateResults.push({
+    protected async handleUserInput(projectId: string, currentStep: string, userPost: ChatPost): Promise<void> {
+        // Create a task for the user input
+        const task = {
+            id: randomUUID(),
+            description: `User response: ${userPost.message}`,
+            creator: this.userId,
+            projectId: projectId,
             type: 'user_input',
-            question: state.userQuestion,
-            answer: userPost.message
-        });
-
-        state.needsUserInput = false;
-        await this.executeStep(state, userPost);
+            complete: true
+        };
+        
+        const project = this.projects.getProject(projectId);
+        await this.projects.addTask(project, task);
+        
+        // Continue execution
+        await this.executeStep(projectId, currentStep, userPost);
     }
 }
