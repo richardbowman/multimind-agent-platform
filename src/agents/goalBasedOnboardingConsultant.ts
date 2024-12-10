@@ -148,20 +148,39 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             required: ["content", "title"]
         };
 
+        // Get the existing business plan content if it exists
+        let existingContent = "";
+        if (state.businessPlanId) {
+            const existingPlan = await this.artifactManager.loadArtifact(state.businessPlanId);
+            if (existingPlan) {
+                existingContent = existingPlan.content.toString();
+            }
+        }
+
         const response = await this.generate({
             message: JSON.stringify({
                 goals: goals,
-                previousResults: state.intermediateResults
+                previousResults: state.intermediateResults,
+                existingPlan: existingContent,
+                latestUpdates: state.intermediateResults
+                    .filter(r => r.type === 'user_input')
+                    .map(r => r.answer)
+                    .join('\n')
             }),
             instructions: new StructuredOutputPrompt(schema,
-                `Create or update a business plan based on the goals and any previous results.
+                `Update the business plan based on the goals, previous results, and latest updates.
+                If there's an existing plan, use it as a base and incorporate new information.
+                
                 Include sections for:
                 - Executive Summary
-                - Goals and Objectives
+                - Goals and Objectives (with current status and progress)
                 - Implementation Strategy
                 - Progress Tracking
+                - Recent Updates and Developments
                 
-                Format the content in markdown.`)
+                Format the content in markdown.
+                Ensure all recent updates and progress are reflected in the appropriate sections.
+                Maintain consistency with previous versions while incorporating new information.`)
         });
 
         // Create or update the business plan artifact
