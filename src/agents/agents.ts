@@ -249,17 +249,18 @@ export abstract class Agent<Project, Task> {
                         const posts = await this.chatClient.getThreadChain(post);
                         // only respond to chats directed at "me"
                         if (posts[0].message.startsWith(handle)) {
-                            const { activityType, requestedArtifacts, searchResults } = await this.classifyResponse(post, ResponseType.RESPONSE, posts, { userPost: post, projects });
-
-                            const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifact-ids"] || [])].flat())];
-                            const artifacts = await this.mapRequestedArtifacts(allArtifacts);
-
                             const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
                             const projects = [];
                             for (const projectId of projectIds) {
                                 const project = this.projects.getProject(projectId);
                                 if (project) projects.push(project);
                             }
+
+                            const { activityType, requestedArtifacts, searchResults } = await this.classifyResponse(post, ResponseType.RESPONSE, posts, { userPost: post, projects });
+
+                            const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifact-ids"] || [])].flat())];
+                            const artifacts = await this.mapRequestedArtifacts(allArtifacts);
+
 
                             // Retrieve the method based on the activity type
                             const handlerMethod = this.getMethodForResponse(activityType);
@@ -320,7 +321,7 @@ export abstract class Agent<Project, Task> {
 
         const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
 
-        const response = await this.lmStudioService.generateStructured(params.userPost||params.message||"", augmentedStructuredInstructions, history);
+        const response = await this.lmStudioService.generateStructured(params.userPost?params.userPost:params.message?params.message:{ message: ""}, augmentedStructuredInstructions, history);
         response.artifactIds = params.artifacts?.map(a => a.id);
         return response;
     }
@@ -535,12 +536,8 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
             }
         `;
 
-        let llmMessages: { role: string, content: string }[] = [];
-        llmMessages.push({ role: "system", content: prompt });
-        llmMessages.push({ role: "user", content: post.message });
-
-        const rawResponse = await this.lmStudioService.sendMessageToLLM(post.message, llmMessages, undefined, 8192, 1024, jsonSchema);
-        const response = JSON5.parse(rawResponse);
+        const response = await this.lmStudioService.generateStructured(post, new StructuredOutputPrompt(jsonSchema, prompt), [], undefined, 1024);
+        
 
         Logger.info(`Model chose ${response.activityType} because ${response.reasoning}`);
 
