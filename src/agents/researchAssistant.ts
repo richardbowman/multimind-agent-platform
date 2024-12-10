@@ -69,7 +69,77 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         Logger.info(`Project ${project.id} completed`);
     }
 
-    @HandleActivity("quick-search", "Perform a quick web search and return results", ResponseType.REPLY)
+    @HandleActivity("quick-search", "Perform a quick web search and return results", ResponseType.REPLY) 
+    @HandleActivity("followup", "Answer follow-up questions about previous search results", ResponseType.REPLY)
+    private async handleFollowup(params: HandlerParams): Promise<void> {
+        const { userPost } = params;
+        const question = userPost.message;
+        const rootId = userPost.getRootId();
+
+        if (!rootId) {
+            await this.chatClient.replyThreaded(userPost, "This command must be used as a reply to an existing search result.");
+            return;
+        }
+
+        // Find the original search result artifact
+        const artifacts = await this.artifactManager.getArtifacts({ type: 'summary' });
+        const originalPost = await this.chatClient.getPost(rootId);
+        
+        if (!originalPost) {
+            await this.chatClient.replyThreaded(userPost, "Could not find the original search result.");
+            return;
+        }
+
+        const relevantArtifacts = artifacts.filter(a => 
+            a.metadata?.pageSummaries && 
+            (a.metadata?.query === originalPost.message || a.content.includes(originalPost.message))
+        );
+
+        if (relevantArtifacts.length === 0) {
+            await this.chatClient.replyThreaded(userPost, "Could not find the original search results to answer your question.");
+            return;
+        }
+
+        // Use the most recent relevant artifact
+        const artifact = relevantArtifacts[0];
+        const pageSummaries = artifact.metadata?.pageSummaries || [];
+
+        const schema = {
+            type: "object",
+            properties: {
+                answer: {
+                    type: "string",
+                    description: "A clear, direct answer to the follow-up question"
+                },
+                confidence: {
+                    type: "string",
+                    enum: ["high", "medium", "low"],
+                    description: "Confidence level in the answer based on available information"
+                }
+            },
+            required: ["answer", "confidence"]
+        };
+
+        const systemPrompt = `You are a research assistant. Answer the follow-up question using ONLY the information from the previous search results provided. 
+If you cannot answer the question from the available information, say so clearly.
+Rate your confidence as:
+- high: Direct information found in results
+- medium: Answer inferred from results
+- low: Limited or partial information available`;
+
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        const context = `Previous search results:\n\n${pageSummaries.join("\n\n")}\n\nFollow-up question: ${question}`;
+
+        try {
+            const response = await this.lmStudioService.sendStructuredRequest(context, instructions, []);
+            const answer = `${response.answer}\n\n*(Confidence: ${response.confidence})*`;
+            await this.chatClient.replyThreaded(userPost, answer);
+        } catch (error) {
+            Logger.error("Error generating follow-up answer:", error);
+            await this.chatClient.replyThreaded(userPost, "Sorry, I encountered an error while trying to answer your follow-up question.");
+        }
+    }
+
     private async handleQuickSearch(params: HandlerParams): Promise<void> {
         const { userPost } = params;
         const query = userPost.message;
@@ -106,18 +176,21 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
                 const finalSummary = await this.summaryHelper.createOverallSummary(query, query, pageSummaries, this.lmStudioService);
                 
                 // Save the summary as an artifact
+                const artifactId = crypto.randomUUID();
                 await this.artifactManager.saveArtifact({
-                    id: crypto.randomUUID(),
+                    id: artifactId,
                     type: 'summary',
                     content: finalSummary,
                     metadata: {
                         title: `Quick Search Summary: ${query}`,
                         query,
-                        type: 'quick-search'
+                        type: 'quick-search',
+                        pageSummaries
                     }
                 });
 
-                await this.chatClient.replyThreaded(userPost, finalSummary);
+                const response = `${finalSummary}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`;
+                await this.chatClient.replyThreaded(userPost, response);
             } else {
                 await this.chatClient.replyThreaded(userPost, "I found some pages but couldn't extract relevant information from them.");
             }
