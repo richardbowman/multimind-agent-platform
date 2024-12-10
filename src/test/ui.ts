@@ -12,11 +12,17 @@ export const screen = blessed.screen({
 
 // Create splash screen box
 export const splashBox = blessed.box({
-    top: 'center',
-    left: 'center',
-    width: '50%',
-    height: '30%',
+    top: '10%',
+    left: '10%',
+    width: '80%',
+    height: '80%',
     content: `
+
+
+
+
+
+
      _   _ _____ _____ _  __
     | \\ | |_   _/ ____| |/ /
     |  \\| | | || |    | ' / 
@@ -24,11 +30,19 @@ export const splashBox = blessed.box({
     | |\\  |_| || |____| . \\ 
     |_| \\_|___|\\_____||_|\\_\\
     
+    
     Neural Intelligence Collaboration Kit
+
+
+
+
+
+
     `,
     style: {
         fg: 'green',
-        bg: 'black'
+        bg: 'black',
+        transparent: true
     },
     tags: true,
     hidden: true
