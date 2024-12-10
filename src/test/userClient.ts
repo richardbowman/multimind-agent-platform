@@ -246,6 +246,8 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             const lastMessage = getLastUserMessage();
             if (lastMessage) {
                 await sendMessage(lastMessage);
+                inputBox.setValue('');
+                inputBox.focus();
             } else {
                 Logger.info("No previous message to retry.");
             }
