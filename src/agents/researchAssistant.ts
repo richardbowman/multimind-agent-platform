@@ -79,13 +79,13 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
             const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
 
             if (searchResults.length === 0) {
-                await this.chatClient.replyToPost(userPost.id, "I couldn't find any relevant results for your query.");
+                await this.chatClient.replyThreaded(userPost, "I couldn't find any relevant results for your query.");
                 return;
             }
 
             const selectedUrls = await this.selectRelevantSearchResults(query, query, searchResults);
             if (selectedUrls.length === 0) {
-                await this.chatClient.replyToPost(userPost.id, "I found some results but none seemed relevant to your query.");
+                await this.chatClient.replyThreaded(userPost, "I found some results but none seemed relevant to your query.");
                 return;
             }
 
@@ -104,9 +104,9 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
 
             if (pageSummaries.length > 0) {
                 const finalSummary = await this.summaryHelper.createOverallSummary(query, query, pageSummaries, this.lmStudioService);
-                await this.chatClient.replyToPost(userPost.id, finalSummary);
+                await this.chatClient.replyThreaded(userPost, finalSummary);
             } else {
-                await this.chatClient.replyToPost(userPost.id, "I found some pages but couldn't extract relevant information from them.");
+                await this.chatClient.replyThreaded(userPost, "I found some pages but couldn't extract relevant information from them.");
             }
         } catch (error) {
             Logger.error("Error in quick search:", error);
