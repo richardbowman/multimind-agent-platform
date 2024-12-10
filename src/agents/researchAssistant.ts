@@ -759,30 +759,7 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
             }
 
             if (nextAction.isComplete) {
-                // Generate final response using all intermediate results
-                const finalResponse = await this.generateFinalResponse(state);
-                
-                // Save the final response as an artifact
-                const artifactId = crypto.randomUUID();
-                const artifact = await this.artifactManager.saveArtifact({
-                    id: artifactId,
-                    type: 'summary',
-                    content: finalResponse.message,
-                    metadata: {
-                        title: `Research Summary: ${state.originalGoal}`,
-                        query: state.originalGoal,
-                        type: 'summary',
-                        steps: state.intermediateResults
-                    }
-                });
-
-                const response : CreateArtifact = {
-                    message: `${finalResponse.message}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`,
-                    artifactId: artifact.id,
-                    artifactTitle: artifact.metadata?.title
-                }
-
-                await this.reply(userPost, response);
+                await this.generateAndSendFinalResponse(state, userPost);
                 return;
             }
 
