@@ -171,7 +171,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             }));
             
             if (handles.length > 0) {
-                commandList.setItems(handles.map(user => `@${user.handle}`));
+                commandList.setItems(handles.map(user => user.handle));
                 commandList.show();
                 screen.render();
             } else {
