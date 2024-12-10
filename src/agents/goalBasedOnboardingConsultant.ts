@@ -43,6 +43,9 @@ class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Ta
         this.artifactManager = new ArtifactManager(chromaDBService);
 
         // Register step executors
+        this.registerStepExecutor('start_onboarding', {
+            execute: this.executeStartOnboarding.bind(this)
+        });
         this.registerStepExecutor('analyze_goals', {
             execute: this.executeAnalyzeGoals.bind(this)
         });
@@ -111,14 +114,14 @@ Otherwise, plan concrete steps to help achieve the goal.`;
     @HandleActivity("start-goal-planning", "Begin the goal planning process", ResponseType.CHANNEL)
     private async handleStartGoalPlanning(params: HandlerParams): Promise<void> {
         const { projectId } = await this.addNewProject({
-            projectName: params.userPost.message,
+            projectName: "Craft a business overview that helps explain to the other agent's what we are trying to accomplish",
             tasks: [{
-                description: "Understand the user's business and their desired business plan",
-                type: "analyze_goals"
+                description: `Kickoff understanding user's business: Respond to user's ${params.userPost.message} incoming channel message`,
+                type: "start_onboarding"
             }]
         });
 
-        await this.executeStep(projectId, "analyze_goals", params.userPost);
+        await this.executeStep(projectId, "start_onboarding", params.userPost);
     }
 
     private async updateBusinessPlan(project: OnboardingProject, existingPlan?: Artifact): Promise<string> {
@@ -203,6 +206,20 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
     private findNextIncompleteTask(project: OnboardingProject): Task | undefined {
         return Object.values(project.tasks).find(t => !t.complete && !t.inProgress);
+    }
+
+    private async executeStartOnboarding(goal: string, step: string, projectId: string): Promise<StepResult> {
+        const project = await this.getProjectWithPlan(projectId);
+        const analyzedGoals = await this.analyzeBusinessGoals(goal);
+        const tasks = await this.createGoalTasks(project, analyzedGoals);
+        const businessPlanId = await this.updateProjectBusinessPlan(project);
+
+        return {
+            type: "analyze_goals",
+            goals: project.goals,
+            projectId: project.id,
+            artifactId: businessPlanId
+        };
     }
 
     private async executeAnalyzeGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
