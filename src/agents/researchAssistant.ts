@@ -772,17 +772,6 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
             await this.reply(userPost, { message: "Sorry, I encountered an error while researching your question."} );
         }
     }
-
-    private async continueResearch(state: ResearchState, userPost: ChatPost): Promise<void> {
-        // Update the research state with user's input and continue
-        state.intermediateResults.push({
-            type: 'user_input',
-            question: state.userQuestion,
-            answer: userPost.message
-        });
-
-        await this.executeResearchStep(state, userPost);
-    }
 }
 
 export default ResearchAssistant;
