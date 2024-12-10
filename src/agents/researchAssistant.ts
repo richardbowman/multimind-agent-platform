@@ -95,6 +95,27 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
         Logger.info(`Project ${project.id} completed`);
     }
 
+    @HandleActivity("response", "Handle user responses to questions", ResponseType.RESPONSE)
+    private async handleResponse(params: HandlerParams): Promise<void> {
+        const state = this.activeStates.get(params.userPost.getRootId() || params.userPost.id);
+        
+        if (!state) {
+            await this.reply(params.userPost, { 
+                message: "I couldn't find our previous conversation. Could you start over with your question?" 
+            });
+            return;
+        }
+
+        if (!state.needsUserInput) {
+            await this.reply(params.userPost, { 
+                message: "I wasn't expecting a response right now. What would you like to know?" 
+            });
+            return;
+        }
+
+        await this.handleUserInput(state, params.userPost);
+    }
+
     @HandleActivity("followup", "Answer follow-up questions about previous search results", ResponseType.RESPONSE)
     private async handleFollowup(params: HandlerParams): Promise<void> {
         const { userPost, rootPost } = params;
