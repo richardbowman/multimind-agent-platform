@@ -208,15 +208,11 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 `Analyze this business goal and break it down into distinct, manageable objectives.`)
         });
 
-        // Create a new project for these goals
-        const project: OnboardingProject = {
-            id: this.projects.newProjectId(),
-            name: "Onboarding Goals",
-            tasks: {},
-            goals: []
-        };
-
-        await this.projects.addProject(project);
+        // Get the existing project
+        const project = this.projects.getProject(projectId);
+        if (!project) {
+            throw new Error(`Project ${projectId} not found`);
+        }
 
         // Create tasks for each goal
         for (const goalData of response.goals) {
