@@ -139,12 +139,8 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
     // Handle input changes for command autocomplete
     inputBox.on('keypress', (ch, key) => {
-        const value = inputBox.getValue();
-        
-        if (value.startsWith('/')) {
-            const filtered = COMMANDS.filter(cmd => 
-                cmd.command.toLowerCase().startsWith(value.toLowerCase())
-            );
+        if (ch === '/') {
+            const filtered = COMMANDS;
             
             if (filtered.length > 0) {
                 commandList.setItems(filtered.map(cmd => `${cmd.command} - ${cmd.description}`));
