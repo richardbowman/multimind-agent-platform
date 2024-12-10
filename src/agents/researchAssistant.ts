@@ -14,18 +14,6 @@ import { Artifact } from 'src/tools/artifact';
 import { ModelResponse, RequestArtifacts, CreateArtifact } from './schemas/ModelResponse';
 
 
-interface ResearchPlan extends ModelResponse {
-    steps: string[]
-    requiresUserInput: boolean,
-    existingArtifacts?: { 
-        id: string, 
-        title: string,
-        content: string,
-        underlyingData: string
-     }[]
-}
-
-
 interface ResearchState {
     originalGoal: string;
     currentStep: string;
