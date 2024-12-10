@@ -127,10 +127,10 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         const stateId = userPost.id;
         const newState: ResearchState = {
             originalGoal: question,
-            currentStep: "review_existing_knowledge",
+            currentStep: researchPlan.steps[0],
             intermediateResults: [],
             needsUserInput: researchPlan.requiresUserInput,
-            userQuestion: researchPlan.userQuestion,
+            userQuestion: question,
             existingArtifacts: [{
                 id: artifact.id,
                 title: artifact.metadata?.title,
@@ -142,11 +142,7 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
         this.activeResearchStates.set(stateId, newState);
 
         try {
-            if (newState.needsUserInput && newState.userQuestion) {
-                await this.reply(userPost, { message: newState.userQuestion });
-            } else {
-                await this.executeResearchStep(newState, userPost);
-            }
+            await this.executeResearchStep(newState, userPost);
         } catch (error) {
             Logger.error("Error in follow-up:", error);
             await this.reply(userPost, { message: "Sorry, I encountered an error while processing your follow-up question." });
@@ -404,7 +400,7 @@ Existing Knowledge:\n${artifactsContext}`;
             instructions
         });
 
-        const selectedArtifacts = artifacts.filter(a => response.relevantArtifactIds.includes(a.id));
+        const selectedArtifacts = response.relevantArtifactIds ? artifacts.filter(a => response.relevantArtifactIds.includes(a.id)) : [];
 
         return {
             hasRelevantInfo: response.hasRelevantInfo,
@@ -817,14 +813,6 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 
     private async executeResearchStep(state: ResearchState, userPost: ChatPost): Promise<void> {
         try {
-            // If we were waiting for user input and got it
-            if (state.needsUserInput) {
-                state.needsUserInput = false;
-                // Re-plan research with the new input
-                const newPlan = await this.planResearchSteps(state.originalGoal + "\n\nUser clarification: " + userPost.message);
-                state.currentStep = newPlan.steps[0];
-            }
-
             let stepResult;
             
             // Handle special knowledge-base steps
