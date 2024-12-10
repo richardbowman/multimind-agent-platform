@@ -132,7 +132,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         await this.executeStep(projectId, "analyze_goals", params.userPost);
     }
 
-    private async updateBusinessPlan(state: OnboardingState, goals: OnboardingGoal[]): Promise<string> {
+    private async updateBusinessPlan(project: OnboardingProject, goals: OnboardingGoal[]): Promise<string> {
         const schema = {
             type: "object",
             properties: {
@@ -150,8 +150,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
         // Get the existing business plan content if it exists
         let existingContent = "";
-        if (state.businessPlanId) {
-            const existingPlan = await this.artifactManager.loadArtifact(state.businessPlanId);
+        if (this.businessPlanId) {
+            const existingPlan = await this.artifactManager.loadArtifact(this.businessPlanId);
             if (existingPlan) {
                 existingContent = existingPlan.content.toString();
             }
@@ -160,12 +160,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         const response = await this.generate({
             message: JSON.stringify({
                 goals: goals,
-                previousResults: state.intermediateResults,
                 existingPlan: existingContent,
-                latestUpdates: state.intermediateResults
-                    .filter(r => r.type === 'user_input')
-                    .map(r => r.answer)
-                    .join('\n')
+                projectId: project.id
             }),
             instructions: new StructuredOutputPrompt(schema,
                 `Update the business plan based on the goals, previous results, and latest updates.
@@ -184,7 +180,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         });
 
         // Create or update the business plan artifact
-        const artifactId = state.businessPlanId || crypto.randomUUID();
+        const artifactId = this.businessPlanId || crypto.randomUUID();
         await this.artifactManager.saveArtifact({
             id: artifactId,
             type: 'business-plan',
@@ -216,9 +212,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             required: ["goals"]
         };
 
-        const userInput = state.intermediateResults.length > 0 
-            ? state.intermediateResults.map(r => r.type === 'user_input' ? r.answer : '').join('\n')
-            : goal;
+        const userInput = goal;
 
         const response = await this.generate({
             message: userInput,
@@ -253,11 +247,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             });
         }
 
-        state.goals = project.goals;
-        
         // Create/update the business plan
-        const businessPlanId = await this.updateBusinessPlan(state, project.goals);
-        state.businessPlanId = businessPlanId;
+        const businessPlanId = await this.updateBusinessPlan(project as OnboardingProject, project.goals);
         this.businessPlanId = businessPlanId;
 
         return {
