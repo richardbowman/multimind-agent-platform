@@ -235,7 +235,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         const response = await this.generate({
             message: userInput,
             instructions: new StructuredOutputPrompt(schema, 
-                `Analyze this business goal and break it down into distinct, manageable objectives.`)
+                `You are speaking directly to the user. Analyze their business goal and break it down into distinct, manageable objectives. Use a friendly, direct tone as if having a conversation.`)
         });
 
 
@@ -438,11 +438,13 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                     projectId: project.id
                 }),
                 instructions: new StructuredOutputPrompt(responseSchema,
-                    `Generate a natural, conversational response about updating the goal's status.
-                    - If the goal is completed, congratulate them and ask if they want to move on to another goal or review progress
-                    - If the goal is in progress, acknowledge the update and ask if they need help moving forward
+                    `You are speaking directly to the user. Generate a natural, conversational response about their goal's status.
+                    - Use "I" and "you" pronouns to make it personal
+                    - If the goal is completed, congratulate them directly and ask what they'd like to work on next
+                    - If the goal is in progress, acknowledge their update and offer direct help
                     - Keep the tone friendly and supportive
-                    - Make it feel like a natural conversation, not a status report`)
+                    - Write as if having a real conversation, not giving a status report
+                    - Avoid phrases like "it looks like" or "the user" - speak directly to them`)
             });
 
             await this.reply(params.userPost, {
