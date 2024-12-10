@@ -16,6 +16,7 @@ export interface OnboardingProject extends Project<Task> {
     businessDescription?: string;
     businessGoals?: string[];
     serviceRequirements?: string;
+    existingPlan?: Artifact;
 }
 
 class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
@@ -205,18 +206,33 @@ Otherwise, plan concrete steps to help achieve the goal.`;
     }
 
     private async executeAnalyzeGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
-        // Get the existing project
+        const project = await this.getProjectWithPlan(projectId);
+        const analyzedGoals = await this.analyzeBusinessGoals(goal);
+        const tasks = await this.createGoalTasks(project, analyzedGoals);
+        const businessPlanId = await this.updateProjectBusinessPlan(project);
+
+        return {
+            type: 'goals_analysis',
+            goals: project.goals,
+            projectId: project.id,
+            artifactId: businessPlanId
+        };
+    }
+
+    private async getProjectWithPlan(projectId: string): Promise<OnboardingProject> {
         const project = this.projects.getProject(projectId) as OnboardingProject;
         if (!project) {
             throw new Error(`Project ${projectId} not found`);
         }
 
-        let existingPlan: Artifact | undefined;
-        
         if (project.props?.businessPlanId) {
-            existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
+            project.existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
         }
 
+        return project;
+    }
+
+    private async analyzeBusinessGoals(userInput: string): Promise<Array<{ description: string }>> {
         const schema = {
             type: "object",
             properties: {
@@ -234,17 +250,19 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             required: ["goals"]
         };
 
-        const userInput = goal;
-
         const response = await this.generate({
             message: userInput,
             instructions: new StructuredOutputPrompt(schema, 
                 `You are speaking directly to the user. Analyze their business goal and break it down into distinct, manageable objectives. Use a friendly, direct tone as if having a conversation.`)
         });
 
+        return response.goals;
+    }
 
-        // Create tasks for each goal
-        for (const goalData of response.goals) {
+    private async createGoalTasks(project: OnboardingProject, goals: Array<{ description: string }>): Promise<Task[]> {
+        const tasks: Task[] = [];
+        
+        for (const goalData of goals) {
             const task: Task = {
                 id: crypto.randomUUID(),
                 description: goalData.description,
@@ -254,23 +272,21 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             };
             
             await this.projects.addTask(project, task);
+            tasks.push(task);
         }
 
-        // Create/update the business plan
-        const businessPlanId = await this.updateBusinessPlan(project as OnboardingProject, existingPlan);
+        return tasks;
+    }
+
+    private async updateProjectBusinessPlan(project: OnboardingProject): Promise<string> {
+        const businessPlanId = await this.updateBusinessPlan(project, project.existingPlan);
         
-        // Store the business plan ID in project props
         project.props = {
             ...project.props,
             businessPlanId
         };
 
-        return {
-            type: 'goals_analysis',
-            goals: project.goals,
-            projectId: project.id,
-            artifactId: businessPlanId
-        };
+        return businessPlanId;
     }
 
     private async executeCreatePlan(goal: string, step: string, state: OnboardingState): Promise<StepResult> {
