@@ -136,8 +136,14 @@ export class ArtifactManager {
     return artifacts;
   }
 
-  async indexArtifacts(): Promise<void> {
+  async indexArtifacts(reindex: boolean = false): Promise<void> {
+    if (reindex) {
+      await this.chromaService.reindexCollection('artifacts');
+    }
+    
     const artifacts = await this.listArtifacts();
+    Logger.info(`Indexing ${artifacts.length} artifacts`);
+    
     for (const artifact of artifacts) {
       await this.chromaService.handleContentChunks(
         artifact.content.toString(),
@@ -147,5 +153,7 @@ export class ArtifactManager {
         artifact.type
       );
     }
+    
+    Logger.info('Finished indexing artifacts');
   }
 }

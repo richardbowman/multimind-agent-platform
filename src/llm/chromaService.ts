@@ -156,6 +156,17 @@ class ChromaDBService extends EventEmitter {
         }
     }
 
+    async clearCollection(): Promise<void> {
+        if (!this.collection) throw new Error("Collection not initialized");
+        Logger.info("Clearing ChromaDB collection");
+        await this.collection.delete();
+    }
+
+    async reindexCollection(name: string): Promise<void> {
+        await this.clearCollection();
+        await this.initializeCollection(name);
+    }
+
     async getTokenCount(content: string) {
         return this.lmStudioService.getTokenCount(content);
     }
