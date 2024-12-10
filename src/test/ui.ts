@@ -16,29 +16,17 @@ export const splashBox = blessed.box({
     left: '10%',
     width: '80%',
     height: '80%',
-    content: `
-
-
-
-
-
-
-     _   _ _____ _____ _  __
-    | \\ | |_   _/ ____| |/ /
-    |  \\| | | || |    | ' / 
-    | . \` | | || |    |  <  
-    | |\\  |_| || |____| . \\ 
-    |_| \\_|___|\\_____||_|\\_\\
-    
-    
-    Neural Intelligence Collaboration Kit
-
-
-
-
-
-
-    `,
+    align: 'center',
+    valign: 'middle',
+    content: 
+`_   _ _____ _____ _  __
+ | \\ | |_   _/ ____| |/ /
+ |  \\| | | || |    | ' / 
+ | . \` | | || |    |  <  
+ | |\\  |_| || |____| . \\ 
+ |_| \\_|___|\\_____||_|\\_\\
+  
+ Neural Intelligence Collaboration Kit`,
     style: {
         fg: 'green',
         bg: 'black',
