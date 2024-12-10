@@ -141,7 +141,7 @@ export const threadList = blessed.list({
     left: '0%',
     width: '30%',
     top: '35%',
-    height: '65%-2'
+    height: '65%-4'
 });
 
 tab1Box.append(threadList);
@@ -151,7 +151,7 @@ export const chatBox = blessed.log({
     top: 0,
     left: '30%',
     width: '40%',
-    height: '100%-3',
+    height: '100%-5',
     label: 'Chat',
     content: '',
     tags: true,
@@ -219,9 +219,9 @@ export const taskList = blessed.list({
             bg: 'blue'
         }
     },
-    left: '70%-1',
-    width: '30%+1',
-    top: '50%',
+    left: '70%',
+    width: '30%',
+    top: '50%-2',
     height: '50%-2',
 });
 
@@ -245,10 +245,10 @@ export const artifactList = blessed.list({
             bg: 'blue'
         }
     },
-    top: 3,
-    left: '70%-1',
+    top: 0,
+    left: '70%',
     width: '30%+1',
-    height: '50%-3'
+    height: '50%-2'
 });
 
 tab1Box.append(artifactList);
