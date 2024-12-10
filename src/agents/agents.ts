@@ -249,7 +249,7 @@ export abstract class Agent<Project, Task> {
                         const posts = await this.chatClient.getThreadChain(post);
                         // only respond to chats directed at "me"
                         if (posts[0].message.startsWith(handle)) {
-                            const { activityType, requestedArtifacts, searchResults } = await this.classifyResponse(post, ResponseType.RESPONSE, posts);
+                            const { activityType, requestedArtifacts, searchResults } = await this.classifyResponse(post, ResponseType.RESPONSE, posts, { userPost: post, projects });
 
                             const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifact-ids"] || [])].flat())];
                             const artifacts = await this.mapRequestedArtifacts(allArtifacts);
@@ -485,7 +485,7 @@ export abstract class Agent<Project, Task> {
         }
     }
 
-    private async classifyResponse(post: ChatPost, channelType: ResponseType, history?: ChatPost[]): Promise<{ activityType: string, requestedArtifacts: string[], searchQuery: string, searchResults: SearchResult[] }> {
+    private async classifyResponse(post: ChatPost, channelType: ResponseType, history?: ChatPost[], params?: HandlerParams): Promise<{ activityType: string, requestedArtifacts: string[], searchQuery: string, searchResults: SearchResult[] }> {
         const artifactList = await this.getArtifactList();
         const availableActions = history ? this.getAvailableActions(ResponseType.RESPONSE) : this.getAvailableActions(ResponseType.CHANNEL);
 
