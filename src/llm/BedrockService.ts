@@ -191,14 +191,12 @@ export class BedrockService implements ILLMService {
         const schema = instructions.getSchema();
         const prompt = instructions.getPrompt();
 
-        const systemPrompt = `You are a structured data generator.
-You MUST return valid JSON matching this schema:
-${JSON.stringify(schema, null, 2)}
-
-Additional instructions:
-${prompt}
-
-IMPORTANT: Return ONLY the JSON object, no other text.`;
+        // Create a tool that enforces our schema
+        const tools = [{
+            name: "generate_structured_output",
+            description: `Generate structured data according to the following instructions: ${prompt}`,
+            input_schema: schema
+        }];
 
         const command = new InvokeModelCommand({
             modelId: this.modelId,
@@ -206,33 +204,27 @@ IMPORTANT: Return ONLY the JSON object, no other text.`;
                 anthropic_version: "bedrock-2023-05-31",
                 max_tokens: 2048,
                 temperature: 0.1,
-                system: systemPrompt,
+                system: "You are a helpful assistant that generates structured data.",
                 messages: [{
-                    role: "user", 
+                    role: "user",
                     content: userPost.message
-                }]
+                }],
+                tools: tools,
+                tool_choice: { type: "tool", name: "generate_structured_output" }
             })
         });
 
         try {
             const response = await this.client.send(command);
             const result = JSON.parse(new TextDecoder().decode(response.body));
-            const content = result.content[0].text;
             
-            try {
-                return JSON.parse(content);
-            } catch (parseError) {
-                // If direct parse fails, try to extract JSON from markdown blocks
-                const jsonMatch = content.match(/```(?:json)?\n([\s\S]*?)\n```/) || 
-                                content.match(/\{[\s\S]*\}/);
-                
-                if (!jsonMatch) {
-                    throw new Error("No valid JSON found in response");
-                }
-
-                const jsonStr = jsonMatch[1] || jsonMatch[0];
-                return JSON.parse(jsonStr);
+            // Extract tool use from response
+            const toolUse = result.content.find((block: any) => block.type === "tool_use");
+            if (!toolUse) {
+                throw new Error("No tool use found in response");
             }
+
+            return toolUse.input;
         } catch (error) {
             Logger.error("Structured generation error:", error);
             throw error;
