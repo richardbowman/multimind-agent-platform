@@ -10,6 +10,7 @@ import Logger from '../helpers/logger';
 import { Project, Task } from '../tools/taskManager';
 import crypto from 'crypto';
 import { Artifact } from 'src/tools/artifact';
+import { RequestArtifacts } from './schemas/ModelResponse';
 
 export interface OnboardingProject extends Project<Task> {
     businessDescription?: string;
@@ -430,7 +431,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 required: ["message"]
             };
 
-            const statusResponse = await this.generate({
+            const replyResponse = await this.generate({
                 message: JSON.stringify({
                     goal: task.description,
                     completed: task.complete,
@@ -444,11 +445,10 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                     - Make it feel like a natural conversation, not a status report`)
             });
 
-            const response: RequestArtifacts = {
-                message: statusResponse.message,
+            await this.reply(params.userPost, {
+                ...replyResponse, 
                 artifactIds: project.props?.businessPlanId ? [project.props.businessPlanId] : undefined
-            };
-            await this.reply(params.userPost, response);
+            } as RequestArtifacts);
         }
     }
 }
