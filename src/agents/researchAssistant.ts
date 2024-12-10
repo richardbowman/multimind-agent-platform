@@ -447,8 +447,9 @@ Existing Knowledge:\n${artifactsContext}`;
 
         const systemPrompt = `You are a research assistant planning how to investigate a topic.
 ${knowledgeCheck.hasRelevantInfo ? 'We have some relevant existing knowledge but need additional research.' : 'We need to conduct new research.'}
-Break down the research goal into specific steps that will help achieve the best result.
-If you need to ask the user for clarification, set requiresUserInput to true and specify the question.`;
+Break down the research goal into specific steps. Each step should be a clear research task.
+If the goal seems unclear or too broad, set requiresUserInput to true and ask for clarification.
+Otherwise, plan concrete research steps that will help achieve the goal.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const response : ResearchPlan = await this.generate({
@@ -465,6 +466,11 @@ If you need to ask the user for clarification, set requiresUserInput to true and
                 title: a.metadata?.title,
                 underlyingData: a.metadata?.steps
             }));
+        }
+
+        // If no existing knowledge and no user input needed, add research steps
+        if (!knowledgeCheck.hasRelevantInfo && !response.requiresUserInput && (!response.steps || response.steps.length === 0)) {
+            response.steps = ["research_topic"];
         }
         
         return response;
