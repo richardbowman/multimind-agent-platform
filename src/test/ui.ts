@@ -2,6 +2,14 @@ import blessed from 'blessed';
 import { markdown } from 'blessed-contrib';
 import Logger from 'src/helpers/logger';
 
+// Create a screen object first
+export const screen = blessed.screen({
+    autoPadding: true,
+    smartCSR: true,
+    dockBorders: true,
+    title: 'Chat Client'
+});
+
 // Create splash screen box
 export const splashBox = blessed.box({
     top: 'center',
@@ -26,13 +34,6 @@ export const splashBox = blessed.box({
     hidden: true
 });
 
-// Create a screen object.
-export const screen = blessed.screen({
-    autoPadding: true,
-    smartCSR: true,
-    dockBorders: true,
-    title: 'Chat Client'
-});
 
 // Create a tab container
 export const tabContainer = blessed.listbar({
