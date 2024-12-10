@@ -176,7 +176,12 @@ Otherwise, plan concrete steps to help achieve the goal.`;
     }
 
     private async executeAnalyzeGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
+        // Get the existing project
         const project = this.projects.getProject(projectId) as OnboardingProject;
+        if (!project) {
+            throw new Error(`Project ${projectId} not found`);
+        }
+
         let existingPlan: Artifact | undefined;
         
         if (project.props?.businessPlanId) {
@@ -208,11 +213,6 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 `Analyze this business goal and break it down into distinct, manageable objectives.`)
         });
 
-        // Get the existing project
-        const project = this.projects.getProject(projectId);
-        if (!project) {
-            throw new Error(`Project ${projectId} not found`);
-        }
 
         // Create tasks for each goal
         for (const goalData of response.goals) {
