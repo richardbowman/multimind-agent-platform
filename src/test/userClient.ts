@@ -137,7 +137,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
     // Handle input changes for command and user handle autocomplete
     inputBox.on('keypress', (ch, key) => {
-        const currentInput = inputBox.getValue();
+        const currentInput = inputBox.getValue() + (ch || '');
         
         if (currentInput.startsWith('/')) {
             // Filter commands based on current input
