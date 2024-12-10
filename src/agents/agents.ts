@@ -32,13 +32,14 @@ export interface HandlerParams extends GenerateParams {
 }
 
 export interface GenerateInputParams extends GenerateParams {
-    instructions: string | InputPrompt;
+    instructions: string | InputPrompt | StructuredOutputPrompt;
 }
 
 export interface GenerateParams {
     artifacts?: Artifact[];
     projects?: Project<Task>[];
     searchResults?: SearchResult[]
+    message?: string;
 }
 
 export interface ProjectHandlerParams extends HandlerParams {
@@ -133,9 +134,7 @@ export abstract class Agent<Project, Task> {
                     
                     // Attempt to process the task
                     await this.processTask(task);
-                    
-                    // If we get here, task completed successfully
-                    await this.projects.completeTask(task);
+
                     processedCount++;
                 } catch (error) {
                     // If task fails, leave it in progress but log the error
@@ -270,7 +269,7 @@ export abstract class Agent<Project, Task> {
                                     rootPost: posts[0],
                                     artifacts,
                                     projects,
-                                    threadPosts: posts.slice(1),
+                                    threadPosts: posts.slice(1, -1),
                                     searchResults
                                 });
                             } else {
@@ -288,7 +287,7 @@ export abstract class Agent<Project, Task> {
         });
     }
 
-    protected async generateStructured(structure: StructuredOutputPrompt, params: HandlerParams): Promise<ModelResponse> {
+    protected async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelResponse> {
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = structure.getPrompt();
         if (this.isMemoryEnabled) {
@@ -321,13 +320,18 @@ export abstract class Agent<Project, Task> {
 
         const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
 
-        const response = await this.lmStudioService.generateStructured(params.userPost, augmentedStructuredInstructions, history);
+        const response = await this.lmStudioService.generateStructured(params.userPost||params.message||"", augmentedStructuredInstructions, history);
         response.artifactIds = params.artifacts?.map(a => a.id);
         return response;
     }
 
     protected async generate(params: GenerateInputParams): Promise<ModelResponse> {
-        return this.generateOld(params.instructions.toString(), params);
+        if (params.instructions instanceof StructuredOutputPrompt) {
+            return this.generateStructured(params.instructions, params);
+        } else {
+            return this.generateOld(params.instructions.toString(), params);
+        }
+        
     }
 
     /**
@@ -364,7 +368,7 @@ export abstract class Agent<Project, Task> {
 
         // Augment instructions with context and generate a response
         const history = (params as HandlerParams).threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
-        const response = await this.lmStudioService.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:""}, history);
+        const response = await this.lmStudioService.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:params.message||""}, history);
         (response as RequestArtifacts).artifactIds = params.artifacts?.map(a => a.id);
         
         return response;
@@ -692,7 +696,7 @@ export abstract class Agent<Project, Task> {
             tasks: {}
         };
 
-        this.projects.addProject(project);
+        await this.projects.addProject(project);
 
         let taskIds : string[] = [];
         if (tasks) {
