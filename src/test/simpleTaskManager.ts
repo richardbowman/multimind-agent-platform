@@ -205,6 +205,24 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         return Object.values(this.projects);
     }
 
+    getNextTask(projectId: string): Task | null {
+        const project = this.projects[projectId];
+        if (!project) {
+            return null;
+        }
+
+        // Get all tasks for the project
+        const tasks = Object.values(project.tasks || {});
+        
+        // Filter for not started tasks and sort by order
+        const availableTasks = tasks
+            .filter(t => !t.complete && !t.inProgress)
+            .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
+
+        // Return the first task or null if none found
+        return availableTasks[0] || null;
+    }
+
     // Method to handle recurring tasks
     async scheduleRecurringTask(taskId: string, nextRunDate?: Date): Promise<void> {
         let taskFound = false;
