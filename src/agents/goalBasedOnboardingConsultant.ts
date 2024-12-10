@@ -258,9 +258,14 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         };
 
         const response = await this.generate({
-            message: params.userPost.message,
+            message: JSON.stringify({
+                currentGoals: state.goals,
+                userUpdate: params.userPost.message
+            }),
             instructions: new StructuredOutputPrompt(schema,
-                `Based on the user's update, identify which goal is being discussed and whether it's completed.`)
+                `Given the list of current goals and the user's update, identify which goal is being discussed and whether it's completed.
+                Current goals state is provided in currentGoals.
+                The user's update message is in userUpdate.`)
         });
 
         // Update goal status
