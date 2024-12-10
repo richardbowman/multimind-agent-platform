@@ -231,42 +231,58 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         }
     }
 
-    startScheduler() {
-        // Schedule a job every day at midnight
-        cron.schedule('0 0 * * *', async () => {
-            for (const projectId in this.projects) {
-                const project = this.projects[projectId];
-                for (const taskId in project.tasks) {
-                    const task = project.tasks[taskId];
-                    if (task.isRecurring) {
-                        const now = new Date();
-                        switch (task.recurrencePattern) {
-                            case RecurrencePattern.Daily:
-                                // If the last run was yesterday, schedule the task again
-                                if (new Date(task.lastRunDate!).setHours(0, 0, 0, 0) < new Date(now).setHours(0, 0, 0, 0)) {
-                                    await this.scheduleRecurringTask(taskId, now);
-                                }
-                                break;
-                            case RecurrencePattern.Weekly:
-                                // If the last run was more than a week ago, schedule the task again
-                                const weekFromLastRun = new Date(task.lastRunDate!);
-                                weekFromLastRun.setDate(weekFromLastRun.getDate() + 7);
-                                if (weekFromLastRun < now) {
-                                    await this.scheduleRecurringTask(taskId, now);
-                                }
-                                break;
+    private lastCheckTime: number = Date.now();
 
-                            case RecurrencePattern.Monthly:
-                                // If the last run was more than a month ago, schedule the task again
-                                const monthFromLastRun = new Date(task.lastRunDate!);
-                                monthFromLastRun.setMonth(monthFromLastRun.getMonth() + 1);
-                                if (monthFromLastRun < now) {
-                                    await this.scheduleRecurringTask(taskId, now);
-                                }
-                                break;
-                        }
-                    }
+    private async checkMissedTasks() {
+        const now = Date.now();
+        const lastCheck = this.lastCheckTime;
+        this.lastCheckTime = now;
+
+        for (const projectId in this.projects) {
+            const project = this.projects[projectId];
+            for (const taskId in project.tasks) {
+                const task = project.tasks[taskId];
+                if (!task.isRecurring || !task.lastRunDate) continue;
+
+                const lastRun = new Date(task.lastRunDate).getTime();
+                let nextRun = lastRun;
+
+                // Calculate when the next run should have been
+                switch (task.recurrencePattern) {
+                    case RecurrencePattern.Daily:
+                        nextRun = new Date(task.lastRunDate).setHours(24, 0, 0, 0);
+                        break;
+                    case RecurrencePattern.Weekly:
+                        nextRun = lastRun + (7 * 24 * 60 * 60 * 1000);
+                        break;
+                    case RecurrencePattern.Monthly:
+                        const nextMonth = new Date(lastRun);
+                        nextMonth.setMonth(nextMonth.getMonth() + 1);
+                        nextRun = nextMonth.getTime();
+                        break;
                 }
+
+                // If next run should have happened between last check and now
+                if (nextRun > lastCheck && nextRun <= now) {
+                    Logger.info(`Executing missed recurring task ${taskId} from ${new Date(nextRun).toISOString()}`);
+                    await this.scheduleRecurringTask(taskId, new Date(nextRun));
+                }
+            }
+        }
+    }
+
+    startScheduler() {
+        // Check for missed tasks on startup
+        this.checkMissedTasks().catch(err => 
+            Logger.error('Error checking missed tasks:', err)
+        );
+
+        // Schedule regular checks
+        cron.schedule('*/5 * * * *', async () => {
+            try {
+                await this.checkMissedTasks();
+            } catch (err) {
+                Logger.error('Error in scheduler:', err);
             }
         });
     }
