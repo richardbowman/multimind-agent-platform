@@ -128,10 +128,11 @@ Based on the current state and results, determine if we:
 Consider the original goal and what we've learned so far.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        const project = this.projects.getProject(projectId);
         const context = JSON.stringify({
-            originalGoal: state.originalGoal,
-            currentStep: state.currentStep,
-            results: state.intermediateResults
+            originalGoal: project.name,
+            currentStep: lastStepResult.type,
+            results: lastStepResult
         }, null, 2);
 
         return await this.generate({
@@ -150,10 +151,10 @@ Consider the original goal and what we've learned so far.`;
             type: 'summary',
             content: finalResponse.message,
             metadata: {
-                title: `Summary: ${state.originalGoal}`,
-                query: state.originalGoal,
+                title: `Summary: ${project.name}`,
+                query: project.name,
                 type: 'summary',
-                steps: state.intermediateResults
+                steps: Object.values(project.tasks).map(t => t.description)
             }
         });
 
@@ -185,9 +186,9 @@ You will respond inside of the message key in Markdown format.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const context = JSON.stringify({
-            originalGoal: state.originalGoal,
-            goals: state.goals,
-            results: state.intermediateResults
+            originalGoal: project.name,
+            tasks: Object.values(project.tasks),
+            results: Object.values(project.tasks).map(t => t.description)
         }, null, 2);
 
         return await this.generate({
