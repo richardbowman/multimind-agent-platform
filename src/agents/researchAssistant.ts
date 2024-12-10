@@ -217,7 +217,7 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
                 existingArtifacts: researchPlan.existingArtifacts
             };
 
-            this.activeResearchStates.set(stateId, newState);
+            this.activeStates.set(stateId, newState);
 
             if (newState.needsUserInput) {
                 await this.reply(userPost, { message: `To help me research this better, could you please answer: ${newState.userQuestion}` });
