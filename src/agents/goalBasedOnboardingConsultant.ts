@@ -237,9 +237,9 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         };
     }
 
-    @HandleActivity("update-goal", "Update the status of a specific goal", ResponseType.RESPONSE)
+    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
     private async handleGoalUpdate(params: HandlerParams): Promise<void> {
-        const state = this.activeStates.get(params.userPost.id) as OnboardingState;
+        const state = this.activeStates.get(params.rootPost.id) as OnboardingState;
         if (!state) {
             await this.reply(params.userPost, { 
                 message: "No active goal planning session found. Please start a new session." 
