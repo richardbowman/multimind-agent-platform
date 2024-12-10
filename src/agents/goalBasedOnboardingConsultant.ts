@@ -434,14 +434,12 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 message: JSON.stringify({
                     goal: task.description,
                     completed: task.complete,
-                    notes: response.notes,
                     projectId: project.id
                 }),
                 instructions: new StructuredOutputPrompt(responseSchema,
                     `Generate a natural, conversational response about updating the goal's status.
                     - If the goal is completed, congratulate them and ask if they want to move on to another goal or review progress
                     - If the goal is in progress, acknowledge the update and ask if they need help moving forward
-                    - Incorporate any relevant notes naturally into the response
                     - Keep the tone friendly and supportive
                     - Make it feel like a natural conversation, not a status report`)
             });
