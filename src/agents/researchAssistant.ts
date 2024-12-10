@@ -1,6 +1,5 @@
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
 import Logger from "src/helpers/logger";
-import JSON5 from 'json5';
 import SearchHelper from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
 import SummaryHelper from '../helpers/summaryHelper';
@@ -8,7 +7,6 @@ import { RESEARCHER_TOKEN, CHAT_MODEL, CHROMA_COLLECTION, WEB_RESEARCH_CHANNEL_I
 import { ChatClient, ChatPost } from '../chat/chatClient';
 import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
 import { Project, RecurrencePattern, Task, TaskManager } from 'src/tools/taskManager';
-import { ArtifactManager } from 'src/tools/artifactManager';
 import { CreateArtifact } from './schemas/ModelResponse';
 
 
@@ -49,7 +47,6 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
     private searchHelper: SearchHelper;
     private scrapeHelper: ScrapeHelper;
     private summaryHelper: SummaryHelper;
-    private isWorking: boolean = false;
 
     constructor(userToken: string, userId: string, chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager) {
         super(chatClient, lmStudioService, userId, projects);
@@ -81,31 +78,30 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
 
     @HandleActivity("followup", "Answer follow-up questions about previous search results", ResponseType.RESPONSE)
     private async handleFollowup(params: HandlerParams): Promise<void> {
-        const { userPost } = params;
+        const { userPost, rootPost } = params;
         const question = userPost.message;
-        const rootId = userPost.getRootId();
+        const rootId = params.rootPost;
 
         if (!rootId) {
-            await this.chatClient.replyThreaded(userPost, "This command must be used as a reply to an existing search result.");
+            await this.reply(userPost, { message: "This command must be used as a reply to an existing search result." });
             return;
         }
 
         // Find the original search result artifact
         const artifacts = await this.artifactManager.getArtifacts({ type: 'summary' });
-        const originalPost = await this.chatClient.getPost(rootId);
         
-        if (!originalPost) {
-            await this.chatClient.replyThreaded(userPost, "Could not find the original search result.");
+        if (!rootPost) {
+            await this.reply(userPost, { message : "Could not find the original search result." });
             return;
         }
 
         const relevantArtifacts = artifacts.filter(a => 
             a.metadata?.pageSummaries && 
-            (a.metadata?.query === originalPost.message || a.content.includes(originalPost.message))
+            (a.metadata?.query === rootPost.message || a.content.includes(rootPost.message))
         );
 
         if (relevantArtifacts.length === 0) {
-            await this.chatClient.replyThreaded(userPost, "Could not find the original search results to answer your question.");
+            await this.reply(userPost, { message: "Could not find the original search results to answer your question." });
             return;
         }
 
@@ -142,10 +138,10 @@ Rate your confidence as:
         try {
             const response = await this.lmStudioService.sendStructuredRequest(context, instructions, []);
             const answer = `${response.answer}\n\n*(Confidence: ${response.confidence})*`;
-            await this.chatClient.replyThreaded(userPost, answer);
+            await this.reply(userPost, { message: answer });
         } catch (error) {
             Logger.error("Error generating follow-up answer:", error);
-            await this.chatClient.replyThreaded(userPost, "Sorry, I encountered an error while trying to answer your follow-up question.");
+            await this.reply(userPost, { message: "Sorry, I encountered an error while trying to answer your follow-up question." });
         }
     }
 
@@ -178,15 +174,14 @@ Rate your confidence as:
             this.activeResearchStates.set(stateId, newState);
 
             if (newState.needsUserInput) {
-                await this.chatClient.replyThreaded(userPost, 
-                    `To help me research this better, could you please answer: ${newState.userQuestion}`);
+                await this.reply(userPost, { message: `To help me research this better, could you please answer: ${newState.userQuestion}` });
                 return;
             }
 
             await this.executeResearchStep(newState, userPost);
         } catch (error) {
             Logger.error("Error in quick search:", error);
-            await this.chatClient.replyToPost(userPost.id, "Sorry, I encountered an error while searching.");
+            await this.reply(userPost, { message: "Sorry, I encountered an error while searching."});
         }
     }
 
@@ -565,9 +560,9 @@ Return ONLY the selected URLs as a valid JSON array of strings like this:
         const message = `Search Results:
 ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${sr.description.slice(0, 200)}`).join("\n\n")}`;
 
-        const selectedUrlsJson = await this.lmStudioService.sendMessageToLLM(message, history, "", 8192, 8192, schema);
+        const selectedUrls = await this.lmStudioService.generateStructured({ message: message }, new StructuredOutputPrompt(schema, systemPrompt), [], undefined, 2048);
 
-        return JSON5.parse(selectedUrlsJson).urls;
+        return selectedUrls.urls;
     }
 
     // returns summary
@@ -701,8 +696,8 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
 
-        const selectedLinks = await this.lmStudioService.sendStructuredRequest(message, instructions, history);
-        return selectedLinks;
+        const responseLinks = await this.lmStudioService.generateStructured({ message }, instructions, []);
+        return responseLinks;
     } catch (error) {
         Logger.error('Error selecting relevant links:', error);
         throw error;
@@ -729,8 +724,10 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
             if (nextAction.needsUserInput) {
                 state.needsUserInput = true;
                 state.userQuestion = nextAction.question;
-                await this.chatClient.replyThreaded(userPost, nextAction.question);
-                return;
+                if (nextAction.question) {
+                    await this.reply(userPost, { message: nextAction.question });
+                    return;
+                }
             }
 
             if (nextAction.isComplete) {
@@ -752,7 +749,7 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
                 });
 
                 const response = `${finalResponse}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`;
-                await this.chatClient.replyThreaded(userPost, response);
+                await this.reply(userPost, { message: response });
                 return;
             }
 
@@ -762,8 +759,7 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 
         } catch (error) {
             Logger.error("Error in research step:", error);
-            await this.chatClient.replyThreaded(userPost, 
-                "Sorry, I encountered an error while researching your question.");
+            await this.reply(userPost, { message: "Sorry, I encountered an error while researching your question."} );
         }
     }
 
