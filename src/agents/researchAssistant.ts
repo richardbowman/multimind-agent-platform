@@ -16,6 +16,7 @@ interface ResearchState {
     intermediateResults: any[];
     needsUserInput?: boolean;
     userQuestion?: string;
+    existingKnowledge?: string;
 }
 
 export class ResearchTask implements Task {
@@ -330,7 +331,79 @@ Previous search results:\n\n${pageSummaries.join("\n\n")}`;
         }
     }
 
+    private async checkExistingKnowledge(goal: string): Promise<{
+        hasRelevantInfo: boolean;
+        existingArtifacts: any[];
+        needsAdditionalResearch: boolean;
+        relevantFindings?: string;
+    }> {
+        const schema = {
+            type: "object",
+            properties: {
+                hasRelevantInfo: {
+                    type: "boolean",
+                    description: "Whether relevant information was found in existing artifacts"
+                },
+                needsAdditionalResearch: {
+                    type: "boolean",
+                    description: "Whether additional research is needed beyond existing information"
+                },
+                relevantFindings: {
+                    type: "string",
+                    description: "Summary of relevant information found in existing artifacts"
+                }
+            },
+            required: ["hasRelevantInfo", "needsAdditionalResearch"]
+        };
+
+        // Get all summary artifacts
+        const artifacts = await this.artifactManager.getArtifacts({ type: 'summary' });
+        
+        if (artifacts.length === 0) {
+            return {
+                hasRelevantInfo: false,
+                existingArtifacts: [],
+                needsAdditionalResearch: true
+            };
+        }
+
+        const systemPrompt = `You are a research assistant analyzing existing knowledge.
+Review these previous research summaries and determine if they contain relevant information for the current goal.
+Assess if additional research is needed or if existing information is sufficient.`;
+
+        const artifactsContext = artifacts.map(a => 
+            `Title: ${a.metadata?.title}
+Content: ${a.content}
+Query: ${a.metadata?.query}
+---`
+        ).join('\n');
+
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        const response = await this.generate({
+            message: `Goal: ${goal}\n\nExisting Knowledge:\n${artifactsContext}`,
+            instructions
+        });
+
+        return {
+            hasRelevantInfo: response.hasRelevantInfo,
+            existingArtifacts: artifacts,
+            needsAdditionalResearch: response.needsAdditionalResearch,
+            relevantFindings: response.relevantFindings
+        };
+    }
+
     private async planResearchSteps(goal: string): Promise<any> {
+        // First check existing knowledge
+        const knowledgeCheck = await this.checkExistingKnowledge(goal);
+
+        if (knowledgeCheck.hasRelevantInfo && !knowledgeCheck.needsAdditionalResearch) {
+            return {
+                steps: ["synthesize_existing_knowledge"],
+                requiresUserInput: false,
+                existingKnowledge: knowledgeCheck.relevantFindings
+            };
+        }
+
         const schema = {
             type: "object",
             properties: {
@@ -354,14 +427,21 @@ Previous search results:\n\n${pageSummaries.join("\n\n")}`;
         };
 
         const systemPrompt = `You are a research assistant planning how to investigate a topic.
+${knowledgeCheck.hasRelevantInfo ? 'We have some relevant existing knowledge but need additional research.' : 'We need to conduct new research.'}
 Break down the research goal into specific steps that will help achieve the best result.
 If you need to ask the user for clarification, set requiresUserInput to true and specify the question.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const response = await this.generate({
-            message: goal, 
+            message: goal,
             instructions
         });
+
+        // If we have existing knowledge, prepend a step to review it
+        if (knowledgeCheck.hasRelevantInfo) {
+            response.steps.unshift("review_existing_knowledge");
+            response.existingKnowledge = knowledgeCheck.relevantFindings;
+        }
         
         return response;
     }
@@ -696,8 +776,33 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 
     private async executeResearchStep(state: ResearchState, userPost: ChatPost): Promise<void> {
         try {
-            // Execute the current step
-            const stepResult = await this.processResearchStep(state.currentStep, state.originalGoal);
+            let stepResult;
+            
+            // Handle special knowledge-base steps
+            if (state.currentStep === "review_existing_knowledge") {
+                stepResult = {
+                    type: 'existing_knowledge',
+                    findings: state.existingKnowledge
+                };
+            } else if (state.currentStep === "synthesize_existing_knowledge") {
+                // Generate response purely from existing knowledge
+                const finalResponse = await this.generateFinalResponse({
+                    ...state,
+                    intermediateResults: [{
+                        type: 'existing_knowledge',
+                        findings: state.existingKnowledge
+                    }]
+                });
+                
+                await this.reply(userPost, { 
+                    message: `Based on our existing knowledge:\n\n${finalResponse.message}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`
+                });
+                return;
+            } else {
+                // Execute normal research step
+                stepResult = await this.processResearchStep(state.currentStep, state.originalGoal);
+            }
+
             state.intermediateResults.push(stepResult);
 
             // Determine next steps
