@@ -149,7 +149,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 commandList.show();
                 
                 // If Enter is pressed, autocomplete with the first match
-                if (key && key.name === 'enter' && filtered.length > 0) {
+                if ((key && key.name === 'enter') || ch === '\r') {
                     inputBox.setValue(filtered[0].command + ' ');
                     commandList.hide();
                     return false; // Prevent default Enter behavior
@@ -177,7 +177,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 commandList.show();
                 
                 // If Enter is pressed, autocomplete with the first match
-                if (key && key.name === 'enter' && handles.length > 0) {
+                if ((key && key.name === 'enter') || ch === '\r') {
                     // Replace the partial handle with the complete one
                     const beforeHandle = currentInput.substring(0, currentInput.lastIndexOf('@'));
                     inputBox.setValue(beforeHandle + handles[0].handle + ' ');
