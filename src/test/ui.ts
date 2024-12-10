@@ -368,6 +368,16 @@ export const globalArtifactList = blessed.list({
             bg: 'blue'
         }
     },
+    scrollable: true,
+    alwaysScroll: true,
+    scrollbar: {
+        style: {
+            bg: 'blue'
+        },
+        track: {
+            bg: 'gray'
+        }
+    },
     left: 0,
     width: '30%',
     top: 3,
@@ -384,7 +394,9 @@ export const globalArtifactViewer = markdown({
     scrollable: true,
     label: 'Artifact Content',
     focusable: true,
+    alwaysScroll: true,
     scrollbar: {
+        ch: ' ',
         style: {
             bg: 'blue'
         },
