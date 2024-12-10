@@ -3,7 +3,7 @@ import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from "src/chat/
 import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
-import blessed from 'blessed';
+import blessed, { input } from 'blessed';
 import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box, taskDetailViewer, screen, splashBox, startSplashAnimation, commandList } from "./ui";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { screen } from './ui'
@@ -137,7 +137,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
     // Handle input changes for command and user handle autocomplete
     inputBox.on('keypress', (ch, key) => {
-        const currentInput = inputBox.getValue();
+        const currentInput = inputBox.getValue() + (key && key.name === "enter" ? "" : ch);
         
         if (currentInput.startsWith('/')) {
             // Filter commands based on current input
@@ -179,7 +179,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 if (key && key.name === 'enter' && handles.length > 0) {
                     // Replace the partial handle with the complete one
                     const beforeHandle = currentInput.substring(0, currentInput.lastIndexOf('@'));
-                    inputBox.setValue(beforeHandle + '@' + handles[0].handle + ' ');
+                    inputBox.setValue(beforeHandle + handles[0].handle + ' ');
                     commandList.hide();
                 }
                 screen.render();
