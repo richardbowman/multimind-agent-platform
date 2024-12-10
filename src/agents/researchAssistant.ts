@@ -104,6 +104,19 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
 
             if (pageSummaries.length > 0) {
                 const finalSummary = await this.summaryHelper.createOverallSummary(query, query, pageSummaries, this.lmStudioService);
+                
+                // Save the summary as an artifact
+                await this.artifactManager.saveArtifact({
+                    id: crypto.randomUUID(),
+                    type: 'summary',
+                    content: finalSummary,
+                    metadata: {
+                        title: `Quick Search Summary: ${query}`,
+                        query,
+                        type: 'quick-search'
+                    }
+                });
+
                 await this.chatClient.replyThreaded(userPost, finalSummary);
             } else {
                 await this.chatClient.replyThreaded(userPost, "I found some pages but couldn't extract relevant information from them.");
@@ -161,6 +174,19 @@ class ResearchAssistant extends Agent<ResearchProject, ResearchTask> {
                     pageSummaries,
                     this.lmStudioService
                 );
+
+                // Save the summary as an artifact
+                await this.artifactManager.saveArtifact({
+                    id: crypto.randomUUID(),
+                    type: 'summary',
+                    content: finalSummary,
+                    metadata: {
+                        title: `Research Summary: ${userPost.message}`,
+                        query: userPost.message,
+                        type: 'research-request'
+                    }
+                });
+
                 await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID, finalSummary);
             } else {
                 await this.chatClient.postInChannel(WEB_RESEARCH_CHANNEL_ID,
