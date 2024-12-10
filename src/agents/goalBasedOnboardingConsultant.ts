@@ -387,117 +387,17 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             return;
         }
 
-        // Find next incomplete task before updating current one
-        const nextTask = this.findNextIncompleteTask(project);
-
-        // Initialize project props if needed
-        if (!project.props) {
-            project.props = {};
+        // Find the current in-progress task
+        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
+        if (!currentTask) {
+            await this.reply(params.userPost, { 
+                message: "I wasn't expecting a response right now. What would you like to work on?" 
+            });
+            return;
         }
 
-        const schema = {
-            type: "object",
-            properties: {
-                goalId: { type: "string" },
-                completed: { type: "boolean" },
-                notes: { type: "string" }
-            },
-            required: ["goalId", "completed"]
-        };
-
-        const response = await this.generate({
-            message: JSON.stringify({
-                currentGoals: project.tasks,
-                userUpdate: params.userPost.message
-            }),
-            instructions: new StructuredOutputPrompt(schema,
-                `Given the list of current goals and the user's update, identify which goal is being discussed and whether it's completed.
-                Current goals state is provided in currentGoals.
-                The user's update message is in userUpdate.`)
-        });
-
-        // Update task status
-        const task = Object.values(project.tasks).find(t => t.id === response.goalId);
-        if (task) {
-            if (response.completed) {
-                await this.projects.completeTask(task.id);
-            } else {
-                await this.projects.markTaskInProgress(task);
-            }
-
-            // Check if this update contains meaningful new information
-            const schema = {
-                type: "object",
-                properties: {
-                    hasNewInformation: { type: "boolean" },
-                    summary: { type: "string" }
-                },
-                required: ["hasNewInformation", "summary"]
-            };
-
-            const updateAnalysis = await this.generate({
-                message: JSON.stringify({
-                    currentUpdate: params.userPost.message,
-                    goalDescription: task.description,
-                    goalStatus: task.complete ? "completed" : (task.inProgress ? "in progress" : "not started")
-                }),
-                instructions: new StructuredOutputPrompt(schema,
-                    `Analyze this update and determine if it contains meaningful new information about the goal's progress or status.
-                    Consider:
-                    - Does it describe specific progress or achievements?
-                    - Does it provide new details about implementation?
-                    - Does it mention blockers or changes in direction?
-                    - Is it substantially different from just acknowledging the goal?
-                    
-                    Return hasNewInformation: true only if the update contains concrete new information.
-                    Provide a brief summary of what's new, or why the update isn't substantial.`)
-            });
-
-            // Only update the business plan if there's new information
-            if (updateAnalysis.hasNewInformation && project.props?.businessPlanId) {
-                const existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
-                project.props.latestUpdate = `${updateAnalysis.summary}\n\nUser's message: ${params.userPost.message}`; // Store analyzed update
-                await this.updateBusinessPlan(project as OnboardingProject, existingPlan);
-            }
-
-            const responseSchema = {
-                type: "object",
-                properties: {
-                    message: {
-                        type: "string",
-                        description: "A natural, conversational response about the goal status update"
-                    }
-                },
-                required: ["message"]
-            };
-
-            const replyResponse = await this.generate({
-                message: JSON.stringify({
-                    goal: task.description,
-                    completed: task.complete,
-                    projectId: project.id,
-                    nextTask: nextTask?.description
-                }),
-                instructions: new StructuredOutputPrompt(responseSchema,
-                    `You are speaking directly to the user. Generate a natural, conversational response about their goal's status.
-                    - Use "I" and "you" pronouns to make it personal
-                    - If the goal is completed:
-                        - Congratulate them directly
-                        - If there's a next task, suggest working on that specific task next
-                        - If no next task, ask what new goal they'd like to work on
-                    - If the goal is in progress:
-                        - Acknowledge their update and offer direct help
-                        - Be specific about what aspects need more work
-                    - Keep the tone friendly and supportive
-                    - Write as if having a real conversation, not giving a status report
-                    - Avoid phrases like "it looks like" or "the user" - speak directly to them`)
-            });
-
-            await this.reply(params.userPost, {
-                ...replyResponse, 
-                artifactIds: project.props?.businessPlanId ? [project.props.businessPlanId] : undefined
-            } as RequestArtifacts);
-        }
+        // Handle the user's input using the base class method
+        await this.handleUserInput(project.id, currentTask.type, params.userPost);
     }
 }
 
