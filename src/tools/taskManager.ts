@@ -11,6 +11,7 @@ export enum RecurrencePattern {
 export interface Task {
     id: string;
     description: string;
+    type: string;
     creator: string;
     assignee?: string;
     complete?: boolean;
