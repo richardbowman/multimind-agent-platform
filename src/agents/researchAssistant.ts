@@ -188,66 +188,31 @@ Rate your confidence as:
     @HandleActivity("process-research-request", "Process research request list", ResponseType.CHANNEL)
     private async handleAssistantMessage(params: HandlerParams): Promise<void> {
         const { userPost } = params;
+        const query = userPost.message;
+        const stateId = userPost.id;
 
         try {
-            const { searchQuery, category } = await this.generateSearchQuery("Research the topic", userPost.message);
-            const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
+            // Start new research
+            const researchPlan = await this.planResearchSteps(query);
+            const newState: ResearchState = {
+                originalGoal: query,
+                currentStep: researchPlan.steps[0],
+                intermediateResults: [],
+                needsUserInput: researchPlan.requiresUserInput,
+                userQuestion: researchPlan.userQuestion
+            };
 
-            if (searchResults.length === 0) {
-                await this.reply(params.userPost, {message: "I couldn't find any relevant results for this research request." });
+            this.activeResearchStates.set(stateId, newState);
+
+            if (newState.needsUserInput) {
+                await this.reply(userPost, { message: `To help me research this better, could you please answer: ${newState.userQuestion}` });
                 return;
             }
 
-            const selectedUrls = await this.selectRelevantSearchResults(userPost.message, userPost.message, searchResults);
-            if (selectedUrls.length === 0) {
-                await this.reply(params.userPost, {message: "I found some results but none seemed relevant to the research request."});
-                return;
-            }
-
-            const pageSummaries: string[] = [];
-            for (const url of selectedUrls) {
-                try {
-                    const { content, title } = await this.scrapeHelper.scrapePage(url);
-                    const summary = await this.summaryHelper.summarizeContent(
-                        userPost.message,
-                        `Page Title: ${title}\nURL: ${url}\n\n${content}`,
-                        this.lmStudioService
-                    );
-                    if (summary !== "NOT RELEVANT") {
-                        pageSummaries.push(summary);
-                    }
-                } catch (error) {
-                    Logger.error(`Error processing page ${url}`, error);
-                }
-            }
-
-            if (pageSummaries.length > 0) {
-                const finalSummary = await this.summaryHelper.createOverallSummary(
-                    userPost.message,
-                    userPost.message,
-                    pageSummaries,
-                    this.lmStudioService
-                );
-
-                // Save the summary as an artifact
-                const artifact = await this.artifactManager.saveArtifact({
-                    id: crypto.randomUUID(),
-                    type: 'summary',
-                    content: finalSummary,
-                    metadata: {
-                        title: `Research Summary: ${userPost.message}`,
-                        query: userPost.message,
-                        type: 'research-request'
-                    }
-                });
-
-                await this.reply(params.userPost, { message: finalSummary, artifactId: artifact.id, artifactTitle: artifact.metadata?.title} as CreateArtifact);
-            } else {
-                await this.reply(params.userPost, { message: "I found some pages but couldn't extract relevant information from them."});
-            }
+            await this.executeResearchStep(newState, userPost);
         } catch (error) {
             Logger.error("Error in research request:", error);
-            await this.reply(params.userPost, { message: "Sorry, I encountered an error while processing this research request." });
+            await this.reply(userPost, { message: "Sorry, I encountered an error while processing this research request." });
         }
     }
 
