@@ -396,8 +396,35 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 await this.updateBusinessPlan(state, state.goals);
             }
 
+            const responseSchema = {
+                type: "object",
+                properties: {
+                    message: {
+                        type: "string",
+                        description: "A natural, conversational response about the goal status update"
+                    }
+                },
+                required: ["message"]
+            };
+
+            const statusResponse = await this.generate({
+                message: JSON.stringify({
+                    goal: goal.description,
+                    completed: goal.completed,
+                    notes: response.notes,
+                    previousResults: state.intermediateResults
+                }),
+                instructions: new StructuredOutputPrompt(responseSchema,
+                    `Generate a natural, conversational response about updating the goal's status.
+                    - If the goal is completed, congratulate them and ask if they want to move on to another goal or review progress
+                    - If the goal is in progress, acknowledge the update and ask if they need help moving forward
+                    - Incorporate any relevant notes naturally into the response
+                    - Keep the tone friendly and supportive
+                    - Make it feel like a natural conversation, not a status report`)
+            });
+
             await this.reply(params.userPost, {
-                message: `Updated status for goal: ${goal.description}\nStatus: ${goal.completed ? 'Completed' : 'In Progress'}\n${response.notes || ''}`,
+                message: statusResponse.message,
                 artifactId: businessPlanId
             });
         }
