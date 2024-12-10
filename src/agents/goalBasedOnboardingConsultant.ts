@@ -17,10 +17,11 @@ export interface OnboardingGoal {
     subgoals?: OnboardingGoal[];
 }
 
-export interface OnboardingState extends AgentState {
-    goals: OnboardingGoal[];
-    currentGoalId?: string;
-    businessPlanId?: string;
+export interface OnboardingGoal {
+    id: string;
+    description: string;
+    completed: boolean;
+    subgoals?: OnboardingGoal[];
 }
 
 export interface OnboardingProject extends Project<Task> {
@@ -120,16 +121,15 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
     @HandleActivity("start-goal-planning", "Begin the goal planning process", ResponseType.CHANNEL)
     private async handleStartGoalPlanning(params: HandlerParams): Promise<void> {
-        const stateId = params.userPost.id;
-        const newState: OnboardingState = {
-            originalGoal: "Understand the user's business and their desired business plan so we can develop an automation plan using our agents.",
-            currentStep: "analyze_goals",
-            intermediateResults: [],
-            goals: []
-        };
+        const { projectId } = await this.addNewProject({
+            projectName: "Business Goals Analysis",
+            tasks: [{
+                description: "Understand the user's business and their desired business plan",
+                type: "analyze_goals"
+            }]
+        });
 
-        this.activeStates.set(stateId, newState);
-        await this.executeStep(newState, params.userPost);
+        await this.executeStep(projectId, "analyze_goals", params.userPost);
     }
 
     private async updateBusinessPlan(state: OnboardingState, goals: OnboardingGoal[]): Promise<string> {
@@ -198,7 +198,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         return artifactId;
     }
 
-    private async executeAnalyzeGoals(goal: string, step: string, state: OnboardingState): Promise<StepResult> {
+    private async executeAnalyzeGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
         const schema = {
             type: "object",
             properties: {
@@ -341,8 +341,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
     @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
     private async handleGoalUpdate(params: HandlerParams): Promise<void> {
-        const state = this.activeStates.get(params.rootPost.id) as OnboardingState;
-        if (!state) {
+        const project = params.projects?.[0];
+        if (!project) {
             await this.reply(params.userPost, { 
                 message: "No active goal planning session found. Please start a new session." 
             });
