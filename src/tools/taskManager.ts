@@ -46,5 +46,6 @@ export interface TaskManager extends EventEmitter {
     getNextTaskForUser(userId: string): Promise<Task | null>;
     getProjects(): Project<Task>[];
     getNextTask(projectId: string): Task | null;
+    getAllTasks(projectId: string): Task[];
     markTaskInProgress(task: Task | string): Promise<Task>;
 }

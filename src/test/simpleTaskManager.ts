@@ -223,6 +223,17 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         return availableTasks[0] || null;
     }
 
+    getAllTasks(projectId: string): Task[] {
+        const project = this.projects[projectId];
+        if (!project) {
+            return [];
+        }
+
+        // Get all tasks and sort by order
+        return Object.values(project.tasks || {})
+            .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
+    }
+
     // Method to handle recurring tasks
     async scheduleRecurringTask(taskId: string, nextRunDate?: Date): Promise<void> {
         let taskFound = false;
