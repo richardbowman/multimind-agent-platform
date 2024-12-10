@@ -47,8 +47,11 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     async function loadMessagesForThread(threadId: string | null) {
         chatBox.setContent("");
         const posts = storage.posts.filter(post => post.channel_id === currentChannelId && (post.getRootId() === threadId || post.id === threadId || (threadId === null && !post.getRootId())));
+        
+        // Get only the last 20 messages
+        const recentPosts = posts.slice(-20);
 
-        for (const post of posts) {
+        for (const post of recentPosts) {
             const handleName = storage.getHandleNameForUserId(post.user_id);
             const displayName = handleName ? `{bold}{red-fg}${handleName}{/red-fg}{/bold}` : `{bold}{red-fg}${post.user_id}{/red-fg}{/bold}`;
 
