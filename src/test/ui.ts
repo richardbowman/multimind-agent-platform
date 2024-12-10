@@ -18,8 +18,8 @@ const logoTemplate = `_   _ _____ _____ _  __
 | |\\  |_| || |____| . \\ 
 |_| \\_|___|\\_____||_|\\_\\`;
 
-// Colors for animation - rainbow order
-const logoColors = ['red', 'orange', 'yellow', 'green', 'blue', 'indigo', 'violet'];
+// Colors for animation - rainbow order in hex
+const logoColors = ['#FF0000', '#FF7F00', '#FFFF00', '#00FF00', '#0000FF', '#4B0082', '#9400D3'];
 
 // Generate frames by wrapping the template in each color
 const logoFrames = logoColors.map(color => 
