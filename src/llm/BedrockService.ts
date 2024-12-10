@@ -13,7 +13,7 @@ export class BedrockService implements ILLMService {
     private embeddingModel?: IEmbeddingFunction;
     private lmStudioService?: LMStudioService;
 
-    constructor(modelId: string = "anthropic.claude-3-5-haiku-20241022-v1:0", lmStudioService?: LMStudioService) {
+    constructor(modelId: string, lmStudioService?: LMStudioService) {
         this.client = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
         this.modelId = modelId;
         this.lmStudioService = lmStudioService;
