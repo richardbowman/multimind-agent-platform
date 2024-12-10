@@ -1,7 +1,7 @@
 import { StepBasedAgent } from './stepBasedAgent';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
-import { ChatClient } from '../chat/chatClient';
-import LMStudioService from '../llm/lmstudioService';
+import { ChatClient, ChatPost } from '../chat/chatClient';
+import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
 import { TaskManager } from '../tools/taskManager';
 import { Project, Task } from '../tools/taskManager';
 import { WebSearchExecutor, ExistingKnowledgeExecutor } from './research/executors';
@@ -9,7 +9,9 @@ import SearchHelper from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
 import SummaryHelper from '../helpers/summaryHelper';
 import Logger from '../helpers/logger';
-import { WEB_RESEARCH_CHANNEL_ID } from '../helpers/config';
+import { CHROMA_COLLECTION, MAX_SEARCHES, RESEARCHER_TOKEN, WEB_RESEARCH_CHANNEL_ID } from '../helpers/config';
+import { Artifact } from 'src/tools/artifact';
+import { ModelResponse, RequestArtifacts, CreateArtifact } from './schemas/ModelResponse';
 
 
 interface ResearchPlan extends ModelResponse {
@@ -61,6 +63,10 @@ export interface ResearchProject extends Project<ResearchTask> {
 }
 
 class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
+    private searchHelper = new SearchHelper();
+    private scrapeHelper = new ScrapeHelper();
+    private summaryHelper = new SummaryHelper();
+
     constructor(
         userToken: string, 
         userId: string, 
@@ -70,15 +76,11 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
     ) {
         super(chatClient, lmStudioService, userId, projects);
 
-        const searchHelper = new SearchHelper();
-        const scrapeHelper = new ScrapeHelper();
-        const summaryHelper = new SummaryHelper();
-
         // Register step executors
         this.registerStepExecutor('web_search', new WebSearchExecutor(
-            searchHelper,
-            scrapeHelper,
-            summaryHelper,
+            this.searchHelper,
+            this.scrapeHelper,
+            this.summaryHelper,
             lmStudioService,
             this.artifactManager
         ));
