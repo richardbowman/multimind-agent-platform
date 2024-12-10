@@ -802,6 +802,14 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 
     private async executeResearchStep(state: ResearchState, userPost: ChatPost): Promise<void> {
         try {
+            // If we were waiting for user input and got it
+            if (state.needsUserInput) {
+                state.needsUserInput = false;
+                // Re-plan research with the new input
+                const newPlan = await this.planResearchSteps(state.originalGoal + "\n\nUser clarification: " + userPost.message);
+                state.currentStep = newPlan.steps[0];
+            }
+
             let stepResult;
             
             // Handle special knowledge-base steps
