@@ -10,29 +10,21 @@ export const screen = blessed.screen({
     title: 'Chat Client'
 });
 
-// Animation frames for the logo
-const logoFrames = [
-    `{green-fg}_   _ _____ _____ _  __
+// Logo template
+const logoTemplate = `_   _ _____ _____ _  __
 | \\ | |_   _/ ____| |/ /
 |  \\| | | || |    | ' / 
 | . \` | | || |    |  <  
 | |\\  |_| || |____| . \\ 
-|_| \\_|___|\\_____||_|\\_\\{/green-fg}`,
+|_| \\_|___|\\_____||_|\\_\\`;
 
-    `{blue-fg}_   _ _____ _____ _  __
-| \\ | |_   _/ ____| |/ /
-|  \\| | | || |    | ' / 
-| . \` | | || |    |  <  
-| |\\  |_| || |____| . \\ 
-|_| \\_|___|\\_____||_|\\_\\{/blue-fg}`,
+// Colors for animation
+const logoColors = ['green', 'blue', 'cyan'];
 
-    `{cyan-fg}_   _ _____ _____ _  __
-| \\ | |_   _/ ____| |/ /
-|  \\| | | || |    | ' / 
-| . \` | | || |    |  <  
-| |\\  |_| || |____| . \\ 
-|_| \\_|___|\\_____||_|\\_\\{/cyan-fg}`
-];
+// Generate frames by wrapping the template in each color
+const logoFrames = logoColors.map(color => 
+    `{${color}-fg}${logoTemplate}{/${color}-fg}`
+);
 
 // Create splash screen box
 export const splashBox = blessed.box({
