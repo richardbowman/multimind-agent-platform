@@ -416,10 +416,11 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                     - Make it feel like a natural conversation, not a status report`)
             });
 
-            await this.reply(params.userPost, {
+            const response: RequestArtifacts = {
                 message: statusResponse.message,
-                artifactId: project.props?.businessPlanId
-            });
+                artifactIds: project.props?.businessPlanId ? [project.props.businessPlanId] : undefined
+            };
+            await this.reply(params.userPost, response);
         }
     }
 }
