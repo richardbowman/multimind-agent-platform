@@ -406,7 +406,11 @@ export abstract class Agent<Project, Task> {
 
     private async getArtifactList(): Promise<string> {
         const artifacts = await this.artifactManager.listArtifacts();
-        const filteredArtifacts = artifacts.filter(a => a.metadata?.title?.length > 0 && !a.id.includes('memory'))
+        const filteredArtifacts = artifacts.filter(a => 
+            a.metadata?.title?.length > 0 && 
+            !a.id.includes('memory') &&
+            a.type !== 'webpage'
+        )
         return filteredArtifacts.map(artifact => ` - ${artifact.id}: ${artifact.metadata?.title}`).join('\n');
     }
 
