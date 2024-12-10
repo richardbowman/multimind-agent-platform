@@ -170,11 +170,15 @@ export abstract class Agent<Project, Task> {
 
     protected async reply(post: ChatPost, response: ModelResponse, postProps?: ConversationContext): Promise<ChatPost> {
         const artifactIds = [...postProps?.["artifact-ids"] || [], ...response.artifactIds || [], ...response.artifactId?[response.artifactId]:[]];
-
-        const reply = await this.chatClient.replyThreaded(post, response.message, {
+        
+        // Include project ID in props if present in response
+        const responseProps = {
             ...postProps,
-            "artifact-ids": artifactIds
-        });
+            "artifact-ids": artifactIds,
+            ...(response.projectId && { "project-id": response.projectId })
+        };
+
+        const reply = await this.chatClient.replyThreaded(post, response.message, responseProps);
 
 
         if (this.isMemoryEnabled) {
