@@ -352,7 +352,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
         const response = await this.generate({
             message: JSON.stringify({
-                currentGoals: state.goals,
+                currentGoals: project.goals,
                 userUpdate: params.userPost.message
             }),
             instructions: new StructuredOutputPrompt(schema,
@@ -361,8 +361,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 The user's update message is in userUpdate.`)
         });
 
-        // Update goal status in both state and task manager
-        const goal = state.goals.find(g => g.id === response.goalId);
+        // Update goal status in project and task manager
+        const goal = project.goals.find(g => g.id === response.goalId);
         if (goal) {
             goal.completed = response.completed;
             
@@ -382,9 +382,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             }
 
             // Update the business plan with progress
-            const businessPlanId = this.businessPlanId || state?.businessPlanId;
-            if (businessPlanId) {
-                await this.updateBusinessPlan(state, state.goals);
+            if (this.businessPlanId) {
+                await this.updateBusinessPlan(project, project.goals);
             }
 
             const responseSchema = {
@@ -403,7 +402,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                     goal: goal.description,
                     completed: goal.completed,
                     notes: response.notes,
-                    previousResults: state.intermediateResults
+                    projectId: project.id
                 }),
                 instructions: new StructuredOutputPrompt(responseSchema,
                     `Generate a natural, conversational response about updating the goal's status.
