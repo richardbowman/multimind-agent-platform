@@ -188,7 +188,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
 
         return {
             type: 'goals_analysis',
-            goals: project.goals
+            goals: project.goals,
+            projectId: project.id
         };
     }
 
