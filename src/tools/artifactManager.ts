@@ -137,6 +137,40 @@ export class ArtifactManager {
     return artifacts;
   }
 
+  async deleteArtifact(artifactId: string): Promise<void> {
+    // Load current metadata
+    const metadata = await this.loadArtifactMetadata();
+    
+    // Check if artifact exists
+    if (!metadata[artifactId]) {
+      throw new Error(`Artifact ${artifactId} not found`);
+    }
+
+    try {
+      // Get the artifact directory path
+      const artifactDir = path.join(this.storageDir, artifactId);
+
+      // Delete all files in the artifact directory
+      await fs.rm(artifactDir, { recursive: true, force: true });
+
+      // Remove from metadata
+      delete metadata[artifactId];
+      await this.saveArtifactMetadata(metadata);
+
+      // Remove from Chroma if it exists
+      if (this.chromaService.collection) {
+        await this.chromaService.collection.delete({
+          ids: [artifactId]
+        });
+      }
+
+      Logger.info(`Successfully deleted artifact: ${artifactId}`);
+    } catch (error) {
+      Logger.error('Error deleting artifact:', error);
+      throw new Error(`Failed to delete artifact ${artifactId}: ${error.message}`);
+    }
+  }
+
   async indexArtifacts(reindex: boolean = false): Promise<void> {
     const artifacts = await this.listArtifacts();
     Logger.info(`Indexing ${artifacts.length} artifacts`);
