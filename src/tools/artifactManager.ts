@@ -148,8 +148,9 @@ export class ArtifactManager {
       await this.chromaService.handleContentChunks(
         artifact.content.toString(),
         artifact.metadata?.url || '',
-        'summary',
-        artifact.id,
+        artifact.metadata?.task || 'summary',
+        artifact.metadata?.projectId || artifact.id,
+        artifact.metadata?.title || artifact.type,
         artifact.type
       );
     }
