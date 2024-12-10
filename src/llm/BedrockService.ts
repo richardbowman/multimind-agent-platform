@@ -241,8 +241,10 @@ export class BedrockService implements ILLMService {
             modelId: this.modelId,
             body: JSON.stringify({
                 anthropic_version: "bedrock-2023-05-31",
-                prompt: `\n\nHuman: ${text}\n\nAssistant: `,
-                max_tokens_to_sample: 1  // We don't need any tokens generated
+                messages: [
+                    { role: "user", content: text }
+                ],
+                max_tokens: 1  // We don't need any tokens generated
             })
         });
 
