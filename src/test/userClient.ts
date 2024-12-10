@@ -137,7 +137,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         }
     });
 
-    // Handle input changes for command autocomplete
+    // Handle input changes for command and user handle autocomplete
     inputBox.on('keypress', (ch, key) => {
         if (ch === '/') {
             const filtered = COMMANDS;
@@ -150,16 +150,41 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 commandList.hide();
                 screen.render();
             }
+        } else if (ch === '@') {
+            // Get all user handles
+            const handles = Object.entries(storage.userIdToHandleName).map(([userId, handle]) => ({
+                userId,
+                handle
+            }));
+            
+            if (handles.length > 0) {
+                commandList.setItems(handles.map(user => `@${user.handle}`));
+                commandList.show();
+                screen.render();
+            } else {
+                commandList.hide();
+                screen.render();
+            }
         } else {
             commandList.hide();
             screen.render();
         }
     });
 
-    // Handle command selection
+    // Handle command and user handle selection
     commandList.on('select', (item) => {
-        const command = item.content.split(' - ')[0];
-        inputBox.setValue(command + ' ');
+        const content = item.content;
+        if (content.startsWith('@')) {
+            // For user handles, insert at cursor position
+            const currentValue = inputBox.getValue();
+            const cursorPos = inputBox.getValue().length; // Get cursor position
+            const newValue = currentValue.slice(0, cursorPos - 1) + content + ' ' + currentValue.slice(cursorPos);
+            inputBox.setValue(newValue);
+        } else {
+            // For commands, replace entire input
+            const command = content.split(' - ')[0];
+            inputBox.setValue(command + ' ');
+        }
         commandList.hide();
         inputBox.focus();
         screen.render();
