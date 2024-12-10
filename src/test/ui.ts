@@ -143,8 +143,6 @@ export const inputBox = blessed.textarea({
     keys: true,
     mouse: true,
     inputOnFocus: true,
-    keys: true,
-    mouse: true,
     vi: true, // Enable vi-style keybindings
     cursorKeys: true, // Enable cursor key movement
     border: {
