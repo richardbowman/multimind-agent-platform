@@ -134,14 +134,15 @@ export const chatBox = blessed.log({
 
 tab1Box.append(chatBox);
 
-// Create a box to enter messages.
-export const inputBox = blessed.textbox({
-    top: '100%-3',
+// Create a textarea to enter messages.
+export const inputBox = blessed.textarea({
+    top: '100%-5',
     left: 0,
     width: '100%',
-    height: 3,
+    height: 5,
     keys: true,
     mouse: true,
+    inputOnFocus: true,
     border: {
         type: 'line',
         fg: 'red'
