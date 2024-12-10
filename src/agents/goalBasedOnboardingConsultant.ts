@@ -149,11 +149,15 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             required: ["goals"]
         };
 
+        const userInput = state.intermediateResults.length > 0 
+            ? state.intermediateResults.map(r => r.type === 'user_input' ? r.answer : '').join('\n')
+            : goal;
+
         const response = await this.generate({
-            message: state.intermediateResults.map(r => r.type === 'user_input' ? r.answer : goal).join('\n'),
+            message: userInput,
             instructions: new StructuredOutputPrompt(schema, 
-                `Analyze the user's input and identify distinct business goals.
-                Break down complex goals into smaller, manageable objectives.`)
+                `Analyze this business goal and break it down into distinct, manageable objectives.
+                For each objective, generate a unique ID and mark it as not completed.`)
         });
 
         return {
