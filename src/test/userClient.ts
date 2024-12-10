@@ -137,27 +137,51 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
     // Handle input changes for command and user handle autocomplete
     inputBox.on('keypress', (ch, key) => {
-        if (ch === '/') {
-            const filtered = COMMANDS;
+        const currentInput = inputBox.getValue();
+        
+        if (currentInput.startsWith('/')) {
+            // Filter commands based on current input
+            const filtered = COMMANDS.filter(cmd => 
+                cmd.command.toLowerCase().startsWith(currentInput.toLowerCase()));
             
             if (filtered.length > 0) {
                 commandList.setItems(filtered.map(cmd => `${cmd.command} - ${cmd.description}`));
                 commandList.show();
+                
+                // If Enter is pressed, autocomplete with the first match
+                if (key && key.name === 'enter' && filtered.length > 0) {
+                    inputBox.setValue(filtered[0].command + ' ');
+                    commandList.hide();
+                }
                 screen.render();
             } else {
                 commandList.hide();
                 screen.render();
             }
-        } else if (ch === '@') {
+        } else if (currentInput.includes('@')) {
+            // Get the partial handle after the @ symbol
+            const parts = currentInput.split('@');
+            const partial = parts[parts.length - 1].toLowerCase();
+            
             // Get all user handles
-            const handles = Object.entries(storage.userIdToHandleName).map(([userId, handle]) => ({
-                userId,
-                handle
-            }));
+            const handles = Object.entries(storage.userIdToHandleName)
+                .map(([userId, handle]) => ({
+                    userId,
+                    handle
+                }))
+                .filter(user => user.handle.toLowerCase().includes(partial));
             
             if (handles.length > 0) {
                 commandList.setItems(handles.map(user => user.handle));
                 commandList.show();
+                
+                // If Enter is pressed, autocomplete with the first match
+                if (key && key.name === 'enter' && handles.length > 0) {
+                    // Replace the partial handle with the complete one
+                    const beforeHandle = currentInput.substring(0, currentInput.lastIndexOf('@'));
+                    inputBox.setValue(beforeHandle + '@' + handles[0].handle + ' ');
+                    commandList.hide();
+                }
                 screen.render();
             } else {
                 commandList.hide();
