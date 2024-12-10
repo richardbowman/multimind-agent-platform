@@ -119,7 +119,7 @@ Otherwise, plan concrete steps to help achieve the goal.`;
     private async handleStartGoalPlanning(params: HandlerParams): Promise<void> {
         const stateId = params.userPost.id;
         const newState: OnboardingState = {
-            originalGoal: "Create a comprehensive business goals plan",
+            originalGoal: "Understand the user's business and their desired business plan so we can develop an automation plan using our agents.",
             currentStep: "analyze_goals",
             intermediateResults: [],
             goals: []
@@ -165,6 +165,8 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             goals: []
         };
 
+        await this.projects.addProject(project);
+
         // Convert goals to tasks
         for (const goalData of response.goals) {
             const task: Task = {
@@ -182,7 +184,6 @@ Otherwise, plan concrete steps to help achieve the goal.`;
             });
         }
 
-        await this.projects.addProject(project);
         state.goals = project.goals;
 
         return {
