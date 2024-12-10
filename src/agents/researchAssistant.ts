@@ -830,7 +830,7 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
                     metadata: {
                         title: `Research Summary: ${state.originalGoal}`,
                         query: state.originalGoal,
-                        type: 'multi-step-research',
+                        type: 'summary',
                         steps: state.intermediateResults
                     }
                 });
