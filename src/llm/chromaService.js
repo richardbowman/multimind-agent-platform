@@ -142,7 +142,7 @@ var ChromaDBService = /** @class */ (function () {
         return hash.digest('hex');
     };
     ChromaDBService.prototype.handleContentChunks = function (content_1, url_1, task_1, projectId_1, title_1) {
-        return __awaiter(this, arguments, void 0, function (content, url, task, projectId, title, type) {
+        return __awaiter(this, arguments, void 0, function (content, url, task, projectId, title, type, artifactId) {
             var splitter, docId, chunks, addCollection;
             var _this = this;
             if (type === void 0) { type = 'content'; }
@@ -179,7 +179,8 @@ var ChromaDBService = /** @class */ (function () {
                                     title: title,
                                     docId: docId,
                                     chunkId: index + 1,
-                                    chunkTotal: chunks.length
+                                    chunkTotal: chunks.length,
+                                    artifactId: artifactId
                                 };
                                 if (type === 'summary') {
                                     metadata.task = task;

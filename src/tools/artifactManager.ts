@@ -89,7 +89,8 @@ export class ArtifactManager {
       artifact.metadata?.task,
       artifact.metadata?.projectId,
       artifact.metadata?.title,
-      artifact.type
+      artifact.type,
+      artifact.id
     );
 
     return artifact;
@@ -151,7 +152,8 @@ export class ArtifactManager {
         artifact.metadata?.task || 'summary',
         artifact.metadata?.projectId || artifact.id,
         artifact.metadata?.title || artifact.type,
-        artifact.type
+        artifact.type,
+        artifact.id
       );
     }
     

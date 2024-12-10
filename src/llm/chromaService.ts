@@ -89,7 +89,7 @@ class ChromaDBService extends EventEmitter {
         return hash.digest('hex');
     }
 
-    async handleContentChunks(content: string, url: string, task: string, projectId: string, title: string, type = 'content') {
+    async handleContentChunks(content: string, url: string, task: string, projectId: string, title: string, type = 'content', artifactId?: string) {
         const splitter = new RecursiveCharacterTextSplitter({
             chunkSize: 2000,
             chunkOverlap: 100,
@@ -123,7 +123,8 @@ class ChromaDBService extends EventEmitter {
                 title,
                 docId,
                 chunkId: index + 1,
-                chunkTotal: chunks.length
+                chunkTotal: chunks.length,
+                artifactId
             };
 
             if (type === 'summary') {
