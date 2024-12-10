@@ -19,7 +19,7 @@ export enum ProjectManagerActivities {
     GenerateArtifact = "generate-artifact",
     // KickoffResearch = "kickoff-research-project",
     // KickoffContentDevelopment = "kickoff-content-development",
-    KickoffComplexProject = "kickoff-complex-project"
+    KickoffCombinedProject = "kickoff-complex-project"
 }
 
 export interface PlanningProject extends Project<Task> {
@@ -284,15 +284,17 @@ Respond to the user's request, explaining to them the other available options.`;
         }
     }
 
-    @HandleActivity(ProjectManagerActivities.KickoffComplexProject, "Kickoff a complex project involving both research and content development", ResponseType.RESPONSE)
+    @HandleActivity(ProjectManagerActivities.KickoffCombinedProject, "Kickoff a combined project involving both research and content development", ResponseType.RESPONSE)
     private async kickoffComplexProject(params: HandlerParams) {
         const instructions = `
-            Create a new project with multiple tasks for both research and content teams based on user's request.
+            Create a new project with multiple tasks for both research and content teams based on user's request. Make sure the tasks are
+            thoroughly described, independent, and complete.
+
             Respond in JSON format with these keys:
             - "projectName": The name of the project
             - "projectGoal": The goal of the project
-            - "researchTasks": An array of research task descriptions
-            - "contentTasks": An array of content development task descriptions that depend on the research
+            - "researchTask": What is needed from the research team
+            - "contentTask": What is needed from the content team
             - "responseMessage": A user-friendly response message to inform the user about the new project and assigned tasks
         `;
 
@@ -302,14 +304,8 @@ Respond to the user's request, explaining to them the other available options.`;
                 properties: {
                     projectName: { type: 'string' },
                     projectGoal: { type: 'string' },
-                    researchTasks: { 
-                        type: 'array',
-                        items: { type: 'string' }
-                    },
-                    contentTasks: {
-                        type: 'array',
-                        items: { type: 'string' }
-                    },
+                    researchTask: { type: 'string' },
+                    contentTask: { type: 'string' },
                     responseMessage: { type: 'string' }
                 }
             },
@@ -318,7 +314,7 @@ Respond to the user's request, explaining to them the other available options.`;
 
         try {
             const responseJSON = await this.lmStudioService.generateStructured(params.userPost, structuredPrompt, params.threadPosts);
-            const { projectName, projectGoal, researchTasks, contentTasks, responseMessage } = responseJSON;
+            const { projectName, projectGoal, researchTask, contentTask, responseMessage } = responseJSON;
 
             // Create a new project
             const projectId = randomUUID();
@@ -326,34 +322,28 @@ Respond to the user's request, explaining to them the other available options.`;
             
             // Create research tasks first
             const researchTaskIds: string[] = [];
-            for (const taskDesc of researchTasks) {
-                const taskId = randomUUID();
-                researchTaskIds.push(taskId);
-                tasks[taskId] = {
-                    id: taskId,
-                    description: taskDesc,
-                    contentBlockId: undefined,
-                    creator: this.userId,
-                    projectId: projectId,
-                    type: ResearchActivityType.WebResearch,
-                    complete: false
-                };
-            }
+            let taskId = randomUUID();
+            researchTaskIds.push(taskId);
+            tasks[taskId] = {
+                id: taskId,
+                description: `${researchTask} [${projectGoal}]`,
+                creator: this.userId,
+                projectId: projectId,
+                type: ResearchActivityType.WebResearch,
+                complete: false
+            };
 
             // Create content tasks that depend on research completion
-            for (const taskDesc of contentTasks) {
-                const taskId = randomUUID();
-                tasks[taskId] = {
-                    id: taskId,
-                    description: taskDesc,
-                    contentBlockId: undefined,
-                    creator: this.userId,
-                    projectId: projectId,
-                    type: ContentManagerActivityType.ConfirmCreateFullContent,
-                    complete: false,
-                    dependsOn: researchTaskIds[0] // Make content tasks depend on first research task
-                };
-            }
+            taskId = randomUUID();
+            tasks[taskId] = {
+                id: taskId,
+                description: `${contentTask} [${projectGoal}]`,
+                creator: this.userId,
+                projectId: projectId,
+                type: ContentManagerActivityType.ConfirmCreateFullContent,
+                complete: false,
+                dependsOn: researchTaskIds[0] // Make content tasks depend on first research task
+            };
 
             // Create and add the project
             const newProject: PlanningProject = {
@@ -379,6 +369,8 @@ Respond to the user's request, explaining to them the other available options.`;
 
             await this.reply(params.userPost, {
                 message: responseMessage
+            }, {
+                "project-id": projectId
             });
         } catch (error) {
             Logger.error('Error kicking off complex project:', error);
