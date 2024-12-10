@@ -20,6 +20,7 @@ export interface OnboardingGoal {
 export interface OnboardingState extends AgentState {
     goals: OnboardingGoal[];
     currentGoalId?: string;
+    businessPlanId?: string;
 }
 
 export interface OnboardingProject extends Project<Task> {
@@ -34,6 +35,8 @@ class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Ta
         throw new Error('Method not implemented.');
     }
     
+    private businessPlanId?: string;
+
     constructor(
         userId: string,
         messagingHandle: string,
@@ -129,6 +132,53 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         await this.executeStep(newState, params.userPost);
     }
 
+    private async updateBusinessPlan(state: OnboardingState, goals: OnboardingGoal[]): Promise<string> {
+        const schema = {
+            type: "object",
+            properties: {
+                content: {
+                    type: "string",
+                    description: "The business plan content in markdown format"
+                },
+                title: {
+                    type: "string",
+                    description: "A title for the business plan"
+                }
+            },
+            required: ["content", "title"]
+        };
+
+        const response = await this.generate({
+            message: JSON.stringify({
+                goals: goals,
+                previousResults: state.intermediateResults
+            }),
+            instructions: new StructuredOutputPrompt(schema,
+                `Create or update a business plan based on the goals and any previous results.
+                Include sections for:
+                - Executive Summary
+                - Goals and Objectives
+                - Implementation Strategy
+                - Progress Tracking
+                
+                Format the content in markdown.`)
+        });
+
+        // Create or update the business plan artifact
+        const artifactId = state.businessPlanId || crypto.randomUUID();
+        await this.artifactManager.saveArtifact({
+            id: artifactId,
+            type: 'business-plan',
+            content: response.content,
+            metadata: {
+                title: response.title,
+                lastUpdated: new Date().toISOString()
+            }
+        });
+
+        return artifactId;
+    }
+
     private async executeAnalyzeGoals(goal: string, step: string, state: OnboardingState): Promise<StepResult> {
         const schema = {
             type: "object",
@@ -185,11 +235,17 @@ Otherwise, plan concrete steps to help achieve the goal.`;
         }
 
         state.goals = project.goals;
+        
+        // Create/update the business plan
+        const businessPlanId = await this.updateBusinessPlan(state, project.goals);
+        state.businessPlanId = businessPlanId;
+        this.businessPlanId = businessPlanId;
 
         return {
             type: 'goals_analysis',
             goals: project.goals,
-            projectId: project.id
+            projectId: project.id,
+            artifactId: businessPlanId
         };
     }
 
@@ -315,8 +371,15 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 }
             }
 
+            // Update the business plan with progress
+            const businessPlanId = this.businessPlanId || state?.businessPlanId;
+            if (businessPlanId) {
+                await this.updateBusinessPlan(state, state.goals);
+            }
+
             await this.reply(params.userPost, {
-                message: `Updated status for goal: ${goal.description}\nStatus: ${goal.completed ? 'Completed' : 'In Progress'}\n${response.notes || ''}`
+                message: `Updated status for goal: ${goal.description}\nStatus: ${goal.completed ? 'Completed' : 'In Progress'}\n${response.notes || ''}`,
+                artifactId: businessPlanId
             });
         }
     }
