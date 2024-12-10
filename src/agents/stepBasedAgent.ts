@@ -34,14 +34,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         this.stepExecutors.set(stepType, executor);
     }
 
-    protected async planSteps(projectId: string, latestGoal: string): Promise<{
-        steps: {
-            type: string;
-            description?: string;
-        }[];
-        requiresUserInput: boolean;
-        userQuestion?: string;
-    }>;
+    protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse>;
 
     protected async executeNextStep(projectId: string, userPost: ChatPost): Promise<void> {
         const task = this.projects.getNextTask(projectId);

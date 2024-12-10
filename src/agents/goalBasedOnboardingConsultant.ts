@@ -12,6 +12,21 @@ import crypto from 'crypto';
 import { Artifact } from 'src/tools/artifact';
 import { RequestArtifacts } from './schemas/ModelResponse';
 
+export interface PlanStepsResponse {
+    steps: {
+        type: string;
+        description?: string;
+    }[];
+    requiresUserInput: boolean;
+    userQuestion?: string;
+    existingArtifacts?: {
+        id: string;
+        content: string;
+        title: string;
+        underlyingData: string;
+    }[];
+}
+
 export interface OnboardingProject extends Project<Task> {
     businessDescription?: string;
     businessGoals?: string[];
