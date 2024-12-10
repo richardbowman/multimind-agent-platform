@@ -275,7 +275,7 @@ ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}
     // returns summary
     private async getScrapedUrls(): Promise<Set<string>> {
         const artifacts = await this.artifactManager.getArtifacts({ type: 'webpage' });
-        return new Set(artifacts.map(a => a.metadata.url));
+        return new Set(artifacts.map(a => a.metadata?.url));
     }
 
     private async processPage(projectId: string, taskId: string, task: string, goal: string, searchUrl: string, pageSummaries: any[], visitedUrls: string[]) : Promise<string> {
@@ -338,7 +338,7 @@ ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}
         }
     
         // Save summary(s)
-        const results = await this.searchDoc(searchUrl, task, 10);
+        const results = await this.searchDoc(searchUrl, task, 15);
         if (results.documents.length > 0) {
             const contentWithMetadata = `Page Title: ${title}\nURL: ${searchUrl}\n\n${results.documents.join("\n\n")}`;
             const summary = await this.summaryHelper.summarizeContent(task, contentWithMetadata, this.lmStudioService);
