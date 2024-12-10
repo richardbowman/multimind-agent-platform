@@ -131,7 +131,7 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
         const pageSummaries = artifact.metadata?.steps || [];
 
         // Plan research for the follow-up
-        const researchPlan = await this.planResearchSteps(question);
+        const researchPlan = await this.planSteps(question);
         
         // Create a research state for the follow-up
         const stateId = userPost.id;
@@ -149,7 +149,7 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
             }]
         };
 
-        this.activeResearchStates.set(stateId, newState);
+        this.activeStates.set(stateId, newState);
 
         try {
             await this.executeResearchStep(newState, userPost);
@@ -158,46 +158,6 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
             await this.reply(userPost, { message: "Sorry, I encountered an error while processing your follow-up question." });
         }
     }
-
-    // @HandleActivity("quick-search", "Perform a quick web search and return results", ResponseType.RESPONSE) 
-    // private async handleQuickSearch(params: HandlerParams): Promise<void> {
-    //     const { userPost } = params;
-    //     const query = userPost.message;
-    //     const stateId = userPost.id;
-
-    //     // Check if this is a response to a previous question
-    //     const existingState = this.activeResearchStates.get(userPost.getRootId() || '');
-    //     if (existingState && existingState.needsUserInput) {
-    //         // Continue with existing research using the user's input
-    //         existingState.needsUserInput = false;
-    //         await this.continueResearch(existingState, userPost);
-    //         return;
-    //     }
-
-    //     try {
-    //         // Start new research
-    //         const researchPlan = await this.planResearchSteps(query);
-    //         const newState: ResearchState = {
-    //             originalGoal: query,
-    //             currentStep: researchPlan.steps[0],
-    //             intermediateResults: [],
-    //             needsUserInput: researchPlan.requiresUserInput,
-    //             userQuestion: researchPlan.userQuestion
-    //         };
-
-    //         this.activeResearchStates.set(stateId, newState);
-
-    //         if (newState.needsUserInput) {
-    //             await this.reply(userPost, { message: `To help me research this better, could you please answer: ${newState.userQuestion}` });
-    //             return;
-    //         }
-
-    //         await this.executeResearchStep(newState, userPost);
-    //     } catch (error) {
-    //         Logger.error("Error in quick search:", error);
-    //         await this.reply(userPost, { message: "Sorry, I encountered an error while searching."});
-    //     }
-    // }
 
     @HandleActivity("process-research-request", "Process research request list", ResponseType.CHANNEL)
     private async handleAssistantMessage(params: HandlerParams): Promise<void> {
