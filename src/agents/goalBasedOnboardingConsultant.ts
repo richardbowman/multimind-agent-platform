@@ -268,10 +268,26 @@ Otherwise, plan concrete steps to help achieve the goal.`;
                 The user's update message is in userUpdate.`)
         });
 
-        // Update goal status
+        // Update goal status in both state and task manager
         const goal = state.goals.find(g => g.id === response.goalId);
         if (goal) {
             goal.completed = response.completed;
+            
+            // Get all projects and find the one containing our goals
+            const projects = this.projects.getProjects();
+            const project = projects.find(p => 'goals' in p && (p as OnboardingProject).goals.some(g => g.id === goal.id));
+            
+            if (project) {
+                const task = project.tasks[goal.id];
+                if (task) {
+                    if (response.completed) {
+                        await this.projects.completeTask(task.id);
+                    } else {
+                        await this.projects.markTaskInProgress(task);
+                    }
+                }
+            }
+
             await this.reply(params.userPost, {
                 message: `Updated status for goal: ${goal.description}\nStatus: ${goal.completed ? 'Completed' : 'In Progress'}\n${response.notes || ''}`
             });
