@@ -4,13 +4,37 @@ import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
 import blessed from 'blessed';
-import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box, taskDetailViewer } from "./ui";
+import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box, taskDetailViewer, screen } from "./ui";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { screen } from './ui'
 import { Task, TaskManager } from "src/tools/taskManager";
 import { Artifact } from "src/tools/artifact";
 
+// Available commands for autocomplete
+const COMMANDS = [
+    { command: '/artifacts', description: 'List artifacts in current thread' },
+    { command: '/tasks', description: 'List tasks in current thread' },
+    { command: '/retry', description: 'Retry last message' },
+    { command: '/channel', description: 'Send message to channel root' }
+];
+
 export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager, taskManager: TaskManager) {
+    // Create command popup list
+    const commandList = blessed.list({
+        parent: screen,
+        width: '30%',
+        height: 'shrink',
+        left: inputBox.left,
+        bottom: inputBox.height + 1,
+        border: 'line',
+        style: {
+            selected: {
+                bg: 'blue',
+                fg: 'white'
+            }
+        },
+        hidden: true
+    });
     const USER_ID = "test";
     const UserClient = new InMemoryTestClient(USER_ID, "test", storage);
     let tasks: Task[] = [];
@@ -111,6 +135,38 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             await loadMessagesForThread(currentThreadId);
             await loadTasksAndArtifacts();
         }
+    });
+
+    // Handle input changes for command autocomplete
+    inputBox.on('keypress', (ch, key) => {
+        const value = inputBox.getValue();
+        
+        if (value.startsWith('/')) {
+            const filtered = COMMANDS.filter(cmd => 
+                cmd.command.toLowerCase().startsWith(value.toLowerCase())
+            );
+            
+            if (filtered.length > 0) {
+                commandList.setItems(filtered.map(cmd => `${cmd.command} - ${cmd.description}`));
+                commandList.show();
+                screen.render();
+            } else {
+                commandList.hide();
+                screen.render();
+            }
+        } else {
+            commandList.hide();
+            screen.render();
+        }
+    });
+
+    // Handle command selection
+    commandList.on('select', (item) => {
+        const command = item.content.split(' - ')[0];
+        inputBox.setValue(command + ' ');
+        commandList.hide();
+        inputBox.focus();
+        screen.render();
     });
 
     inputBox.key(['C-s'], async (ch, key) => {
