@@ -506,9 +506,18 @@ export abstract class Agent<Project, Task> {
         // Get thread summary if there's history
         const threadContext = history ? await this.getThreadSummary(history) : undefined;
 
+        // Format project tasks as markdown
+        const projectTasksMarkdown = params?.projects?.map(project => {
+            const tasks = Object.values(project.tasks);
+            return `
+### Project: ${project.name} (${project.id})
+${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.inProgress ? ' (In Progress)' : ''}`).join('\n')}`;
+        }).join('\n') || '';
+
         let prompt = `Follow these steps:
             1. Consider the ${channelType === ResponseType.RESPONSE ? `thread response` : `new channel message`} you've received.
                ${threadContext ? `\nThread Context:\n${threadContext}` : ''}
+               ${projectTasksMarkdown ? `\nCurrent Project Tasks:\n${projectTasksMarkdown}` : ''}
             2. Generate a specific query that should be used to retrieve relevant information for this request.
             3. Here are the possible follow-up activity types to consider:
                     ${availableActions.map(a => ` - ${a.activityType}: ${a.usage}`).join('\n')}
