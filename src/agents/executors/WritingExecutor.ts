@@ -3,13 +3,18 @@ import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { TaskManager } from 'src/tools/taskManager';
+import { CONTENT_WRITER_USER_ID } from 'src/helpers/config';
+import Logger from 'src/helpers/logger';
 
-@StepExecutorDecorator('writing', 'Write content sections based on outline and research')
+@StepExecutorDecorator('writing', 'Assign content writing tasks to content writer')
 export class WritingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    private taskManager: TaskManager;
 
     constructor(llmService: LMStudioService) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
+        this.taskManager = new TaskManager();
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
@@ -21,15 +26,19 @@ export class WritingExecutor implements StepExecutor {
                     items: {
                         type: "object",
                         properties: {
-                            heading: { type: "string" },
-                            content: { type: "string" },
-                            citations: {
+                            title: { type: "string" },
+                            description: { type: "string" },
+                            keyPoints: {
                                 type: "array",
-                                items: {
+                                items: { type: "string" }
+                            },
+                            researchFindings: {
+                                type: "array",
+                                items: { 
                                     type: "object",
                                     properties: {
-                                        source: { type: "string" },
-                                        reference: { type: "string" }
+                                        finding: { type: "string" },
+                                        source: { type: "string" }
                                     }
                                 }
                             }
@@ -40,11 +49,11 @@ export class WritingExecutor implements StepExecutor {
             required: ["sections"]
         };
 
-        const prompt = `You are a content writer.
-Given an outline and research findings, write detailed content sections.
-Each section should be well-written, engaging, and properly cited when using research.
+        const prompt = `You are planning content writing tasks.
+Break down the content into sections that can be assigned to writers.
+For each section, provide a clear title, description, key points to cover, and relevant research findings.
 
-${previousResult ? `Use these materials to inform the writing:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
+${previousResult ? `Use these materials to inform the task planning:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const result = await this.modelHelpers.generate({
@@ -52,16 +61,35 @@ ${previousResult ? `Use these materials to inform the writing:\n${JSON.stringify
             instructions
         });
 
+        // Create writing tasks for each section
+        try {
+            for (const section of result.sections) {
+                const taskId = await this.taskManager.addTask({
+                    projectId,
+                    type: 'writing',
+                    title: section.title,
+                    description: `# ${section.title}\n\n${section.description}\n\n## Key Points:\n${
+                        section.keyPoints.map(p => `- ${p}`).join('\n')
+                    }\n\n## Research Findings:\n${
+                        section.researchFindings.map(f => `- ${f.finding}\n  Source: ${f.source}`).join('\n')
+                    }`,
+                    order: result.sections.indexOf(section)
+                });
+
+                await this.taskManager.assignTaskToAgent(taskId, CONTENT_WRITER_USER_ID);
+            }
+        } catch (error) {
+            Logger.error('Error creating writing tasks:', error);
+            throw error;
+        }
+
         return {
             type: "writing",
             finished: true,
             response: {
-                message: result.sections.map(s => 
-                    `# ${s.heading}\n\n${s.content}\n\n${s.citations.length > 0 ? 
-                        '**Citations:**\n' + s.citations.map(c => 
-                            `- ${c.source}: ${c.reference}`
-                        ).join('\n') : ''}`
-                ).join('\n\n'),
+                message: `Created ${result.sections.length} writing tasks:\n\n${
+                    result.sections.map(s => `- ${s.title}`).join('\n')
+                }`,
                 data: result
             }
         };
