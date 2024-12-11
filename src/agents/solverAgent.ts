@@ -31,12 +31,20 @@ export class SolverAgent extends StepBasedAgent<any, any> {
 Break down the solution into alternating steps of deep thinking and critical refutation.
 Use 'thinking' steps for constructive reasoning and 'refuting' steps to challenge assumptions.
 
-IMPORTANT: Always follow this minimum pattern:
-1. Start with a 'thinking' step to develop initial ideas
-2. Follow with a 'refuting' step to challenge those ideas
-3. End with another 'thinking' step to synthesize and improve based on the refutation
+CRITICAL INSTRUCTION - YOU MUST FOLLOW THIS EXACT PATTERN:
+1. FIRST: A 'thinking' step to develop initial ideas and approach
+2. SECOND: A 'refuting' step to critically challenge those ideas and find weaknesses
+3. THIRD: A final 'thinking' step to synthesize improvements based on the refutation
 
-You may add more thinking and refuting steps as needed, but never fewer than these three steps.`)
+This three-step pattern is mandatory and non-negotiable. Each step must be explicitly labeled as either 'thinking' or 'refuting'.
+Do not use 'validate' or other step types in place of these required steps.
+You may add additional thinking/refuting steps after these three, but these specific three steps must always come first in this exact order.
+
+Remember:
+- First step must be 'thinking'
+- Second step must be 'refuting' 
+- Third step must be 'thinking'
+- No substitutions or alternatives allowed`)
     }
 
     public async initialize(): Promise<void> {
