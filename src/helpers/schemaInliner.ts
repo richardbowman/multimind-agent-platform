@@ -14,13 +14,13 @@ export class SchemaInliner {
         return this.inlineRefsRecursive(schema);
     }
 
-    private inlineRefsRecursive(obj: any): any {
+    private inlineRefsRecursive(obj: any, currentPath: string[] = []): any {
         if (!obj || typeof obj !== 'object') {
             return obj;
         }
 
         if (Array.isArray(obj)) {
-            return obj.map(item => this.inlineRefsRecursive(item));
+            return obj.map(item => this.inlineRefsRecursive(item, currentPath));
         }
 
         const result: any = {};
@@ -29,22 +29,22 @@ export class SchemaInliner {
             if (key === '$ref') {
                 const refPath = (value as string).split('/').pop()!;
                 
-                // Prevent circular references
-                if (this.processedRefs.has(refPath)) {
-                    throw new Error(`Circular reference detected: ${refPath}`);
+                // Check if this reference would create a cycle
+                const newPath = [...currentPath, refPath];
+                if (currentPath.includes(refPath)) {
+                    // Instead of throwing, just return a reference to avoid the cycle
+                    return { ...this.definitions[refPath] };
                 }
-                
-                this.processedRefs.add(refPath);
                 
                 if (!this.definitions[refPath]) {
                     throw new Error(`Reference not found: ${refPath}`);
                 }
 
                 // Merge the referenced definition
-                const inlinedRef = this.inlineRefsRecursive(this.definitions[refPath]);
+                const inlinedRef = this.inlineRefsRecursive(this.definitions[refPath], newPath);
                 Object.assign(result, inlinedRef);
             } else {
-                result[key] = this.inlineRefsRecursive(value);
+                result[key] = this.inlineRefsRecursive(value, currentPath);
             }
         }
 
