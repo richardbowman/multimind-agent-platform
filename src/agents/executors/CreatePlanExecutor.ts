@@ -1,12 +1,12 @@
-import { StepExecutor } from '../decorators/executorDecorator';
-import { StepResult } from '../stepBasedAgent';
-import { IExecutor } from './IExecutor';
+import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
+import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 
-export class CreatePlanExecutor implements IExecutor {
+@StepExecutorDecorator('create_plan', 'Create detailed action plans for each business goal')
+export class CreatePlanExecutor implements StepExecutor {
     constructor(
         private lmStudioService: LMStudioService,
         private taskManager: TaskManager,

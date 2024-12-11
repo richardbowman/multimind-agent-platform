@@ -1,10 +1,10 @@
-import { StepExecutor } from '../decorators/executorDecorator';
-import { StepResult } from '../stepBasedAgent';
-import { IExecutor } from './IExecutor';
+import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
+import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 
-export class UnderstandGoalsExecutor implements IExecutor {
+@StepExecutorDecorator('understand_goals', 'Generate focused questions to understand business needs and AI service fit')
+export class UnderstandGoalsExecutor implements StepExecutor {
     constructor(
         private lmStudioService: LMStudioService,
         private taskManager: TaskManager

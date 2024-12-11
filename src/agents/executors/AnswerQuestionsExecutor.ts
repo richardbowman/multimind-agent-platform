@@ -1,11 +1,11 @@
-import { StepExecutor } from '../decorators/executorDecorator';
-import { StepResult } from '../stepBasedAgent';
-import { IExecutor } from './IExecutor';
+import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
+import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 
-export class AnswerQuestionsExecutor implements IExecutor {
+@StepExecutorDecorator('answer_questions', 'Analyze and process user responses to intake questions')
+export class AnswerQuestionsExecutor implements StepExecutor {
     constructor(
         private lmStudioService: LMStudioService,
         private taskManager: TaskManager

@@ -1,14 +1,14 @@
-import { StepExecutor } from '../decorators/executorDecorator';
-import { StepResult } from '../stepBasedAgent';
-import { IExecutor } from './IExecutor';
+import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import crypto from 'crypto';
 import { Task } from '../../tools/taskManager';
+import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 
-export class AnalyzeGoalsExecutor implements IExecutor {
+@StepExecutorDecorator('analyze_goals', 'Break down and analyze business goals into actionable tasks')
+export class AnalyzeGoalsExecutor implements StepExecutor {
     constructor(
         private lmStudioService: LMStudioService,
         private taskManager: TaskManager,
