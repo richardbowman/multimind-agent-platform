@@ -11,7 +11,7 @@ export class RefutingExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const schema = {
             type: "object",
             properties: {
@@ -36,7 +36,9 @@ export class RefutingExecutor implements StepExecutor {
 
         const prompt = `You are a critical thinker tasked with finding potential flaws in an argument or conclusion.
 Consider possible counterarguments and evaluate their validity.
-Provide a balanced analysis and final verdict.`;
+Provide a balanced analysis and final verdict.
+
+${previousResult ? `Specifically analyze these previous conclusions:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const result = await this.modelHelpers.generate({

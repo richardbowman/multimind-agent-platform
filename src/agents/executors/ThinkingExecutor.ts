@@ -11,7 +11,7 @@ export class ThinkingExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const schema = {
             type: "object",
             properties: {
@@ -29,7 +29,9 @@ export class ThinkingExecutor implements StepExecutor {
 
         const prompt = `You are a careful analytical thinker.
 Given a problem, break it down into logical steps and reason through it carefully.
-Consider multiple angles and potential implications.`;
+Consider multiple angles and potential implications.
+
+${previousResult ? `Consider this previous result in your thinking:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const result = await this.modelHelpers.generate({
