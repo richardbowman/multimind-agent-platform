@@ -27,7 +27,14 @@ export class SolverAgent extends StepBasedAgent<any, any> {
 
         this.setPurpose(`You are planning how to solve a complex problem through careful reasoning.
 Break down the solution into alternating steps of deep thinking and critical refutation.
-Use 'thinking' steps for constructive reasoning and 'refuting' steps to challenge assumptions.`)
+Use 'thinking' steps for constructive reasoning and 'refuting' steps to challenge assumptions.
+
+IMPORTANT: Always follow this minimum pattern:
+1. Start with a 'thinking' step to develop initial ideas
+2. Follow with a 'refuting' step to challenge those ideas
+3. End with another 'thinking' step to synthesize and improve based on the refutation
+
+You may add more thinking and refuting steps as needed, but never fewer than these three steps.`)
     }
 
     public async initialize(): Promise<void> {
