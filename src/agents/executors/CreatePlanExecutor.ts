@@ -30,31 +30,31 @@ export class CreatePlanExecutor implements StepExecutor {
         const schema = {
             type: "object",
             properties: {
-                plans: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            goalId: { type: "string" },
-                            actionItems: {
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        description: { type: "string" },
-                                        timeline: { type: "string" },
-                                        resources: { type: "string" },
-                                        dependencies: { 
-                                            type: "array",
-                                            items: { type: "string" }
-                                        }
-                                    },
-                                    required: ["description", "timeline", "resources"]
-                                }
-                            }
+                operationalGuide: {
+                    type: "object",
+                    properties: {
+                        businessContext: { type: "string" },
+                        serviceStrategy: { type: "string" },
+                        implementationApproach: { type: "string" },
+                        keyConsiderations: {
+                            type: "array",
+                            items: { type: "string" }
                         },
-                        required: ["goalId", "actionItems"]
-                    }
+                        recommendedSteps: {
+                            type: "array",
+                            items: {
+                                type: "object",
+                                properties: {
+                                    phase: { type: "string" },
+                                    description: { type: "string" },
+                                    expectedOutcome: { type: "string" },
+                                    considerations: { type: "string" }
+                                },
+                                required: ["phase", "description", "expectedOutcome"]
+                            }
+                        }
+                    },
+                    required: ["businessContext", "serviceStrategy", "implementationApproach", "recommendedSteps"]
                 },
                 summary: { type: "string" }
             },
@@ -77,39 +77,16 @@ export class CreatePlanExecutor implements StepExecutor {
                 Use the provided answers about the business and service requirements to inform the plan.`)
         });
 
-        // Create tasks for each action item
-        for (const plan of response.plans) {
-            const parentGoal = project.tasks[plan.goalId];
-            if (!parentGoal) continue;
-
-            for (const action of plan.actionItems) {
-                await this.taskManager.addTask(project, {
-                    id: crypto.randomUUID(),
-                    type: 'action-item',
-                    description: action.description,
-                    creator: this.userId,
-                    complete: false,
-                    order: 0,
-                    metadata: {
-                        timeline: action.timeline,
-                        resources: action.resources,
-                        dependencies: action.dependencies
-                    },
-                    dependsOn: plan.goalId
-                });
-            }
-        }
-
-        // Update the business plan with the new action items
+        // Update the business plan with the operational guide
         const businessPlanId = await this.updateProjectBusinessPlan(project);
 
         return {
-            type: 'action_plans',
+            type: 'operational_guide',
             finished: true,
             needsUserInput: false,
             response: {
                 message: response.summary,
-                plans: response.plans,
+                operationalGuide: response.operationalGuide,
                 businessPlanId
             }
         };
