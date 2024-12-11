@@ -546,17 +546,24 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
     }
 
     // Convenience method to add a new project
-    public async addNewProject({ projectName, tasks }: {
-        projectName: string, tasks: {
+    public async addNewProject({ projectName, tasks, metadata }: {
+        projectName: string,
+        tasks: {
             description: string;
             type: string;
-        }[]
+        }[],
+        metadata?: ProjectMetadata
     }): Promise<{ projectId: string, taskIds: string[]}> {
         const projectId = randomUUID();
         const project = {
             id: projectId,
             name: projectName,
-            tasks: {}
+            tasks: {},
+            metadata: metadata || {
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'active'
+            }
         };
 
         await this.projects.addProject(project);
