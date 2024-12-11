@@ -63,6 +63,12 @@ export class UnderstandGoalsExecutor implements StepExecutor {
                 Keep questions focused and actionable.`)
         });
 
+        Logger.info('UnderstandGoalsExecutor response:', JSON.stringify(response, null, 2));
+
+        if (!response.intakeQuestions || !Array.isArray(response.intakeQuestions)) {
+            throw new Error(`Invalid response format. Expected array of questions but got: ${JSON.stringify(response)}`);
+        }
+
         const project = this.taskManager.getProject(projectId);
         
         // Get existing tasks and their current max order
