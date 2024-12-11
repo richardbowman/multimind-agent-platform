@@ -141,11 +141,44 @@ ${completedSteps}
 
 ${currentSteps}`
 
-
-        const response : PlanStepsResponse = await this.generate({
+        const response: PlanStepsResponse = await this.generate({
             message: latestGoal,
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
+
+        // Create a map of existing tasks by type and description for quick lookup
+        const existingTaskMap = new Map(
+            tasks.map(task => [`${task.type}-${task.description}`, task])
+        );
+
+        // Update task order and status based on response
+        response.steps.forEach((step, index) => {
+            const taskKey = `${step.type}-${step.description}`;
+            const existingTask = existingTaskMap.get(taskKey);
+
+            if (existingTask) {
+                // Update existing task
+                existingTask.order = index;
+                existingTaskMap.delete(taskKey); // Remove from map to track which tasks weren't in response
+            } else {
+                // Create new task
+                const newTask: Task = {
+                    id: crypto.randomUUID(),
+                    type: step.type,
+                    description: step.description,
+                    creator: this.userId,
+                    complete: false,
+                    order: index
+                };
+                this.projects.addTask(projectId, newTask);
+            }
+        });
+
+        // Mark any tasks not in the response as completed
+        for (const [_, task] of existingTaskMap) {
+            task.complete = true;
+            this.projects.updateTask(projectId, task);
+        }
 
         return response;
     }
