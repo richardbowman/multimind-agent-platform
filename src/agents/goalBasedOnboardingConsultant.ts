@@ -167,7 +167,7 @@ ${currentSteps}`
             if (existingTask) {
                 // Update existing task
                 existingTask.order = index;
-                existingTaskMap.delete(taskKey); // Remove from map to track which tasks weren't in response
+                existingTaskMap.delete(`${existingTask.type}-${existingTask.description}`); // Remove from map to track which tasks weren't in response
             } else {
                 // Create new task
                 const newTask: Task = {
@@ -178,13 +178,14 @@ ${currentSteps}`
                     complete: false,
                     order: index
                 };
-                this.projects.addTask(project, newTask);
+                this.projects.addTask(projectId, newTask);
             }
         });
 
         // Mark any tasks not in the response as completed
         for (const [_, task] of existingTaskMap) {
-            this.projects.completeTask(task.id);
+            task.complete = true;
+            this.projects.updateTask(projectId, task);
         }
 
         return response;
