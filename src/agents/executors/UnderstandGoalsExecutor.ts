@@ -24,13 +24,31 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
+    private formatMessage(goal: string, project: any): string {
+        let message = `${goal}\n\n`;
+
+        // Include existing Q&A if available
+        if (project.answers?.length > 0) {
+            message += "📋 Previously Gathered Information:\n";
+            project.answers.forEach((answer: any) => {
+                const question = project.tasks[answer.questionId]?.description || '';
+                message += `Q: ${question}\nA: ${answer.answer}\n\n`;
+            });
+        }
+
+        return message;
+    }
+
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
         const schema = generatedSchemaDef.IntakeQuestionsResponse;
+        const project = this.taskManager.getProject(projectId);
+        
+        const formattedMessage = this.formatMessage(goal, project);
 
         const response : IntakeQuestionsResponse = await this.modelHelpers.generate({
-            message: goal,
+            message: formattedMessage,
             instructions: new StructuredOutputPrompt(schema,
-                `Based on the user's initial business goals, generate focused questions to understand both their business needs and how our AI service fits in.
+                `Based on the user's initial business goals and any previously gathered information, generate focused questions to understand both their business needs and how our AI service fits in. Avoid asking questions that have already been answered.
                 Each question should help gather specific information about:
 
                 Business Understanding:
