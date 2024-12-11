@@ -10,6 +10,7 @@ import Logger from 'src/helpers/logger';
 import { SOLVER_CHANNEL_ID } from 'src/helpers/config';
 import ChromaDBService from 'src/llm/chromaService';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
+import { ValidationExecutor } from './executors/ValidationExecutor';
 
 export class SolverAgent extends StepBasedAgent<any, any> {
     constructor(
