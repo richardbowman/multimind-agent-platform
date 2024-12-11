@@ -63,6 +63,11 @@ export class ArtifactManager {
       Logger.error('Error creating directory:', error);
     }
 
+    // Validate content is not undefined
+    if (!artifact.content) {
+      throw new Error(`Cannot save artifact ${artifact.id}: content is undefined`);
+    }
+
     const filePath = path.join(artifactDir, `${artifact.type}_v${version}.md`);
     await fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content));
 

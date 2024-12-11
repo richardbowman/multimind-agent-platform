@@ -325,6 +325,11 @@ Consider the original goal and what we've learned so far.`;
         const finalResponse = await this.generateFinalResponse(project);
 
         const artifactId = crypto.randomUUID();
+        // Validate finalResponse before saving
+        if (!finalResponse?.message) {
+            throw new Error('Final response message is undefined');
+        }
+
         const artifact = await this.artifactManager.saveArtifact({
             id: artifactId,
             type: 'summary',
