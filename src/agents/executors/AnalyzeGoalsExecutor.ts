@@ -12,12 +12,16 @@ import { ModelHelpers } from '../../llm/helpers';
 export class AnalyzeGoalsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
+    private userId: string;
+
     constructor(
         llmService: LMStudioService,
         private taskManager: TaskManager,
-        private artifactManager: ArtifactManager
+        private artifactManager: ArtifactManager,
+        userId: string
     ) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
+        this.userId = userId;
     }
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
@@ -122,7 +126,7 @@ export class AnalyzeGoalsExecutor implements StepExecutor {
 
         let existingContent = existingPlan?.content.toString();
 
-        const response = await this.lmStudioService.generate({
+        const response = await this.modelHelpers.generate({
             message: JSON.stringify({
                 goals: Object.values(project.tasks).filter(t => t.type === 'business-goal'),
                 existingPlan: existingContent,
