@@ -3,7 +3,7 @@ import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
-import { TaskManager } from 'src/tools/taskManager';
+import { Project, Task, TaskManager } from 'src/tools/taskManager';
 import { CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID } from 'src/helpers/config';
 import Logger from 'src/helpers/logger';
 
@@ -64,9 +64,10 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
         // Create a new project and writing tasks for each section
         try {
             const newProjectId = this.taskManager.newProjectId();
-            const project = {
+            const writingProject : Project<Task> = {
                 id: newProjectId,
-                tasks: [],
+                name: `Writing project: ${goal}`,
+                tasks: {},
                 metadata: {
                     createdAt: new Date(),
                     updatedAt: new Date(),
@@ -77,10 +78,10 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
                 }
             };
             
-            await this.taskManager.addProject(project);
+            await this.taskManager.addProject(writingProject);
 
             for (const section of result.sections) {
-                const task = await this.taskManager.addTask(project, {
+                const task = await this.taskManager.addTask(writingProject, {
                     id: crypto.randomUUID(),
                     creator: CONTENT_MANAGER_USER_ID,
                     type: 'writing',
@@ -93,22 +94,23 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
                 });
 
                 await this.taskManager.assignTaskToAgent(task.id, CONTENT_WRITER_USER_ID);
+
+                return {
+                    type: "writing",
+                    finished: false,
+                    needsUserInput: true,
+                    response: {
+                        message: `Created ${result.sections.length} writing tasks:\n\n${
+                            result.sections.map(s => `- ${s.title}`).join('\n')
+                        }`,
+                        data: result
+                    },
+                    projectId: writingProject.id
+                };
             }
         } catch (error) {
             Logger.error('Error creating writing tasks:', error);
             throw error;
         }
-
-        return {
-            type: "writing",
-            finished: false,
-            needsUserInput: true,
-            response: {
-                message: `Created ${result.sections.length} writing tasks:\n\n${
-                    result.sections.map(s => `- ${s.title}`).join('\n')
-                }`,
-                data: result
-            }
-        };
     }
 }
