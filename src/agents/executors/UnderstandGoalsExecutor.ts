@@ -65,7 +65,8 @@ export class UnderstandGoalsExecutor implements StepExecutor {
 
         // Create tasks for each intake question
         for (const q of response.intakeQuestions) {
-            await this.taskManager.addTask(projectId, {
+            const project = this.taskManager.getProject(projectId);
+            await this.taskManager.addTask(project, {
                 id: crypto.randomUUID(),
                 type: 'answer-questions',
                 description: `Q: ${q.question}\nPurpose: ${q.purpose}`,
