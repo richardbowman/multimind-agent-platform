@@ -1,5 +1,6 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
@@ -114,7 +115,7 @@ export class ReviewProgressExecutor implements StepExecutor {
     }
 
     private async updateProjectBusinessPlan(project: OnboardingProject): Promise<string> {
-        const businessPlanId = await this.updateBusinessPlan(project, project.existingPlan);
+        const businessPlanId = await updateBusinessPlan(project, this.modelHelpers, this.artifactManager, project.existingPlan);
         
         project.props = {
             ...project.props,
