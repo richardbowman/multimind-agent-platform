@@ -2,11 +2,12 @@ import { Agent } from './agents';
 import { ChatClient, ChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
-import { Task, TaskManager } from '../tools/taskManager';
+import { Project, Task, TaskManager } from '../tools/taskManager';
 import Logger from '../helpers/logger';
 import { CreateArtifact, ModelResponse } from './schemas/ModelResponse';
 import crypto from 'crypto';
-//import { PlanStepsResponse } from './schemas/agent';
+import { definitions as generatedSchemaDef } from "./schemas/schema.json";
+import ChromaDBService from 'src/llm/chromaService';
 
 export interface StepResult {
     type?: string;
@@ -29,9 +30,10 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         chatClient: ChatClient,
         lmStudioService: LMStudioService,
         userId: string,
-        projects: TaskManager
+        projects: TaskManager,
+        chromaDBService: ChromaDBService
     ) {
-        super(chatClient, lmStudioService, userId, projects);
+        super(chatClient, lmStudioService, userId, projects, chromaDBService);
     }
 
     protected registerStepExecutor(stepType: string, executor: StepExecutor): void {
@@ -41,7 +43,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse> {
         const registeredSteps = Array.from(this.stepExecutors.keys());
         
-        const schema = schemas.PlanStepsResponse;
+        const schema = generatedSchemaDef.PlanStepsResponse;
 
         const project = this.projects.getProject(projectId);
         const tasks = this.projects.getAllTasks(projectId);
@@ -125,6 +127,13 @@ ${currentSteps}`;
         this.projects.markTaskInProgress(task);
         await this.executeStep(projectId, task, userPost);
     }
+
+    protected async projectCompleted(project: Project): Promise<void> {
+        const postId = project.metadata?.originalPostId;
+        const userPost = this.chatClient.getPost(postId);
+        await this.generateAndSendFinalResponse(project.id, userPost);
+        return;
+    }
     
     protected async executeStep(projectId: string, task: Task, userPost: ChatPost): Promise<void> {
         try {
@@ -150,6 +159,7 @@ ${currentSteps}`;
             //         projectId: projectId
             //     });
             // }
+
             if (stepResult.finished) {
                 this.projects.completeTask(task.id);
             }
@@ -163,11 +173,6 @@ ${currentSteps}`;
                 });
                 return;
             }
-
-            // if (nextAction.isComplete) {
-            //     await this.generateAndSendFinalResponse(projectId, userPost);
-            //     return;
-            // }
 
             // Continue with next step
             await this.executeNextStep(projectId, userPost);
@@ -289,42 +294,6 @@ You will respond inside of the message key in Markdown format.`;
         });
     }
 
-    @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
-    protected async handleConversation(params: HandlerParams): Promise<void> {
-        const { projectId } = await this.addNewProject({
-            projectName: params.userPost.message,
-            tasks: [{
-                type: "reply",
-                description: "Initial response to user query."
-            }]
-        });
-
-        const plan = await this.planSteps(projectId, params.userPost.message);
-        await this.executeNextStep(projectId, params.userPost);
-    }
-
-    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
-    protected async handleThreadResponse(params: HandlerParams): Promise<void> {
-        const project = params.projects?.[0];
-        if (!project) {
-            await this.reply(params.userPost, { 
-                message: "No active session found. Please start a new conversation." 
-            });
-            return;
-        }
-
-        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
-        if (!currentTask) {
-            await this.reply(params.userPost, { 
-                message: "I wasn't expecting a response right now. What would you like to discuss?" 
-            });
-            return;
-        }
-
-        const plan = await this.planSteps(project.id, params.userPost.message);
-        await this.executeNextStep(project.id, params.userPost);
-    }
-
     protected async handleUserInput(projectId: string, currentStep: string, userPost: ChatPost): Promise<void> {
         const project = this.projects.getProject(projectId);
         if (!project) {
@@ -356,7 +325,7 @@ You will respond inside of the message key in Markdown format.`;
         // Continue execution
         await this.executeStep(projectId, currentStep, userPost);
     }
-}
+
     @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
     protected async handleConversation(params: HandlerParams): Promise<void> {
         const { projectId } = await this.addNewProject({
@@ -364,7 +333,8 @@ You will respond inside of the message key in Markdown format.`;
             tasks: [{
                 type: "reply",
                 description: "Initial response to user query."
-            }]
+            }],
+            originalPostId: params.userPost.id
         });
 
         const plan = await this.planSteps(projectId, params.userPost.message);
