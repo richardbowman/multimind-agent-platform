@@ -27,7 +27,7 @@ export class ReviewProgressExecutor implements StepExecutor {
 
         const schema = generatedSchemaDef.ReviewProgressResponse;
 
-        const response = await this.modelHelpers.generate({
+        const response : ReviewProgressResponse = await this.modelHelpers.generate({
             message: JSON.stringify({
                 currentGoal: goal,
                 tasks: tasks.map(t => ({

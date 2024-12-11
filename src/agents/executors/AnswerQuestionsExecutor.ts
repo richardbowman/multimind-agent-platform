@@ -34,7 +34,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             };
         }
 
-        const modelResponse = await this.modelHelpers.generate({
+        const modelResponse : AnswerAnalysisResponse = await this.modelHelpers.generate({
             message: response,
             instructions: new StructuredOutputPrompt(schema,
                 `Analyze the user's response against these pending questions:

@@ -34,7 +34,7 @@ export class CreatePlanExecutor implements StepExecutor {
 
         const answers = this.getAnswersForType(project, 'process-answers');
 
-        const response = await this.modelHelpers.generate({
+        const response : OperationalGuideResponse = await this.modelHelpers.generate({
             message: JSON.stringify({
                 goals: businessGoals,
                 currentPlan: project.existingPlan?.content.toString(),
