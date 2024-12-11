@@ -130,7 +130,7 @@ Let's start by discussing your main business goals. What would you like to achie
         const tasks = this.projects.getAllTasks(projectId);
 
         const mapper = (t: Task) => ({
-            id: t.id,
+            existingId: t.id,
             type: t.type,
             description: t.description
         } as PlanStepTask);
