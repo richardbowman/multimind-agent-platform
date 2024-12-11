@@ -3,7 +3,9 @@ import { ModelResponse } from '../schemas/ModelResponse';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
+import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 
+@StepExecutorDecorator('refuting', 'Challenge assumptions and identify potential flaws in the current reasoning')
 export class RefutingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
