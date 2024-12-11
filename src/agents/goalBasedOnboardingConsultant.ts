@@ -581,7 +581,10 @@ ${currentSteps}`
     }
 
     @StepExecutor("review-progress", "Review progress on goals and provide status updates with next steps")
-    private async executeReviewProgress(goal: string, step: string, state: OnboardingState): Promise<StepResult> {
+    private async executeReviewProgress(goal: string, step: string, projectId: string): Promise<StepResult> {
+        const project = await this.getProjectWithPlan(projectId);
+        const tasks = this.projects.getAllTasks(projectId);
+
         const schema = {
             type: "object",
             properties: {
@@ -590,30 +593,84 @@ ${currentSteps}`
                     items: {
                         type: "object",
                         properties: {
-                            goalId: { type: "string" },
-                            status: { type: "string" },
-                            nextSteps: { type: "array", items: { type: "string" } }
+                            taskId: { type: "string" },
+                            status: { 
+                                type: "string",
+                                enum: ["Not Started", "In Progress", "Blocked", "Complete"]
+                            },
+                            analysis: { type: "string" },
+                            nextSteps: { 
+                                type: "array", 
+                                items: { type: "string" } 
+                            },
+                            blockers: { 
+                                type: "array", 
+                                items: { type: "string" },
+                                description: "Any issues preventing progress"
+                            }
                         },
-                        required: ["goalId", "status", "nextSteps"]
+                        required: ["taskId", "status", "analysis", "nextSteps"]
                     }
-                }
+                },
+                summary: { type: "string" }
             },
-            required: ["progress"]
+            required: ["progress", "summary"]
         };
 
         const response = await this.generate({
             message: JSON.stringify({
-                goals: state.goals,
-                results: state.intermediateResults
+                currentGoal: goal,
+                tasks: tasks.map(t => ({
+                    id: t.id,
+                    type: t.type,
+                    description: t.description,
+                    complete: t.complete,
+                    metadata: t.metadata
+                }))
             }),
             instructions: new StructuredOutputPrompt(schema,
-                `Review the progress on each goal and recommend next steps.
-                Identify any goals that need adjustment or additional support.`)
+                `Review the progress of all tasks and provide a detailed status update.
+                For each task:
+                - Assess current status
+                - Analyze progress made
+                - Identify any blockers
+                - Recommend specific next steps
+                
+                Provide a summary that highlights:
+                - Overall progress
+                - Key achievements
+                - Critical issues needing attention
+                - Recommendations for keeping progress on track`)
         });
+
+        // Update task metadata with latest progress info
+        for (const update of response.progress) {
+            const task = this.projects.getTask(update.taskId);
+            if (task) {
+                task.metadata = {
+                    ...task.metadata,
+                    lastReview: {
+                        status: update.status,
+                        analysis: update.analysis,
+                        nextSteps: update.nextSteps,
+                        blockers: update.blockers,
+                        reviewedAt: new Date().toISOString()
+                    }
+                };
+            }
+        }
+
+        // Update the business plan with latest progress
+        await this.updateProjectBusinessPlan(project);
 
         return {
             type: 'progress_review',
-            progress: response.progress
+            finished: true,
+            needsUserInput: false,
+            response: {
+                message: response.summary,
+                progress: response.progress
+            }
         };
     }
 }
