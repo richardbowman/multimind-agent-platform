@@ -5,7 +5,7 @@ import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
 
-@StepExecutorDecorator('answer_questions', 'Analyze and process user responses to intake questions')
+@StepExecutorDecorator('answer-questions', 'Analyze and process user responses to intake questions')
 export class AnswerQuestionsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
