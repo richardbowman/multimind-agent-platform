@@ -1,5 +1,6 @@
 import { ResearchManager } from "./agents/researchManager";
-import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, RESEARCH_MANAGER_TOKEN_ID as RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID as RESEARCH_MANAGER_USER_ID, PROJECT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID, ONBOARDING_CHANNEL_ID, ONBOARDING_CONSULTANT_USER_ID, CONTENT_CREATION_CHANNEL_ID, FACT_CHECK_CHANNEL_ID, FACT_CHECKER_USER_ID } from "./helpers/config";
+import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, RESEARCH_MANAGER_TOKEN_ID as RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID as RESEARCH_MANAGER_USER_ID, PROJECT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID, ONBOARDING_CHANNEL_ID, ONBOARDING_CONSULTANT_USER_ID, CONTENT_CREATION_CHANNEL_ID, FACT_CHECK_CHANNEL_ID, FACT_CHECKER_USER_ID, SOLVER_AGENT_USER_ID, SOLVER_AGENT_TOKEN, SOLVER_CHANNEL_ID } from "./helpers/config";
+import { SolverAgent } from "./agents/solverAgent";
 import { LLMServiceFactory, LLMProvider } from "./llm/LLMServiceFactory";
 import ResearchAssistant from "./agents/researchAssistant";
 import { chatBox, inputBox } from "./test/ui";
@@ -46,6 +47,7 @@ storage.registerChannel(PROJECTS_CHANNEL_ID, "#projects");
 storage.registerChannel(WEB_RESEARCH_CHANNEL_ID, "#research");
 storage.registerChannel(CONTENT_CREATION_CHANNEL_ID, "#content");
 storage.registerChannel(FACT_CHECK_CHANNEL_ID, "#fact-check");
+storage.registerChannel(SOLVER_CHANNEL_ID, "#solver");
 
 
 process.on("exit", async () => {
@@ -79,6 +81,11 @@ await onboardingAssistant.initialize();
 const factCheckerClient = new InMemoryTestClient(FACT_CHECKER_USER_ID, "test", storage);
 const factChecker = new FactChecker(factCheckerClient, llmService, tasks);
 factChecker.setupChatMonitor(FACT_CHECK_CHANNEL_ID, "@factcheck");
+
+// Initialize Solver Agent
+const solverClient = new InMemoryTestClient(SOLVER_AGENT_USER_ID, "test", storage);
+const solverAgent = new SolverAgent(solverClient, llmService, SOLVER_AGENT_USER_ID, tasks);
+await solverAgent.initialize();
 
 setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
 
