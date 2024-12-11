@@ -115,7 +115,13 @@ export class CreatePlanExecutor implements StepExecutor {
     }
 
     private async updateProjectBusinessPlan(project: OnboardingProject): Promise<string> {
-        const businessPlanId = await updateBusinessPlan(project, this.modelHelpers, this.artifactManager, project.existingPlan);
+        const businessPlanId = await updateBusinessPlan(
+            project, 
+            this.modelHelpers, 
+            this.artifactManager, 
+            project.existingPlan,
+            response.operationalGuide
+        );
         
         project.props = {
             ...project.props,

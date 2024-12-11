@@ -9,7 +9,8 @@ export async function updateBusinessPlan(
     project: OnboardingProject, 
     modelHelpers: ModelHelpers,
     artifactManager: ArtifactManager,
-    existingPlan?: Artifact
+    existingPlan?: Artifact,
+    operationalGuide?: any
 ): Promise<string> {
     const schema = {
         type: "object",
@@ -34,7 +35,8 @@ export async function updateBusinessPlan(
             goals: Object.values(project.tasks).filter(t => t.type === 'business-goal'),
             existingPlan: existingContent,
             projectId: project.id,
-            latestUpdate: project.props?.latestUpdate || ''
+            latestUpdate: project.props?.latestUpdate || '',
+            operationalGuide: operationalGuide
         }),
         instructions: new StructuredOutputPrompt(schema,
             `Update the business plan based on the goals, previous results, and latest updates.
