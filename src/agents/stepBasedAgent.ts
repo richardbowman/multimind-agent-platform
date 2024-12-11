@@ -170,6 +170,33 @@ ${currentSteps}`;
 
             if (stepResult.finished) {
                 this.projects.completeTask(task.id);
+                
+                // If this was the last planned task, add a validation step
+                const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
+                if (remainingTasks.length === 0) {
+                    const validationTask: Task = {
+                        id: crypto.randomUUID(),
+                        type: 'validation',
+                        description: 'Validate solution completeness',
+                        creator: this.userId,
+                        complete: false,
+                        order: (task.order || 0) + 1
+                    };
+                    this.projects.addTask(project, validationTask);
+                }
+            }
+
+            // If this was a validation step, check if we need more work
+            if (task.type === 'validation' && stepResult.response) {
+                const validationResult = stepResult.response as any;
+                if (!validationResult.isComplete && validationResult.missingAspects?.length > 0) {
+                    const planningPrompt = `Original Goal: ${project.name}\n\n` +
+                        `The solution is not yet complete. Please continue working on the goal.\n` +
+                        `Missing aspects to address:\n` +
+                        `${validationResult.missingAspects.map((aspect: string) => `- ${aspect}`).join('\n')}`;
+
+                    await this.planSteps(projectId, planningPrompt);
+                }
             }
 
             if (stepResult.needsUserInput && stepResult.response) {

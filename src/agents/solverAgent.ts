@@ -24,6 +24,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         // Register our specialized executors
         this.registerStepExecutor('thinking', new ThinkingExecutor(lmStudioService));
         this.registerStepExecutor('refuting', new RefutingExecutor(lmStudioService));
+        this.registerStepExecutor('validation', new ValidationExecutor(lmStudioService));
 
         this.setPurpose(`You are planning how to solve a complex problem through careful reasoning.
 Break down the solution into alternating steps of deep thinking and critical refutation.
