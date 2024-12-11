@@ -4,20 +4,25 @@ import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ModelHelpers } from '../../llm/helpers';
 
 @StepExecutorDecorator('reply', 'Generate user-friendly responses to messages')
 export class ReplyExecutor implements StepExecutor {
+    private modelHelpers: ModelHelpers;
+
     constructor(
-        private lmStudioService: LMStudioService,
+        llmService: LMStudioService,
         private taskManager: TaskManager,
         private artifactManager: ArtifactManager
-    ) {}
+    ) {
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    }
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
-        const reply = await this.lmStudioService.generate({
-            instructions: "Generate a user friendly reply",
+        const reply = await this.modelHelpers.generate({
             message: `${step} [${goal}]`,
+            instructions: "Generate a user friendly reply",
             projects: [project]
         });
 
