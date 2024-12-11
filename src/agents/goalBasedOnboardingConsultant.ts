@@ -34,7 +34,7 @@ export interface OnboardingProject extends Project<Task> {
 
 class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
     protected projectCompleted(project: OnboardingProject): void {
-        throw new Error('Method not implemented.');
+        // this.chatClient.postInChannel()
     }
     protected processTask(task: Task): Promise<void> {
         throw new Error('Method not implemented.');
