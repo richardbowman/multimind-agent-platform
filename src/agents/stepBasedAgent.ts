@@ -1,4 +1,5 @@
 import { Agent } from './agents';
+import { getExecutorMetadata } from './decorators/executorDecorator';
 import { ChatClient, ChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
@@ -46,7 +47,13 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     }
 
     protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse> {
-        const registeredSteps = Array.from(this.stepExecutors.keys());
+        const executorMetadata = Array.from(this.stepExecutors.entries()).map(([key, executor]) => {
+            const metadata = getExecutorMetadata(executor.constructor);
+            return {
+                key,
+                description: metadata?.description || executor.description || 'No description available'
+            };
+        });
 
         const schema = generatedSchemaDef.PlanStepsResponse;
 
@@ -62,10 +69,9 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         const completedSteps = `Completed Tasks:\n${JSON.stringify(tasks.filter(t => t.complete).map(mapper), undefined, " ")}\n\n`;
         const currentSteps = `Current Plan:\n${JSON.stringify(tasks.filter(t => !t.complete).map(mapper), undefined, " ")}\n\n`;
 
-        const stepDescriptions = registeredSteps.map(key => {
-            const executor = this.stepExecutors.get(key);
-            return `${key}\n    Description: ${executor?.description || 'No description available'}`;
-        }).join("\n\n");
+        const stepDescriptions = executorMetadata
+            .map(({ key, description }) => `${key}\n    Description: ${description}`)
+            .join("\n\n");
 
         const systemPrompt =
             `${this.modelHelpers.getPurpose()}
