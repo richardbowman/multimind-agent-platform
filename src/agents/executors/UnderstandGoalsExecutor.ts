@@ -65,18 +65,10 @@ export class UnderstandGoalsExecutor implements StepExecutor {
 
         const project = this.taskManager.getProject(projectId);
         
-        // Get current max order
+        // Get existing tasks and their current max order
         const existingTasks = this.taskManager.getAllTasks(projectId);
-        const maxOrder = Math.max(...existingTasks.map(t => t.order || 0), -1);
         
-        // Increment order of all existing tasks
-        for (const task of existingTasks) {
-            if (task.order !== undefined) {
-                task.order += response.intakeQuestions.length;
-            }
-        }
-        
-        // Create tasks for each intake question with sequential ordering
+        // Create tasks for each intake question with sequential ordering starting at 1
         for (let i = 0; i < response.intakeQuestions.length; i++) {
             const q = response.intakeQuestions[i];
             await this.taskManager.addTask(project, {
@@ -85,8 +77,15 @@ export class UnderstandGoalsExecutor implements StepExecutor {
                 description: `Q: ${q.question}\nPurpose: ${q.purpose}`,
                 creator: this.userId,
                 complete: false,
-                order: i
+                order: i + 1
             });
+        }
+        
+        // Update existing tasks to continue numbering after the new questions
+        for (const task of existingTasks) {
+            if (task.order !== undefined) {
+                task.order = task.order + response.intakeQuestions.length + 1;
+            }
         }
 
         return {
