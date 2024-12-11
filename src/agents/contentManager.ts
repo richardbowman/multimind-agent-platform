@@ -35,7 +35,30 @@ export interface ContentTask extends Task {
     content?: string;
 }
 
-export class ContentManager extends Agent<ContentProject, ContentTask> {
+export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> {
+    constructor(
+        chatClient: ChatClient,
+        lmStudioService: LMStudioService,
+        userId: string,
+        projects: TaskManager,
+        chromaDBService: ChromaDBService
+    ) {
+        super(chatClient, lmStudioService, userId, projects, chromaDBService);
+
+        // Register our specialized executors
+        this.registerStepExecutor(new ResearchExecutor(lmStudioService));
+
+        this.setPurpose(`You are planning how to create high-quality content.
+Break down the content creation into steps of research, outlining, and section development.
+Use 'research' steps to gather information, 'outline' steps to structure the content,
+and 'assign' steps to delegate section writing.
+
+IMPORTANT: Always follow this pattern:
+1. Start with a 'research' step to gather relevant information
+2. Follow with an 'outline' step to structure the content
+3. End with 'assign' steps to delegate section writing to content writers`);
+    }
+
     protected async processTask(task: ContentTask): Promise<void> {
         try {
             const instructions = task.description;
@@ -142,12 +165,27 @@ writers to develop content sections.`;
         this.artifactManager = new ArtifactManager(this.chromaDBService);
     }
 
-    public async initialize() {
+    public async initialize(): Promise<void> {
         await this.chromaDBService.initializeCollection(CHROMA_COLLECTION);
-        super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@content");
-    
-        // asynchronously check for old tasks and keep working on them
+        await super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@content");
         this.processTaskQueue();
+    }
+
+    @HandleActivity("start-content", "Start content creation process", ResponseType.CHANNEL)
+    protected async handleContentRequest(params: HandlerParams): Promise<void> {
+        const { projectId } = await this.addNewProject({
+            projectName: `Content creation: ${params.userPost.message}`,
+            tasks: [],
+            metadata: {
+                originalPostId: params.userPost.id
+            }
+        });
+        
+        const project = await this.projects.getProject(projectId);
+        params.projects = [...params.projects || [], project];
+        
+        const plan = await this.planSteps(params);
+        await this.executeNextStep(projectId, params.userPost);
     }
 
     async decomposeContent(instructions: ChatPost, priorProject?: ContentProject): Promise<ContentProject> {
