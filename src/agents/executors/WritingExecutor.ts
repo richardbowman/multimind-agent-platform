@@ -4,17 +4,17 @@ import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { TaskManager } from 'src/tools/taskManager';
-import { CONTENT_WRITER_USER_ID } from 'src/helpers/config';
+import { CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID } from 'src/helpers/config';
 import Logger from 'src/helpers/logger';
 
-@StepExecutorDecorator('writing', 'Assign content writing tasks to content writer')
+@StepExecutorDecorator('assign-writers', 'Take an existing outline and break out sections to writers.')
 export class WritingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
 
-    constructor(llmService: LMStudioService) {
+    constructor(llmService: LMStudioService, taskManager: TaskManager) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
-        this.taskManager = new TaskManager();
+        this.taskManager = taskManager
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
@@ -63,20 +63,22 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
 
         // Create writing tasks for each section
         try {
+            const project = await this.taskManager.getProject(projectId);
+
             for (const section of result.sections) {
-                const taskId = await this.taskManager.addTask({
-                    projectId,
+                const task = await this.taskManager.addTask(project, {
+                    id: crypto.randomUUID(),
+                    creator: CONTENT_MANAGER_USER_ID,
                     type: 'writing',
-                    title: section.title,
                     description: `# ${section.title}\n\n${section.description}\n\n## Key Points:\n${
-                        section.keyPoints.map(p => `- ${p}`).join('\n')
+                        section.keyPoints?.map(p => `- ${p}`).join('\n')||""
                     }\n\n## Research Findings:\n${
-                        section.researchFindings.map(f => `- ${f.finding}\n  Source: ${f.source}`).join('\n')
+                        section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).join('\n')||""
                     }`,
                     order: result.sections.indexOf(section)
                 });
 
-                await this.taskManager.assignTaskToAgent(taskId, CONTENT_WRITER_USER_ID);
+                await this.taskManager.assignTaskToAgent(task.id, CONTENT_WRITER_USER_ID);
             }
         } catch (error) {
             Logger.error('Error creating writing tasks:', error);
@@ -85,7 +87,8 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
 
         return {
             type: "writing",
-            finished: true,
+            finished: false,
+            needsUserInput: true,
             response: {
                 message: `Created ${result.sections.length} writing tasks:\n\n${
                     result.sections.map(s => `- ${s.title}`).join('\n')
