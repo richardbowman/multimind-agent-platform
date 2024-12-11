@@ -25,11 +25,20 @@ export function StepExecutor(key: string, description: string) {
     };
 }
 
+interface QuestionAnswer {
+    questionId: string;
+    question: string;
+    answer: string;
+    analysis: string;
+    answeredAt: string;
+}
+
 export interface OnboardingProject extends Project<Task> {
     businessDescription?: string;
     businessGoals?: string[];
     serviceRequirements?: string;
     existingPlan?: Artifact;
+    answers?: QuestionAnswer[];
 }
 
 class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
@@ -326,9 +335,10 @@ ${currentSteps}`
                         properties: {
                             questionId: { type: "string" },
                             answered: { type: "boolean" },
-                            analysis: { type: "string" }
+                            analysis: { type: "string" },
+                            extractedAnswer: { type: "string" }
                         },
-                        required: ["questionId", "answered", "analysis"]
+                        required: ["questionId", "answered", "analysis", "extractedAnswer"]
                     }
                 },
                 summary: { type: "string" }
@@ -336,7 +346,7 @@ ${currentSteps}`
             required: ["answers", "summary"]
         };
 
-        const project = this.projects.getProject(projectId);
+        const project = this.projects.getProject(projectId) as OnboardingProject;
         const intakeQuestions = Object.values(project.tasks).filter(t => t.type === 'intake-question' && !t.complete);
 
         if (intakeQuestions.length === 0) {
@@ -357,17 +367,34 @@ ${currentSteps}`
                 
                 For each question:
                 1. Determine if it was answered
-                2. Provide a brief analysis of the answer or why it wasn't answered
-                3. Be specific about what information was provided or what's still missing`)
+                2. Extract the specific answer from the response
+                3. Provide a brief analysis of the answer or why it wasn't answered
+                4. Be specific about what information was provided or what's still missing`)
         });
 
-        // Update tasks based on analysis
+        // Initialize answers array if it doesn't exist
+        if (!project.answers) {
+            project.answers = [];
+        }
+
+        // Update tasks and store answers based on analysis
         for (const answer of modelResponse.answers) {
             const task = this.projects.getTask(answer.questionId);
             if (task && answer.answered) {
+                // Store the answer in project
+                project.answers.push({
+                    questionId: answer.questionId,
+                    question: task.description,
+                    answer: answer.extractedAnswer,
+                    analysis: answer.analysis,
+                    answeredAt: new Date().toISOString()
+                });
+
+                // Update task metadata
                 task.metadata = {
                     ...task.metadata,
                     analysis: answer.analysis,
+                    answer: answer.extractedAnswer,
                     answeredAt: new Date().toISOString()
                 };
                 await this.projects.completeTask(answer.questionId);
@@ -390,6 +417,15 @@ ${currentSteps}`
                 }`
             }
         };
+    }
+
+    private getAnswersForType(project: OnboardingProject, questionType: string): QuestionAnswer[] {
+        if (!project.answers) return [];
+        
+        return project.answers.filter(answer => {
+            const task = this.projects.getTask(answer.questionId);
+            return task?.type === questionType;
+        });
     }
 
     @StepExecutor("understand-goals", "Analyze and break down the user's business goals into actionable items")
@@ -583,14 +619,27 @@ ${currentSteps}`
             required: ["plans", "summary"]
         };
 
+        const businessAnswers = this.getAnswersForType(project, 'business-question');
+        const serviceAnswers = this.getAnswersForType(project, 'service-question');
+
         const response = await this.generate({
             message: JSON.stringify({
                 goals: businessGoals,
                 currentPlan: project.existingPlan?.content.toString(),
-                projectContext: project.props
+                projectContext: project.props,
+                businessAnswers,
+                serviceAnswers
             }),
             instructions: new StructuredOutputPrompt(schema,
                 `Create detailed action plans for each business goal.
+                Use the provided answers about the business and service requirements to inform the plan.
+                
+                Business Context:
+                ${businessAnswers.map(a => `- ${a.question}: ${a.answer}`).join('\n')}
+                
+                Service Requirements:
+                ${serviceAnswers.map(a => `- ${a.question}: ${a.answer}`).join('\n')}
+                
                 For each goal:
                 - Break down into specific, actionable tasks
                 - Estimate timeline for each action item
