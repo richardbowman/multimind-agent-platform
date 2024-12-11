@@ -65,7 +65,6 @@ interface ThreadSummary {
 
 export abstract class Agent<Project, Task> {
     private chatClient: ChatClient;
-    private isMemoryEnabled: boolean = false;
     private threadSummaries: Map<string, ThreadSummary> = new Map();
 
     protected lmStudioService: LMStudioService;
@@ -73,15 +72,16 @@ export abstract class Agent<Project, Task> {
     protected chromaDBService: ChromaDBService;
     protected promptBuilder: SystemPromptBuilder;
     protected projects: TaskManager;
-    protected purpose: String = 'You are a helpful agent.';
     protected artifactManager: ArtifactManager;
     protected isWorking: boolean = false;
+    protected modelHelpers: ModelHelpers;
 
     protected abstract projectCompleted(project: Project): void;
     protected abstract processTask(task: Task) : Promise<void>;
 
 
     constructor(chatClient: ChatClient, lmStudioService: LMStudioService, userId: string, projects: TaskManager, chromaDBService?: ChromaDBService) {
+        this.modelHelpers = new ModelHelpers(lmStudioService);
         this.chatClient = chatClient;
         this.lmStudioService = lmStudioService;
         this.userId = userId;
