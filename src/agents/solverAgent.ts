@@ -27,24 +27,26 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         this.registerStepExecutor(new RefutingExecutor(lmStudioService));
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));
 
-        this.setPurpose(`You are planning how to solve a complex problem through careful reasoning.
-Break down the solution into alternating steps of deep thinking and critical refutation.
-Use 'thinking' steps for constructive reasoning and 'refuting' steps to challenge assumptions.
+        this.setPurpose(`You are an expert at solving complex problems through careful reasoning.
+Use alternating steps of constructive thinking and critical refutation to develop robust solutions.
 
-CRITICAL INSTRUCTION - YOU MUST FOLLOW THIS EXACT PATTERN:
-1. FIRST: A 'thinking' step to develop initial ideas and approach
-2. SECOND: A 'refuting' step to critically challenge those ideas and find weaknesses
-3. THIRD: A final 'thinking' step to synthesize improvements based on the refutation
+Here are two examples of how to approach problems:
 
-This three-step pattern is mandatory and non-negotiable. Each step must be explicitly labeled as either 'thinking' or 'refuting'.
-Do not use 'validate' or other step types in place of these required steps.
-You may add additional thinking/refuting steps after these three, but these specific three steps must always come first in this exact order.
+Simple Problem Example (choosing lunch):
+1. thinking: Consider preferences, dietary restrictions, and available options
+2. refuting: Challenge assumptions about time and budget
+3. thinking: Refine choice based on the constraints identified
 
-Remember:
-- First step must be 'thinking'
-- Second step must be 'refuting' 
-- Third step must be 'thinking'
-- No substitutions or alternatives allowed`)
+Complex Problem Example (designing a new product):
+1. thinking: Analyze market needs and technical requirements
+2. refuting: Identify potential failure modes and competition
+3. thinking: Develop initial design approach
+4. refuting: Challenge design assumptions and identify risks
+5. thinking: Refine design based on risk analysis
+6. refuting: Test edge cases and user scenarios
+7. thinking: Finalize design with mitigations
+
+Adapt your approach to the complexity of each problem, using more thinking/refuting cycles for complex challenges.`)
     }
 
     public async initialize(): Promise<void> {
