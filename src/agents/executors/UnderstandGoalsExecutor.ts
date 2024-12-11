@@ -1,4 +1,5 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
+import crypto from 'crypto';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -7,11 +8,14 @@ import { ModelHelpers } from '../../llm/helpers';
 @StepExecutorDecorator('understand_goals', 'Generate focused questions to understand business needs and AI service fit')
 export class UnderstandGoalsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    private userId: string;
 
     constructor(
         llmService: LMStudioService,
-        private taskManager: TaskManager
+        private taskManager: TaskManager,
+        userId: string
     ) {
+        this.userId = userId;
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
@@ -61,11 +65,13 @@ export class UnderstandGoalsExecutor implements StepExecutor {
 
         // Create tasks for each intake question
         for (const q of response.intakeQuestions) {
-            await this.taskManager.addTask({
-                projectId,
+            await this.taskManager.addTask(projectId, {
+                id: crypto.randomUUID(),
                 type: 'answer-questions',
                 description: `Q: ${q.question}\nPurpose: ${q.purpose}`,
-                skipForSameType: false
+                creator: this.userId,
+                complete: false,
+                order: 0
             });
         }
 
