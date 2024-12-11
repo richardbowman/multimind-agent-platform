@@ -1,5 +1,7 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { definitions as generatedSchemaDef } from "../schemas/schema.json";
+import { AnswerAnalysisResponse } from '../schemas/AnswerAnalysisResponse';
 import { TaskManager } from '../../tools/taskManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -17,26 +19,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
     }
 
     async execute(response: string, step: string, projectId: string): Promise<StepResult> {
-        const schema = {
-            type: "object",
-            properties: {
-                answers: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            questionId: { type: "string" },
-                            answered: { type: "boolean" },
-                            analysis: { type: "string" },
-                            extractedAnswer: { type: "string" }
-                        },
-                        required: ["questionId", "answered", "analysis", "extractedAnswer"]
-                    }
-                },
-                summary: { type: "string" }
-            },
-            required: ["answers", "summary"]
-        };
+        const schema = generatedSchemaDef.AnswerAnalysisResponse;
 
         const project = this.taskManager.getProject(projectId) as OnboardingProject;
         const intakeQuestions = Object.values(project.tasks).filter(t => t.type === 'process-answers' && !t.complete);

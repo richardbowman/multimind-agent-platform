@@ -1,5 +1,7 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { definitions as generatedSchemaDef } from "../schemas/schema.json";
+import { ReviewProgressResponse } from '../schemas/ReviewProgressResponse';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
@@ -23,37 +25,7 @@ export class ReviewProgressExecutor implements StepExecutor {
         const project = await this.getProjectWithPlan(projectId);
         const tasks = this.taskManager.getAllTasks(projectId);
 
-        const schema = {
-            type: "object",
-            properties: {
-                progress: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            taskId: { type: "string" },
-                            status: { 
-                                type: "string",
-                                enum: ["Not Started", "In Progress", "Blocked", "Complete"]
-                            },
-                            analysis: { type: "string" },
-                            nextSteps: { 
-                                type: "array", 
-                                items: { type: "string" } 
-                            },
-                            blockers: { 
-                                type: "array", 
-                                items: { type: "string" },
-                                description: "Any issues preventing progress"
-                            }
-                        },
-                        required: ["taskId", "status", "analysis", "nextSteps"]
-                    }
-                },
-                summary: { type: "string" }
-            },
-            required: ["progress", "summary"]
-        };
+        const schema = generatedSchemaDef.ReviewProgressResponse;
 
         const response = await this.modelHelpers.generate({
             message: JSON.stringify({

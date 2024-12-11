@@ -1,6 +1,8 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import crypto from 'crypto';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { definitions as generatedSchemaDef } from "../schemas/schema.json";
+import { OperationalGuideResponse } from '../schemas/OperationalGuideResponse';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
@@ -28,39 +30,7 @@ export class CreatePlanExecutor implements StepExecutor {
         const project = await this.getProjectWithPlan(projectId);
         const businessGoals = Object.values(project.tasks).filter(t => t.type === 'create-plan');
 
-        const schema = {
-            type: "object",
-            properties: {
-                operationalGuide: {
-                    type: "object",
-                    properties: {
-                        businessContext: { type: "string" },
-                        serviceStrategy: { type: "string" },
-                        implementationApproach: { type: "string" },
-                        keyConsiderations: {
-                            type: "array",
-                            items: { type: "string" }
-                        },
-                        recommendedSteps: {
-                            type: "array",
-                            items: {
-                                type: "object",
-                                properties: {
-                                    phase: { type: "string" },
-                                    description: { type: "string" },
-                                    expectedOutcome: { type: "string" },
-                                    considerations: { type: "string" }
-                                },
-                                required: ["phase", "description", "expectedOutcome"]
-                            }
-                        }
-                    },
-                    required: ["businessContext", "serviceStrategy", "implementationApproach", "recommendedSteps"]
-                },
-                summary: { type: "string" }
-            },
-            required: ["plans", "summary"]
-        };
+        const schema = generatedSchemaDef.OperationalGuideResponse;
 
         const answers = this.getAnswersForType(project, 'process-answers');
 
