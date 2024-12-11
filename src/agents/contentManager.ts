@@ -345,10 +345,41 @@ Writer Tasks: ${Object.values(project.tasks).map(c => ` - ${c.description}`).joi
         if (projectId && project?.tasks) {
             const contentPost = await this.replyWithContentId(ContentManagerActivityType.CreateDocument, projectId, params.userPost.channel_id, params.userPost);
             await this.postContentDetails(projectId, params.userPost.channel_id, contentPost);
-            const taskIds = Object.keys(this.projects.getProject(projectId).tasks);
+            
+            // Get the research and outline results from previous steps
+            const researchResults = await this.getStepResult(projectId, 'research');
+            const outlineResults = await this.getStepResult(projectId, 'outline');
+            
+            // Create writing tasks for each section
+            const taskIds = Object.keys(project.tasks);
             for (const taskId of taskIds) {
+                const task = project.tasks[taskId];
+                
+                // Create a writing task with context
+                const writingTask = {
+                    ...task,
+                    type: 'writing',
+                    context: {
+                        research: researchResults,
+                        outline: outlineResults,
+                        section: task.description
+                    }
+                };
+                
+                // Update the task in the project
+                project.tasks[taskId] = writingTask;
+                
+                // Assign to content writer
                 await this.projects.assignTaskToAgent(taskId, CONTENT_WRITER_USER_ID);
             }
+            
+            // Update the project with the modified tasks
+            this.projects.replaceProject(project);
+            
+            // Notify about task assignments
+            await this.reply(contentPost, {
+                message: `I've assigned ${taskIds.length} writing tasks to our content writer. They will develop each section using our research and outline.`
+            });
         } else {
             Logger.error("Trying to start content writing, but no tasks found.");
         }
