@@ -303,7 +303,7 @@ export abstract class Agent<Project, Task> {
         return this.modelHelpers.generate(params);
     }
 
-    private deduplicateArtifacts(artifacts: Artifact[]): Artifact[] {
+    protected deduplicateArtifacts(artifacts: Artifact[]): Artifact[] {
         const seenArtifacts = new Set<string>();
         return artifacts.filter(artifact => {
             const { id: artifactId } = artifact;
@@ -315,7 +315,7 @@ export abstract class Agent<Project, Task> {
         });
     }
 
-    private deduplicateSearchResults(searchResults: SearchResult[], artifacts: Artifact[]): SearchResult[] {
+    protected deduplicateSearchResults(searchResults: SearchResult[], artifacts: Artifact[]): SearchResult[] {
         const seenChunks = new Set<string>();
         const artifactUrls = new Set<string>(artifacts.map(a => `artifact://${a.id}`));
 

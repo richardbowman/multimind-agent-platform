@@ -144,8 +144,8 @@ export class ModelHelpers {
         }
 
         // Deduplicate artifacts first, then search results
-        const deduplicatedArtifacts = params.artifacts ? this.deduplicateArtifacts(params.artifacts) : [];
-        const deduplicatedSearchResults = params.searchResults ? this.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
+        const deduplicatedArtifacts = params.artifacts ? this.modelHelpers.deduplicateArtifacts(params.artifacts) : [];
+        const deduplicatedSearchResults = params.searchResults ? this.modelHelpers.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
 
         if (deduplicatedSearchResults) {
             augmentedInstructions += `\n\nSearch results from knowledge base:\n${deduplicatedSearchResults.map(s => `<searchresult>Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}</searchresult>\n\n`)}`;
