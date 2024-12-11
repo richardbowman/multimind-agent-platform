@@ -1,4 +1,4 @@
-import { StepBasedAgent, AgentState, StepResult, PlanStepsResponse } from './stepBasedAgent';
+import { StepBasedAgent, AgentState, StepResult, PlanStepsResponse, PlanStepTask } from './stepBasedAgent';
 import { ChatClient } from '../chat/chatClient';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
 import { TaskManager } from '../tools/taskManager';
@@ -45,13 +45,19 @@ class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Ta
         this.artifactManager = new ArtifactManager(chromaDBService);
 
         // Register step executors
+        this.registerStepExecutor('answer_questions', {
+            execute: this.executeReply.bind(this)
+        });
+        this.registerStepExecutor('reply', {
+            execute: this.executeReply.bind(this)
+        });
         this.registerStepExecutor('understand_goals', {
             execute: this.executeUnderstandGoals.bind(this)
         });
         this.registerStepExecutor('analyze_goals', {
             execute: this.executeAnalyzeGoals.bind(this)
         });
-        this.registerStepExecutor('create_plan', {
+        this.registerStepExecutor('document_business_plan', {
             execute: this.executeCreatePlan.bind(this)
         });
         this.registerStepExecutor('review_progress', {
@@ -78,15 +84,15 @@ Let's start by discussing your main business goals. What would you like to achie
     @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
     private async handleConversation(params: HandlerParams): Promise<void> {
 
-        const plan = await this.planSteps(params.message);
-
-        this.addNewProject({
-            name: "Onboarding",
-            tasks: plan.steps.map(s => ({
-                type: s.type,
-                description: s.description
-            }))
+        const { projectId } = await this.addNewProject({
+            projectName: "Onboarding",
+            tasks: [{
+                type: "reply",
+                description: "Welcome the user to the onboarding plan, and explain the steps."
+            }]
         });
+
+        const plan = await this.planSteps(projectId, params.userPost.message);
         
         await this.executeNextStep(projectId, params.userPost);
     }
@@ -110,8 +116,9 @@ Let's start by discussing your main business goals. What would you like to achie
             return;
         }
 
-        // Handle the user's input using the base class method
-        await this.handleUserInput(project.id, currentTask.type, params.userPost);
+        const plan = await this.planSteps(project.id, params.userPost.message);
+        
+        await this.executeNextStep(project.id, params.userPost);
     }
 
     protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse> {
@@ -119,13 +126,15 @@ Let's start by discussing your main business goals. What would you like to achie
         
         const schema = schemas.PlanStepsResponse;
 
+        const project = this.projects.getProject(projectId);
         const tasks = this.projects.getAllTasks(projectId);
 
         const mapper = (t: Task, index: number) => ({
             type: t.type,
             description: t.description,
-            index: index,
-        });
+            existingId: t.id,
+        } as PlanStepTask);
+
         const completedSteps = `Completed Tasks:\n${JSON.stringify(tasks.filter(t => t.complete).map(mapper), undefined, " ")}\n\n`;
         const currentSteps = `Current Plan:\n${JSON.stringify(tasks.filter(t => !t.complete).map(mapper), undefined, " ")}\n\n`;
 
@@ -133,9 +142,6 @@ Let's start by discussing your main business goals. What would you like to achie
 `You help on-board users into our AI Agent tool. This service is designed
 to help small businesses perform tasks automatically with regards to research and content creation.
 Break down the consultation process into specific steps.
-If you need clarification or more information, add "ask-question" steps at the beginning of the plan.
-Otherwise, plan concrete steps to help achieve on-board the user and make sure the other agents
-will have sufficient context to help the business.
 
 ${completedSteps}
 
@@ -170,19 +176,20 @@ ${currentSteps}`
                     complete: false,
                     order: index
                 };
-                this.projects.addTask(projectId, newTask);
+                this.projects.addTask(project, newTask);
             }
         });
 
         // Mark any tasks not in the response as completed
         for (const [_, task] of existingTaskMap) {
-            task.complete = true;
-            this.projects.updateTask(projectId, task);
+            this.projects.completeTask(task.id);
         }
 
         return response;
     }
 
+    
+    
     private async updateBusinessPlan(project: OnboardingProject, existingPlan?: Artifact): Promise<string> {
         const schema = {
             type: "object",
@@ -261,6 +268,18 @@ ${currentSteps}`
         });
 
         return artifactId;
+    }
+
+    private async executeReply(goal: string, step: string, projectId: string): Promise<StepResult> {
+        const project = await this.getProjectWithPlan(projectId);
+        const reply = this.generate({
+            instructions: "Generate a user friendly reply",
+            message: step
+        });
+
+        return {
+            finished: true
+        };
     }
 
     private async executeUnderstandGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
