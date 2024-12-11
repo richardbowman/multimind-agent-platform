@@ -152,22 +152,21 @@ ${currentSteps}`
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
 
-        // Create a map of existing tasks by type and description for quick lookup
+        // Create a map of existing tasks by ID
         const existingTaskMap = new Map(
-            tasks.map(task => [`${task.type}-${task.description}`, task])
+            tasks.map(task => [task.id, task])
         );
+
+        // Track which tasks are mentioned in the response
+        const mentionedTaskIds = new Set<string>();
 
         // Update task order and status based on response
         response.steps.forEach((step, index) => {
-            // First try to find by ID if provided, then fall back to type+description
-            const existingTask = step.id ? 
-                tasks.find(t => t.id === step.id) :
-                existingTaskMap.get(`${step.type}-${step.description}`);
-
-            if (existingTask) {
+            if (step.id && existingTaskMap.has(step.id)) {
                 // Update existing task
+                const existingTask = existingTaskMap.get(step.id)!;
                 existingTask.order = index;
-                existingTaskMap.delete(`${existingTask.type}-${existingTask.description}`); // Remove from map to track which tasks weren't in response
+                mentionedTaskIds.add(step.id);
             } else {
                 // Create new task
                 const newTask: Task = {
@@ -182,10 +181,12 @@ ${currentSteps}`
             }
         });
 
-        // Mark any tasks not in the response as completed
-        for (const [_, task] of existingTaskMap) {
-            task.complete = true;
-            this.projects.updateTask(projectId, task);
+        // Mark any tasks not mentioned in the response as completed
+        for (const [taskId, task] of existingTaskMap) {
+            if (!mentionedTaskIds.has(taskId)) {
+                task.complete = true;
+                this.projects.updateTask(projectId, task);
+            }
         }
 
         return response;
