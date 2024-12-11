@@ -63,16 +63,29 @@ export class UnderstandGoalsExecutor implements StepExecutor {
                 Keep questions focused and actionable.`)
         });
 
-        // Create tasks for each intake question
-        for (const q of response.intakeQuestions) {
-            const project = this.taskManager.getProject(projectId);
+        const project = this.taskManager.getProject(projectId);
+        
+        // Get current max order
+        const existingTasks = this.taskManager.getAllTasks(projectId);
+        const maxOrder = Math.max(...existingTasks.map(t => t.order || 0), -1);
+        
+        // Increment order of all existing tasks
+        for (const task of existingTasks) {
+            if (task.order !== undefined) {
+                task.order += response.intakeQuestions.length;
+            }
+        }
+        
+        // Create tasks for each intake question with sequential ordering
+        for (let i = 0; i < response.intakeQuestions.length; i++) {
+            const q = response.intakeQuestions[i];
             await this.taskManager.addTask(project, {
                 id: crypto.randomUUID(),
                 type: 'process-answers',
                 description: `Q: ${q.question}\nPurpose: ${q.purpose}`,
                 creator: this.userId,
                 complete: false,
-                order: 0
+                order: i
             });
         }
 
