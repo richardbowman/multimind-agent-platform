@@ -3,7 +3,7 @@ import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from "src/chat/
 import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
-import blessed, { input } from 'blessed';
+import blessed from 'reblessed';
 import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box, taskDetailViewer, screen, splashBox, startSplashAnimation, commandList, deleteArtifactButton } from "./ui";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { screen } from './ui'
@@ -22,10 +22,10 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     // Show splash screen with animation
     splashBox.show();
     screen.render();
-    
+
     // Start animation
     const animation = startSplashAnimation();
-    
+
     // Hide splash and stop animation after 3 seconds
     setTimeout(() => {
         clearInterval(animation);
@@ -47,7 +47,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     async function loadMessagesForThread(threadId: string | null) {
         chatBox.setContent("");
         const posts = storage.posts.filter(post => post.channel_id === currentChannelId && (post.getRootId() === threadId || post.id === threadId || (threadId === null && !post.getRootId())));
-        
+
         // Get only the last 20 messages
         const recentPosts = posts.slice(-20);
 
@@ -144,34 +144,76 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     });
 
     // Handle input changes for command and user handle autocomplete
-    inputBox.on('keypress', (ch, key) => {
+    inputBox.on('keypress', async (ch, key) => {
         const currentInput = inputBox.getValue() + (ch !== "\r" ? ch : "");
-        
+
+        const fallbackHandler = async () => {
+            commandList.hide();
+            screen.render();
+
+            if (key && key.name === 'enter') {
+                const message = inputBox.getValue().trim();
+
+                if (!message) {
+                    Logger.info("Message cannot be empty.");
+                    inputBox.setValue('');
+                    inputBox.focus();
+                    return;
+                }
+
+                if (message === "/artifacts") {
+                    await loadArtifacts();
+                    return;
+                }
+
+                if (message === "/tasks") {
+                    await loadTasks();
+                    return;
+                }
+
+                if (message === "/retry") {
+                    const lastMessage = getLastUserMessage();
+                    if (lastMessage) {
+                        await sendMessage(lastMessage);
+                        inputBox.setValue('');
+                        inputBox.focus();
+                    } else {
+                        Logger.info("No previous message to retry.");
+                    }
+                    return;
+                }
+
+                await sendMessage(message);
+
+                inputBox.setValue('');
+                inputBox.focus();
+            }
+        };
+
         if (currentInput.startsWith('/')) {
             // Filter commands based on current input
-            const filtered = COMMANDS.filter(cmd => 
+            const filtered = COMMANDS.filter(cmd =>
                 cmd.command.toLowerCase().startsWith(currentInput.toLowerCase()));
-            
+
             if (filtered.length > 0) {
                 commandList.setItems(filtered.map(cmd => `${cmd.command} - ${cmd.description}`));
                 commandList.show();
-                
+
                 // If Enter is pressed, autocomplete with the first match
                 if ((key && key.name === 'enter') || ch === '\r') {
-                    setTimeout(() => { inputBox.setValue(filtered[0].command + ' '); screen.render(); }, 0);
+                    // setTimeout(() => { inputBox.setValue(filtered[0].command + ' '); screen.render(); }, 0);
                     commandList.hide();
                     return false; // Prevent default Enter behavior
                 }
                 screen.render();
             } else {
-                commandList.hide();
-                screen.render();
+                fallbackHandler();
             }
         } else if (currentInput.includes('@')) {
             // Get the partial handle after the @ symbol
             const parts = currentInput.split('@');
             const partial = parts[parts.length - 1].toLowerCase();
-            
+
             // Get all user handles
             const handles = Object.entries(storage.userIdToHandleName)
                 .map(([userId, handle]) => ({
@@ -179,27 +221,25 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                     handle
                 }))
                 .filter(user => user.handle.toLowerCase().includes(partial));
-            
+
             if (handles.length > 0) {
                 commandList.setItems(handles.map(user => user.handle));
                 commandList.show();
-                
+
                 // If Enter is pressed, autocomplete with the first match
                 if ((key && key.name === 'enter') || ch === '\r') {
                     // Replace the partial handle with the complete one
                     const beforeHandle = currentInput.substring(0, currentInput.lastIndexOf('@'));
-                    setTimeout(() => { inputBox.setValue(beforeHandle + handles[0].handle + ' '); screen.render(); }, 0);
+                    // setTimeout(() => { inputBox.setValue(beforeHandle + handles[0].handle + ' '); screen.render(); }, 0);
                     commandList.hide();
                     return false; // Prevent default Enter behavior
                 }
                 screen.render();
             } else {
-                commandList.hide();
-                screen.render();
+                fallbackHandler();
             }
         } else {
-            commandList.hide();
-            screen.render();
+            fallbackHandler();
         }
     });
 
@@ -222,43 +262,6 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         screen.render();
     });
 
-    inputBox.key(['C-s'], async (ch, key) => {
-        const message = inputBox.getValue().trim();
-
-        if (!message) {
-            Logger.info("Message cannot be empty.");
-            inputBox.setValue('');
-            inputBox.focus();
-            return;
-        }
-
-        if (message === "/artifacts") {
-            await loadArtifacts();
-            return;
-        }
-
-        if (message === "/tasks") {
-            await loadTasks();
-            return;
-        }
-
-        if (message === "/retry") {
-            const lastMessage = getLastUserMessage();
-            if (lastMessage) {
-                await sendMessage(lastMessage);
-                inputBox.setValue('');
-                inputBox.focus();
-            } else {
-                Logger.info("No previous message to retry.");
-            }
-            return;
-        }
-
-        await sendMessage(message);
-
-        inputBox.setValue('');
-        inputBox.focus();
-    });
 
     function getLastUserMessage(): string | null {
         const posts = storage.posts.filter(post =>
@@ -355,7 +358,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             const project = await taskManager.getProject(projectId);
             if (!project) continue
             projects.push(project);
-            tasks = [...tasks, ...Object.values(project?.tasks||{})].sort((a, b) => Number(a.complete) - Number(b.complete));
+            tasks = [...tasks, ...Object.values(project?.tasks || {})].sort((a, b) => Number(a.complete) - Number(b.complete));
         }
 
         // Store task IDs in order and create display items
@@ -370,7 +373,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             const assignee = task.assignee ? ` (${storage.getHandleNameForUserId(task.assignee)})` : '';
             return `${checkbox} ${task.description || task.id}${assignee}`;
         });
-        
+
         taskList.setItems(displayItems);
 
         screen.render();
@@ -388,7 +391,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     });
 
     taskManager.on('taskUpdated', async () => {
-        await loadTasks(); 
+        await loadTasks();
         screen.render();
     });
 
@@ -439,7 +442,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             if (task) {
                 const status = task.complete ? 'Completed' : (task.inProgress ? 'In Progress' : 'Not Started');
                 const assignee = task.assignee ? storage.getHandleNameForUserId(task.assignee) : 'Unassigned';
-                
+
                 const contentToShow = `# ${task.title || task.id}
 
 ## Status
@@ -453,7 +456,7 @@ ${task.order !== undefined ? `- **Order**: ${task.order}` : ''}
 ${task.description || '*No description available*'}`;
 
                 inputBox.hide();
-                taskDetailViewer.setMarkdown(contentToShow);
+                taskDetailViewer.setContent(contentToShow);
                 taskDetailViewer.show();
                 taskDetailViewer.focus();
             } else {
@@ -481,7 +484,7 @@ ${task.description || '*No description available*'}`;
                 const contentToShow = `Title: ${artifact.metadata?.title || selectedArtifactId}\n\nContent:\n${artifact.content.toString()}`;
 
                 inputBox.hide();
-                artifactDetailViewer.setMarkdown(contentToShow);
+                artifactDetailViewer.setContent(contentToShow);
                 artifactDetailViewer.show();
                 artifactDetailViewer.focus();
             } else {
@@ -495,12 +498,12 @@ ${task.description || '*No description available*'}`;
         screen.render();
     });
 
-    let allArtifacts : Artifact[];
+    let allArtifacts: Artifact[];
 
     async function loadArtifactFilter() {
         // Update type filter options if needed
         const types = ['All Types', ...new Set(allArtifacts.map(a => a.type))];
-        
+
         // Create commands object for listbar
         const commands = types.reduce((acc, type) => {
             const key = type.toLowerCase().replace(/\s+/g, '-');
@@ -530,7 +533,7 @@ ${task.description || '*No description available*'}`;
         return filteredArtifacts;
     }
 
-    let selectedArtifact : Artifact;
+    let selectedArtifact: Artifact;
 
     // Handle global artifact list selection
     globalArtifactList.on('select', async (item, index) => {
@@ -538,7 +541,7 @@ ${task.description || '*No description available*'}`;
 
         if (selectedArtifact) {
             // Format metadata section
-            const metadataSection = selectedArtifact.metadata ? 
+            const metadataSection = selectedArtifact.metadata ?
                 Object.entries(selectedArtifact.metadata)
                     .map(([key, value]) => `- **${key}**: ${value}`)
                     .join('\n') :
@@ -552,7 +555,7 @@ ${metadataSection}
 
 ## Content
 ${selectedArtifact.content.toString()}`;
-            
+
             globalArtifactViewer.setContent(contentToShow);
             deleteArtifactButton.show();
             screen.render();
@@ -565,11 +568,11 @@ ${selectedArtifact.content.toString()}`;
         try {
             await artifactManager.deleteArtifact(selectedArtifact.id);
             Logger.info(`Deleted artifact: ${selectedArtifact.id}`);
-            
+
             // Refresh the artifacts list
             allArtifacts = await artifactManager.listArtifacts();
             await loadGlobalArtifacts();
-            
+
             // Clear and hide the viewer and delete button
             globalArtifactViewer.setContent('');
             deleteArtifactButton.hide();
@@ -578,7 +581,7 @@ ${selectedArtifact.content.toString()}`;
             Logger.error('Failed to delete artifact:', error);
         }
     });
-    
+
     screen.key(['escape', 'q', 'C-c'], function (ch, key) {
         if (!artifactDetailViewer.hidden || !taskDetailViewer.hidden) {
             artifactDetailViewer.hide();
@@ -591,6 +594,14 @@ ${selectedArtifact.content.toString()}`;
             return process.exit(0);
         }
     });
+
+    inputBox.on("mouseover", () => {
+        inputBox.focus();
+    })
+
+    inputBox.on("mouseout", () => {
+        chatBox.focus();
+    })
 
     inputBox.on("focus", () => {
         inputBox.input();
