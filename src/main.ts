@@ -15,6 +15,8 @@ import { ProjectManager } from "./agents/projectManager";
 import { OnboardingConsultant } from "./agents/onboardingConsultant";
 import { ConverseResponseFilterSensitiveLog } from "@aws-sdk/client-bedrock-runtime";
 import { FactChecker } from "./agents/factChecker";
+import Logger from "./helpers/logger";
+import GoalBasedOnboardingConsultant from "./agents/goalBasedOnboardingConsultant";
 
 const llmService = LLMServiceFactory.createService(LLM_PROVIDER as LLMProvider);
 // Initialize the embedding and LLaMA models
@@ -22,9 +24,15 @@ await llmService.initializeEmbeddingModel(EMBEDDING_MODEL);
 await llmService.initializeLlamaModel(CHAT_MODEL);
 
 const chromaService = new ChromaDBService(llmService);
+const artifactManager = new ArtifactManager(chromaService);
+
+chromaService.on("needsReindex", async () => {
+    Logger.info("Reindexing");
+    await artifactManager.indexArtifacts();
+});
+
 await chromaService.initializeCollection(CHROMA_COLLECTION);
 
-const artifactManager = new ArtifactManager(chromaService);
 
 const storage = new InMemoryChatStorage(".output/chats.json");
 const tasks = new SimpleTaskManager(".output/tasks.json");
@@ -65,7 +73,7 @@ const pmClient = new InMemoryTestClient(PROJECT_MANAGER_USER_ID, "test", storage
 const pmAssistant = new ProjectManager(PROJECT_MANAGER_USER_ID, "@pm", pmClient, llmService, chromaService, tasks);
 
 const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
-const onboardingAssistant = new OnboardingConsultant(ONBOARDING_CONSULTANT_USER_ID, "@onboarding", onboardingClient, llmService, chromaService, tasks);
+const onboardingAssistant = new GoalBasedOnboardingConsultant(ONBOARDING_CONSULTANT_USER_ID, "@onboarding", onboardingClient, llmService, chromaService, tasks);
 await onboardingAssistant.initialize();
 
 const factCheckerClient = new InMemoryTestClient(FACT_CHECKER_USER_ID, "test", storage);
@@ -73,6 +81,8 @@ const factChecker = new FactChecker(factCheckerClient, llmService, tasks);
 factChecker.setupChatMonitor(FACT_CHECK_CHANNEL_ID, "@factcheck");
 
 setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
+
+
 
 
 // const project = await tasks.getProject("58b88241-5bf8-4e74-9184-963baa9d7664");
