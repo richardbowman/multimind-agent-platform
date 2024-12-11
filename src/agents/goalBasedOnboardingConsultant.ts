@@ -46,25 +46,6 @@ class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Ta
         throw new Error('Method not implemented.');
     }
 
-    constructor(
-        chatClient: ChatClient,
-        lmStudioService: LMStudioService,
-        userId: string,
-        projects: TaskManager,
-        chromaDBService: ChromaDBService
-    ) {
-        super(chatClient, lmStudioService, userId, projects, chromaDBService);
-        
-        // Register our specialized executors
-        this.registerStepExecutor(new ThinkingExecutor(lmStudioService));
-        this.registerStepExecutor(new RefutingExecutor(lmStudioService));
-        this.registerStepExecutor(new ValidationExecutor(lmStudioService));
-
-        this.setPurpose(`I am an Onboarding Agent focused on helping users achieve their business goals with our AI Agent tools. This service is designed
-to help businesses automate tasks automatically including research and content creation. My goal is to ensure that the rest of the agents in the platform
-are trained and educated on what the user is trying to achieve using our system. This means I build an understanding of their business goals, market, strategy,
-and brand standards. When all of that is complete, I build and maintain a comprehensive on-boarding guide, and then introduce the user to the other agents.`);
-    }
 
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Onboarding Consultant`);
@@ -255,7 +236,10 @@ Let's start by discussing your main business goals. What would you like to achie
         this.registerStepExecutor(new RefutingExecutor(lmStudioService));
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));
 
-        this.setPurpose(`I am an Onboarding Agent focused on helping users achieve their business goals with our AI Agent tools...`);
+        this.setPurpose(`I am an Onboarding Agent focused on helping users achieve their business goals with our AI Agent tools. This service is designed
+to help businesses automate tasks automatically including research and content creation. My goal is to ensure that the rest of the agents in the platform
+are trained and educated on what the user is trying to achieve using our system. This means I build an understanding of their business goals, market, strategy,
+and brand standards. When all of that is complete, I build and maintain a comprehensive on-boarding guide, and then introduce the user to the other agents.`);
     }
         const schema = {
             type: "object",
