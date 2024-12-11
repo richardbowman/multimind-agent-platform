@@ -50,14 +50,17 @@ If the solution is incomplete, list the specific aspects that still need to be a
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
 
-        return {
+        const result = {
             type: 'validation',
             finished: true,
             isComplete: response.isComplete,
-            missingAspects: response.missingAspects,
+            missingAspects: response.missingAspects || [],
             response: {
                 message: response.message
             }
         };
+
+        // Ensure we always return a valid result with required fields
+        return result;
     }
 }

@@ -187,15 +187,19 @@ ${currentSteps}`;
             }
 
             // If this was a validation step, check if we need more work
-            if (task.type === 'validation' && stepResult.response) {
-                const validationResult = stepResult.response as any;
-                if (!validationResult.isComplete && validationResult.missingAspects?.length > 0) {
+            if (task.type === 'validation') {
+                if (!stepResult.isComplete && stepResult.missingAspects?.length > 0) {
+                    // Plan additional steps only if validation failed
                     const planningPrompt = `Original Goal: ${project.name}\n\n` +
                         `The solution is not yet complete. Please continue working on the goal.\n` +
                         `Missing aspects to address:\n` +
-                        `${validationResult.missingAspects.map((aspect: string) => `- ${aspect}`).join('\n')}`;
+                        `${stepResult.missingAspects.map((aspect: string) => `- ${aspect}`).join('\n')}`;
 
                     await this.planSteps(projectId, planningPrompt);
+                } else {
+                    // If validation passed, mark project as complete
+                    await this.projectCompleted(project);
+                    return;
                 }
             }
 
