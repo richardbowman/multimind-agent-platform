@@ -20,7 +20,7 @@ export interface StepResult {
 }
 
 export interface StepExecutor {
-    execute(goal: string, step: string, projectId: string): Promise<StepResult>;
+    execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult>;
 }
 
 export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
@@ -137,10 +137,9 @@ ${currentSteps}`;
     
     protected async executeStep(projectId: string, task: Task, userPost: ChatPost): Promise<void> {
         try {
-            const currentStep = task.type;
-            const executor = this.stepExecutors.get(currentStep);
+            const executor = this.stepExecutors.get(task.type);
             if (!executor) {
-                throw new Error(`No executor found for step type: ${currentStep}`);
+                throw new Error(`No executor found for step type: ${task.type}`);
             }
 
             const project = this.projects.getProject(projectId);
@@ -148,25 +147,25 @@ ${currentSteps}`;
                 throw new Error(`Project ${projectId} not found`);
             }
 
-            const stepResult = await executor.execute(project.name, currentStep, projectId);
+            // Get previous step's result if it exists
+            const previousTask = this.getPreviousTask(projectId, task);
+            const previousResult = previousTask?.props?.result;
+
+            const stepResult = await executor.execute(
+                project.name, 
+                task.type, 
+                projectId,
+                previousResult
+            );
             
-            // // Create a task for this step result if one was returned
-            // if (stepResult.taskId) {
-            //     await this.projects.markTaskInProgress({
-            //         id: stepResult.taskId,
-            //         description: `${currentStep}: ${stepResult.description || 'Step completed'}`,
-            //         creator: this.userId,
-            //         projectId: projectId
-            //     });
-            // }
+            // Store the result in task props
+            if (!task.props) task.props = {};
+            task.props.result = stepResult.response;
 
             if (stepResult.finished) {
                 this.projects.completeTask(task.id);
             }
 
-            // // Determine next steps
-            // const nextAction = await this.determineNextAction(projectId, stepResult);
-            
             if (stepResult.needsUserInput && stepResult.response) {
                 await this.reply(userPost, stepResult.response, {
                     "project-id": projectId
@@ -174,7 +173,6 @@ ${currentSteps}`;
                 return;
             }
 
-            // Continue with next step
             await this.executeNextStep(projectId, userPost);
 
         } catch (error) {
@@ -235,6 +233,13 @@ Consider the original goal and what we've learned so far.`;
             message: context,
             instructions
         });
+    }
+
+    private getPreviousTask(projectId: string, currentTask: Task): Task | null {
+        const tasks = this.projects.getAllTasks(projectId);
+        const sortedTasks = tasks.sort((a, b) => (a.order || 0) - (b.order || 0));
+        const currentIndex = sortedTasks.findIndex(t => t.id === currentTask.id);
+        return currentIndex > 0 ? sortedTasks[currentIndex - 1] : null;
     }
 
     protected async generateAndSendFinalResponse(projectId: string, userPost: ChatPost): Promise<void> {

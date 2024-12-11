@@ -18,6 +18,7 @@ export interface Task {
     inProgress?: boolean;
     order?: number;  // Lower numbers come first
     dependsOn?: string;  // ID of the task that must complete before this one can start
+    props?: Record<string, any>;  // Flexible metadata field for storing step results etc
 }
 
 export interface RecurringTask extends Task {
