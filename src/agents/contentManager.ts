@@ -54,14 +54,15 @@ export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> 
         this.registerStepExecutor(new EditingExecutor(lmStudioService));
 
         this.setPurpose(`You are planning how to create high-quality content.
-Break down the content creation into steps of research, outlining, and section development.
+Break down the content creation into steps of research, outlining, writing and editing.
 Use 'research' steps to gather information, 'outline' steps to structure the content,
-and 'assign' steps to delegate section writing.
+'writing' steps to develop sections, and 'editing' steps to improve quality.
 
 IMPORTANT: Always follow this pattern:
 1. Start with a 'research' step to gather relevant information
 2. Follow with an 'outline' step to structure the content
-3. End with 'assign' steps to delegate section writing to content writers`);
+3. Use 'writing' steps to develop each section
+4. End with 'editing' steps to improve the final content`);
     }
 
     protected async processTask(task: ContentTask): Promise<void> {
@@ -260,8 +261,8 @@ writers to develop content sections.`;
         }
     }
 
-    @HandleActivity(ContentManagerActivityType.CreateDocument, "STEP 1: Begin content project", ResponseType.CHANNEL)
-    private async handleBlogPostResearch(params: HandlerParams) {
+    @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
+    protected async handleConversation(params: HandlerParams): Promise<void> {
         try {
             const interpretationJSON = await this.lmStudioService.sendStructuredRequest(
                 params.userPost.message,
@@ -313,8 +314,8 @@ writers to develop content sections.`;
         }
     }
 
-    @HandleActivity(ContentManagerActivityType.CreateOutline, "STEP 2: Generate content outline", ResponseType.RESPONSE)
-    private async handleCreateBlogPost(params: ProjectHandlerParams) {
+    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
+    protected async handleThreadResponse(params: HandlerParams): Promise<void> {
         const existingProject : ContentProject = this.projects.getProject(params.projectChain.projectId);
         const project = await this.decomposeContent(params.userPost, existingProject);
     
