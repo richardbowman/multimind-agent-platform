@@ -11,6 +11,7 @@ import { SOLVER_CHANNEL_ID } from 'src/helpers/config';
 import ChromaDBService from 'src/llm/chromaService';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { ValidationExecutor } from './executors/ValidationExecutor';
+import { ResearchExecutor } from './executors/ResearchExecutor';
 
 export class SolverAgent extends StepBasedAgent<any, any> {
     constructor(
@@ -26,6 +27,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         this.registerStepExecutor(new ThinkingExecutor(lmStudioService));
         this.registerStepExecutor(new RefutingExecutor(lmStudioService));
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));
+        this.registerStepExecutor(new ResearchExecutor(lmStudioService, chromaDBService));
 
         this.setPurpose(`You are an expert at solving complex problems through careful reasoning.`);
 
@@ -35,24 +37,31 @@ Use steps of constructive thinking, critical refutation, and validation to devel
 Here are two examples of how to approach problems:
 
 MINIMUM STEPS (e.g. choosing lunch):
-1. thinking: Consider preferences, dietary restrictions, and available options
-2. refuting: Challenge assumptions about time and budget
-3. thinking: Refine choice based on the constraints identified
-4. validation: Confirm the choice meets all requirements and constraints
+1. research: Look up relevant guidelines and best practices
+2. thinking: Consider preferences, dietary restrictions, and available options
+3. refuting: Challenge assumptions about time and budget
+4. thinking: Refine choice based on the constraints identified
+5. validation: Confirm the choice meets all requirements and constraints
 
 COMPLEX PROBLEM SAMPLE (e.g. designing a new product):
-1. thinking: Brainstorm potential concepts
-2. thinking: Analyze market needs and technical requirements
-3. thinking: Develop initial design approach
-4. refuting: Challenge design assumptions and identify risks
-5. thinking: Refine design based on risk analysis
-6. refuting: Test edge cases and user scenarios
-7. thinking: Finalize design with mitigations
-8. validation: Comprehensive verification of final design
+1. research: Study similar solutions and established patterns
+2. thinking: Brainstorm potential concepts
+3. thinking: Analyze market needs and technical requirements
+4. thinking: Develop initial design approach
+5. refuting: Challenge design assumptions and identify risks
+6. thinking: Refine design based on risk analysis
+7. refuting: Test edge cases and user scenarios
+8. thinking: Finalize design with mitigations
+9. validation: Comprehensive verification of final design
 
 Adapt your approach to the complexity of each problem, using more cycles as needed.
 
-AT A MINIMUM, YOU MUST always perform 4 cycles: thinking, refuting, thinking, validation.
+AT A MINIMUM, YOU MUST always perform these 5 steps in order:
+1. research (to learn from existing knowledge)
+2. thinking (to develop initial approach)
+3. refuting (to challenge assumptions)
+4. thinking (to refine based on challenges)
+5. validation (to verify the solution)
 
 In the reasoning field, explain the complexity you see in this goal.`;
     }
