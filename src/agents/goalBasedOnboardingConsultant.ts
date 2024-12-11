@@ -387,7 +387,7 @@ ${currentSteps}`
 
         // Update tasks and store answers based on analysis
         for (const answer of modelResponse.answers) {
-            const task = this.projects.getTask(answer.questionId);
+            const task = project.tasks[answer.questionId];
             if (task && answer.answered) {
                 // Validate the answer quality
                 const isAnswerMeaningful = answer.extractedAnswer.length > 10 && 
@@ -476,7 +476,7 @@ ${currentSteps}`
         if (!project.answers) return [];
         
         return project.answers.filter(answer => {
-            const task = this.projects.getTask(answer.questionId);
+            const task = project.tasks[answer.questionId];
             return task?.type === questionType;
         });
     }
@@ -714,7 +714,7 @@ ${currentSteps}`
 
         // Create tasks for each action item
         for (const plan of response.plans) {
-            const parentGoal = this.projects.getTask(plan.goalId);
+            const parentGoal = project.tasks[plan.goalId];
             if (!parentGoal) continue;
 
             for (const action of plan.actionItems) {
@@ -812,7 +812,7 @@ ${currentSteps}`
 
         // Update task metadata with latest progress info
         for (const update of response.progress) {
-            const task = this.projects.getTask(update.taskId);
+            const task = project.tasks[update.taskId];
             if (task) {
                 task.metadata = {
                     ...task.metadata,
