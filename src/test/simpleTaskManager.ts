@@ -163,6 +163,10 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
             const project = this.projects[projectId];
             if (project.tasks?.hasOwnProperty(id)) {
                 const task = project.tasks[id];
+                // Skip if task is already completed
+                if (task.complete) {
+                    return task;
+                }
                 task.complete = true;
                 taskFound = true;
                 // Emit the 'taskCompleted' event with the completed task, creator, and assignee
