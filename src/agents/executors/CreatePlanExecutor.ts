@@ -1,7 +1,9 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import crypto from 'crypto';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
-import { definitions as generatedSchemaDef } from "../schemas/schema.json";
+import { SchemaInliner } from '../../helpers/schemaInliner';
+import * as schemaJson from "../schemas/schema.json";
+const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 import { OperationalGuideResponse } from '../schemas/OperationalGuideResponse';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
