@@ -48,14 +48,13 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
     }
 
     async addProject(project: Project<Task>): Promise<void> {
-        // Ensure metadata exists with defaults
-        if (!project.metadata) {
-            project.metadata = {
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                status: 'active'
-            };
-        }
+        // Merge provided metadata with defaults
+        project.metadata = {
+            createdAt: new Date(),
+            updatedAt: new Date(),
+            status: 'active',
+            ...project.metadata // Spread existing metadata to override defaults
+        };
         this.projects[project.id] = project;
         await this.save();
     }
