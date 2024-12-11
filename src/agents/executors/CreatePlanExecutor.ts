@@ -78,7 +78,7 @@ export class CreatePlanExecutor implements StepExecutor {
         });
 
         // Update the business plan with the operational guide
-        const businessPlanId = await this.updateProjectBusinessPlan(project);
+        const businessPlanId = await this.updateProjectBusinessPlan(project, response);
 
         return {
             type: 'operational_guide',
@@ -114,7 +114,7 @@ export class CreatePlanExecutor implements StepExecutor {
         });
     }
 
-    private async updateProjectBusinessPlan(project: OnboardingProject): Promise<string> {
+    private async updateProjectBusinessPlan(project: OnboardingProject, response: any): Promise<string> {
         const businessPlanId = await updateBusinessPlan(
             project, 
             this.modelHelpers, 
