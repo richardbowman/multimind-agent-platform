@@ -47,6 +47,7 @@ export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> 
 
         // Register our specialized executors
         this.registerStepExecutor(new ResearchExecutor(lmStudioService));
+        this.registerStepExecutor(new OutlineExecutor(lmStudioService));
 
         this.setPurpose(`You are planning how to create high-quality content.
 Break down the content creation into steps of research, outlining, and section development.
@@ -177,14 +178,27 @@ writers to develop content sections.`;
             projectName: `Content creation: ${params.userPost.message}`,
             tasks: [],
             metadata: {
-                originalPostId: params.userPost.id
+                originalPostId: params.userPost.id,
+                goal: params.userPost.message
             }
         });
         
         const project = await this.projects.getProject(projectId);
         params.projects = [...params.projects || [], project];
         
-        const plan = await this.planSteps(params);
+        // Define the standard content creation steps
+        const steps = [
+            {
+                type: 'research',
+                description: 'Research relevant content and gather information'
+            },
+            {
+                type: 'outline',
+                description: 'Create structured content outline based on research'
+            }
+        ];
+        
+        await this.setProjectSteps(projectId, steps);
         await this.executeNextStep(projectId, params.userPost);
     }
 
