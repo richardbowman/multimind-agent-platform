@@ -416,17 +416,25 @@ ${currentSteps}`
         const response = await this.generate({
             message: goal,
             instructions: new StructuredOutputPrompt(schema,
-                `Based on the user's initial goals, generate a list of intake questions.
-                Each question should help gather specific information needed to create an effective plan.
-                Consider aspects like:
-                - Current business state
-                - Specific objectives
-                - Timeline expectations
-                - Resource constraints
-                - Success metrics
+                `Based on the user's initial business goals, generate focused questions to understand both their business needs and how our AI service fits in.
+                Each question should help gather specific information about:
+
+                Business Understanding:
+                - Their business model and target market
+                - Their specific growth objectives and challenges
+                - Their competitive advantages
+                - Their desired business outcomes
+                - Their timeline and budget expectations
+
+                AI Service Integration:
+                - Which business processes they want to automate
+                - What type of content or tasks they need help with
+                - Their team's current workflow and pain points
+                - Their experience level with AI tools
+                - Their success metrics for AI automation
                 
-                Keep questions focused and actionable.
-                Include 3-5 essential questions.`)
+                Include 4-6 essential questions that will help us understand both their business goals and how we can best support them.
+                Keep questions focused and actionable.`)
         });
 
         // Create tasks for each intake question
