@@ -13,7 +13,7 @@ import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDec
 import { ModelHelpers } from '../../llm/helpers';
 import { CreateArtifact } from '../schemas/ModelResponse';
 
-@StepExecutorDecorator('create_plan', 'Create detailed action plans for each business goal')
+@StepExecutorDecorator('create_revise_plan', `Create (or revise) a guide for our agents of the user's desired business goals.`)
 export class CreatePlanExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private userId: string;
@@ -44,12 +44,12 @@ export class CreatePlanExecutor implements StepExecutor {
                 answers
             }),
             instructions: new StructuredOutputPrompt(schema,
-                `Create detailed action plans for each business goal.
+                `Create an overview of the user's desired business goals so our project manager, researcher, and content writer agents know how to help.
                 Use the provided answers about the business and service requirements to inform the plan.`)
         });
 
         // Update the business plan with the operational guide
-        const businessPlanId = await this.updateProjectBusinessPlan(project, response);
+        const agentsGuideId = await this.updateProjectBusinessPlan(project, response);
 
         // mark all tasks we were able to incorporate as complete
         for (const planTask of businessGoals) {
@@ -57,15 +57,15 @@ export class CreatePlanExecutor implements StepExecutor {
         }
 
         // Format the response message to include the artifact reference
-        const responseMessage = `${response.summary}\n\n---\nI've created a detailed business plan (${businessPlanId}) that outlines the operational strategy and next steps.`;
+        const responseMessage = `${response.summary}\n\n---\nI've created a detailed plan (${agentsGuideId}) that outlines the operational strategy. Let me know if you'd like any changes?`;
 
         return {
-            type: 'operational_guide',
+            type: 'create_revise_plan',
             finished: true,
-            needsUserInput: false,
+            needsUserInput: true,
             response: {
                 message: responseMessage,
-                artifactId: businessPlanId,
+                artifactId: agentsGuideId,
                 artifactTitle: "Business Plan"
             } as CreateArtifact
         };
