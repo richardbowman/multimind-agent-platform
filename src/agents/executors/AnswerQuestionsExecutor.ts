@@ -3,13 +3,18 @@ import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioServi
 import { TaskManager } from '../../tools/taskManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ModelHelpers } from '../../llm/helpers';
 
 @StepExecutorDecorator('answer_questions', 'Analyze and process user responses to intake questions')
 export class AnswerQuestionsExecutor implements StepExecutor {
+    private modelHelpers: ModelHelpers;
+
     constructor(
-        private lmStudioService: LMStudioService,
+        llmService: LMStudioService,
         private taskManager: TaskManager
-    ) {}
+    ) {
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    }
 
     async execute(response: string, step: string, projectId: string): Promise<StepResult> {
         const schema = {
@@ -46,7 +51,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             };
         }
 
-        const modelResponse = await this.lmStudioService.generate({
+        const modelResponse = await this.modelHelpers.generate({
             message: response,
             instructions: new StructuredOutputPrompt(schema,
                 `Analyze the user's response against these pending questions:

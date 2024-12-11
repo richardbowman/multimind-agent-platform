@@ -4,14 +4,19 @@ import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ModelHelpers } from '../../llm/helpers';
 
 @StepExecutorDecorator('create_plan', 'Create detailed action plans for each business goal')
 export class CreatePlanExecutor implements StepExecutor {
+    private modelHelpers: ModelHelpers;
+
     constructor(
-        private lmStudioService: LMStudioService,
+        llmService: LMStudioService,
         private taskManager: TaskManager,
         private artifactManager: ArtifactManager
-    ) {}
+    ) {
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    }
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
@@ -54,7 +59,7 @@ export class CreatePlanExecutor implements StepExecutor {
         const businessAnswers = this.getAnswersForType(project, 'business-question');
         const serviceAnswers = this.getAnswersForType(project, 'service-question');
 
-        const response = await this.lmStudioService.generate({
+        const response = await this.modelHelpers.generate({
             message: JSON.stringify({
                 goals: businessGoals,
                 currentPlan: project.existingPlan?.content.toString(),

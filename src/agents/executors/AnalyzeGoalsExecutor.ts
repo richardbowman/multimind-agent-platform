@@ -6,14 +6,19 @@ import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import crypto from 'crypto';
 import { Task } from '../../tools/taskManager';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ModelHelpers } from '../../llm/helpers';
 
 @StepExecutorDecorator('analyze_goals', 'Break down and analyze business goals into actionable tasks')
 export class AnalyzeGoalsExecutor implements StepExecutor {
+    private modelHelpers: ModelHelpers;
+
     constructor(
-        private lmStudioService: LMStudioService,
+        llmService: LMStudioService,
         private taskManager: TaskManager,
         private artifactManager: ArtifactManager
-    ) {}
+    ) {
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    }
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
@@ -60,7 +65,7 @@ export class AnalyzeGoalsExecutor implements StepExecutor {
             required: ["goals"]
         };
 
-        const response = await this.lmStudioService.generate({
+        const response = await this.modelHelpers.generate({
             message: userInput,
             instructions: new StructuredOutputPrompt(schema, 
                 `Restructure the information the user provided on business goals`)

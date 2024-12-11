@@ -4,14 +4,19 @@ import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ModelHelpers } from '../../llm/helpers';
 
 @StepExecutorDecorator('review_progress', 'Review and analyze progress of all tasks and goals')
 export class ReviewProgressExecutor implements StepExecutor {
+    private modelHelpers: ModelHelpers;
+
     constructor(
-        private lmStudioService: LMStudioService,
+        llmService: LMStudioService,
         private taskManager: TaskManager,
         private artifactManager: ArtifactManager
-    ) {}
+    ) {
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    }
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
@@ -49,7 +54,7 @@ export class ReviewProgressExecutor implements StepExecutor {
             required: ["progress", "summary"]
         };
 
-        const response = await this.lmStudioService.generate({
+        const response = await this.modelHelpers.generate({
             message: JSON.stringify({
                 currentGoal: goal,
                 tasks: tasks.map(t => ({

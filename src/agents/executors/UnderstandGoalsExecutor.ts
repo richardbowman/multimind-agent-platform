@@ -2,13 +2,18 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ModelHelpers } from '../../llm/helpers';
 
 @StepExecutorDecorator('understand_goals', 'Generate focused questions to understand business needs and AI service fit')
 export class UnderstandGoalsExecutor implements StepExecutor {
+    private modelHelpers: ModelHelpers;
+
     constructor(
-        private lmStudioService: LMStudioService,
+        llmService: LMStudioService,
         private taskManager: TaskManager
-    ) {}
+    ) {
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    }
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
         const schema = {
@@ -30,7 +35,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             required: ["intakeQuestions", "reasoning"]
         };
 
-        const response = await this.lmStudioService.generate({
+        const response = await this.modelHelpers.generate({
             message: goal,
             instructions: new StructuredOutputPrompt(schema,
                 `Based on the user's initial business goals, generate focused questions to understand both their business needs and how our AI service fits in.
