@@ -22,7 +22,6 @@ export interface StepResult {
 }
 
 export interface StepExecutor {
-    description: string;
     execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult>;
 }
 
@@ -44,13 +43,8 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         if (metadata) {
             // Use decorator metadata if available
             this.stepExecutors.set(metadata.key, executor);
-        } else if (typeof executor.description === 'string') {
-            // Fall back to using the executor's description property
-            // Use constructor name as key if no explicit key is provided
-            const key = executor.constructor.name.toLowerCase().replace('executor', '');
-            this.stepExecutors.set(key, executor);
         } else {
-            throw new Error(`No metadata or description found for executor ${executor.constructor.name}`);
+            Logger.warn(`No metadata or description found for executor ${executor.constructor.name}`);
         }
     }
 
@@ -84,15 +78,19 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         const systemPrompt =
             `${this.modelHelpers.getPurpose()}
 
-TASK GOAL: Plan the steps needed to accomplish the given goal.
+TASK GOAL: Your only job is to create new steps to achieve the goal if they are missing, and reorder steps if needed to change priority.
+Return a steps list in the order you want the steps performed.
 
-The allowable step types you can execute later are:
+The allowable step types you can execute in the plan:
 ${stepDescriptions}
 
 If you've completed any steps already they will be listed here:
 ${completedSteps}
 
-This is your current active step list. If you remove an item from this list, we'll assume it isn't needed any longer. You can add new items by specifying a type and a description. You should include any relevant existing steps as well with their existingStepId.
+This is your current active step list. If you remove an item from this list, we'll assume it isn't needed any longer. 
+You can add new items by specifying a type and a description.
+You must include current steps in your response with their "existingId".
+
 ${currentSteps}`;
 
         const response: PlanStepsResponse = await this.generate({
@@ -177,7 +175,7 @@ ${currentSteps}`;
                 .filter(r => r); // Remove undefined/null results
 
             const stepResult = await executor.execute(
-                project.name,
+                `${userPost.message} [${project.name}]`,
                 task.type,
                 projectId,
                 priorResults
