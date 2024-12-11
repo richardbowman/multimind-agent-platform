@@ -4,10 +4,10 @@ import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 
 export class RefutingExecutor implements StepExecutor {
-    private llmService: LMStudioService;
+    private modelHelpers: ModelHelpers;
 
     constructor(llmService: LMStudioService) {
-        this.llmService = llmService;
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
@@ -38,7 +38,7 @@ Consider possible counterarguments and evaluate their validity.
 Provide a balanced analysis and final verdict.`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.llmService.generate({
+        const result = await this.modelHelpers.generate({
             message: goal,
             instructions
         });

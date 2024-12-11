@@ -4,10 +4,10 @@ import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 
 export class ThinkingExecutor implements StepExecutor {
-    private llmService: LMStudioService;
+    private modelHelpers: ModelHelpers;
 
     constructor(llmService: LMStudioService) {
-        this.llmService = llmService;
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
@@ -31,7 +31,7 @@ Given a problem, break it down into logical steps and reason through it carefull
 Consider multiple angles and potential implications.`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.llmService.generate({
+        const result = await this.modelHelpers.generate({
             message: goal,
             instructions
         });
