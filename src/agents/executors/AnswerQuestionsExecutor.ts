@@ -160,11 +160,19 @@ export class AnswerQuestionsExecutor implements StepExecutor {
     private formatRemainingQuestions(remainingQuestions: any[], modelResponse: any): string {
         let message = "I still need more information:\n\n";
         remainingQuestions.forEach(q => {
-            const answer = modelResponse.answers.find(a => a.questionId === q.id);
+            // Get the corresponding answer from modelResponse
+            const answer = Array.isArray(modelResponse.answers) ? 
+                modelResponse.answers.find((a: any) => a.questionId === q.id) : 
+                undefined;
+
             message += `${q.description}\n`;
-            if (answer?.partialAnswer) {
-                message += `Current answer: ${answer.partialAnswer}\n`;
-                message += `Additional info needed: ${answer.analysis}\n`;
+            
+            // Check task metadata instead of answer for partial information
+            if (q.metadata?.partialAnswer) {
+                message += `Current answer: ${q.metadata.partialAnswer}\n`;
+                message += `Additional info needed: ${q.metadata.analysis}\n`;
+            } else if (answer?.analysis) {
+                message += `Feedback: ${answer.analysis}\n`;
             }
             message += "\n";
         });
