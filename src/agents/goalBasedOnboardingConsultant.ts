@@ -1,4 +1,4 @@
-import { StepBasedAgent, AgentState, StepResult } from './stepBasedAgent';
+import { StepBasedAgent, AgentState, StepResult, PlanStepsResponse } from './stepBasedAgent';
 import { ChatClient } from '../chat/chatClient';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
 import { TaskManager } from '../tools/taskManager';
@@ -11,21 +11,8 @@ import { Project, Task } from '../tools/taskManager';
 import crypto from 'crypto';
 import { Artifact } from 'src/tools/artifact';
 import { RequestArtifacts } from './schemas/ModelResponse';
+import { definitions as schemas } from "./schemas/schema.json";
 
-export interface PlanStepsResponse {
-    steps: {
-        type: string;
-        description?: string;
-    }[];
-    requiresUserInput: boolean;
-    userQuestion?: string;
-    existingArtifacts?: {
-        id: string;
-        content: string;
-        title: string;
-        underlyingData: string;
-    }[];
-}
 
 export interface OnboardingProject extends Project<Task> {
     businessDescription?: string;
@@ -127,59 +114,17 @@ Let's start by discussing your main business goals. What would you like to achie
         await this.handleUserInput(project.id, currentTask.type, params.userPost);
     }
 
-    protected async planSteps(projectId: string, latestGoal: string): Promise<{
-        steps: {
-            type: string;
-            description?: string;
-        }[];
-        requiresUserInput: boolean;
-        userQuestion?: string;
-    }> {
+    protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse> {
         const registeredSteps = Array.from(this.stepExecutors.keys());
         
-        const schema = {
-            type: "object",
-            properties: {
-                steps: {
-                    type: "array",
-                    items: {
-                        type: "object" ,
-                        properties: {
-                            type: {
-                                type: "string",
-                                enum: registeredSteps,
-                                description: "The type of step to execute"
-                            },
-                            description: {
-                                type: "string",
-                                description: "Description of what needs to be done"
-                            },
-                            order: {
-                                type: "number",
-                                description: "Order in which the step is executed"
-                            }
-                        }
-                    },
-                    description: "List of steps needed"
-                },
-                requiresUserInput: {
-                    type: "boolean",
-                    description: "Whether user input is needed"
-                },
-                userQuestion: {
-                    type: "string",
-                    description: "Question to ask the user if needed"
-                }
-            },
-            required: ["steps", "requiresUserInput"]
-        };
+        const schema = schemas.PlanStepsResponse;
 
         const tasks = this.projects.getAllTasks(projectId);
 
-        const mapper = (t: Task) => ({
+        const mapper = (t: Task, index: number) => ({
             type: t.type,
             description: t.description,
-            order: t.order,
+            index: index,
         });
         const completedSteps = `Completed Tasks:\n${JSON.stringify(tasks.filter(t => t.complete).map(mapper), undefined, " ")}\n\n`;
         const currentSteps = `Current Plan:\n${JSON.stringify(tasks.filter(t => !t.complete).map(mapper), undefined, " ")}\n\n`;
@@ -197,7 +142,7 @@ ${completedSteps}
 ${currentSteps}`
 
 
-        const response = await this.generate({
+        const response : PlanStepsResponse = await this.generate({
             message: latestGoal,
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
