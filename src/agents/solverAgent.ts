@@ -67,21 +67,36 @@ You may add more thinking and refuting steps as needed, but never fewer than the
     @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
     protected async handleThreadResponse(params: HandlerParams): Promise<void> {
         const project = params.projects?.[0];
+        
+        // If no active project, treat it as a new conversation
         if (!project) {
-            await this.reply(params.userPost, { 
-                message: "No active session found. Please start a new conversation." 
+            Logger.info("No active project found, starting new conversation");
+            const { projectId } = await this.addNewProject({
+                projectName: params.userPost.message,
+                tasks: [{
+                    type: "reply",
+                    description: "Initial response to user query."
+                }],
+                metadata: {
+                    originalPostId: params.userPost.id
+                }
             });
+
+            const plan = await this.planSteps(projectId, params.userPost.message);
+            await this.executeNextStep(projectId, params.userPost);
             return;
         }
 
+        // Handle response to existing project
         const currentTask = Object.values(project.tasks).find(t => t.inProgress);
         if (!currentTask) {
-            await this.reply(params.userPost, { 
-                message: "I wasn't expecting a response right now. What would you like to discuss?" 
-            });
+            Logger.info("No active task, treating as new query in existing project");
+            const plan = await this.planSteps(project.id, params.userPost.message);
+            await this.executeNextStep(project.id, params.userPost);
             return;
         }
 
+        // Handle response to active task
         const plan = await this.planSteps(project.id, params.userPost.message);
         await this.executeNextStep(project.id, params.userPost);
     }
