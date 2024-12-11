@@ -25,7 +25,7 @@ export class CreatePlanExecutor implements StepExecutor {
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
-        const businessGoals = Object.values(project.tasks).filter(t => t.type === 'business-goal');
+        const businessGoals = Object.values(project.tasks).filter(t => t.type === 'create-plan');
 
         const schema = {
             type: "object",
@@ -61,16 +61,14 @@ export class CreatePlanExecutor implements StepExecutor {
             required: ["plans", "summary"]
         };
 
-        const businessAnswers = this.getAnswersForType(project, 'business-question');
-        const serviceAnswers = this.getAnswersForType(project, 'service-question');
+        const answers = this.getAnswersForType(project, 'process-answers');
 
         const response = await this.modelHelpers.generate({
             message: JSON.stringify({
                 goals: businessGoals,
                 currentPlan: project.existingPlan?.content.toString(),
                 projectContext: project.props,
-                businessAnswers,
-                serviceAnswers
+                answers
             }),
             instructions: new StructuredOutputPrompt(schema,
                 `Create detailed action plans for each business goal.
@@ -79,6 +77,11 @@ export class CreatePlanExecutor implements StepExecutor {
 
         // Update the business plan with the operational guide
         const businessPlanId = await this.updateProjectBusinessPlan(project, response);
+
+        // mark all tasks we were able to incorporate as complete
+        for (const planTask of businessGoals) {
+            this.taskManager.completeTask(planTask.id);
+        }
 
         return {
             type: 'operational_guide',
