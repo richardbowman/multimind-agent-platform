@@ -235,24 +235,24 @@ Let's start by discussing your main business goals. What would you like to achie
         return artifactId;
     }
 
-    @StepExecutor("reply", "Respond to user messages and questions with appropriate context")
-    private async executeReply(goal: string, step: string, projectId: string): Promise<StepResult> {
-        const project = await this.getProjectWithPlan(projectId);
-        const reply = await this.generate({
-            instructions: "Generate a user friendly reply",
-            message: `${step} [${goal}]`,
-            projects: [project]
-        });
+    constructor(
+        chatClient: ChatClient,
+        lmStudioService: LMStudioService,
+        userId: string,
+        projects: TaskManager,
+        chromaDBService: ChromaDBService
+    ) {
+        super(chatClient, lmStudioService, userId, projects, chromaDBService);
+        
+        // Register our specialized executors
+        this.registerStepExecutor(new ReplyExecutor(lmStudioService));
+        this.registerStepExecutor(new AnswerQuestionsExecutor(lmStudioService, projects));
+        this.registerStepExecutor(new ThinkingExecutor(lmStudioService));
+        this.registerStepExecutor(new RefutingExecutor(lmStudioService));
+        this.registerStepExecutor(new ValidationExecutor(lmStudioService));
 
-        return {
-            finished: true,
-            needsUserInput: true,
-            response: reply
-        };
+        this.setPurpose(`I am an Onboarding Agent focused on helping users achieve their business goals with our AI Agent tools...`);
     }
-
-    @StepExecutor("answer-questions", "Analyze user responses and mark answered questions as complete")
-    private async executeAnswerQuestions(response: string, step: string, projectId: string): Promise<StepResult> {
         const schema = {
             type: "object",
             properties: {
