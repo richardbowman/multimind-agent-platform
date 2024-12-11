@@ -310,6 +310,62 @@ ${currentSteps}`
 
     @StepExecutor("understand-goals", "Analyze and break down the user's business goals into actionable items")
     private async executeUnderstandGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
+        const schema = {
+            type: "object",
+            properties: {
+                intakeQuestions: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            question: { type: "string" },
+                            purpose: { type: "string" }
+                        },
+                        required: ["question", "purpose"]
+                    }
+                },
+                reasoning: { type: "string" }
+            },
+            required: ["intakeQuestions", "reasoning"]
+        };
+
+        const response = await this.generate({
+            message: goal,
+            instructions: new StructuredOutputPrompt(schema,
+                `Based on the user's initial goals, generate a list of intake questions.
+                Each question should help gather specific information needed to create an effective plan.
+                Consider aspects like:
+                - Current business state
+                - Specific objectives
+                - Timeline expectations
+                - Resource constraints
+                - Success metrics
+                
+                Keep questions focused and actionable.
+                Include 3-5 essential questions.`)
+        });
+
+        // Create tasks for each intake question
+        for (const q of response.intakeQuestions) {
+            await this.addTaskToProject({
+                projectId,
+                type: 'intake-question',
+                description: `Q: ${q.question}\nPurpose: ${q.purpose}`,
+                skipForSameType: false
+            });
+        }
+
+        return {
+            type: 'intake_questions',
+            finished: true,
+            needsUserInput: true,
+            response: {
+                message: `To help me better understand your goals, I have a few questions:\n\n${
+                    response.intakeQuestions.map((q, i) => `${i + 1}. ${q.question}`).join('\n\n')
+                }\n\nPlease respond to these questions so I can create a more tailored plan.`
+            }
+        };
+    }
         const project = await this.getProjectWithPlan(projectId);
         const analyzedGoals = await this.breakdownBusinessGoals(goal);
         const tasks = await this.createGoalTasks(project, analyzedGoals);
