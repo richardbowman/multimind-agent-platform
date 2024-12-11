@@ -1,8 +1,13 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { ModelHelpers } from 'src/llm/helpers';
 
 export class ValidationExecutor implements StepExecutor {
-    constructor(private lmStudioService: LMStudioService) {}
+    private modelHelpers: ModelHelpers;
+
+    constructor(llmService: LMStudioService) {
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    }
 
     async execute(goal: string, step: string, projectId: string, previousResults: any[]): Promise<StepResult> {
         const schema = {
@@ -40,7 +45,7 @@ Evaluate whether:
 
 If the solution is incomplete, list the specific aspects that still need to be addressed.`;
 
-        const response = await this.lmStudioService.generate({
+        const response = await this.modelHelpers.generate({
             message: "Validate solution completeness",
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
