@@ -1,4 +1,5 @@
-import { PlanStepsResponse, StepBasedAgent, StepResult } from './stepBasedAgent';
+import { StepBasedAgent, StepResult } from './stepBasedAgent';
+import { PlanStepsResponse } from './schemas/agent';
 import { ChatClient } from '../chat/chatClient';
 import 'reflect-metadata';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
