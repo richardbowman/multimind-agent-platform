@@ -68,6 +68,12 @@ You may add more thinking and refuting steps as needed, but never fewer than the
     protected async handleThreadResponse(params: HandlerParams): Promise<void> {
         const project = params.projects?.[0];
         
+        // Get conversation history
+        const conversationHistory = await this.chatClient.getPostThread(params.userPost.id);
+        const conversationContext = conversationHistory
+            .map(post => `[${post.user_id === this.userId ? 'Assistant' : 'User'}] ${post.message}`)
+            .join('\n\n');
+
         // If no active project, treat it as a new conversation
         if (!project) {
             Logger.info("No active project found, starting new conversation");

@@ -373,7 +373,8 @@ You will respond inside of the message key in Markdown format.`;
             originalPostId: params.userPost.id
         });
 
-        const plan = await this.planSteps(projectId, params.userPost.message);
+        const planningPrompt = `Previous conversation:\n${conversationContext}\n\nNew request: ${params.userPost.message}`;
+        const plan = await this.planSteps(projectId, planningPrompt);
         await this.executeNextStep(projectId, params.userPost);
     }
 
@@ -395,7 +396,8 @@ You will respond inside of the message key in Markdown format.`;
             return;
         }
 
-        const plan = await this.planSteps(project.id, params.userPost.message);
+        const planningPrompt = `Previous conversation:\n${conversationContext}\n\nNew message: ${params.userPost.message}`;
+        const plan = await this.planSteps(project.id, planningPrompt);
         await this.executeNextStep(project.id, params.userPost);
     }
 }
