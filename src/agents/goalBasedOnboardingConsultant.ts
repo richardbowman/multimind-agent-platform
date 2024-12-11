@@ -247,6 +247,10 @@ Let's start by discussing your main business goals. What would you like to achie
         // Register our specialized executors
         this.registerStepExecutor(new ReplyExecutor(lmStudioService, projects, this.artifactManager));
         this.registerStepExecutor(new AnswerQuestionsExecutor(lmStudioService, projects));
+        this.registerStepExecutor(new UnderstandGoalsExecutor(lmStudioService, projects));
+        this.registerStepExecutor(new AnalyzeGoalsExecutor(lmStudioService, projects, this.artifactManager));
+        this.registerStepExecutor(new CreatePlanExecutor(lmStudioService, projects, this.artifactManager));
+        this.registerStepExecutor(new ReviewProgressExecutor(lmStudioService, projects, this.artifactManager));
         this.registerStepExecutor(new ThinkingExecutor(lmStudioService));
         this.registerStepExecutor(new RefutingExecutor(lmStudioService));
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));
