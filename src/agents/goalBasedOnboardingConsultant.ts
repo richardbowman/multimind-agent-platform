@@ -16,9 +16,8 @@ import { definitions as schemas } from "./schemas/schema.json";
 
 
 // Decorator for step executors
-export function StepExecutor(description: string) {
+export function StepExecutor(key: string, description: string) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        const key = propertyKey.replace('execute', '').toLowerCase();
         Reflect.defineMetadata('stepDescription', description, target, propertyKey);
         Reflect.defineMetadata('stepKey', key, target, propertyKey);
     };
@@ -293,7 +292,7 @@ ${currentSteps}`
         }
     }
 
-    @StepExecutor("Respond to user messages and questions with appropriate context")
+    @StepExecutor("reply", "Respond to user messages and questions with appropriate context")
     private async executeReply(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
         const reply = await this.generate({
@@ -309,7 +308,7 @@ ${currentSteps}`
         };
     }
 
-    @StepExecutor("Analyze and break down the user's business goals into actionable items")
+    @StepExecutor("understand-goals", "Analyze and break down the user's business goals into actionable items")
     private async executeUnderstandGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
         const analyzedGoals = await this.breakdownBusinessGoals(goal);
@@ -324,7 +323,7 @@ ${currentSteps}`
         };
     }
 
-    @StepExecutor("Perform detailed analysis of business goals and create specific action items")
+    @StepExecutor("analyze-goals", "Perform detailed analysis of business goals and create specific action items")
     private async executeAnalyzeGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
         const analyzedGoals = await this.breakdownBusinessGoals(goal);
@@ -409,7 +408,7 @@ ${currentSteps}`
         return businessPlanId;
     }
 
-    @StepExecutor("Create a detailed business plan based on analyzed goals and requirements")
+    @StepExecutor("create-plan", "Create a detailed business plan based on analyzed goals and requirements")
     private async executeCreatePlan(goal: string, step: string, state: OnboardingState): Promise<StepResult> {
         const schema = {
             type: "object",
@@ -445,7 +444,7 @@ ${currentSteps}`
         };
     }
 
-    @StepExecutor("Review progress on goals and provide status updates with next steps")
+    @StepExecutor("review-progress", "Review progress on goals and provide status updates with next steps")
     private async executeReviewProgress(goal: string, step: string, state: OnboardingState): Promise<StepResult> {
         const schema = {
             type: "object",
