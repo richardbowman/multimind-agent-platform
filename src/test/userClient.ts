@@ -4,7 +4,7 @@ import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
 import blessed, { input } from 'blessed';
-import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box, taskDetailViewer, screen, splashBox, startSplashAnimation, commandList } from "./ui";
+import { artifactList, taskList, chatBox, inputBox, channelList, threadList, artifactDetailViewer, globalArtifactList, globalArtifactViewer, logBox, tab1Box, tabContainer, artifactTypeFilter, tab3Box, taskDetailViewer, screen, splashBox, startSplashAnimation, commandList, deleteArtifactButton } from "./ui";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { screen } from './ui'
 import { Task, TaskManager } from "src/tools/taskManager";
@@ -529,9 +529,11 @@ ${task.description || '*No description available*'}`;
         return filteredArtifacts;
     }
 
+    let selectedArtifact : Artifact;
+
     // Handle global artifact list selection
     globalArtifactList.on('select', async (item, index) => {
-        const selectedArtifact = filteredArtifacts[index];
+        selectedArtifact = filteredArtifacts[index];
 
         if (selectedArtifact) {
             // Format metadata section
@@ -554,27 +556,28 @@ ${selectedArtifact.content.toString()}`;
             deleteArtifactButton.show();
             screen.render();
 
-            // Handle delete button click
-            deleteArtifactButton.once('press', async () => {
-                try {
-                    await artifactManager.deleteArtifact(selectedArtifact.id);
-                    Logger.info(`Deleted artifact: ${selectedArtifact.id}`);
-                    
-                    // Refresh the artifacts list
-                    allArtifacts = await artifactManager.listArtifacts();
-                    await loadGlobalArtifacts();
-                    
-                    // Clear and hide the viewer and delete button
-                    globalArtifactViewer.setContent('');
-                    deleteArtifactButton.hide();
-                    screen.render();
-                } catch (error) {
-                    Logger.error('Failed to delete artifact:', error);
-                }
-            });
         }
     });
 
+    // Handle delete button click
+    deleteArtifactButton.on('press', async () => {
+        try {
+            await artifactManager.deleteArtifact(selectedArtifact.id);
+            Logger.info(`Deleted artifact: ${selectedArtifact.id}`);
+            
+            // Refresh the artifacts list
+            allArtifacts = await artifactManager.listArtifacts();
+            await loadGlobalArtifacts();
+            
+            // Clear and hide the viewer and delete button
+            globalArtifactViewer.setContent('');
+            deleteArtifactButton.hide();
+            screen.render();
+        } catch (error) {
+            Logger.error('Failed to delete artifact:', error);
+        }
+    });
+    
     screen.key(['escape', 'q', 'C-c'], function (ch, key) {
         if (!artifactDetailViewer.hidden || !taskDetailViewer.hidden) {
             artifactDetailViewer.hide();
