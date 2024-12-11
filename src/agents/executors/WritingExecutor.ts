@@ -61,9 +61,23 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
             instructions
         });
 
-        // Create writing tasks for each section
+        // Create a new project and writing tasks for each section
         try {
-            const project = await this.taskManager.getProject(projectId);
+            const newProjectId = this.taskManager.newProjectId();
+            const project = {
+                id: newProjectId,
+                tasks: [],
+                metadata: {
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    status: 'active',
+                    owner: CONTENT_MANAGER_USER_ID,
+                    description: goal,
+                    priority: 'medium'
+                }
+            };
+            
+            await this.taskManager.addProject(project);
 
             for (const section of result.sections) {
                 const task = await this.taskManager.addTask(project, {
