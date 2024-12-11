@@ -8,7 +8,7 @@ import { OperationalGuideResponse } from '../schemas/OperationalGuideResponse';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
-import { OnboardingProject } from '../goalBasedOnboardingConsultant';
+import { OnboardingProject, QuestionAnswer } from '../goalBasedOnboardingConsultant';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
 import { CreateArtifact } from '../schemas/ModelResponse';
@@ -41,7 +41,13 @@ export class CreatePlanExecutor implements StepExecutor {
                 goals: businessGoals,
                 currentPlan: project.existingPlan?.content.toString(),
                 projectContext: project.props,
-                answers
+                answers,
+                // Include answers in the operational guide
+                questionsAndAnswers: answers.map(a => ({
+                    question: project.tasks[a.questionId]?.description || '',
+                    answer: a.answer,
+                    category: project.tasks[a.questionId]?.type
+                }))
             }),
             instructions: new StructuredOutputPrompt(schema,
                 `Create an overview of the user's desired business goals so our project manager, researcher, and content writer agents know how to help.
