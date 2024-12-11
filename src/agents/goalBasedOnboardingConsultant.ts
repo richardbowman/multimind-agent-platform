@@ -131,10 +131,10 @@ Let's start by discussing your main business goals. What would you like to achie
         const completedSteps = `Completed Tasks:\n${JSON.stringify(tasks.filter(t => t.complete).map(mapper), undefined, " ")}\n\n`;
         const currentSteps = `Current Plan:\n${JSON.stringify(tasks.filter(t => !t.complete).map(mapper), undefined, " ")}\n\n`;
 
-        const stepDescriptions = registeredSteps.map(s => {
-            const executor = this.stepExecutors.get(s);
-            return ` - ${s}: ${executor?.description || 'No description available'}`;
-        }).join("\n");
+        const stepDescriptions = registeredSteps.map(key => {
+            const executor = this.stepExecutors.get(key);
+            return `${key}\n    Description: ${executor?.description || 'No description available'}`;
+        }).join("\n\n");
 
         const systemPrompt = 
 `You help on-board users into our AI Agent tool. This service is designed
