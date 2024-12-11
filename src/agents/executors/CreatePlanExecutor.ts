@@ -1,4 +1,5 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
+import crypto from 'crypto';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
@@ -9,12 +10,15 @@ import { ModelHelpers } from '../../llm/helpers';
 @StepExecutorDecorator('create_plan', 'Create detailed action plans for each business goal')
 export class CreatePlanExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    private userId: string;
 
     constructor(
         llmService: LMStudioService,
         private taskManager: TaskManager,
-        private artifactManager: ArtifactManager
+        private artifactManager: ArtifactManager,
+        userId: string
     ) {
+        this.userId = userId;
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
@@ -78,10 +82,13 @@ export class CreatePlanExecutor implements StepExecutor {
             if (!parentGoal) continue;
 
             for (const action of plan.actionItems) {
-                await this.taskManager.addTask({
-                    projectId,
+                await this.taskManager.addTask(project, {
+                    id: crypto.randomUUID(),
                     type: 'action-item',
                     description: action.description,
+                    creator: this.userId,
+                    complete: false,
+                    order: 0,
                     metadata: {
                         timeline: action.timeline,
                         resources: action.resources,

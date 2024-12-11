@@ -153,7 +153,7 @@ Let's start by discussing your main business goals. What would you like to achie
         this.registerStepExecutor(new AnswerQuestionsExecutor(lmStudioService, projects));
         this.registerStepExecutor(new UnderstandGoalsExecutor(lmStudioService, projects, userId));
         this.registerStepExecutor(new AnalyzeGoalsExecutor(lmStudioService, projects, this.artifactManager, userId));
-        this.registerStepExecutor(new CreatePlanExecutor(lmStudioService, projects, this.artifactManager));
+        this.registerStepExecutor(new CreatePlanExecutor(lmStudioService, projects, this.artifactManager, userId));
         this.registerStepExecutor(new ReviewProgressExecutor(lmStudioService, projects, this.artifactManager));
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));
 
