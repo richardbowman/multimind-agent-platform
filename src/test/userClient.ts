@@ -358,7 +358,22 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             const project = await taskManager.getProject(projectId);
             if (!project) continue
             projects.push(project);
-            tasks = [...tasks, ...Object.values(project?.tasks || {})].sort((a, b) => Number(a.complete) - Number(b.complete));
+            tasks = [...tasks, ...Object.values(project?.tasks || {})].sort((a, b) => {
+                // First sort by completion status
+                const completionDiff = Number(a.complete) - Number(b.complete);
+                if (completionDiff !== 0) return completionDiff;
+                
+                // Then sort by order if both tasks have order defined
+                if (a.order !== undefined && b.order !== undefined) {
+                    return a.order - b.order;
+                }
+                
+                // Put tasks with undefined order at the end
+                if (a.order === undefined) return 1;
+                if (b.order === undefined) return -1;
+                
+                return 0;
+            });
         }
 
         // Store task IDs in order and create display items
