@@ -26,11 +26,22 @@ export interface RecurringTask extends Task {
     lastRunDate?: Date; // To keep track of the last run date
 }
 
+export interface ProjectMetadata {
+    createdAt: Date;
+    updatedAt: Date;
+    status: 'active' | 'completed' | 'archived';
+    owner?: string;
+    tags?: string[];
+    description?: string;
+    priority?: 'low' | 'medium' | 'high';
+}
+
 export interface Project<Task> {
     id: string;
     name: string;
     props?: Record<string, any>;
     tasks: Record<string, Task>;
+    metadata: ProjectMetadata;
 }
 
 export interface TaskManager extends EventEmitter {

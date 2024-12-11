@@ -48,6 +48,14 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
     }
 
     async addProject(project: Project<Task>): Promise<void> {
+        // Ensure metadata exists with defaults
+        if (!project.metadata) {
+            project.metadata = {
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'active'
+            };
+        }
         this.projects[project.id] = project;
         await this.save();
     }
@@ -193,6 +201,10 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
     }
 
     async replaceProject(project: ContentProject): Promise<void> {
+        // Update metadata
+        if (project.metadata) {
+            project.metadata.updatedAt = new Date();
+        }
         this.projects[project.id] = project;
         // Emit taskUpdated for each task in the project
         Object.values(project.tasks || {}).forEach(task => {
