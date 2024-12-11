@@ -1,4 +1,5 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { definitions as generatedSchemaDef } from "../schemas/schema.json";
 import crypto from 'crypto';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
@@ -21,24 +22,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
-        const schema = {
-            type: "object",
-            properties: {
-                intakeQuestions: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            question: { type: "string" },
-                            purpose: { type: "string" }
-                        },
-                        required: ["question", "purpose"]
-                    }
-                },
-                reasoning: { type: "string" }
-            },
-            required: ["intakeQuestions", "reasoning"]
-        };
+        const schema = generatedSchemaDef.IntakeQuestionsResponse;
         
 
         const response = await this.modelHelpers.generate({
