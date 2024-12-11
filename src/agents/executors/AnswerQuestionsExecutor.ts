@@ -5,7 +5,7 @@ import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
 
-@StepExecutorDecorator('answer-questions', 'Analyze and process user responses to intake questions')
+@StepExecutorDecorator('process-answers', 'Analyze and process user responses to intake questions')
 export class AnswerQuestionsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
@@ -39,7 +39,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         };
 
         const project = this.taskManager.getProject(projectId) as OnboardingProject;
-        const intakeQuestions = Object.values(project.tasks).filter(t => t.type === 'intake-question' && !t.complete);
+        const intakeQuestions = Object.values(project.tasks).filter(t => t.type === 'process-answers' && !t.complete);
 
         if (intakeQuestions.length === 0) {
             return {
