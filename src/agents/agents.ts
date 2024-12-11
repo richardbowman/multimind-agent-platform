@@ -295,43 +295,7 @@ export abstract class Agent<Project, Task> {
     }
 
     protected async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelResponse> {
-        // Fetch the latest memory artifact for the channel
-        let augmentedInstructions = structure.getPrompt();
-        if (this.isMemoryEnabled) {
-            const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
-
-            // Append the memory content to the instructions if it exists
-            if (memoryArtifact && memoryArtifact.content) {
-                const memoryContent = memoryArtifact.content.toString();
-                augmentedInstructions += `\n\nContext from previous interactions:\n${memoryContent}`;
-            }
-        }
-
-        // Deduplicate artifacts first, then search results
-        const deduplicatedArtifacts = params.artifacts ? this.deduplicateArtifacts(params.artifacts) : [];
-        const deduplicatedSearchResults = params.searchResults ? this.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
-
-        if (deduplicatedSearchResults) {
-            augmentedInstructions += `\n\nSearch results from knowledge base:\n${deduplicatedSearchResults.map(s => `<searchresult>Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}</searchresult>\n\n`)}`;
-        }
-
-        if (deduplicatedArtifacts) {
-            for (const artifact of deduplicatedArtifacts) {
-                const artifactContent = artifact.content ? artifact.content.toString() : 'No content available';
-                augmentedInstructions += `\n\n<artifact>Artifact ID: ${artifact.id}\nTitle: ${artifact.metadata?.title || 'No title'}\nContent:\n${artifactContent}</artifact>`;
-            }
-        }
-
-        // Augment instructions with context and generate a response
-        const history = params.threadPosts || params.projectChain?.posts.slice(0, -1) || [];
-
-        const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
-
-        const { contextWindow, maxTokens } = params;
-
-        const response = await this.lmStudioService.generateStructured(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
-        response.artifactIds = params.artifacts?.map(a => a.id);
-        return response;
+        return this.modelHelpers.generateStructured(structure, params);
     }
 
     protected async generate(params: GenerateInputParams): Promise<ModelResponse> {
