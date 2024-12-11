@@ -303,34 +303,6 @@ export abstract class Agent<Project, Task> {
         return this.modelHelpers.generate(params);
     }
 
-    protected deduplicateArtifacts(artifacts: Artifact[]): Artifact[] {
-        const seenArtifacts = new Set<string>();
-        return artifacts.filter(artifact => {
-            const { id: artifactId } = artifact;
-            if (seenArtifacts.has(artifactId)) {
-                return false;
-            }
-            seenArtifacts.add(artifactId);
-            return true;
-        });
-    }
-
-    protected deduplicateSearchResults(searchResults: SearchResult[], artifacts: Artifact[]): SearchResult[] {
-        const seenChunks = new Set<string>();
-        const artifactUrls = new Set<string>(artifacts.map(a => `artifact://${a.id}`));
-
-        return searchResults.filter(result => {
-            if (seenChunks.has(result.id)) {
-                return false;
-            }
-            if (artifactUrls.has(result.metadata.url)) {
-                return false;
-            }
-
-            seenChunks.add(result.id);
-            return true;
-        });
-    }
 
     private async getArtifactList(): Promise<string> {
         const artifacts = await this.artifactManager.listArtifacts();
