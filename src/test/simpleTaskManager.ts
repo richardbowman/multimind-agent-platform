@@ -16,6 +16,9 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
     }
 
     async addTask(project: Project<Task>, task: Task) : Promise<Task> {
+        // Set project ID and order
+        task.projectId = project.id;
+        
         // Set order to be after existing tasks if not specified
         if (task.order === undefined) {
             const existingTasks = Object.values(this.projects[project.id].tasks || {});
