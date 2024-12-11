@@ -149,15 +149,19 @@ ${currentSteps}`;
                 throw new Error(`Project ${projectId} not found`);
             }
 
-            // Get previous step's result if it exists
-            const previousTask = this.getPreviousTask(projectId, task);
-            const previousResult = previousTask?.props?.result;
+            // Get all prior completed tasks' results
+            const tasks = this.projects.getAllTasks(projectId);
+            const priorResults = tasks
+                .filter(t => t.complete && t.order !== undefined && t.order < (task.order || Infinity))
+                .sort((a, b) => (a.order || 0) - (b.order || 0))
+                .map(t => t.props?.result)
+                .filter(r => r); // Remove undefined/null results
 
             const stepResult = await executor.execute(
                 project.name, 
                 task.type, 
                 projectId,
-                previousResult
+                priorResults
             );
             
             // Store the result in task props
@@ -237,12 +241,6 @@ Consider the original goal and what we've learned so far.`;
         });
     }
 
-    private getPreviousTask(projectId: string, currentTask: Task): Task | null {
-        const tasks = this.projects.getAllTasks(projectId);
-        const sortedTasks = tasks.sort((a, b) => (a.order || 0) - (b.order || 0));
-        const currentIndex = sortedTasks.findIndex(t => t.id === currentTask.id);
-        return currentIndex > 0 ? sortedTasks[currentIndex - 1] : null;
-    }
 
     protected async generateAndSendFinalResponse(projectId: string, userPost: ChatPost): Promise<void> {
         const project = this.projects.getProject(projectId);
