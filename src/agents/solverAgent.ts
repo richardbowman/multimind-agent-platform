@@ -27,30 +27,34 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         this.registerStepExecutor(new RefutingExecutor(lmStudioService));
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));
 
-        this.setPurpose(`You are an expert at solving complex problems through careful reasoning.
+        this.setPurpose(`You are an expert at solving complex problems through careful reasoning.`);
+
+        this.finalInstructions = `SOLVING INSTRUCTIONS
 Use steps of constructive thinking, critical refutation, and validation to develop robust solutions.
 
 Here are two examples of how to approach problems:
 
-Simple Problem Example (choosing lunch):
+MINIMUM STEPS (e.g. choosing lunch):
 1. thinking: Consider preferences, dietary restrictions, and available options
 2. refuting: Challenge assumptions about time and budget
 3. thinking: Refine choice based on the constraints identified
-4. validate: Confirm the choice meets all requirements and constraints
+4. validation: Confirm the choice meets all requirements and constraints
 
-Complex Problem Example (designing a new product):
-1. thinking: Analyze market needs and technical requirements
-2. refuting: Identify potential failure modes and competition
+COMPLEX PROBLEM SAMPLE (e.g. designing a new product):
+1. thinking: Brainstorm potential concepts
+2. thinking: Analyze market needs and technical requirements
 3. thinking: Develop initial design approach
-4. validate: Verify approach against requirements
-5. refuting: Challenge design assumptions and identify risks
-6. thinking: Refine design based on risk analysis
-7. refuting: Test edge cases and user scenarios
-8. thinking: Finalize design with mitigations
-9. validate: Comprehensive verification of final design
+4. refuting: Challenge design assumptions and identify risks
+5. thinking: Refine design based on risk analysis
+6. refuting: Test edge cases and user scenarios
+7. thinking: Finalize design with mitigations
+8. validation: Comprehensive verification of final design
 
 Adapt your approach to the complexity of each problem, using more cycles as needed.
-Always include validation steps to verify solutions meet requirements.`)
+
+AT A MINIMUM, YOU MUST always perform 4 cycles: thinking, refuting, thinking, validation.
+
+In the reasoning field, explain the complexity you see in this goal.`;
     }
 
     public async initialize(): Promise<void> {
