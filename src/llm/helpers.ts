@@ -144,8 +144,8 @@ export class ModelHelpers {
         }
 
         // Deduplicate artifacts first, then search results
-        const deduplicatedArtifacts = params.artifacts ? this.modelHelpers.deduplicateArtifacts(params.artifacts) : [];
-        const deduplicatedSearchResults = params.searchResults ? this.modelHelpers.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
+        const deduplicatedArtifacts = params.artifacts ? this.deduplicateArtifacts(params.artifacts) : [];
+        const deduplicatedSearchResults = params.searchResults ? this.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
 
         if (deduplicatedSearchResults) {
             augmentedInstructions += `\n\nSearch results from knowledge base:\n${deduplicatedSearchResults.map(s => `<searchresult>Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}</searchresult>\n\n`)}`;
@@ -182,6 +182,35 @@ export class ModelHelpers {
     /**
      * @deprecated
      */
+    protected deduplicateArtifacts(artifacts: Artifact[]): Artifact[] {
+        const seenArtifacts = new Set<string>();
+        return artifacts.filter(artifact => {
+            const { id: artifactId } = artifact;
+            if (seenArtifacts.has(artifactId)) {
+                return false;
+            }
+            seenArtifacts.add(artifactId);
+            return true;
+        });
+    }
+
+    protected deduplicateSearchResults(searchResults: SearchResult[], artifacts: Artifact[]): SearchResult[] {
+        const seenChunks = new Set<string>();
+        const artifactUrls = new Set<string>(artifacts.map(a => `artifact://${a.id}`));
+
+        return searchResults.filter(result => {
+            if (seenChunks.has(result.id)) {
+                return false;
+            }
+            if (artifactUrls.has(result.metadata.url)) {
+                return false;
+            }
+
+            seenChunks.add(result.id);
+            return true;
+        });
+    }
+
     protected async generateOld(instructions: string, params: GenerateParams): Promise<ModelResponse> {
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = `AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`;
