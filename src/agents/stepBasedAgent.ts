@@ -40,10 +40,17 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
     protected registerStepExecutor(executor: StepExecutor): void {
         const metadata = getExecutorMetadata(executor.constructor);
-        if (!metadata) {
-            throw new Error(`No metadata found for executor ${executor.constructor.name}. Did you forget the @StepExecutor decorator?`);
+        if (metadata) {
+            // Use decorator metadata if available
+            this.stepExecutors.set(metadata.key, executor);
+        } else if (typeof executor.description === 'string') {
+            // Fall back to using the executor's description property
+            // Use constructor name as key if no explicit key is provided
+            const key = executor.constructor.name.toLowerCase().replace('executor', '');
+            this.stepExecutors.set(key, executor);
+        } else {
+            throw new Error(`No metadata or description found for executor ${executor.constructor.name}`);
         }
-        this.stepExecutors.set(metadata.key, executor);
     }
 
     protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse> {
