@@ -309,6 +309,84 @@ ${currentSteps}`
     }
 
     @StepExecutor("understand-goals", "Analyze and break down the user's business goals into actionable items")
+    @StepExecutor("answer-questions", "Analyze user responses and mark answered questions as complete")
+    private async executeAnswerQuestions(response: string, step: string, projectId: string): Promise<StepResult> {
+        const schema = {
+            type: "object",
+            properties: {
+                answers: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            questionId: { type: "string" },
+                            answered: { type: "boolean" },
+                            analysis: { type: "string" }
+                        },
+                        required: ["questionId", "answered", "analysis"]
+                    }
+                },
+                summary: { type: "string" }
+            },
+            required: ["answers", "summary"]
+        };
+
+        const project = this.projects.getProject(projectId);
+        const intakeQuestions = Object.values(project.tasks).filter(t => t.type === 'intake-question' && !t.complete);
+
+        if (intakeQuestions.length === 0) {
+            return {
+                type: 'answer_analysis',
+                finished: true,
+                response: {
+                    message: "No pending questions to analyze."
+                }
+            };
+        }
+
+        const response = await this.generate({
+            message: response,
+            instructions: new StructuredOutputPrompt(schema,
+                `Analyze the user's response against these pending questions:
+                ${intakeQuestions.map(q => `ID ${q.id}: ${q.description}`).join('\n')}
+                
+                For each question:
+                1. Determine if it was answered
+                2. Provide a brief analysis of the answer or why it wasn't answered
+                3. Be specific about what information was provided or what's still missing`)
+        });
+
+        // Update tasks based on analysis
+        for (const answer of response.answers) {
+            const task = this.projects.getTask(answer.questionId);
+            if (task && answer.answered) {
+                task.metadata = {
+                    ...task.metadata,
+                    analysis: answer.analysis,
+                    answeredAt: new Date().toISOString()
+                };
+                await this.projects.completeTask(answer.questionId);
+            }
+        }
+
+        const remainingQuestions = intakeQuestions.filter(q => 
+            !response.answers.find(a => a.questionId === q.id && a.answered)
+        );
+
+        return {
+            type: 'answer_analysis',
+            finished: remainingQuestions.length === 0,
+            needsUserInput: remainingQuestions.length > 0,
+            response: {
+                message: `${response.summary}\n\n${
+                    remainingQuestions.length > 0 
+                        ? `I still need answers to these questions:\n${remainingQuestions.map(q => q.description).join('\n')}`
+                        : "All questions have been answered. I'll analyze the information to create a plan."
+                }`
+            }
+        };
+    }
+
     private async executeUnderstandGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
         const schema = {
             type: "object",
