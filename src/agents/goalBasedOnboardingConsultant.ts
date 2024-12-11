@@ -545,7 +545,10 @@ ${currentSteps}`
     }
 
     @StepExecutor("create-plan", "Create a detailed business plan based on analyzed goals and requirements")
-    private async executeCreatePlan(goal: string, step: string, state: OnboardingState): Promise<StepResult> {
+    private async executeCreatePlan(goal: string, step: string, projectId: string): Promise<StepResult> {
+        const project = await this.getProjectWithPlan(projectId);
+        const businessGoals = Object.values(project.tasks).filter(t => t.type === 'business-goal');
+
         const schema = {
             type: "object",
             properties: {
@@ -555,28 +558,90 @@ ${currentSteps}`
                         type: "object",
                         properties: {
                             goalId: { type: "string" },
-                            steps: { 
+                            actionItems: {
                                 type: "array",
-                                items: { type: "string" }
+                                items: {
+                                    type: "object",
+                                    properties: {
+                                        description: { type: "string" },
+                                        timeline: { type: "string" },
+                                        resources: { type: "string" },
+                                        dependencies: { 
+                                            type: "array",
+                                            items: { type: "string" }
+                                        }
+                                    },
+                                    required: ["description", "timeline", "resources"]
+                                }
                             }
                         },
-                        required: ["goalId", "steps"]
+                        required: ["goalId", "actionItems"]
                     }
-                }
+                },
+                summary: { type: "string" }
             },
-            required: ["plans"]
+            required: ["plans", "summary"]
         };
 
         const response = await this.generate({
-            message: JSON.stringify(state.goals),
+            message: JSON.stringify({
+                goals: businessGoals,
+                currentPlan: project.existingPlan?.content.toString(),
+                projectContext: project.props
+            }),
             instructions: new StructuredOutputPrompt(schema,
-                `Create specific action plans for each identified business goal.
-                Break down each goal into concrete, actionable steps.`)
+                `Create detailed action plans for each business goal.
+                For each goal:
+                - Break down into specific, actionable tasks
+                - Estimate timeline for each action item
+                - Identify required resources
+                - Note dependencies between tasks
+                
+                Consider:
+                - Business constraints and requirements
+                - Available resources and capabilities
+                - Dependencies between different goals
+                - Realistic timelines for implementation
+                
+                Provide a summary that outlines:
+                - Overall implementation strategy
+                - Critical path items
+                - Resource requirements
+                - Risk factors to consider`)
         });
+
+        // Create tasks for each action item
+        for (const plan of response.plans) {
+            const parentGoal = this.projects.getTask(plan.goalId);
+            if (!parentGoal) continue;
+
+            for (const action of plan.actionItems) {
+                await this.addTaskToProject({
+                    projectId,
+                    type: 'action-item',
+                    description: action.description,
+                    metadata: {
+                        timeline: action.timeline,
+                        resources: action.resources,
+                        dependencies: action.dependencies
+                    },
+                    dependsOn: plan.goalId
+                });
+            }
+        }
+
+        // Update the business plan with the new action items
+        const businessPlanId = await this.updateProjectBusinessPlan(project);
 
         return {
             type: 'action_plans',
-            plans: response.plans
+            finished: true,
+            needsUserInput: false,
+            response: {
+                message: response.summary,
+                plans: response.plans,
+                businessPlanId
+            }
         };
     }
 
