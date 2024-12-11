@@ -435,5 +435,5 @@ You will respond inside of the message key in Markdown format.`;
     }
 }
 
-export { PlanStepsResponse };
+export { PlanStepsResponse } from './schemas/PlanStepsResponse';
 
