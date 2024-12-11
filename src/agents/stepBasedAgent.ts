@@ -1,5 +1,6 @@
 import { Agent } from './agents';
-import { getExecutorMetadata } from './decorators/executorDecorator';
+import { getExecutorMetadata, EXECUTOR_METADATA_KEY } from './decorators/executorDecorator';
+import 'reflect-metadata';
 import { ChatClient, ChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
