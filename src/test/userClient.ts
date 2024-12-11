@@ -65,7 +65,10 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
             chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(blessed.escape(post.message))}\n`);
         }
-        chatBox.setScrollPerc(100);
+        setTimeout(() => {
+            chatBox.setScrollPerc(100);
+            screen.render();
+        }, 10);
     }
 
     async function refreshLists(channelId: string | null, threadId: string | null) {
