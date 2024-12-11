@@ -84,7 +84,7 @@ factChecker.setupChatMonitor(FACT_CHECK_CHANNEL_ID, "@factcheck");
 
 // Initialize Solver Agent
 const solverClient = new InMemoryTestClient(SOLVER_AGENT_USER_ID, "test", storage);
-const solverAgent = new SolverAgent(solverClient, llmService, SOLVER_AGENT_USER_ID, tasks);
+const solverAgent = new SolverAgent(solverClient, llmService, SOLVER_AGENT_USER_ID, tasks, chromaService);
 await solverAgent.initialize();
 
 setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
