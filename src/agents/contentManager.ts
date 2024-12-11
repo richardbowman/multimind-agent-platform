@@ -9,6 +9,8 @@ import { Task } from "src/tools/taskManager";
 import { CONTENT_DECOMPOSITION_SYSTEM_PROMPT, ContentDecompositionPrompt, LOOKUP_RESEARCH_SYSTEM_PROMPT, LookupResearchPrompt } from './schemas/contentSchemas';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
+import { WritingExecutor } from './executors/WritingExecutor';
+import { EditingExecutor } from './executors/EditingExecutor';
 
 export enum ContentManagerActivityType {
     CreateDocument = "create-document",
