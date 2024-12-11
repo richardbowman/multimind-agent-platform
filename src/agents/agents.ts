@@ -580,6 +580,22 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
     }
 
     private async classifyAndRespond(post: ChatPost, responseType: ResponseType, history?: ChatPost[]) {
+        // Get all available actions for this response type
+        const actions = this.getAvailableActions(responseType);
+        
+        // If we only have one handler, use it directly without classification
+        if (actions.length === 1) {
+            const handlerMethod = responseType === ResponseType.CHANNEL 
+                ? this.getMethodForActivity(actions[0].activityType)
+                : this.getMethodForResponse(actions[0].activityType);
+                
+            if (handlerMethod) {
+                await handlerMethod({ userPost: post });
+                return;
+            }
+        }
+
+        // Otherwise, proceed with full classification
         const { activityType, requestedArtifacts, searchResults } = await this.classifyResponse(post, responseType, history);
         const artifacts = await this.mapRequestedArtifacts(requestedArtifacts);
 
