@@ -129,10 +129,10 @@ Let's start by discussing your main business goals. What would you like to achie
         const project = this.projects.getProject(projectId);
         const tasks = this.projects.getAllTasks(projectId);
 
-        const mapper = (t: Task, index: number) => ({
+        const mapper = (t: Task) => ({
+            id: t.id,
             type: t.type,
-            description: t.description,
-            existingId: t.id,
+            description: t.description
         } as PlanStepTask);
 
         const completedSteps = `Completed Tasks:\n${JSON.stringify(tasks.filter(t => t.complete).map(mapper), undefined, " ")}\n\n`;
@@ -159,8 +159,10 @@ ${currentSteps}`
 
         // Update task order and status based on response
         response.steps.forEach((step, index) => {
-            const taskKey = `${step.type}-${step.description}`;
-            const existingTask = existingTaskMap.get(taskKey);
+            // First try to find by ID if provided, then fall back to type+description
+            const existingTask = step.id ? 
+                tasks.find(t => t.id === step.id) :
+                existingTaskMap.get(`${step.type}-${step.description}`);
 
             if (existingTask) {
                 // Update existing task
