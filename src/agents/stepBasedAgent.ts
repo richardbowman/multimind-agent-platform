@@ -197,8 +197,8 @@ ${currentSteps}`;
 
                     await this.planSteps(projectId, planningPrompt);
                 } else {
-                    // If validation passed, mark project as complete
-                    await this.projectCompleted(project);
+                    // If validation passed, mark validation step as complete
+                    await this.projects.completeTask(task.id);
                     return;
                 }
             }
