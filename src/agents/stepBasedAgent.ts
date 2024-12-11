@@ -114,6 +114,8 @@ ${currentSteps}`;
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
 
+        Logger.info('PlanStepsResponse:', JSON.stringify(response, null, 2));
+
         // Create a map of existing tasks by ID
         const existingTaskMap = new Map(
             tasks.map(task => [task.id, task])
