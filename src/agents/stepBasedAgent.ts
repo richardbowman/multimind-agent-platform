@@ -63,7 +63,9 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         }).join("\n\n");
 
         const systemPrompt = 
-`TASK GOAL: Plan the steps needed to accomplish the given goal.
+`${this.modelHelpers.getPurpose()}
+
+TASK GOAL: Plan the steps needed to accomplish the given goal.
 
 The allowable step types you can execute later are:
 ${stepDescriptions}
@@ -130,7 +132,7 @@ ${currentSteps}`;
 
     protected async projectCompleted(project: Project): Promise<void> {
         const postId = project.metadata?.originalPostId;
-        const userPost = this.chatClient.getPost(postId);
+        const userPost = await this.chatClient.getPost(postId);
         await this.generateAndSendFinalResponse(project.id, userPost);
         return;
     }
