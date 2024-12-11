@@ -15,6 +15,10 @@ import { Artifact } from 'src/tools/artifact';
 import { RequestArtifacts } from './schemas/ModelResponse';
 import { definitions as schemas } from "./schemas/schema.json";
 import { PlanStepTask } from './schemas/agent';
+import { StepExecutor } from './decorators/executorDecorator';
+import { RefutingExecutor } from './executors/RefutingExecutor';
+import { ThinkingExecutor } from './executors/ThinkingExecutor';
+import { ValidationExecutor } from './executors/ValidationExecutor';
 
 
 
@@ -229,24 +233,6 @@ Let's start by discussing your main business goals. What would you like to achie
         });
 
         return artifactId;
-    }
-
-    private registerStepExecutorsFromMetadata() {
-        const prototype = Object.getPrototypeOf(this);
-        const propertyNames = Object.getOwnPropertyNames(prototype);
-        
-        for (const prop of propertyNames) {
-            if (prop.startsWith('execute')) {
-                const description = Reflect.getMetadata('stepDescription', prototype, prop);
-                const key = Reflect.getMetadata('stepKey', prototype, prop);
-                if (description && key) {
-                    this.registerStepExecutor(key, {
-                        execute: (this as any)[prop].bind(this),
-                        description
-                    });
-                }
-            }
-        }
     }
 
     @StepExecutor("reply", "Respond to user messages and questions with appropriate context")
