@@ -443,6 +443,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 const contentToShow = `# ${task.title || task.id}
 
 ## Status
+- **Type**: ${task.type}
 - **State**: ${status}
 - **Assignee**: ${assignee}
 ${task.dependsOn ? `- **Depends On**: ${task.dependsOn}` : ''}
