@@ -81,7 +81,7 @@ export abstract class Agent<Project, Task> {
 
 
     constructor(chatClient: ChatClient, lmStudioService: LMStudioService, userId: string, projects: TaskManager, chromaDBService?: ChromaDBService) {
-        this.modelHelpers = new ModelHelpers(lmStudioService);
+        this.modelHelpers = new ModelHelpers(lmStudioService, userId);
         this.chatClient = chatClient;
         this.lmStudioService = lmStudioService;
         this.userId = userId;
@@ -342,69 +342,7 @@ export abstract class Agent<Project, Task> {
     }
 
     private async getThreadSummary(posts: ChatPost[]): Promise<string> {
-        // If thread is short enough, no need to summarize
-        if (posts.length <= 3) {
-            return posts.map(p => `${p.user_id === this.userId ? 'Assistant' : 'User'}: ${p.message}`).join('\n');
-        }
-
-        const threadId = posts[0].getRootId() || posts[0].id;
-        const existingSummary = this.threadSummaries.get(threadId);
-        
-        // Find index of last processed message
-        let startIndex = 0;
-        if (existingSummary) {
-            startIndex = posts.findIndex(p => p.id === existingSummary.lastProcessedMessageId) + 1;
-            if (startIndex <= 0) {
-                // If we can't find the last processed message, start fresh
-                startIndex = 0;
-            }
-        }
-
-        // If no new messages to process, return existing summary
-        if (startIndex === posts.length && existingSummary) {
-            return existingSummary.summary;
-        }
-
-        // Get new messages that need to be processed
-        const newMessages = posts.slice(startIndex);
-
-        const llmMessages = [{
-            role: "system",
-            content: existingSummary 
-                ? `Given this existing conversation summary:
-                   "${existingSummary.summary}"
-                   
-                   Update it to include these new messages, maintaining the same concise style.
-                   Focus on how the new messages advance or change the conversation.
-                   Keep the total summary under 200 words.`
-                : `Summarize this conversation thread concisely, focusing on:
-                   1. The main topic or request
-                   2. Key decisions or information shared
-                   3. The current state of the discussion
-                   Keep the summary under 200 words.`
-        }];
-
-        // Add only new messages as context
-        newMessages.forEach(post => {
-            llmMessages.push({
-                role: post.user_id === this.userId ? "assistant" : "user",
-                content: post.message
-            });
-        });
-
-        const updatedSummary = await this.lmStudioService.sendMessageToLLM(
-            "Please update/create the conversation summary.",
-            llmMessages
-        );
-
-        // Store the updated summary
-        this.threadSummaries.set(threadId, {
-            summary: updatedSummary,
-            lastProcessedMessageId: posts[posts.length - 1].id,
-            messageCount: posts.length
-        });
-
-        return `Thread Summary:\n${updatedSummary}\n\nLatest message:\n${posts[posts.length - 1].message}`;
+        return this.modelHelpers.getThreadSummary(posts);
     }
 
     private cleanupOldSummaries(maxAge: number = 1000 * 60 * 60) { // default 1 hour

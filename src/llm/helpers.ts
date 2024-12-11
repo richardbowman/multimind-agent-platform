@@ -9,8 +9,11 @@ export class ModelHelpers {
     protected model: ILLMService;
     protected isMemoryEnabled: boolean = false;
     protected purpose: string = 'You are a helpful agent.';
+    private threadSummaries: Map<string, ThreadSummary> = new Map();
+    protected userId: string;
 
-    constructor(model: ILLMService) {
+    constructor(model: ILLMService, userId: string) {
+        this.userId = userId;
         this.model = model;
     }
 
