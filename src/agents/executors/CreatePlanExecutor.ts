@@ -83,14 +83,18 @@ export class CreatePlanExecutor implements StepExecutor {
             this.taskManager.completeTask(planTask.id);
         }
 
+        // Format the response message to include the artifact reference
+        const responseMessage = `${response.summary}\n\n---\nI've created a detailed business plan (${businessPlanId}) that outlines the operational strategy and next steps.`;
+
         return {
             type: 'operational_guide',
             finished: true,
             needsUserInput: false,
             response: {
-                message: response.summary,
+                message: responseMessage,
                 operationalGuide: response.operationalGuide,
-                businessPlanId
+                artifactId: businessPlanId,
+                artifactTitle: "Business Plan"
             }
         };
     }
