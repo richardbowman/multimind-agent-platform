@@ -58,7 +58,7 @@ export function HandleActivity(activityType: string, usage: string, responseType
     };
 }
 
-interface ThreadSummary {
+export interface ThreadSummary {
     summary: string;
     lastProcessedMessageId: string;
     messageCount: number;
@@ -486,8 +486,7 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
     }
 
     private async fetchLatestMemoryArtifact(channelId: string): Promise<Artifact | null> {
-        const artifact = await this.artifactManager.loadArtifact(`${channelId}-${this.userId}-memory`);
-        return artifact;
+        return this.modelHelpers.fetchLatestMemoryArtifact(channelId, this.artifactManager);
     }
 
     private async classifyImportantInformation(channelId: string, history: ChatPost[], previousMemory?: string): Promise<string[]> {
