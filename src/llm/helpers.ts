@@ -1,11 +1,18 @@
 import { ChatPost } from "src/chat/chatClient";
 import { ILLMService } from "./ILLMService";
-import { ModelResponse } from "src/agents/schemas/ModelResponse";
-import { StructuredOutputPrompt } from "./lmStudioService";
+import { ModelResponse, RequestArtifacts } from "src/agents/schemas/ModelResponse";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
+import { GenerateInputParams, GenerateParams, HandlerParams, ProjectHandlerParams, ThreadSummary } from "src/agents/agents";
+import { Artifact } from "src/tools/artifact";
+import { SearchResult } from "./chromaService";
+import { ArtifactManager } from "src/tools/artifactManager";
+import { StructuredOutputPrompt } from "./lmstudioService";
 
 export class ModelHelpers {
+    getPurpose() {
+        return this.purpose;
+    }
     protected model: ILLMService;
     protected isMemoryEnabled: boolean = false;
     protected purpose: string = 'You are a helpful agent.';
@@ -25,7 +32,7 @@ export class ModelHelpers {
         this.isMemoryEnabled = true;
     }
 
-    protected async getThreadSummary(posts: ChatPost[]): Promise<string> {
+    public async getThreadSummary(posts: ChatPost[]): Promise<string> {
         // If thread is short enough, no need to summarize
         if (posts.length <= 3) {
             return posts.map(p => `${p.user_id === this.userId ? 'Assistant' : 'User'}: ${p.message}`).join('\n');
@@ -91,7 +98,7 @@ export class ModelHelpers {
         return `Thread Summary:\n${updatedSummary}\n\nLatest message:\n${posts[posts.length - 1].message}`;
     }
 
-    protected async classifyImportantInformation(channelId: string, history: ChatPost[], previousMemory?: string): Promise<string[]> {
+    public async classifyImportantInformation(channelId: string, history: ChatPost[], previousMemory?: string): Promise<string[]> {
         const llmMessages: { role: string, content: string }[] = [];
 
         // Add system message explaining the task
@@ -130,7 +137,7 @@ export class ModelHelpers {
         return importantPoints;
     }
 
-    protected async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelResponse> {
+    public async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelResponse> {
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = structure.getPrompt();
         if (this.isMemoryEnabled) {
@@ -182,7 +189,7 @@ export class ModelHelpers {
     /**
      * @deprecated
      */
-    protected deduplicateArtifacts(artifacts: Artifact[]): Artifact[] {
+    public deduplicateArtifacts(artifacts: Artifact[]): Artifact[] {
         const seenArtifacts = new Set<string>();
         return artifacts.filter(artifact => {
             const { id: artifactId } = artifact;
@@ -194,7 +201,7 @@ export class ModelHelpers {
         });
     }
 
-    protected deduplicateSearchResults(searchResults: SearchResult[], artifacts: Artifact[]): SearchResult[] {
+    public deduplicateSearchResults(searchResults: SearchResult[], artifacts: Artifact[]): SearchResult[] {
         const seenChunks = new Set<string>();
         const artifactUrls = new Set<string>(artifacts.map(a => `artifact://${a.id}`));
 
@@ -211,7 +218,12 @@ export class ModelHelpers {
         });
     }
 
-    protected async generateOld(instructions: string, params: GenerateParams): Promise<ModelResponse> {
+    public async fetchLatestMemoryArtifact(channelId: string, artifactManager: ArtifactManager): Promise<Artifact | null> {
+        const artifact = await artifactManager.loadArtifact(`${channelId}-${this.userId}-memory`);
+        return artifact;
+    }
+
+    public async generateOld(instructions: string, params: GenerateParams): Promise<ModelResponse> {
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = `AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`;
 

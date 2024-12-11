@@ -12,19 +12,6 @@ import schemas from './schemas/schema.json';
 import { OnboardingConsultantResponse } from './schemas/onboarding';
 import { ModelResponse } from './schemas/ModelResponse';
 
-export enum OnboardingActivities {
-    Welcome = "welcome",
-    UnderstandGoals = "understand-business-goals",
-    SaveGoals = "save-business-goals",
-    UnderstandService = "understand-service-usage",
-    SaveRequirements = "save-service-requirements",
-    ReviewDocuments = "review-documents"
-}
-
-export interface OnboardingTask extends Task {
-    activity: OnboardingActivities;
-}
-
 export interface OnboardingProject extends Project<OnboardingTask> {
     businessDescription?: string;
     businessGoals?: string[];
@@ -40,15 +27,11 @@ export class OnboardingConsultant extends Agent<OnboardingProject, Task> {
 
     protected async projectCompleted(project: OnboardingProject): Promise<void> {
         const taskList = Object.values(project.tasks);
-        const onboardingTask = taskList.find(task => 
-            task.type === OnboardingActivities.UnderstandGoals
-        );
+        
         const instructions = `The user's onboarding process is now complete. Included is a list of tasks
 you worked on together which you can summarize with the user, and then encourage them to reach out to the @pm in #projects!`
-        if (onboardingTask?.complete) {
-            const response = await this.generate({ instructions: new TaskInputPrompt(instructions, taskList) });
-            await this.send({ message: response.message }, ONBOARDING_CHANNEL_ID);
-        }
+        const response = await this.generate({ instructions: new TaskInputPrompt(instructions, taskList) });
+        await this.send({ message: response.message }, ONBOARDING_CHANNEL_ID);
     }
 
     constructor(userId: string, messagingHandle: string, chatClient: ChatClient, lmStudioService: LMStudioService, chromaDBService: ChromaDBService, projects: TaskManager) {
@@ -64,7 +47,7 @@ you worked on together which you can summarize with the user, and then encourage
         const welcomeTask = Object.values(allProjects)
             .flatMap(project => Object.values(project.tasks||[]))
             .find(task => 
-                task.type === OnboardingActivities.Welcome
+                task.type === "channel-welcome"
             );
 
         if (!welcomeTask || !welcomeTask.complete) {
@@ -88,7 +71,7 @@ Feel free to start by telling me about your business, or type "help" to see all 
                     projectName: "Initial Onboarding",
                     tasks: [{
                         description: "Initial welcome and user engagement",
-                        type: OnboardingActivities.Welcome
+                        type: "channel-welcome"
                     }]
                 });
 

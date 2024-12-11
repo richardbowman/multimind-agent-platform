@@ -6,3 +6,4 @@ src/playground.ts
 TODO
 .aider*
 .env
+src/**/*.js

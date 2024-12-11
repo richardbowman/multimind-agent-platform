@@ -10,8 +10,9 @@ requiresUserInput: boolean;
     }[];*/
 
 import { ModelResponse } from "./ModelResponse";
+import { Task } from "../../tools/taskManager";
 
-    
+  
 export interface PlanStepTask {
     type: string;
     description?: string;
@@ -20,19 +21,4 @@ export interface PlanStepTask {
 
 export interface PlanStepsResponse extends ModelResponse {
     steps: PlanStepTask[];
-}
-import { Task } from "../../tools/taskManager";
-
-export interface PlanStepTask {
-    existingId?: string;
-    type: string;
-    description?: string;
-}
-
-export interface PlanStepsResponse {
-    steps: PlanStepTask[];
-    reasoning: string;
-    message: string;
-    artifactIds?: string[];
-    projectId?: string;
 }

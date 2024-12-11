@@ -21,7 +21,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         chromaDBService: ChromaDBService
     ) {
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
-        
+
         // Register our specialized executors
         this.registerStepExecutor(new ThinkingExecutor(lmStudioService));
         this.registerStepExecutor(new RefutingExecutor(lmStudioService));
@@ -50,45 +50,37 @@ You may add more thinking and refuting steps as needed, but never fewer than the
     @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
     protected async handleConversation(params: HandlerParams): Promise<void> {
         const { projectId } = await this.addNewProject({
-            projectName: params.userPost.message,
-            tasks: [{
-                type: "reply",
-                description: "Initial response to user query."
-            }],
+            projectName: `Kickoff onboarding based on incoming message: ${params.userPost.message}`,
+            tasks: [],
             metadata: {
                 originalPostId: params.userPost.id
             }
         });
+        const project = await this.projects.getProject(projectId);
 
-        const plan = await this.planSteps(projectId, params.userPost.message);
+        params.projects = [...params.projects || [], project]
+        const plan = await this.planSteps(params);
         await this.executeNextStep(projectId, params.userPost);
     }
 
     @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
     protected async handleThreadResponse(params: HandlerParams): Promise<void> {
-        const project = params.projects?.[0];
-        
-        // Get conversation history
-        const conversationHistory = await this.chatClient.getPostThread(params.userPost.id);
-        const conversationContext = conversationHistory
-            .map(post => `[${post.user_id === this.userId ? 'Assistant' : 'User'}] ${post.message}`)
-            .join('\n\n');
+        const project = params.projects?.[0] as OnboardingProject;
 
         // If no active project, treat it as a new conversation
         if (!project) {
             Logger.info("No active project found, starting new conversation");
             const { projectId } = await this.addNewProject({
                 projectName: params.userPost.message,
-                tasks: [{
-                    type: "reply",
-                    description: "Initial response to user query."
-                }],
+                tasks: [],
                 metadata: {
                     originalPostId: params.userPost.id
                 }
             });
+            const project = await this.projects.getProject(projectId);
+            params.projects = [...params.projects || [], project]
 
-            const plan = await this.planSteps(projectId, params.userPost.message);
+            const plan = await this.planSteps(params);
             await this.executeNextStep(projectId, params.userPost);
             return;
         }
@@ -97,14 +89,14 @@ You may add more thinking and refuting steps as needed, but never fewer than the
         const currentTask = Object.values(project.tasks).find(t => t.inProgress);
         if (!currentTask) {
             Logger.info("No active task, treating as new query in existing project");
-            const plan = await this.planSteps(project.id, params.userPost.message);
+            const plan = await this.planSteps(params);
             await this.executeNextStep(project.id, params.userPost);
             return;
         }
 
         // Handle response to active task
-        const plan = await this.planSteps(project.id, params.userPost.message);
+        const plan = await this.planSteps(params);
         await this.executeNextStep(project.id, params.userPost);
     }
-    
+
 }

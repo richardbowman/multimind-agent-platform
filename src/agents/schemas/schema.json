@@ -1,6 +1,49 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "definitions": {
+    "AnswerAnalysis": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis": {
+          "type": "string"
+        },
+        "answered": {
+          "type": "boolean"
+        },
+        "extractedAnswer": {
+          "type": "string"
+        },
+        "questionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "questionId",
+        "answered",
+        "analysis",
+        "extractedAnswer"
+      ],
+      "type": "object"
+    },
+    "AnswerAnalysisResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "answers": {
+          "items": {
+            "$ref": "#/definitions/AnswerAnalysis"
+          },
+          "type": "array"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "answers",
+        "summary"
+      ],
+      "type": "object"
+    },
     "ArtifactResponseSchema": {
       "additionalProperties": false,
       "properties": {
@@ -77,6 +120,64 @@
       ],
       "type": "object"
     },
+    "ImplementationStep": {
+      "additionalProperties": false,
+      "properties": {
+        "considerations": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "expectedOutcome": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "phase",
+        "description",
+        "expectedOutcome"
+      ],
+      "type": "object"
+    },
+    "IntakeQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "purpose": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "purpose"
+      ],
+      "type": "object"
+    },
+    "IntakeQuestionsResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "intakeQuestions": {
+          "items": {
+            "$ref": "#/definitions/IntakeQuestion"
+          },
+          "type": "array"
+        },
+        "reasoning": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "intakeQuestions",
+        "reasoning"
+      ],
+      "type": "object"
+    },
     "LookupResearchResponse": {
       "additionalProperties": false,
       "properties": {
@@ -124,6 +225,118 @@
       ],
       "type": "object"
     },
+    "OperationalGuide": {
+      "additionalProperties": false,
+      "properties": {
+        "businessContext": {
+          "type": "string"
+        },
+        "implementationApproach": {
+          "type": "string"
+        },
+        "keyConsiderations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "questionsAndAnswers": {
+          "items": {
+            "$ref": "#/definitions/QAItem"
+          },
+          "type": "array"
+        },
+        "recommendedSteps": {
+          "items": {
+            "$ref": "#/definitions/ImplementationStep"
+          },
+          "type": "array"
+        },
+        "serviceStrategy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "businessContext",
+        "serviceStrategy",
+        "implementationApproach",
+        "recommendedSteps",
+        "questionsAndAnswers"
+      ],
+      "type": "object"
+    },
+    "OperationalGuideResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "operationalGuide": {
+          "$ref": "#/definitions/OperationalGuide"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "operationalGuide",
+        "summary"
+      ],
+      "type": "object"
+    },
+    "PlanStepTask": {
+      "additionalProperties": false,
+      "properties": {
+        "actionType": {
+          "type": "string"
+        },
+        "existingId": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "actionType",
+        "parameters"
+      ],
+      "type": "object"
+    },
+    "PlanStepsResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "reasoning": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/definitions/PlanStepTask"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "steps"
+      ],
+      "type": "object"
+    },
+    "QAItem": {
+      "additionalProperties": false,
+      "properties": {
+        "answer": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "answer"
+      ],
+      "type": "object"
+    },
     "RequestArtifacts": {
       "additionalProperties": false,
       "properties": {
@@ -139,6 +352,64 @@
       },
       "required": [
         "message"
+      ],
+      "type": "object"
+    },
+    "ReviewProgressResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "progress": {
+          "items": {
+            "$ref": "#/definitions/TaskProgress"
+          },
+          "type": "array"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "progress",
+        "summary"
+      ],
+      "type": "object"
+    },
+    "TaskProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis": {
+          "type": "string"
+        },
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "nextSteps": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "Not Started",
+            "In Progress",
+            "Blocked",
+            "Complete"
+          ],
+          "type": "string"
+        },
+        "taskId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "taskId",
+        "status",
+        "analysis",
+        "nextSteps"
       ],
       "type": "object"
     }

@@ -77,7 +77,6 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
     
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Research Assistant ${RESEARCHER_TOKEN}`);
-        await this.chromaDBService.initializeCollection(CHROMA_COLLECTION);
         await this.scrapeHelper.initialize();
         await super.setupChatMonitor(WEB_RESEARCH_CHANNEL_ID, "@researchteam");
 

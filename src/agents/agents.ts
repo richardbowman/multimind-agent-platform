@@ -34,6 +34,7 @@ export interface HandlerParams extends GenerateParams {
 
 export interface GenerateInputParams extends GenerateParams {
     instructions: string | InputPrompt | StructuredOutputPrompt;
+    threadPosts?: ChatPost[];
 }
 
 export interface GenerateParams {
@@ -78,7 +79,7 @@ export abstract class Agent<Project, Task> {
     protected modelHelpers: ModelHelpers;
 
     protected abstract projectCompleted(project: Project): void;
-    protected abstract processTask(task: Task) : Promise<void>;
+    protected abstract processTask(task: Task): Promise<void>;
 
 
     constructor(chatClient: ChatClient, lmStudioService: LMStudioService, userId: string, projects: TaskManager, chromaDBService?: ChromaDBService) {
@@ -121,7 +122,7 @@ export abstract class Agent<Project, Task> {
 
         this.isWorking = true;
         let processedCount = 0;
-        
+
         try {
             while (true) {
                 const task: Task = await this.projects.getNextTaskForUser(this.userId);
@@ -134,7 +135,7 @@ export abstract class Agent<Project, Task> {
                 try {
                     // Mark task as in progress before starting
                     await this.projects.markTaskInProgress(task);
-                    
+
                     // Attempt to process the task
                     await this.processTask(task);
 
@@ -152,11 +153,11 @@ export abstract class Agent<Project, Task> {
     }
 
     public setPurpose(purpose: string) {
-        this.purpose = purpose;
+        this.modelHelpers.setPurpose(purpose)
     }
 
     protected enableMemory() {
-        this.isMemoryEnabled = true;
+        this.modelHelpers.enableMemory();
     }
 
     protected async send(post: Message, channelId: string) {
@@ -170,8 +171,8 @@ export abstract class Agent<Project, Task> {
     }
 
     protected async reply(post: ChatPost, response: ModelResponse, postProps?: ConversationContext): Promise<ChatPost> {
-        const artifactIds = [...postProps?.["artifact-ids"] || [], ...response.artifactIds || [], ...response.artifactId?[response.artifactId]:[]];
-        
+        const artifactIds = [...postProps?.["artifact-ids"] || [], ...response.artifactIds || [], ...response.artifactId ? [response.artifactId] : []];
+
         // Include project ID in props if present in response
         const responseProps = {
             ...postProps,
@@ -256,6 +257,8 @@ export abstract class Agent<Project, Task> {
                         const posts = await this.chatClient.getThreadChain(post);
                         // only respond to chats directed at "me"
                         if (posts[0].message.startsWith(handle)) {
+                            // Get all available actions for this response type
+                            const actions = this.getAvailableActions(ResponseType.RESPONSE);
                             const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
                             const projects = [];
                             for (const projectId of projectIds) {
@@ -263,11 +266,17 @@ export abstract class Agent<Project, Task> {
                                 if (project) projects.push(project);
                             }
 
-                            const { activityType, requestedArtifacts, searchResults } = await this.classifyResponse(post, ResponseType.RESPONSE, posts, { userPost: post, projects });
-
+                            let activityType, requestedArtifacts : string[] = [], searchResults : SearchResult[] = [];
+                            if (actions.length > 1) {
+                                const classify = await this.classifyResponse(post, ResponseType.RESPONSE, posts, { userPost: post, projects });
+                                activityType = classify.activityType;
+                                requestedArtifacts = classify.requestedArtifacts;
+                                searchResults = classify.searchResults;
+                            } else {
+                                activityType = actions[0].activityType;
+                            }
                             const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifact-ids"] || [])].flat())];
                             const artifacts = await this.mapRequestedArtifacts(allArtifacts);
-
 
                             // Retrieve the method based on the activity type
                             const handlerMethod = this.getMethodForResponse(activityType);
@@ -306,8 +315,8 @@ export abstract class Agent<Project, Task> {
 
     private async getArtifactList(): Promise<string> {
         const artifacts = await this.artifactManager.listArtifacts();
-        const filteredArtifacts = artifacts.filter(a => 
-            a.metadata?.title?.length > 0 && 
+        const filteredArtifacts = artifacts.filter(a =>
+            a.metadata?.title?.length > 0 &&
             !a.id.includes('memory') &&
             a.type !== 'webpage'
         )
@@ -379,7 +388,7 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
         `;
 
         const response = await this.lmStudioService.generateStructured(post, new StructuredOutputPrompt(jsonSchema, prompt), [], undefined, 1024);
-        
+
 
         Logger.info(`Model chose ${response.activityType} because ${response.reasoning}`);
 
@@ -412,13 +421,13 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
     private async classifyAndRespond(post: ChatPost, responseType: ResponseType, history?: ChatPost[]) {
         // Get all available actions for this response type
         const actions = this.getAvailableActions(responseType);
-        
+
         // If we only have one handler, use it directly without classification
         if (actions.length === 1) {
-            const handlerMethod = responseType === ResponseType.CHANNEL 
+            const handlerMethod = responseType === ResponseType.CHANNEL
                 ? this.getMethodForActivity(actions[0].activityType)
                 : this.getMethodForResponse(actions[0].activityType);
-                
+
             if (handlerMethod) {
                 await handlerMethod({ userPost: post });
                 return;
@@ -552,27 +561,23 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
             description: string;
             type: string;
         }[],
-        metadata?: ProjectMetadata
-    }): Promise<{ projectId: string, taskIds: string[]}> {
+        metadata?: Record<string, any>
+    }): Promise<{ projectId: string, taskIds: string[] }> {
         const projectId = randomUUID();
         const project = {
             id: projectId,
             name: projectName,
             tasks: {},
-            metadata: metadata || {
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                status: 'active'
-            }
+            metadata: metadata
         };
 
         await this.projects.addProject(project);
 
-        let taskIds : string[] = [];
+        let taskIds: string[] = [];
         if (tasks) {
-            for(let task of tasks) {
+            for (let task of tasks) {
                 const { description, type } = task;
-                taskIds.push(await this.addTaskToProject({projectId, description, type}));
+                taskIds.push(await this.addTaskToProject({ projectId, description, type }));
             }
         }
 
@@ -642,11 +647,11 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
         return {
             artifactId: artifact.id,
             ...response,
-            message:  `${response.message} [Document titled "${response.artifactTitle}" has been saved. ID: ${artifact.id}]`
+            message: `${response.message} [Document titled "${response.artifactTitle}" has been saved. ID: ${artifact.id}]`
         };
     }
 
-    protected async getMessage(messageId: string) : Promise<ChatPost> {
+    protected async getMessage(messageId: string): Promise<ChatPost> {
         return this.chatClient.getPost(messageId);
     }
 }

@@ -1,7 +1,7 @@
 export interface PlanStepTask {
     existingId?: string;
-    type: string;
-    description: string;
+    actionType: string;
+    parameters: string;
 }
 
 export interface PlanStepsResponse {

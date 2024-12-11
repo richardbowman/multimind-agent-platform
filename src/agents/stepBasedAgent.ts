@@ -10,6 +10,10 @@ import { CreateArtifact, ModelResponse } from './schemas/ModelResponse';
 import crypto from 'crypto';
 import { definitions as generatedSchemaDef } from "./schemas/schema.json";
 import ChromaDBService from 'src/llm/chromaService';
+import { Handler } from 'puppeteer';
+import { PlanStepsResponse } from './schemas/PlanStepsResponse';
+import * as schemaJson from "./schemas/schema.json";
+import { SchemaInliner } from 'src/helpers/schemaInliner';
 
 export interface StepResult {
     type?: string;
@@ -48,19 +52,19 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         }
     }
 
-    protected async planSteps(projectId: string, posts: ChatPost[]): Promise<PlanStepsResponse> {
+    protected async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
         const executorMetadata = Array.from(this.stepExecutors.entries()).map(([key, executor]) => {
             const metadata = getExecutorMetadata(executor.constructor);
             return {
                 key,
-                description: metadata?.description || executor.description || 'No description available'
+                description: metadata?.description || 'No description available'
             };
         });
 
-        const schema = generatedSchemaDef.PlanStepsResponse;
+        const schema = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions).PlanStepsResponse;
 
-        const project = this.projects.getProject(projectId);
-        const tasks = this.projects.getAllTasks(projectId);
+        const project = handlerParams.projects[0];
+        const tasks = this.projects.getAllTasks(project.id);
 
         const formatCompletedTasks = (tasks: Task[]) => {
             return tasks.map(t => {
@@ -94,6 +98,8 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         const systemPrompt =
             `${this.modelHelpers.getPurpose()}
 
+PROJECT GOAL: ${project.name}
+
 TASK GOAL: Your only job is to create new steps to achieve the goal if they are missing, and reorder steps if needed to change priority.
 Return a steps list in the order you want the steps performed.
 
@@ -109,15 +115,8 @@ You must include current steps in your response with their "existingId".
 
 ${currentSteps}`;
 
-        const conversationHistory = posts.map(post => {
-            return `${post.user_id === this.userId ? 'Assistant' : 'User'}: ${post.message}`;
-        }).join('\n\n');
-
-        const project = this.projects.getProject(projectId);
-        const latestGoal = project.name;
-
         const response: PlanStepsResponse = await this.generate({
-            message: `Goal: ${latestGoal}\n\nConversation History:\n${conversationHistory}`,
+            ...handlerParams,
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
 
@@ -137,13 +136,15 @@ ${currentSteps}`;
                 // Update existing task
                 const existingTask = existingTaskMap.get(step.existingId)!;
                 existingTask.order = index;
+                if (step.actionType) existingTask.type = step.actionType;
+                if (step.parameters) existingTask.description = step.parameters;
                 mentionedTaskIds.add(step.existingId);
             } else {
                 // Create new task
                 const newTask: Task = {
                     id: crypto.randomUUID(),
-                    type: step.type,
-                    description: step.description || step.type,
+                    type: step.actionType,
+                    description: step.parameters || step.actionType,
                     creator: this.userId,
                     complete: false,
                     order: index

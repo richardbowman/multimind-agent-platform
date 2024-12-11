@@ -1,23 +1,14 @@
-import { StepBasedAgent, StepResult } from './stepBasedAgent';
-import { PlanStepsResponse } from './schemas/agent';
+import { StepBasedAgent } from './stepBasedAgent';
 import { ChatClient } from '../chat/chatClient';
 import 'reflect-metadata';
-import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
+import LMStudioService from '../llm/lmstudioService';
 import { TaskManager } from '../tools/taskManager';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { ONBOARDING_CHANNEL_ID } from '../helpers/config';
-import { ArtifactManager } from '../tools/artifactManager';
 import ChromaDBService from '../llm/chromaService';
 import Logger from '../helpers/logger';
 import { Project, Task } from '../tools/taskManager';
-import crypto from 'crypto';
 import { Artifact } from 'src/tools/artifact';
-import { RequestArtifacts } from './schemas/ModelResponse';
-import { definitions as schemas } from "./schemas/schema.json";
-import { PlanStepTask } from './schemas/agent';
-import { StepExecutor } from './decorators/executorDecorator';
-import { RefutingExecutor } from './executors/RefutingExecutor';
-import { ThinkingExecutor } from './executors/ThinkingExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { AnalyzeGoalsExecutor } from './executors/AnalyzeGoalsExecutor';
 import { AnswerQuestionsExecutor } from './executors/AnswerQuestionsExecutor';
@@ -77,23 +68,17 @@ Let's start by discussing your main business goals. What would you like to achie
 
     @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
     protected async handleConversation(params: HandlerParams): Promise<void> {
-        // Get conversation history
-        const conversationContext = [...params.rootPost?[params.rootPost]:[], ...params.threadPosts||[], params.userPost]
-            .map(post => `[${post.user_id === this.userId ? 'Assistant' : 'User'}] ${post.message}`)
-            .join('\n\n');
-
         const { projectId } = await this.addNewProject({
-            projectName: params.userPost.message,
-            tasks: [{
-                type: "reply",
-                description: "Initial response to user query."
-            }],
+            projectName: `Kickoff onboarding based on incoming message: ${params.userPost.message}`,
+            tasks: [],
             metadata: {
                 originalPostId: params.userPost.id
             }
         });
+        const project = await this.projects.getProject(projectId);
 
-        const plan = await this.planSteps(projectId, conversationContext);
+        params.projects = [...params.projects||[], project]
+        const plan = await this.planSteps(params);
         await this.executeNextStep(projectId, params.userPost);
     }
 
@@ -101,26 +86,20 @@ Let's start by discussing your main business goals. What would you like to achie
     protected async handleThreadResponse(params: HandlerParams): Promise<void> {
         const project = params.projects?.[0] as OnboardingProject;
         
-        // Get conversation history
-        const conversationContext = [...params.rootPost?[params.rootPost]:[], ...params.threadPosts||[], params.userPost]
-            .map(post => `[${post.user_id === this.userId ? 'Assistant' : 'User'}] ${post.message}`)
-            .join('\n\n');
-
         // If no active project, treat it as a new conversation
         if (!project) {
             Logger.info("No active project found, starting new conversation");
             const { projectId } = await this.addNewProject({
                 projectName: params.userPost.message,
-                tasks: [{
-                    type: "reply",
-                    description: "Initial response to user query."
-                }],
+                tasks: [],
                 metadata: {
                     originalPostId: params.userPost.id
                 }
             });
+            const project = await this.projects.getProject(projectId);
+            params.projects = [...params.projects||[], project]
 
-            const plan = await this.planSteps(projectId, conversationContext);
+            const plan = await this.planSteps(params);
             await this.executeNextStep(projectId, params.userPost);
             return;
         }
@@ -129,13 +108,13 @@ Let's start by discussing your main business goals. What would you like to achie
         const currentTask = Object.values(project.tasks).find(t => t.inProgress);
         if (!currentTask) {
             Logger.info("No active task, treating as new query in existing project");
-            const plan = await this.planSteps(project.id, params.userPost.message);
+            const plan = await this.planSteps(params);
             await this.executeNextStep(project.id, params.userPost);
             return;
         }
 
         // Handle response to active task
-        const plan = await this.planSteps(project.id, conversationContext);
+        const plan = await this.planSteps(params);
         await this.executeNextStep(project.id, params.userPost);
     }
 
@@ -149,10 +128,10 @@ Let's start by discussing your main business goals. What would you like to achie
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
         
         // Register our specialized executors
-        this.registerStepExecutor(new ReplyExecutor(lmStudioService, projects, this.artifactManager));
+        // this.registerStepExecutor(new ReplyExecutor(lmStudioService, projects, this.artifactManager));
         this.registerStepExecutor(new AnswerQuestionsExecutor(lmStudioService, projects));
         this.registerStepExecutor(new UnderstandGoalsExecutor(lmStudioService, projects, userId));
-        this.registerStepExecutor(new AnalyzeGoalsExecutor(lmStudioService, projects, this.artifactManager, userId));
+        // this.registerStepExecutor(new AnalyzeGoalsExecutor(lmStudioService, projects, this.artifactManager, userId));
         this.registerStepExecutor(new CreatePlanExecutor(lmStudioService, projects, this.artifactManager, userId));
         this.registerStepExecutor(new ReviewProgressExecutor(lmStudioService, projects, this.artifactManager));
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));

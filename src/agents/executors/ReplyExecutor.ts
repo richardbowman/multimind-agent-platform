@@ -40,7 +40,7 @@ export class ReplyExecutor implements StepExecutor {
         }
 
         if (project.props?.businessPlanId) {
-            project.existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
+            project.props.existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
         }
 
         return project;

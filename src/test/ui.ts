@@ -1,13 +1,16 @@
-import blessed from 'blessed';
-import { markdown } from 'blessed-contrib';
+import blessed from 'reblessed';
+// import { markdown } from 'blessed-contrib';
 import Logger from 'src/helpers/logger';
+
 
 // Create a screen object first
 export const screen = blessed.screen({
     autoPadding: true,
     smartCSR: true,
     dockBorders: true,
-    title: 'Chat Client'
+    title: 'Chat Client',
+    fullUnicode: true,
+    forceUnicode: true
 });
 
 // Logo template
@@ -179,16 +182,16 @@ export const chatBox = blessed.log({
 tab1Box.append(chatBox);
 
 // Create a textarea to enter messages.
-export const inputBox = blessed.textarea({
+export const inputBox = blessed.textbox({
     top: '100%-5',
     left: 0,
     width: '100%',
     height: 5,
     keys: true,
     mouse: true,
-    inputOnFocus: true,
-    vi: true, // Enable vi-style keybindings
-    cursorKeys: true, // Enable cursor key movement
+    // inputOnFocus: true,
+    // vi: true, // Enable vi-style keybindings
+    // cursorKeys: true, // Enable cursor key movement
     border: {
         type: 'line',
         fg: 'red'
@@ -283,7 +286,7 @@ export const logBox = blessed.log({
 
 screen.append(logBox);
 
-export const artifactDetailViewer = markdown({
+export const artifactDetailViewer = blessed.box({
     top: '10%',
     left: '10%',
     width: '80%',
@@ -316,7 +319,7 @@ export const artifactDetailViewer = markdown({
 
 screen.append(artifactDetailViewer);
 
-export const taskDetailViewer = markdown({
+export const taskDetailViewer = blessed.box({
     top: '10%',
     left: '10%',
     width: '80%',
@@ -379,7 +382,7 @@ export const artifactTypeFilter = blessed.listbar({
         }
     },
     left: 0,
-    width: '100%',
+    width: '100%-20',
     top: 0,
     height: 3,
     commands: {
@@ -447,14 +450,15 @@ tab1Box.append(commandList);
 
 // Create delete button
 export const deleteArtifactButton = blessed.button({
-    content: 'Delete Artifact',
-    top: 3,
+    top: 0,
     right: 0,
-    width: 'shrink',
-    height: 'shrink',
-    padding: {
-        left: 1,
-        right: 1
+    content: 'Delete',
+    mouse: true,
+    focusable: true,
+    width: 20,
+    height: 3,
+    border: {
+        type: 'line'
     },
     style: {
         bg: 'red',
@@ -466,11 +470,11 @@ export const deleteArtifactButton = blessed.button({
             bg: 'dark-red'
         }
     },
-    hidden: true
+    hidden: false
 });
 
-export const globalArtifactViewer = markdown({
-    top: 3,
+export const globalArtifactViewer = blessed.box({
+    top: 4,
     left: '30%',
     width: '70%',
     height: '100%-3',
