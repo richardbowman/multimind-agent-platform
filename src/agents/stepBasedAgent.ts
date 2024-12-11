@@ -20,6 +20,7 @@ export interface StepResult {
 }
 
 export interface StepExecutor {
+    description: string;
     execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult>;
 }
 
