@@ -37,8 +37,12 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
     }
 
-    protected registerStepExecutor(stepType: string, executor: StepExecutor): void {
-        this.stepExecutors.set(stepType, executor);
+    protected registerStepExecutor(executor: StepExecutor): void {
+        const metadata = getExecutorMetadata(executor.constructor);
+        if (!metadata) {
+            throw new Error(`No metadata found for executor ${executor.constructor.name}. Did you forget the @StepExecutor decorator?`);
+        }
+        this.stepExecutors.set(metadata.key, executor);
     }
 
     protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse> {
