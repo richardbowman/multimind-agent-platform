@@ -1,7 +1,7 @@
 import { ChatPost } from "src/chat/chatClient";
 import { ILLMService } from "./ILLMService";
 import { ModelResponse } from "src/agents/schemas/ModelResponse";
-import { StructuredOutputPrompt } from "./lmstudioService";
+import { StructuredOutputPrompt } from "./lmStudioService";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 
@@ -165,7 +165,7 @@ export class ModelHelpers {
 
         const { contextWindow, maxTokens } = params;
 
-        const response = await this.lmStudioService.generateStructured(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
+        const response = await this.model.generateStructured(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
         response.artifactIds = params.artifacts?.map(a => a.id);
         return response;
     }
@@ -213,7 +213,7 @@ export class ModelHelpers {
 
         // Augment instructions with context and generate a response
         const history = (params as HandlerParams).threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
-        const response = await this.lmStudioService.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:params.message||""}, history);
+        const response = await this.model.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:params.message||""}, history);
         (response as RequestArtifacts).artifactIds = params.artifacts?.map(a => a.id);
         
         return response;

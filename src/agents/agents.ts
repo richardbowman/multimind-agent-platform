@@ -14,6 +14,7 @@ import { Project, Task, TaskManager } from "src/tools/taskManager";
 import { ArtifactResponseSchema } from './schemas/artifactSchema';
 import schemas from './schemas/schema.json';
 import { ArtifactInputPrompt } from 'src/prompts/artifactInputPrompt';
+import { ModelHelpers } from 'src/llm/helpers';
 
 export interface ActionMetadata {
     activityType: string;
