@@ -17,13 +17,6 @@ import { definitions as schemas } from "./schemas/schema.json";
 import { PlanStepTask } from './schemas/agent';
 
 
-// Decorator for step executors
-export function StepExecutor(key: string, description: string) {
-    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
-        Reflect.defineMetadata('stepDescription', description, target, propertyKey);
-        Reflect.defineMetadata('stepKey', key, target, propertyKey);
-    };
-}
 
 interface QuestionAnswer {
     questionId: string;
@@ -50,28 +43,29 @@ class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Ta
     }
 
     constructor(
-        userId: string,
-        messagingHandle: string,
         chatClient: ChatClient,
         lmStudioService: LMStudioService,
-        chromaDBService: ChromaDBService,
-        projects: TaskManager
+        userId: string,
+        projects: TaskManager,
+        chromaDBService: ChromaDBService
     ) {
-        super(chatClient, lmStudioService, userId, projects);
-        this.chromaDBService = chromaDBService;
+        super(chatClient, lmStudioService, userId, projects, chromaDBService);
+        
+        // Register our specialized executors
+        this.registerStepExecutor(new ThinkingExecutor(lmStudioService));
+        this.registerStepExecutor(new RefutingExecutor(lmStudioService));
+        this.registerStepExecutor(new ValidationExecutor(lmStudioService));
 
         this.setPurpose(`I am an Onboarding Agent focused on helping users achieve their business goals with our AI Agent tools. This service is designed
 to help businesses automate tasks automatically including research and content creation. My goal is to ensure that the rest of the agents in the platform
 are trained and educated on what the user is trying to achieve using our system. This means I build an understanding of their business goals, market, strategy,
 and brand standards. When all of that is complete, I build and maintain a comprehensive on-boarding guide, and then introduce the user to the other agents.`);
-        this.setupChatMonitor(ONBOARDING_CHANNEL_ID, messagingHandle);
-        this.artifactManager = new ArtifactManager(chromaDBService);
-
-        // Automatically register step executors using reflection
-        this.registerStepExecutorsFromMetadata();
     }
 
     public async initialize(): Promise<void> {
+        Logger.info(`Initialized Onboarding Consultant`);
+        await super.setupChatMonitor(ONBOARDING_CHANNEL_ID, "@onboarding");
+
         const welcomeMessage = {
             message: `👋 Welcome! I'm your Goal-Based Onboarding Consultant.
             
@@ -85,45 +79,72 @@ Let's start by discussing your main business goals. What would you like to achie
         };
 
         await this.send(welcomeMessage, ONBOARDING_CHANNEL_ID);
+        
+        // asynchronously check for old tasks and keep working on them
+        this.processTaskQueue();
     }
 
     @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
-    private async handleConversation(params: HandlerParams): Promise<void> {
+    protected async handleConversation(params: HandlerParams): Promise<void> {
+        // Get conversation history
+        const conversationContext = [...params.rootPost?[params.rootPost]:[], ...params.threadPosts||[], params.userPost]
+            .map(post => `[${post.user_id === this.userId ? 'Assistant' : 'User'}] ${post.message}`)
+            .join('\n\n');
 
         const { projectId } = await this.addNewProject({
-            projectName: "Onboarding",
+            projectName: params.userPost.message,
             tasks: [{
                 type: "reply",
-                description: "Welcome the user to the onboarding plan, and explain the steps."
-            }]
+                description: "Initial response to user query."
+            }],
+            metadata: {
+                originalPostId: params.userPost.id
+            }
         });
 
-        const plan = await this.planSteps(projectId, params.userPost.message);
-        
+        const plan = await this.planSteps(projectId, conversationContext);
         await this.executeNextStep(projectId, params.userPost);
     }
 
     @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
-    private async handleThreadResponse(params: HandlerParams): Promise<void> {
+    protected async handleThreadResponse(params: HandlerParams): Promise<void> {
         const project = params.projects?.[0] as OnboardingProject;
+        
+        // Get conversation history
+        const conversationContext = [...params.rootPost?[params.rootPost]:[], ...params.threadPosts||[], params.userPost]
+            .map(post => `[${post.user_id === this.userId ? 'Assistant' : 'User'}] ${post.message}`)
+            .join('\n\n');
+
+        // If no active project, treat it as a new conversation
         if (!project) {
-            await this.reply(params.userPost, { 
-                message: "No active goal planning session found. Please start a new session." 
+            Logger.info("No active project found, starting new conversation");
+            const { projectId } = await this.addNewProject({
+                projectName: params.userPost.message,
+                tasks: [{
+                    type: "reply",
+                    description: "Initial response to user query."
+                }],
+                metadata: {
+                    originalPostId: params.userPost.id
+                }
             });
+
+            const plan = await this.planSteps(projectId, conversationContext);
+            await this.executeNextStep(projectId, params.userPost);
             return;
         }
 
-        // Find the current in-progress task
+        // Handle response to existing project
         const currentTask = Object.values(project.tasks).find(t => t.inProgress);
         if (!currentTask) {
-            await this.reply(params.userPost, { 
-                message: "I wasn't expecting a response right now. What would you like to work on?" 
-            });
+            Logger.info("No active task, treating as new query in existing project");
+            const plan = await this.planSteps(project.id, params.userPost.message);
+            await this.executeNextStep(project.id, params.userPost);
             return;
         }
 
-        const plan = await this.planSteps(project.id, params.userPost.message);
-        
+        // Handle response to active task
+        const plan = await this.planSteps(project.id, conversationContext);
         await this.executeNextStep(project.id, params.userPost);
     }
 
