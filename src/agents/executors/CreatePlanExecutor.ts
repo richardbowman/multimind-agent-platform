@@ -36,19 +36,19 @@ export class CreatePlanExecutor implements StepExecutor {
 
         const answers = this.getAnswersForType(project, 'process-answers');
 
+        const formattedMessage = this.formatPromptMessage(
+            businessGoals,
+            project.existingPlan?.content.toString(),
+            project.props,
+            answers.map(a => ({
+                question: project.tasks[a.questionId]?.description || '',
+                answer: a.answer,
+                category: project.tasks[a.questionId]?.type
+            }))
+        );
+
         const response : OperationalGuideResponse = await this.modelHelpers.generate({
-            message: JSON.stringify({
-                goals: businessGoals,
-                currentPlan: project.existingPlan?.content.toString(),
-                projectContext: project.props,
-                answers,
-                // Include answers in the operational guide
-                questionsAndAnswers: answers.map(a => ({
-                    question: project.tasks[a.questionId]?.description || '',
-                    answer: a.answer,
-                    category: project.tasks[a.questionId]?.type
-                }))
-            }),
+            message: formattedMessage,
             instructions: new StructuredOutputPrompt(schema,
                 `Create an overview of the user's desired business goals so our project manager, researcher, and content writer agents know how to help.
                 Use the provided answers about the business and service requirements to inform the plan.`)
@@ -97,6 +97,53 @@ export class CreatePlanExecutor implements StepExecutor {
             const task = project.tasks[answer.questionId];
             return task?.type === questionType;
         });
+    }
+
+    private formatPromptMessage(
+        businessGoals: any[],
+        currentPlan: string | undefined,
+        projectContext: any,
+        questionsAndAnswers: QAItem[]
+    ): string {
+        let message = "I need you to create a comprehensive operational guide based on the following information:\n\n";
+
+        // Add business goals section
+        message += "🎯 Business Goals:\n";
+        businessGoals.forEach(goal => {
+            message += `- ${goal.description}\n`;
+        });
+        message += "\n";
+
+        // Add Q&A section
+        if (questionsAndAnswers.length > 0) {
+            message += "📋 Gathered Information:\n";
+            questionsAndAnswers.forEach(qa => {
+                message += `Q: ${qa.question}\nA: ${qa.answer}\n`;
+                if (qa.category) {
+                    message += `Category: ${qa.category}\n`;
+                }
+                message += "\n";
+            });
+        }
+
+        // Add existing plan context if available
+        if (currentPlan) {
+            message += "📑 Current Plan Context:\n";
+            message += currentPlan + "\n\n";
+        }
+
+        // Add project context if relevant
+        if (Object.keys(projectContext).length > 0) {
+            message += "🔍 Additional Context:\n";
+            Object.entries(projectContext).forEach(([key, value]) => {
+                if (key !== 'businessPlanId') { // Skip technical fields
+                    message += `${key}: ${value}\n`;
+                }
+            });
+            message += "\n";
+        }
+
+        return message;
     }
 
     private async updateProjectBusinessPlan(project: OnboardingProject, response: any): Promise<string> {
