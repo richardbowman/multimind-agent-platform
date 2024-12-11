@@ -1,4 +1,4 @@
-import { StepBasedAgent, AgentState, StepResult, PlanStepsResponse, PlanStepTask } from './stepBasedAgent';
+import { PlanStepsResponse, StepBasedAgent, StepResult } from './stepBasedAgent';
 import { ChatClient } from '../chat/chatClient';
 import 'reflect-metadata';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
@@ -13,6 +13,7 @@ import crypto from 'crypto';
 import { Artifact } from 'src/tools/artifact';
 import { RequestArtifacts } from './schemas/ModelResponse';
 import { definitions as schemas } from "./schemas/schema.json";
+import { PlanStepTask } from './schemas/agent';
 
 
 // Decorator for step executors
@@ -49,7 +50,10 @@ class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Ta
         super(chatClient, lmStudioService, userId, projects);
         this.chromaDBService = chromaDBService;
 
-        this.setPurpose(`I am an Onboarding Consultant focused on helping you achieve your business goals with our service.`);
+        this.setPurpose(`I am an Onboarding Agent focused on helping users achieve their business goals with our AI Agent tools. This service is designed
+to help businesses automate tasks automatically including research and content creation. My goal is to ensure that the rest of the agents in the platform
+are trained and educated on what the user is trying to achieve using our system. This means I build an understanding of their business goals, market, strategy,
+and brand standards. When all of that is complete, I build and maintain a comprehensive on-boarding guide, and then introduce the user to the other agents.`);
         this.setupChatMonitor(ONBOARDING_CHANNEL_ID, messagingHandle);
         this.artifactManager = new ArtifactManager(chromaDBService);
 
@@ -136,16 +140,17 @@ Let's start by discussing your main business goals. What would you like to achie
         }).join("\n\n");
 
         const systemPrompt = 
-`You help on-board users into our AI Agent tool. This service is designed
-to help small businesses perform tasks automatically with regards to research and content creation.
-Break down the consultation process into specific steps. To keep existing steps, make sure to include
-their existingId value.
+`OVERALL BACKSTORY AND GOAL: ${this.purpose}
 
-The allowable step types are:
+TASK GOAL: Manage a list of execution steps to complete a successful on-boarding process.
+
+The allowable step types you can execute later are:
 ${stepDescriptions}
 
+If you've completed any steps already they will be listed here:
 ${completedSteps}
 
+This is your current active step list. If you remove an item from this list, we'll assume it isn't needed any longer. You can add new items by specifying a type and a description. You should include any relevant existing steps as well with their existingStepId.
 ${currentSteps}`
 
         const response: PlanStepsResponse = await this.generate({
@@ -308,7 +313,6 @@ ${currentSteps}`
         };
     }
 
-    @StepExecutor("understand-goals", "Analyze and break down the user's business goals into actionable items")
     @StepExecutor("answer-questions", "Analyze user responses and mark answered questions as complete")
     private async executeAnswerQuestions(response: string, step: string, projectId: string): Promise<StepResult> {
         const schema = {
@@ -344,7 +348,7 @@ ${currentSteps}`
             };
         }
 
-        const response = await this.generate({
+        const modelResponse = await this.generate({
             message: response,
             instructions: new StructuredOutputPrompt(schema,
                 `Analyze the user's response against these pending questions:
@@ -357,7 +361,7 @@ ${currentSteps}`
         });
 
         // Update tasks based on analysis
-        for (const answer of response.answers) {
+        for (const answer of modelResponse.answers) {
             const task = this.projects.getTask(answer.questionId);
             if (task && answer.answered) {
                 task.metadata = {
@@ -370,7 +374,7 @@ ${currentSteps}`
         }
 
         const remainingQuestions = intakeQuestions.filter(q => 
-            !response.answers.find(a => a.questionId === q.id && a.answered)
+            !modelResponse.answers.find(a => a.questionId === q.id && a.answered)
         );
 
         return {
@@ -378,7 +382,7 @@ ${currentSteps}`
             finished: remainingQuestions.length === 0,
             needsUserInput: remainingQuestions.length > 0,
             response: {
-                message: `${response.summary}\n\n${
+                message: `${modelResponse.summary}\n\n${
                     remainingQuestions.length > 0 
                         ? `I still need answers to these questions:\n${remainingQuestions.map(q => q.description).join('\n')}`
                         : "All questions have been answered. I'll analyze the information to create a plan."
@@ -387,6 +391,7 @@ ${currentSteps}`
         };
     }
 
+    @StepExecutor("understand-goals", "Analyze and break down the user's business goals into actionable items")
     private async executeUnderstandGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
         const schema = {
             type: "object",
@@ -427,7 +432,7 @@ ${currentSteps}`
         for (const q of response.intakeQuestions) {
             await this.addTaskToProject({
                 projectId,
-                type: 'intake-question',
+                type: 'answer-questions',
                 description: `Q: ${q.question}\nPurpose: ${q.purpose}`,
                 skipForSameType: false
             });
@@ -442,18 +447,6 @@ ${currentSteps}`
                     response.intakeQuestions.map((q, i) => `${i + 1}. ${q.question}`).join('\n\n')
                 }\n\nPlease respond to these questions so I can create a more tailored plan.`
             }
-        };
-    }
-        const project = await this.getProjectWithPlan(projectId);
-        const analyzedGoals = await this.breakdownBusinessGoals(goal);
-        const tasks = await this.createGoalTasks(project, analyzedGoals);
-        const businessPlanId = await this.updateProjectBusinessPlan(project);
-
-        return {
-            type: "analyze_goals",
-            goals: project.goals,
-            projectId: project.id,
-            artifactId: businessPlanId
         };
     }
 
