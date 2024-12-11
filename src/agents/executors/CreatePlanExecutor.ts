@@ -7,6 +7,7 @@ import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
+import { CreateArtifact } from '../schemas/ModelResponse';
 
 @StepExecutorDecorator('create_plan', 'Create detailed action plans for each business goal')
 export class CreatePlanExecutor implements StepExecutor {
@@ -92,10 +93,9 @@ export class CreatePlanExecutor implements StepExecutor {
             needsUserInput: false,
             response: {
                 message: responseMessage,
-                operationalGuide: response.operationalGuide,
                 artifactId: businessPlanId,
                 artifactTitle: "Business Plan"
-            }
+            } as CreateArtifact
         };
     }
 

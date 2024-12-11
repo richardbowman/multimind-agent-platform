@@ -4,6 +4,7 @@ import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioServi
 import { TaskManager } from '../../tools/taskManager';
 import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
+import Logger from 'src/helpers/logger';
 
 @StepExecutorDecorator('understand_goals', 'Generate focused questions to understand business needs and AI service fit')
 export class UnderstandGoalsExecutor implements StepExecutor {
@@ -38,6 +39,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             },
             required: ["intakeQuestions", "reasoning"]
         };
+        
 
         const response = await this.modelHelpers.generate({
             message: goal,
