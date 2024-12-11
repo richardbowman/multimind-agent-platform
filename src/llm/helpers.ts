@@ -167,7 +167,7 @@ export class ModelHelpers {
         return response;
     }
 
-    protected async generate(params: GenerateInputParams): Promise<ModelResponse> {
+    public async generate(params: GenerateInputParams): Promise<ModelResponse> {
         if (params.instructions instanceof StructuredOutputPrompt) {
             return this.generateStructured(params.instructions, params);
         } else {
