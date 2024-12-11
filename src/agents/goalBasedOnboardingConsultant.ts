@@ -98,7 +98,7 @@ Let's start by discussing your main business goals. What would you like to achie
     }
 
     @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
-    private async handleGoalUpdate(params: HandlerParams): Promise<void> {
+    private async handleThreadResponse(params: HandlerParams): Promise<void> {
         const project = params.projects?.[0] as OnboardingProject;
         if (!project) {
             await this.reply(params.userPost, { 
@@ -138,10 +138,16 @@ Let's start by discussing your main business goals. What would you like to achie
         const completedSteps = `Completed Tasks:\n${JSON.stringify(tasks.filter(t => t.complete).map(mapper), undefined, " ")}\n\n`;
         const currentSteps = `Current Plan:\n${JSON.stringify(tasks.filter(t => !t.complete).map(mapper), undefined, " ")}\n\n`;
 
+        const stepDescriptions = registeredSteps.map(s => ` - {s}`).join("\n");
+
         const systemPrompt = 
 `You help on-board users into our AI Agent tool. This service is designed
 to help small businesses perform tasks automatically with regards to research and content creation.
-Break down the consultation process into specific steps.
+Break down the consultation process into specific steps. To keep existing steps, make sure to include
+their existingId value.
+
+The allowable step types are:
+${stepDescriptions}
 
 ${completedSteps}
 
@@ -162,30 +168,29 @@ ${currentSteps}`
 
         // Update task order and status based on response
         response.steps.forEach((step, index) => {
-            if (step.id && existingTaskMap.has(step.id)) {
+            if (step.existingId && existingTaskMap.has(step.existingId)) {
                 // Update existing task
-                const existingTask = existingTaskMap.get(step.id)!;
+                const existingTask = existingTaskMap.get(step.existingId)!;
                 existingTask.order = index;
-                mentionedTaskIds.add(step.id);
+                mentionedTaskIds.add(step.existingId);
             } else {
                 // Create new task
                 const newTask: Task = {
                     id: crypto.randomUUID(),
                     type: step.type,
-                    description: step.description,
+                    description: step.description||step.type,
                     creator: this.userId,
                     complete: false,
                     order: index
                 };
-                this.projects.addTask(projectId, newTask);
+                this.projects.addTask(project, newTask);
             }
         });
 
         // Mark any tasks not mentioned in the response as completed
         for (const [taskId, task] of existingTaskMap) {
             if (!mentionedTaskIds.has(taskId)) {
-                task.complete = true;
-                this.projects.updateTask(projectId, task);
+                this.projects.completeTask(taskId);
             }
         }
 
@@ -276,13 +281,16 @@ ${currentSteps}`
 
     private async executeReply(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
-        const reply = this.generate({
+        const reply = await this.generate({
             instructions: "Generate a user friendly reply",
-            message: step
+            message: `${step} [${goal}]`,
+            projects: [project]
         });
 
         return {
-            finished: true
+            finished: true,
+            needsUserInput: true,
+            response: reply
         };
     }
 
