@@ -2,9 +2,16 @@ import { StepExecutor } from '../decorators/executorDecorator';
 import { StepResult } from '../stepBasedAgent';
 import { IExecutor } from './IExecutor';
 import LMStudioService from '../../llm/lmstudioService';
+import { TaskManager } from '../../tools/taskManager';
+import { ArtifactManager } from '../../tools/artifactManager';
+import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 
 export class ReplyExecutor implements IExecutor {
-    constructor(private lmStudioService: LMStudioService) {}
+    constructor(
+        private lmStudioService: LMStudioService,
+        private taskManager: TaskManager,
+        private artifactManager: ArtifactManager
+    ) {}
 
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
@@ -21,8 +28,16 @@ export class ReplyExecutor implements IExecutor {
         };
     }
 
-    private async getProjectWithPlan(projectId: string) {
-        // Implementation would come from your project management system
-        return { id: projectId };
+    private async getProjectWithPlan(projectId: string): Promise<OnboardingProject> {
+        const project = this.taskManager.getProject(projectId) as OnboardingProject;
+        if (!project) {
+            throw new Error(`Project ${projectId} not found`);
+        }
+
+        if (project.props?.businessPlanId) {
+            project.existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
+        }
+
+        return project;
     }
 }

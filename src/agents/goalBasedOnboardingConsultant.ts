@@ -245,7 +245,7 @@ Let's start by discussing your main business goals. What would you like to achie
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
         
         // Register our specialized executors
-        this.registerStepExecutor(new ReplyExecutor(lmStudioService));
+        this.registerStepExecutor(new ReplyExecutor(lmStudioService, projects, this.artifactManager));
         this.registerStepExecutor(new AnswerQuestionsExecutor(lmStudioService, projects));
         this.registerStepExecutor(new ThinkingExecutor(lmStudioService));
         this.registerStepExecutor(new RefutingExecutor(lmStudioService));
