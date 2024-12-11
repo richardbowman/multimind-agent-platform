@@ -1,5 +1,6 @@
 import { Agent } from './agents';
 import { ChatClient, ChatPost } from '../chat/chatClient';
+import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
 import { Task, TaskManager } from '../tools/taskManager';
 import Logger from '../helpers/logger';
@@ -37,7 +38,50 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         this.stepExecutors.set(stepType, executor);
     }
 
-    protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse>;
+    protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse> {
+        const registeredSteps = Array.from(this.stepExecutors.keys());
+        
+        const schema = {
+            type: "object",
+            properties: {
+                steps: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            type: {
+                                type: "string",
+                                enum: registeredSteps,
+                                description: "Type of step to execute"
+                            },
+                            description: {
+                                type: "string",
+                                description: "Description of what this step will accomplish"
+                            },
+                            existingId: {
+                                type: "string",
+                                description: "ID of existing step if this updates one"
+                            }
+                        },
+                        required: ["type", "description"]
+                    }
+                }
+            },
+            required: ["steps"]
+        };
+
+        const systemPrompt = `You are planning the steps needed to accomplish a goal.
+Break down the goal into logical steps using the available step types.
+Consider dependencies and order of operations.
+Each step should move closer to the final goal.`;
+
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        
+        return await this.generate({
+            message: latestGoal,
+            instructions
+        });
+    }
 
     protected async executeNextStep(projectId: string, userPost: ChatPost): Promise<void> {
         const task = this.projects.getNextTask(projectId);
@@ -244,5 +288,42 @@ You will respond inside of the message key in Markdown format.`;
         await this.executeStep(projectId, currentStep, userPost);
     }
 }
+    @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
+    protected async handleConversation(params: HandlerParams): Promise<void> {
+        const { projectId } = await this.addNewProject({
+            projectName: params.userPost.message,
+            tasks: [{
+                type: "reply",
+                description: "Initial response to user query."
+            }]
+        });
+
+        const plan = await this.planSteps(projectId, params.userPost.message);
+        await this.executeNextStep(projectId, params.userPost);
+    }
+
+    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
+    protected async handleThreadResponse(params: HandlerParams): Promise<void> {
+        const project = params.projects?.[0];
+        if (!project) {
+            await this.reply(params.userPost, { 
+                message: "No active session found. Please start a new conversation." 
+            });
+            return;
+        }
+
+        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
+        if (!currentTask) {
+            await this.reply(params.userPost, { 
+                message: "I wasn't expecting a response right now. What would you like to discuss?" 
+            });
+            return;
+        }
+
+        const plan = await this.planSteps(project.id, params.userPost.message);
+        await this.executeNextStep(project.id, params.userPost);
+    }
+}
+
 export { PlanStepsResponse };
 
