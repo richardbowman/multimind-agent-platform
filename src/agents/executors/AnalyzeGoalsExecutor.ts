@@ -1,5 +1,6 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
@@ -109,46 +110,6 @@ export class AnalyzeGoalsExecutor implements StepExecutor {
     }
 
     private async updateBusinessPlan(project: OnboardingProject, existingPlan?: Artifact): Promise<string> {
-        const schema = {
-            type: "object",
-            properties: {
-                content: {
-                    type: "string",
-                    description: "The business plan content in markdown format"
-                },
-                title: {
-                    type: "string",
-                    description: "A title for the business plan"
-                }
-            },
-            required: ["content", "title"]
-        };
-
-        let existingContent = existingPlan?.content.toString();
-
-        const response = await this.modelHelpers.generate({
-            message: JSON.stringify({
-                goals: Object.values(project.tasks).filter(t => t.type === 'business-goal'),
-                existingPlan: existingContent,
-                projectId: project.id,
-                latestUpdate: project.props?.latestUpdate || ''
-            }),
-            instructions: new StructuredOutputPrompt(schema,
-                `Update the business plan based on the goals, previous results, and latest updates.
-                If there's an existing plan, use it as a base and incorporate new information.`)
-        });
-
-        const artifactId = existingPlan?.id || crypto.randomUUID();
-        await this.artifactManager.saveArtifact({
-            id: artifactId,
-            type: 'business-plan',
-            content: response.content,
-            metadata: {
-                title: response.title,
-                lastUpdated: new Date().toISOString()
-            }
-        });
-
-        return artifactId;
+        return updateBusinessPlan(project, this.modelHelpers, this.artifactManager, existingPlan);
     }
 }

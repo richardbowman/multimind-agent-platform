@@ -1,7 +1,16 @@
-import { Artifact } from "src/tools/artifact";
-import { OnboardingProject } from "../onboardingConsultant";
+import { Artifact } from "../../tools/artifact";
+import { OnboardingProject } from "../goalBasedOnboardingConsultant";
+import { StructuredOutputPrompt } from "../../llm/lmstudioService";
+import { ArtifactManager } from "../../tools/artifactManager";
+import { ModelHelpers } from "../../llm/helpers";
+import crypto from 'crypto';
 
-export async function updateBusinessPlan(project: OnboardingProject, existingPlan?: Artifact): Promise<string> {
+export async function updateBusinessPlan(
+    project: OnboardingProject, 
+    modelHelpers: ModelHelpers,
+    artifactManager: ArtifactManager,
+    existingPlan?: Artifact
+): Promise<string> {
     const schema = {
         type: "object",
         properties: {
@@ -20,7 +29,7 @@ export async function updateBusinessPlan(project: OnboardingProject, existingPla
     // Get the existing business plan content if it exists
     let existingContent = existingPlan?.content.toString();
 
-    const response = await this.generate({
+    const response = await modelHelpers.generate({
         message: JSON.stringify({
             goals: Object.values(project.tasks).filter(t => t.type === 'business-goal'),
             existingPlan: existingContent,
@@ -68,7 +77,7 @@ export async function updateBusinessPlan(project: OnboardingProject, existingPla
 
     // Create or update the business plan artifact
     const artifactId = existingPlan?.id || crypto.randomUUID();
-    await this.artifactManager.saveArtifact({
+    await artifactManager.saveArtifact({
         id: artifactId,
         type: 'business-plan',
         content: response.content,
