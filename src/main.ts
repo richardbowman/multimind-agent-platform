@@ -75,7 +75,7 @@ const pmClient = new InMemoryTestClient(PROJECT_MANAGER_USER_ID, "test", storage
 const pmAssistant = new ProjectManager(PROJECT_MANAGER_USER_ID, "@pm", pmClient, llmService, chromaService, tasks);
 
 const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
-const onboardingAssistant = new GoalBasedOnboardingConsultant(ONBOARDING_CONSULTANT_USER_ID, "@onboarding", onboardingClient, llmService, chromaService, tasks);
+const onboardingAssistant = new GoalBasedOnboardingConsultant(onboardingClient, llmService, ONBOARDING_CONSULTANT_USER_ID, tasks, chromaService);
 await onboardingAssistant.initialize();
 
 const factCheckerClient = new InMemoryTestClient(FACT_CHECKER_USER_ID, "test", storage);
