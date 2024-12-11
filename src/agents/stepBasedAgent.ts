@@ -42,7 +42,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
     protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse> {
         const registeredSteps = Array.from(this.stepExecutors.keys());
-        
+
         const schema = generatedSchemaDef.PlanStepsResponse;
 
         const project = this.projects.getProject(projectId);
@@ -62,8 +62,8 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
             return `${key}\n    Description: ${executor?.description || 'No description available'}`;
         }).join("\n\n");
 
-        const systemPrompt = 
-`${this.modelHelpers.getPurpose()}
+        const systemPrompt =
+            `${this.modelHelpers.getPurpose()}
 
 TASK GOAL: Plan the steps needed to accomplish the given goal.
 
@@ -101,7 +101,7 @@ ${currentSteps}`;
                 const newTask: Task = {
                     id: crypto.randomUUID(),
                     type: step.type,
-                    description: step.description||step.type,
+                    description: step.description || step.type,
                     creator: this.userId,
                     complete: false,
                     order: index
@@ -136,7 +136,7 @@ ${currentSteps}`;
         await this.generateAndSendFinalResponse(project.id, userPost);
         return;
     }
-    
+
     protected async executeStep(projectId: string, task: Task, userPost: ChatPost): Promise<void> {
         try {
             const executor = this.stepExecutors.get(task.type);
@@ -158,33 +158,15 @@ ${currentSteps}`;
                 .filter(r => r); // Remove undefined/null results
 
             const stepResult = await executor.execute(
-                project.name, 
-                task.type, 
+                project.name,
+                task.type,
                 projectId,
                 priorResults
             );
-            
+
             // Store the result in task props
             if (!task.props) task.props = {};
             task.props.result = stepResult.response;
-
-            if (stepResult.finished) {
-                this.projects.completeTask(task.id);
-                
-                // If this was the last planned task, add a validation step
-                const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
-                if (remainingTasks.length === 0) {
-                    const validationTask: Task = {
-                        id: crypto.randomUUID(),
-                        type: 'validation',
-                        description: 'Validate solution completeness',
-                        creator: this.userId,
-                        complete: false,
-                        order: (task.order || 0) + 1
-                    };
-                    this.projects.addTask(project, validationTask);
-                }
-            }
 
             // If this was a validation step, check if we need more work
             if (task.type === 'validation') {
@@ -200,6 +182,22 @@ ${currentSteps}`;
                     // If validation passed, mark validation step as complete
                     await this.projects.completeTask(task.id);
                     return;
+                }
+            } else if (stepResult.finished) {
+                this.projects.completeTask(task.id);
+
+                // If this was the last planned task, add a validation step
+                const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
+                if (remainingTasks.length === 0) {
+                    const validationTask: Task = {
+                        id: crypto.randomUUID(),
+                        type: 'validation',
+                        description: 'Validate solution completeness',
+                        creator: this.userId,
+                        complete: false,
+                        order: (task.order || 0) + 1
+                    };
+                    this.projects.addTask(project, validationTask);
                 }
             }
 
@@ -225,7 +223,7 @@ ${currentSteps}`;
         nextStep?: string;
     }> {
         const registeredSteps = Array.from(this.stepExecutors.keys());
-        
+
         const schema = {
             type: "object",
             properties: {
@@ -276,7 +274,7 @@ Consider the original goal and what we've learned so far.`;
     protected async generateAndSendFinalResponse(projectId: string, userPost: ChatPost): Promise<void> {
         const project = this.projects.getProject(projectId);
         const finalResponse = await this.generateFinalResponse(project);
-        
+
         const artifactId = crypto.randomUUID();
         const artifact = await this.artifactManager.saveArtifact({
             id: artifactId,
@@ -346,7 +344,7 @@ You will respond inside of the message key in Markdown format.`;
             complete: true,
             order: 0 // This ensures it appears first
         };
-        
+
         // Update order of existing tasks to make room
         for (const existingTask of Object.values(project.tasks)) {
             if (existingTask.order === undefined) {
@@ -355,9 +353,9 @@ You will respond inside of the message key in Markdown format.`;
                 existingTask.order += 1;
             }
         }
-        
+
         await this.projects.addTask(project, task);
-        
+
         // Continue execution
         await this.executeStep(projectId, currentStep, userPost);
     }
@@ -382,16 +380,16 @@ You will respond inside of the message key in Markdown format.`;
     protected async handleThreadResponse(params: HandlerParams): Promise<void> {
         const project = params.projects?.[0];
         if (!project) {
-            await this.reply(params.userPost, { 
-                message: "No active session found. Please start a new conversation." 
+            await this.reply(params.userPost, {
+                message: "No active session found. Please start a new conversation."
             });
             return;
         }
 
         const currentTask = Object.values(project.tasks).find(t => t.inProgress);
         if (!currentTask) {
-            await this.reply(params.userPost, { 
-                message: "I wasn't expecting a response right now. What would you like to discuss?" 
+            await this.reply(params.userPost, {
+                message: "I wasn't expecting a response right now. What would you like to discuss?"
             });
             return;
         }
