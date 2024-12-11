@@ -48,7 +48,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         }
     }
 
-    protected async planSteps(projectId: string, latestGoal: string): Promise<PlanStepsResponse> {
+    protected async planSteps(projectId: string, posts: ChatPost[]): Promise<PlanStepsResponse> {
         const executorMetadata = Array.from(this.stepExecutors.entries()).map(([key, executor]) => {
             const metadata = getExecutorMetadata(executor.constructor);
             return {
@@ -109,8 +109,15 @@ You must include current steps in your response with their "existingId".
 
 ${currentSteps}`;
 
+        const conversationHistory = posts.map(post => {
+            return `${post.user_id === this.userId ? 'Assistant' : 'User'}: ${post.message}`;
+        }).join('\n\n');
+
+        const project = this.projects.getProject(projectId);
+        const latestGoal = project.name;
+
         const response: PlanStepsResponse = await this.generate({
-            message: latestGoal,
+            message: `Goal: ${latestGoal}\n\nConversation History:\n${conversationHistory}`,
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
 
@@ -406,8 +413,8 @@ You will respond inside of the message key in Markdown format.`;
             originalPostId: params.userPost.id
         });
 
-        const planningPrompt = `Previous conversation:\n${conversationContext}\n\nNew request: ${params.userPost.message}`;
-        const plan = await this.planSteps(projectId, planningPrompt);
+        const posts = [params.userPost];
+        const plan = await this.planSteps(projectId, posts);
         await this.executeNextStep(projectId, params.userPost);
     }
 
@@ -429,8 +436,9 @@ You will respond inside of the message key in Markdown format.`;
             return;
         }
 
-        const planningPrompt = `Previous conversation:\n${conversationContext}\n\nNew message: ${params.userPost.message}`;
-        const plan = await this.planSteps(project.id, planningPrompt);
+        // Get conversation history for this thread
+        const posts = await this.chatClient.getThreadPosts(params.userPost.getRootId() || params.userPost.id);
+        const plan = await this.planSteps(project.id, posts);
         await this.executeNextStep(project.id, params.userPost);
     }
 }
