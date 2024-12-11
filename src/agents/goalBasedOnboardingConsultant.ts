@@ -366,10 +366,18 @@ ${currentSteps}`
                 ${intakeQuestions.map(q => `ID ${q.id}: ${q.description}`).join('\n')}
                 
                 For each question:
-                1. Determine if it was answered
-                2. Extract the specific answer from the response
-                3. Provide a brief analysis of the answer or why it wasn't answered
-                4. Be specific about what information was provided or what's still missing`)
+                1. Determine if the question was answered completely and meaningfully
+                2. Extract the specific answer from the response (mark as "Not provided" if unclear or incomplete)
+                3. Provide a detailed analysis of the answer quality and completeness
+                4. Be specific about what information was provided or what's still missing
+                
+                Only mark a question as 'answered: true' if:
+                - The response directly addresses the question
+                - Provides specific, actionable information
+                - Contains enough detail to inform our planning
+                - Is clear and unambiguous
+                
+                If the answer is vague, incomplete, or doesn't provide enough context, mark it as 'answered: false'`)
         });
 
         // Initialize answers array if it doesn't exist
@@ -381,40 +389,85 @@ ${currentSteps}`
         for (const answer of modelResponse.answers) {
             const task = this.projects.getTask(answer.questionId);
             if (task && answer.answered) {
-                // Store the answer in project
-                project.answers.push({
-                    questionId: answer.questionId,
-                    question: task.description,
-                    answer: answer.extractedAnswer,
-                    analysis: answer.analysis,
-                    answeredAt: new Date().toISOString()
-                });
+                // Validate the answer quality
+                const isAnswerMeaningful = answer.extractedAnswer.length > 10 && 
+                    !answer.extractedAnswer.toLowerCase().includes("not provided") &&
+                    !answer.extractedAnswer.toLowerCase().includes("no answer") &&
+                    !answer.analysis.toLowerCase().includes("insufficient") &&
+                    !answer.analysis.toLowerCase().includes("unclear");
 
-                // Update task metadata
-                task.metadata = {
-                    ...task.metadata,
-                    analysis: answer.analysis,
-                    answer: answer.extractedAnswer,
-                    answeredAt: new Date().toISOString()
-                };
-                await this.projects.completeTask(answer.questionId);
+                if (isAnswerMeaningful) {
+                    // Store the answer in project
+                    project.answers.push({
+                        questionId: answer.questionId,
+                        question: task.description,
+                        answer: answer.extractedAnswer,
+                        analysis: answer.analysis,
+                        answeredAt: new Date().toISOString()
+                    });
+
+                    // Update task metadata
+                    task.metadata = {
+                        ...task.metadata,
+                        analysis: answer.analysis,
+                        answer: answer.extractedAnswer,
+                        answeredAt: new Date().toISOString(),
+                        isComplete: true
+                    };
+                    await this.projects.completeTask(answer.questionId);
+                } else {
+                    // Mark as incomplete and needing more information
+                    task.metadata = {
+                        ...task.metadata,
+                        analysis: answer.analysis,
+                        partialAnswer: answer.extractedAnswer,
+                        needsMoreInfo: true,
+                        lastAttempt: new Date().toISOString()
+                    };
+                }
             }
         }
 
+        // Check if we have enough meaningful information to proceed
+        const answeredQuestions = project.answers?.length || 0;
+        const totalQuestions = intakeQuestions.length;
+        const minimumQuestionsNeeded = Math.ceil(totalQuestions * 0.75); // Require at least 75% of questions
+
         const remainingQuestions = intakeQuestions.filter(q => 
-            !modelResponse.answers.find(a => a.questionId === q.id && a.answered)
+            !q.metadata?.isComplete
         );
+
+        const hasEnoughInformation = answeredQuestions >= minimumQuestionsNeeded;
+
+        let responseMessage = modelResponse.summary + "\n\n";
+        
+        if (remainingQuestions.length > 0) {
+            responseMessage += "I still need more information:\n\n";
+            remainingQuestions.forEach(q => {
+                const answer = modelResponse.answers.find(a => a.questionId === q.id);
+                responseMessage += `${q.description}\n`;
+                if (answer?.partialAnswer) {
+                    responseMessage += `Current answer: ${answer.partialAnswer}\n`;
+                    responseMessage += `Additional info needed: ${answer.analysis}\n`;
+                }
+                responseMessage += "\n";
+            });
+        }
+
+        if (hasEnoughInformation && remainingQuestions.length === 0) {
+            responseMessage += "All questions have been answered sufficiently. I'll analyze the information to create a plan.";
+        } else if (hasEnoughInformation) {
+            responseMessage += "\nWhile we could proceed with the current information, providing answers to the remaining questions would help create a more detailed plan.";
+        } else {
+            responseMessage += "\nPlease provide more detailed answers so I can create an effective plan.";
+        }
 
         return {
             type: 'answer_analysis',
-            finished: remainingQuestions.length === 0,
-            needsUserInput: remainingQuestions.length > 0,
+            finished: hasEnoughInformation && remainingQuestions.length === 0,
+            needsUserInput: !hasEnoughInformation || remainingQuestions.length > 0,
             response: {
-                message: `${modelResponse.summary}\n\n${
-                    remainingQuestions.length > 0 
-                        ? `I still need answers to these questions:\n${remainingQuestions.map(q => q.description).join('\n')}`
-                        : "All questions have been answered. I'll analyze the information to create a plan."
-                }`
+                message: responseMessage
             }
         };
     }
