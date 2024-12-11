@@ -111,7 +111,7 @@ ${completedSteps}
 
 This is your current active step list. If you remove an item from this list, we'll assume it isn't needed any longer. 
 You can add new items by specifying a type and a description.
-You must include current steps in your response with their "existingId".
+You must include current steps in your response using their provided ID.
 
 ${currentSteps}`;
 
@@ -120,7 +120,7 @@ ${currentSteps}`;
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
 
-        Logger.info('PlanStepsResponse:', JSON.stringify(response, null, 2));
+        Logger.info(`PlanStepsResponse: ${JSON.stringify(response, null, 2)}`);
 
         // Create a map of existing tasks by ID
         const existingTaskMap = new Map(
@@ -244,9 +244,15 @@ ${currentSteps}`;
                 }
             }
 
+            if (stepResult.projectId) {
+                const newProject = this.projects.getProject(stepResult.projectId);
+                newProject.metadata.parentTaskId = task.id;
+                //TODO need a way to update project to disk
+            }
+
             if (stepResult.needsUserInput && stepResult.response) {
                 await this.reply(userPost, stepResult.response, {
-                    "project-id": projectId
+                    "project-id": stepResult.projectId||projectId
                 });
                 return;
             }
@@ -411,7 +417,9 @@ You will respond inside of the message key in Markdown format.`;
                 type: "reply",
                 description: "Initial response to user query."
             }],
-            originalPostId: params.userPost.id
+            metadata: {
+                originalPostId: params.userPost.id
+            }
         });
 
         const posts = [params.userPost];
