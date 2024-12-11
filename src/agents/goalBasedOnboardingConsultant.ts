@@ -1,5 +1,6 @@
 import { StepBasedAgent, AgentState, StepResult, PlanStepsResponse, PlanStepTask } from './stepBasedAgent';
 import { ChatClient } from '../chat/chatClient';
+import 'reflect-metadata';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
 import { TaskManager } from '../tools/taskManager';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
@@ -13,6 +14,13 @@ import { Artifact } from 'src/tools/artifact';
 import { RequestArtifacts } from './schemas/ModelResponse';
 import { definitions as schemas } from "./schemas/schema.json";
 
+
+// Decorator for step executors
+export function StepExecutor(description: string) {
+    return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        Reflect.defineMetadata('stepDescription', description, target, propertyKey);
+    };
+}
 
 export interface OnboardingProject extends Project<Task> {
     businessDescription?: string;
@@ -44,25 +52,8 @@ class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Ta
         this.setupChatMonitor(ONBOARDING_CHANNEL_ID, messagingHandle);
         this.artifactManager = new ArtifactManager(chromaDBService);
 
-        // Register step executors
-        this.registerStepExecutor('answer_questions', {
-            execute: this.executeReply.bind(this)
-        });
-        this.registerStepExecutor('reply', {
-            execute: this.executeReply.bind(this)
-        });
-        this.registerStepExecutor('understand_goals', {
-            execute: this.executeUnderstandGoals.bind(this)
-        });
-        this.registerStepExecutor('analyze_goals', {
-            execute: this.executeAnalyzeGoals.bind(this)
-        });
-        this.registerStepExecutor('document_business_plan', {
-            execute: this.executeCreatePlan.bind(this)
-        });
-        this.registerStepExecutor('review_progress', {
-            execute: this.executeReviewProgress.bind(this)
-        });
+        // Automatically register step executors using reflection
+        this.registerStepExecutorsFromMetadata();
     }
 
     public async initialize(): Promise<void> {
@@ -138,7 +129,10 @@ Let's start by discussing your main business goals. What would you like to achie
         const completedSteps = `Completed Tasks:\n${JSON.stringify(tasks.filter(t => t.complete).map(mapper), undefined, " ")}\n\n`;
         const currentSteps = `Current Plan:\n${JSON.stringify(tasks.filter(t => !t.complete).map(mapper), undefined, " ")}\n\n`;
 
-        const stepDescriptions = registeredSteps.map(s => ` - {s}`).join("\n");
+        const stepDescriptions = registeredSteps.map(s => {
+            const executor = this.stepExecutors.get(s);
+            return ` - ${s}: ${executor?.description || 'No description available'}`;
+        }).join("\n");
 
         const systemPrompt = 
 `You help on-board users into our AI Agent tool. This service is designed
@@ -279,6 +273,25 @@ ${currentSteps}`
         return artifactId;
     }
 
+    private registerStepExecutorsFromMetadata() {
+        const prototype = Object.getPrototypeOf(this);
+        const propertyNames = Object.getOwnPropertyNames(prototype);
+        
+        for (const prop of propertyNames) {
+            if (prop.startsWith('execute')) {
+                const description = Reflect.getMetadata('stepDescription', prototype, prop);
+                if (description) {
+                    const stepType = prop.replace('execute', '').toLowerCase();
+                    this.registerStepExecutor(stepType, {
+                        execute: (this as any)[prop].bind(this),
+                        description
+                    });
+                }
+            }
+        }
+    }
+
+    @StepExecutor("Respond to user messages and questions with appropriate context")
     private async executeReply(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
         const reply = await this.generate({
@@ -294,6 +307,7 @@ ${currentSteps}`
         };
     }
 
+    @StepExecutor("Analyze and break down the user's business goals into actionable items")
     private async executeUnderstandGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
         const analyzedGoals = await this.breakdownBusinessGoals(goal);
@@ -308,6 +322,7 @@ ${currentSteps}`
         };
     }
 
+    @StepExecutor("Perform detailed analysis of business goals and create specific action items")
     private async executeAnalyzeGoals(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
         const analyzedGoals = await this.breakdownBusinessGoals(goal);
@@ -392,6 +407,7 @@ ${currentSteps}`
         return businessPlanId;
     }
 
+    @StepExecutor("Create a detailed business plan based on analyzed goals and requirements")
     private async executeCreatePlan(goal: string, step: string, state: OnboardingState): Promise<StepResult> {
         const schema = {
             type: "object",
@@ -427,6 +443,7 @@ ${currentSteps}`
         };
     }
 
+    @StepExecutor("Review progress on goals and provide status updates with next steps")
     private async executeReviewProgress(goal: string, step: string, state: OnboardingState): Promise<StepResult> {
         const schema = {
             type: "object",
