@@ -62,14 +62,30 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         const project = this.projects.getProject(projectId);
         const tasks = this.projects.getAllTasks(projectId);
 
-        const mapper = (t: Task) => ({
-            existingId: t.id,
-            type: t.type,
-            description: t.description
-        } as PlanStepTask);
+        const formatCompletedTasks = (tasks: Task[]) => {
+            return tasks.map(t => {
+                const type = t.type ? `**Type**: ${t.type}` : '';
+                return `- ${t.description}\n  ${type}`;
+            }).join('\n');
+        };
 
-        const completedSteps = `Completed Tasks:\n${JSON.stringify(tasks.filter(t => t.complete).map(mapper), undefined, " ")}\n\n`;
-        const currentSteps = `Current Plan:\n${JSON.stringify(tasks.filter(t => !t.complete).map(mapper), undefined, " ")}\n\n`;
+        const formatCurrentTasks = (tasks: Task[]) => {
+            return tasks.map(t => {
+                const type = t.type ? `**Type**: ${t.type}` : '';
+                return `- ${t.description}\n  ${type}\n  **ID**: ${t.id}`;
+            }).join('\n');
+        };
+
+        const completedTasks = tasks.filter(t => t.complete);
+        const currentTasks = tasks.filter(t => !t.complete);
+
+        const completedSteps = completedTasks.length > 0 ? 
+            `## Completed Tasks\n${formatCompletedTasks(completedTasks)}\n\n` : 
+            `## Completed Tasks\n*No completed tasks yet*\n\n`;
+
+        const currentSteps = currentTasks.length > 0 ? 
+            `## Current Plan\n${formatCurrentTasks(currentTasks)}\n\n` : 
+            `## Current Plan\n*No tasks in current plan*\n\n`;
 
         const stepDescriptions = executorMetadata
             .map(({ key, description }) => `${key}\n    Description: ${description}`)
