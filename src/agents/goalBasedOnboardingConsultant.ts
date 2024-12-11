@@ -18,7 +18,9 @@ import { definitions as schemas } from "./schemas/schema.json";
 // Decorator for step executors
 export function StepExecutor(description: string) {
     return function (target: any, propertyKey: string, descriptor: PropertyDescriptor) {
+        const key = propertyKey.replace('execute', '').toLowerCase();
         Reflect.defineMetadata('stepDescription', description, target, propertyKey);
+        Reflect.defineMetadata('stepKey', key, target, propertyKey);
     };
 }
 
@@ -280,9 +282,9 @@ ${currentSteps}`
         for (const prop of propertyNames) {
             if (prop.startsWith('execute')) {
                 const description = Reflect.getMetadata('stepDescription', prototype, prop);
-                if (description) {
-                    const stepType = prop.replace('execute', '').toLowerCase();
-                    this.registerStepExecutor(stepType, {
+                const key = Reflect.getMetadata('stepKey', prototype, prop);
+                if (description && key) {
+                    this.registerStepExecutor(key, {
                         execute: (this as any)[prop].bind(this),
                         description
                     });
