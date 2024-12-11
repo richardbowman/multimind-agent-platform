@@ -1,17 +1,20 @@
-import { Agent, HandlerParams, ResponseType } from './agents';
+import { Agent } from './agents';
 import { ChatClient, ChatPost } from '../chat/chatClient';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
-import { TaskManager } from '../tools/taskManager';
+import { Task, TaskManager } from '../tools/taskManager';
 import Logger from '../helpers/logger';
-import { CreateArtifact, ModelResponse, RequestArtifacts } from './schemas/ModelResponse';
-import { Artifact } from '../tools/artifact';
+import { CreateArtifact, ModelResponse } from './schemas/ModelResponse';
 import crypto from 'crypto';
+//import { PlanStepsResponse } from './schemas/agent';
 
 export interface StepResult {
-    type: string;
+    type?: string;
     projectId?: string;
     taskId?: string;
+    finished?: boolean;
     [key: string]: any;
+    needsUserInput?: boolean;
+    response: ModelResponse;
 }
 
 export interface StepExecutor {
@@ -39,14 +42,16 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     protected async executeNextStep(projectId: string, userPost: ChatPost): Promise<void> {
         const task = this.projects.getNextTask(projectId);
         if (!task) {
-            throw new Error('No tasks found to execute');
+            Logger.warn('No tasks found to execute');
+            return;
         }
         this.projects.markTaskInProgress(task);
-        await this.executeStep(projectId, task.type, userPost);
+        await this.executeStep(projectId, task, userPost);
     }
     
-    protected async executeStep(projectId: string, currentStep: string, userPost: ChatPost): Promise<void> {
+    protected async executeStep(projectId: string, task: Task, userPost: ChatPost): Promise<void> {
         try {
+            const currentStep = task.type;
             const executor = this.stepExecutors.get(currentStep);
             if (!executor) {
                 throw new Error(`No executor found for step type: ${currentStep}`);
@@ -59,34 +64,36 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
             const stepResult = await executor.execute(project.name, currentStep, projectId);
             
-            // Create a task for this step result if one was returned
-            if (stepResult.taskId) {
-                await this.projects.markTaskInProgress({
-                    id: stepResult.taskId,
-                    description: `${currentStep}: ${stepResult.description || 'Step completed'}`,
-                    creator: this.userId,
-                    projectId: projectId
-                });
+            // // Create a task for this step result if one was returned
+            // if (stepResult.taskId) {
+            //     await this.projects.markTaskInProgress({
+            //         id: stepResult.taskId,
+            //         description: `${currentStep}: ${stepResult.description || 'Step completed'}`,
+            //         creator: this.userId,
+            //         projectId: projectId
+            //     });
+            // }
+            if (stepResult.finished) {
+                this.projects.completeTask(task.id);
             }
 
-            // Determine next steps
-            const nextAction = await this.determineNextAction(projectId, stepResult);
+            // // Determine next steps
+            // const nextAction = await this.determineNextAction(projectId, stepResult);
             
-            if (nextAction.needsUserInput && nextAction.question) {
-                await this.reply(userPost, { 
-                    message: nextAction.question, 
-                    projectId: projectId
+            if (stepResult.needsUserInput && stepResult.response) {
+                await this.reply(userPost, stepResult.response, {
+                    "project-id": projectId
                 });
                 return;
             }
 
-            if (nextAction.isComplete) {
-                await this.generateAndSendFinalResponse(projectId, userPost);
-                return;
-            }
+            // if (nextAction.isComplete) {
+            //     await this.generateAndSendFinalResponse(projectId, userPost);
+            //     return;
+            // }
 
             // Continue with next step
-            await this.executeStep(projectId, nextAction.nextStep!, userPost);
+            await this.executeNextStep(projectId, userPost);
 
         } catch (error) {
             Logger.error("Error in step execution:", error);
@@ -237,3 +244,5 @@ You will respond inside of the message key in Markdown format.`;
         await this.executeStep(projectId, currentStep, userPost);
     }
 }
+export { PlanStepsResponse };
+
