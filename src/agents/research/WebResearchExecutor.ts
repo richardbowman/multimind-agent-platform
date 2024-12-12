@@ -119,15 +119,21 @@ export class WebSearchExecutor implements StepExecutor {
         }
 
         const schema = {
-            type: "array",
-            items: {
-                type: "object",
-                properties: {
-                    href: { type: "string" },
-                    text: { type: "string" }
-                },
-                required: ["href"]
-            }
+            type: "object",
+            properties: {
+                links: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            href: { type: "string" },
+                            text: { type: "string" }
+                        },
+                        required: ["href"]
+                    }
+                }
+            },
+            required: ["links"]
         };
 
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}. 
@@ -139,10 +145,11 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
             .map((l, i) => `${i + 1}. URL: ${l.href}\nText: ${l.text}`)
             .join("\n\n");
 
-        return await this.modelHelpers.generate({
+        const response = await this.modelHelpers.generate({
             message,
             instructions
         });
+        return response.links || [];
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {

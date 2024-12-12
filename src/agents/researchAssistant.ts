@@ -559,19 +559,21 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 `;
 
         const schema = {
-            type: "array",
-            items: {
-                type: "object",
-                properties: {
-                    href: {
-                        type: "string"
-                    },
-                    text: {
-                        type: "string"
+            type: "object",
+            properties: {
+                links: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            href: { type: "string" },
+                            text: { type: "string" }
+                        },
+                        required: ["href"]
                     }
-                },
-                required: ["href"]
-            }
+                }
+            },
+            required: ["links"]
         };
 
         const history = [
@@ -582,8 +584,8 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
 
-        const responseLinks = await this.lmStudioService.generateStructured({ message }, instructions, []);
-        return responseLinks;
+        const response = await this.lmStudioService.generateStructured({ message }, instructions, []);
+        return response.links || [];
     } catch (error) {
         Logger.error('Error selecting relevant links:', error);
         throw error;
