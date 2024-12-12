@@ -3,7 +3,7 @@ import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioServi
 import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 
-@StepExecutorDecorator('validation', 'Verify the solution is complete and addresses all aspects of the problem')
+@StepExecutorDecorator('validation', 'After doing other work steps, verify your work addresses the goal')
 export class ValidationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
