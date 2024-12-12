@@ -69,9 +69,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         // Ensure content is fully rendered before scrolling
         process.nextTick(() => {
-            const maxScroll = chatBox.getScrollHeight() - chatBox.height;
-            const scrollOffset = Math.max(0, maxScroll);
-            chatBox.scroll(scrollOffset);
+            chatBox.scroll(chatBox.scrollOffset - chatBox.getScrollHeight());
             screen.render();
         });
     }
