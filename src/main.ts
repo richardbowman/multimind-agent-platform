@@ -1,5 +1,6 @@
 import { ResearchManager } from "./agents/researchManager";
 import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, VECTOR_DATABASE_TYPE, RESEARCH_MANAGER_TOKEN_ID as RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID as RESEARCH_MANAGER_USER_ID, PROJECT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID, ONBOARDING_CHANNEL_ID, ONBOARDING_CONSULTANT_USER_ID, CONTENT_CREATION_CHANNEL_ID, FACT_CHECK_CHANNEL_ID, SOLVER_AGENT_USER_ID, SOLVER_CHANNEL_ID } from "./helpers/config";
+import { parseArgs } from 'node:util';
 import { DefaultPlanner } from "./agents/planners/DefaultPlanner";
 import { SolverAgent } from "./agents/solverAgent";
 import { LLMServiceFactory, LLMProvider } from "./llm/LLMServiceFactory";
@@ -88,7 +89,22 @@ await solverAgent.initialize();
 
 setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
 
-await artifactManager.indexArtifacts();
+// Parse command line arguments
+const { values } = parseArgs({
+    options: {
+        reindex: { type: 'boolean' }
+    }
+});
+
+// Handle reindex flag
+if (values.reindex) {
+    Logger.info("Reindexing artifacts...");
+    await vectorDB.reindexCollection(CHROMA_COLLECTION);
+    await artifactManager.indexArtifacts();
+    process.exit(0);
+} else {
+    await artifactManager.indexArtifacts();
+}
 
 
 // const project = await tasks.getProject("58b88241-5bf8-4e74-9184-963baa9d7664");
