@@ -35,6 +35,10 @@ export class ModelHelpers {
         this.purpose = purpose;
     }
 
+    public setFinalInstructions(instructions: string) {
+        this.finalInstructions = instructions;
+    }
+
     public enableMemory() {
         this.isMemoryEnabled = true;
     }
