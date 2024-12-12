@@ -36,3 +36,5 @@ export const SOLVER_CHANNEL_ID = process.env.SOLVER_CHANNEL_ID!;
 
 export const LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY;
 export const LLM_PROVIDER = process.env.LLM_PROVIDER || 'lmstudio';
+export const LLM_WEAK_MODEL = process.env.LLM_WEAK_MODEL;
+export const LLM_HEAVY_MODEL = process.env.LLM_HEAVY_MODEL;
