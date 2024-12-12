@@ -31,6 +31,13 @@ export class ModelHelpers {
         this.finalInstructions = finalInstructions;
     }
 
+    protected addDateToSystemPrompt(content: string): string {
+        const now = new Date();
+        const date = now.toISOString().split('T')[0];
+        const time = now.toTimeString().split(' ')[0];
+        return `Current date: ${date}\nCurrent time: ${time}\n\n${content}`;
+    }
+
     public setPurpose(purpose: string) {
         this.purpose = purpose;
     }
@@ -115,10 +122,10 @@ export class ModelHelpers {
         // Add system message explaining the task
         llmMessages.push({
             role: "system",
-            content: `You are an AI assistant tasked with analyzing a conversation and identifying key points
+            content: this.addDateToSystemPrompt(`You are an AI assistant tasked with analyzing a conversation and identifying key points
             or actions that should be remembered. Focus on remembering information about the user and their intentions.
             Respond with a new complete set of memories you want to keep moving forward as a JSON array of strings, where
-            each string is a summary of an important point. Don't keep duplicate information, and limit yourself to 10 or less total.`
+            each string is a summary of an important point. Don't keep duplicate information, and limit yourself to 10 or less total.`)
         });
 
         // Add previous memory if available
@@ -236,7 +243,7 @@ export class ModelHelpers {
 
     public async generateOld(instructions: string, params: GenerateParams): Promise<ModelResponse> {
         // Fetch the latest memory artifact for the channel
-        let augmentedInstructions = `AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`;
+        let augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`);
 
         if (this.isMemoryEnabled && (params as HandlerParams).userPost) {
             const memoryArtifact = await this.fetchLatestMemoryArtifact((params as HandlerParams).userPost.channel_id);
