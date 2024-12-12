@@ -11,16 +11,22 @@ export class BedrockService implements ILLMService {
     private client: BedrockRuntimeClient;
     private modelId: string;
     private embeddingModelId: string;
+    private embeddingService?: ILLMService;
 
-    constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v2:0") {
+    constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v2:0", embeddingService?: ILLMService) {
         this.client = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
         this.modelId = modelId;
         this.embeddingModelId = embeddingModelId;
+        this.embeddingService = embeddingService;
     }
 
-    async initializeEmbeddingModel(_modelPath: string): Promise<void> {
-        // No initialization needed for Bedrock embeddings
-        Logger.info("Using Bedrock for embeddings with model: " + this.embeddingModelId);
+    async initializeEmbeddingModel(modelPath: string): Promise<void> {
+        if (this.embeddingService) {
+            await this.embeddingService.initializeEmbeddingModel(modelPath);
+            Logger.info("Using external embedding service");
+        } else {
+            Logger.info("Using Bedrock for embeddings with model: " + this.embeddingModelId);
+        }
     }
 
     private async getEmbedding(text: string): Promise<number[]> {
@@ -248,6 +254,9 @@ export class BedrockService implements ILLMService {
     }
 
     getEmbeddingModel(): IEmbeddingFunction {
+        if (this.embeddingService) {
+            return this.embeddingService.getEmbeddingModel();
+        }
         return {
             generate: async (texts: string[]): Promise<number[][]> => {
                 const embeddings = await Promise.all(
