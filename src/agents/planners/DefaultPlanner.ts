@@ -92,7 +92,7 @@ ${this.modelHelpers.getFinalInstructions()}`;
         const mentionedTaskIds = new Set<string>();
 
         // Update task order and status based on response
-        response.steps.forEach((step, index) => {
+        (response.steps || []).forEach((step, index) => {
             if (step.existingId && existingTaskMap.has(step.existingId)) {
                 // Update existing task
                 const existingTask = existingTaskMap.get(step.existingId)!;
