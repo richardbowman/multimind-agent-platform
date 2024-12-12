@@ -387,13 +387,13 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         const displayItems = tasks.map(task => {
             let status;
             if (task.complete) {
-                status = '{green-fg}[x]{/green-fg}';  // completed
+                status = '[x]';  // completed
             } else if (task.inProgress) {
-                status = '{yellow-fg}[~]{/yellow-fg}';  // in progress
+                status = '[~]';  // in progress
             } else {
-                status = '{gray-fg}[ ]{/gray-fg}';  // not started
+                status = '[ ]';  // not started
             }
-            const assignee = task.assignee ? ` {blue-fg}(${storage.getHandleNameForUserId(task.assignee)}){/blue-fg}` : '';
+            const assignee = task.assignee ? ` (${storage.getHandleNameForUserId(task.assignee)})` : '';
             return `${status} ${task.description || task.id}${assignee}`;
         });
 
