@@ -3,18 +3,17 @@ import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
-import ChromaDBService from '../../llm/chromaService';
-import { CHROMA_COLLECTION } from '../../helpers/config';
+import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import Logger from '../../helpers/logger';
 
 @StepExecutorDecorator('check-knowledge', 'Check my existing knowledgebase (useful to do upfront)')
 export class ResearchExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
-    private chromaDBService: ChromaDBService;
+    private vectorDB: IVectorDatabase;
 
-    constructor(llmService: LMStudioService, chromaDbService: ChromaDBService) {
+    constructor(llmService: LMStudioService, vectorDB: IVectorDatabase) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
-        this.chromaDBService = chromaDbService;
+        this.vectorDB = vectorDB;
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
@@ -53,7 +52,7 @@ Explain the rationale for each query.`;
         
         for (const queryObj of queryResult.queries) {
             try {
-                const results = await this.chromaDBService.query(
+                const results = await this.vectorDB.query(
                     [queryObj.query], 
                     undefined, 
                     5
