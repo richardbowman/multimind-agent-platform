@@ -88,7 +88,7 @@ await solverAgent.initialize();
 
 setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
 
-
+await artifactManager.indexArtifacts();
 
 
 // const project = await tasks.getProject("58b88241-5bf8-4e74-9184-963baa9d7664");
