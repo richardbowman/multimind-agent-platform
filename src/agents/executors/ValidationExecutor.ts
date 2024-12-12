@@ -2,6 +2,9 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { ValidationResult } from '../../schemas/validation';
+import { SchemaInliner } from '../../helpers/schemaInliner';
+import * as schemaJson from "../schemas/schema.json";
+const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 
 @StepExecutorDecorator('validation', 'After doing other work steps, verify your work addresses the goal')
@@ -13,8 +16,7 @@ export class ValidationExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResults: any[]): Promise<StepResult> {
-        // Use ts-json-schema-generator generated schema
-        const schema = require('../../schemas/generated/validation.json');
+        const schema = generatedSchemaDef.ValidationResult;
 
         const systemPrompt = `You are validating whether a proposed solution fully addresses the original goal.
 Carefully analyze the previous steps and their results to determine if all aspects have been properly addressed.
