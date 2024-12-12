@@ -6,7 +6,7 @@ export function formatMarkdownForTerminal(text: string): string {
 
     // Handle italic text
     const italicRegex = /\*(.*?)\*/g;
-    text = text.replace(italicRegex, '{italic}$1{/italic}');
+    text = text.replace(italicRegex, '{blue-fg}$1{/blue-fg}');
 
     // Handle code text
     const codeRegex = /`(.+?)`/g;
