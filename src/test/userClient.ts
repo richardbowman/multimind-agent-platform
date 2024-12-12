@@ -502,10 +502,10 @@ ${task.description || '*No description available*'}`;
 
             if (artifact) {
                 // Use the title if it exists, otherwise use the ID
-                const contentToShow = `Title: ${artifact.metadata?.title || selectedArtifactId}\n\nContent:\n${artifact.content.toString()}`;
+                const contentToShow = `# ${artifact.metadata?.title || selectedArtifactId}\n\nContent:\n${artifact.content.toString()}`;
 
                 inputBox.hide();
-                artifactDetailViewer.setContent(contentToShow);
+                artifactDetailViewer.setContent(formatMarkdownForTerminal(contentToShow));
                 artifactDetailViewer.show();
                 artifactDetailViewer.focus();
             } else {
@@ -577,7 +577,7 @@ ${metadataSection}
 ## Content
 ${selectedArtifact.content.toString()}`;
 
-            globalArtifactViewer.setContent(contentToShow);
+            globalArtifactViewer.setContent(formatMarkdownForTerminal(contentToShow));
             deleteArtifactButton.show();
             screen.render();
 
