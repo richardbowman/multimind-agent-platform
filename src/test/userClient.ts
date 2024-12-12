@@ -204,9 +204,8 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
                 // If Enter is pressed, autocomplete with the first match
                 if ((key && key.name === 'enter') || ch === '\r') {
-                    // setTimeout(() => { inputBox.setValue(filtered[0].command + ' '); screen.render(); }, 0);
+                    inputBox.setValue(filtered[0].command + ' ');
                     commandList.hide();
-                    return false; // Prevent default Enter behavior
                 }
                 screen.render();
             } else {
@@ -233,9 +232,8 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 if ((key && key.name === 'enter') || ch === '\r') {
                     // Replace the partial handle with the complete one
                     const beforeHandle = currentInput.substring(0, currentInput.lastIndexOf('@'));
-                    // setTimeout(() => { inputBox.setValue(beforeHandle + handles[0].handle + ' '); screen.render(); }, 0);
+                    inputBox.setValue(beforeHandle + handles[0].handle + ' ');
                     commandList.hide();
-                    return false; // Prevent default Enter behavior
                 }
                 screen.render();
             } else {
