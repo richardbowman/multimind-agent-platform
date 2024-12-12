@@ -31,7 +31,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         const embeddings = await embedder.generate(collection.documents);
         
         for (let i = 0; i < collection.documents.length; i++) {
-            this.index.addItem({
+            this.index.insertItem({
                 id: collection.ids[i],
                 vector: embeddings[i],
                 metadata: {
