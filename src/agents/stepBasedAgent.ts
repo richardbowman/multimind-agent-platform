@@ -220,7 +220,7 @@ Consider the original goal and what we've learned so far.`;
             results: lastStepResult
         }, null, 2);
 
-        return await this.generate({
+        return await this.modelHelpers.generate({
             message: context,
             instructions
         });
