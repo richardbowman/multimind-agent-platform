@@ -28,7 +28,7 @@ export class WebSearchExecutor implements StepExecutor {
             return { type: 'no_results' };
         }
 
-        const selectedUrls = await this.selectRelevantSearchResults(step, goal, searchResults);
+        const selectedUrls = await this.selectRelevantSearchResults(step, goal, searchResults, previousResult);
         if (selectedUrls.length === 0) {
             return { type: 'no_relevant_results' };
         }
@@ -113,7 +113,8 @@ Focus on filling knowledge gaps and expanding on existing findings.`;
     private async selectRelevantSearchResults(
         task: string,
         goal: string,
-        searchResults: { title: string, url: string, description: string }[]
+        searchResults: { title: string, url: string, description: string }[],
+        previousResult?: any
     ): Promise<string[]> {
         const schema = {
             type: "array",
