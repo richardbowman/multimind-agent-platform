@@ -65,10 +65,11 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
             chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(blessed.escape(post.message))}\n`);
         }
-        setTimeout(() => {
-            chatBox.setScrollPerc(100);
+        // Ensure content is fully rendered before scrolling
+        process.nextTick(() => {
+            chatBox.scrollTo(chatBox.getScrollHeight());
             screen.render();
-        }, 10);
+        });
     }
 
     async function refreshLists(channelId: string | null, threadId: string | null) {
