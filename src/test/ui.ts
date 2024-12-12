@@ -180,13 +180,20 @@ export const chatBox = blessed.log({
 });
 
 chatBox.on('wheelup', () => {
-    chatBox.scroll(-1);
-    screen.render();
+    const currentScroll = chatBox.getScroll();
+    if (currentScroll > 0) {
+        chatBox.scroll(-1);
+        screen.render();
+    }
 });
 
 chatBox.on('wheeldown', () => {
-    chatBox.scroll(1);
-    screen.render();
+    const currentScroll = chatBox.getScroll();
+    const maxScroll = chatBox.getScrollHeight() - chatBox.height;
+    if (currentScroll < maxScroll) {
+        chatBox.scroll(1);
+        screen.render();
+    }
 });
 
 tab1Box.append(chatBox);
@@ -295,13 +302,20 @@ export const logBox = blessed.log({
 });
 
 logBox.on('wheelup', () => {
-    logBox.scroll(-1);
-    screen.render();
+    const currentScroll = logBox.getScroll();
+    if (currentScroll > 0) {
+        logBox.scroll(-1);
+        screen.render();
+    }
 });
 
 logBox.on('wheeldown', () => {
-    logBox.scroll(1);
-    screen.render();
+    const currentScroll = logBox.getScroll();
+    const maxScroll = logBox.getScrollHeight() - logBox.height;
+    if (currentScroll < maxScroll) {
+        logBox.scroll(1);
+        screen.render();
+    }
 });
 
 screen.append(logBox);
@@ -338,13 +352,20 @@ export const artifactDetailViewer = blessed.box({
 });
 
 artifactDetailViewer.on('wheelup', () => {
-    artifactDetailViewer.scroll(-1);
-    screen.render();
+    const currentScroll = artifactDetailViewer.getScroll();
+    if (currentScroll > 0) {
+        artifactDetailViewer.scroll(-1);
+        screen.render();
+    }
 });
 
 artifactDetailViewer.on('wheeldown', () => {
-    artifactDetailViewer.scroll(1);
-    screen.render();
+    const currentScroll = artifactDetailViewer.getScroll();
+    const maxScroll = artifactDetailViewer.getScrollHeight() - artifactDetailViewer.height;
+    if (currentScroll < maxScroll) {
+        artifactDetailViewer.scroll(1);
+        screen.render();
+    }
 });
 
 screen.append(artifactDetailViewer);
