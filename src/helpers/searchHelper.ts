@@ -93,19 +93,19 @@ export class DuckDuckGoProvider implements ISearchProvider {
             Logger.info(`Saved DuckDuckGo search page as artifact: ${artifactId}`);
 
             // Extract search results
-            const searchResults = await page.$$('.result');
+            const searchResults = await page.$$('[data-testid="result"]');
             Logger.info(`Found ${searchResults.length} results on page`);
             
             for (const result of searchResults) {
                 try {
-                    const titleElement = await result.$('.result__title');
-                    const linkElement = await result.$('.result__url');
-                    const snippetElement = await result.$('.result__snippet');
+                    const titleElement = await result.$('[data-testid="result-title-a"]');
+                    const linkElement = await result.$('[data-testid="result-extras-url-link"]');
+                    const snippetElement = await result.$('.kY2IgmnCmOGjharHErah');
 
                     if (titleElement && linkElement) {
                         const title = await titleElement.innerText();
                         const url = await linkElement.getAttribute('href') || '';
-                        const description = snippetElement ? await snippetElement.innerText() : '';
+                        const description = snippetElement ? (await snippetElement.innerText()).replace(/\s+/g, ' ').trim() : '';
 
                         if (url.startsWith('http')) {
                             results.push({
