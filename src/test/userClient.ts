@@ -151,7 +151,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
     // Handle input changes for command and user handle autocomplete
     inputBox.on('keypress', async (ch, key) => {
-        const currentInput = inputBox.getValue() + (ch !== "\r" ? ch : "");
+        const currentInput = inputBox.getValue() + (key.name !== "tab" ? ch : "");
 
         const fallbackHandler = async () => {
             commandList.hide();
