@@ -12,7 +12,11 @@ import { ModelHelpers } from 'src/llm/helpers';
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
     constructor(
-        private searchHelper: SearchHelper,
+        private searchHelper: SearchHelper = new SearchHelper(
+            process.env.SEARCH_PROVIDER === 'google' 
+                ? new GoogleSearchProvider() 
+                : new SearxNGProvider()
+        ),
         private scrapeHelper: ScrapeHelper,
         private summaryHelper: SummaryHelper,
         private lmStudioService: LMStudioService,
