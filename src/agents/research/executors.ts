@@ -117,14 +117,20 @@ Focus on filling knowledge gaps and expanding on existing findings.`;
         previousResult?: any
     ): Promise<string[]> {
         const schema = {
-            type: "array",
-            items: {
-                type: "object",
-                properties: {
-                    href: { type: "string" }
-                },
-                required: ["href"]
-            }
+            type: "object",
+            properties: {
+                urls: {
+                    type: "array",
+                    items: {
+                        type: "object",
+                        properties: {
+                            href: { type: "string" }
+                        },
+                        required: ["href"]
+                    }
+                }
+            },
+            required: ["urls"]
         };
 
         const previousFindings = previousResult?.data?.analysis?.keyFindings || [];
@@ -147,7 +153,7 @@ Given the following web search results, select 1-3 URLs that are most relevant t
             instructions
         });
 
-        return response.map(r => r.href);
+        return response.urls.map(r => r.href);
     }
 }
 
