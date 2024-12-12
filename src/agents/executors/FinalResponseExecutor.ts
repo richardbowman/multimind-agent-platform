@@ -6,7 +6,11 @@ import { ModelResponse } from '../schemas/ModelResponse';
 
 @StepExecutorDecorator('final_response', 'Generates final comprehensive response')
 export class FinalResponseExecutor implements StepExecutor {
-    constructor(private lmStudioService: LMStudioService) {}
+    private modelHelpers: ModelHelpers;
+
+    constructor(lmStudioService: LMStudioService) {
+        this.modelHelpers = new ModelHelpers(lmStudioService, 'executor');
+    }
 
     async execute(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
         const schema = {
@@ -31,13 +35,11 @@ You will respond inside of the message key in Markdown format.`;
             previousResults
         }, null, 2);
 
-        const response = await this.lmStudioService.generateStructured(
-            { message: context },
+        const response = await this.modelHelpers.generate({
+            message: context,
             instructions,
-            [],
-            undefined,
-            16384
-        );
+            maxTokens: 16384
+        });
 
         return {
             type: 'final_response',
