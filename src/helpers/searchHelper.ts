@@ -45,7 +45,7 @@ export class SearxNGProvider implements ISearchProvider {
     }
 }
 
-export class GoogleSearchProvider implements ISearchProvider {
+export class DuckDuckGoProvider implements ISearchProvider {
     private browser: Browser | null = null;
 
     private async initBrowser() {
@@ -65,25 +65,18 @@ export class GoogleSearchProvider implements ISearchProvider {
 
             const page = await context.newPage();
             const encodedQuery = encodeURIComponent(query);
-            await page.goto(`https://www.google.com/search?q=${encodedQuery}`);
+            await page.goto(`https://duckduckgo.com/?q=${encodedQuery}`);
             
-            // Accept cookies if present
-            // try {
-            //     await page.click('button:has-text("Accept all")');
-            // } catch (e) {
-            //     // Cookie prompt might not appear
-            // }
-
             await page.waitForLoadState('networkidle');
 
             // Extract search results
-            const searchResults = await page.$$('div.g');
+            const searchResults = await page.$$('.result');
             
             for (const result of searchResults) {
                 try {
-                    const titleElement = await result.$('h3');
-                    const linkElement = await result.$('a');
-                    const snippetElement = await result.$('div.VwiC3b');
+                    const titleElement = await result.$('.result__title');
+                    const linkElement = await result.$('.result__url');
+                    const snippetElement = await result.$('.result__snippet');
 
                     if (titleElement && linkElement) {
                         const title = await titleElement.innerText();
@@ -107,7 +100,7 @@ export class GoogleSearchProvider implements ISearchProvider {
             await context.close();
 
         } catch (error) {
-            Logger.error(`Error searching Google for "${query}":`, error);
+            Logger.error(`Error searching DuckDuckGo for "${query}":`, error);
         }
 
         return results;
@@ -124,7 +117,7 @@ export class GoogleSearchProvider implements ISearchProvider {
 class SearchHelper {
     private provider: ISearchProvider;
 
-    constructor(provider: ISearchProvider = new SearxNGProvider()) {
+    constructor(provider: ISearchProvider = new DuckDuckGoProvider()) {
         this.provider = provider;
     }
 

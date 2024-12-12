@@ -5,7 +5,7 @@ import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService'
 import { TaskManager } from '../tools/taskManager';
 import { Project, Task } from '../tools/taskManager';
 import { WebSearchExecutor } from './research/WebResearchExecutor';
-import SearchHelper, { GoogleSearchProvider } from '../helpers/searchHelper';
+import SearchHelper, { DuckDuckGoProvider } from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
 import SummaryHelper from '../helpers/summaryHelper';
 import Logger from '../helpers/logger';
@@ -55,7 +55,7 @@ export interface ResearchProject extends Project<ResearchTask> {
 }
 
 class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
-    private searchHelper = new SearchHelper(new GoogleSearchProvider());
+    private searchHelper = new SearchHelper(new DuckDuckGoProvider());
     private scrapeHelper = new ScrapeHelper();
     private summaryHelper = new SummaryHelper();
 
