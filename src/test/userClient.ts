@@ -212,6 +212,9 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
                 // If Tab is pressed, autocomplete with the first match
                 if (key && key.name === 'tab') {
+                    // Send backspace first to remove the partial command
+                    inputBox.setValue(inputBox.getValue().slice(0, -1));
+                    // Then set the full command with a space
                     inputBox.setValue(filtered[0].command + ' ');
                     commandList.hide();
                     return; // Prevent default tab behavior
@@ -241,7 +244,11 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 if (key && key.name === 'tab') {
                     // Replace the partial handle with the complete one
                     const beforeHandle = currentInput.substring(0, currentInput.lastIndexOf('@'));
-                    inputBox.setValue(beforeHandle + handles[0].handle + ' ');
+                    const partial = currentInput.substring(currentInput.lastIndexOf('@'));
+                    // First remove the partial text
+                    inputBox.setValue(beforeHandle + partial.slice(0, -1));
+                    // Then set the complete handle
+                    inputBox.setValue(beforeHandle + '@' + handles[0].handle + ' ');
                     commandList.hide();
                     return; // Prevent default tab behavior
                 }
