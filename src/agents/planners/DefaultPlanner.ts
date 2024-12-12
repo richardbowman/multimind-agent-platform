@@ -88,33 +88,40 @@ ${this.modelHelpers.getFinalInstructions()}`;
             tasks.map(task => [task.id, task])
         );
 
-        // Track which tasks are mentioned in the response
-        const mentionedTaskIds = new Set<string>();
+        if (response.steps && response.steps.length > 0) {
+            // Track which tasks are mentioned in the response
+            const mentionedTaskIds = new Set<string>();
 
-        // Update task order and status based on response
-        (response.steps || []).forEach((step, index) => {
-            if (step.existingId && existingTaskMap.has(step.existingId)) {
-                // Update existing task
-                const existingTask = existingTaskMap.get(step.existingId)!;
-                existingTask.order = index;
-                if (step.actionType) existingTask.type = step.actionType;
-                if (step.parameters) existingTask.description = step.parameters;
-                mentionedTaskIds.add(step.existingId);
-            } else {
-                // Create new task
-                const newTask: Task = {
-                    id: crypto.randomUUID(),
-                    type: step.actionType,
-                    description: step.parameters || step.actionType,
-                    creator: this.userId,
-                    complete: false,
-                    order: index
-                };
-                this.projects.addTask(project, newTask);
+            // Update task order and status based on response
+            response.steps.forEach((step, index) => {
+                if (step.existingId && existingTaskMap.has(step.existingId)) {
+                    // Update existing task
+                    const existingTask = existingTaskMap.get(step.existingId)!;
+                    existingTask.order = index;
+                    if (step.actionType) existingTask.type = step.actionType;
+                    if (step.parameters) existingTask.description = step.parameters;
+                    mentionedTaskIds.add(step.existingId);
+                } else {
+                    // Create new task
+                    const newTask: Task = {
+                        id: crypto.randomUUID(),
+                        type: step.actionType,
+                        description: step.parameters || step.actionType,
+                        creator: this.userId,
+                        complete: false,
+                        order: index
+                    };
+                    this.projects.addTask(project, newTask);
+                }
+            });
+
+            // Mark unmentioned tasks as completed only if we got a valid steps list
+            for (const [taskId, task] of existingTaskMap) {
+                if (!mentionedTaskIds.has(taskId)) {
+                    this.projects.completeTask(taskId);
+                }
             }
-        });
-
-        // We no longer automatically complete unmentioned tasks
+        }
 
         return response;
     }
