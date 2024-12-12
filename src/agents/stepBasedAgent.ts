@@ -132,6 +132,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 }
             } else if (stepResult.finished) {
                 this.projects.completeTask(task.id);
+                Logger.info(`Completed step "${task.type}" for project "${projectId}"`);
 
                 // If this was the last planned task, add a validation step
                 const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
