@@ -12,6 +12,9 @@ import ChromaDBService from 'src/llm/chromaService';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { ResearchExecutor } from './executors/ResearchExecutor';
+import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
+import { DefaultPlanner } from './planners/DefaultPlanner';
+import { ModelHelpers } from 'src/llm/helpers';
 
 export class SolverAgent extends StepBasedAgent<any, any> {
     constructor(
@@ -21,7 +24,23 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         projects: TaskManager,
         chromaDBService: ChromaDBService
     ) {
-        super(chatClient, lmStudioService, userId, projects, chromaDBService);
+
+        const modelHelpers = new ModelHelpers(lmStudioService, userId, `SOLVING INSTRUCTIONS
+        Use steps of constructive thinking, critical refutation, and validation to develop robust solutions. In the reasoning field, explain the complexity you see in this goal.
+        
+        AT A MINIMUM, YOU MUST always perform these 6 steps in order:
+        1. goal_confirmation (to ensure clear understanding)
+        2. research (to learn from existing knowledge)
+        3. thinking (to develop initial approach)
+        4. refuting (to challenge assumptions)
+        5. thinking (to refine based on challenges)
+        6. validation (to verify the solution)
+        
+        Adapt your approach to the complexity of each problem, using more cycles as needed.`);
+        modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning.`);
+        const planner = new DefaultPlanner(lmStudioService, projects, userId, modelHelpers);
+
+        super(chatClient, lmStudioService, userId, projects, chromaDBService, planner);
 
         // Register our specialized executors
         this.registerStepExecutor(new GoalConfirmationExecutor(lmStudioService, userId));
@@ -30,42 +49,6 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));
         this.registerStepExecutor(new ResearchExecutor(lmStudioService, chromaDBService));
 
-        this.setPurpose(`You are an expert at solving complex problems through careful reasoning.`);
-
-        this.finalInstructions = `SOLVING INSTRUCTIONS
-Use steps of constructive thinking, critical refutation, and validation to develop robust solutions.
-
-Here are two examples of how to approach problems:
-
-MINIMUM STEPS (e.g. choosing lunch):
-1. research: Look up relevant guidelines and best practices
-2. thinking: Consider preferences, dietary restrictions, and available options
-3. refuting: Challenge assumptions about time and budget
-4. thinking: Refine choice based on the constraints identified
-5. validation: Confirm the choice meets all requirements and constraints
-
-COMPLEX PROBLEM SAMPLE (e.g. designing a new product):
-1. research: Study similar solutions and established patterns
-2. thinking: Brainstorm potential concepts
-3. thinking: Analyze market needs and technical requirements
-4. thinking: Develop initial design approach
-5. refuting: Challenge design assumptions and identify risks
-6. thinking: Refine design based on risk analysis
-7. refuting: Test edge cases and user scenarios
-8. thinking: Finalize design with mitigations
-9. validation: Comprehensive verification of final design
-
-Adapt your approach to the complexity of each problem, using more cycles as needed.
-
-AT A MINIMUM, YOU MUST always perform these 6 steps in order:
-1. goal_confirmation (to ensure clear understanding)
-2. research (to learn from existing knowledge)
-3. thinking (to develop initial approach)
-4. refuting (to challenge assumptions)
-5. thinking (to refine based on challenges)
-6. validation (to verify the solution)
-
-In the reasoning field, explain the complexity you see in this goal.`;
     }
 
     public async initialize(): Promise<void> {

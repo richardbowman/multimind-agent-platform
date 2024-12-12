@@ -9,7 +9,6 @@ import { Task } from "src/tools/taskManager";
 import { Artifact } from 'src/tools/artifact';
 import ChromaDBService from 'src/llm/chromaService';
 import { ResearchActivityType } from './researchManager';
-import { ContentManagerActivityType } from './contentManager';
 import { RequestArtifacts } from './schemas/ModelResponse';
 
 export enum ProjectManagerActivities {
@@ -266,7 +265,9 @@ Respond to the user's request, explaining to them the other available options.`;
                 name: projectName,
                 goal: projectGoal,
                 tasks: { [task.id]: task },
-                originalPostId: params.userPost.id,
+                metadata: {
+                    originalPostId: params.userPost.id,
+                },
                 description: 'A project initiated by Mesa with a task for the content team.'
             };
 
@@ -352,7 +353,9 @@ Respond to the user's request, explaining to them the other available options.`;
                 name: projectName,
                 goal: projectGoal,
                 tasks: tasks,
-                originalPostId: params.userPost.id,
+                metadata: {
+                    originalPostId: params.userPost.id,
+                },
                 description: 'A complex project involving both research and content development.'
             };
 
@@ -435,7 +438,9 @@ Respond to the user's request, explaining to them the other available options.`;
                 name: `Recurring ${recurrencePattern} Task`,
                 goal: `Complete recurring task: ${taskDescription}`,
                 tasks: { [taskId]: task },
-                originalPostId: params.userPost.id,
+                metadata: {
+                    originalPostId: params.userPost.id,
+                },
                 description: `A ${recurrencePattern.toLowerCase()} recurring task.`
             };
 
