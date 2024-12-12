@@ -68,10 +68,12 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         screen.render();
 
         // Ensure content is fully rendered before scrolling
-        // process.nextTick(() => {
-        //     chatBox.scrollTo(Math.min(0,chatBox.getScrollHeight()-chatBox._getHeight()));
-        //     screen.render();
-        // });
+        process.nextTick(() => {
+            const maxScroll = chatBox.getScrollHeight() - chatBox.height;
+            const scrollOffset = Math.max(0, maxScroll);
+            chatBox.scroll(scrollOffset);
+            screen.render();
+        });
     }
 
     async function refreshLists(channelId: string | null, threadId: string | null) {
