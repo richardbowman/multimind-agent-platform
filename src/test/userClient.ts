@@ -205,10 +205,11 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 commandList.setItems(filtered.map(cmd => `${cmd.command} - ${cmd.description}`));
                 commandList.show();
 
-                // If Enter is pressed, autocomplete with the first match
-                if ((key && key.name === 'enter') || ch === '\r') {
+                // If Tab is pressed, autocomplete with the first match
+                if (key && key.name === 'tab') {
                     inputBox.setValue(filtered[0].command + ' ');
                     commandList.hide();
+                    return; // Prevent default tab behavior
                 }
                 screen.render();
             } else {
@@ -231,12 +232,13 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 commandList.setItems(handles.map(user => user.handle));
                 commandList.show();
 
-                // If Enter is pressed, autocomplete with the first match
-                if ((key && key.name === 'enter') || ch === '\r') {
+                // If Tab is pressed, autocomplete with the first match
+                if (key && key.name === 'tab') {
                     // Replace the partial handle with the complete one
                     const beforeHandle = currentInput.substring(0, currentInput.lastIndexOf('@'));
                     inputBox.setValue(beforeHandle + handles[0].handle + ' ');
                     commandList.hide();
+                    return; // Prevent default tab behavior
                 }
                 screen.render();
             } else {
