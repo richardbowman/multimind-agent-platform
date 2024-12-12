@@ -31,6 +31,7 @@ export interface StepExecutor {
 
 export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
+    protected finalInstructions: string = "";
 
     constructor(
         chatClient: ChatClient,
@@ -98,22 +99,16 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         const systemPrompt =
             `${this.modelHelpers.getPurpose()}
 
-PROJECT GOAL: ${project.name}
-
-TASK GOAL: Your only job is to create new steps to achieve the goal if they are missing, and reorder steps if needed to change priority.
-Return a steps list in the order you want the steps performed.
+HIGH-LEVEL GOAL: ${project.name}
 
 The allowable step types you can execute in the plan:
 ${stepDescriptions}
 
-If you've completed any steps already they will be listed here:
-${completedSteps}
 
-This is your current active step list. If you remove an item from this list, we'll assume it isn't needed any longer. 
-You can add new items by specifying a type and a description.
-You must include current steps in your response using their provided ID.
+TASK GOAL: If the user's high-level goal is not solved, your job is to create new steps to achieve the goal if they are missing, and reorder steps if needed to change priority.
+Return a steps list in the order to perform.
 
-${currentSteps}`;
+${this.finalInstructions}`;
 
         const response: PlanStepsResponse = await this.generate({
             ...handlerParams,
