@@ -15,7 +15,7 @@ export class DefaultPlanner implements Planner {
         private projects: TaskManager,
         private userId: string,
         private modelHelpers: { getPurpose: () => string },
-        private stepExecutors: Map<string, any>,
+        private stepExecutors: Map<string, any> = new Map(),
         private finalInstructions: string = ""
     ) {}
 

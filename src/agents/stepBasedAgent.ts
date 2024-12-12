@@ -5,6 +5,9 @@ import { ChatClient, ChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
 import { Project, Task, TaskManager } from '../tools/taskManager';
+import { Planner } from './planners/Planner';
+import { DefaultPlanner } from './planners/DefaultPlanner';
+import crypto from 'crypto';
 import Logger from '../helpers/logger';
 import { CreateArtifact, ModelResponse } from './schemas/ModelResponse';
 import crypto from 'crypto';
@@ -294,7 +297,7 @@ You will respond inside of the message key in Markdown format.`;
 
         // Create a task for the user input with order=0 to make it first
         const task = {
-            id: randomUUID(),
+            id: crypto.randomUUID(),
             description: `User response: ${userPost.message}`,
             creator: this.userId,
             projectId: projectId,
