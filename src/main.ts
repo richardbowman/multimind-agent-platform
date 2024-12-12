@@ -1,5 +1,5 @@
 import { ResearchManager } from "./agents/researchManager";
-import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, RESEARCH_MANAGER_TOKEN_ID as RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID as RESEARCH_MANAGER_USER_ID, PROJECT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID, ONBOARDING_CHANNEL_ID, ONBOARDING_CONSULTANT_USER_ID, CONTENT_CREATION_CHANNEL_ID, FACT_CHECK_CHANNEL_ID, SOLVER_AGENT_USER_ID, SOLVER_CHANNEL_ID } from "./helpers/config";
+import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, VECTOR_DATABASE_TYPE, RESEARCH_MANAGER_TOKEN_ID as RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID as RESEARCH_MANAGER_USER_ID, PROJECT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID, ONBOARDING_CHANNEL_ID, ONBOARDING_CONSULTANT_USER_ID, CONTENT_CREATION_CHANNEL_ID, FACT_CHECK_CHANNEL_ID, SOLVER_AGENT_USER_ID, SOLVER_CHANNEL_ID } from "./helpers/config";
 import { DefaultPlanner } from "./agents/planners/DefaultPlanner";
 import { SolverAgent } from "./agents/solverAgent";
 import { LLMServiceFactory, LLMProvider } from "./llm/LLMServiceFactory";
@@ -12,7 +12,7 @@ import { InMemoryChatStorage, InMemoryTestClient } from "./chat/inMemoryChatClie
 import { ContentWriter } from "./agents/contentWriter";
 import SimpleTaskManager from "./test/simpleTaskManager";
 import { ArtifactManager } from "./tools/artifactManager";
-import ChromaDBService from "./llm/chromaService";
+import { createVectorDatabase } from "./llm/vectorDatabaseFactory";
 import { ProjectManager } from "./agents/projectManager";
 import Logger from "./helpers/logger";
 import GoalBasedOnboardingConsultant from "./agents/goalBasedOnboardingConsultant";
@@ -22,15 +22,15 @@ const llmService = LLMServiceFactory.createService(LLM_PROVIDER as LLMProvider);
 await llmService.initializeEmbeddingModel(EMBEDDING_MODEL);
 await llmService.initializeLlamaModel(CHAT_MODEL);
 
-const chromaService = new ChromaDBService(llmService);
-const artifactManager = new ArtifactManager(chromaService);
+const vectorDB = createVectorDatabase(VECTOR_DATABASE_TYPE, llmService);
+const artifactManager = new ArtifactManager(vectorDB);
 
-chromaService.on("needsReindex", async () => {
+vectorDB.on("needsReindex", async () => {
     Logger.info("Reindexing");
     await artifactManager.indexArtifacts();
 });
 
-await chromaService.initializeCollection(CHROMA_COLLECTION);
+await vectorDB.initializeCollection(CHROMA_COLLECTION);
 
 
 const storage = new InMemoryChatStorage(".output/chats.json");
