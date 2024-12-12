@@ -100,7 +100,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
                 try {
                     const titleElement = await result.$('[data-testid="result-title-a"]');
                     const linkElement = await result.$('[data-testid="result-extras-url-link"]');
-                    const snippetElement = await result.$('.kY2IgmnCmOGjharHErah');
+                    const snippetElement = await result.$('[data-result="snippet"] .kY2IgmnCmOGjharHErah');
 
                     if (titleElement && linkElement) {
                         const title = await titleElement.innerText();
