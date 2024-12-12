@@ -65,14 +65,14 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
         super(chatClient, lmStudioService, userId, projects);
 
         // Register step executors
-        this.registerStepExecutor('web_search', new WebSearchExecutor(
+        this.registerStepExecutor(new WebSearchExecutor(
             this.searchHelper,
             this.scrapeHelper,
             this.summaryHelper,
             lmStudioService,
             this.artifactManager
         ));
-        this.registerStepExecutor('review_existing_knowledge', new ExistingKnowledgeExecutor());
+        this.registerStepExecutor(new ExistingKnowledgeExecutor());
     }
     
     public async initialize(): Promise<void> {
