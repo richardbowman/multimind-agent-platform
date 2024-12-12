@@ -61,7 +61,8 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     }
 
     protected async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
-        return await this.planner.planSteps(handlerParams);
+        const steps = await this.planner.planSteps(handlerParams);
+        return steps;
     }
 
     protected async executeNextStep(projectId: string, userPost: ChatPost): Promise<void> {
@@ -162,6 +163,12 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                     "project-id": stepResult.projectId||projectId
                 });
                 return;
+            } else {
+                await this.reply(userPost, {
+                    message: `Just finished ${task.type}, still working...`
+                }, {
+                    "project-id": stepResult.projectId||projectId
+                });
             }
 
             await this.executeNextStep(projectId, userPost);
