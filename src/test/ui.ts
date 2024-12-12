@@ -179,25 +179,24 @@ export const chatBox = blessed.log({
     }
 });
 
-chatBox.on('wheelup', () => {
-    const currentScroll = chatBox.getScroll();
-    if (currentScroll < 0) {
-        chatBox.scroll(-currentScroll);
+// Helper function for scroll handling
+function handleScroll(element: blessed.Widgets.BoxElement, direction: 'up' | 'down') {
+    const currentScroll = element.getScroll();
+    const maxScroll = element.getScrollHeight();
+    
+    if (direction === 'up' && currentScroll < 0) {
+        element.scroll(-currentScroll);
         screen.render();
-    }
-});
-
-chatBox.on('wheeldown', () => {
-    const currentScroll = chatBox.getScroll();
-    const maxScroll = chatBox.getScrollHeight();
-    if (currentScroll > maxScroll) {
+    } else if (direction === 'down' && currentScroll > maxScroll) {
         process.nextTick(() => {
-            chatBox.scroll(maxScroll - currentScroll);
+            element.scroll(maxScroll - currentScroll);
             screen.render();
         });
-        
     }
-});
+}
+
+chatBox.on('wheelup', () => handleScroll(chatBox, 'up'));
+chatBox.on('wheeldown', () => handleScroll(chatBox, 'down'));
 
 tab1Box.append(chatBox);
 
@@ -304,22 +303,8 @@ export const logBox = blessed.log({
     }
 });
 
-logBox.on('wheelup', () => {
-    const currentScroll = logBox.getScroll();
-    if (currentScroll > 0) {
-        logBox.scroll(-1);
-        screen.render();
-    }
-});
-
-logBox.on('wheeldown', () => {
-    const currentScroll = logBox.getScroll();
-    const maxScroll = logBox.getScrollHeight() - logBox.height;
-    if (currentScroll < maxScroll) {
-        logBox.scroll(1);
-        screen.render();
-    }
-});
+logBox.on('wheelup', () => handleScroll(logBox, 'up'));
+logBox.on('wheeldown', () => handleScroll(logBox, 'down'));
 
 screen.append(logBox);
 
@@ -354,22 +339,8 @@ export const artifactDetailViewer = blessed.box({
     hidden: true
 });
 
-artifactDetailViewer.on('wheelup', () => {
-    const currentScroll = artifactDetailViewer.getScroll();
-    if (currentScroll > 0) {
-        artifactDetailViewer.scroll(-1);
-        screen.render();
-    }
-});
-
-artifactDetailViewer.on('wheeldown', () => {
-    const currentScroll = artifactDetailViewer.getScroll();
-    const maxScroll = artifactDetailViewer.getScrollHeight() - artifactDetailViewer.height;
-    if (currentScroll < maxScroll) {
-        artifactDetailViewer.scroll(1);
-        screen.render();
-    }
-});
+artifactDetailViewer.on('wheelup', () => handleScroll(artifactDetailViewer, 'up'));
+artifactDetailViewer.on('wheeldown', () => handleScroll(artifactDetailViewer, 'down'));
 
 screen.append(artifactDetailViewer);
 
