@@ -21,7 +21,7 @@ export class WebSearchExecutor implements StepExecutor {
     ) {}
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const { searchQuery, category } = await this.generateSearchQuery(goal, step);
+        const { searchQuery, category } = await this.generateSearchQuery(goal, step, previousResult);
         const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
         
         if (searchResults.length === 0) {
@@ -71,7 +71,7 @@ export class WebSearchExecutor implements StepExecutor {
         };
     }
 
-    private async generateSearchQuery(goal: string, task: string): Promise<{ searchQuery: string, category: string}> {
+    private async generateSearchQuery(goal: string, task: string, previousResult?: any): Promise<{ searchQuery: string, category: string}> {
         const schema = {
             type: "object",
             properties: {
@@ -88,10 +88,20 @@ export class WebSearchExecutor implements StepExecutor {
             required: ["searchQuery", "category"]
         };
 
+        const previousFindings = previousResult?.data?.analysis?.keyFindings || [];
+        const previousGaps = previousResult?.data?.analysis?.gaps || [];
+
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}.
 Consider these specific goals we're trying to achieve: ${task}
 
-Generate a broad web search query without special keywords or operators based on the task we've been asked to research.`;
+Previous Research Findings:
+${previousFindings.map((f: any) => `- ${f.finding}`).join('\n')}
+
+Identified Gaps:
+${previousGaps.map((g: string) => `- ${g}`).join('\n')}
+
+Generate a broad web search query without special keywords or operators based on the task and previous findings.
+Focus on filling knowledge gaps and expanding on existing findings.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         return await this.modelHelpers.generate({
@@ -116,8 +126,14 @@ Generate a broad web search query without special keywords or operators based on
             }
         };
 
+        const previousFindings = previousResult?.data?.analysis?.keyFindings || [];
+        
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
-Given the following web search results, select 1-3 URLs that are most relevant to our goal. Don't pick PDFs, we can't scrape them.`;
+
+Previous Research Findings:
+${previousFindings.map((f: any) => `- ${f.finding}`).join('\n')}
+
+Given the following web search results, select 1-3 URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const message = searchResults
