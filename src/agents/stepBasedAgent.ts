@@ -89,6 +89,8 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 throw new Error(`No executor found for step type: ${task.type}`);
             }
 
+            Logger.info(`Executing step "${task.type}" for project "${projectId}"`);
+
             const project = this.projects.getProject(projectId);
             if (!project) {
                 throw new Error(`Project ${projectId} not found`);
