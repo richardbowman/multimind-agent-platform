@@ -294,6 +294,16 @@ export const logBox = blessed.log({
     }
 });
 
+logBox.on('wheelup', () => {
+    logBox.scroll(-1);
+    screen.render();
+});
+
+logBox.on('wheeldown', () => {
+    logBox.scroll(1);
+    screen.render();
+});
+
 screen.append(logBox);
 
 export const artifactDetailViewer = blessed.box({
@@ -325,6 +335,16 @@ export const artifactDetailViewer = blessed.box({
     shadow: true,
     draggable: true,
     hidden: true
+});
+
+artifactDetailViewer.on('wheelup', () => {
+    artifactDetailViewer.scroll(-1);
+    screen.render();
+});
+
+artifactDetailViewer.on('wheeldown', () => {
+    artifactDetailViewer.scroll(1);
+    screen.render();
 });
 
 screen.append(artifactDetailViewer);
