@@ -29,15 +29,17 @@ export interface ResearchProject extends Project<ResearchTask> {
 export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
     private USER_TOKEN: string;
     private artifactManager: ArtifactManager;
+    private vectorDB: IVectorDatabase;
 
-    constructor(chatUserToken: string, userId: string, chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager) {
+    constructor(chatUserToken: string, userId: string, chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager, vectorDB: IVectorDatabase) {
         super(chatClient, lmStudioService, userId, projects);
         this.USER_TOKEN = chatUserToken;
-        this.artifactManager = new ArtifactManager(this.chromaDBService);
+        this.vectorDB = vectorDB;
+        this.artifactManager = new ArtifactManager(this.vectorDB);
     }
 
     public async initialize() {
-        await this.chromaDBService.initializeCollection(CHROMA_COLLECTION);
+        await this.vectorDB.initializeCollection(CHROMA_COLLECTION);
         await super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@research");
     }
 
@@ -263,7 +265,7 @@ ${tasks.map(({ description }) => ` - ${description}`).join("\n")}`;
         const nResults = 20;
 
         try {
-            const response = await this.chromaDBService.query(queryTexts, where, nResults);
+            const response = await this.vectorDB.query(queryTexts, where, nResults);
 
             // Sort the results by score in descending order
             response.sort((a, b) => b.score - a.score);

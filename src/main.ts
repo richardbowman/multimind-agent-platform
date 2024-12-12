@@ -60,7 +60,7 @@ export const researcher = new ResearchAssistant(RESEARCH_MANAGER_TOKEN_ID, RESEA
 await researcher.initialize();
 
 const researchManagerClient = new InMemoryTestClient(RESEARCH_MANAGER_USER_ID, "test", storage);
-const researchManager = new ResearchManager(RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID, researchManagerClient, llmService, tasks);
+const researchManager = new ResearchManager(RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID, researchManagerClient, llmService, tasks, vectorDB);
 await researchManager.initialize();
 
 const contentClient = new InMemoryTestClient(CONTENT_MANAGER_USER_ID, "test", storage);
