@@ -62,6 +62,16 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
     protected async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
         const steps = await this.planner.planSteps(handlerParams);
+        
+        // Send a progress message about the next steps
+        const nextStepsMessage = steps.steps
+            .map((step, index) => `${index + 1}. ${step.actionType}`)
+            .join('\n');
+        
+        await this.reply(handlerParams.userPost, {
+            message: `🔄 Planning next steps:\n${nextStepsMessage}`
+        });
+        
         return steps;
     }
 
