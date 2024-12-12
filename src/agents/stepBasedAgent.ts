@@ -29,7 +29,6 @@ export interface StepExecutor {
 
 export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
-    protected finalInstructions: string = "";
     protected planner: Planner;
 
     constructor(

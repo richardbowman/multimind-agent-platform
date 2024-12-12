@@ -44,7 +44,7 @@ export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> 
         this.registerStepExecutor(new WritingExecutor(lmStudioService, projects));
         this.registerStepExecutor(new EditingExecutor(lmStudioService));
 
-        this.setPurpose(`You are planning how to create high-quality content.
+        this.modelHelpers.setPurpose(`You are planning how to create high-quality content.
 Break down the content creation into steps of research, outlining, writing and editing.
 Use 'research' steps to gather information, 'outline' steps to structure the content,
 'writing' steps to develop sections, and 'editing' steps to improve quality.

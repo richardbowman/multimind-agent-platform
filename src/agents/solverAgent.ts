@@ -25,7 +25,9 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         chromaDBService: ChromaDBService
     ) {
 
-        const modelHelpers = new ModelHelpers(lmStudioService, userId, `SOLVING INSTRUCTIONS
+        const modelHelpers = new ModelHelpers(lmStudioService, userId);
+        modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning.`);
+        modelHelpers.setFinalInstructions(`SOLVING INSTRUCTIONS
         Use steps of constructive thinking, critical refutation, and validation to develop robust solutions. In the reasoning field, explain the complexity you see in this goal.
         
         AT A MINIMUM, YOU MUST always perform these 6 steps in order:
@@ -37,7 +39,6 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         6. validation (to verify the solution)
         
         Adapt your approach to the complexity of each problem, using more cycles as needed.`);
-        modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning.`);
         const planner = new DefaultPlanner(lmStudioService, projects, userId, modelHelpers);
 
         super(chatClient, lmStudioService, userId, projects, chromaDBService, planner);

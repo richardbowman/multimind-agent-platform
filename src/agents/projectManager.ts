@@ -40,7 +40,7 @@ export class ProjectManager extends Agent<PlanningProject, Task> {
 
     constructor(userId: string, messagingHandle: string, chatClient: ChatClient, lmStudioService: LMStudioService, chromaDBService: ChromaDBService, projects: TaskManager) {
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
-        this.setPurpose(`My name is Mesa. My goal is to help develop standardized processes for your business.`)
+        this.modelHelpers.setPurpose(`My name is Mesa. My goal is to help develop standardized processes for your business.`)
         this.setupChatMonitor(PROJECTS_CHANNEL_ID, messagingHandle);
     }
 
