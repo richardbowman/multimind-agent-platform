@@ -117,7 +117,9 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
             return;
         }
 
-        await this.handleUserInput(projectId, currentTask.type, userPost);
+        // Plan next steps based on user input
+        const plan = await this.planSteps(params);
+        await this.executeNextStep(projectId, userPost);
     }
 
     @HandleActivity("followup", "Answer follow-up questions about previous search results", ResponseType.RESPONSE)

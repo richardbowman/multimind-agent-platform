@@ -286,37 +286,6 @@ You will respond inside of the message key in Markdown format.`;
         });
     }
 
-    protected async handleUserInput(projectId: string, currentStep: string, userPost: ChatPost): Promise<void> {
-        const project = this.projects.getProject(projectId);
-        if (!project) {
-            throw new Error(`Project ${projectId} not found`);
-        }
-
-        // Create a task for the user input with order=0 to make it first
-        const task = {
-            id: crypto.randomUUID(),
-            description: `User response: ${userPost.message}`,
-            creator: this.userId,
-            projectId: projectId,
-            type: 'user_input',
-            complete: true,
-            order: 0 // This ensures it appears first
-        };
-
-        // Update order of existing tasks to make room
-        for (const existingTask of Object.values(project.tasks)) {
-            if (existingTask.order === undefined) {
-                existingTask.order = 1;
-            } else {
-                existingTask.order += 1;
-            }
-        }
-
-        await this.projects.addTask(project, task);
-
-        // Continue execution
-        await this.executeStep(projectId, currentStep, userPost);
-    }
 
     @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
     protected async handleConversation(params: HandlerParams): Promise<void> {
