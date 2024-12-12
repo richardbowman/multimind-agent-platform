@@ -1,5 +1,5 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import { ExecutorMetadata } from '../decorators/executorDecorator';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import SearchHelper from '../../helpers/searchHelper';
 import ScrapeHelper from '../../helpers/scrapeHelper';
 import SummaryHelper from '../../helpers/summaryHelper';
@@ -8,7 +8,7 @@ import Logger from '../../helpers/logger';
 import { ArtifactManager } from '../../tools/artifact';
 import crypto from 'crypto';
 
-@ExecutorMetadata({
+@StepExecutorDecorator({
     key: 'web_search',
     description: 'Performs web searches and summarizes results'
 })
