@@ -20,8 +20,9 @@ class VectraService extends EventEmitter implements IVectorDatabase {
 
     async initializeCollection(name: string): Promise<void> {
         this.collectionName = name;
-        this.index = new LocalIndex();
-        await this.index.init(); // Initialize the index
+        this.index = new LocalIndex({
+            similarity: "cosine"
+        });
         Logger.info(`Vectra index initialized for collection: ${name}`);
     }
 
