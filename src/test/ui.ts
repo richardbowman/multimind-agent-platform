@@ -179,6 +179,16 @@ export const chatBox = blessed.log({
     }
 });
 
+chatBox.on('wheelup', () => {
+    chatBox.scroll(-1);
+    screen.render();
+});
+
+chatBox.on('wheeldown', () => {
+    chatBox.scroll(1);
+    screen.render();
+});
+
 tab1Box.append(chatBox);
 
 // Create a textarea to enter messages.
