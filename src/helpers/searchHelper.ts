@@ -3,6 +3,8 @@ import { SEARXNG_URL } from './config';
 import Logger from "src/helpers/logger";
 import { Browser, chromium } from 'playwright-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
+import { ArtifactManager } from '../tools/artifactManager';
+import crypto from 'crypto';
 
 // Add stealth plugin to avoid detection
 chromium.use(stealth())
@@ -47,6 +49,11 @@ export class SearxNGProvider implements ISearchProvider {
 
 export class DuckDuckGoProvider implements ISearchProvider {
     private browser: Browser | null = null;
+    private artifactManager: ArtifactManager;
+
+    constructor(artifactManager: ArtifactManager) {
+        this.artifactManager = artifactManager;
+    }
 
     private async initBrowser() {
         if (!this.browser) {
@@ -69,9 +76,21 @@ export class DuckDuckGoProvider implements ISearchProvider {
             
             await page.waitForLoadState('networkidle');
 
-            // Log the page content for debugging
+            // Save the page content as an artifact
             const content = await page.content();
-            Logger.debug('DuckDuckGo page content:', content);
+            const artifactId = crypto.randomUUID();
+            await this.artifactManager.saveArtifact({
+                id: artifactId,
+                type: 'search-page',
+                content: content,
+                metadata: {
+                    query,
+                    category,
+                    url: page.url(),
+                    searchedAt: new Date().toISOString()
+                }
+            });
+            Logger.debug(`Saved DuckDuckGo search page as artifact: ${artifactId}`);
 
             // Extract search results
             const searchResults = await page.$$('.result');
@@ -125,7 +144,8 @@ export class DuckDuckGoProvider implements ISearchProvider {
 class SearchHelper {
     private provider: ISearchProvider;
 
-    constructor(provider: ISearchProvider = new DuckDuckGoProvider()) {
+    constructor(artifactManager: ArtifactManager) {
+        this.provider = new DuckDuckGoProvider(artifactManager);
         this.provider = provider;
     }
 
