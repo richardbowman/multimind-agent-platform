@@ -1,5 +1,5 @@
 import { EventEmitter } from "events";
-import { Index } from "vectra";
+import { LocalIndex } from "vectra";
 import crypto from 'crypto';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import LMStudioService from "./lmstudioService";
@@ -9,7 +9,7 @@ import { saveToFile } from "../tools/storeToFile";
 import { ConversationContext } from "../chat/chatClient";
 
 class VectraService extends EventEmitter implements IVectorDatabase {
-    private index: Index | null = null;
+    private index: LocalIndex | null = null;
     private lmStudioService: LMStudioService;
     private collectionName: string = '';
 
@@ -20,7 +20,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
 
     async initializeCollection(name: string): Promise<void> {
         this.collectionName = name;
-        this.index = new Index();
+        this.index = new LocalIndex();
         Logger.info(`Vectra index initialized for collection: ${name}`);
     }
 
