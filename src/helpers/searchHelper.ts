@@ -68,11 +68,11 @@ export class GoogleSearchProvider implements ISearchProvider {
             await page.goto(`https://www.google.com/search?q=${encodedQuery}`);
             
             // Accept cookies if present
-            try {
-                await page.click('button:has-text("Accept all")');
-            } catch (e) {
-                // Cookie prompt might not appear
-            }
+            // try {
+            //     await page.click('button:has-text("Accept all")');
+            // } catch (e) {
+            //     // Cookie prompt might not appear
+            // }
 
             await page.waitForLoadState('networkidle');
 
