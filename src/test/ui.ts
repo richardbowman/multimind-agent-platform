@@ -117,7 +117,7 @@ export const channelList = blessed.list({
         }
     },
     left: 0,
-    width: '30%',
+    width: '20%',
     top: 0,
     height: '35%'
 });
@@ -142,7 +142,7 @@ export const threadList = blessed.list({
         }
     },
     left: '0%',
-    width: '30%',
+    width: '20%',
     top: '35%',
     height: '65%-4'
 });
@@ -152,8 +152,8 @@ tab1Box.append(threadList);
 // Create a box to display chat messages.
 export const chatBox = blessed.log({
     top: 0,
-    left: '30%',
-    width: '40%',
+    left: '20%',
+    width: '50%',
     height: '100%-5',
     label: 'Chat',
     content: '',
