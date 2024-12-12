@@ -123,7 +123,10 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                         `Missing aspects to address:\n` +
                         `${stepResult.missingAspects.map((aspect: string) => `- ${aspect}`).join('\n')}`;
 
-                    await this.planSteps(projectId, planningPrompt);
+                    await this.planSteps({
+                        projects: [projectId], 
+                        message: planningPrompt
+                    });
                 } else {
                     // If validation passed, mark validation step as complete
                     await this.projects.completeTask(task.id);

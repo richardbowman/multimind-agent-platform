@@ -1,11 +1,9 @@
 import { StepBasedAgent } from './stepBasedAgent';
-import { ChatClient, ChatPost } from '../chat/chatClient';
+import { ChatClient } from '../chat/chatClient';
 import LMStudioService from '../llm/lmstudioService';
 import { TaskManager } from '../tools/taskManager';
 import { ThinkingExecutor } from './executors/ThinkingExecutor';
 import { RefutingExecutor } from './executors/RefutingExecutor';
-import { PlanStepsResponse } from './schemas/agent';
-import { StructuredOutputPrompt } from '../llm/lmstudioService';
 import Logger from 'src/helpers/logger';
 import { SOLVER_CHANNEL_ID } from 'src/helpers/config';
 import ChromaDBService from 'src/llm/chromaService';
@@ -78,7 +76,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
 
     @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
     protected async handleThreadResponse(params: HandlerParams): Promise<void> {
-        const project = params.projects?.[0] as OnboardingProject;
+        const project = params.projects?.[0];
 
         // If no active project, treat it as a new conversation
         if (!project) {
