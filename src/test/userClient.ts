@@ -385,14 +385,16 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         // Store task IDs in order and create display items
         taskIds = tasks.map(task => task.id);
         const displayItems = tasks.map(task => {
-            let checkbox = '[ ]';  // default incomplete
+            let status;
             if (task.complete) {
-                checkbox = '[x]';  // completed
+                status = '{green-fg}[x]{/green-fg}';  // completed
             } else if (task.inProgress) {
-                checkbox = '[~]';  // in progress (assigned but not complete)
+                status = '{yellow-fg}[~]{/yellow-fg}';  // in progress
+            } else {
+                status = '{gray-fg}[ ]{/gray-fg}';  // not started
             }
-            const assignee = task.assignee ? ` (${storage.getHandleNameForUserId(task.assignee)})` : '';
-            return `${checkbox} ${task.description || task.id}${assignee}`;
+            const assignee = task.assignee ? ` {blue-fg}(${storage.getHandleNameForUserId(task.assignee)}){/blue-fg}` : '';
+            return `${status} ${task.description || task.id}${assignee}`;
         });
 
         taskList.setItems(displayItems);
