@@ -2,7 +2,7 @@ import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedroc
 import LMStudioService from "./lmstudioService";
 import { ILLMService } from "./ILLMService";
 import { ChatPost } from "src/chat/chatClient";
-import { ModelResponse } from "../agents/schemas/ModelResponse";
+import { ModelMessageResponse } from "../agents/schemas/ModelResponse";
 import { StructuredOutputPrompt } from "./lmstudioService";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
@@ -49,7 +49,7 @@ export class BedrockService implements ILLMService {
         Logger.info("Bedrock service ready");
     }
 
-    async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelResponse> {
+    async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelMessageResponse> {
         const messages = this.formatMessages(userPost.message, history);
         
         const command = new InvokeModelCommand({
