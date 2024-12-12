@@ -127,7 +127,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     }
 
     async clearCollection(): Promise<void> {
-        this.index = new Index();
+        this.index = new LocalIndex();
         Logger.info("Cleared Vectra index");
     }
 
