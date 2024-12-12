@@ -70,18 +70,18 @@ export class DuckDuckGoProvider implements ISearchProvider {
             await page.waitForLoadState('networkidle');
 
             // Extract search results
-            const searchResults = await page.$$('.result');
+            const searchResults = await page.$$('ol.react-results--main > li');
             
             for (const result of searchResults) {
                 try {
-                    const titleElement = await result.$('.result__title');
-                    const linkElement = await result.$('.result__url');
-                    const snippetElement = await result.$('.result__snippet');
+                    const titleElement = await result.$('h2 a');
+                    const linkElement = await result.$('a[data-testid="result-title-a"]');
+                    const snippetElement = await result.$('[data-result="snippet"]');
 
                     if (titleElement && linkElement) {
                         const title = await titleElement.innerText();
                         const url = await linkElement.getAttribute('href') || '';
-                        const description = snippetElement ? await snippetElement.innerText() : '';
+                        const description = snippetElement ? await snippetElement.textContent() : '';
 
                         if (url.startsWith('http')) {
                             results.push({
