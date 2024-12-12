@@ -10,22 +10,35 @@ import Logger from "src/helpers/logger";
 export class BedrockService implements ILLMService {
     private client: BedrockRuntimeClient;
     private modelId: string;
-    private embeddingModel?: IEmbeddingFunction;
-    private lmStudioService?: LMStudioService;
+    private embeddingModelId: string;
 
-    constructor(modelId: string, lmStudioService?: LMStudioService) {
+    constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v1") {
         this.client = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
         this.modelId = modelId;
-        this.lmStudioService = lmStudioService;
+        this.embeddingModelId = embeddingModelId;
     }
 
-    async initializeEmbeddingModel(modelPath: string): Promise<void> {
-        if (!this.lmStudioService) {
-            this.lmStudioService = new LMStudioService();
+    async initializeEmbeddingModel(_modelPath: string): Promise<void> {
+        // No initialization needed for Bedrock embeddings
+        Logger.info("Using Bedrock for embeddings with model: " + this.embeddingModelId);
+    }
+
+    private async getEmbedding(text: string): Promise<number[]> {
+        const command = new InvokeModelCommand({
+            modelId: this.embeddingModelId,
+            body: JSON.stringify({
+                inputText: text
+            })
+        });
+
+        try {
+            const response = await this.client.send(command);
+            const result = JSON.parse(new TextDecoder().decode(response.body));
+            return result.embedding;
+        } catch (error) {
+            Logger.error("Bedrock embedding error:", error);
+            throw error;
         }
-        await this.lmStudioService.initializeEmbeddingModel(modelPath);
-        this.embeddingModel = this.lmStudioService.getEmbeddingModel();
-        Logger.info("Using LMStudio for embeddings as Bedrock fallback");
     }
 
     async initializeLlamaModel(modelPath: string): Promise<void> {
@@ -232,8 +245,14 @@ export class BedrockService implements ILLMService {
     }
 
     getEmbeddingModel(): IEmbeddingFunction {
-        if (!this.embeddingModel) throw new Error("Embedding model not initialized");
-        return this.embeddingModel;
+        return {
+            generate: async (texts: string[]): Promise<number[][]> => {
+                const embeddings = await Promise.all(
+                    texts.map(text => this.getEmbedding(text))
+                );
+                return embeddings;
+            }
+        };
     }
 
     async getTokenCount(text: string): Promise<number> {
