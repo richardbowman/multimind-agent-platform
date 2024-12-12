@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
 import { LocalIndex } from "vectra";
 import crypto from 'crypto';
+import { AsyncQueue } from "../helpers/asyncQueue";
 import path from 'path';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import LMStudioService from "./lmstudioService";
@@ -13,6 +14,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     private index: LocalIndex | null = null;
     private lmStudioService: LMStudioService;
     private collectionName: string = '';
+    private insertQueue = new AsyncQueue();
 
     constructor(lmStudioService: LMStudioService) {
         super();
@@ -37,14 +39,17 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         const embedder = this.lmStudioService.getEmbeddingModel();
         const embeddings = await embedder.generate(collection.documents);
         
+        // Process inserts sequentially through the queue
         for (let i = 0; i < collection.documents.length; i++) {
-            await this.index.insertItem({
-                id: collection.ids[i],
-                vector: embeddings[i],
-                metadata: {
-                    ...collection.metadatas[i],
-                    text: collection.documents[i]
-                }
+            await this.insertQueue.enqueue(async () => {
+                await this.index!.insertItem({
+                    id: collection.ids[i],
+                    vector: embeddings[i],
+                    metadata: {
+                        ...collection.metadatas[i],
+                        text: collection.documents[i]
+                    }
+                });
             });
         }
     }
