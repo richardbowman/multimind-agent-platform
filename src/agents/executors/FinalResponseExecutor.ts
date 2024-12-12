@@ -6,10 +6,7 @@ import { ModelResponse } from '../schemas/ModelResponse';
 
 @StepExecutorDecorator('final_response', 'Generates final comprehensive response')
 export class FinalResponseExecutor implements StepExecutor {
-    private modelHelpers: ModelHelpers;
-
-    constructor(lmStudioService: LMStudioService) {
-        this.modelHelpers = new ModelHelpers(lmStudioService, 'executor');
+    constructor(private modelHelpers: LMStudioService) {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {

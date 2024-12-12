@@ -124,7 +124,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                         `${stepResult.missingAspects.map((aspect: string) => `- ${aspect}`).join('\n')}`;
 
                     await this.planSteps({
-                        projects: [projectId], 
+                        projects: [project], 
                         message: planningPrompt
                     });
                 } else {

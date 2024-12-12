@@ -2,19 +2,19 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
-import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import ChromaDBService from '../../llm/chromaService';
 import { CHROMA_COLLECTION } from '../../helpers/config';
 import Logger from '../../helpers/logger';
 
-@StepExecutorDecorator('research', 'Research relevant content from knowledge base')
+@StepExecutorDecorator('check-knowledge', 'Check my existing knowledgebase (useful to do upfront)')
 export class ResearchExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private chromaDBService: ChromaDBService;
 
-    constructor(llmService: LMStudioService) {
+    constructor(llmService: LMStudioService, chromaDbService: ChromaDBService) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
-        this.chromaDBService = new ChromaDBService();
+        this.chromaDBService = chromaDbService;
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
@@ -54,8 +54,7 @@ Explain the rationale for each query.`;
                 const results = await this.chromaDBService.query(
                     [queryObj.query], 
                     undefined, 
-                    5, 
-                    CHROMA_COLLECTION
+                    5
                 );
                 searchResults.push(...results);
             } catch (error) {
