@@ -106,12 +106,7 @@ export default class LMStudioService implements ILLMService {
     }
 
     async generate(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: MessageOpts) : Promise<ModelResponse> {
-        const currentDate = new Date().toISOString().split('T')[0];
         const messageChain = [
-            {
-                role: "system",
-                content: `Current date: ${currentDate}\n\n${instructions}`
-            },
             ...this.mapPosts(userPost, history),
             {
                 role: ModelRole.USER,
@@ -184,11 +179,9 @@ export default class LMStudioService implements ILLMService {
         }
 
         // Add the current message to the history
-        const currentDate = new Date().toISOString().split('T')[0];
-        const systemMessage = { role: "system", content: `Current date: ${currentDate}\n\n${instructions.getPrompt()}` };
         const userMessage = { role: "user", content: message };
         let messageChain = [
-            systemMessage, ...history||[], userMessage
+            ...history||[], userMessage
         ];
 
         const opts : LLMPredictionOpts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens  };
