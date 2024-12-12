@@ -231,7 +231,7 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
         const { searchQuery, category } = await this.generateSearchQuery(goal, task);
         Logger.info(`Performing search for: ${searchQuery}`);
 
-        const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
+        const searchResults = await this.searchHelper.search(searchQuery, category);
         Logger.info(`Search Results Count: ${searchResults.length}`);
 
         if (searchResults.length === 0) {

@@ -1,6 +1,6 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import SearchHelper from '../../helpers/searchHelper';
+import SearchHelper, { DuckDuckGoProvider, GoogleSearchProvider } from '../../helpers/searchHelper';
 import ScrapeHelper from '../../helpers/scrapeHelper';
 import SummaryHelper from '../../helpers/summaryHelper';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
@@ -12,11 +12,7 @@ import { ModelHelpers } from 'src/llm/helpers';
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
     constructor(
-        private searchHelper: SearchHelper = new SearchHelper(
-            process.env.SEARCH_PROVIDER === 'google' 
-                ? new GoogleSearchProvider() 
-                : new SearxNGProvider()
-        ),
+        private searchHelper: SearchHelper = new SearchHelper(new DuckDuckGoProvider()),
         private scrapeHelper: ScrapeHelper,
         private summaryHelper: SummaryHelper,
         private lmStudioService: LMStudioService,
@@ -158,7 +154,7 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const { searchQuery, category } = await this.generateSearchQuery(goal, step, previousResult);
-        const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
+        const searchResults = await this.searchHelper.search(searchQuery, category);
         
         if (searchResults.length === 0) {
             return { type: 'no_results' };
@@ -182,6 +178,7 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
         }
 
         return {
+            finished: true,
             type: 'web_search_results',
             summaries: pageSummaries,
             query: searchQuery,

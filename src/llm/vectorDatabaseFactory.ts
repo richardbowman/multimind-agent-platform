@@ -9,7 +9,7 @@ export enum VectorDatabaseType {
 }
 
 export function createVectorDatabase(
-    type: string = VectorDatabaseType.CHROMA,
+    type: string = VectorDatabaseType.VECTRA,
     lmStudioService: LMStudioService
 ): IVectorDatabase {
     switch (type) {
@@ -18,6 +18,6 @@ export function createVectorDatabase(
         case VectorDatabaseType.VECTRA:
             return new VectraService(lmStudioService);
         default:
-            return new ChromaDBService(lmStudioService);
+            return new VectraService(lmStudioService);
     }
 }

@@ -195,6 +195,11 @@ protected async handleConversation(params: HandlerParams): Promise<void> {
 2. Create a feature branch
 3. Submit a pull request
 
+## Development with LLMs
+```
+aider --model bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+```
+
 ## License
 
 [Your License Here]

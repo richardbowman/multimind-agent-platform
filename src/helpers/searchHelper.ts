@@ -70,18 +70,18 @@ export class DuckDuckGoProvider implements ISearchProvider {
             await page.waitForLoadState('networkidle');
 
             // Extract search results
-            const searchResults = await page.$$('ol.react-results--main > li');
+            const searchResults = await page.$$('.result');
             
             for (const result of searchResults) {
                 try {
-                    const titleElement = await result.$('h2 a');
-                    const linkElement = await result.$('a[data-testid="result-title-a"]');
-                    const snippetElement = await result.$('[data-result="snippet"]');
+                    const titleElement = await result.$('.result__title');
+                    const linkElement = await result.$('.result__url');
+                    const snippetElement = await result.$('.result__snippet');
 
                     if (titleElement && linkElement) {
                         const title = await titleElement.innerText();
                         const url = await linkElement.getAttribute('href') || '';
-                        const description = snippetElement ? await snippetElement.textContent() : '';
+                        const description = snippetElement ? await snippetElement.innerText() : '';
 
                         if (url.startsWith('http')) {
                             results.push({
@@ -121,7 +121,7 @@ class SearchHelper {
         this.provider = provider;
     }
 
-    async searchOnSearXNG(query: string, category: string): Promise<SearchResult[]> {
+    async search(query: string, category: string): Promise<SearchResult[]> {
         return this.provider.search(query, category);
     }
 }

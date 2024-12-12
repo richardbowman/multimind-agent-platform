@@ -3,10 +3,11 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { Project, Task } from '../../tools/taskManager';
 import { ModelResponse } from '../schemas/ModelResponse';
+import { ModelHelpers } from 'src/llm/helpers';
 
 @StepExecutorDecorator('final_response', 'Generates final comprehensive response')
 export class FinalResponseExecutor implements StepExecutor {
-    constructor(private modelHelpers: LMStudioService) {
+    constructor(private modelHelpers: ModelHelpers) {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {

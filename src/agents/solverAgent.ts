@@ -31,7 +31,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         
         AT A MINIMUM, YOU MUST always perform these 6 steps in order:
         1. goal_confirmation (to ensure clear understanding)
-        2. research (to learn from existing knowledge)
+        2. check-knowledge (to learn from existing knowledge)
         3. thinking (to develop initial approach)
         4. refuting (to challenge assumptions)
         5. thinking (to refine based on challenges)
@@ -48,7 +48,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         this.registerStepExecutor(new RefutingExecutor(lmStudioService));
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));
         this.registerStepExecutor(new ResearchExecutor(lmStudioService, chromaDBService));
-        this.registerStepExecutor(new FinalResponseExecutor(lmStudioService));
+        this.registerStepExecutor(new FinalResponseExecutor(modelHelpers));
 
     }
 

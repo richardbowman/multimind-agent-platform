@@ -57,9 +57,9 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         const results = await this.index.queryItems(queryEmbeddings[0], nResults, where);
 
         return results.map(result => ({
-            id: result.id,
-            metadata: { ...result.metadata, text: undefined },
-            text: result.metadata.text,
+            id: result.item.id,
+            metadata: { ...result.item.metadata, text: undefined },
+            text: result.item.metadata.text,
             score: result.score
         }));
     }
