@@ -25,7 +25,7 @@ export class BedrockService implements ILLMService {
 
     private async getEmbedding(text: string): Promise<number[]> {
         const command = new InvokeModelCommand({
-            modelId: this.embeddingModelId,
+            modelId: "amazon.titan-embed-text-v2:0",
             body: JSON.stringify({
                 inputText: text,
                 embeddingTypes: ["float"]
