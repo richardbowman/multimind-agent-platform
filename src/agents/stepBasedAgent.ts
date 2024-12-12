@@ -1,5 +1,5 @@
 import { Agent } from './agents';
-import { getExecutorMetadata, EXECUTOR_METADATA_KEY } from './decorators/executorDecorator';
+import { getExecutorMetadata } from './decorators/executorDecorator';
 import 'reflect-metadata';
 import { ChatClient, ChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
@@ -10,13 +10,8 @@ import { DefaultPlanner } from './planners/DefaultPlanner';
 import crypto from 'crypto';
 import Logger from '../helpers/logger';
 import { CreateArtifact, ModelResponse } from './schemas/ModelResponse';
-import crypto from 'crypto';
-import { definitions as generatedSchemaDef } from "./schemas/schema.json";
 import ChromaDBService from 'src/llm/chromaService';
-import { Handler } from 'puppeteer';
 import { PlanStepsResponse } from './schemas/PlanStepsResponse';
-import * as schemaJson from "./schemas/schema.json";
-import { SchemaInliner } from 'src/helpers/schemaInliner';
 
 export interface StepResult {
     type?: string;
