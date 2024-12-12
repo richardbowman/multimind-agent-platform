@@ -27,14 +27,17 @@ export class BedrockService implements ILLMService {
         const command = new InvokeModelCommand({
             modelId: this.embeddingModelId,
             body: JSON.stringify({
-                inputText: text
-            })
+                inputText: text,
+                embeddingTypes: ["float"]
+            }),
+            contentType: "application/json",
+            accept: "application/json"
         });
 
         try {
             const response = await this.client.send(command);
             const result = JSON.parse(new TextDecoder().decode(response.body));
-            return result.embedding;
+            return result.embeddingsByType.float;
         } catch (error) {
             Logger.error("Bedrock embedding error:", error);
             throw error;
