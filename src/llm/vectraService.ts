@@ -27,7 +27,8 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     async addDocuments(collection: { ids: string[], metadatas: any[], documents: string[] }): Promise<void> {
         if (!this.index) throw new Error("Index not initialized");
 
-        const embeddings = await this.lmStudioService.getEmbeddings(collection.documents);
+        const embedder = this.lmStudioService.getEmbeddingModel();
+        const embeddings = await embedder.generate(collection.documents);
         
         for (let i = 0; i < collection.documents.length; i++) {
             this.index.addItem({
