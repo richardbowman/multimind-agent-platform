@@ -181,18 +181,21 @@ export const chatBox = blessed.log({
 
 chatBox.on('wheelup', () => {
     const currentScroll = chatBox.getScroll();
-    if (currentScroll > 0) {
-        chatBox.scroll(-1);
+    if (currentScroll < 0) {
+        chatBox.scroll(-currentScroll);
         screen.render();
     }
 });
 
 chatBox.on('wheeldown', () => {
     const currentScroll = chatBox.getScroll();
-    const maxScroll = chatBox.getScrollHeight() - chatBox.height;
-    if (currentScroll < maxScroll) {
-        chatBox.scroll(1);
-        screen.render();
+    const maxScroll = chatBox.getScrollHeight();
+    if (currentScroll > maxScroll) {
+        process.nextTick(() => {
+            chatBox.scroll(maxScroll - currentScroll);
+            screen.render();
+        });
+        
     }
 });
 
