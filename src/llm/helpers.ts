@@ -79,7 +79,7 @@ export class ModelHelpers {
 
         const llmMessages = [{
             role: "system",
-            content: existingSummary 
+            content: this.addDateToSystemPrompt(existingSummary 
                 ? `Given this existing conversation summary:
                    "${existingSummary.summary}"
                    
@@ -90,7 +90,7 @@ export class ModelHelpers {
                    1. The main topic or request
                    2. Key decisions or information shared
                    3. The current state of the discussion
-                   Keep the summary under 200 words.`
+                   Keep the summary under 200 words.`)
         }];
 
         // Add only new messages as context
