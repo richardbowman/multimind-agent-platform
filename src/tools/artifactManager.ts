@@ -2,18 +2,18 @@ import fs from 'fs/promises';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import Logger from '../helpers/logger';
-import ChromaDBService from '../llm/chromaService';
+import { IVectorDatabase } from '../llm/IVectorDatabase';
 import { Artifact } from './artifact';
 
 export class ArtifactManager {
   private storageDir: string;
   private artifactMetadataFile: string;
-  private chromaService: ChromaDBService;
+  private vectorDb: IVectorDatabase;
 
-  constructor(chromaService: ChromaDBService, storageDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../.output')) {
+  constructor(vectorDb: IVectorDatabase, storageDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../.output')) {
     this.storageDir = storageDir;
     this.artifactMetadataFile = path.join(this.storageDir, 'artifact.json');
-    this.chromaService = chromaService;
+    this.vectorDb = vectorDb;
 
     // Ensure the .output directory exists
     fs.mkdir(this.storageDir, { recursive: true }).catch(err => Logger.error('Error creating output directory:', err));
@@ -74,7 +74,7 @@ export class ArtifactManager {
     // Update or add the artifact metadata
     // Calculate token count using GPT tokenizer
     const content = artifact.content.toString();
-    const tokenCount = await this.chromaService.getTokenCount(content);
+    const tokenCount = await this.vectorDb.getTokenCount(content);
 
     metadata[artifact.id] = {
       contentPath: filePath,
@@ -88,7 +88,7 @@ export class ArtifactManager {
     await this.saveArtifactMetadata(metadata);
 
     // Index the artifact into Chroma
-    await this.chromaService.handleContentChunks(
+    await this.vectorDb.handleContentChunks(
       artifact.content.toString(),
       artifact.metadata?.url,
       artifact.metadata?.task,
@@ -163,11 +163,6 @@ export class ArtifactManager {
       await this.saveArtifactMetadata(metadata);
 
       // Remove from Chroma if it exists
-      if (this.chromaService.collection) {
-        await this.chromaService.collection.delete({
-          ids: [artifactId]
-        });
-      }
 
       Logger.info(`Successfully deleted artifact: ${artifactId}`);
     } catch (error) {
@@ -181,7 +176,7 @@ export class ArtifactManager {
     Logger.info(`Indexing ${artifacts.length} artifacts`);
     
     for (const artifact of artifacts) {
-      await this.chromaService.handleContentChunks(
+      await this.vectorDb.handleContentChunks(
         artifact.content.toString(),
         artifact.metadata?.url || '',
         artifact.metadata?.task || 'summary',
