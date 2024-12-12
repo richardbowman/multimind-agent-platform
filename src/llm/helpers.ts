@@ -13,15 +13,22 @@ export class ModelHelpers {
     getPurpose() {
         return this.purpose;
     }
+    getFinalInstructions() {
+        return this.finalInstructions;
+    }
+    
+
     protected model: ILLMService;
     protected isMemoryEnabled: boolean = false;
     protected purpose: string = 'You are a helpful agent.';
     private threadSummaries: Map<string, ThreadSummary> = new Map();
     protected userId: string;
+    protected finalInstructions?: string;
 
-    constructor(model: ILLMService, userId: string) {
+    constructor(model: ILLMService, userId: string, finalInstructions?: string) {
         this.userId = userId;
         this.model = model;
+        this.finalInstructions = finalInstructions;
     }
 
     public setPurpose(purpose: string) {
