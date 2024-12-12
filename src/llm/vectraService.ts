@@ -1,6 +1,7 @@
 import { EventEmitter } from "events";
 import { LocalIndex } from "vectra";
 import crypto from 'crypto';
+import path from 'path';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import LMStudioService from "./lmstudioService";
 import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
@@ -20,10 +21,14 @@ class VectraService extends EventEmitter implements IVectorDatabase {
 
     async initializeCollection(name: string): Promise<void> {
         this.collectionName = name;
-        this.index = new LocalIndex({
-            similarity: "cosine"
-        });
-        Logger.info(`Vectra index initialized for collection: ${name}`);
+        const indexPath = path.join(process.cwd(), 'data', 'vectra', name);
+        this.index = new LocalIndex(indexPath);
+        
+        if (!(await this.index.isIndexCreated())) {
+            await this.index.createIndex();
+        }
+        
+        Logger.info(`Vectra index initialized for collection: ${name} at ${indexPath}`);
     }
 
     async addDocuments(collection: { ids: string[], metadatas: any[], documents: string[] }): Promise<void> {
