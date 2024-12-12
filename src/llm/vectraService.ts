@@ -47,14 +47,23 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         // Process inserts sequentially through the queue
         for (let i = 0; i < collection.documents.length; i++) {
             await syncQueue.enqueue(async () => {
-                await this.index!.insertItem({
-                    id: collection.ids[i],
-                    vector: embeddings[i],
-                    metadata: {
-                        ...collection.metadatas[i],
-                        text: collection.documents[i]
+                try {
+                    await this.index!.insertItem({
+                        id: collection.ids[i],
+                        vector: embeddings[i],
+                        metadata: {
+                            ...collection.metadatas[i],
+                            text: collection.documents[i]
+                        }
+                    });
+                } catch (error) {
+                    // Skip if item already exists
+                    if (error.message?.includes('already exists')) {
+                        Logger.debug(`Skipping duplicate item with id ${collection.ids[i]}`);
+                        continue;
                     }
-                });
+                    throw error; // Re-throw other errors
+                }
             });
         }
 
