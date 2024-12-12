@@ -90,7 +90,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
                     searchedAt: new Date().toISOString()
                 }
             });
-            Logger.debug(`Saved DuckDuckGo search page as artifact: ${artifactId}`);
+            Logger.info(`Saved DuckDuckGo search page as artifact: ${artifactId}`);
 
             // Extract search results
             const searchResults = await page.$$('.result');
@@ -144,8 +144,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
 class SearchHelper {
     private provider: ISearchProvider;
 
-    constructor(artifactManager: ArtifactManager) {
-        this.provider = new DuckDuckGoProvider(artifactManager);
+    constructor(provider: ISearchProvider) {
         this.provider = provider;
     }
 
