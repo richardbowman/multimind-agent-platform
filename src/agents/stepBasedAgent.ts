@@ -229,10 +229,24 @@ Consider the original goal and what we've learned so far.`;
 
     protected async generateAndSendFinalResponse(projectId: string, userPost: ChatPost): Promise<void> {
         const project = this.projects.getProject(projectId);
-        const finalResponse = await this.generateFinalResponse(project);
+        
+        // Get all completed tasks' results
+        const tasks = Object.values(project.tasks);
+        const completedResults = tasks
+            .filter(t => t.complete)
+            .map(t => t.props?.result)
+            .filter(r => r);
+
+        // Execute final response executor
+        const executor = this.stepExecutors.get('final_response');
+        if (!executor) {
+            throw new Error('Final response executor not found');
+        }
+
+        const finalResult = await executor.execute(project.name, 'final_response', projectId, completedResults);
+        const finalResponse = finalResult.response;
 
         const artifactId = crypto.randomUUID();
-        // Validate finalResponse before saving
         if (!finalResponse?.message) {
             throw new Error('Final response message is undefined');
         }
@@ -245,7 +259,7 @@ Consider the original goal and what we've learned so far.`;
                 title: `Summary: ${project.name}`,
                 query: project.name,
                 type: 'summary',
-                steps: Object.values(project.tasks).map(t => t.description)
+                steps: tasks.map(t => t.description)
             }
         });
 
@@ -256,37 +270,6 @@ Consider the original goal and what we've learned so far.`;
         };
 
         await this.reply(userPost, response);
-    }
-
-    private async generateFinalResponse(project: Project<Task>): Promise<ModelResponse> {
-        const schema = {
-            type: "object",
-            properties: {
-                message: {
-                    type: "string",
-                    description: "Final comprehensive response in Markdown format."
-                }
-            },
-            required: ["message"]
-        };
-
-        const systemPrompt = `You are an AI assistant generating a final response.
-Synthesize all the intermediate results into a clear, comprehensive answer that addresses the original goal.
-Include relevant details from all steps while maintaining clarity and coherence.
-You will respond inside of the message key in Markdown format.`;
-
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const context = JSON.stringify({
-            originalGoal: project.name,
-            tasks: Object.values(project.tasks),
-            results: Object.values(project.tasks).map(t => t.description)
-        }, null, 2);
-
-        return await this.generate({
-            message: context,
-            instructions,
-            maxTokens: 16384
-        });
     }
 
 

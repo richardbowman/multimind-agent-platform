@@ -47,6 +47,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         this.registerStepExecutor(new RefutingExecutor(lmStudioService));
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));
         this.registerStepExecutor(new ResearchExecutor(lmStudioService, chromaDBService));
+        this.registerStepExecutor(new FinalResponseExecutor(lmStudioService));
 
     }
 
