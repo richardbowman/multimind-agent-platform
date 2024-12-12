@@ -41,3 +41,4 @@ export const LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY;
 export const LLM_PROVIDER = process.env.LLM_PROVIDER || 'lmstudio';
 export const LLM_WEAK_MODEL = process.env.LLM_WEAK_MODEL;
 export const LLM_HEAVY_MODEL = process.env.LLM_HEAVY_MODEL;
+export const VECTOR_DATABASE_TYPE = process.env.VECTOR_DATABASE_TYPE || 'chroma';
