@@ -49,6 +49,8 @@ Explain the rationale for each query.`;
 
         // Execute searches using ChromaDB
         const searchResults = [];
+        const seenContent = new Set();
+        
         for (const queryObj of queryResult.queries) {
             try {
                 const results = await this.chromaDBService.query(
@@ -56,7 +58,14 @@ Explain the rationale for each query.`;
                     undefined, 
                     5
                 );
-                searchResults.push(...results);
+                
+                // Only add unique results based on content
+                for (const result of results) {
+                    if (!seenContent.has(result.text)) {
+                        seenContent.add(result.text);
+                        searchResults.push(result);
+                    }
+                }
             } catch (error) {
                 Logger.error(`Error querying ChromaDB: ${error}`);
             }
