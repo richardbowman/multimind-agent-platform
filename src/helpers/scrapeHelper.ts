@@ -1,6 +1,8 @@
 import { chromium, devices, Browser } from 'playwright-extra';
 import TurndownService from 'turndown';
 import { load } from 'cheerio';
+import { ArtifactManager } from '../tools/artifactManager';
+import crypto from 'crypto';
 
 // Load the stealth plugin and use defaults (all tricks to hide playwright usage)
 // Note: playwright-extra is compatible with most puppeteer-extra plugins
@@ -12,6 +14,11 @@ chromium.use(stealth())
 
 class ScrapeHelper {
     private browser: Browser | null = null;
+    private artifactManager: ArtifactManager;
+
+    constructor(artifactManager: ArtifactManager) {
+        this.artifactManager = artifactManager;
+    }
 
     async initialize(): Promise<void> {
         if (!this.browser) {
@@ -145,7 +152,21 @@ class ScrapeHelper {
                 }
             });
 
-            return { content: markdownContent, links, title, screenshot };
+            // Save the full webpage content as an artifact
+            const artifactId = crypto.randomUUID();
+            await this.artifactManager.saveArtifact({
+                id: artifactId,
+                type: 'webpage',
+                content: markdownContent,
+                metadata: {
+                    url,
+                    title,
+                    scrapedAt: new Date().toISOString(),
+                    links
+                }
+            });
+
+            return { content: markdownContent, links, title, screenshot, artifactId };
         } catch (error) {
             Logger.error(`Error scraping page "${url}":`, error);
             throw error;
