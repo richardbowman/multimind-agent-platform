@@ -63,7 +63,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             // Determine the color for user and other users
             const messageColor = (USER_ID === post.user_id) ? "{green-fg}" : "{red-fg}";
 
-            chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(blessed.escape(post.message))}\n`);
+            chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(post.message)}\n`);
         }
         screen.render();
 
