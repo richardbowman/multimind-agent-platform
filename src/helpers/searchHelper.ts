@@ -69,8 +69,13 @@ export class DuckDuckGoProvider implements ISearchProvider {
             
             await page.waitForLoadState('networkidle');
 
+            // Log the page content for debugging
+            const content = await page.content();
+            Logger.debug('DuckDuckGo page content:', content);
+
             // Extract search results
             const searchResults = await page.$$('.result');
+            Logger.info(`Found ${searchResults.length} results on page`);
             
             for (const result of searchResults) {
                 try {
@@ -92,7 +97,10 @@ export class DuckDuckGoProvider implements ISearchProvider {
                         }
                     }
                 } catch (error) {
-                    Logger.warn('Error parsing search result:', error);
+                    Logger.warn('Error parsing search result:', {
+                        error,
+                        elementHTML: await result.innerHTML()
+                    });
                 }
             }
 
