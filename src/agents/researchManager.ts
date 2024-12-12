@@ -39,7 +39,6 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
     }
 
     public async initialize() {
-        await this.vectorDB.initializeCollection(CHROMA_COLLECTION);
         await super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@research");
     }
 
