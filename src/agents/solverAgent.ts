@@ -24,6 +24,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
 
         // Register our specialized executors
+        this.registerStepExecutor(new GoalConfirmationExecutor(lmStudioService, userId));
         this.registerStepExecutor(new ThinkingExecutor(lmStudioService));
         this.registerStepExecutor(new RefutingExecutor(lmStudioService));
         this.registerStepExecutor(new ValidationExecutor(lmStudioService));
@@ -56,12 +57,13 @@ COMPLEX PROBLEM SAMPLE (e.g. designing a new product):
 
 Adapt your approach to the complexity of each problem, using more cycles as needed.
 
-AT A MINIMUM, YOU MUST always perform these 5 steps in order:
-1. research (to learn from existing knowledge)
-2. thinking (to develop initial approach)
-3. refuting (to challenge assumptions)
-4. thinking (to refine based on challenges)
-5. validation (to verify the solution)
+AT A MINIMUM, YOU MUST always perform these 6 steps in order:
+1. goal_confirmation (to ensure clear understanding)
+2. research (to learn from existing knowledge)
+3. thinking (to develop initial approach)
+4. refuting (to challenge assumptions)
+5. thinking (to refine based on challenges)
+6. validation (to verify the solution)
 
 In the reasoning field, explain the complexity you see in this goal.`;
     }
