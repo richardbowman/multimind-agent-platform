@@ -52,16 +52,13 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     async query(queryTexts: string[], where: any, nResults: number): Promise<SearchResult[]> {
         if (!this.index) throw new Error("Index not initialized");
 
-        const queryEmbeddings = await this.lmStudioService.getEmbeddings(queryTexts);
-        const results = this.index.query({
-            vector: queryEmbeddings[0],
-            k: nResults,
-            filter: (item) => {
-                for (const [key, value] of Object.entries(where)) {
-                    if (item.metadata[key] !== value) return false;
-                }
-                return true;
+        const embedder = this.lmStudioService.getEmbeddingModel();
+        const queryEmbeddings = await embedder.generate(queryTexts);
+        const results = await this.index.queryItems(queryEmbeddings[0], nResults, (item) => {
+            for (const [key, value] of Object.entries(where)) {
+                if (item.metadata[key] !== value) return false;
             }
+            return true;
         });
 
         return results.map(result => ({
