@@ -1,4 +1,5 @@
-import { StepExecutor, StepResult, AgentState } from '../stepBasedAgent';
+import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorMetadata } from '../decorators/executorDecorator';
 import SearchHelper from '../../helpers/searchHelper';
 import ScrapeHelper from '../../helpers/scrapeHelper';
 import SummaryHelper from '../../helpers/summaryHelper';
@@ -7,6 +8,10 @@ import Logger from '../../helpers/logger';
 import { ArtifactManager } from '../../tools/artifact';
 import crypto from 'crypto';
 
+@ExecutorMetadata({
+    key: 'web_search',
+    description: 'Performs web searches and summarizes results'
+})
 export class WebSearchExecutor implements StepExecutor {
     constructor(
         private searchHelper: SearchHelper,
@@ -16,7 +21,7 @@ export class WebSearchExecutor implements StepExecutor {
         private artifactManager: ArtifactManager
     ) {}
 
-    async execute(goal: string, step: string, state: AgentState): Promise<StepResult> {
+    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const { searchQuery, category } = await this.generateSearchQuery(goal, step);
         const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
         
@@ -133,11 +138,19 @@ Given the following web search results, select 1-3 URLs that are most relevant t
     }
 }
 
+@ExecutorMetadata({
+    key: 'review_existing_knowledge',
+    description: 'Reviews previously gathered knowledge'
+})
 export class ExistingKnowledgeExecutor implements StepExecutor {
-    async execute(goal: string, step: string, state: AgentState): Promise<StepResult> {
+    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         return {
             type: 'existing_knowledge',
-            findings: state.existingArtifacts
+            findings: previousResult?.existingArtifacts || [],
+            response: {
+                message: "Reviewed existing knowledge"
+            },
+            finished: true
         };
     }
 }
