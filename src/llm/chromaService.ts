@@ -8,17 +8,11 @@ import { CHROMADB_URL } from "../helpers/config";
 import Logger from "src/helpers/logger";
 import { ConversationContext } from "../chat/chatClient";
 import { saveToFile } from "src/tools/storeToFile";
+import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
 
 dotenv.config();
 
-export interface SearchResult {
-    id: string;
-    text: string;
-    metadata: Record<string, any>;
-    score: number;
-}
-
-class ChromaDBService extends EventEmitter {
+class ChromaDBService extends EventEmitter implements IVectorDatabase {
     private chromaDB: ChromaClient;
     private collection: Collection | null = null;
     private lmStudioService: LMStudioService;
