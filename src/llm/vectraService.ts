@@ -22,15 +22,17 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     }
 
     async initializeCollection(name: string): Promise<void> {
-        this.collectionName = name;
-        const indexPath = path.join(process.cwd(), 'data', 'vectra', name);
-        this.index = new LocalIndex(indexPath);
-        
-        if (!(await this.index.isIndexCreated())) {
-            await this.index.createIndex();
-        }
-        
-        Logger.info(`Vectra index initialized for collection: ${name} at ${indexPath}`);
+        await this.insertQueue.enqueue(async () => {
+            this.collectionName = name;
+            const indexPath = path.join(process.cwd(), 'data', 'vectra', name);
+            this.index = new LocalIndex(indexPath);
+            
+            if (!(await this.index.isIndexCreated())) {
+                await this.index.createIndex();
+            }
+            
+            Logger.info(`Vectra index initialized for collection: ${name} at ${indexPath}`);
+        });
     }
 
     async addDocuments(collection: { ids: string[], metadatas: any[], documents: string[] }): Promise<void> {
@@ -55,18 +57,20 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     }
 
     async query(queryTexts: string[], where: any, nResults: number): Promise<SearchResult[]> {
-        if (!this.index) throw new Error("Index not initialized");
+        return this.insertQueue.enqueue(async () => {
+            if (!this.index) throw new Error("Index not initialized");
 
-        const embedder = this.lmStudioService.getEmbeddingModel();
-        const queryEmbeddings = await embedder.generate(queryTexts);
-        const results = await this.index.queryItems(queryEmbeddings[0], nResults, where);
+            const embedder = this.lmStudioService.getEmbeddingModel();
+            const queryEmbeddings = await embedder.generate(queryTexts);
+            const results = await this.index!.queryItems(queryEmbeddings[0], nResults, where);
 
-        return results.map(result => ({
-            id: result.item.id,
-            metadata: { ...result.item.metadata, text: undefined },
-            text: result.item.metadata.text,
-            score: result.score
-        }));
+            return results.map(result => ({
+                id: result.item.id,
+                metadata: { ...result.item.metadata, text: undefined },
+                text: result.item.metadata.text,
+                score: result.score
+            }));
+        });
     }
 
     computeHash(content: string): string {
@@ -131,13 +135,17 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     }
 
     async clearCollection(): Promise<void> {
-        this.index = new LocalIndex();
-        Logger.info("Cleared Vectra index");
+        await this.insertQueue.enqueue(async () => {
+            this.index = new LocalIndex();
+            Logger.info("Cleared Vectra index");
+        });
     }
 
     async reindexCollection(name: string): Promise<void> {
-        await this.clearCollection();
-        await this.initializeCollection(name);
+        await this.insertQueue.enqueue(async () => {
+            await this.clearCollection();
+            await this.initializeCollection(name);
+        });
     }
 
     async getTokenCount(content: string): Promise<number> {
