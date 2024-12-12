@@ -61,7 +61,7 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
         // Assign tasks to researchers
         await this.assignResearcherTasks(researchProject.id);
 
-        const post = await this.getMessage(parentProject.originalPostId);
+        const post = await this.getMessage(parentProject.metadata.originalPostId);
 
         // Post the task list to the channel
         const projectPost = await this.replyWithProjectId(task.type as ResearchActivityType, researchProject.id, PROJECTS_CHANNEL_ID, post);

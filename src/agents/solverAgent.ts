@@ -13,6 +13,7 @@ import { ResearchExecutor } from './executors/ResearchExecutor';
 import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
 import { DefaultPlanner } from './planners/DefaultPlanner';
 import { ModelHelpers } from 'src/llm/helpers';
+import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 
 export class SolverAgent extends StepBasedAgent<any, any> {
     constructor(

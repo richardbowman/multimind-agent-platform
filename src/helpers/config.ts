@@ -1,9 +1,9 @@
 // config.ts
 import dotenv from 'dotenv';
-// Load defaults first, then override with local configs
+
 dotenv.config({ path: 'env.defaults' });
-dotenv.config({ path: '.env.local' });
-dotenv.config({ path: '.env' });
+dotenv.config({ path: '.env', override: true });
+dotenv.config({ path: '.env.local', override: true });
 
 export const WEB_RESEARCH_CHANNEL_ID = process.env.WEB_RESEARCH_CHANNEL_ID!;
 export const RESEARCHER_TOKEN = process.env.RESEARCHER_TOKEN!;

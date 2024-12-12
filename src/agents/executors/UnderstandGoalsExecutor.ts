@@ -5,7 +5,7 @@ const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schema
 import crypto from 'crypto';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
-import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
 import Logger from 'src/helpers/logger';
 import { IntakeQuestionsResponse } from '../schemas/IntakeQuestionsResponse';

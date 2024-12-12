@@ -13,6 +13,7 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
     constructor(filePath: string) {
         super();
         this.filePath = filePath;
+        Logger.info("Starting task manager (should not happen more than once)");
     }
 
     async addTask(project: Project<Task>, task: Task) : Promise<Task> {

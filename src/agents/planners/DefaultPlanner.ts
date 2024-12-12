@@ -8,15 +8,16 @@ import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioServi
 import { TaskManager } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import crypto from 'crypto';
+import { ModelHelpers } from 'src/llm/helpers';
+import { Agent } from 'http';
 
 export class DefaultPlanner implements Planner {
     constructor(
         private lmStudioService: LMStudioService,
         private projects: TaskManager,
         private userId: string,
-        private modelHelpers: { getPurpose: () => string },
-        private stepExecutors: Map<string, any> = new Map(),
-        private finalInstructions: string = ""
+        private modelHelpers: ModelHelpers,
+        private stepExecutors: Map<string, any> = new Map()
     ) {}
 
     public async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
@@ -73,9 +74,9 @@ ${stepDescriptions}
 TASK GOAL: If the user's high-level goal is not solved, your job is to create new steps to achieve the goal if they are missing, and reorder steps if needed to change priority.
 Return a steps list in the order to perform.
 
-${this.finalInstructions}`;
+${this.modelHelpers.getFinalInstructions()}`;
 
-        const response: PlanStepsResponse = await this.lmStudioService.generate({
+        const response: PlanStepsResponse = await this.modelHelpers.generate({
             ...handlerParams,
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });

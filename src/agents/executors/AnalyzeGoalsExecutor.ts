@@ -6,7 +6,7 @@ import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import crypto from 'crypto';
 import { Task } from '../../tools/taskManager';
-import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
 
 @StepExecutorDecorator('analyze_goals', 'Break down and analyze business goals into actionable tasks')

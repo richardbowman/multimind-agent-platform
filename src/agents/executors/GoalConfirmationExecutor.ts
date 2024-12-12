@@ -1,7 +1,9 @@
 import { StepExecutor } from "../stepBasedAgent";
 import LMStudioService, { StructuredOutputPrompt } from "../../llm/lmstudioService";
 import { ModelHelpers } from "../../llm/helpers";
+import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 
+@StepExecutorDecorator('goal_confirmation', 'Confirm the goals of the user.')
 export class GoalConfirmationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 

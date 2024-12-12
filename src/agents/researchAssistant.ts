@@ -4,7 +4,7 @@ import { ChatClient, ChatPost } from '../chat/chatClient';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
 import { TaskManager } from '../tools/taskManager';
 import { Project, Task } from '../tools/taskManager';
-import { WebSearchExecutor, ExistingKnowledgeExecutor } from './research/executors';
+import { WebSearchExecutor } from './research/WebResearchExecutor';
 import SearchHelper from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
 import SummaryHelper from '../helpers/summaryHelper';
@@ -12,6 +12,10 @@ import Logger from '../helpers/logger';
 import { CHROMA_COLLECTION, MAX_SEARCHES, RESEARCHER_TOKEN, WEB_RESEARCH_CHANNEL_ID } from '../helpers/config';
 import { Artifact } from 'src/tools/artifact';
 import { ModelResponse, RequestArtifacts, CreateArtifact } from './schemas/ModelResponse';
+import ChromaDBService from 'src/llm/chromaService';
+import { ResearchExecutor } from './executors/ResearchExecutor';
+import { ValidationExecutor } from './executors/ValidationExecutor';
+import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 
 
 interface ResearchState {
@@ -60,9 +64,12 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
         userId: string, 
         chatClient: ChatClient, 
         lmStudioService: LMStudioService, 
-        projects: TaskManager
+        projects: TaskManager,
+        chromaDBService: ChromaDBService
     ) {
-        super(chatClient, lmStudioService, userId, projects);
+        super(chatClient, lmStudioService, userId, projects, chromaDBService);
+        this.modelHelpers.setPurpose("You are a research assisant who thoroughly summarizes web results.");
+        this.modelHelpers.setFinalInstructions("PROPER PROCESS: do a 'check-knowledge' first, then a 'validation' step to see if you can meet the goals. If not, then add 'web_search' and 'validation' as needed until you get the answer. Make sure your final step is a `final_response`");
 
         // Register step executors
         this.registerStepExecutor(new WebSearchExecutor(
@@ -70,9 +77,14 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
             this.scrapeHelper,
             this.summaryHelper,
             lmStudioService,
-            this.artifactManager
+            this.artifactManager,
+            this.modelHelpers
         ));
-        this.registerStepExecutor(new ExistingKnowledgeExecutor());
+        this.registerStepExecutor(new ValidationExecutor(lmStudioService));
+        this.registerStepExecutor(new ResearchExecutor(
+            lmStudioService, chromaDBService
+        ));
+        this.registerStepExecutor(new FinalResponseExecutor(this.modelHelpers));
     }
     
     public async initialize(): Promise<void> {
@@ -94,123 +106,56 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
         Logger.info(`Project ${project.id} completed`);
     }
 
-    @HandleActivity("response", "Handle user responses to questions", ResponseType.RESPONSE)
-    private async handleResponse(params: HandlerParams): Promise<void> {
-        const { userPost, projects } = params;
-        const projectId = userPost.props["project-id"];
-        
-        if (!projectId || !projects?.length) {
-            await this.reply(userPost, { 
-                message: "I couldn't find our previous conversation. Could you start over with your question?" 
-            });
-            return;
-        }
+    @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
+    protected async handleConversation(params: HandlerParams): Promise<void> {
+        const { projectId } = await this.addNewProject({
+            projectName: `Kickoff onboarding based on incoming message: ${params.userPost.message}`,
+            tasks: [],
+            metadata: {
+                originalPostId: params.userPost.id
+            }
+        });
+        const project = await this.projects.getProject(projectId);
 
-        const project = projects[0];
-        const currentTask = Object.values(project.tasks)
-            .find(t => t.inProgress);
-
-        if (!currentTask) {
-            await this.reply(userPost, { 
-                message: "I wasn't expecting a response right now. What would you like to know?" 
-            });
-            return;
-        }
-
-        // Plan next steps based on user input
+        params.projects = [...params.projects || [], project]
         const plan = await this.planSteps(params);
-        await this.executeNextStep(projectId, userPost);
+        await this.executeNextStep(projectId, params.userPost);
     }
 
-    @HandleActivity("followup", "Answer follow-up questions about previous search results", ResponseType.RESPONSE)
-    private async handleFollowup(params: HandlerParams): Promise<void> {
-        const { userPost, rootPost } = params;
-        const question = userPost.message;
-        const rootId = params.rootPost;
+    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
+    protected async handleThreadResponse(params: HandlerParams): Promise<void> {
+        const project = params.projects?.[0];
 
-        if (!rootId) {
-            await this.reply(userPost, { message: "This command must be used as a reply to an existing search result." });
-            return;
-        }
-
-        // Find the original search result artifact
-        const relevantArtifacts = params.artifacts?.filter(a => a.type === "summary")||[];
-
-        if (relevantArtifacts.length === 0) {
-            await this.reply(userPost, { message: "Could not find the original search results to answer your question." });
-            return;
-        }
-
-        // Use the most recent relevant artifact
-        const artifact = relevantArtifacts[0];
-        const pageSummaries = artifact.metadata?.steps || [];
-
-        // Plan research for the follow-up
-        const researchPlan = await this.planSteps(question);
-        
-        // Create a research state for the follow-up
-        const stateId = userPost.id;
-        const newState: ResearchState = {
-            originalGoal: question,
-            currentStep: researchPlan.steps[0],
-            intermediateResults: [],
-            needsUserInput: researchPlan.requiresUserInput,
-            userQuestion: question,
-            existingArtifacts: [{
-                id: artifact.id,
-                title: artifact.metadata?.title,
-                content: artifact.content.toString(),
-                underlyingData: pageSummaries
-            }]
-        };
-
-        this.activeStates.set(stateId, newState);
-
-        try {
-            await this.executeResearchStep(newState, userPost);
-        } catch (error) {
-            Logger.error("Error in follow-up:", error);
-            await this.reply(userPost, { message: "Sorry, I encountered an error while processing your follow-up question." });
-        }
-    }
-
-    @HandleActivity("process-research-request", "Process research request list", ResponseType.CHANNEL)
-    private async handleAssistantMessage(params: HandlerParams): Promise<void> {
-        const { userPost } = params;
-        const query = userPost.message;
-
-        try {
-            // Start new research project
+        // If no active project, treat it as a new conversation
+        if (!project) {
+            Logger.info("No active project found, starting new conversation");
             const { projectId } = await this.addNewProject({
-                projectName: query,
-                tasks: []
+                projectName: params.userPost.message,
+                tasks: [],
+                metadata: {
+                    originalPostId: params.userPost.id
+                }
             });
+            const project = await this.projects.getProject(projectId);
+            params.projects = [...params.projects || [], project]
 
-            // Plan research steps
-            const researchPlan = await this.planSteps(query);
-            
-            // Store any existing artifacts in project props
-            if (researchPlan.existingArtifacts) {
-                const project = this.projects.getProject(projectId);
-                project.props = {
-                    ...project.props,
-                    existingArtifacts: researchPlan.existingArtifacts
-                };
-            }
-
-            if (researchPlan.requiresUserInput) {
-                await this.reply(userPost, { 
-                    message: `To help me research this better, could you please answer: ${researchPlan.userQuestion}`,
-                    projectId: projectId
-                });
-                return;
-            }
-
-            await this.executeResearchStep(projectId, researchPlan.steps[0], userPost);
-        } catch (error) {
-            Logger.error("Error in research request:", error);
-            await this.reply(userPost, { message: "Sorry, I encountered an error while processing this research request." });
+            const plan = await this.planSteps(params);
+            await this.executeNextStep(projectId, params.userPost);
+            return;
         }
+
+        // Handle response to existing project
+        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
+        if (!currentTask) {
+            Logger.info("No active task, treating as new query in existing project");
+            const plan = await this.planSteps(params);
+            await this.executeNextStep(project.id, params.userPost);
+            return;
+        }
+
+        // Handle response to active task
+        const plan = await this.planSteps(params);
+        await this.executeNextStep(project.id, params.userPost);
     }
 
     private formatTaskMessage(taskId: string, message: string): string {
@@ -320,218 +265,124 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
         }
     }
 
-    private async checkExistingKnowledge(goal: string): Promise<{
-        hasRelevantInfo: boolean;
-        existingArtifacts: Artifact[];
-        needsAdditionalResearch: boolean;
-        relevantFindings?: string;
-    }> {
-        const schema = {
-            type: "object",
-            properties: {
-                hasRelevantInfo: {
-                    type: "boolean",
-                    description: "Whether relevant information was found in existing artifacts"
-                },
-                needsAdditionalResearch: {
-                    type: "boolean",
-                    description: "Whether additional research is needed beyond existing information"
-                },
-                relevantFindings: {
-                    type: "string",
-                    description: "Summary of relevant information found in existing artifacts"
-                },
-                relevantArtifactIds: {
-                    type: "array",
-                    description: "The id of each relevant artifact found in the query"
-                }
-            },
-            required: ["hasRelevantInfo", "needsAdditionalResearch"]
-        };
+//     private async checkExistingKnowledge(goal: string): Promise<{
+//         hasRelevantInfo: boolean;
+//         existingArtifacts: Artifact[];
+//         needsAdditionalResearch: boolean;
+//         relevantFindings?: string;
+//     }> {
+//         const schema = {
+//             type: "object",
+//             properties: {
+//                 hasRelevantInfo: {
+//                     type: "boolean",
+//                     description: "Whether relevant information was found in existing artifacts"
+//                 },
+//                 needsAdditionalResearch: {
+//                     type: "boolean",
+//                     description: "Whether additional research is needed beyond existing information"
+//                 },
+//                 relevantFindings: {
+//                     type: "string",
+//                     description: "Summary of relevant information found in existing artifacts"
+//                 },
+//                 relevantArtifactIds: {
+//                     type: "array",
+//                     description: "The id of each relevant artifact found in the query"
+//                 }
+//             },
+//             required: ["hasRelevantInfo", "needsAdditionalResearch"]
+//         };
 
-        // Query the vector store for relevant summaries
-        const results = await this.chromaDBService.query([goal], { "type": "summary" }, 5);
+//         // Query the vector store for relevant summaries
+//         const results = await this.chromaDBService.query([goal], { "type": "summary" }, 5);
         
-        if (results.length === 0) {
-            return {
-                hasRelevantInfo: false,
-                existingArtifacts: [],
-                needsAdditionalResearch: true
-            };
-        }
+//         if (results.length === 0) {
+//             return {
+//                 hasRelevantInfo: false,
+//                 existingArtifacts: [],
+//                 needsAdditionalResearch: true
+//             };
+//         }
 
-        // Get the full artifacts that contain these chunks
-        const artifacts = await this.artifactManager.getArtifacts({ 
-            type: 'summary'
-        });
+//         // Get the full artifacts that contain these chunks
+//         const artifacts = await this.artifactManager.getArtifacts({ 
+//             type: 'summary'
+//         });
         
-        // Filter to artifacts that contain the matched chunks
-        const relevantArtifacts = artifacts.filter(artifact => 
-            results.some(r => 
-                r.metadata.artifactId === artifact.id
-            )
-        );
+//         // Filter to artifacts that contain the matched chunks
+//         const relevantArtifacts = artifacts.filter(artifact => 
+//             results.some(r => 
+//                 r.metadata.artifactId === artifact.id
+//             )
+//         );
 
-        const artifactsContext = relevantArtifacts.map(a => 
-`ID: ${a.id}
-Title: ${a.metadata?.title}
-Content: ${a.content}
-Query: ${a.metadata?.query}
----`).join('\n');
+//         const artifactsContext = relevantArtifacts.map(a => 
+// `ID: ${a.id}
+// Title: ${a.metadata?.title}
+// Content: ${a.content}
+// Query: ${a.metadata?.query}
+// ---`).join('\n');
 
-        const systemPrompt = `You are a research assistant analyzing existing knowledge.
-Review these previous research summaries and determine if they contain relevant information for the current goal.
-Assess if additional research is needed or if existing information is sufficient.
+//         const systemPrompt = `You are a research assistant analyzing existing knowledge.
+// Review these previous research summaries and determine if they contain relevant information for the current goal.
+// Assess if additional research is needed or if existing information is sufficient.
 
-Existing Knowledge:\n${artifactsContext}`;
+// Existing Knowledge:\n${artifactsContext}`;
 
 
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const response = await this.generate({
-            message: `Goal: ${goal}`,
-            instructions
-        });
+//         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+//         const response = await this.generate({
+//             message: `Goal: ${goal}`,
+//             instructions
+//         });
 
-        const selectedArtifacts = response.relevantArtifactIds ? artifacts.filter(a => response.relevantArtifactIds.includes(a.id)) : [];
+//         const selectedArtifacts = response.relevantArtifactIds ? artifacts.filter(a => response.relevantArtifactIds.includes(a.id)) : [];
 
-        return {
-            hasRelevantInfo: response.hasRelevantInfo,
-            existingArtifacts: selectedArtifacts,
-            needsAdditionalResearch: response.needsAdditionalResearch,
-            relevantFindings: response.relevantFindings
-        };
-    }
+//         return {
+//             hasRelevantInfo: response.hasRelevantInfo,
+//             existingArtifacts: selectedArtifacts,
+//             needsAdditionalResearch: response.needsAdditionalResearch,
+//             relevantFindings: response.relevantFindings
+//         };
+//     }
 
-    protected async planSteps(goal: string) {
-        // Check existing knowledge first
-        const knowledgeCheck = await this.checkExistingKnowledge(goal);
-
-        if (knowledgeCheck.hasRelevantInfo && !knowledgeCheck.needsAdditionalResearch) {
-            return {
-                steps: ["review_existing_knowledge"],
-                requiresUserInput: false,
-                existingArtifacts: knowledgeCheck.existingArtifacts.map(a => ({
-                    id: a.id,
-                    content: a.content.toString(),
-                    title: a.metadata?.title,
-                    underlyingData: a.metadata?.steps
-                }))
-            };
-        }
-
-        const schema = {
-            type: "object",
-            properties: {
-                steps: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "List of research steps needed"
-                },
-                requiresUserInput: {
-                    type: "boolean",
-                    description: "Whether user input is needed before proceeding"
-                },
-                userQuestion: {
-                    type: "string",
-                    description: "Question to ask the user if input is needed"
-                }
-            },
-            required: ["steps"]
-        };
-
-        const response = await this.generate({
-            message: goal,
-            instructions: new StructuredOutputPrompt(schema, 
-                `You are a research assistant planning how to investigate a topic.
-${knowledgeCheck.hasRelevantInfo ? 'We have some relevant existing knowledge but need additional research.' : 'We need to conduct new research.'}
-Break down the research goal into specific steps. Each step should be a clear research task.
-If the goal seems unclear or too broad, set requiresUserInput to true and ask for clarification.
-Otherwise, plan concrete research steps that will help achieve the goal.`)
-        });
-
-        if (knowledgeCheck.hasRelevantInfo) {
-            response.steps.unshift("review_existing_knowledge");
-            response.existingArtifacts = knowledgeCheck.existingArtifacts.map(a => ({
-                id: a.id,
-                content: a.content.toString(),
-                title: a.metadata?.title,
-                underlyingData: a.metadata?.steps
-            }));
-        }
-
-        if (!knowledgeCheck.hasRelevantInfo && !response.requiresUserInput && (!response.steps || response.steps.length === 0)) {
-            response.steps = ["web_search"];
-        }
-
-        return response;
-    }
-
-    private async processResearchStep(step: string, originalGoal: string): Promise<any> {
-        const { searchQuery, category } = await this.generateSearchQuery(originalGoal, step);
-        const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
+    // private async processResearchStep(step: string, originalGoal: string): Promise<any> {
+    //     const { searchQuery, category } = await this.generateSearchQuery(originalGoal, step);
+    //     const searchResults = await this.searchHelper.searchOnSearXNG(searchQuery, category);
         
-        if (searchResults.length === 0) {
-            return { type: 'no_results' };
-        }
+    //     if (searchResults.length === 0) {
+    //         return { type: 'no_results' };
+    //     }
 
-        const selectedUrls = await this.selectRelevantSearchResults(step, originalGoal, searchResults);
-        if (selectedUrls.length === 0) {
-            return { type: 'no_relevant_results' };
-        }
+    //     const selectedUrls = await this.selectRelevantSearchResults(step, originalGoal, searchResults);
+    //     if (selectedUrls.length === 0) {
+    //         return { type: 'no_relevant_results' };
+    //     }
 
-        const pageSummaries: string[] = [];
-        for (const url of selectedUrls.slice(0, 2)) {
-            try {
-                const { content, title } = await this.scrapeHelper.scrapePage(url);
-                const summary = await this.summaryHelper.summarizeContent(step, `Page Title: ${title}\nURL: ${url}\n\n${content}`, this.lmStudioService);
-                if (summary !== "NOT RELEVANT") {
-                    pageSummaries.push(summary);
-                }
-            } catch (error) {
-                Logger.error(`Error processing page ${url}`, error);
-            }
-        }
+    //     const pageSummaries: string[] = [];
+    //     for (const url of selectedUrls.slice(0, 2)) {
+    //         try {
+    //             const { content, title } = await this.scrapeHelper.scrapePage(url);
+    //             const summary = await this.summaryHelper.summarizeContent(step, `Page Title: ${title}\nURL: ${url}\n\n${content}`, this.lmStudioService);
+    //             if (summary !== "NOT RELEVANT") {
+    //                 pageSummaries.push(summary);
+    //             }
+    //         } catch (error) {
+    //             Logger.error(`Error processing page ${url}`, error);
+    //         }
+    //     }
 
-        return {
-            type: 'step_results',
-            summaries: pageSummaries,
-            query: searchQuery,
-            urls: selectedUrls
-        };
-    }
+    //     return {
+    //         type: 'step_results',
+    //         summaries: pageSummaries,
+    //         query: searchQuery,
+    //         urls: selectedUrls
+    //     };
+    // }
 
 
-    private async generateFinalResponse(state: ResearchState): Promise<ModelResponse> {
-        const schema = {
-            type: "object",
-            properties: {
-                message: {
-                    type: "string",
-                    description: "Final comprehensive response in Markdown format."
-                }
-            },
-            required: ["message"]
-        };
-
-        const systemPrompt = `You are a research assistant generating a final response.
-Synthesize all the intermediate results into a clear, comprehensive answer that addresses the original goal.
-Include relevant details from all research steps while maintaining clarity and coherence.
-You will respond inside of the message key in Markdown format. `;
-
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const context = JSON.stringify({
-            originalGoal: state.originalGoal,
-            results: state.intermediateResults
-        }, null, 2);
-
-        const response = await this.generate({
-            message: context, 
-            instructions,
-            maxTokens: 16384
-        });
-
-        return response;
-    }
+    
 
     private async generateSearchQuery(goal: string, task: string): Promise<{ searchQuery: string, category: string}> {
         const schema = {
@@ -745,75 +596,6 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 
     async cleanup(): Promise<void> {
         await this.scrapeHelper.cleanup();
-    }
-
-    private async executeResearchStep(projectId: string, currentStep: string, userPost: ChatPost): Promise<void> {
-        try {
-            const project = this.projects.getProject(projectId);
-            if (!project) {
-                throw new Error(`Project ${projectId} not found`);
-            }
-
-            let stepResult;
-            
-            // Handle special knowledge-base steps
-            if (currentStep === "review_existing_knowledge") {
-                const existingArtifacts = project.props?.existingArtifacts || [];
-                stepResult = {
-                    type: 'existing_knowledge',
-                    findings: existingArtifacts
-                };
-            } else if (currentStep === "synthesize_existing_knowledge") {
-                // Generate response purely from existing knowledge
-                const finalResponse = await this.generateFinalResponse(project);
-                
-                const response: RequestArtifacts = {
-                    message: `Based on our existing knowledge:\n\n${finalResponse.message}\n\n---\nYou can ask follow-up questions about these results by replying with "@researchteam followup <your question>"`,
-                    artifactIds: project.props?.existingArtifacts?.map(a => a.id)
-                };
-                await this.reply(userPost, response);
-                return;
-            } else {
-                // Execute normal research step
-                stepResult = await this.processResearchStep(currentStep, project.name);
-            }
-
-            // Create a task for this step result
-            const task = {
-                id: crypto.randomUUID(),
-                description: `${currentStep}: ${stepResult.type}`,
-                creator: this.userId,
-                projectId: projectId,
-                type: currentStep,
-                complete: false
-            };
-            
-            await this.projects.addTask(project, task);
-            await this.projects.markTaskInProgress(task);
-
-            // Determine next steps
-            const nextAction = await this.determineNextAction(projectId, stepResult);
-            
-            if (nextAction.needsUserInput && nextAction.question) {
-                await this.reply(userPost, { 
-                    message: nextAction.question,
-                    projectId: projectId
-                });
-                return;
-            }
-
-            if (nextAction.isComplete) {
-                await this.generateAndSendFinalResponse(projectId, userPost);
-                return;
-            }
-
-            // Continue with next step
-            await this.executeResearchStep(projectId, nextAction.nextStep!, userPost);
-
-        } catch (error) {
-            Logger.error("Error in research step:", error);
-            await this.reply(userPost, { message: "Sorry, I encountered an error while researching your question."} );
-        }
     }
 }
 

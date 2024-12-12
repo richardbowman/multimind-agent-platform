@@ -55,34 +55,26 @@ process.on("exit", async () => {
 });
 
 // Create planners for each agent
-const researcherPlanner = new DefaultPlanner(llmService, tasks, RESEARCHER_USER_ID, { getPurpose: () => "Research Assistant" });
-const researchManagerPlanner = new DefaultPlanner(llmService, tasks, RESEARCH_MANAGER_USER_ID, { getPurpose: () => "Research Manager" });
-const contentPlanner = new DefaultPlanner(llmService, tasks, CONTENT_MANAGER_USER_ID, { getPurpose: () => "Content Manager" });
-const writerPlanner = new DefaultPlanner(llmService, tasks, CONTENT_WRITER_USER_ID, { getPurpose: () => "Content Writer" });
-const pmPlanner = new DefaultPlanner(llmService, tasks, PROJECT_MANAGER_USER_ID, { getPurpose: () => "Project Manager" });
-const onboardingPlanner = new DefaultPlanner(llmService, tasks, ONBOARDING_CONSULTANT_USER_ID, { getPurpose: () => "Onboarding Consultant" });
-const solverPlanner = new DefaultPlanner(llmService, tasks, SOLVER_AGENT_USER_ID, { getPurpose: () => "Problem Solver" });
-
 const researchClient = new InMemoryTestClient(RESEARCHER_USER_ID, "test", storage);
-export const researcher = new ResearchAssistant(RESEARCH_MANAGER_TOKEN_ID, RESEARCHER_USER_ID, researchClient, llmService, tasks, researcherPlanner);
+export const researcher = new ResearchAssistant(RESEARCH_MANAGER_TOKEN_ID, RESEARCHER_USER_ID, researchClient, llmService, tasks, chromaService);
 await researcher.initialize();
 
 const researchManagerClient = new InMemoryTestClient(RESEARCH_MANAGER_USER_ID, "test", storage);
-const researchManager = new ResearchManager(RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID, researchManagerClient, llmService, tasks, researchManagerPlanner);
+const researchManager = new ResearchManager(RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID, researchManagerClient, llmService, tasks);
 await researchManager.initialize();
 
 const contentClient = new InMemoryTestClient(CONTENT_MANAGER_USER_ID, "test", storage);
-const contentAssistant = new ContentManager(contentClient, llmService, CONTENT_MANAGER_USER_ID, tasks, chromaService, contentPlanner);
+const contentAssistant = new ContentManager(contentClient, llmService, CONTENT_MANAGER_USER_ID, tasks, chromaService);
 await contentAssistant.initialize();
 
 const writerClient = new InMemoryTestClient(CONTENT_WRITER_USER_ID, "test", storage);
-const writerAssistant = new ContentWriter(writerClient, llmService, tasks, chromaService, writerPlanner);
+const writerAssistant = new ContentWriter(writerClient, llmService, tasks, chromaService);
 
 const pmClient = new InMemoryTestClient(PROJECT_MANAGER_USER_ID, "test", storage);
-const pmAssistant = new ProjectManager(PROJECT_MANAGER_USER_ID, "@pm", pmClient, llmService, chromaService, tasks, pmPlanner);
+const pmAssistant = new ProjectManager(PROJECT_MANAGER_USER_ID, "@pm", pmClient, llmService, chromaService, tasks);
 
 const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
-const onboardingAssistant = new GoalBasedOnboardingConsultant(onboardingClient, llmService, ONBOARDING_CONSULTANT_USER_ID, tasks, chromaService, onboardingPlanner);
+const onboardingAssistant = new GoalBasedOnboardingConsultant(onboardingClient, llmService, ONBOARDING_CONSULTANT_USER_ID, tasks, chromaService);
 await onboardingAssistant.initialize();
 
 // const factCheckerClient = new InMemoryTestClient(FACT_CHECKER_USER_ID, "test", storage);
@@ -91,7 +83,7 @@ await onboardingAssistant.initialize();
 
 // Initialize Solver Agent
 const solverClient = new InMemoryTestClient(SOLVER_AGENT_USER_ID, "test", storage);
-const solverAgent = new SolverAgent(solverClient, llmService, SOLVER_AGENT_USER_ID, tasks, chromaService, solverPlanner);
+const solverAgent = new SolverAgent(solverClient, llmService, SOLVER_AGENT_USER_ID, tasks, chromaService);
 await solverAgent.initialize();
 
 setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);

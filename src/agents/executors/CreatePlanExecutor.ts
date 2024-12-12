@@ -9,7 +9,7 @@ import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject, QuestionAnswer } from '../goalBasedOnboardingConsultant';
-import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
 import { CreateArtifact } from '../schemas/ModelResponse';
 

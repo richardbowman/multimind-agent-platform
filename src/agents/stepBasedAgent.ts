@@ -12,6 +12,7 @@ import Logger from '../helpers/logger';
 import { CreateArtifact, ModelResponse } from './schemas/ModelResponse';
 import ChromaDBService from 'src/llm/chromaService';
 import { PlanStepsResponse } from './schemas/PlanStepsResponse';
+import { InMemoryPost } from 'src/chat/inMemoryChatClient';
 
 export interface StepResult {
     type?: string;
@@ -134,9 +135,13 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                         `Missing aspects to address:\n` +
                         `${stepResult.missingAspects.map((aspect: string) => `- ${aspect}`).join('\n')}`;
 
+                    //TODO: hacky, we don't really post this message
                     await this.planSteps({
                         projects: [project], 
-                        message: planningPrompt
+                        userPost: InMemoryPost.fromLoad({
+                            ...userPost,
+                            message: planningPrompt
+                        })
                     });
                 } else {
                     // If validation passed, mark validation step as complete

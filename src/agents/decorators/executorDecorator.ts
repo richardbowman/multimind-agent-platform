@@ -7,7 +7,7 @@ export interface ExecutorMetadata {
     description: string;
 }
 
-export function StepExecutor(key: string, description: string) {
+export function StepExecutorDecorator(key: string, description: string) {
     return function (target: Function) {
         Reflect.defineMetadata(EXECUTOR_METADATA_KEY, { key, description }, target);
         return target;

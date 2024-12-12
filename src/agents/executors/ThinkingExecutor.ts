@@ -3,7 +3,7 @@ import { ModelResponse } from '../schemas/ModelResponse';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
-import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 
 @StepExecutorDecorator('thinking', 'Develop ideas and reasoning through careful analysis and deep thinking')
 export class ThinkingExecutor implements StepExecutor {

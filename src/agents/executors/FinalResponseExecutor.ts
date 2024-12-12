@@ -23,7 +23,7 @@ export class FinalResponseExecutor implements StepExecutor {
 
         const systemPrompt = `You are an AI assistant generating a final response.
 Synthesize all the intermediate results into a clear, comprehensive answer that addresses the original goal.
-Include relevant details from all steps while maintaining clarity and coherence.
+Include relevant details from all steps while maintaining clarity and coherence. Include your sources.
 You will respond inside of the message key in Markdown format.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
@@ -41,6 +41,7 @@ You will respond inside of the message key in Markdown format.`;
         return {
             type: 'final_response',
             finished: true,
+            needsUserInput: true,
             response
         };
     }

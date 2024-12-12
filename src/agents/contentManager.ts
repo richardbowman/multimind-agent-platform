@@ -46,11 +46,11 @@ export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> 
 
         this.modelHelpers.setPurpose(`You are planning how to create high-quality content.
 Break down the content creation into steps of research, outlining, writing and editing.
-Use 'research' steps to gather information, 'outline' steps to structure the content,
+Use 'check-knowledge' steps to gather information, 'outline' steps to structure the content,
 'writing' steps to develop sections, and 'editing' steps to improve quality.
 
 IMPORTANT: Always follow this pattern:
-1. Start with a 'research' step to gather relevant information
+1. Start with a 'check-knowledge' step to gather relevant information
 2. Follow with an 'outline' step to structure the content
 3. Then you can 'assign-writers' to have the writers create the sections
 4. End with 'editing' steps to improve the final content`);

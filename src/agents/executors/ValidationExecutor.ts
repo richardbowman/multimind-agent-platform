@@ -1,7 +1,7 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
-import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
 
 @StepExecutorDecorator('validation', 'Verify the solution is complete and addresses all aspects of the problem')
 export class ValidationExecutor implements StepExecutor {

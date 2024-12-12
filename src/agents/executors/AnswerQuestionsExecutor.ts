@@ -6,7 +6,7 @@ const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schema
 import { AnswerAnalysisResponse } from '../schemas/AnswerAnalysisResponse';
 import { TaskManager } from '../../tools/taskManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
-import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
 
 @StepExecutorDecorator('process-answers', 'Analyze and process user responses to intake questions')

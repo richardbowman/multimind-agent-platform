@@ -3,7 +3,7 @@ import { ModelResponse } from '../schemas/ModelResponse';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
-import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 
 @StepExecutorDecorator('refuting', 'Challenge assumptions and identify potential flaws in the current reasoning')
 export class RefutingExecutor implements StepExecutor {
@@ -37,7 +37,7 @@ export class RefutingExecutor implements StepExecutor {
         };
 
         const prompt = `You are a critical thinker tasked with finding potential flaws in an argument or conclusion.
-Consider possible counterarguments and evaluate their validity.
+Think deeply about the problem and explain detailed reasoning in the response. Consider possible counterarguments and evaluate their validity.
 Provide a balanced analysis and final verdict.
 
 ${previousResult ? `Specifically analyze these previous conclusions:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;

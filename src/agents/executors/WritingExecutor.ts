@@ -2,7 +2,7 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
-import { StepExecutor as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Project, Task, TaskManager } from 'src/tools/taskManager';
 import { CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID } from 'src/helpers/config';
 import Logger from 'src/helpers/logger';

@@ -1,6 +1,8 @@
 import { ILLMService } from "./ILLMService";
 import LMStudioService from "./lmstudioService";
 import { BedrockService } from "./BedrockService";
+import { config } from "dotenv";
+import { LLM_HEAVY_MODEL, LLM_WEAK_MODEL } from "src/helpers/config";
 
 export enum LLMProvider {
     LMSTUDIO = "lmstudio",
@@ -14,7 +16,9 @@ export class LLMServiceFactory {
                 return new LMStudioService();
             case LLMProvider.BEDROCK:
                 const lmStudioService = new LMStudioService();
-                return new BedrockService("anthropic.claude-3-5-haiku-20241022-v1:0", lmStudioService);
+                const modelId = LLM_WEAK_MODEL;
+                if (!modelId) throw new Error("LM_HEAVY_MODEL not found in environment.");
+                return new BedrockService(LLM_WEAK_MODEL, lmStudioService);
             default:
                 throw new Error(`Unsupported LLM provider: ${provider}`);
         }
