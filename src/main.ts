@@ -1,5 +1,5 @@
 import { ResearchManager } from "./agents/researchManager";
-import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, RESEARCH_MANAGER_TOKEN_ID as RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID as RESEARCH_MANAGER_USER_ID, PROJECT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID, ONBOARDING_CHANNEL_ID, ONBOARDING_CONSULTANT_USER_ID, CONTENT_CREATION_CHANNEL_ID, FACT_CHECK_CHANNEL_ID, FACT_CHECKER_USER_ID, SOLVER_AGENT_USER_ID, SOLVER_AGENT_TOKEN, SOLVER_CHANNEL_ID } from "./helpers/config";
+import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, RESEARCH_MANAGER_TOKEN_ID as RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID as RESEARCH_MANAGER_USER_ID, PROJECT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID, ONBOARDING_CHANNEL_ID, ONBOARDING_CONSULTANT_USER_ID, CONTENT_CREATION_CHANNEL_ID, FACT_CHECK_CHANNEL_ID, SOLVER_AGENT_USER_ID, SOLVER_CHANNEL_ID } from "./helpers/config";
 import { SolverAgent } from "./agents/solverAgent";
 import { LLMServiceFactory, LLMProvider } from "./llm/LLMServiceFactory";
 import ResearchAssistant from "./agents/researchAssistant";
@@ -13,9 +13,6 @@ import SimpleTaskManager from "./test/simpleTaskManager";
 import { ArtifactManager } from "./tools/artifactManager";
 import ChromaDBService from "./llm/chromaService";
 import { ProjectManager } from "./agents/projectManager";
-import { OnboardingConsultant } from "./agents/onboardingConsultant";
-import { ConverseResponseFilterSensitiveLog } from "@aws-sdk/client-bedrock-runtime";
-import { FactChecker } from "./agents/factChecker";
 import Logger from "./helpers/logger";
 import GoalBasedOnboardingConsultant from "./agents/goalBasedOnboardingConsultant";
 
@@ -65,7 +62,7 @@ const researchManager = new ResearchManager(RESEARCH_MANAGER_TOKEN_ID, RESEARCH_
 await researchManager.initialize();
 
 const contentClient = new InMemoryTestClient(CONTENT_MANAGER_USER_ID, "test", storage);
-const contentAssistant = new ContentManager("", CONTENT_MANAGER_USER_ID, contentClient, llmService, tasks);
+const contentAssistant = new ContentManager(contentClient, llmService, CONTENT_MANAGER_USER_ID, tasks, chromaService);
 await contentAssistant.initialize();
 
 const writerClient = new InMemoryTestClient(CONTENT_WRITER_USER_ID, "test", storage);
@@ -78,9 +75,9 @@ const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "
 const onboardingAssistant = new GoalBasedOnboardingConsultant(onboardingClient, llmService, ONBOARDING_CONSULTANT_USER_ID, tasks, chromaService);
 await onboardingAssistant.initialize();
 
-const factCheckerClient = new InMemoryTestClient(FACT_CHECKER_USER_ID, "test", storage);
-const factChecker = new FactChecker(factCheckerClient, llmService, tasks);
-factChecker.setupChatMonitor(FACT_CHECK_CHANNEL_ID, "@factcheck");
+// const factCheckerClient = new InMemoryTestClient(FACT_CHECKER_USER_ID, "test", storage);
+// const factChecker = new FactChecker(factCheckerClient, llmService, tasks);
+// factChecker.setupChatMonitor(FACT_CHECK_CHANNEL_ID, "@factcheck");
 
 // Initialize Solver Agent
 const solverClient = new InMemoryTestClient(SOLVER_AGENT_USER_ID, "test", storage);
