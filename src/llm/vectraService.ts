@@ -10,11 +10,12 @@ import Logger from "../helpers/logger";
 import { saveToFile } from "../tools/storeToFile";
 import { ConversationContext } from "../chat/chatClient";
 
+const syncQueue = new AsyncQueue();
+
 class VectraService extends EventEmitter implements IVectorDatabase {
     private index: LocalIndex | null = null;
     private lmStudioService: LMStudioService;
     private collectionName: string = '';
-    private insertQueue = new AsyncQueue();
 
     constructor(lmStudioService: LMStudioService) {
         super();
@@ -22,7 +23,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     }
 
     async initializeCollection(name: string): Promise<void> {
-        await this.insertQueue.enqueue(async () => {
+        await syncQueue.enqueue(async () => {
             this.collectionName = name;
             const indexPath = path.join(process.cwd(), 'data', 'vectra', name);
             this.index = new LocalIndex(indexPath);
@@ -41,9 +42,11 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         const embedder = this.lmStudioService.getEmbeddingModel();
         const embeddings = await embedder.generate(collection.documents);
         
+        await this.index.beginUpdate();
+
         // Process inserts sequentially through the queue
         for (let i = 0; i < collection.documents.length; i++) {
-            await this.insertQueue.enqueue(async () => {
+            await syncQueue.enqueue(async () => {
                 await this.index!.insertItem({
                     id: collection.ids[i],
                     vector: embeddings[i],
@@ -54,10 +57,12 @@ class VectraService extends EventEmitter implements IVectorDatabase {
                 });
             });
         }
+
+        await this.index.endUpdate();
     }
 
     async query(queryTexts: string[], where: any, nResults: number): Promise<SearchResult[]> {
-        return this.insertQueue.enqueue(async () => {
+        return syncQueue.enqueue(async () => {
             if (!this.index) throw new Error("Index not initialized");
 
             const embedder = this.lmStudioService.getEmbeddingModel();
@@ -135,14 +140,14 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     }
 
     async clearCollection(): Promise<void> {
-        await this.insertQueue.enqueue(async () => {
+        await syncQueue.enqueue(async () => {
             this.index = new LocalIndex();
             Logger.info("Cleared Vectra index");
         });
     }
 
     async reindexCollection(name: string): Promise<void> {
-        await this.insertQueue.enqueue(async () => {
+        await syncQueue.enqueue(async () => {
             await this.clearCollection();
             await this.initializeCollection(name);
         });
