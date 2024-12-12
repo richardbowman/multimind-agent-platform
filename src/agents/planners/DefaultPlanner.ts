@@ -114,12 +114,7 @@ ${this.modelHelpers.getFinalInstructions()}`;
             }
         });
 
-        // Mark any tasks not mentioned in the response as completed
-        for (const [taskId, task] of existingTaskMap) {
-            if (!mentionedTaskIds.has(taskId)) {
-                this.projects.completeTask(taskId);
-            }
-        }
+        // We no longer automatically complete unmentioned tasks
 
         return response;
     }
