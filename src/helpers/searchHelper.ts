@@ -92,8 +92,13 @@ export class DuckDuckGoProvider implements ISearchProvider {
             });
             Logger.info(`Saved DuckDuckGo search page as artifact: ${artifactId}`);
 
-            // Extract search results
-            const searchResults = await page.$$('[data-testid="result"]');
+            // Find the main results container and extract results
+            const mainResults = await page.$('.react-results--main');
+            if (!mainResults) {
+                Logger.warn('Could not find main results container');
+                return results;
+            }
+            const searchResults = await mainResults.$$('[data-testid="result"]');
             Logger.info(`Found ${searchResults.length} results on page`);
             
             for (const result of searchResults) {
