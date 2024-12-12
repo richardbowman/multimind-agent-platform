@@ -7,18 +7,17 @@ import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioServi
 import Logger from '../../helpers/logger';
 import { ArtifactManager } from '../../tools/artifact';
 import crypto from 'crypto';
+import { ModelHelpers } from 'src/llm/helpers';
 
-@StepExecutorDecorator({
-    key: 'web_search',
-    description: 'Performs web searches and summarizes results'
-})
+@StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
     constructor(
         private searchHelper: SearchHelper,
         private scrapeHelper: ScrapeHelper,
         private summaryHelper: SummaryHelper,
         private lmStudioService: LMStudioService,
-        private artifactManager: ArtifactManager
+        private artifactManager: ArtifactManager,
+        private modelHelpers: ModelHelpers
     ) {}
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
@@ -90,17 +89,15 @@ export class WebSearchExecutor implements StepExecutor {
         };
 
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}.
-Consider these specific goals we're trying to achieve:
-${state.goals?.map(g => `- ${g.description} (${g.completed ? 'completed' : 'pending'})`).join('\n')}
+Consider these specific goals we're trying to achieve: ${task}
 
 Generate a broad web search query without special keywords or operators based on the task we've been asked to research.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        return await this.lmStudioService.generateStructured(
-            { message: `Task: ${task}` },
-            instructions,
-            []
-        );
+        return await this.modelHelpers.generate({
+            message: `Task: ${task}`,
+            instructions
+        });
     }
 
     private async selectRelevantSearchResults(
@@ -128,20 +125,16 @@ Given the following web search results, select 1-3 URLs that are most relevant t
             .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${sr.description.slice(0, 200)}`)
             .join("\n\n");
 
-        const response = await this.lmStudioService.generateStructured(
-            { message },
-            instructions,
-            []
-        );
+        const response = await this.modelHelpers.generate({
+            message,
+            instructions
+        });
 
         return response.map(r => r.href);
     }
 }
 
-@ExecutorMetadata({
-    key: 'review_existing_knowledge',
-    description: 'Reviews previously gathered knowledge'
-})
+@StepExecutorDecorator('review_existing_knowledge', 'Reviews previously gathered knowledge')
 export class ExistingKnowledgeExecutor implements StepExecutor {
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         return {
