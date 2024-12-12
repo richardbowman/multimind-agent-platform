@@ -64,7 +64,8 @@ export class GoogleSearchProvider implements ISearchProvider {
             });
 
             const page = await context.newPage();
-            await page.goto('https://www.google.com');
+            const encodedQuery = encodeURIComponent(query);
+            await page.goto(`https://www.google.com/search?q=${encodedQuery}`);
             
             // Accept cookies if present
             try {
@@ -73,9 +74,6 @@ export class GoogleSearchProvider implements ISearchProvider {
                 // Cookie prompt might not appear
             }
 
-            // Type search query and submit
-            await page.fill('input[name="q"]', query);
-            await page.press('input[name="q"]', 'Enter');
             await page.waitForLoadState('networkidle');
 
             // Extract search results
