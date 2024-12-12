@@ -12,7 +12,7 @@ export class BedrockService implements ILLMService {
     private modelId: string;
     private embeddingModelId: string;
 
-    constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v1") {
+    constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v2:0") {
         this.client = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
         this.modelId = modelId;
         this.embeddingModelId = embeddingModelId;
