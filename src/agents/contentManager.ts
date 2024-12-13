@@ -85,7 +85,10 @@ IMPORTANT: Always follow this pattern:
                 projectId: project.id
             }
         }
-        this.artifactManager.saveArtifact(content);
+        await this.artifactManager.saveArtifact(content);
+
+        // Store the artifact ID in the project's metadata for editing tasks
+        project.metadata.contentArtifactId = content.id;
 
         //TODO: hack for now, we don't assign workign steps to agent right now
         await this.projects.assignTaskToAgent(project.metadata.parentTaskId, CONTENT_MANAGER_USER_ID);
