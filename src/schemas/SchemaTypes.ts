@@ -22,5 +22,6 @@ export enum SchemaType {
     ResearchDecomposition = 'ResearchDecomposition',
     ResearchArtifactResponse = 'ResearchArtifactResponse',
     ReviewProgressResponse = 'ReviewProgressResponse',
-    WritingResponse = 'WritingResponse'
+    WritingResponse = 'WritingResponse',
+    ThinkingResponse = 'ThinkingResponse'
 }

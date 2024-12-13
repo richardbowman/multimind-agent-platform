@@ -1,7 +1,9 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import { ModelMessageResponse } from '../../schemas/ModelResponse';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import LMStudioService from '../../llm/lmstudioService';
+import { ILLMService } from '../../llm/ILLMService';
+import { ThinkingResponse } from '../../schemas/thinking';
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
+import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 
@@ -9,25 +11,12 @@ import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/ex
 export class ThinkingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(llmService: LMStudioService) {
+    constructor(llmService: ILLMService) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = {
-            type: "object",
-            properties: {
-                reasoning: {
-                    type: "string",
-                    description: "Step-by-step reasoning process"
-                },
-                conclusion: {
-                    type: "string",
-                    description: "Final conclusion based on the reasoning"
-                }
-            },
-            required: ["reasoning", "conclusion"]
-        };
+        const schema = await getGeneratedSchema(SchemaType.ThinkingResponse);
 
         const prompt = `You are a careful analytical thinker.
 Given a problem, break it down into logical steps and reason through it carefully.
@@ -36,7 +25,7 @@ Consider multiple angles and potential implications.
 ${previousResult ? `Consider this previous result in your thinking:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.modelHelpers.generate({
+        const result = await this.modelHelpers.generate<ThinkingResponse>({
             message: goal,
             instructions
         });
