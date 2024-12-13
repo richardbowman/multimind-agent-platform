@@ -1,6 +1,6 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import LMStudioService from '../../llm/lmstudioService';
+import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
@@ -11,7 +11,7 @@ import { ContentOutline } from 'src/schemas/outline';
 export class OutlineExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(llmService: LMStudioService) {
+    constructor(llmService: ILLMService) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
