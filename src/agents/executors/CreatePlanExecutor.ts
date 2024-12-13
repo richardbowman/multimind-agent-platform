@@ -39,7 +39,7 @@ export class CreatePlanExecutor implements StepExecutor {
         const formattedMessage = this.formatPromptMessage(
             businessGoals,
             project.existingPlan?.content.toString(),
-            project.props,
+            project.props||{},
             answers.map(a => ({
                 question: project.tasks[a.questionId]?.description || '',
                 answer: a.answer,
