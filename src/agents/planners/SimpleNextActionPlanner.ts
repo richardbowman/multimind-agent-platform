@@ -1,5 +1,6 @@
 import { HandlerParams } from '../agents';
 import { NextActionResponse } from '../../schemas/NextActionResponse';
+import { PlanStepsResponse } from '../../schemas/PlanStepsResponse';
 import { Planner } from './Planner';
 import { Task } from '../../tools/taskManager';
 import { SchemaInliner } from '../../helpers/schemaInliner';
@@ -19,7 +20,7 @@ export class SimpleNextActionPlanner implements Planner {
         private stepExecutors: Map<string, any> = new Map()
     ) {}
 
-    public async planSteps(handlerParams: HandlerParams): Promise<NextActionResponse> {
+    public async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
         const executorMetadata = Array.from(this.stepExecutors.entries()).map(([key, executor]) => {
             const metadata = Reflect.getMetadata('executor', executor.constructor);
             return {
@@ -88,6 +89,15 @@ ${this.modelHelpers.getFinalInstructions()}`;
             this.projects.addTask(project, newTask);
         }
 
-        return response;
+        // Convert NextActionResponse to PlanStepsResponse
+        const planResponse: PlanStepsResponse = {
+            reasoning: response.reasoning,
+            steps: response.action ? [{
+                actionType: response.action.actionType,
+                parameters: response.action.parameters
+            }] : []
+        };
+
+        return planResponse;
     }
 }
