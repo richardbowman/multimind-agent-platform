@@ -1,15 +1,15 @@
 /**
  * Represents an analyzed business goal
  */
-export interface BusinessGoal {
+export class BusinessGoal {
     /** Detailed description of the business goal */
-    description: string;
+    description: string = '';
 }
 
 /**
  * Represents the analysis of business goals
  */
-export interface GoalsAnalysis {
+export class GoalsAnalysis {
     /** List of broken down business goals */
-    goals: BusinessGoal[];
+    goals: BusinessGoal[] = [];
 }
