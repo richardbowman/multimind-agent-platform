@@ -4,7 +4,7 @@ import { Agent, HandleActivity, HandlerParams, ProjectHandlerParams, ResponseTyp
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Project, TaskManager } from "src/tools/taskManager";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from 'src/chat/chatClient';
-import LMStudioService from 'src/llm/lmstudioService';
+import { ILLMService } from 'src/llm/ILLMService';
 import { CHROMA_COLLECTION, CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID, PROJECTS_CHANNEL_ID } from 'src/helpers/config';
 import { Task } from "src/tools/taskManager";
 import { CONTENT_DECOMPOSITION_SYSTEM_PROMPT, ContentDecompositionPrompt, LOOKUP_RESEARCH_SYSTEM_PROMPT, LookupResearchPrompt } from '../schemas/contentSchemas';
@@ -12,7 +12,7 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
 import { WritingExecutor } from './executors/WritingExecutor';
 import { EditingExecutor } from './executors/EditingExecutor';
-import ChromaDBService from 'src/llm/chromaService';
+import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { OutlineExecutor } from './executors/OutlineExecutor';
 import { KnowledgeCheckExecutor } from './executors/ResearchExecutor';
 import { OnboardingProject } from './goalBasedOnboardingConsultant';
