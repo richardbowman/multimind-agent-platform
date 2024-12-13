@@ -153,10 +153,12 @@ export function convertPageToMarkdown($: CheerioAPI): string {
             if (!value) return;
 
             try {
-                const absoluteUrl = new URL(value, actualUrl).href;
+                // Use the page's URL as the base for relative URLs
+                const absoluteUrl = new URL(value, url).toString();
                 $(element).attr(attr, absoluteUrl);
             } catch (e) {
-                Logger.warn(`Failed to process ${attr} URL:`, value, e);
+                // Log the error but don't modify the original URL
+                Logger.warn(`Failed to process ${attr} URL: ${value}`, e);
             }
         });
     });
