@@ -6,6 +6,9 @@ export enum SchemaType {
     BusinessGoal = 'BusinessGoal',
     ContentOutline = 'ContentOutline',
     OutlineSection = 'OutlineSection',
+    OperationalGuide = 'OperationalGuide',
     OperationalGuideResponse = 'OperationalGuideResponse',
+    ImplementationStep = 'ImplementationStep',
+    QAItem = 'QAItem',
     AnswerAnalysisResponse = 'AnswerAnalysisResponse'
 }
