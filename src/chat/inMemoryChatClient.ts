@@ -70,7 +70,7 @@ export class InMemoryChatStorage {
             try {
                 throw new Error("Empty message.")
             } catch (e) {
-                Logger.error(e);
+                Logger.error("Add post failed", e);
             }
             return;
         }
@@ -138,7 +138,7 @@ export class InMemoryChatStorage {
 export class InMemoryTestClient implements ChatClient {
     private webSocketUrl: string;
     private userId: string;
-    private callback: (data: ChatPost) => void;
+    private callback: (data: ChatPost) => void = () => {};
     storage: InMemoryChatStorage;
 
     constructor(userId: string, webSocketUrl: string, storage: InMemoryChatStorage) {
