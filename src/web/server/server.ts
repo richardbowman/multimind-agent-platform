@@ -63,13 +63,49 @@ async function handleChatMessage(message: WebSocketMessage, ws: WebSocket) {
 }
 
 async function handleChannelMessage(message: WebSocketMessage, ws: WebSocket) {
-    // TODO: Implement channel operations
-    broadcast(message, ws);
+    switch (message.action) {
+        case 'LIST':
+            // TODO: Replace with actual channel fetching
+            const channels = [
+                { id: 'general', name: 'General' },
+                { id: 'random', name: 'Random' },
+                { id: 'projects', name: 'Projects' }
+            ];
+            ws.send(JSON.stringify({
+                type: 'CHANNEL',
+                action: 'LIST',
+                payload: channels
+            }));
+            break;
+        default:
+            broadcast(message, ws);
+    }
 }
 
 async function handleThreadMessage(message: WebSocketMessage, ws: WebSocket) {
-    // TODO: Implement thread operations
-    broadcast(message, ws);
+    switch (message.action) {
+        case 'LIST':
+            if (!message.payload.channelId) {
+                ws.send(JSON.stringify({
+                    type: 'ERROR',
+                    payload: 'Channel ID is required'
+                }));
+                return;
+            }
+            // TODO: Replace with actual thread fetching
+            const threads = [
+                { id: 'thread1', channelId: message.payload.channelId, rootMessageId: 'msg1' },
+                { id: 'thread2', channelId: message.payload.channelId, rootMessageId: 'msg2' }
+            ];
+            ws.send(JSON.stringify({
+                type: 'THREAD',
+                action: 'LIST',
+                payload: threads
+            }));
+            break;
+        default:
+            broadcast(message, ws);
+    }
 }
 
 // The "catchall" handler: for any request that doesn't
