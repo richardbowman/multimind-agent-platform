@@ -70,12 +70,12 @@ Let's start by discussing your main business goals. What would you like to achie
         
         // Register our specialized executors
         // this.registerStepExecutor(new ReplyExecutor(lmStudioService, projects, this.artifactManager));
-        this.registerStepExecutor(new AnswerQuestionsExecutor(lmStudioService, projects));
-        this.registerStepExecutor(new UnderstandGoalsExecutor(lmStudioService, projects, userId));
-        // this.registerStepExecutor(new AnalyzeGoalsExecutor(lmStudioService, projects, this.artifactManager, userId));
-        this.registerStepExecutor(new CreatePlanExecutor(lmStudioService, projects, this.artifactManager, userId));
-        this.registerStepExecutor(new ReviewProgressExecutor(lmStudioService, projects, this.artifactManager));
-        this.registerStepExecutor(new ValidationExecutor(lmStudioService));
+        this.registerStepExecutor(new AnswerQuestionsExecutor(params.llmService, params.taskManager));
+        this.registerStepExecutor(new UnderstandGoalsExecutor(params.llmService, params.taskManager, params.userId));
+        // this.registerStepExecutor(new AnalyzeGoalsExecutor(params.llmService, params.taskManager, this.artifactManager, params.userId));
+        this.registerStepExecutor(new CreatePlanExecutor(params.llmService, params.taskManager, this.artifactManager, params.userId));
+        this.registerStepExecutor(new ReviewProgressExecutor(params.llmService, params.taskManager, this.artifactManager));
+        this.registerStepExecutor(new ValidationExecutor(params.llmService));
 
         this.modelHelpers.setFinalInstructions(`This means I build an understanding of their business goals, market, strategy,
 and brand standards. When all of that is complete, I build and maintain a comprehensive on-boarding guide, and then introduce the user to the other agents.`);
