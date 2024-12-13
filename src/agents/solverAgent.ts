@@ -1,21 +1,20 @@
 import { StepBasedAgent } from './stepBasedAgent';
-import { ChatClient } from '../chat/chatClient';
-import LMStudioService from '../llm/lmstudioService';
-import { TaskManager } from '../tools/taskManager';
 import { ThinkingExecutor } from './executors/ThinkingExecutor';
 import { RefutingExecutor } from './executors/RefutingExecutor';
 import Logger from 'src/helpers/logger';
 import { SOLVER_CHANNEL_ID } from 'src/helpers/config';
-import ChromaDBService from 'src/llm/chromaService';
-import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { KnowledgeCheckExecutor } from './executors/ResearchExecutor';
 import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
 import { MultiStepPlanner } from './planners/DefaultPlanner';
 import { ModelHelpers } from 'src/llm/helpers';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
+import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 export class SolverAgent extends StepBasedAgent<any, any> {
+    protected processTask(task: any): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
     constructor(params: AgentConstructorParams) {
         const modelHelpers = new ModelHelpers(params.llmService, params.userId);
         modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning.`);
@@ -31,7 +30,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         6. validation (to verify the solution)
         
         Adapt your approach to the complexity of each problem, using more cycles as needed.`);
-        const planner = new MultiStepPlanner(lmStudioService, projects, userId, modelHelpers);
+        const planner = new MultiStepPlanner(params.llmService, params.projects, params.userId, modelHelpers);
 
         super(params, planner);
 
