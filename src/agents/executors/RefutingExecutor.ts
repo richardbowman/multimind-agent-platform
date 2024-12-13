@@ -1,5 +1,5 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import { ModelResponse } from '../schemas/ModelResponse';
+import { ModelMessageResponse } from '../schemas/ModelResponse';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
