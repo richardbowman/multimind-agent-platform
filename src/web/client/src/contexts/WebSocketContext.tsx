@@ -1,31 +1,54 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import webSocketService, { Message } from '../services/WebSocketService';
+import webSocketService, { Message, Channel, Thread } from '../services/WebSocketService';
 
 interface WebSocketContextType {
   messages: Message[];
+  channels: Channel[];
+  threads: Record<string, Thread[]>; // Keyed by channel_id
   sendMessage: (message: Partial<Message>) => void;
+  fetchChannels: () => void;
+  fetchThreads: (channelId: string) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
   messages: [],
+  channels: [],
+  threads: {},
   sendMessage: () => {},
+  fetchChannels: () => {},
+  fetchThreads: () => {},
 });
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<Message[]>([]);
+  const [channels, setChannels] = useState<Channel[]>([]);
+  const [threads, setThreads] = useState<Record<string, Thread[]>>({});
 
   useEffect(() => {
-    // Connect to WebSocket server when component mounts
     webSocketService.connect();
 
-    // Set up message handler
-    const cleanup = webSocketService.onMessage((message) => {
+    const messageCleanup = webSocketService.onMessage((message) => {
       setMessages(prev => [...prev, message]);
     });
 
-    // Cleanup on unmount
+    const channelCleanup = webSocketService.onChannels((newChannels) => {
+      setChannels(newChannels);
+    });
+
+    const threadCleanup = webSocketService.onThreads((newThreads) => {
+      if (newThreads.length > 0) {
+        const channelId = newThreads[0].channel_id;
+        setThreads(prev => ({
+          ...prev,
+          [channelId]: newThreads
+        }));
+      }
+    });
+
     return () => {
-      cleanup();
+      messageCleanup();
+      channelCleanup();
+      threadCleanup();
       webSocketService.disconnect();
     };
   }, []);
@@ -34,8 +57,23 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.sendMessage(message);
   };
 
+  const fetchChannels = () => {
+    webSocketService.fetchChannels();
+  };
+
+  const fetchThreads = (channelId: string) => {
+    webSocketService.fetchThreads(channelId);
+  };
+
   return (
-    <WebSocketContext.Provider value={{ messages, sendMessage }}>
+    <WebSocketContext.Provider value={{ 
+      messages, 
+      channels, 
+      threads, 
+      sendMessage, 
+      fetchChannels, 
+      fetchThreads 
+    }}>
       {children}
     </WebSocketContext.Provider>
   );
