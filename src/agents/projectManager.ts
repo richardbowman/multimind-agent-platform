@@ -10,6 +10,8 @@ import { Artifact } from 'src/tools/artifact';
 import ChromaDBService from 'src/llm/chromaService';
 import { ResearchActivityType } from './researchManager';
 import { RequestArtifacts } from '../schemas/ModelResponse';
+import { BrainstormExecutor } from './executors/BrainstormExecutor';
+import { GenerateArtifactExecutor } from './executors/GenerateArtifactExecutor';
 
 export enum ProjectManagerActivities {
     AnswerQuestions = "answer-questions",
