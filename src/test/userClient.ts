@@ -46,6 +46,8 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     // Function to load messages from a specific thread
     async function loadMessagesForThread(threadId: string | null) {
         chatBox.setContent("");
+        screen.render();
+
         const posts = storage.posts.filter(post => post.channel_id === currentChannelId && (post.getRootId() === threadId || post.id === threadId || (threadId === null && !post.getRootId())));
 
         // Get only the last 20 messages
@@ -54,6 +56,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         // Show warning if messages were trimmed
         if (posts.length > 20) {
             chatBox.log(`{yellow-fg}⚠ Showing last 20 of ${posts.length} messages{/yellow-fg}\n`);
+            screen.render();
         }
 
         for (const post of recentPosts) {
@@ -64,15 +67,15 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             const messageColor = (USER_ID === post.user_id) ? "{green-fg}" : "{red-fg}";
 
             chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(post.message)}\n`);
+            screen.render();
         }
-        screen.render();
 
         // Ensure content is fully rendered before scrolling
-        process.nextTick(() => {
-            const currentScrollHeight = chatBox.getScrollHeight();
-            chatBox.scroll(chatBox.scrollOffset - currentScrollHeight);
-            screen.render();
-        });
+        // process.nextTick(() => {
+        //     const currentScrollHeight = chatBox.getScrollHeight();
+        //     chatBox.scrollTo(0,0);
+        //     screen.render();
+        // });
     }
 
     async function refreshLists(channelId: string | null, threadId: string | null) {
