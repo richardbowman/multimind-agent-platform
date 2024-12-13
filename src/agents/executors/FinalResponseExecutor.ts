@@ -3,6 +3,9 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { Project, Task } from '../../tools/taskManager';
 import { ModelMessageResponse } from '../schemas/ModelResponse';
+import { FinalResponse } from '../../schemas/finalResponse';
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
+import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/helpers';
 
 @StepExecutorDecorator('final_response', 'Generates final comprehensive response')
@@ -11,16 +14,7 @@ export class FinalResponseExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
-        const schema = {
-            type: "object",
-            properties: {
-                message: {
-                    type: "string",
-                    description: "Final comprehensive response in Markdown format."
-                }
-            },
-            required: ["message"]
-        };
+        const schema = getGeneratedSchema(SchemaType.FinalResponse);
 
         const systemPrompt = `You are an AI assistant generating a final response.
 Synthesize all the intermediate results into a clear, comprehensive answer that addresses the original goal.
@@ -33,7 +27,7 @@ You will respond inside of the message key in Markdown format.`;
             previousResults
         }, null, 2);
 
-        const response = await this.modelHelpers.generate({
+        const response = await this.modelHelpers.generate<FinalResponse>({
             message: context,
             instructions,
             maxTokens: 16384
