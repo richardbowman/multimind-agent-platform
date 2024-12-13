@@ -1,4 +1,4 @@
-import { io, Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 
 export interface Channel {
   id: string;
@@ -24,12 +24,12 @@ export interface Message {
 }
 
 class WebSocketService {
-  private socket: Socket | null = null;
+  private socket: SocketIOClient.Socket | null = null;
   private messageHandlers: ((message: Message) => void)[] = [];
   private channelHandlers: ((channels: Channel[]) => void)[] = [];
   private threadHandlers: ((threads: Thread[]) => void)[] = [];
 
-  connect(url: string = 'ws://localhost:3001') {
+  connect(url: string = 'ws://localhost:4001') {
     this.socket = io(url);
 
     this.socket.on('connect', () => {

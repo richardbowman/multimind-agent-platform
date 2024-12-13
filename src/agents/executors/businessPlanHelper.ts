@@ -1,6 +1,6 @@
 import { Artifact } from "../../tools/artifact";
 import { OnboardingProject } from "../goalBasedOnboardingConsultant";
-import { StructuredOutputPrompt } from "../../llm/lmstudioService";
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ArtifactManager } from "../../tools/artifactManager";
 import { ModelHelpers } from "../../llm/helpers";
 import crypto from 'crypto';

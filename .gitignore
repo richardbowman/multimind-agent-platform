@@ -8,3 +8,5 @@ TODO
 .env
 src/**/*.js
 data
+dist
+src/web/client/build

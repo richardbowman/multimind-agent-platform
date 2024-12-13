@@ -3,7 +3,7 @@ import LMStudioService from "./lmstudioService";
 import { ILLMService } from "./ILLMService";
 import { ChatPost } from "src/chat/chatClient";
 import { ModelMessageResponse } from "../schemas/ModelResponse";
-import { StructuredOutputPrompt } from "./lmstudioService";
+import { StructuredOutputPrompt } from "./ILLMService";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import { LLMCallLogger } from "./LLMLogger";
@@ -88,18 +88,17 @@ export class BedrockService implements ILLMService {
             })),
             inferenceConfig: {
                 temperature: 0.7,
-                topP: 1,
-                topK: 250
+                topP: 1
             }
         });
 
         try {
-            const response = await this.client.send(command);
-            const result = response.output?.message?.content?.[0];
+            const bedrockResponse = await this.client.send(command);
+            const result = bedrockResponse.output?.message?.content?.[0];
             const response = {
                 message: result?.text || ''
             };
-            await this.logger.logCall('generate', input, response);
+            await this.logger.logCall('generate', input, bedrockResponse);
             return response;
         } catch (error) {
             Logger.error("Bedrock API error:", error);
@@ -210,8 +209,7 @@ export class BedrockService implements ILLMService {
             messages: processedMessages,
             inferenceConfig: {
                 temperature: 0.7,
-                topP: 1,
-                topK: 250
+                topP: 1
             }
         });
 
@@ -262,8 +260,7 @@ export class BedrockService implements ILLMService {
             toolConfig: tools,
             inferenceConfig: {
                 temperature: 1,
-                topP: 1,
-                topK: 1
+                topP: 1
             }
         });
 

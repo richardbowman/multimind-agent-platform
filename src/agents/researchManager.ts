@@ -1,5 +1,6 @@
 import Logger from "src/helpers/logger";
-import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService'; // Import the LMStudioService
+import LMStudioService from '../llm/lmstudioService'; // Import the LMStudioService
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { WEB_RESEARCH_CHANNEL_ID, PROJECTS_CHANNEL_ID, CHROMA_COLLECTION, RESEARCH_MANAGER_USER_ID, RESEARCHER_USER_ID } from '../helpers/config';
 import { randomUUID } from 'crypto';
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from '../chat/chatClient';
@@ -24,11 +25,8 @@ interface ResearchManagerContext extends ConversationContext {
     activityType: ResearchActivityType;
 }
 
-export interface ResearchProject extends Project<ResearchTask> {
-    parentTaskId?: string;  // ID of the task that spawned this research project
-}
 
-export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
+export class ResearchManager extends Agent<Project<ResearchTask>, ResearchTask> {
     private USER_TOKEN: string;
     private artifactManager: ArtifactManager;
     private vectorDB: IVectorDatabase;
@@ -56,7 +54,7 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
         // Create a new research project for this task
         const researchProject = this.addProject();
         researchProject.name = task.description;
-        researchProject.parentTaskId = task.id;  // Link back to original task
+        researchProject.metadata.parentTaskId = task.id;  // Link back to original task
 
         // Decompose the task into sub-tasks
         await this.decomposeTask(researchProject.id, task.description);
@@ -105,8 +103,8 @@ export class ResearchManager extends Agent<ResearchProject, ResearchTask> {
         }
 
         // If this project was created for a task, mark that task as complete
-        if (project.parentTaskId) {
-            await this.projects.completeTask(project.parentTaskId);
+        if (project.metadata.parentTaskId) {
+            await this.projects.completeTask(project.metadata.parentTaskId);
         }
 
         Logger.info(`Report saved as artifact with ID ${project.id} and title "${artifactResponse.artifactTitle}"`);
@@ -195,7 +193,7 @@ Activity Type: **${activityType}**`;
             const history: any[] = [];
 
             const project = this.projects.getProject(projectId);
-            const responseJSON = await this.lmStudioService.sendStructuredRequest<ResearchDecomposition>(userPrompt, structuredPrompt, history);
+            const responseJSON = await this.llmService.sendStructuredRequest<ResearchDecomposition>(userPrompt, structuredPrompt, history);
 
             if (responseJSON.goal) {
                 project.name = responseJSON.goal;
@@ -300,7 +298,7 @@ Your reponse should look like:
             // Use StructuredOutputPrompt to generate the report
             const schema = await getGeneratedSchema(SchemaType.ResearchArtifactResponse);
             const structuredPrompt = new StructuredOutputPrompt(schema, systemPrompt);
-            const responseJSON = await this.lmStudioService.sendStructuredRequest<ResearchArtifactResponse>(userPrompt, structuredPrompt, undefined, undefined, 32000);
+            const responseJSON = await this.llmService.sendStructuredRequest<ResearchArtifactResponse>(userPrompt, structuredPrompt, undefined, undefined, 32000);
             return responseJSON;
         } catch (error) {
             Logger.error('Error generating final report:', error);
@@ -328,7 +326,7 @@ You've already provided a detailed explanation of the findings. Now the user is 
             { role: "system", content: systemPrompt },
             ...(chatHistory || []).map(post => ({ role: post.sender === this.USER_TOKEN ? 'user' : 'assistant', content: post.message }))
         ];
-        const response = await this.lmStudioService.sendMessageToLLM(history[history.length - 1].content, history);
+        const response = await this.llmService.sendMessageToLLM(history[history.length - 1].content, history);
         return response;
     }
 }

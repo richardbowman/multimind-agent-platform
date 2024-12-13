@@ -1,5 +1,5 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/helpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { IVectorDatabase } from '../../llm/IVectorDatabase';
@@ -10,7 +10,7 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import Logger from '../../helpers/logger';
 
 @StepExecutorDecorator('check-knowledge', 'Check my existing knowledgebase (useful to do upfront)')
-export class ResearchExecutor implements StepExecutor {
+export class KnowledgeCheckExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private vectorDB: IVectorDatabase;
 

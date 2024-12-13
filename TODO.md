@@ -4,6 +4,11 @@
  - [~] means in-progress
  - [x] complete
 
+## 2024-12-13
+- [ ] need to finish transitioning project manager.
+- [ ] the content manager is getting "stuck" when the sub project completes it doesnt seem to be able to push forward with more step-based processing
+- [ ] implement dynamic RAG injection strategy like LM studio has based on content size
+- [ ] i think the Bedrock processing is not using message history in the structured generation calls, i also found it wasnt even including system prompts 
 
 ## 2024-12-12
  - [ ] make the GoalConfirmer update the project info with its refined understanding

@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ChatPost } from '../../../chat/chatClient';
+import { ChatPost } from '../../../../chat/chatClient';
 import { CommandInput } from './CommandInput';
-import { WebSocketMessage, ChatMessage } from '../../shared/types';
+import { WebSocketMessage, ChatMessage } from '../../../shared/types';
 
 interface ChatPanelProps {
     currentChannelId: string | null;

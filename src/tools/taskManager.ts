@@ -41,7 +41,7 @@ export interface RecurringTask extends Task {
     lastRunDate?: Date; // To keep track of the last run date
 }
 
-export interface ProjectMetadata {
+export interface ProjectMetadata extends Record<string, any> {
     createdAt: Date;
     updatedAt: Date;
     status: 'active' | 'completed' | 'archived';

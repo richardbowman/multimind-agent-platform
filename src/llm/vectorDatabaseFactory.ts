@@ -2,6 +2,7 @@ import { IVectorDatabase } from './IVectorDatabase';
 import ChromaDBService from './chromaService';
 import VectraService from './vectraService';
 import LMStudioService from './lmstudioService';
+import { ILLMService } from './ILLMService';
 
 export enum VectorDatabaseType {
     CHROMA = 'chroma',
@@ -10,7 +11,7 @@ export enum VectorDatabaseType {
 
 export function createVectorDatabase(
     type: string = VectorDatabaseType.VECTRA,
-    lmStudioService: LMStudioService
+    lmStudioService: ILLMService
 ): IVectorDatabase {
     switch (type) {
         case VectorDatabaseType.CHROMA:

@@ -3,7 +3,7 @@ import { getExecutorMetadata } from './decorators/executorDecorator';
 import 'reflect-metadata';
 import { ChatClient, ChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
-import { StructuredOutputPrompt } from '../llm/lmstudioService';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Project, Task, TaskManager } from '../tools/taskManager';
 import { Planner } from './planners/Planner';
@@ -113,9 +113,11 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
             steps.steps.map((step, index) => `${index + 1}. ${step.actionType}`)
             .join('\n') : "No steps provided";
         
-        await this.reply(handlerParams.userPost, {
-            message: `🔄 Planning next steps:\n${nextStepsMessage}`
-        });
+        if (handlerParams.userPost) {
+            await this.reply(handlerParams.userPost, {
+                message: `🔄 Planning next steps:\n${nextStepsMessage}`
+            });
+        }
         
         return steps;
     }
@@ -232,7 +234,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
             await this.executeNextStep(projectId, userPost);
 
         } catch (error) {
-            Logger.error("Error in step execution:", error);
+            Logger.error(`Error in step execution ${task.description}`, error);
             await this.reply(userPost, { message: "Sorry, I encountered an error while processing your request." });
         }
     }

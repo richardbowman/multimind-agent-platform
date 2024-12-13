@@ -1,5 +1,5 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { AnswerAnalysisResponse } from '../../schemas/AnswerAnalysisResponse';

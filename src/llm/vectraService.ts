@@ -9,15 +9,16 @@ import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
 import Logger from "../helpers/logger";
 import { saveToFile } from "../tools/storeToFile";
 import { ConversationContext } from "../chat/chatClient";
+import { ILLMService } from "./ILLMService";
 
 const syncQueue = new AsyncQueue();
 
 class VectraService extends EventEmitter implements IVectorDatabase {
     private index: LocalIndex | null = null;
-    private lmStudioService: LMStudioService;
+    private lmStudioService: ILLMService;
     private collectionName: string = '';
 
-    constructor(lmStudioService: LMStudioService) {
+    constructor(lmStudioService: ILLMService) {
         super();
         this.lmStudioService = lmStudioService;
     }

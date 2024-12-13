@@ -1,7 +1,8 @@
 import { StepBasedAgent } from './stepBasedAgent';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { ChatClient, ChatPost } from '../chat/chatClient';
-import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
+import LMStudioService from '../llm/lmstudioService';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { TaskManager } from '../tools/taskManager';
 import { Project, Task } from '../tools/taskManager';
 import { WebSearchExecutor } from './research/WebResearchExecutor';
@@ -13,7 +14,7 @@ import { CHROMA_COLLECTION, MAX_SEARCHES, RESEARCHER_TOKEN, WEB_RESEARCH_CHANNEL
 import { Artifact } from 'src/tools/artifact';
 import { ModelMessageResponse, RequestArtifacts, CreateArtifact } from '../schemas/ModelResponse';
 import ChromaDBService from 'src/llm/chromaService';
-import { ResearchExecutor } from './executors/ResearchExecutor';
+import { KnowledgeCheckExecutor } from './executors/ResearchExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 
@@ -63,11 +64,11 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
         userToken: string, 
         userId: string, 
         chatClient: ChatClient, 
-        lmStudioService: LMStudioService, 
-        projects: TaskManager,
-        chromaDBService: ChromaDBService
+        llmService: LMStudioService, 
+        taskManager: TaskManager,
+        vectorDBService: ChromaDBService
     ) {
-        super(chatClient, lmStudioService, userId, projects, chromaDBService);
+        super({chatClient, llmService, userId, taskManager, vectorDBService});
         this.modelHelpers.setPurpose("You are a research assisant who thoroughly summarizes web results.");
         this.modelHelpers.setFinalInstructions("PROPER PROCESS: do a 'check-knowledge' first, then a 'validation' step to see if you can meet the goals. If not, then add 'web_search' and 'validation' as needed until you get the answer. Make sure your final step is a `final_response`");
 
@@ -76,13 +77,13 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
             this.searchHelper,
             this.scrapeHelper,
             this.summaryHelper,
-            lmStudioService,
+            llmService,
             this.artifactManager,
             this.modelHelpers
         ));
-        this.registerStepExecutor(new ValidationExecutor(lmStudioService));
-        this.registerStepExecutor(new ResearchExecutor(
-            lmStudioService, chromaDBService
+        this.registerStepExecutor(new ValidationExecutor(llmService));
+        this.registerStepExecutor(new KnowledgeCheckExecutor(
+            llmService, vectorDBService
         ));
         this.registerStepExecutor(new FinalResponseExecutor(this.modelHelpers));
     }
@@ -104,58 +105,6 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
 
     protected projectCompleted(project: ResearchProject): void {
         Logger.info(`Project ${project.id} completed`);
-    }
-
-    @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
-    protected async handleConversation(params: HandlerParams): Promise<void> {
-        const { projectId } = await this.addNewProject({
-            projectName: `Kickoff onboarding based on incoming message: ${params.userPost.message}`,
-            tasks: [],
-            metadata: {
-                originalPostId: params.userPost.id
-            }
-        });
-        const project = await this.projects.getProject(projectId);
-
-        params.projects = [...params.projects || [], project]
-        const plan = await this.planSteps(params);
-        await this.executeNextStep(projectId, params.userPost);
-    }
-
-    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
-    protected async handleThreadResponse(params: HandlerParams): Promise<void> {
-        const project = params.projects?.[0];
-
-        // If no active project, treat it as a new conversation
-        if (!project) {
-            Logger.info("No active project found, starting new conversation");
-            const { projectId } = await this.addNewProject({
-                projectName: params.userPost.message,
-                tasks: [],
-                metadata: {
-                    originalPostId: params.userPost.id
-                }
-            });
-            const project = await this.projects.getProject(projectId);
-            params.projects = [...params.projects || [], project]
-
-            const plan = await this.planSteps(params);
-            await this.executeNextStep(projectId, params.userPost);
-            return;
-        }
-
-        // Handle response to existing project
-        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
-        if (!currentTask) {
-            Logger.info("No active task, treating as new query in existing project");
-            const plan = await this.planSteps(params);
-            await this.executeNextStep(project.id, params.userPost);
-            return;
-        }
-
-        // Handle response to active task
-        const plan = await this.planSteps(params);
-        await this.executeNextStep(project.id, params.userPost);
     }
 
     private formatTaskMessage(taskId: string, message: string): string {
@@ -259,7 +208,7 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
         }
 
         if (pageSummaries.length > 0) {
-            const overallSummary = await this.summaryHelper.createOverallSummary(goal, task, pageSummaries, this.lmStudioService);
+            const overallSummary = await this.summaryHelper.createOverallSummary(goal, task, pageSummaries, this.llmService);
             await this.publishResult(WEB_RESEARCH_CHANNEL_ID, taskId, `Summary for task ${task}: ${overallSummary}`);
             this.results.push(overallSummary);
         }
@@ -405,7 +354,7 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
 Generate a broad web search query without special keywords or operators based on the task we've been asked to research.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const response = await this.lmStudioService.generateStructured({ message: `Task: ${task}` }, new StructuredOutputPrompt(schema, systemPrompt), []);
+        const response = await this.llmService.generateStructured({ message: `Task: ${task}` }, new StructuredOutputPrompt(schema, systemPrompt), []);
 
         return response;
     }
@@ -446,7 +395,7 @@ Return ONLY the selected URLs as a valid JSON array of strings like this:
         const message = `Search Results:
 ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${sr.description.slice(0, 200)}`).join("\n\n")}`;
 
-        const selectedUrls = await this.lmStudioService.generateStructured({ message: message }, new StructuredOutputPrompt(schema, systemPrompt), [], undefined, 2048);
+        const selectedUrls = await this.llmService.generateStructured({ message: message }, new StructuredOutputPrompt(schema, systemPrompt), [], undefined, 2048);
 
         return selectedUrls.urls;
     }
@@ -520,7 +469,7 @@ ${searchResults.slice(0, 8).map((sr, index) => `${index + 1}. Title: ${sr.title}
         const results = await this.searchDoc(searchUrl, task, 15);
         if (results.documents.length > 0) {
             const contentWithMetadata = `Page Title: ${title}\nURL: ${searchUrl}\n\n${results.documents.join("\n\n")}`;
-            const summary = await this.summaryHelper.summarizeContent(task, contentWithMetadata, this.lmStudioService);
+            const summary = await this.summaryHelper.summarizeContent(task, contentWithMetadata, this.llmService);
             pageSummaries.push(summary);
     
             // Save summary as an artifact
@@ -584,7 +533,7 @@ Return ONLY the selected URLs as a valid JSON array of objects like this:
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
 
-        const response = await this.lmStudioService.generateStructured({ message }, instructions, []);
+        const response = await this.llmService.generateStructured({ message }, instructions, []);
         return response.links || [];
     } catch (error) {
         Logger.error('Error selecting relevant links:', error);

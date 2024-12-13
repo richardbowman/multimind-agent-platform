@@ -44,14 +44,18 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     let threadIds: string[] = [];
 
     // Helper function to log a single message with a delay
-    function logMessageWithDelay(post: ChatPost): Promise<void> {
+    function logMessageWithDelay(post: ChatPost | string): Promise<void> {
         return new Promise((resolve) => {
             setTimeout(() => {
-                const handleName = storage.getHandleNameForUserId(post.user_id);
-                const displayName = handleName ? `{bold}{red-fg}${handleName}{/red-fg}{/bold}` : `{bold}{red-fg}${post.user_id}{/red-fg}{/bold}`;
-                const messageColor = (USER_ID === post.user_id) ? "{green-fg}" : "{red-fg}";
-                
-                chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(post.message)}\n`);
+                if (typeof post === "string") {
+                    chatBox.log(post);
+                } else {
+                    const handleName = storage.getHandleNameForUserId(post.user_id);
+                    const displayName = handleName ? `{bold}{red-fg}${handleName}{/red-fg}{/bold}` : `{bold}{red-fg}${post.user_id}{/red-fg}{/bold}`;
+                    const messageColor = (USER_ID === post.user_id) ? "{green-fg}" : "{red-fg}";
+                    
+                    chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(post.message)}\n`);
+                }
                 screen.render();
                 resolve();
             }, 0);
@@ -73,8 +77,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         // Show warning if messages were trimmed
         if (posts.length > 20) {
-            chatBox.log(`{yellow-fg}⚠ Showing last 20 of ${posts.length} messages{/yellow-fg}\n`);
-            screen.render();
+            await logMessageWithDelay(`{yellow-fg}⚠ Showing last 20 of ${posts.length} messages{/yellow-fg}\n`);
         }
 
         // Log messages one at a time with delay

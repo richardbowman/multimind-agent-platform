@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Artifact } from '../../../tools/artifact';
+import { Artifact } from '../../../../tools/artifact';
 
 interface ArtifactPanelProps {
     channelId: string | null;

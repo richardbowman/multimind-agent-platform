@@ -163,7 +163,7 @@ export function convertPageToMarkdown($: CheerioAPI): string {
         });
     });
 
-    const fullHtmlWithoutIndentation = cleanedHtml?
+    const fullHtmlWithoutIndentation = (cleanedHtml||"")
         .replace(/\t/g, '') // Remove tabs
         .replace(/^[ \t]+/gm, ''); // Remove leading spaces and tabs from each line
 

@@ -1,6 +1,7 @@
 import { ModelHelpers } from '../../llm/helpers';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
-import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import LMStudioService from '../../llm/lmstudioService';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';

@@ -1,5 +1,6 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import LMStudioService from '../../llm/lmstudioService';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/helpers';
 import { ValidationResult } from '../../schemas/validation';
 import { SchemaInliner } from '../../helpers/schemaInliner';
@@ -33,7 +34,7 @@ Evaluate whether:
 
 If the solution is incomplete, list the specific aspects that still need to be addressed.`;
 
-        const response = await this.modelHelpers.generate({
+        const response = await this.modelHelpers.generate<ValidationResult>({
             message: "Validate solution completeness",
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });

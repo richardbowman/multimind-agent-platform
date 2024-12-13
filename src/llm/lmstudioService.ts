@@ -24,29 +24,6 @@ class MyEmbedder implements IEmbeddingFunction {
     }
 }
 
-export class StructuredOutputPrompt {
-    private schema: any;
-    private prompt: string;
-
-    constructor(schema: any, prompt: string) {
-        this.schema = schema;
-        this.prompt = prompt;
-    }
-
-    public getSchema(): any {
-        return this.schema;
-    }
-
-    public getPrompt(): string {
-        return this.prompt;
-    }
-}
-
-export enum ModelRole {
-    USER = "user",
-    ASSISTANT = "assistant"
-}
-
 export interface ModelMessageHistory {
     role: ModelRole;
     content: string;
@@ -56,7 +33,7 @@ export interface MessageOpts {
     contextWindowLength?: number;
 }
 
-import { ILLMService } from "./ILLMService";
+import { ILLMService, ModelRole, StructuredOutputPrompt } from "./ILLMService";
 
 export default class LMStudioService implements ILLMService {
     private lmStudioClient: LMStudioClient;

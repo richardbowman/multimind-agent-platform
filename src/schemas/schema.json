@@ -354,6 +354,38 @@
       ],
       "type": "object"
     },
+    "NextAction": {
+      "additionalProperties": false,
+      "properties": {
+        "actionType": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "actionType",
+        "parameters"
+      ],
+      "type": "object"
+    },
+    "NextActionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "action": {
+          "$ref": "#/definitions/NextAction"
+        },
+        "reasoning": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "action",
+        "reasoning"
+      ],
+      "type": "object"
+    },
     "OnboardingConsultantResponse": {
       "additionalProperties": false,
       "properties": {
@@ -735,14 +767,15 @@
         "ContentSuggestion",
         "SectionImprovement",
         "FinalResponse",
-        "GoalConfirmation",
-        "Refuting",
-        "Research",
+        "GoalConfirmationResponse",
+        "RefutingResponse",
+        "ResearchResponse",
         "QueriesResponse",
         "ResearchDecomposition",
         "ResearchArtifactResponse",
         "ReviewProgressResponse",
-        "WritingResponse"
+        "WritingResponse",
+        "ThinkingResponse"
       ],
       "type": "string"
     },
@@ -835,6 +868,24 @@
         "Complete"
       ],
       "type": "string"
+    },
+    "ThinkingResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "conclusion": {
+          "description": "Final conclusion based on the reasoning",
+          "type": "string"
+        },
+        "reasoning": {
+          "description": "Step-by-step reasoning process",
+          "type": "string"
+        }
+      },
+      "required": [
+        "reasoning",
+        "conclusion"
+      ],
+      "type": "object"
     },
     "ValidationResult": {
       "additionalProperties": false,

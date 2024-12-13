@@ -5,15 +5,16 @@ import { Planner } from './Planner';
 import { Task } from '../../tools/taskManager';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
-import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { TaskManager } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import crypto from 'crypto';
 import { ModelHelpers } from 'src/llm/helpers';
+import { ILLMService } from 'src/llm/ILLMService';
 
 export class SimpleNextActionPlanner implements Planner {
     constructor(
-        private lmStudioService: LMStudioService,
+        private llmService: ILLMService,
         private projects: TaskManager,
         private userId: string,
         private modelHelpers: ModelHelpers,

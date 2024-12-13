@@ -11,6 +11,8 @@ export interface ChatClient {
      */
     postReply(rootId: string, channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost>;
     replyThreaded(post: ChatPost, response: string, props?: ConversationContext): Promise<ChatPost>;
+
+    registerHandle(handleName: string): void;
 }
 
 export interface ProjectChainResponse {

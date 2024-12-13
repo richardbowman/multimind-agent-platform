@@ -1,5 +1,5 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/helpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ILLMService } from '../../llm/ILLMService';

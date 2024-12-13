@@ -1,5 +1,5 @@
 import { StepExecutor } from "../stepBasedAgent";
-import { StructuredOutputPrompt } from "../../llm/lmstudioService";
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from "../../llm/helpers";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { GoalConfirmationResponse } from "../../schemas/goalConfirmation";
@@ -16,7 +16,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string): Promise<any> {
-        const schema = await getGeneratedSchema(SchemaType.GoalConfirmation);
+        const schema = await getGeneratedSchema(SchemaType.GoalConfirmationResponse);
 
         const prompt = `As an AI assistant, your task is to:
 1. Restate the user's goal in your own words to demonstrate understanding
@@ -25,16 +25,16 @@ export class GoalConfirmationExecutor implements StepExecutor {
 
 Goal to analyze: "${goal}"`;
 
-        const result = await this.modelHelpers.generate<{ response: GoalConfirmationResponse }>({
+        const result = await this.modelHelpers.generate<GoalConfirmationResponse>({
             message: goal,
             instructions: new StructuredOutputPrompt(schema, prompt)
         });
 
         return {
-            finished: result.response.understanding,
-            needsUserInput: !result.response.understanding,
+            finished: result.understanding,
+            needsUserInput: !result.understanding,
             response: {
-                message: result.response.message
+                message: result.message
             }
         };
     }

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Thread } from '../../shared/types';
+import { Thread } from '../../../shared/types';
 
 interface ThreadListProps {
     channelId: string | null;

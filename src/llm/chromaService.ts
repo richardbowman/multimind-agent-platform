@@ -9,15 +9,16 @@ import Logger from "src/helpers/logger";
 import { ConversationContext } from "../chat/chatClient";
 import { saveToFile } from "src/tools/storeToFile";
 import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
+import { ILLMService } from "./ILLMService";
 
 dotenv.config();
 
 class ChromaDBService extends EventEmitter implements IVectorDatabase {
     private chromaDB: ChromaClient;
     private collection: Collection | null = null;
-    private lmStudioService: LMStudioService;
+    private lmStudioService: ILLMService;
 
-    constructor(lmStudioService: LMStudioService) {
+    constructor(lmStudioService: ILLMService) {
         super();
         this.chromaDB = new ChromaClient({ path: CHROMADB_URL! });
         this.lmStudioService = lmStudioService;

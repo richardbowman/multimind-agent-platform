@@ -1,4 +1,4 @@
-import { StructuredOutputPrompt } from "src/llm/lmstudioService";
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { definitions } from "./schema.json";
 
 const { ContentDecompositionResponse : CONTENT_DECOMPOSITION_SCHEMA, LookupResearchResponse : LOOKUP_RESEARCH_SCHEMA } = definitions;

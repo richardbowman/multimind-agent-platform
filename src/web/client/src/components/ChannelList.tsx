@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Channel } from '../../shared/types';
+import { Channel } from '../../../shared/types';
 
 interface ChannelListProps {
     onChannelSelect: (channelId: string) => void;

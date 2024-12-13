@@ -7,7 +7,7 @@ import { GenerateInputParams, GenerateParams, HandlerParams, ProjectHandlerParam
 import { Artifact } from "src/tools/artifact";
 import { SearchResult } from "./chromaService";
 import { ArtifactManager } from "src/tools/artifactManager";
-import { StructuredOutputPrompt } from "./lmstudioService";
+import { StructuredOutputPrompt } from "./ILLMService";
 
 export class ModelHelpers {
     getPurpose() {
