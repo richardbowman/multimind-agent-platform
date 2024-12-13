@@ -12,12 +12,8 @@ import { ResearchActivityType } from './researchManager';
 import { RequestArtifacts } from '../schemas/ModelResponse';
 
 export enum ProjectManagerActivities {
-    InitateBrainstorm = "initiate-brainstorm",
-    ContinueBrainstorm = "continue-brainstorm",
     AnswerQuestions = "answer-questions",
     GenerateArtifact = "generate-artifact",
-    // KickoffResearch = "kickoff-research-project",
-    // KickoffContentDevelopment = "kickoff-content-development",
     KickoffCombinedProject = "kickoff-complex-project",
     ScheduleTask = "schedule-task"
 }
@@ -29,13 +25,9 @@ export interface PlanningProject extends Project<Task> {
     description: string;
 }
 
-export class ProjectManager extends Agent<PlanningProject, Task> {
-    protected processTask(task: Task): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
+export class ProjectManager extends StepBasedAgent<PlanningProject, Task> {
     protected async projectCompleted(project: PlanningProject): Promise<void> {
-
+        await super.projectCompleted(project);
     }
 
     constructor(userId: string, messagingHandle: string, chatClient: ChatClient, lmStudioService: LMStudioService, chromaDBService: ChromaDBService, projects: TaskManager) {
@@ -78,21 +70,6 @@ Respond to the user's request, explaining to them the other available options.`;
     }
 
 
-    @HandleActivity(ProjectManagerActivities.InitateBrainstorm, "User wants my help brainstorming structured projects", ResponseType.CHANNEL)
-    private async startBrainstorming(params: HandlerParams) {
-        const instructions = `Generate ideas for the user based on their concept or starting point. Try not to rule out ideas and focus on being creative.`;
-
-        const response = await this.generateOld(instructions, params);
-        await this.reply(params.userPost, response);
-    }
-
-    @HandleActivity(ProjectManagerActivities.ContinueBrainstorm, "Continue brainstorming", ResponseType.RESPONSE)
-    private async continueBrainstorming(params: HandlerParams) {
-        const instructions = `Generate ideas for the user based on their concept or starting point. Try not to rule out ideas and focus on being creative.`;
-
-        const response = await this.generateOld(instructions, params);
-        await this.reply(params.userPost, response);
-    }
 
     @HandleActivity(ProjectManagerActivities.GenerateArtifact, "Create/revise a Markdown document the user can refer back to later.", ResponseType.RESPONSE)
     private async generateArtifact(params: HandlerParams) {
