@@ -102,7 +102,13 @@ await onboardingAssistant.initialize();
 
 // Initialize Solver Agent
 const solverClient = new InMemoryTestClient(SOLVER_AGENT_USER_ID, "test", storage);
-const solverAgent = new SolverAgent(solverClient, llmService, SOLVER_AGENT_USER_ID, tasks, vectorDB);
+const solverAgent = new SolverAgent({
+    chatClient: solverClient,
+    llmService: llmService,
+    userId: SOLVER_AGENT_USER_ID,
+    taskManager: tasks,
+    vectorDBService: vectorDB
+});
 await solverAgent.initialize();
 
 setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);

@@ -16,15 +16,8 @@ import { ModelHelpers } from 'src/llm/helpers';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 
 export class SolverAgent extends StepBasedAgent<any, any> {
-    constructor(
-        chatClient: ChatClient,
-        lmStudioService: LMStudioService,
-        userId: string,
-        projects: TaskManager,
-        chromaDBService: ChromaDBService
-    ) {
-
-        const modelHelpers = new ModelHelpers(lmStudioService, userId);
+    constructor(params: AgentConstructorParams) {
+        const modelHelpers = new ModelHelpers(params.llmService, params.userId);
         modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning.`);
         modelHelpers.setFinalInstructions(`SOLVING INSTRUCTIONS
         Use steps of constructive thinking, critical refutation, and validation to develop robust solutions. In the reasoning field, explain the complexity you see in this goal.
@@ -40,14 +33,14 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         Adapt your approach to the complexity of each problem, using more cycles as needed.`);
         const planner = new MultiStepPlanner(lmStudioService, projects, userId, modelHelpers);
 
-        super(chatClient, lmStudioService, userId, projects, chromaDBService, planner);
+        super(params, planner);
 
         // Register our specialized executors
-        this.registerStepExecutor(new GoalConfirmationExecutor(lmStudioService, userId));
-        this.registerStepExecutor(new ThinkingExecutor(lmStudioService));
-        this.registerStepExecutor(new RefutingExecutor(lmStudioService));
-        this.registerStepExecutor(new ValidationExecutor(lmStudioService));
-        this.registerStepExecutor(new KnowledgeCheckExecutor(lmStudioService, chromaDBService));
+        this.registerStepExecutor(new GoalConfirmationExecutor(params.llmService, params.userId));
+        this.registerStepExecutor(new ThinkingExecutor(params.llmService));
+        this.registerStepExecutor(new RefutingExecutor(params.llmService));
+        this.registerStepExecutor(new ValidationExecutor(params.llmService));
+        this.registerStepExecutor(new KnowledgeCheckExecutor(params.llmService, params.vectorDBService));
         this.registerStepExecutor(new FinalResponseExecutor(modelHelpers));
 
     }
