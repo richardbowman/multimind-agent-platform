@@ -11,7 +11,9 @@ import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { ArtifactResponseSchema } from "../schemas/artifactSchema";
 import { IVectorDatabase } from "src/llm/IVectorDatabase";
-import schema from "src/schemas/schemasImport";
+import { getGeneratedSchema } from '../helpers/schemaUtils';
+import { SchemaType } from '../schemas/SchemaTypes';
+import { ResearchDecomposition, ResearchArtifactResponse } from '../schemas/research-manager';
 
 export enum ResearchActivityType {
     DraftEmail = "draft-email",
@@ -186,26 +188,14 @@ Activity Type: **${activityType}**`;
     }
     `;
 
-            const schema = {
-                type: 'object',
-                properties: {
-                    goal: { type: 'string' },
-                    strategy: { type: 'string' },
-                    researchRequested: {
-                        type: 'array',
-                        items: { type: 'string' }
-                    }
-                },
-                required: ['goal', 'strategy', 'researchRequested']
-            };
-
+            const schema = await getGeneratedSchema(SchemaType.ResearchDecomposition);
             const structuredPrompt = new StructuredOutputPrompt(schema, systemPrompt);
 
             const userPrompt = task;
             const history: any[] = [];
 
             const project = this.projects.getProject(projectId);
-            const responseJSON = await this.lmStudioService.sendStructuredRequest(userPrompt, structuredPrompt, history);
+            const responseJSON = await this.lmStudioService.sendStructuredRequest<ResearchDecomposition>(userPrompt, structuredPrompt, history);
 
             if (responseJSON.goal) {
                 project.name = responseJSON.goal;
@@ -308,8 +298,9 @@ Your reponse should look like:
             const userPrompt = `Original Prompt: ${project.name}\nAggregated Data:\n${aggregatedData}`;
 
             // Use StructuredOutputPrompt to generate the report
-            const structuredPrompt = new StructuredOutputPrompt(schema.definitions.ArtifactResponseSchema, systemPrompt);
-            const responseJSON: ArtifactResponseSchema = await this.lmStudioService.sendStructuredRequest(userPrompt, structuredPrompt, undefined, undefined, 32000);
+            const schema = await getGeneratedSchema(SchemaType.ResearchArtifactResponse);
+            const structuredPrompt = new StructuredOutputPrompt(schema, systemPrompt);
+            const responseJSON = await this.lmStudioService.sendStructuredRequest<ResearchArtifactResponse>(userPrompt, structuredPrompt, undefined, undefined, 32000);
             return responseJSON;
         } catch (error) {
             Logger.error('Error generating final report:', error);

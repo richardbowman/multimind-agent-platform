@@ -18,6 +18,8 @@ export enum SchemaType {
     GoalConfirmation = 'GoalConfirmation',
     Refuting = 'Refuting',
     Research = 'Research',
+    ResearchDecomposition = 'ResearchDecomposition',
+    ResearchArtifactResponse = 'ResearchArtifactResponse',
     ReviewProgressResponse = 'ReviewProgressResponse',
     WritingResponse = 'WritingResponse'
 }
