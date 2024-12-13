@@ -8,6 +8,10 @@ import crypto from 'crypto';
 import { Task } from '../../tools/taskManager';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
+import { SchemaInliner } from '../../helpers/schemaInliner';
+import * as schemaJson from "../../schemas/generated/goalsAnalysis.json";
+import { GoalsAnalysis, BusinessGoal } from '../../schemas/goalsAnalysis';
+const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
 @StepExecutorDecorator('analyze_goals', 'Break down and analyze business goals into actionable tasks')
 export class AnalyzeGoalsExecutor implements StepExecutor {
@@ -53,22 +57,7 @@ export class AnalyzeGoalsExecutor implements StepExecutor {
     }
 
     private async breakdownBusinessGoals(userInput: string): Promise<Array<{ description: string }>> {
-        const schema = {
-            type: "object",
-            properties: {
-                goals: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            description: { type: "string" }
-                        },
-                        required: ["description"]
-                    }
-                }
-            },
-            required: ["goals"]
-        };
+        const schema = generatedSchemaDef.GoalsAnalysis;
 
         const response = await this.modelHelpers.generate({
             message: userInput,
