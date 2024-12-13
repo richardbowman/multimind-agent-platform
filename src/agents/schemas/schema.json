@@ -194,7 +194,7 @@
       ],
       "type": "object"
     },
-    "ModelResponse": {
+    "ModelMessageResponse": {
       "additionalProperties": false,
       "properties": {
         "message": {
@@ -314,6 +314,7 @@
         }
       },
       "required": [
+        "reasoning",
         "steps"
       ],
       "type": "object"
@@ -334,6 +335,18 @@
       "required": [
         "question",
         "answer"
+      ],
+      "type": "object"
+    },
+    "ReasoningResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "reasoning": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "reasoning"
       ],
       "type": "object"
     },

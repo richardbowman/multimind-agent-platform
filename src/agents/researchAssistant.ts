@@ -11,7 +11,7 @@ import SummaryHelper from '../helpers/summaryHelper';
 import Logger from '../helpers/logger';
 import { CHROMA_COLLECTION, MAX_SEARCHES, RESEARCHER_TOKEN, WEB_RESEARCH_CHANNEL_ID } from '../helpers/config';
 import { Artifact } from 'src/tools/artifact';
-import { ModelResponse, RequestArtifacts, CreateArtifact } from './schemas/ModelResponse';
+import { ModelMessageResponse, RequestArtifacts, CreateArtifact } from './schemas/ModelResponse';
 import ChromaDBService from 'src/llm/chromaService';
 import { ResearchExecutor } from './executors/ResearchExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
@@ -55,8 +55,8 @@ export interface ResearchProject extends Project<ResearchTask> {
 }
 
 class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
-    private searchHelper = new SearchHelper(new DuckDuckGoProvider());
-    private scrapeHelper = new ScrapeHelper();
+    private searchHelper = new SearchHelper(new DuckDuckGoProvider(this.artifactManager));
+    private scrapeHelper = new ScrapeHelper(this.artifactManager);
     private summaryHelper = new SummaryHelper();
 
     constructor(

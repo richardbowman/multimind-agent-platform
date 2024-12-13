@@ -9,7 +9,7 @@ requiresUserInput: boolean;
         underlyingData: string;
     }[];*/
 
-import { ModelResponse } from "./ModelResponse";
+import { ModelMessageResponse } from "./ModelResponse";
 import { Task } from "../../tools/taskManager";
 
   
@@ -19,6 +19,6 @@ export interface PlanStepTask {
     existingId: string;
 };
 
-export interface PlanStepsResponse extends ModelResponse {
+export interface PlanStepsResponse extends ModelMessageResponse {
     steps: PlanStepTask[];
 }

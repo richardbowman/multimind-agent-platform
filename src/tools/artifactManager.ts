@@ -101,11 +101,11 @@ export class ArtifactManager {
     return artifact;
   }
 
-  async loadArtifact(artifactId: string, version?: number): Promise<Artifact | null> {
+  async loadArtifact(artifactId: string, version?: number): Promise<Artifact | undefined> {
     const metadata = await this.loadArtifactMetadata();
     if (!metadata[artifactId]) {
       Logger.warn(`Artifact not found in metadata: ${artifactId}`);
-      return null;
+      return undefined;
     }
 
     let contentPath = metadata[artifactId].contentPath;

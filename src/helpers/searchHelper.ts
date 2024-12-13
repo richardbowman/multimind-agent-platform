@@ -5,6 +5,8 @@ import { Browser, chromium } from 'playwright-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import { ArtifactManager } from '../tools/artifactManager';
 import crypto from 'crypto';
+import { load } from 'cheerio';
+import { convertPageToMarkdown } from './scrapeHelper';
 
 // Add stealth plugin to avoid detection
 chromium.use(stealth())
@@ -77,16 +79,25 @@ export class DuckDuckGoProvider implements ISearchProvider {
             await page.waitForLoadState('networkidle');
 
             // Save the page content as an artifact
-            const content = await page.content();
+            const htmlContent = await page.content();
+
+            // Extract the title of the page
+            const title = await page.title();
+
+            // Load the HTML content into Cheerio
+            const $ = load(htmlContent);
+            const markdownContent = convertPageToMarkdown($);
+
             const artifactId = crypto.randomUUID();
             await this.artifactManager.saveArtifact({
                 id: artifactId,
-                type: 'search-page',
-                content: content,
+                type: 'webpage',
+                content: markdownContent,
                 metadata: {
                     query,
                     category,
                     url: page.url(),
+                    title,
                     searchedAt: new Date().toISOString()
                 }
             });
@@ -105,7 +116,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
                 try {
                     const titleElement = await result.$('[data-testid="result-title-a"]');
                     const linkElement = await result.$('[data-testid="result-extras-url-link"]');
-                    const snippetElement = await result.$('[data-result="snippet"] .kY2IgmnCmOGjharHErah');
+                    const snippetElement = await result.$('[data-result="snippet"]');
 
                     if (titleElement && linkElement) {
                         const title = await titleElement.innerText();

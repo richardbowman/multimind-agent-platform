@@ -69,7 +69,8 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
 
         // Ensure content is fully rendered before scrolling
         process.nextTick(() => {
-            chatBox.scroll(chatBox.scrollOffset - chatBox.getScrollHeight());
+            const currentScrollHeight = chatBox.getScrollHeight();
+            chatBox.scroll(chatBox.scrollOffset - currentScrollHeight);
             screen.render();
         });
     }
@@ -248,7 +249,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                     // First remove the partial text
                     inputBox.setValue(beforeHandle + partial.slice(0, -1));
                     // Then set the complete handle
-                    inputBox.setValue(beforeHandle + '@' + handles[0].handle + ' ');
+                    inputBox.setValue(beforeHandle + handles[0].handle + ' ');
                     commandList.hide();
                     return; // Prevent default tab behavior
                 }

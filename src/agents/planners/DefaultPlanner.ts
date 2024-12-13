@@ -71,8 +71,14 @@ HIGH-LEVEL GOAL: ${project.name}
 The allowable step types you can execute in the plan:
 ${stepDescriptions}
 
-TASK GOAL: If the user's high-level goal is not solved, your job is to create new steps to achieve the goal if they are missing, and reorder steps if needed to change priority.
-Return a steps list in the order to perform.
+TASK GOAL:
+- If the user's high-level goal is not solved, look at the Current Plan and decide if you need to change anything to achieve the goal.
+- If no change to the plan is needed, just return the same steps and include their ID. 
+- Return a steps list in the order to perform.
+
+${completedSteps}
+
+${currentTasks}
 
 ${this.modelHelpers.getFinalInstructions()}`;
 
@@ -81,7 +87,7 @@ ${this.modelHelpers.getFinalInstructions()}`;
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
 
-        Logger.info(`PlanStepsResponse: ${JSON.stringify(response, null, 2)}`);
+        Logger.verbose(`PlanStepsResponse: ${JSON.stringify(response, null, 2)}`);
 
         // Create a map of existing tasks by ID
         const existingTaskMap = new Map(

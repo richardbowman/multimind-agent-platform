@@ -1,11 +1,12 @@
 // config.ts
 import dotenv from 'dotenv';
+import Logger from './logger';
 
 dotenv.config({ path: 'env.defaults' });
 dotenv.config({ path: '.env', override: true });
 dotenv.config({ path: '.env.local', override: true });
 
-console.log(JSON.stringify(process.env, undefined, " "));
+Logger.info(JSON.stringify(process.env, undefined, " "));
 
 export const WEB_RESEARCH_CHANNEL_ID = process.env.WEB_RESEARCH_CHANNEL_ID!;
 export const RESEARCHER_TOKEN = process.env.RESEARCHER_TOKEN!;

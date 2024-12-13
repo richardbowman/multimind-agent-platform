@@ -1,6 +1,6 @@
 import { ChatPost } from "src/chat/chatClient";
 import { ILLMService } from "./ILLMService";
-import { ModelResponse, RequestArtifacts } from "src/agents/schemas/ModelResponse";
+import { ModelMessageResponse, RequestArtifacts } from "src/agents/schemas/ModelResponse";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { GenerateInputParams, GenerateParams, HandlerParams, ProjectHandlerParams, ThreadSummary } from "src/agents/agents";
@@ -155,7 +155,7 @@ export class ModelHelpers {
         return importantPoints;
     }
 
-    public async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelResponse> {
+    public async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelMessageResponse> {
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = structure.getPrompt();
         if (this.isMemoryEnabled) {
@@ -195,7 +195,7 @@ export class ModelHelpers {
         return response;
     }
 
-    public async generate(params: GenerateInputParams): Promise<ModelResponse> {
+    public async generate<T>(params: GenerateInputParams): Promise<T> {
         if (params.instructions instanceof StructuredOutputPrompt) {
             return this.generateStructured(params.instructions, params);
         } else {
@@ -241,7 +241,7 @@ export class ModelHelpers {
         return artifact;
     }
 
-    public async generateOld(instructions: string, params: GenerateParams): Promise<ModelResponse> {
+    public async generateOld(instructions: string, params: GenerateParams): Promise<ModelMessageResponse> {
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`);
 

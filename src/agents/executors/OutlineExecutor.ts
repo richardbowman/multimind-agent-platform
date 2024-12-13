@@ -2,10 +2,10 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
-import { getInlinedSchema } from '../../helpers/schemaUtils';
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-const schema = getGeneratedSchema(SchemaType.ContentOutline);
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ContentOutline } from 'src/schemas/outline';
 
 @StepExecutorDecorator('outline', 'Create structured content outlines')
 export class OutlineExecutor implements StepExecutor {
@@ -16,7 +16,7 @@ export class OutlineExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = schema;
+        const schema = getGeneratedSchema(SchemaType.ContentOutline);
 
         const prompt = `You are a content outline specialist.
 Given a content goal and research findings, create a well-structured outline.

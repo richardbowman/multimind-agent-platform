@@ -6,7 +6,7 @@ import Logger from "src/helpers/logger";
 import { SystemPromptBuilder } from "src/helpers/systemPrompt";
 import ChromaDBService, { SearchResult } from "src/llm/chromaService";
 import LMStudioService, { StructuredOutputPrompt } from "src/llm/lmstudioService";
-import { CreateArtifact, ModelResponse, RequestArtifacts } from "src/agents/schemas/ModelResponse";
+import { CreateArtifact, ModelMessageResponse, RequestArtifacts } from "src/agents/schemas/ModelResponse";
 import { InputPrompt, StructuredInputPrompt } from "src/prompts/structuredInputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
@@ -170,7 +170,7 @@ export abstract class Agent<Project, Task> {
         }
     }
 
-    protected async reply(post: ChatPost, response: ModelResponse, postProps?: ConversationContext): Promise<ChatPost> {
+    protected async reply(post: ChatPost, response: ModelMessageResponse, postProps?: ConversationContext): Promise<ChatPost> {
         const artifactIds = [...postProps?.["artifact-ids"] || [], ...response.artifactIds || [], ...response.artifactId ? [response.artifactId] : []];
 
         // Include project ID in props if present in response
@@ -304,11 +304,11 @@ export abstract class Agent<Project, Task> {
         });
     }
 
-    protected async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelResponse> {
+    protected async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelMessageResponse> {
         return this.modelHelpers.generateStructured(structure, params);
     }
 
-    protected async generate(params: GenerateInputParams): Promise<ModelResponse> {
+    protected async generate(params: GenerateInputParams): Promise<ModelMessageResponse> {
         return this.modelHelpers.generate(params);
     }
 

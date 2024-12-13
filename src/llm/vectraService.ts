@@ -59,10 +59,10 @@ class VectraService extends EventEmitter implements IVectorDatabase {
                 } catch (error) {
                     // Skip if item already exists
                     if (error.message?.includes('already exists')) {
-                        Logger.debug(`Skipping duplicate item with id ${collection.ids[i]}`);
-                        continue;
+                        Logger.warn(`Skipping duplicate item with id ${collection.ids[i]}`);
+                    } else {
+                        throw error; // Re-throw other errors
                     }
-                    throw error; // Re-throw other errors
                 }
             });
         }

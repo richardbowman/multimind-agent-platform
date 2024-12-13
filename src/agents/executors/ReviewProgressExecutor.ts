@@ -1,22 +1,22 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
-import { SchemaInliner } from '../../helpers/schemaInliner';
-import * as schemaJson from "../schemas/schema.json";
-const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
+import { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { ILLMService } from '../../llm/ILLMService';
 import { ReviewProgressResponse } from '../../schemas/reviewProgress';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
-import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
+import { SchemaType } from '../../schemas/SchemaTypes';
 
 @StepExecutorDecorator('review_progress', 'Review and analyze progress of all tasks and goals')
 export class ReviewProgressExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
     constructor(
-        llmService: LMStudioService,
+        llmService: ILLMService,
         private taskManager: TaskManager,
         private artifactManager: ArtifactManager
     ) {
@@ -27,7 +27,7 @@ export class ReviewProgressExecutor implements StepExecutor {
         const project = await this.getProjectWithPlan(projectId);
         const tasks = this.taskManager.getAllTasks(projectId);
 
-        const schema = generatedSchemaDef.ReviewProgressResponse;
+        const schema = getGeneratedSchema(SchemaType.ReviewProgressResponse);
 
         const response : ReviewProgressResponse = await this.modelHelpers.generate({
             message: JSON.stringify({

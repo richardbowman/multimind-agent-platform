@@ -90,57 +90,7 @@ class ScrapeHelper {
             // Load the HTML content into Cheerio
             const $ = load(htmlContent);
 
-            // Remove script tags from the body
-            $('script, style, img, iframe').remove();
-            $('*').removeAttr('style');
-
-            // Convert all relative URLs to absolute
-            $('[src], [href]').each((i, element) => {
-                ['src', 'href'].forEach(attr => {
-                    const value = $(element).attr(attr);
-                    if (!value) return;
-
-                    try {
-                        const absoluteUrl = new URL(value, actualUrl).href;
-                        $(element).attr(attr, absoluteUrl);
-                    } catch (e) {
-                        Logger.warn(`Failed to process ${attr} URL:`, value, e);
-                    }
-                });
-            });
-
-            // Get the modified HTML without scripts, styles, and style attributes
-            const cleanedHtml = $('body').html();
-
-            const fullHtmlWithoutIndentation = cleanedHtml
-                .replace(/\t/g, '') // Remove tabs
-                .replace(/^[ \t]+/gm, ''); // Remove leading spaces and tabs from each line
-
-            const turndownService = new TurndownService({
-                linkStyle: 'referenced',
-                linkReferenceStyle: 'collapsed'
-            });
-            
-            // Configure link formatting
-            turndownService.addRule('links', {
-                filter: 'a',
-                replacement: function(content, node, options) {
-                    const href = node.getAttribute('href');
-                    const title = node.getAttribute('title');
-                    if (href === null) {
-                        return content;
-                    }
-                    // Normalize the content: remove newlines and excessive spaces
-                    const normalizedContent = content
-                        .replace(/\s+/g, ' ')  // Replace multiple spaces/newlines with single space
-                        .trim();               // Remove leading/trailing whitespace
-                    
-                    const titlePart = title ? ` "${title.replace(/\s+/g, ' ').trim()}"` : '';
-                    return `[${normalizedContent}](${href}${titlePart})`;
-                }
-            });
-
-            let markdownContent = turndownService.turndown(fullHtmlWithoutIndentation);
+            const markdownContent = convertPageToMarkdown($);
 
             // Extract links
             const links: { href: string, text: string }[] = [];
@@ -186,3 +136,58 @@ class ScrapeHelper {
 }
 
 export default ScrapeHelper;
+
+
+export function convertPageToMarkdown($: CheerioAPI): string {
+    // Get the modified HTML without scripts, styles, and style attributes
+    const cleanedHtml = $('body').html();
+
+    // Remove script tags from the body
+    $('script, style, img, iframe').remove();
+    $('*').removeAttr('style');
+
+    // Convert all relative URLs to absolute
+    $('[src], [href]').each((i, element) => {
+        ['src', 'href'].forEach(attr => {
+            const value = $(element).attr(attr);
+            if (!value) return;
+
+            try {
+                const absoluteUrl = new URL(value, actualUrl).href;
+                $(element).attr(attr, absoluteUrl);
+            } catch (e) {
+                Logger.warn(`Failed to process ${attr} URL:`, value, e);
+            }
+        });
+    });
+
+    const fullHtmlWithoutIndentation = cleanedHtml
+        .replace(/\t/g, '') // Remove tabs
+        .replace(/^[ \t]+/gm, ''); // Remove leading spaces and tabs from each line
+
+    const turndownService = new TurndownService({
+        linkStyle: 'referenced',
+        linkReferenceStyle: 'collapsed'
+    });
+    
+    // Configure link formatting
+    turndownService.addRule('links', {
+        filter: 'a',
+        replacement: function(content, node, options) {
+            const href = node.getAttribute('href');
+            const title = node.getAttribute('title');
+            if (href === null) {
+                return content;
+            }
+            // Normalize the content: remove newlines and excessive spaces
+            const normalizedContent = content
+                .replace(/\s+/g, ' ')  // Replace multiple spaces/newlines with single space
+                .trim();               // Remove leading/trailing whitespace
+            
+            const titlePart = title ? ` "${title.replace(/\s+/g, ' ').trim()}"` : '';
+            return `[${normalizedContent}](${href}${titlePart})`;
+        }
+    });
+
+    return turndownService.turndown(fullHtmlWithoutIndentation);
+}

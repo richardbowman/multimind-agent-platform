@@ -1,5 +1,5 @@
-import { ModelResponse } from "./ModelResponse";
+import { ModelMessageResponse } from "./ModelResponse";
 
-export interface OnboardingConsultantResponse extends ModelResponse {
+export interface OnboardingConsultantResponse extends ModelMessageResponse {
     completedTasks: string[];
 }

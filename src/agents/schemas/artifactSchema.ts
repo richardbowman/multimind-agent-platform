@@ -1,6 +1,6 @@
-import { ModelResponse } from "./ModelResponse";
+import { ModelMessageResponse } from "./ModelResponse";
 
-export interface ArtifactResponseSchema extends ModelResponse {
+export interface ArtifactResponseSchema extends ModelMessageResponse {
     artifactTitle: string;
     artifactContent: string;
 }

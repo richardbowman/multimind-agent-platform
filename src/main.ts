@@ -102,8 +102,6 @@ if (values.reindex) {
     await vectorDB.reindexCollection(CHROMA_COLLECTION);
     await artifactManager.indexArtifacts();
     process.exit(0);
-} else {
-    await artifactManager.indexArtifacts();
 }
 
 

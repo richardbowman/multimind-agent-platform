@@ -17,5 +17,6 @@ export enum SchemaType {
     FinalResponse = 'FinalResponse',
     GoalConfirmation = 'GoalConfirmation',
     Refuting = 'Refuting',
-    Research = 'Research'
+    Research = 'Research',
+    ReviewProgressResponse = 'ReviewProgressResponse'
 }

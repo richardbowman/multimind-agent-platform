@@ -32,8 +32,6 @@ export class CreatePlanExecutor implements StepExecutor {
         const project = await this.getProjectWithPlan(projectId);
         const businessGoals = Object.values(project.tasks).filter(t => t.type === 'create-plan');
 
-        const schema = schema;
-
         const answers = this.getAnswersForType(project, 'process-answers');
 
         const formattedMessage = this.formatPromptMessage(

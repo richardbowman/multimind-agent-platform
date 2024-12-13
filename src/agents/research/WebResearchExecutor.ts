@@ -12,7 +12,7 @@ import { ModelHelpers } from 'src/llm/helpers';
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
     constructor(
-        private searchHelper: SearchHelper = new SearchHelper(new DuckDuckGoProvider()),
+        private searchHelper: SearchHelper = new SearchHelper(new DuckDuckGoProvider(this.artifactManager)),
         private scrapeHelper: ScrapeHelper,
         private summaryHelper: SummaryHelper,
         private lmStudioService: LMStudioService,

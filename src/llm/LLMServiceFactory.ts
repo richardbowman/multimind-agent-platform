@@ -18,7 +18,7 @@ export class LLMServiceFactory {
                 const lmStudioService = new LMStudioService();
                 const modelId = LLM_WEAK_MODEL;
                 if (!modelId) throw new Error("LM_HEAVY_MODEL not found in environment.");
-                return new BedrockService(LLM_WEAK_MODEL, lmStudioService);
+                return new BedrockService(LLM_WEAK_MODEL, undefined, lmStudioService);
             default:
                 throw new Error(`Unsupported LLM provider: ${provider}`);
         }

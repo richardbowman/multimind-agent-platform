@@ -9,7 +9,7 @@ import { Planner } from './planners/Planner';
 import { DefaultPlanner } from './planners/DefaultPlanner';
 import crypto from 'crypto';
 import Logger from '../helpers/logger';
-import { CreateArtifact, ModelResponse } from './schemas/ModelResponse';
+import { CreateArtifact, ModelMessageResponse } from './schemas/ModelResponse';
 import ChromaDBService from 'src/llm/chromaService';
 import { PlanStepsResponse } from './schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/inMemoryChatClient';
@@ -21,7 +21,7 @@ export interface StepResult {
     finished?: boolean;
     [key: string]: any;
     needsUserInput?: boolean;
-    response: ModelResponse;
+    response: ModelMessageResponse;
 }
 
 export interface StepExecutor {
@@ -65,9 +65,9 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         const steps = await this.planner.planSteps(handlerParams);
         
         // Send a progress message about the next steps
-        const nextStepsMessage = steps.steps
-            .map((step, index) => `${index + 1}. ${step.actionType}`)
-            .join('\n');
+        const nextStepsMessage = steps.steps?
+            steps.steps.map((step, index) => `${index + 1}. ${step.actionType}`)
+            .join('\n') : "No steps provided";
         
         await this.reply(handlerParams.userPost, {
             message: `🔄 Planning next steps:\n${nextStepsMessage}`
@@ -143,18 +143,16 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                             message: planningPrompt
                         })
                     });
-                } else {
-                    // If validation passed, mark validation step as complete
-                    await this.projects.completeTask(task.id);
-                    return;
                 }
-            } else if (stepResult.finished) {
+            }
+            
+            if (stepResult.finished) {
                 this.projects.completeTask(task.id);
                 Logger.info(`Completed step "${task.type}" for project "${projectId}"`);
 
                 // If this was the last planned task, add a validation step
                 const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
-                if (remainingTasks.length === 0) {
+                if (task.type !== 'validation' && remainingTasks.length === 0) {
                     const validationTask: Task = {
                         id: crypto.randomUUID(),
                         type: 'validation',
@@ -179,8 +177,9 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 });
                 return;
             } else {
+                const message = stepResult.response?.reasoning || stepResult.response?.message ||"";
                 await this.reply(userPost, {
-                    message: `Just finished ${task.type}, still working...`
+                    message: `${message} [Finished ${task.type}, still working...]`
                 }, {
                     "project-id": stepResult.projectId||projectId
                 });
