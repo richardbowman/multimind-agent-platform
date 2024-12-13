@@ -87,7 +87,13 @@ const pmAssistant = new ProjectManager({
 });
 
 const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
-const onboardingAssistant = new GoalBasedOnboardingConsultant(onboardingClient, llmService, ONBOARDING_CONSULTANT_USER_ID, tasks, vectorDB);
+const onboardingAssistant = new GoalBasedOnboardingConsultant({
+    chatClient: onboardingClient,
+    llmService: llmService,
+    userId: ONBOARDING_CONSULTANT_USER_ID,
+    taskManager: tasks,
+    vectorDBService: vectorDB
+});
 await onboardingAssistant.initialize();
 
 // const factCheckerClient = new InMemoryTestClient(FACT_CHECKER_USER_ID, "test", storage);

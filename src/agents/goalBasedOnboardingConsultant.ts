@@ -65,14 +65,8 @@ Let's start by discussing your main business goals. What would you like to achie
     }
 
 
-    constructor(
-        chatClient: ChatClient,
-        lmStudioService: LMStudioService,
-        userId: string,
-        projects: TaskManager,
-        chromaDBService: ChromaDBService
-    ) {
-        super(chatClient, lmStudioService, userId, projects, chromaDBService);
+    constructor(params: AgentConstructorParams) {
+        super(params);
         
         // Register our specialized executors
         // this.registerStepExecutor(new ReplyExecutor(lmStudioService, projects, this.artifactManager));
