@@ -7,3 +7,4 @@ TODO
 .aider*
 .env
 src/**/*.js
+data
