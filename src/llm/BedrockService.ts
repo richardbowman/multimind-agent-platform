@@ -57,26 +57,30 @@ export class BedrockService implements ILLMService {
 
     async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelMessageResponse> {
         const messages = this.formatMessages(userPost.message, history);
-
-        const command = new InvokeModelCommand({
+        
+        const command = new ConverseCommand({
             modelId: this.modelId,
-            body: JSON.stringify({
-                // anthropic_version: "bedrock-2023-05-31",
-                // max_tokens: 2048,
-                // temperature: 0.7,
-                system: instructions,
-                // inferenceConfig: {
-                //     max_tokens: 2048,
-                // }
-                messages: messages
-            })
+            system: [{
+                text: instructions
+            }],
+            messages: messages.map(msg => ({
+                role: msg.role,
+                content: [{
+                    text: msg.content
+                }]
+            })),
+            inferenceConfig: {
+                temperature: 0.7,
+                topP: 1,
+                topK: 250
+            }
         });
 
         try {
             const response = await this.client.send(command);
-            const result = JSON.parse(new TextDecoder().decode(response.body));
+            const result = response.output?.message?.content?.[0];
             return {
-                message: result.content[0].text
+                message: result?.text || ''
             };
         } catch (error) {
             Logger.error("Bedrock API error:", error);
@@ -139,77 +143,59 @@ export class BedrockService implements ILLMService {
     }
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string): Promise<string> {
-        let mergedMessages = [];
-        let currentRole: string | null = null;
-        let currentContent: string[] = [];
         let systemPrompt = "You are a helpful assistant";
+        const processedMessages = [];
 
-        // Process history
+        // Extract system message and process history
         for (const msg of history) {
-            if (msg.role === currentRole) {
-                currentContent.push(msg.content);
-            } else if (msg.role === "system") {
+            if (msg.role === "system") {
                 systemPrompt = msg.content;
             } else {
-                if (currentRole) {
-                    mergedMessages.push({
-                        role: currentRole,
-                        content: currentContent.join("\n\n")
-                    });
-                }
-                currentRole = msg.role;
-                currentContent = [msg.content];
-            }
-        }
-
-        // Handle the current message if not empty
-        if (message.trim()) {
-            if (currentRole === "user") {
-                currentContent.push(message);
-            } else {
-                if (currentRole) {
-                    mergedMessages.push({
-                        role: currentRole,
-                        content: currentContent.join("\n\n")
-                    });
-                }
-                currentRole = "user";
-                currentContent = [message];
-            }
-        }
-
-        // Handle seed assistant message
-        if (seedAssistant) {
-            if (currentRole) {
-                mergedMessages.push({
-                    role: currentRole,
-                    content: currentContent.join("\n\n")
+                processedMessages.push({
+                    role: msg.role,
+                    content: [{
+                        text: msg.content
+                    }]
                 });
             }
-            mergedMessages.push({
-                role: "assistant",
-                content: seedAssistant
-            });
-        } else if (currentRole) {
-            mergedMessages.push({
-                role: currentRole,
-                content: currentContent.join("\n\n")
+        }
+
+        // Add current message
+        if (message.trim()) {
+            processedMessages.push({
+                role: "user",
+                content: [{
+                    text: message
+                }]
             });
         }
 
-        const command = new InvokeModelCommand({
+        // Add seed assistant message if provided
+        if (seedAssistant) {
+            processedMessages.push({
+                role: "assistant",
+                content: [{
+                    text: seedAssistant
+                }]
+            });
+        }
+
+        const command = new ConverseCommand({
             modelId: this.modelId,
-            body: JSON.stringify({
-                // anthropic_version: "bedrock-2023-05-31",
-                // max_tokens: 2048,
-                system: systemPrompt,
-                messages: mergedMessages
-            })
+            system: [{
+                text: systemPrompt
+            }],
+            messages: processedMessages,
+            inferenceConfig: {
+                temperature: 0.7,
+                topP: 1,
+                topK: 250
+            }
         });
 
         const response = await this.client.send(command);
-        const result = JSON.parse(new TextDecoder().decode(response.body));
-        return result.content[0].text;
+        const result = response.output?.message?.content?.[0];
+        return result?.text || '';
     }
 
     async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<any> {
