@@ -68,20 +68,20 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
                 });
 
                 await this.taskManager.assignTaskToAgent(task.id, CONTENT_WRITER_USER_ID);
-
-                return {
-                    type: "writing",
-                    finished: false,
-                    needsUserInput: true,
-                    response: {
-                        message: `Created ${result.sections.length} writing tasks:\n\n${
-                            result.sections.map(s => `- ${s.title}`).join('\n')
-                        }`,
-                        data: result
-                    },
-                    projectId: writingProject.id
-                };
             }
+
+            return {
+                type: "writing",
+                finished: false,
+                needsUserInput: true,
+                response: {
+                    message: `Created ${result.sections.length} writing tasks:\n\n${
+                        result.sections.map(s => `- ${s.title}`).join('\n')
+                    }`,
+                    data: result
+                },
+                projectId: writingProject.id
+            };
         } catch (error) {
             Logger.error('Error creating writing tasks:', error);
             throw error;
