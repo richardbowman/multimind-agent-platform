@@ -8,9 +8,9 @@ export interface ExecutorMetadata {
 }
 
 export function StepExecutorDecorator(key: string, description: string) {
-    return function (target: Function) {
-        Reflect.defineMetadata(EXECUTOR_METADATA_KEY, { key, description }, target);
-        return target;
+    return function <T extends { new (...args: any[]): {} }>(constructor: T) {
+        Reflect.defineMetadata(EXECUTOR_METADATA_KEY, { key, description }, constructor);
+        return constructor;
     };
 }
 
