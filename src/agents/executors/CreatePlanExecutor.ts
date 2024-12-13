@@ -1,5 +1,5 @@
-import { SchemaInliner } from '../../helpers/schemaInliner';
 import { ModelHelpers } from '../../llm/helpers';
+import { getInlinedSchema } from '../../helpers/schemaUtils';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from '../../tools/taskManager';
@@ -10,7 +10,7 @@ import { OperationalGuideResponse, QAItem } from '../schemas/OperationalGuideRes
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { updateBusinessPlan } from './businessPlanHelper';
 
-const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
+const schema = getInlinedSchema(schemaJson, 'OperationalGuideResponse');
 
 @StepExecutorDecorator('create_revise_plan', `Create (or revise) a guide for our agents of the user's desired business goals.`)
 export class CreatePlanExecutor implements StepExecutor {
@@ -31,7 +31,7 @@ export class CreatePlanExecutor implements StepExecutor {
         const project = await this.getProjectWithPlan(projectId);
         const businessGoals = Object.values(project.tasks).filter(t => t.type === 'create-plan');
 
-        const schema = generatedSchemaDef.OperationalGuideResponse;
+        const schema = schema;
 
         const answers = this.getAnswersForType(project, 'process-answers');
 

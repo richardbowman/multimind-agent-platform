@@ -10,7 +10,7 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 
-const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
+const schema = getInlinedSchema(schemaJson, 'GoalsAnalysis');
 
 @StepExecutorDecorator('analyze_goals', 'Break down and analyze business goals into actionable tasks')
 export class AnalyzeGoalsExecutor implements StepExecutor {
@@ -56,7 +56,7 @@ export class AnalyzeGoalsExecutor implements StepExecutor {
     }
 
     private async breakdownBusinessGoals(userInput: string): Promise<Array<{ description: string }>> {
-        const schema = generatedSchemaDef.GoalsAnalysis;
+        const schema = schema;
 
         const response = await this.modelHelpers.generate({
             message: userInput,
