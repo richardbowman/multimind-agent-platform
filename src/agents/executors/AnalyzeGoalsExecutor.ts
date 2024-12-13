@@ -1,5 +1,6 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import type { ILLMService } from '../../llm/types';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
@@ -20,7 +21,7 @@ export class AnalyzeGoalsExecutor implements StepExecutor {
     private userId: string;
 
     constructor(
-        llmService: LMStudioService,
+        llmService: ILLMService,
         private taskManager: TaskManager,
         private artifactManager: ArtifactManager,
         userId: string
