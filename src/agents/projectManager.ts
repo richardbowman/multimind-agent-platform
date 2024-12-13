@@ -12,6 +12,8 @@ import { ResearchActivityType } from './researchManager';
 import { RequestArtifacts } from '../schemas/ModelResponse';
 import { BrainstormExecutor } from './executors/BrainstormExecutor';
 import { GenerateArtifactExecutor } from './executors/GenerateArtifactExecutor';
+import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
+import { AnswerQuestionsExecutor } from './executors/AnswerQuestionsExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
 
 export enum ProjectManagerActivities {
@@ -44,38 +46,11 @@ export class ProjectManager extends StepBasedAgent<PlanningProject, Task> {
         // Register executors
         this.registerStepExecutor(new BrainstormExecutor(lmStudioService));
         this.registerStepExecutor(new GenerateArtifactExecutor(lmStudioService, this.artifactManager));
+        this.registerStepExecutor(new GoalConfirmationExecutor(lmStudioService, userId));
+        this.registerStepExecutor(new AnswerQuestionsExecutor(lmStudioService, this.projects));
     }
 
     
-    @HandleActivity(ProjectManagerActivities.AnswerQuestions, "All initial inquries", ResponseType.CHANNEL)
-    private async handleChannel(params: HandlerParams) {
-        const instructions = `Here are the ways you can help when the user posts in the channel:
-${this.getAvailableActions(ResponseType.CHANNEL).map(a => ` - ${a.activityType}: ${a.usage}`).join('\n')}
-
-Here are the ways you can help respond to initial posts:
-${this.getAvailableActions(ResponseType.RESPONSE).map(a => ` - ${a.activityType}: ${a.usage}`).join('\n')}
-
-Respond to the user's request, explaining to them the other available options.`;
-
-        const response = await this.generateOld(instructions, params);
-        await this.reply(params.userPost, response);
-    }
-
-
-    @HandleActivity(ProjectManagerActivities.AnswerQuestions, "Follow-up questions", ResponseType.RESPONSE)
-    private async handleGeneralReplies(params: HandlerParams) {
-        const instructions = `Here are the ways you can help when the user posts in the channel:
-${this.getAvailableActions(ResponseType.CHANNEL).map(a => ` - ${a.activityType}: ${a.usage}`).join('\n')}
-
-Here are the ways you can help respond to initial posts:
-${this.getAvailableActions(ResponseType.RESPONSE).map(a => ` - ${a.activityType}: ${a.usage}`).join('\n')}
-
-Respond to the user's request, explaining to them the other available options.`;
-
-        const response = await this.generateOld(instructions, params);
-        await this.reply(params.userPost, response);
-    }
-
 
 
 
