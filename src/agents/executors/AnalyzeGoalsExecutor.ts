@@ -1,6 +1,6 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
-import type { ILLMService } from '../../llm/types';
+import { ILLMService } from '../../llm/ILLMService';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
@@ -11,6 +11,7 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
 import { GoalsAnalysis } from 'src/schemas/goalsAnalysis';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { Artifact } from 'src/tools/artifact';
 
 const schema = getGeneratedSchema(GoalsAnalysis);
 

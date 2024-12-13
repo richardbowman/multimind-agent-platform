@@ -17,8 +17,7 @@ export function getInlinedSchema(schemaJson: any, type?: string): any {
  * @param type The interface type to extract from the schema
  * @returns The inlined schema for the specified type
  */
-export function getGeneratedSchema<T>(type: new () => T): any {
-    const typeName = type.name;
-    const schemaJson = require(`../schemas/generated/${typeName}.json`);
+export function getGeneratedSchema(typeName: string): any {
+    const schemaJson = require(`../schemas/schemas.json`);
     return getInlinedSchema(schemaJson, typeName);
 }
