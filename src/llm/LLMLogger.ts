@@ -12,7 +12,11 @@ export class LLMCallLogger {
         this.logDir = path.join(process.cwd(), '.output', 'llm');
         this.logFile = path.join(this.logDir, `${serviceName}-${this.sessionId}.json`);
         
-        // Ensure log directory exists
+        // Ensure .output and llm directories exist
+        const outputDir = path.join(process.cwd(), '.output');
+        if (!fs.existsSync(outputDir)) {
+            fs.mkdirSync(outputDir, { recursive: true });
+        }
         if (!fs.existsSync(this.logDir)) {
             fs.mkdirSync(this.logDir, { recursive: true });
         }
