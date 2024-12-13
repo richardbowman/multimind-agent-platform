@@ -15,6 +15,7 @@ import { GenerateArtifactExecutor } from './executors/GenerateArtifactExecutor';
 import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
 import { AnswerQuestionsExecutor } from './executors/AnswerQuestionsExecutor';
 import { ComplexProjectExecutor } from './executors/ComplexProjectExecutor';
+import { ScheduleTaskExecutor } from './executors/ScheduleTaskExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
 
 export enum ProjectManagerActivities {
@@ -68,6 +69,7 @@ Prioritize steps in this order:
         this.registerStepExecutor(new GoalConfirmationExecutor(lmStudioService, userId));
         this.registerStepExecutor(new AnswerQuestionsExecutor(lmStudioService, this.projects));
         this.registerStepExecutor(new ComplexProjectExecutor(lmStudioService, this.projects));
+        this.registerStepExecutor(new ScheduleTaskExecutor(lmStudioService, this.projects));
     }
 
     
@@ -215,79 +217,4 @@ Prioritize steps in this order:
     }
 
 
-    @HandleActivity(ProjectManagerActivities.ScheduleTask, "Schedule a recurring task", ResponseType.RESPONSE)
-    private async scheduleTask(params: HandlerParams) {
-        const instructions = `
-            Create a new recurring task based on the user's request.
-            Respond in JSON format with these keys:
-            - "taskDescription": Description of what needs to be done
-            - "recurrencePattern": One of "Daily", "Weekly", or "Monthly"
-            - "responseMessage": A user-friendly confirmation message
-        `;
-
-        const structuredPrompt = new StructuredOutputPrompt(
-            {
-                type: 'object',
-                properties: {
-                    taskDescription: { type: 'string' },
-                    recurrencePattern: { type: 'string', enum: ['Daily', 'Weekly', 'Monthly'] },
-                    responseMessage: { type: 'string' }
-                }
-            },
-            instructions
-        );
-
-        try {
-            const responseJSON = await this.lmStudioService.generateStructured(params.userPost, structuredPrompt, params.threadPosts);
-            const { taskDescription, recurrencePattern, responseMessage } = responseJSON;
-
-            // Create a new project for the recurring task
-            const projectId = randomUUID();
-            const taskId = randomUUID();
-
-            // Map string pattern to enum
-            const pattern = {
-                'Daily': RecurrencePattern.Daily,
-                'Weekly': RecurrencePattern.Weekly,
-                'Monthly': RecurrencePattern.Monthly
-            }[recurrencePattern];
-
-            const task: Task = {
-                id: taskId,
-                description: taskDescription,
-                creator: this.userId,
-                projectId: projectId,
-                isRecurring: true,
-                recurrencePattern: pattern,
-                lastRunDate: new Date(),
-                complete: false
-            };
-
-            // Create and add the project
-            const newProject: PlanningProject = {
-                id: projectId,
-                name: `Recurring ${recurrencePattern} Task`,
-                goal: `Complete recurring task: ${taskDescription}`,
-                tasks: { [taskId]: task },
-                metadata: {
-                    originalPostId: params.userPost.id,
-                },
-                description: `A ${recurrencePattern.toLowerCase()} recurring task.`
-            };
-
-            await this.projects.addProject(newProject);
-
-            await this.reply(params.userPost, {
-                message: responseMessage
-            }, {
-                "project-id": projectId
-            });
-
-        } catch (error) {
-            Logger.error('Error scheduling recurring task:', error);
-            await this.reply(params.userPost, {
-                message: 'Failed to schedule the recurring task. Please try again later.'
-            });
-        }
-    }
 }   
