@@ -65,7 +65,7 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
                         section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).join('\n')||""
                     }`,
                     order: result.sections.indexOf(section)
-                });
+                } as AddTaskParams);
 
                 await this.taskManager.assignTaskToAgent(task.id, CONTENT_WRITER_USER_ID);
             }
