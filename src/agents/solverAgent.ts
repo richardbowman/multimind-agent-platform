@@ -16,6 +16,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         throw new Error('Method not implemented.');
     }
     constructor(params: AgentConstructorParams) {
+        // Initialize model helpers before calling super
         const modelHelpers = new ModelHelpers(params.llmService, params.userId);
         modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning.`);
         modelHelpers.setFinalInstructions(`SOLVING INSTRUCTIONS
@@ -30,11 +31,19 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         6. validation (to verify the solution)
         
         Adapt your approach to the complexity of each problem, using more cycles as needed.`);
-        const planner = new MultiStepPlanner(params.llmService, params.projects, params.userId, modelHelpers);
 
+        // Create planner with the correct parameters
+        const planner = new MultiStepPlanner(
+            params.llmService,
+            params.taskManager,
+            params.userId,
+            modelHelpers
+        );
+
+        // Call super with params and planner
         super(params, planner);
 
-        // Register our specialized executors
+        // Register executors after super is called
         this.registerStepExecutor(new GoalConfirmationExecutor(params.llmService, params.userId));
         this.registerStepExecutor(new ThinkingExecutor(params.llmService));
         this.registerStepExecutor(new RefutingExecutor(params.llmService));
