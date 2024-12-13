@@ -6,7 +6,10 @@
   "scripts": {
     "start": "tsx src/main.ts",
     "watch": "tsx --watch src/main.ts",
-    "schemas": "ts-json-schema-generator --path 'src/schemas/**/*.ts' --type '*' -o src/schemas/schema.json --no-type-check"
+    "schemas": "ts-json-schema-generator --path 'src/schemas/**/*.ts' --type '*' -o src/schemas/schema.json --no-type-check",
+    "build": "tsc",
+    "build:web": "cd src/web/client && npm run build",
+    "build:all": "npm run build && npm run build:web"
   },
   "keywords": [],
   "author": "",

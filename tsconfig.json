@@ -10,8 +10,13 @@
       "resolveJsonModule": true,
       "baseUrl": "./",
       "experimentalDecorators": true,
-      "emitDecoratorMetadata": true
+      "emitDecoratorMetadata": true,
+      "outDir": "./dist",
+      "rootDir": "./src",
+      "jsx": "react-jsx",
+      "allowJs": true,
+      "declaration": true
     },
     "include": ["src/**/*"],
-    "exclude": ["node_modules"]
+    "exclude": ["node_modules", "dist"]
   }
