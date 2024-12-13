@@ -25,7 +25,7 @@ Break the content into logical sections with clear descriptions and key points.
 ${previousResult ? `Use these research findings to inform the outline:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.modelHelpers.generate({
+        const result = await this.modelHelpers.generate<ContentOutline>({
             message: goal,
             instructions
         });

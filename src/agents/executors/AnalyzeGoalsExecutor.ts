@@ -61,7 +61,7 @@ export class AnalyzeGoalsExecutor implements StepExecutor {
     private async breakdownBusinessGoals(userInput: string): Promise<Array<{ description: string }>> {
         const schema = schema;
 
-        const response = await this.modelHelpers.generate({
+        const response = await this.modelHelpers.generate<GoalsAnalysis>({
             message: userInput,
             instructions: new StructuredOutputPrompt(schema, 
                 `Restructure the information the user provided on business goals`)

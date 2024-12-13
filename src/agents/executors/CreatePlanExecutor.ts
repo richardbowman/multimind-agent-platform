@@ -47,7 +47,7 @@ export class CreatePlanExecutor implements StepExecutor {
             }))
         );
 
-        const response : OperationalGuideResponse = await this.modelHelpers.generate({
+        const response = await this.modelHelpers.generate<OperationalGuideResponse>({
             message: formattedMessage,
             instructions: new StructuredOutputPrompt(schema,
                 `Create an overview of the user's desired business goals so our project manager, researcher, and content writer agents know how to help.
