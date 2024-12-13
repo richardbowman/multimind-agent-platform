@@ -55,15 +55,15 @@ Prioritize steps in this order:
 6. Validation and quality checks
 7. Final summary and next steps`);
         
-        this.setupChatMonitor(PROJECTS_CHANNEL_ID, messagingHandle);
+        this.setupChatMonitor(PROJECTS_CHANNEL_ID, params.messagingHandle);
         
         // Register executors
-        this.registerStepExecutor(new BrainstormExecutor(lmStudioService));
-        this.registerStepExecutor(new GenerateArtifactExecutor(lmStudioService, this.artifactManager));
-        this.registerStepExecutor(new GoalConfirmationExecutor(lmStudioService, userId));
-        this.registerStepExecutor(new AnswerQuestionsExecutor(lmStudioService, this.projects));
-        this.registerStepExecutor(new ComplexProjectExecutor(lmStudioService, this.projects));
-        this.registerStepExecutor(new ScheduleTaskExecutor(lmStudioService, this.projects));
+        this.registerStepExecutor(new BrainstormExecutor(params.llmService));
+        this.registerStepExecutor(new GenerateArtifactExecutor(params.llmService, this.artifactManager));
+        this.registerStepExecutor(new GoalConfirmationExecutor(params.llmService, params.userId));
+        this.registerStepExecutor(new AnswerQuestionsExecutor(params.llmService, params.taskManager));
+        this.registerStepExecutor(new ComplexProjectExecutor(params.llmService, params.taskManager));
+        this.registerStepExecutor(new ScheduleTaskExecutor(params.llmService, params.taskManager));
     }
 
 }   
