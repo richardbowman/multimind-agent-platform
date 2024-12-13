@@ -8,7 +8,8 @@ import crypto from 'crypto';
 import { Task } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
-import { SchemaInliner } from '../../helpers/schemaInliner';
+import { GoalsAnalysis } from 'src/schemas/goalsAnalysis';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 
 const schema = getGeneratedSchema(GoalsAnalysis);
 
