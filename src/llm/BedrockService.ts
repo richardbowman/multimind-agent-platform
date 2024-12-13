@@ -1,4 +1,4 @@
-import { BedrockRuntimeClient, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 import LMStudioService from "./lmstudioService";
 import { ILLMService } from "./ILLMService";
 import { ChatPost } from "src/chat/chatClient";
@@ -57,14 +57,17 @@ export class BedrockService implements ILLMService {
 
     async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelMessageResponse> {
         const messages = this.formatMessages(userPost.message, history);
-        
+
         const command = new InvokeModelCommand({
             modelId: this.modelId,
             body: JSON.stringify({
-                anthropic_version: "bedrock-2023-05-31",
-                max_tokens: 2048,
-                temperature: 0.7,
+                // anthropic_version: "bedrock-2023-05-31",
+                // max_tokens: 2048,
+                // temperature: 0.7,
                 system: instructions,
+                // inferenceConfig: {
+                //     max_tokens: 2048,
+                // }
                 messages: messages
             })
         });
@@ -90,7 +93,7 @@ export class BedrockService implements ILLMService {
         if (history) {
             for (const post of history) {
                 const role = post.user_id === "assistant" ? "assistant" : "user";
-                
+
                 if (role === currentRole) {
                     // Merge consecutive messages of the same role
                     currentContent.push(post.message);
@@ -197,8 +200,8 @@ export class BedrockService implements ILLMService {
         const command = new InvokeModelCommand({
             modelId: this.modelId,
             body: JSON.stringify({
-                anthropic_version: "bedrock-2023-05-31",
-                max_tokens: 2048,
+                // anthropic_version: "bedrock-2023-05-31",
+                // max_tokens: 2048,
                 system: systemPrompt,
                 messages: mergedMessages
             })
@@ -214,39 +217,49 @@ export class BedrockService implements ILLMService {
         const prompt = instructions.getPrompt();
 
         // Create a tool that enforces our schema
-        const tools = [{
-            name: "generate_structured_output",
-            description: `Generate structured data according to the following instructions: ${prompt}`,
-            input_schema: schema
-        }];
+        const tools = {
+            tools: [
+                {
+                    "toolSpec": {
+                        "name": "generate_structured_output",
+                        "description": `Generate structured data according to the following instructions: ${prompt}`,
+                        "inputSchema": {
+                            "json": schema
+                        }
+                    }
+                }
+            ]
+        };
 
-        const command = new InvokeModelCommand({
+        const command = new ConverseCommand({
             modelId: this.modelId,
-            body: JSON.stringify({
-                anthropic_version: "bedrock-2023-05-31",
-                max_tokens: 2048,
-                temperature: 0.1,
-                system: "You are a helpful assistant that generates structured data.",
-                messages: [{
-                    role: "user",
-                    content: userPost.message
-                }],
-                tools: tools,
-                tool_choice: { type: "tool", name: "generate_structured_output" }
-            })
+            system: [{
+                "text": `${prompt} You MUST CALL "generate_structured_output" tool to submit your response.`
+            }],
+            messages: [{
+                role: "user",
+                content: [{
+                    "text": userPost.message
+                }]
+            }],
+            toolConfig: tools,
+            inferenceConfig: {
+                temperature: 1,
+                topP: 1,
+                topK: 1
+            }
         });
 
         try {
             const response = await this.client.send(command);
-            const result = JSON.parse(new TextDecoder().decode(response.body));
-            
+
             // Extract tool use from response
-            const toolUse = result.content.find((block: any) => block.type === "tool_use");
-            if (!toolUse) {
+            const result = response.output?.message?.content?.find(c => c.toolUse);
+            if (!result) {
                 throw new Error("No tool use found in response");
             }
 
-            return toolUse.input;
+            return result.toolUse?.input;
         } catch (error) {
             Logger.error("Structured generation error:", error);
             throw error;
