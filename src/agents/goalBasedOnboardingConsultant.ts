@@ -19,7 +19,7 @@ import { UnderstandGoalsExecutor } from './executors/UnderstandGoalsExecutor';
 
 
 
-interface QuestionAnswer {
+export interface QuestionAnswer {
     questionId: string;
     question: string;
     answer: string;
