@@ -37,6 +37,7 @@ export class ProjectManager extends StepBasedAgent<PlanningProject, Task> {
         
         // Register executors
         this.registerStepExecutor(new BrainstormExecutor(lmStudioService));
+        this.registerStepExecutor(new GenerateArtifactExecutor(lmStudioService, this.artifactManager));
     }
 
     
@@ -71,60 +72,6 @@ Respond to the user's request, explaining to them the other available options.`;
 
 
 
-    @HandleActivity(ProjectManagerActivities.GenerateArtifact, "Create/revise a Markdown document the user can refer back to later.", ResponseType.RESPONSE)
-    private async generateArtifact(params: HandlerParams) {
-        const instructions = `
-        Generate a title, content for a Markdown document and a confirmation message based on the user's request.
-        Specify the existing artifact ID if you want to revise an existing artifact. Otherwise, leave this field blank.
-        Respond in JSON format with three keys: "artifactId", "title", "content", and "confirmationMessage".
-    `;
-
-        // Create a structured prompt
-        const structuredPrompt = new StructuredOutputPrompt(
-            {
-                type: 'object',
-                properties: {
-                    artifactId: { type: 'string' },
-                    title: { type: 'string' },
-                    content: { type: 'string' },
-                    confirmationMessage: { type: 'string' }
-                }
-            },
-            instructions
-        );
-
-        try {
-            // Send the structured request to LMStudioService
-            const responseJSON = await this.lmStudioService.generateStructured(params.userPost, structuredPrompt, params.threadPosts);
-
-            // Extract title, content, and confirmationMessage from the response
-            const { artifactId, title, content, confirmationMessage } = responseJSON;
-
-            // Prepare the artifact
-            const artifact: Artifact = {
-                id: artifactId.length > 0 ? artifactId : randomUUID(),
-                type: 'markdown',
-                content: content,
-                metadata: {
-                    title: title
-                }
-            };
-
-            // Save the artifact using ArtifactManager
-            await this.artifactManager.saveArtifact(artifact);
-
-            // Reply to the user with confirmation message and artifact details
-            await this.reply(params.userPost, {
-                message: `${confirmationMessage} Your artifact titled "${title}" has been generated and saved. You can find it under ID: ${artifact.id}`,
-                artifactIds: [artifact.id]
-            } as RequestArtifacts);
-        } catch (error) {
-            Logger.error('Error generating artifact:', error);
-            await this.reply(params.userPost, {
-                message: 'Failed to generate the artifact. Please try again later.'
-            });
-        }
-    }
 
     @HandleActivity(ProjectManagerActivities.KickoffResearch, "Kickoff a research project with the research team", ResponseType.RESPONSE)
     private async kickoffProject(params: HandlerParams) {

@@ -1,0 +1,80 @@
+import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ModelMessageResponse, RequestArtifacts } from '../../schemas/ModelResponse';
+import { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import LMStudioService from '../../llm/lmstudioService';
+import { ModelHelpers } from 'src/llm/helpers';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
+import { randomUUID } from 'crypto';
+import { ArtifactManager } from 'src/tools/artifactManager';
+import { Artifact } from 'src/tools/artifact';
+import Logger from '../../helpers/logger';
+
+@StepExecutorDecorator('generate-artifact', 'Create/revise a Markdown document')
+export class GenerateArtifactExecutor implements StepExecutor {
+    private modelHelpers: ModelHelpers;
+    private artifactManager: ArtifactManager;
+
+    constructor(llmService: LMStudioService, artifactManager: ArtifactManager) {
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+        this.artifactManager = artifactManager;
+    }
+
+    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+        const schema = {
+            type: 'object',
+            properties: {
+                artifactId: { type: 'string' },
+                title: { type: 'string' },
+                content: { type: 'string' },
+                confirmationMessage: { type: 'string' }
+            },
+            required: ['title', 'content', 'confirmationMessage']
+        };
+
+        const prompt = `Generate a title, content for a Markdown document and a confirmation message based on the goal.
+Specify the existing artifact ID if you want to revise an existing artifact. Otherwise, leave this field blank.
+
+${previousResult ? `Consider this previous content:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
+
+        const instructions = new StructuredOutputPrompt(schema, prompt);
+        
+        try {
+            const result = await this.modelHelpers.generate({
+                message: goal,
+                instructions
+            });
+
+            // Prepare the artifact
+            const artifact: Artifact = {
+                id: result.artifactId?.length > 0 ? result.artifactId : randomUUID(),
+                type: 'markdown',
+                content: result.content,
+                metadata: {
+                    title: result.title
+                }
+            };
+
+            // Save the artifact
+            await this.artifactManager.saveArtifact(artifact);
+
+            return {
+                type: "generate-artifact",
+                finished: true,
+                response: {
+                    message: `${result.confirmationMessage} Your artifact titled "${result.title}" has been generated and saved. You can find it under ID: ${artifact.id}`,
+                    artifactIds: [artifact.id]
+                } as RequestArtifacts
+            };
+
+        } catch (error) {
+            Logger.error('Error generating artifact:', error);
+            return {
+                type: "generate-artifact",
+                finished: true,
+                response: {
+                    message: 'Failed to generate the artifact. Please try again later.'
+                }
+            };
+        }
+    }
+}
