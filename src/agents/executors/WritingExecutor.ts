@@ -1,53 +1,27 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
-import LMStudioService from '../../llm/lmstudioService';
+import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Project, Task, TaskManager } from 'src/tools/taskManager';
 import { CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID } from 'src/helpers/config';
 import Logger from 'src/helpers/logger';
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
+import { SchemaType } from '../../schemas/SchemaTypes';
+import { WritingResponse } from '../../schemas/writing';
 
 @StepExecutorDecorator('assign-writers', 'Take an existing outline and break out sections to writers.')
 export class WritingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
 
-    constructor(llmService: LMStudioService, taskManager: TaskManager) {
+    constructor(llmService: ILLMService, taskManager: TaskManager) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
         this.taskManager = taskManager
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = {
-            type: "object",
-            properties: {
-                sections: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            title: { type: "string" },
-                            description: { type: "string" },
-                            keyPoints: {
-                                type: "array",
-                                items: { type: "string" }
-                            },
-                            researchFindings: {
-                                type: "array",
-                                items: { 
-                                    type: "object",
-                                    properties: {
-                                        finding: { type: "string" },
-                                        source: { type: "string" }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            },
-            required: ["sections"]
-        };
+        const schema = getGeneratedSchema(SchemaType.WritingResponse);
 
         const prompt = `You are planning content writing tasks.
 Break down the content into sections that can be assigned to writers.
@@ -56,7 +30,7 @@ For each section, provide a clear title, description, key points to cover, and r
 ${previousResult ? `Use these materials to inform the task planning:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.modelHelpers.generate({
+        const result = await this.modelHelpers.generate<WritingResponse>({
             message: goal,
             instructions
         });
