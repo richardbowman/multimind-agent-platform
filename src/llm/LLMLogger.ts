@@ -9,7 +9,7 @@ export class LLMCallLogger {
 
     constructor(serviceName: string) {
         this.sessionId = new Date().toISOString().replace(/[:.]/g, '-');
-        this.logDir = path.join(process.cwd(), 'logs', 'llm');
+        this.logDir = path.join(process.cwd(), '.output', 'llm');
         this.logFile = path.join(this.logDir, `${serviceName}-${this.sessionId}.json`);
         
         // Ensure log directory exists
