@@ -1,6 +1,7 @@
 import { randomUUID } from 'crypto';
 import Logger from '../helpers/logger';
 import { Agent, HandleActivity, HandlerParams, ProjectHandlerParams, ResponseType } from './agents';
+import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Project, TaskManager } from "src/tools/taskManager";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from 'src/chat/chatClient';
 import LMStudioService from 'src/llm/lmstudioService';
@@ -29,14 +30,8 @@ export interface ContentTask extends Task {
 }
 
 export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> {
-    constructor(
-        chatClient: ChatClient,
-        lmStudioService: LMStudioService,
-        userId: string,
-        projects: TaskManager,
-        chromaDBService: ChromaDBService
-    ) {
-        super(chatClient, lmStudioService, userId, projects, chromaDBService);
+    constructor(params: AgentConstructorParams) {
+        super(params);
 
         // Register our specialized executors
         this.registerStepExecutor(new KnowledgeCheckExecutor(lmStudioService, chromaDBService));
