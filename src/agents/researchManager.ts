@@ -4,14 +4,14 @@ import { WEB_RESEARCH_CHANNEL_ID, PROJECTS_CHANNEL_ID, CHROMA_COLLECTION, RESEAR
 import { randomUUID } from 'crypto';
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from '../chat/chatClient';
 import 'reflect-metadata';
-import { Agent, HandleActivity, HandlerParams, ResponseType } from "./agents";
-import EmailWorkflow from "./workflows/emailWorkflow";
-import schema from './schemas/schema.json';
-import { TaskManager } from "src/tools/taskManager";
-import { ResearchProject, ResearchTask } from "./researchAssistant";
+import { Agent, HandleActivity, HandlerParams, ProjectHandlerParams, ResponseType } from "./agents";
+import { Project, TaskManager } from "src/tools/taskManager";
+import { ResearchTask } from "./researchAssistant";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
-import { ArtifactResponseSchema } from "./schemas/artifactSchema";
+import { ArtifactResponseSchema } from "../schemas/artifactSchema";
+import { IVectorDatabase } from "src/llm/IVectorDatabase";
+import schema from "src/schemas/schemasImport";
 
 export enum ResearchActivityType {
     DraftEmail = "draft-email",
