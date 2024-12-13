@@ -123,9 +123,9 @@ export class InMemoryChatStorage {
             if (parsedData.posts) this.posts = parsedData.posts.map(p => InMemoryPost.fromLoad(p));
             if (parsedData.userIdToHandleName) this.userIdToHandleName = parsedData.userIdToHandleName;
             Logger.info(`Loaded ${this.posts.length} chat posts from disk`);
-        } catch (error) {
+        } catch (error: unknown) {
             // If the file doesn't exist or is invalid, initialize with default values
-            if (error.code === 'ENOENT') {
+            if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
                 Logger.info('No saved data found. Starting with a fresh storage.');
                 return;
             }
