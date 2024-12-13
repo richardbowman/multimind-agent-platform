@@ -3,7 +3,7 @@ import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioServi
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../schemas/schema.json";
 const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
-import { ReviewProgressResponse } from '../schemas/ReviewProgressResponse';
+import { ReviewProgressResponse } from '../../schemas/reviewProgress';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
