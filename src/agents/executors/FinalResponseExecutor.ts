@@ -2,7 +2,7 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { Project, Task } from '../../tools/taskManager';
-import { ModelMessageResponse } from '../schemas/ModelResponse';
+import { ModelMessageResponse } from '../../schemas/ModelResponse';
 import { FinalResponse } from '../../schemas/finalResponse';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
@@ -14,7 +14,7 @@ export class FinalResponseExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
-        const schema = getGeneratedSchema(SchemaType.FinalResponse);
+        const schema = await getGeneratedSchema(SchemaType.FinalResponse);
 
         const systemPrompt = `You are an AI assistant generating a final response.
 Synthesize all the intermediate results into a clear, comprehensive answer that addresses the original goal.

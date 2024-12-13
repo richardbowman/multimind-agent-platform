@@ -4,7 +4,7 @@ import { ModelHelpers } from '../../llm/helpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { ILLMService } from '../../llm/ILLMService';
-import { ResearchResponse } from '../../schemas/research';
+import { QueriesResponse, ResearchResponse } from '../../schemas/research';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import Logger from '../../helpers/logger';
@@ -20,15 +20,16 @@ export class ResearchExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = getGeneratedSchema(SchemaType.Research);
+        const querySchema = await getGeneratedSchema(SchemaType.QueriesResponse);
+        const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
 
         const queryPrompt = `You are a research specialist crafting search queries.
 Given this content goal: "${goal}"
 Generate 2-3 different search queries that will help find relevant information.
 Explain the rationale for each query.`;
 
-        const queryInstructions = new StructuredOutputPrompt(schema, queryPrompt);
-        const queryResult = await this.modelHelpers.generate<ResearchResponse>({
+        const queryInstructions = new StructuredOutputPrompt(querySchema, queryPrompt);
+        const queryResult = await this.modelHelpers.generate<QueriesResponse>({
             message: goal,
             instructions: queryInstructions
         });

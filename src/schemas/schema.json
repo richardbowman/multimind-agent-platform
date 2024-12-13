@@ -1,0 +1,909 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "definitions": {
+    "AnswerAnalysis": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis": {
+          "type": "string"
+        },
+        "answered": {
+          "type": "boolean"
+        },
+        "extractedAnswer": {
+          "type": "string"
+        },
+        "questionId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "questionId",
+        "answered",
+        "analysis",
+        "extractedAnswer"
+      ],
+      "type": "object"
+    },
+    "AnswerAnalysisResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "answers": {
+          "items": {
+            "$ref": "#/definitions/AnswerAnalysis"
+          },
+          "type": "array"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "answers",
+        "summary"
+      ],
+      "type": "object"
+    },
+    "ArtifactResponseSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactContent": {
+          "type": "string"
+        },
+        "artifactTitle": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactContent",
+        "artifactTitle",
+        "message"
+      ],
+      "type": "object"
+    },
+    "BusinessGoal": {
+      "additionalProperties": false,
+      "description": "Represents an analyzed business goal",
+      "properties": {
+        "description": {
+          "description": "Detailed description of the business goal",
+          "type": "string"
+        }
+      },
+      "required": [
+        "description"
+      ],
+      "type": "object"
+    },
+    "ContentDecompositionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "goal": {
+          "type": "string"
+        },
+        "sections": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "description": {
+                "type": "string"
+              },
+              "title": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "title",
+              "description"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "strategy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "goal",
+        "strategy",
+        "sections"
+      ],
+      "type": "object"
+    },
+    "ContentOutline": {
+      "additionalProperties": false,
+      "description": "Represents a complete content outline",
+      "properties": {
+        "sections": {
+          "description": "Organized sections of the content",
+          "items": {
+            "$ref": "#/definitions/OutlineSection"
+          },
+          "type": "array"
+        },
+        "strategy": {
+          "description": "Content development strategy",
+          "type": "string"
+        },
+        "title": {
+          "description": "Main title for the content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "sections",
+        "strategy"
+      ],
+      "type": "object"
+    },
+    "ContentSuggestion": {
+      "additionalProperties": false,
+      "description": "Represents a content improvement suggestion",
+      "properties": {
+        "explanation": {
+          "description": "Explanation of the improvement",
+          "type": "string"
+        },
+        "improved": {
+          "description": "Improved version",
+          "type": "string"
+        },
+        "original": {
+          "description": "Original content",
+          "type": "string"
+        },
+        "type": {
+          "description": "Type of improvement",
+          "enum": [
+            "clarity",
+            "structure",
+            "style",
+            "grammar"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "original",
+        "improved",
+        "explanation"
+      ],
+      "type": "object"
+    },
+    "CreateArtifact": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "type": "string"
+        },
+        "artifactTitle": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactId",
+        "artifactTitle",
+        "message"
+      ],
+      "type": "object"
+    },
+    "EditingResponse": {
+      "additionalProperties": false,
+      "description": "Response containing content editing suggestions",
+      "properties": {
+        "improvements": {
+          "description": "List of section-specific improvements",
+          "items": {
+            "$ref": "#/definitions/SectionImprovement"
+          },
+          "type": "array"
+        },
+        "overallFeedback": {
+          "description": "Overall feedback on the content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "improvements",
+        "overallFeedback"
+      ],
+      "type": "object"
+    },
+    "FinalResponse": {
+      "additionalProperties": false,
+      "description": "Interface for final comprehensive response",
+      "properties": {
+        "message": {
+          "description": "Final comprehensive response in Markdown format",
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
+    "GoalConfirmationResponse": {
+      "additionalProperties": false,
+      "description": "Interface for goal confirmation response",
+      "properties": {
+        "message": {
+          "description": "A clear restatement of the goal and confirmation of understanding",
+          "type": "string"
+        },
+        "understanding": {
+          "description": "Whether the goal is clear and actionable",
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "message",
+        "understanding"
+      ],
+      "type": "object"
+    },
+    "GoalsAnalysis": {
+      "additionalProperties": false,
+      "description": "Represents the analysis of business goals",
+      "properties": {
+        "goals": {
+          "description": "List of broken down business goals",
+          "items": {
+            "$ref": "#/definitions/BusinessGoal"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "goals"
+      ],
+      "type": "object"
+    },
+    "ImplementationStep": {
+      "additionalProperties": false,
+      "properties": {
+        "considerations": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "expectedOutcome": {
+          "type": "string"
+        },
+        "phase": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "phase",
+        "description",
+        "expectedOutcome"
+      ],
+      "type": "object"
+    },
+    "IntakeQuestion": {
+      "additionalProperties": false,
+      "properties": {
+        "purpose": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "purpose"
+      ],
+      "type": "object"
+    },
+    "IntakeQuestionsResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "intakeQuestions": {
+          "items": {
+            "$ref": "#/definitions/IntakeQuestion"
+          },
+          "type": "array"
+        },
+        "reasoning": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "intakeQuestions",
+        "reasoning"
+      ],
+      "type": "object"
+    },
+    "LookupResearchResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "query": {
+          "type": "string"
+        },
+        "reinterpreted_goal": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "reinterpreted_goal",
+        "query"
+      ],
+      "type": "object"
+    },
+    "ModelMessageResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
+    "OnboardingConsultantResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "completedTasks": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "completedTasks",
+        "message"
+      ],
+      "type": "object"
+    },
+    "OperationalGuide": {
+      "additionalProperties": false,
+      "properties": {
+        "businessContext": {
+          "type": "string"
+        },
+        "implementationApproach": {
+          "type": "string"
+        },
+        "keyConsiderations": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "questionsAndAnswers": {
+          "items": {
+            "$ref": "#/definitions/QAItem"
+          },
+          "type": "array"
+        },
+        "recommendedSteps": {
+          "items": {
+            "$ref": "#/definitions/ImplementationStep"
+          },
+          "type": "array"
+        },
+        "serviceStrategy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "businessContext",
+        "serviceStrategy",
+        "implementationApproach",
+        "recommendedSteps",
+        "questionsAndAnswers"
+      ],
+      "type": "object"
+    },
+    "OperationalGuideResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "operationalGuide": {
+          "$ref": "#/definitions/OperationalGuide"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "operationalGuide",
+        "summary"
+      ],
+      "type": "object"
+    },
+    "OutlineSection": {
+      "additionalProperties": false,
+      "description": "Represents a content outline section",
+      "properties": {
+        "description": {
+          "description": "Detailed description of the section content",
+          "type": "string"
+        },
+        "heading": {
+          "description": "The section heading",
+          "type": "string"
+        },
+        "keyPoints": {
+          "description": "Key points to be covered in the section",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "heading",
+        "description",
+        "keyPoints"
+      ],
+      "type": "object"
+    },
+    "PlanStepTask": {
+      "additionalProperties": false,
+      "properties": {
+        "actionType": {
+          "type": "string"
+        },
+        "existingId": {
+          "type": "string"
+        },
+        "parameters": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "actionType",
+        "parameters"
+      ],
+      "type": "object"
+    },
+    "PlanStepsResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "reasoning": {
+          "type": "string"
+        },
+        "steps": {
+          "items": {
+            "$ref": "#/definitions/PlanStepTask"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "reasoning",
+        "steps"
+      ],
+      "type": "object"
+    },
+    "QAItem": {
+      "additionalProperties": false,
+      "properties": {
+        "answer": {
+          "type": "string"
+        },
+        "category": {
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "answer"
+      ],
+      "type": "object"
+    },
+    "QueriesResponse": {
+      "additionalProperties": false,
+      "description": "Interface for research response",
+      "properties": {
+        "queries": {
+          "description": "Generated search queries",
+          "items": {
+            "$ref": "#/definitions/SearchQuery"
+          },
+          "type": "array"
+        },
+        "rationale": {
+          "description": "Why these searches will help reach the goal",
+          "type": "string"
+        }
+      },
+      "required": [
+        "queries",
+        "rationale"
+      ],
+      "type": "object"
+    },
+    "ReasoningResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "reasoning": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "reasoning"
+      ],
+      "type": "object"
+    },
+    "RefutingResponse": {
+      "additionalProperties": false,
+      "description": "Interface for refuting response",
+      "properties": {
+        "analysis": {
+          "description": "Analysis of the counterarguments",
+          "type": "string"
+        },
+        "counterarguments": {
+          "description": "List of potential counterarguments",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "finalVerdict": {
+          "description": "Final verdict after considering counterarguments",
+          "type": "string"
+        }
+      },
+      "required": [
+        "counterarguments",
+        "analysis",
+        "finalVerdict"
+      ],
+      "type": "object"
+    },
+    "RequestArtifacts": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactIds": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
+    "ResearchArtifactResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactContent": {
+          "type": "string"
+        },
+        "artifactTitle": {
+          "type": "string"
+        },
+        "message": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactTitle",
+        "artifactContent",
+        "message"
+      ],
+      "type": "object"
+    },
+    "ResearchDecomposition": {
+      "additionalProperties": false,
+      "properties": {
+        "goal": {
+          "type": "string"
+        },
+        "researchRequested": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "strategy": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "goal",
+        "strategy",
+        "researchRequested"
+      ],
+      "type": "object"
+    },
+    "ResearchFinding": {
+      "additionalProperties": false,
+      "description": "Interface for a key research finding",
+      "properties": {
+        "finding": {
+          "description": "The main finding or insight",
+          "type": "string"
+        },
+        "relevance": {
+          "description": "How relevant this finding is to the goal",
+          "type": "string"
+        },
+        "sources": {
+          "description": "Sources supporting this finding",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "finding",
+        "sources",
+        "relevance"
+      ],
+      "type": "object"
+    },
+    "ResearchResponse": {
+      "additionalProperties": false,
+      "description": "Interface for research response",
+      "properties": {
+        "gaps": {
+          "description": "Identified information gaps",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "keyFindings": {
+          "description": "Key findings from the research",
+          "items": {
+            "$ref": "#/definitions/ResearchFinding"
+          },
+          "type": "array"
+        },
+        "queries": {
+          "description": "Generated search queries",
+          "items": {
+            "$ref": "#/definitions/SearchQuery"
+          },
+          "type": "array"
+        },
+        "recommendations": {
+          "description": "Recommendations for next steps",
+          "type": "string"
+        }
+      },
+      "required": [
+        "queries",
+        "keyFindings",
+        "gaps",
+        "recommendations"
+      ],
+      "type": "object"
+    },
+    "ReviewProgressResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "progress": {
+          "items": {
+            "$ref": "#/definitions/TaskProgress"
+          },
+          "type": "array"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "progress",
+        "summary"
+      ],
+      "type": "object"
+    },
+    "SchemaType": {
+      "description": "Enum representing all available generated schema types",
+      "enum": [
+        "GoalsAnalysis",
+        "BusinessGoal",
+        "ContentOutline",
+        "OutlineSection",
+        "OperationalGuide",
+        "OperationalGuideResponse",
+        "ImplementationStep",
+        "QAItem",
+        "AnswerAnalysisResponse",
+        "EditingResponse",
+        "ContentSuggestion",
+        "SectionImprovement",
+        "FinalResponse",
+        "GoalConfirmation",
+        "Refuting",
+        "Research",
+        "QueriesResponse",
+        "ResearchDecomposition",
+        "ResearchArtifactResponse",
+        "ReviewProgressResponse",
+        "WritingResponse"
+      ],
+      "type": "string"
+    },
+    "SearchQuery": {
+      "additionalProperties": false,
+      "description": "Interface for search query",
+      "properties": {
+        "query": {
+          "description": "The search query text",
+          "type": "string"
+        },
+        "rationale": {
+          "description": "Explanation for why this query was chosen",
+          "type": "string"
+        }
+      },
+      "required": [
+        "query",
+        "rationale"
+      ],
+      "type": "object"
+    },
+    "SectionImprovement": {
+      "additionalProperties": false,
+      "description": "Represents improvements for a content section",
+      "properties": {
+        "section": {
+          "description": "Section identifier or name",
+          "type": "string"
+        },
+        "suggestions": {
+          "description": "List of suggestions for this section",
+          "items": {
+            "$ref": "#/definitions/ContentSuggestion"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "section",
+        "suggestions"
+      ],
+      "type": "object"
+    },
+    "TaskProgress": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis": {
+          "type": "string"
+        },
+        "blockers": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "nextSteps": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "status": {
+          "enum": [
+            "Not Started",
+            "In Progress",
+            "Blocked",
+            "Complete"
+          ],
+          "type": "string"
+        },
+        "taskId": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "taskId",
+        "status",
+        "analysis",
+        "nextSteps"
+      ],
+      "type": "object"
+    },
+    "TaskStatus": {
+      "description": "Represents the status of a task in the review process",
+      "enum": [
+        "Not Started",
+        "In Progress",
+        "Blocked",
+        "Complete"
+      ],
+      "type": "string"
+    },
+    "ValidationResult": {
+      "additionalProperties": false,
+      "properties": {
+        "isComplete": {
+          "description": "Whether the solution fully addresses the original goal",
+          "type": "boolean"
+        },
+        "message": {
+          "description": "Explanation of the validation results",
+          "type": "string"
+        },
+        "missingAspects": {
+          "description": "List of aspects that still need to be addressed",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "isComplete",
+        "message"
+      ],
+      "type": "object"
+    },
+    "WritingResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "sections": {
+          "items": {
+            "$ref": "#/definitions/WritingSection"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "sections"
+      ],
+      "type": "object"
+    },
+    "WritingSection": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "keyPoints": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "researchFindings": {
+          "items": {
+            "$ref": "#/definitions/ResearchFinding"
+          },
+          "type": "array"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "keyPoints"
+      ],
+      "type": "object"
+    }
+  }
+}

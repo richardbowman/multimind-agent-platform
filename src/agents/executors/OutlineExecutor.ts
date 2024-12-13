@@ -16,7 +16,7 @@ export class OutlineExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = getGeneratedSchema(SchemaType.ContentOutline);
+        const schema = await getGeneratedSchema(SchemaType.ContentOutline);
 
         const prompt = `You are a content outline specialist.
 Given a content goal and research findings, create a well-structured outline.

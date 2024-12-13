@@ -16,7 +16,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string): Promise<any> {
-        const schema = getGeneratedSchema(SchemaType.GoalConfirmation);
+        const schema = await getGeneratedSchema(SchemaType.GoalConfirmation);
 
         const prompt = `As an AI assistant, your task is to:
 1. Restate the user's goal in your own words to demonstrate understanding

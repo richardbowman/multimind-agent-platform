@@ -1,9 +1,9 @@
 import { HandlerParams } from '../agents';
-import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
+import { PlanStepsResponse } from '../../schemas/PlanStepsResponse';
 import { Planner } from './Planner';
 import { Task } from '../../tools/taskManager';
 import { SchemaInliner } from '../../helpers/schemaInliner';
-import * as schemaJson from "../schemas/schema.json";
+import * as schemaJson from "../../schemas/schema.json";
 import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';

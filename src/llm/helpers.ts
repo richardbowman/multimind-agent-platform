@@ -1,6 +1,6 @@
 import { ChatPost } from "src/chat/chatClient";
 import { ILLMService } from "./ILLMService";
-import { ModelMessageResponse, RequestArtifacts } from "src/agents/schemas/ModelResponse";
+import { ModelMessageResponse, RequestArtifacts } from "src/schemas/ModelResponse";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { GenerateInputParams, GenerateParams, HandlerParams, ProjectHandlerParams, ThreadSummary } from "src/agents/agents";

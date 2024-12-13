@@ -21,7 +21,7 @@ export class WritingExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = getGeneratedSchema(SchemaType.WritingResponse);
+        const schema = await getGeneratedSchema(SchemaType.WritingResponse);
 
         const prompt = `You are planning content writing tasks.
 Break down the content into sections that can be assigned to writers.
@@ -65,7 +65,7 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
                         section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).join('\n')||""
                     }`,
                     order: result.sections.indexOf(section)
-                } as AddTaskParams);
+                });
 
                 await this.taskManager.assignTaskToAgent(task.id, CONTENT_WRITER_USER_ID);
             }

@@ -10,7 +10,7 @@ requiresUserInput: boolean;
     }[];*/
 
 import { ModelMessageResponse } from "./ModelResponse";
-import { Task } from "../../tools/taskManager";
+import { Task } from "../tools/taskManager";
 
   
 export interface PlanStepTask {

@@ -36,6 +36,21 @@ export interface ResearchFinding {
 /**
  * Interface for research response
  */
+export interface QueriesResponse {
+    /**
+     * Generated search queries
+     */
+    queries: SearchQuery[];
+
+    /**
+     * Why these searches will help reach the goal
+     */
+    rationale: string;
+}
+
+/**
+ * Interface for research response
+ */
 export interface ResearchResponse {
     /**
      * Generated search queries

@@ -9,9 +9,9 @@ import { Planner } from './planners/Planner';
 import { DefaultPlanner } from './planners/DefaultPlanner';
 import crypto from 'crypto';
 import Logger from '../helpers/logger';
-import { CreateArtifact, ModelMessageResponse } from './schemas/ModelResponse';
+import { CreateArtifact, ModelMessageResponse } from '../schemas/ModelResponse';
 import ChromaDBService from 'src/llm/chromaService';
-import { PlanStepsResponse } from './schemas/PlanStepsResponse';
+import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/inMemoryChatClient';
 
 export interface StepResult {

@@ -16,7 +16,7 @@ export class RefutingExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = getGeneratedSchema(SchemaType.Refuting);
+        const schema = await getGeneratedSchema(SchemaType.Refuting);
 
         const prompt = `You are a critical thinker tasked with finding potential flaws in an argument or conclusion.
 Think deeply about the problem and explain detailed reasoning in the response. Consider possible counterarguments and evaluate their validity.

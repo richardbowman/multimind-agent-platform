@@ -3,7 +3,7 @@ import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioServi
 import { ModelHelpers } from 'src/llm/helpers';
 import { ValidationResult } from '../../schemas/validation';
 import { SchemaInliner } from '../../helpers/schemaInliner';
-import * as schemaJson from "../schemas/schema.json";
+import * as schemaJson from "../../schemas/schema.json";
 const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 

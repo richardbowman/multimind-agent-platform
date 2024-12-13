@@ -27,7 +27,7 @@ export class ReviewProgressExecutor implements StepExecutor {
         const project = await this.getProjectWithPlan(projectId);
         const tasks = this.taskManager.getAllTasks(projectId);
 
-        const schema = getGeneratedSchema(SchemaType.ReviewProgressResponse);
+        const schema = await getGeneratedSchema(SchemaType.ReviewProgressResponse);
 
         const response : ReviewProgressResponse = await this.modelHelpers.generate({
             message: JSON.stringify({

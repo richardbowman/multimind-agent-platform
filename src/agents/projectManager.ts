@@ -9,7 +9,7 @@ import { Task } from "src/tools/taskManager";
 import { Artifact } from 'src/tools/artifact';
 import ChromaDBService from 'src/llm/chromaService';
 import { ResearchActivityType } from './researchManager';
-import { RequestArtifacts } from './schemas/ModelResponse';
+import { RequestArtifacts } from '../schemas/ModelResponse';
 
 export enum ProjectManagerActivities {
     InitateBrainstorm = "initiate-brainstorm",

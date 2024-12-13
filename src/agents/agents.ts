@@ -6,13 +6,13 @@ import Logger from "src/helpers/logger";
 import { SystemPromptBuilder } from "src/helpers/systemPrompt";
 import ChromaDBService, { SearchResult } from "src/llm/chromaService";
 import LMStudioService, { StructuredOutputPrompt } from "src/llm/lmstudioService";
-import { CreateArtifact, ModelMessageResponse, RequestArtifacts } from "src/agents/schemas/ModelResponse";
+import { CreateArtifact, ModelMessageResponse, RequestArtifacts } from "src/schemas/ModelResponse";
 import { InputPrompt, StructuredInputPrompt } from "src/prompts/structuredInputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Project, Task, TaskManager } from "src/tools/taskManager";
-import { ArtifactResponseSchema } from './schemas/artifactSchema';
-import schemas from './schemas/schema.json';
+import { ArtifactResponseSchema } from '../schemas/artifactSchema';
+import schemas from '../schemas/schema.json';
 import { ArtifactInputPrompt } from 'src/prompts/artifactInputPrompt';
 import { ModelHelpers } from 'src/llm/helpers';
 

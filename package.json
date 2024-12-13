@@ -6,7 +6,7 @@
   "scripts": {
     "start": "tsx src/main.ts",
     "watch": "tsx --watch src/main.ts",
-    "schemas": "ts-json-schema-generator --path 'src/agents/schemas/**/*.ts' --type '*' -o src/agents/schemas/schema.json --no-type-check"
+    "schemas": "ts-json-schema-generator --path 'src/schemas/**/*.ts' --type '*' -o src/schemas/schema.json --no-type-check"
   },
   "keywords": [],
   "author": "",

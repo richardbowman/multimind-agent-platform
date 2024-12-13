@@ -5,7 +5,7 @@ import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { ChatPost } from "src/chat/chatClient";
-import { ModelMessageResponse } from "../agents/schemas/ModelResponse";
+import { ModelMessageResponse } from "../schemas/ModelResponse";
 
 class MyEmbedder implements IEmbeddingFunction {
     private embeddingModel: EmbeddingSpecificModel;

@@ -16,7 +16,7 @@ export class EditingExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = getGeneratedSchema(SchemaType.EditingResponse);
+        const schema = await getGeneratedSchema(SchemaType.EditingResponse);
 
         const prompt = `You are a content editor.
 Review the content for clarity, structure, style, and grammar.

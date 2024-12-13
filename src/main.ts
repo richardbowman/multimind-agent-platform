@@ -99,7 +99,7 @@ const { values } = parseArgs({
 // Handle reindex flag
 if (values.reindex) {
     Logger.info("Reindexing artifacts...");
-    await vectorDB.reindexCollection(CHROMA_COLLECTION);
+    //await vectorDB.reindexCollection(CHROMA_COLLECTION);
     await artifactManager.indexArtifacts();
     process.exit(0);
 }

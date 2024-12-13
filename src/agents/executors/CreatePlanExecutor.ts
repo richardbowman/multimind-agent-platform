@@ -5,13 +5,13 @@ import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { OnboardingProject, QuestionAnswer } from '../goalBasedOnboardingConsultant';
-import { CreateArtifact } from '../schemas/ModelResponse';
-import { OperationalGuideResponse, QAItem } from '../schemas/OperationalGuideResponse';
+import { CreateArtifact } from '../../schemas/ModelResponse';
+import { OperationalGuideResponse, QAItem } from '../../schemas/OperationalGuideResponse';
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
 
-const schema = getGeneratedSchema(SchemaType.OperationalGuideResponse);
+const schema = await getGeneratedSchema(SchemaType.OperationalGuideResponse);
 
 @StepExecutorDecorator('create_revise_plan', `Create (or revise) a guide for our agents of the user's desired business goals.`)
 export class CreatePlanExecutor implements StepExecutor {

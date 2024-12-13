@@ -2,7 +2,7 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { ILLMService } from '../../llm/ILLMService';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
-import { AnswerAnalysisResponse } from '../schemas/AnswerAnalysisResponse';
+import { AnswerAnalysisResponse } from '../../schemas/AnswerAnalysisResponse';
 import { TaskManager } from '../../tools/taskManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -20,7 +20,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
     }
 
     async execute(response: string, step: string, projectId: string): Promise<StepResult> {
-        const schema = getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
+        const schema = await getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
 
         const project = this.taskManager.getProject(projectId) as OnboardingProject;
         const intakeQuestions = Object.values(project.tasks).filter(t => t.type === 'process-answers' && !t.complete);

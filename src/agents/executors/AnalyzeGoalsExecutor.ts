@@ -13,7 +13,7 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { Artifact } from 'src/tools/artifact';
 
-const schema = getGeneratedSchema(SchemaType.GoalsAnalysis);
+const schema = await getGeneratedSchema(SchemaType.GoalsAnalysis);
 
 @StepExecutorDecorator('analyze_goals', 'Break down and analyze business goals into actionable tasks')
 export class AnalyzeGoalsExecutor implements StepExecutor {

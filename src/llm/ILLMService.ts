@@ -1,5 +1,5 @@
 import { ChatPost } from "src/chat/chatClient";
-import { ModelMessageResponse } from "../agents/schemas/ModelResponse";
+import { ModelMessageResponse } from "../schemas/ModelResponse";
 import { StructuredOutputPrompt } from "./lmstudioService";
 import { IEmbeddingFunction } from "chromadb";
 
