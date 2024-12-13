@@ -25,7 +25,7 @@ Provide specific suggestions for improvements while maintaining the original mes
 ${previousResult ? `Review this content:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.modelHelpers.generate({
+        const result = await this.modelHelpers.generate<EditingResponse>({
             message: goal,
             instructions
         });
