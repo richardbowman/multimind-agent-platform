@@ -18,7 +18,7 @@ export function getInlinedSchema(schemaJson: any, type?: string): any {
  * @param type The schema type to extract
  * @returns The inlined schema for the specified type
  */
-export function getGeneratedSchema(type: SchemaType): any {
-    const schemaJson = require(`../schemas/schemas.json`);
+export async function getGeneratedSchema(type: SchemaType): Promise<any> {
+    const schemaJson = (await import('../schemas/schemasImport.js')).default;
     return getInlinedSchema(schemaJson, type);
 }
