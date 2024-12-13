@@ -44,3 +44,18 @@ const App: React.FC = () => {
 };
 
 export default App;
+import React from 'react';
+import { WebSocketProvider } from './contexts/WebSocketContext';
+import './App.css';
+
+function App() {
+  return (
+    <WebSocketProvider>
+      <div className="App">
+        {/* Your other components will go here */}
+      </div>
+    </WebSocketProvider>
+  );
+}
+
+export default App;
