@@ -20,7 +20,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
     }
 
     async execute(response: string, step: string, projectId: string): Promise<StepResult> {
-        const schema = getGeneratedSchema(AnswerAnalysisResponse);
+        const schema = getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
 
         const project = this.taskManager.getProject(projectId) as OnboardingProject;
         const intakeQuestions = Object.values(project.tasks).filter(t => t.type === 'process-answers' && !t.complete);

@@ -9,11 +9,11 @@ import crypto from 'crypto';
 import { Task } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
-import { GoalsAnalysis } from 'src/schemas/goalsAnalysis';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
 import { Artifact } from 'src/tools/artifact';
 
-const schema = getGeneratedSchema(GoalsAnalysis);
+const schema = getGeneratedSchema(SchemaType.GoalsAnalysis);
 
 @StepExecutorDecorator('analyze_goals', 'Break down and analyze business goals into actionable tasks')
 export class AnalyzeGoalsExecutor implements StepExecutor {

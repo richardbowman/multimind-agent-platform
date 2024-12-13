@@ -3,8 +3,8 @@ import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { getInlinedSchema } from '../../helpers/schemaUtils';
-import { ContentOutline } from '../../schemas/outline';
-const schema = getGeneratedSchema(ContentOutline);
+import { SchemaType } from '../../schemas/SchemaTypes';
+const schema = getGeneratedSchema(SchemaType.ContentOutline);
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 
 @StepExecutorDecorator('outline', 'Create structured content outlines')

@@ -1,4 +1,5 @@
 import { SchemaInliner } from './schemaInliner';
+import { SchemaType } from '../schemas/SchemaTypes';
 
 /**
  * Gets an inlined schema from a JSON schema file
@@ -14,10 +15,10 @@ export function getInlinedSchema(schemaJson: any, type?: string): any {
 
 /**
  * Gets an inlined schema from our generated schema files
- * @param type The interface type to extract from the schema
+ * @param type The schema type to extract
  * @returns The inlined schema for the specified type
  */
-export function getGeneratedSchema(typeName: string): any {
+export function getGeneratedSchema(type: SchemaType): any {
     const schemaJson = require(`../schemas/schemas.json`);
-    return getInlinedSchema(schemaJson, typeName);
+    return getInlinedSchema(schemaJson, type);
 }

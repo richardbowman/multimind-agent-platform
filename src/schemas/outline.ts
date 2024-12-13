@@ -1,23 +1,23 @@
 /**
  * Represents a content outline section
  */
-export class OutlineSection {
+export interface OutlineSection {
     /** The section heading */
-    heading: string = '';
+    heading: string;
     /** Detailed description of the section content */
-    description: string = '';
+    description: string;
     /** Key points to be covered in the section */
-    keyPoints: string[] = [];
+    keyPoints: string[];
 }
 
 /**
  * Represents a complete content outline
  */
-export class ContentOutline {
+export interface ContentOutline {
     /** Main title for the content */
-    title: string = '';
+    title: string;
     /** Organized sections of the content */
-    sections: OutlineSection[] = [];
+    sections: OutlineSection[];
     /** Content development strategy */
-    strategy: string = '';
+    strategy: string;
 }
