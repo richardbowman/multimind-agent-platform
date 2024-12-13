@@ -64,7 +64,13 @@ const researchManager = new ResearchManager(RESEARCH_MANAGER_TOKEN_ID, RESEARCH_
 await researchManager.initialize();
 
 const contentClient = new InMemoryTestClient(CONTENT_MANAGER_USER_ID, "test", storage);
-const contentAssistant = new ContentManager(contentClient, llmService, CONTENT_MANAGER_USER_ID, tasks, vectorDB);
+const contentAssistant = new ContentManager({
+    chatClient: contentClient,
+    llmService: llmService,
+    userId: CONTENT_MANAGER_USER_ID,
+    taskManager: tasks,
+    vectorDBService: vectorDB
+});
 await contentAssistant.initialize();
 
 const writerClient = new InMemoryTestClient(CONTENT_WRITER_USER_ID, "test", storage);
