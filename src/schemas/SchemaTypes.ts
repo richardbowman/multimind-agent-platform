@@ -15,5 +15,6 @@ export enum SchemaType {
     ContentSuggestion = 'ContentSuggestion',
     SectionImprovement = 'SectionImprovement',
     FinalResponse = 'FinalResponse',
-    GoalConfirmation = 'GoalConfirmation'
+    GoalConfirmation = 'GoalConfirmation',
+    Refuting = 'Refuting'
 }
