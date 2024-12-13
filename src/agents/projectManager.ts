@@ -41,6 +41,24 @@ export class ProjectManager extends StepBasedAgent<PlanningProject, Task> {
     constructor(userId: string, messagingHandle: string, chatClient: ChatClient, lmStudioService: LMStudioService, chromaDBService: ChromaDBService, projects: TaskManager) {
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
         this.modelHelpers.setPurpose(`My name is Mesa. My goal is to help develop standardized processes for your business.`)
+        this.modelHelpers.setFinalInstructions(`When planning steps for a project:
+1. Start with goal confirmation to ensure clear understanding
+2. Break down complex tasks into smaller, manageable steps
+3. Consider dependencies between tasks
+4. Include validation steps to ensure quality
+5. Add brainstorming steps for creative solutions
+6. Generate artifacts to document decisions and plans
+7. Always end with a clear summary of accomplishments
+
+Prioritize steps in this order:
+1. Goal confirmation and requirements gathering
+2. Research and analysis if needed
+3. Planning and brainstorming
+4. Execution steps
+5. Documentation and artifact generation
+6. Validation and quality checks
+7. Final summary and next steps`);
+        
         this.setupChatMonitor(PROJECTS_CHANNEL_ID, messagingHandle);
         
         // Register executors
