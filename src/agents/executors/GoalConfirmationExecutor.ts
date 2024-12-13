@@ -1,17 +1,18 @@
 import { StepExecutor } from "../stepBasedAgent";
-import LMStudioService, { StructuredOutputPrompt } from "../../llm/lmstudioService";
+import { StructuredOutputPrompt } from "../../llm/lmstudioService";
 import { ModelHelpers } from "../../llm/helpers";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { GoalConfirmationResponse } from "../../schemas/goalConfirmation";
 import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
+import { ILLMService } from "../../llm/ILLMService";
 
 @StepExecutorDecorator('goal_confirmation', 'Confirm the goals of the user.')
 export class GoalConfirmationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(private lmStudioService: LMStudioService, userId: string) {
-        this.modelHelpers = new ModelHelpers(lmStudioService, userId);
+    constructor(private llmService: ILLMService, userId: string) {
+        this.modelHelpers = new ModelHelpers(llmService, userId);
     }
 
     async execute(goal: string, step: string, projectId: string): Promise<any> {
