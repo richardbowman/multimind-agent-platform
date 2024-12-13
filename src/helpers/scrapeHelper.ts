@@ -173,23 +173,24 @@ export function convertPageToMarkdown($: CheerioAPI): string {
     });
     
     // Configure link formatting
-    // turndownService.addRule('links', {
-    //     filter: 'a',
-    //     replacement: function(content, node, options) {
-    //         const href = node.getAttribute('href');
-    //         const title = node.getAttribute('title');
-    //         if (href === null) {
-    //             return content;
-    //         }
-    //         // Normalize the content: remove newlines and excessive spaces
-    //         const normalizedContent = content
-    //             .replace(/\s+/g, ' ')  // Replace multiple spaces/newlines with single space
-    //             .trim();               // Remove leading/trailing whitespace
+    turndownService.addRule('links', {
+        filter: 'a',
+        replacement: function(content, node: Node, options) {
+            const element = node as HTMLElement;
+            const href = element.getAttribute('href');
+            const title = element.getAttribute('title');
+            if (href === null) {
+                return content;
+            }
+            // Normalize the content: remove newlines and excessive spaces
+            const normalizedContent = content
+                .replace(/\s+/g, ' ')  // Replace multiple spaces/newlines with single space
+                .trim();               // Remove leading/trailing whitespace
             
-    //         const titlePart = title ? ` "${title.replace(/\s+/g, ' ').trim()}"` : '';
-    //         return `[${normalizedContent}](${href}${titlePart})`;
-    //     }
-    // });
+            const titlePart = title ? ` "${title.replace(/\s+/g, ' ').trim()}"` : '';
+            return `[${normalizedContent}](${href}${titlePart})`;
+        }
+    });
 
     return turndownService.turndown(fullHtmlWithoutIndentation);
 }
