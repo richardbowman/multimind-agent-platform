@@ -13,7 +13,7 @@ import { WritingExecutor } from './executors/WritingExecutor';
 import { EditingExecutor } from './executors/EditingExecutor';
 import ChromaDBService from 'src/llm/chromaService';
 import { OutlineExecutor } from './executors/OutlineExecutor';
-import { ResearchExecutor } from './executors/ResearchExecutor';
+import { KnowledgeCheckExecutor } from './executors/ResearchExecutor';
 import { OnboardingProject } from './goalBasedOnboardingConsultant';
 import { StepBasedAgent } from './stepBasedAgent';
 import { Handler } from 'puppeteer';
@@ -39,7 +39,7 @@ export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> 
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
 
         // Register our specialized executors
-        this.registerStepExecutor(new ResearchExecutor(lmStudioService, chromaDBService));
+        this.registerStepExecutor(new KnowledgeCheckExecutor(lmStudioService, chromaDBService));
         this.registerStepExecutor(new OutlineExecutor(lmStudioService));
         this.registerStepExecutor(new WritingExecutor(lmStudioService, projects));
         this.registerStepExecutor(new EditingExecutor(lmStudioService));
@@ -114,7 +114,6 @@ IMPORTANT: Always follow this pattern:
     }
 
     public async initialize(): Promise<void> {
-        await this.chromaDBService.initializeCollection(CHROMA_COLLECTION);
         await super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@content");
         this.processTaskQueue();
     }
