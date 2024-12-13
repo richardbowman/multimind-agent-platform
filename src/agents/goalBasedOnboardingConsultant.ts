@@ -10,10 +10,8 @@ import Logger from '../helpers/logger';
 import { Project, Task } from '../tools/taskManager';
 import { Artifact } from 'src/tools/artifact';
 import { ValidationExecutor } from './executors/ValidationExecutor';
-import { AnalyzeGoalsExecutor } from './executors/AnalyzeGoalsExecutor';
 import { AnswerQuestionsExecutor } from './executors/AnswerQuestionsExecutor';
 import { CreatePlanExecutor } from './executors/CreatePlanExecutor';
-import { ReplyExecutor } from './executors/ReplyExecutor';
 import { ReviewProgressExecutor } from './executors/ReviewProgressExecutor';
 import { UnderstandGoalsExecutor } from './executors/UnderstandGoalsExecutor';
 
@@ -66,57 +64,6 @@ Let's start by discussing your main business goals. What would you like to achie
         this.processTaskQueue();
     }
 
-    @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
-    protected async handleConversation(params: HandlerParams): Promise<void> {
-        const { projectId } = await this.addNewProject({
-            projectName: `Kickoff onboarding based on incoming message: ${params.userPost.message}`,
-            tasks: [],
-            metadata: {
-                originalPostId: params.userPost.id
-            }
-        });
-        const project = await this.projects.getProject(projectId);
-
-        params.projects = [...params.projects||[], project]
-        const plan = await this.planSteps(params);
-        await this.executeNextStep(projectId, params.userPost);
-    }
-
-    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
-    protected async handleThreadResponse(params: HandlerParams): Promise<void> {
-        const project = params.projects?.[0] as OnboardingProject;
-        
-        // If no active project, treat it as a new conversation
-        if (!project) {
-            Logger.info("No active project found, starting new conversation");
-            const { projectId } = await this.addNewProject({
-                projectName: params.userPost.message,
-                tasks: [],
-                metadata: {
-                    originalPostId: params.userPost.id
-                }
-            });
-            const project = await this.projects.getProject(projectId);
-            params.projects = [...params.projects||[], project]
-
-            const plan = await this.planSteps(params);
-            await this.executeNextStep(projectId, params.userPost);
-            return;
-        }
-
-        // Handle response to existing project
-        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
-        if (!currentTask) {
-            Logger.info("No active task, treating as new query in existing project");
-            const plan = await this.planSteps(params);
-            await this.executeNextStep(project.id, params.userPost);
-            return;
-        }
-
-        // Handle response to active task
-        const plan = await this.planSteps(params);
-        await this.executeNextStep(project.id, params.userPost);
-    }
 
     constructor(
         chatClient: ChatClient,
