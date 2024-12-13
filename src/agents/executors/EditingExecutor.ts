@@ -2,7 +2,10 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
-import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
+import { SchemaType } from '../../schemas/SchemaTypes';
+import { EditingResponse } from '../../schemas/editing';
 
 @StepExecutorDecorator('editing', 'Review and improve content quality')
 export class EditingExecutor implements StepExecutor {
@@ -13,37 +16,7 @@ export class EditingExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = {
-            type: "object",
-            properties: {
-                improvements: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            section: { type: "string" },
-                            suggestions: {
-                                type: "array",
-                                items: {
-                                    type: "object",
-                                    properties: {
-                                        type: { 
-                                            type: "string",
-                                            enum: ["clarity", "structure", "style", "grammar"]
-                                        },
-                                        original: { type: "string" },
-                                        improved: { type: "string" },
-                                        explanation: { type: "string" }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                },
-                overallFeedback: { type: "string" }
-            },
-            required: ["improvements", "overallFeedback"]
-        };
+        const schema = getGeneratedSchema(SchemaType.EditingResponse);
 
         const prompt = `You are a content editor.
 Review the content for clarity, structure, style, and grammar.

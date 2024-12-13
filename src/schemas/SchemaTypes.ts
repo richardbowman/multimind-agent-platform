@@ -10,5 +10,8 @@ export enum SchemaType {
     OperationalGuideResponse = 'OperationalGuideResponse',
     ImplementationStep = 'ImplementationStep',
     QAItem = 'QAItem',
-    AnswerAnalysisResponse = 'AnswerAnalysisResponse'
+    AnswerAnalysisResponse = 'AnswerAnalysisResponse',
+    EditingResponse = 'EditingResponse',
+    ContentSuggestion = 'ContentSuggestion',
+    SectionImprovement = 'SectionImprovement'
 }
