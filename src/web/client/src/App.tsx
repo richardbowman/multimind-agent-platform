@@ -4,6 +4,7 @@ import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
 import { TaskPanel } from './components/TaskPanel';
 import { ArtifactPanel } from './components/ArtifactPanel';
+import { WebSocketProvider } from './contexts/WebSocketContext';
 import './App.css';
 
 const App: React.FC = () => {
@@ -11,6 +12,7 @@ const App: React.FC = () => {
     const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
 
     return (
+      <WebSocketProvider>
         <div className="app">
             <div className="sidebar">
                 <ChannelList 
@@ -40,22 +42,8 @@ const App: React.FC = () => {
                 />
             </div>
         </div>
+      </WebSocketProvider>
     );
 };
-
-export default App;
-import React from 'react';
-import { WebSocketProvider } from './contexts/WebSocketContext';
-import './App.css';
-
-function App() {
-  return (
-    <WebSocketProvider>
-      <div className="App">
-        {/* Your other components will go here */}
-      </div>
-    </WebSocketProvider>
-  );
-}
 
 export default App;
