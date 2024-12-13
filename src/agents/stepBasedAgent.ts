@@ -35,7 +35,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     protected planner: Planner;
 
     constructor(params: AgentConstructorParams, planner?: Planner) {
-        super(params);
+        super(params.chatClient, params.llmService, params.userId, params.taskManager, params.vectorDBService);
         this.planner = planner || new SimpleNextActionPlanner(
             params.llmService,
             params.taskManager,
