@@ -71,7 +71,14 @@ const writerClient = new InMemoryTestClient(CONTENT_WRITER_USER_ID, "test", stor
 const writerAssistant = new ContentWriter(writerClient, llmService, tasks, vectorDB);
 
 const pmClient = new InMemoryTestClient(PROJECT_MANAGER_USER_ID, "test", storage);
-const pmAssistant = new ProjectManager(PROJECT_MANAGER_USER_ID, "@pm", pmClient, llmService, vectorDB, tasks);
+const pmAssistant = new ProjectManager({
+    userId: PROJECT_MANAGER_USER_ID,
+    messagingHandle: "@pm",
+    chatClient: pmClient,
+    llmService: llmService,
+    vectorDBService: vectorDB,
+    taskManager: tasks
+});
 
 const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
 const onboardingAssistant = new GoalBasedOnboardingConsultant(onboardingClient, llmService, ONBOARDING_CONSULTANT_USER_ID, tasks, vectorDB);
