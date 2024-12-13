@@ -1,23 +1,18 @@
 import { randomUUID } from 'crypto';
 import Logger from '../helpers/logger';
-import { Agent, HandleActivity, HandlerParams, ProjectHandlerParams, ResponseType } from './agents';
+import { HandlerParams } from './agents';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { Project, TaskManager } from "src/tools/taskManager";
-import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from 'src/chat/chatClient';
-import { ILLMService } from 'src/llm/ILLMService';
-import { CHROMA_COLLECTION, CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID, PROJECTS_CHANNEL_ID } from 'src/helpers/config';
+import { Project } from "src/tools/taskManager";
+import { CONTENT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID } from 'src/helpers/config';
 import { Task } from "src/tools/taskManager";
-import { CONTENT_DECOMPOSITION_SYSTEM_PROMPT, ContentDecompositionPrompt, LOOKUP_RESEARCH_SYSTEM_PROMPT, LookupResearchPrompt } from '../schemas/contentSchemas';
-import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
 import { WritingExecutor } from './executors/WritingExecutor';
 import { EditingExecutor } from './executors/EditingExecutor';
-import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { OutlineExecutor } from './executors/OutlineExecutor';
 import { KnowledgeCheckExecutor } from './executors/ResearchExecutor';
-import { OnboardingProject } from './goalBasedOnboardingConsultant';
 import { StepBasedAgent } from './stepBasedAgent';
-import { Handler } from 'puppeteer';
+import { MultiStepPlanner } from './planners/DefaultPlanner';
+import { ModelHelpers } from 'src/llm/helpers';
 
 export interface ContentProject extends Project<ContentTask> {
     goal: string;
@@ -31,7 +26,10 @@ export interface ContentTask extends Task {
 
 export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> {
     constructor(params: AgentConstructorParams) {
-        super(params);
+        const modelHelpers = new ModelHelpers(params.llmService, params.userId);
+        const planner = new MultiStepPlanner(params.llmService, params.taskManager, params.userId, modelHelpers)
+        super(params, planner);
+        this.modelHelpers = modelHelpers;
 
         // Register our specialized executors
         this.registerStepExecutor(new KnowledgeCheckExecutor(params.llmService, params.vectorDBService));
@@ -111,57 +109,5 @@ IMPORTANT: Always follow this pattern:
     public async initialize(): Promise<void> {
         await super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@content");
         this.processTaskQueue();
-    }
-
-    @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
-    protected async handleConversation(params: HandlerParams): Promise<void> {
-        const { projectId } = await this.addNewProject({
-            projectName: `Kickoff onboarding based on incoming message: ${params.userPost.message}`,
-            tasks: [],
-            metadata: {
-                originalPostId: params.userPost.id
-            }
-        });
-        const project = await this.projects.getProject(projectId);
-
-        params.projects = [...params.projects || [], project]
-        const plan = await this.planSteps(params);
-        await this.executeNextStep(projectId, params.userPost);
-    }
-
-    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
-    protected async handleThreadResponse(params: HandlerParams): Promise<void> {
-        const project = params.projects?.[0] as OnboardingProject;
-
-        // If no active project, treat it as a new conversation
-        if (!project) {
-            Logger.info("No active project found, starting new conversation");
-            const { projectId } = await this.addNewProject({
-                projectName: params.userPost.message,
-                tasks: [],
-                metadata: {
-                    originalPostId: params.userPost.id
-                }
-            });
-            const project = await this.projects.getProject(projectId);
-            params.projects = [...params.projects || [], project]
-
-            const plan = await this.planSteps(params);
-            await this.executeNextStep(projectId, params.userPost);
-            return;
-        }
-
-        // Handle response to existing project
-        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
-        if (!currentTask) {
-            Logger.info("No active task, treating as new query in existing project");
-            const plan = await this.planSteps(params);
-            await this.executeNextStep(project.id, params.userPost);
-            return;
-        }
-
-        // Handle response to active task
-        const plan = await this.planSteps(params);
-        await this.executeNextStep(project.id, params.userPost);
     }
 }   
