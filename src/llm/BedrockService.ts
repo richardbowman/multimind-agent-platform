@@ -6,8 +6,10 @@ import { ModelMessageResponse } from "../schemas/ModelResponse";
 import { StructuredOutputPrompt } from "./lmstudioService";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
+import { LLMCallLogger } from "./LLMLogger";
 
 export class BedrockService implements ILLMService {
+    private logger: LLMCallLogger;
     private client: BedrockRuntimeClient;
     private modelId: string;
     private embeddingModelId: string;
@@ -29,6 +31,7 @@ export class BedrockService implements ILLMService {
         this.modelId = modelId;
         this.embeddingModelId = embeddingModelId;
         this.embeddingService = embeddingService;
+        this.logger = new LLMCallLogger('bedrock');
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
@@ -70,6 +73,7 @@ export class BedrockService implements ILLMService {
     async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelMessageResponse> {
         await this.waitForNextCall();
         const messages = this.formatMessages(userPost.message, history);
+        const input = { instructions, messages };
         
         const command = new ConverseCommand({
             modelId: this.modelId,
@@ -92,11 +96,14 @@ export class BedrockService implements ILLMService {
         try {
             const response = await this.client.send(command);
             const result = response.output?.message?.content?.[0];
-            return {
+            const response = {
                 message: result?.text || ''
             };
+            await this.logger.logCall('generate', input, response);
+            return response;
         } catch (error) {
             Logger.error("Bedrock API error:", error);
+            await this.logger.logCall('generate', input, null, error);
             throw error;
         }
     }
@@ -157,6 +164,7 @@ export class BedrockService implements ILLMService {
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string): Promise<string> {
         await this.waitForNextCall();
+        const input = { message, history, seedAssistant };
         let systemPrompt = "You are a helpful assistant";
         const processedMessages = [];
 
@@ -207,13 +215,21 @@ export class BedrockService implements ILLMService {
             }
         });
 
-        const response = await this.client.send(command);
-        const result = response.output?.message?.content?.[0];
-        return result?.text || '';
+        try {
+            const response = await this.client.send(command);
+            const result = response.output?.message?.content?.[0];
+            const output = result?.text || '';
+            await this.logger.logCall('sendMessageToLLM', input, output);
+            return output;
+        } catch (error) {
+            await this.logger.logCall('sendMessageToLLM', input, null, error);
+            throw error;
+        }
     }
 
     async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<any> {
         await this.waitForNextCall();
+        const input = { userPost, instructions: instructions.getPrompt() };
         const schema = instructions.getSchema();
         const prompt = instructions.getPrompt();
 
@@ -260,9 +276,12 @@ export class BedrockService implements ILLMService {
                 throw new Error("No tool use found in response");
             }
 
-            return result.toolUse?.input;
+            const output = result.toolUse?.input;
+            await this.logger.logCall('generateStructured', input, output);
+            return output;
         } catch (error) {
             Logger.error("Structured generation error:", error);
+            await this.logger.logCall('generateStructured', input, null, error);
             throw error;
         }
     }
@@ -283,6 +302,7 @@ export class BedrockService implements ILLMService {
 
     async getTokenCount(text: string): Promise<number> {
         await this.waitForNextCall();
+        const input = { text };
         const command = new InvokeModelCommand({
             modelId: this.modelId,
             body: JSON.stringify({
@@ -297,9 +317,12 @@ export class BedrockService implements ILLMService {
         try {
             const response = await this.client.send(command);
             const result = JSON.parse(new TextDecoder().decode(response.body));
-            return result.usage.input_tokens;
+            const output = result.usage.input_tokens;
+            await this.logger.logCall('getTokenCount', input, output);
+            return output;
         } catch (error) {
             Logger.error("Token count error:", error);
+            await this.logger.logCall('getTokenCount', input, null, error);
             throw error;
         }
     }
