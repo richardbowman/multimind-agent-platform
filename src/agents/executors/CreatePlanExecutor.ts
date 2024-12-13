@@ -6,7 +6,7 @@ import { TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { OnboardingProject, QuestionAnswer } from '../goalBasedOnboardingConsultant';
 import { CreateArtifact } from '../schemas/ModelResponse';
-import { OperationalGuideResponse, QAItem } from '../schemas/operationalGuide';
+import { OperationalGuideResponse, QAItem } from '../schemas/OperationalGuideResponse';
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
