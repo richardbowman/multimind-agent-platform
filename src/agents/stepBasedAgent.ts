@@ -6,13 +6,14 @@ import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
 import { Project, Task, TaskManager } from '../tools/taskManager';
 import { Planner } from './planners/Planner';
-import { DefaultPlanner } from './planners/DefaultPlanner';
+import { MultiStepPlanner } from './planners/DefaultPlanner';
 import crypto from 'crypto';
 import Logger from '../helpers/logger';
 import { CreateArtifact, ModelMessageResponse } from '../schemas/ModelResponse';
 import ChromaDBService from 'src/llm/chromaService';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/inMemoryChatClient';
+import { SimpleNextActionPlanner } from './planners/SimpleNextActionPlanner';
 
 export interface StepResult {
     type?: string;
@@ -41,14 +42,63 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         planner?: Planner
     ) {
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
-        this.planner = planner || new DefaultPlanner(
+        this.planner = planner || new SimpleNextActionPlanner(
             lmStudioService,
             projects,
             userId,
             this.modelHelpers,
-            this.stepExecutors,
-            this.finalInstructions
+            this.stepExecutors
         );
+    }
+
+    protected async handleChannel(params: HandlerParams): Promise<void> {
+        const { projectId } = await this.addNewProject({
+            projectName: `Kickoff onboarding based on incoming message: ${params.userPost.message}`,
+            tasks: [],
+            metadata: {
+                originalPostId: params.userPost.id
+            }
+        });
+        const project = await this.projects.getProject(projectId);
+
+        params.projects = [...params.projects || [], project]
+        const plan = await this.planSteps(params);
+        await this.executeNextStep(projectId, params.userPost);
+    }
+
+    protected async handlerThread(params: HandlerParams): Promise<void> {
+        const project = params.projects?.[0];
+
+        // If no active project, treat it as a new conversation
+        if (!project) {
+            Logger.info("No active project found, starting new conversation");
+            const { projectId } = await this.addNewProject({
+                projectName: params.userPost.message,
+                tasks: [],
+                metadata: {
+                    originalPostId: params.userPost.id
+                }
+            });
+            const project = await this.projects.getProject(projectId);
+            params.projects = [...params.projects || [], project]
+
+            const plan = await this.planSteps(params);
+            await this.executeNextStep(projectId, params.userPost);
+            return;
+        }
+
+        // Handle response to existing project
+        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
+        if (!currentTask) {
+            Logger.info("No active task, treating as new query in existing project");
+            const plan = await this.planSteps(params);
+            await this.executeNextStep(project.id, params.userPost);
+            return;
+        }
+
+        // Handle response to active task
+        const plan = await this.planSteps(params);
+        await this.executeNextStep(project.id, params.userPost);
     }
 
     protected registerStepExecutor(executor: StepExecutor): void {
