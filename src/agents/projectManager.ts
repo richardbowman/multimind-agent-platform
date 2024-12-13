@@ -42,6 +42,9 @@ export class ProjectManager extends Agent<PlanningProject, Task> {
         super(chatClient, lmStudioService, userId, projects, chromaDBService);
         this.modelHelpers.setPurpose(`My name is Mesa. My goal is to help develop standardized processes for your business.`)
         this.setupChatMonitor(PROJECTS_CHANNEL_ID, messagingHandle);
+        
+        // Register executors
+        this.registerStepExecutor(new BrainstormExecutor(lmStudioService));
     }
 
     
