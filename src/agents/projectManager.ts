@@ -1,7 +1,7 @@
 import { randomUUID } from 'crypto';
 import Logger from '../helpers/logger';
 import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
-import { Project, TaskManager } from "src/tools/taskManager";
+import { Project, RecurrencePattern, TaskManager } from "src/tools/taskManager";
 import { ChatClient } from 'src/chat/chatClient';
 import LMStudioService, { StructuredOutputPrompt } from 'src/llm/lmstudioService';
 import { CONTENT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCH_MANAGER_USER_ID } from 'src/helpers/config';
@@ -12,6 +12,7 @@ import { ResearchActivityType } from './researchManager';
 import { RequestArtifacts } from '../schemas/ModelResponse';
 import { BrainstormExecutor } from './executors/BrainstormExecutor';
 import { GenerateArtifactExecutor } from './executors/GenerateArtifactExecutor';
+import { StepBasedAgent } from './stepBasedAgent';
 
 export enum ProjectManagerActivities {
     AnswerQuestions = "answer-questions",
@@ -28,6 +29,9 @@ export interface PlanningProject extends Project<Task> {
 }
 
 export class ProjectManager extends StepBasedAgent<PlanningProject, Task> {
+    protected processTask(task: Task): Promise<void> {
+        throw new Error('Method not implemented.');
+    }
     protected async projectCompleted(project: PlanningProject): Promise<void> {
         await super.projectCompleted(project);
     }
