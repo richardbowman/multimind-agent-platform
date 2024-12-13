@@ -46,7 +46,7 @@ Explain the rationale for each query.`;
             instructions: queryInstructions
         });
 
-        // Execute searches using ChromaDB
+        // Execute searches using our vector DB
         const searchResults = [];
         const seenContent = new Set();
         
