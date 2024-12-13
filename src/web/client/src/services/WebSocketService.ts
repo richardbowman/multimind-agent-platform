@@ -1,4 +1,4 @@
-import { io, Socket as ClientSocket } from 'socket.io-client';
+import io from 'socket.io-client';
 
 export interface Message {
   id: string;
@@ -10,7 +10,7 @@ export interface Message {
 }
 
 class WebSocketService {
-  private socket: ClientSocket | null = null;
+  private socket: SocketIOClient.Socket | null = null;
   private messageHandlers: ((message: Message) => void)[] = [];
 
   connect(url: string = 'ws://localhost:3001') {
