@@ -1,17 +1,16 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
-import crypto from 'crypto';
-import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
 import { SchemaInliner } from '../../helpers/schemaInliner';
-import * as schemaJson from "../../schemas/generated/operationalGuide.json";
-const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
-import { OperationalGuideResponse } from '../schemas/OperationalGuideResponse';
-import { updateBusinessPlan } from './businessPlanHelper';
-import { TaskManager } from '../../tools/taskManager';
-import { ArtifactManager } from '../../tools/artifactManager';
-import { OnboardingProject, QuestionAnswer } from '../goalBasedOnboardingConsultant';
-import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
+import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { ArtifactManager } from '../../tools/artifactManager';
+import { TaskManager } from '../../tools/taskManager';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
+import { OnboardingProject, QuestionAnswer } from '../goalBasedOnboardingConsultant';
 import { CreateArtifact } from '../schemas/ModelResponse';
+import { OperationalGuideResponse, QAItem } from '../schemas/OperationalGuideResponse';
+import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { updateBusinessPlan } from './businessPlanHelper';
+
+const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
 @StepExecutorDecorator('create_revise_plan', `Create (or revise) a guide for our agents of the user's desired business goals.`)
 export class CreatePlanExecutor implements StepExecutor {
