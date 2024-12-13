@@ -43,12 +43,30 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
     let currentChannelId: string | null = null;
     let threadIds: string[] = [];
 
+    // Helper function to log a single message with a delay
+    function logMessageWithDelay(post: ChatPost): Promise<void> {
+        return new Promise((resolve) => {
+            setTimeout(() => {
+                const handleName = storage.getHandleNameForUserId(post.user_id);
+                const displayName = handleName ? `{bold}{red-fg}${handleName}{/red-fg}{/bold}` : `{bold}{red-fg}${post.user_id}{/red-fg}{/bold}`;
+                const messageColor = (USER_ID === post.user_id) ? "{green-fg}" : "{red-fg}";
+                
+                chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(post.message)}\n`);
+                screen.render();
+                resolve();
+            }, 0);
+        });
+    }
+
     // Function to load messages from a specific thread
     async function loadMessagesForThread(threadId: string | null) {
         chatBox.setContent("");
         screen.render();
 
-        const posts = storage.posts.filter(post => post.channel_id === currentChannelId && (post.getRootId() === threadId || post.id === threadId || (threadId === null && !post.getRootId())));
+        const posts = storage.posts.filter(post => 
+            post.channel_id === currentChannelId && 
+            (post.getRootId() === threadId || post.id === threadId || (threadId === null && !post.getRootId()))
+        );
 
         // Get only the last 20 messages
         const recentPosts = posts.slice(-20);
@@ -59,15 +77,9 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
             screen.render();
         }
 
+        // Log messages one at a time with delay
         for (const post of recentPosts) {
-            const handleName = storage.getHandleNameForUserId(post.user_id);
-            const displayName = handleName ? `{bold}{red-fg}${handleName}{/red-fg}{/bold}` : `{bold}{red-fg}${post.user_id}{/red-fg}{/bold}`;
-
-            // Determine the color for user and other users
-            const messageColor = (USER_ID === post.user_id) ? "{green-fg}" : "{red-fg}";
-
-            chatBox.log(`${displayName}: [${post.getRootId()}/${post.id}] ${formatMarkdownForTerminal(post.message)}\n`);
-            screen.render();
+            await logMessageWithDelay(post);
         }
 
         // Ensure content is fully rendered before scrolling
