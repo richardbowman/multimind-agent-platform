@@ -1,6 +1,6 @@
 import { chromium, devices, Browser } from 'playwright-extra';
 import TurndownService from 'turndown';
-import { load } from 'cheerio';
+import { CheerioAPI, load } from 'cheerio';
 import { ArtifactManager } from '../tools/artifactManager';
 import crypto from 'crypto';
 
@@ -163,7 +163,7 @@ export function convertPageToMarkdown($: CheerioAPI): string {
         });
     });
 
-    const fullHtmlWithoutIndentation = cleanedHtml
+    const fullHtmlWithoutIndentation = cleanedHtml?
         .replace(/\t/g, '') // Remove tabs
         .replace(/^[ \t]+/gm, ''); // Remove leading spaces and tabs from each line
 
@@ -173,23 +173,23 @@ export function convertPageToMarkdown($: CheerioAPI): string {
     });
     
     // Configure link formatting
-    turndownService.addRule('links', {
-        filter: 'a',
-        replacement: function(content, node, options) {
-            const href = node.getAttribute('href');
-            const title = node.getAttribute('title');
-            if (href === null) {
-                return content;
-            }
-            // Normalize the content: remove newlines and excessive spaces
-            const normalizedContent = content
-                .replace(/\s+/g, ' ')  // Replace multiple spaces/newlines with single space
-                .trim();               // Remove leading/trailing whitespace
+    // turndownService.addRule('links', {
+    //     filter: 'a',
+    //     replacement: function(content, node, options) {
+    //         const href = node.getAttribute('href');
+    //         const title = node.getAttribute('title');
+    //         if (href === null) {
+    //             return content;
+    //         }
+    //         // Normalize the content: remove newlines and excessive spaces
+    //         const normalizedContent = content
+    //             .replace(/\s+/g, ' ')  // Replace multiple spaces/newlines with single space
+    //             .trim();               // Remove leading/trailing whitespace
             
-            const titlePart = title ? ` "${title.replace(/\s+/g, ' ').trim()}"` : '';
-            return `[${normalizedContent}](${href}${titlePart})`;
-        }
-    });
+    //         const titlePart = title ? ` "${title.replace(/\s+/g, ' ').trim()}"` : '';
+    //         return `[${normalizedContent}](${href}${titlePart})`;
+    //     }
+    // });
 
     return turndownService.turndown(fullHtmlWithoutIndentation);
 }
