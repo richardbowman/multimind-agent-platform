@@ -12,6 +12,17 @@ export class BedrockService implements ILLMService {
     private modelId: string;
     private embeddingModelId: string;
     private embeddingService?: ILLMService;
+    private lastCallTime: number = 0;
+    private defaultDelay: number = 1000; // 1 second delay between calls
+    
+    private async waitForNextCall(): Promise<void> {
+        const now = Date.now();
+        const timeSinceLastCall = now - this.lastCallTime;
+        if (timeSinceLastCall < this.defaultDelay) {
+            await new Promise(resolve => setTimeout(resolve, this.defaultDelay - timeSinceLastCall));
+        }
+        this.lastCallTime = Date.now();
+    }
 
     constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v2:0", embeddingService?: ILLMService) {
         this.client = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
@@ -30,6 +41,7 @@ export class BedrockService implements ILLMService {
     }
 
     private async getEmbedding(text: string): Promise<number[]> {
+        await this.waitForNextCall();
         const command = new InvokeModelCommand({
             modelId: "amazon.titan-embed-text-v2:0",
             body: JSON.stringify({
@@ -56,6 +68,7 @@ export class BedrockService implements ILLMService {
     }
 
     async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelMessageResponse> {
+        await this.waitForNextCall();
         const messages = this.formatMessages(userPost.message, history);
         
         const command = new ConverseCommand({
@@ -143,6 +156,7 @@ export class BedrockService implements ILLMService {
     }
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string): Promise<string> {
+        await this.waitForNextCall();
         let systemPrompt = "You are a helpful assistant";
         const processedMessages = [];
 
@@ -199,6 +213,7 @@ export class BedrockService implements ILLMService {
     }
 
     async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<any> {
+        await this.waitForNextCall();
         const schema = instructions.getSchema();
         const prompt = instructions.getPrompt();
 
@@ -267,6 +282,7 @@ export class BedrockService implements ILLMService {
     }
 
     async getTokenCount(text: string): Promise<number> {
+        await this.waitForNextCall();
         const command = new InvokeModelCommand({
             modelId: this.modelId,
             body: JSON.stringify({
