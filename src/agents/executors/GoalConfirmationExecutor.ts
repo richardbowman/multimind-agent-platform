@@ -1,7 +1,10 @@
 import { StepExecutor } from "../stepBasedAgent";
 import LMStudioService, { StructuredOutputPrompt } from "../../llm/lmstudioService";
 import { ModelHelpers } from "../../llm/helpers";
-import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
+import { GoalConfirmationResponse } from "../../schemas/goalConfirmation";
+import { getGeneratedSchema } from "../../helpers/schemaUtils";
+import { SchemaType } from "../../schemas/SchemaTypes";
 
 @StepExecutorDecorator('goal_confirmation', 'Confirm the goals of the user.')
 export class GoalConfirmationExecutor implements StepExecutor {
@@ -12,26 +15,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string): Promise<any> {
-        const schema = {
-            type: "object",
-            properties: {
-                response: {
-                    type: "object",
-                    properties: {
-                        message: {
-                            type: "string",
-                            description: "A clear restatement of the goal and confirmation of understanding"
-                        },
-                        understanding: {
-                            type: "boolean",
-                            description: "Whether the goal is clear and actionable"
-                        }
-                    },
-                    required: ["message", "understanding"]
-                }
-            },
-            required: ["response"]
-        };
+        const schema = getGeneratedSchema(SchemaType.GoalConfirmation);
 
         const prompt = `As an AI assistant, your task is to:
 1. Restate the user's goal in your own words to demonstrate understanding
@@ -40,7 +24,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
 
 Goal to analyze: "${goal}"`;
 
-        const result = await this.modelHelpers.generate({
+        const result = await this.modelHelpers.generate<{ response: GoalConfirmationResponse }>({
             message: goal,
             instructions: new StructuredOutputPrompt(schema, prompt)
         });
