@@ -4,7 +4,7 @@ import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { getInlinedSchema } from '../../helpers/schemaUtils';
 import { ContentOutline } from '../../schemas/outline';
-const schema = getGeneratedSchema('ContentOutline');
+const schema = getGeneratedSchema(ContentOutline);
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 
 @StepExecutorDecorator('outline', 'Create structured content outlines')

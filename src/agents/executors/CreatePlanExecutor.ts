@@ -10,7 +10,7 @@ import { OperationalGuideResponse, QAItem } from '../schemas/OperationalGuideRes
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { updateBusinessPlan } from './businessPlanHelper';
 
-const schema = getGeneratedSchema('OperationalGuideResponse');
+const schema = getGeneratedSchema(OperationalGuideResponse);
 
 @StepExecutorDecorator('create_revise_plan', `Create (or revise) a guide for our agents of the user's desired business goals.`)
 export class CreatePlanExecutor implements StepExecutor {

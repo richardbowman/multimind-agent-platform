@@ -14,10 +14,11 @@ export function getInlinedSchema(schemaJson: any, type?: string): any {
 
 /**
  * Gets an inlined schema from our generated schema files
- * @param type The type name to extract from the schema
+ * @param type The interface type to extract from the schema
  * @returns The inlined schema for the specified type
  */
-export function getGeneratedSchema(type: string): any {
-    const schemaJson = require(`../schemas/generated/${type}.json`);
-    return getInlinedSchema(schemaJson, type);
+export function getGeneratedSchema<T>(type: new () => T): any {
+    const typeName = type.name;
+    const schemaJson = require(`../schemas/generated/${typeName}.json`);
+    return getInlinedSchema(schemaJson, typeName);
 }

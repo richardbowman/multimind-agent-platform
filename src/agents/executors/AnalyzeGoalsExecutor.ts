@@ -10,7 +10,7 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/helpers';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 
-const schema = getGeneratedSchema('GoalsAnalysis');
+const schema = getGeneratedSchema(GoalsAnalysis);
 
 @StepExecutorDecorator('analyze_goals', 'Break down and analyze business goals into actionable tasks')
 export class AnalyzeGoalsExecutor implements StepExecutor {
