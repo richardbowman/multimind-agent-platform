@@ -34,8 +34,8 @@ export class ProjectManager extends StepBasedAgent<PlanningProject, Task> {
         await super.projectCompleted(project);
     }
 
-    constructor(userId: string, messagingHandle: string, chatClient: ChatClient, lmStudioService: LMStudioService, chromaDBService: ChromaDBService, projects: TaskManager) {
-        super(chatClient, lmStudioService, userId, projects, chromaDBService);
+    constructor(params: AgentConstructorParams) {
+        super(params);
         this.modelHelpers.setPurpose(`My name is Mesa. My goal is to help develop standardized processes for your business.`)
         this.modelHelpers.setFinalInstructions(`When planning steps for a project:
 1. Start with goal confirmation to ensure clear understanding

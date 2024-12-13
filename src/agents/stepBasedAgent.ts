@@ -3,7 +3,8 @@ import { getExecutorMetadata } from './decorators/executorDecorator';
 import 'reflect-metadata';
 import { ChatClient, ChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
-import LMStudioService, { StructuredOutputPrompt } from '../llm/lmstudioService';
+import { StructuredOutputPrompt } from '../llm/lmstudioService';
+import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Project, Task, TaskManager } from '../tools/taskManager';
 import { Planner } from './planners/Planner';
 import { MultiStepPlanner } from './planners/DefaultPlanner';
@@ -33,19 +34,12 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
     protected planner: Planner;
 
-    constructor(
-        chatClient: ChatClient,
-        lmStudioService: LMStudioService,
-        userId: string,
-        projects: TaskManager,
-        chromaDBService: ChromaDBService,
-        planner?: Planner
-    ) {
-        super(chatClient, lmStudioService, userId, projects, chromaDBService);
+    constructor(params: AgentConstructorParams, planner?: Planner) {
+        super(params);
         this.planner = planner || new SimpleNextActionPlanner(
-            lmStudioService,
-            projects,
-            userId,
+            params.llmService,
+            params.taskManager,
+            params.userId,
             this.modelHelpers,
             this.stepExecutors
         );
