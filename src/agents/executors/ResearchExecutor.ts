@@ -1,9 +1,12 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from '../../llm/lmstudioService';
-import LMStudioService from '../../llm/lmstudioService';
-import { ModelHelpers } from 'src/llm/helpers';
-import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ModelHelpers } from '../../llm/helpers';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { IVectorDatabase } from '../../llm/IVectorDatabase';
+import { ILLMService } from '../../llm/ILLMService';
+import { ResearchResponse } from '../../schemas/research';
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
+import { SchemaType } from '../../schemas/SchemaTypes';
 import Logger from '../../helpers/logger';
 
 @StepExecutorDecorator('check-knowledge', 'Check my existing knowledgebase (useful to do upfront)')
@@ -11,37 +14,21 @@ export class ResearchExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private vectorDB: IVectorDatabase;
 
-    constructor(llmService: LMStudioService, vectorDB: IVectorDatabase) {
+    constructor(llmService: ILLMService, vectorDB: IVectorDatabase) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
         this.vectorDB = vectorDB;
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        // First, generate optimal search queries
-        const querySchema = {
-            type: "object",
-            properties: {
-                queries: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            query: { type: "string" },
-                            rationale: { type: "string" }
-                        }
-                    }
-                }
-            },
-            required: ["queries"]
-        };
+        const schema = getGeneratedSchema(SchemaType.Research);
 
         const queryPrompt = `You are a research specialist crafting search queries.
 Given this content goal: "${goal}"
 Generate 2-3 different search queries that will help find relevant information.
 Explain the rationale for each query.`;
 
-        const queryInstructions = new StructuredOutputPrompt(querySchema, queryPrompt);
-        const queryResult = await this.modelHelpers.generate({
+        const queryInstructions = new StructuredOutputPrompt(schema, queryPrompt);
+        const queryResult = await this.modelHelpers.generate<ResearchResponse>({
             message: goal,
             instructions: queryInstructions
         });
@@ -70,34 +57,6 @@ Explain the rationale for each query.`;
             }
         }
 
-        // Analyze search results
-        const analysisSchema = {
-            type: "object",
-            properties: {
-                keyFindings: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            finding: { type: "string" },
-                            sources: { 
-                                type: "array",
-                                items: { type: "string" }
-                            },
-                            relevance: { type: "string" }
-                        }
-                    }
-                },
-                gaps: {
-                    type: "array",
-                    items: { type: "string" }
-                },
-                recommendations: {
-                    type: "string"
-                }
-            },
-            required: ["keyFindings", "gaps", "recommendations"]
-        };
 
         const analysisPrompt = `You are analyzing research results for: "${goal}"
 
@@ -112,8 +71,8 @@ Analyze these results to:
 2. Identify any information gaps
 3. Recommend next steps for content creation`;
 
-        const analysisInstructions = new StructuredOutputPrompt(analysisSchema, analysisPrompt);
-        const analysis = await this.modelHelpers.generate({
+        const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
+        const analysis = await this.modelHelpers.generate<ResearchResponse>({
             message: goal,
             instructions: analysisInstructions
         });
