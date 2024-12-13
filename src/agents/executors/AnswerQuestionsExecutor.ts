@@ -1,8 +1,7 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import LMStudioService, { StructuredOutputPrompt } from '../../llm/lmstudioService';
-import { SchemaInliner } from '../../helpers/schemaInliner';
-import * as schemaJson from "../schemas/schema.json";
-const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
+import { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { ILLMService } from '../../llm/ILLMService';
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { AnswerAnalysisResponse } from '../schemas/AnswerAnalysisResponse';
 import { TaskManager } from '../../tools/taskManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
@@ -14,14 +13,14 @@ export class AnswerQuestionsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
     constructor(
-        llmService: LMStudioService,
+        llmService: ILLMService,
         private taskManager: TaskManager
     ) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
     async execute(response: string, step: string, projectId: string): Promise<StepResult> {
-        const schema = generatedSchemaDef.AnswerAnalysisResponse;
+        const schema = getGeneratedSchema(AnswerAnalysisResponse);
 
         const project = this.taskManager.getProject(projectId) as OnboardingProject;
         const intakeQuestions = Object.values(project.tasks).filter(t => t.type === 'process-answers' && !t.complete);
