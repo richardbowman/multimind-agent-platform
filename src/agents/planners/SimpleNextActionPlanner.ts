@@ -1,5 +1,5 @@
 import { HandlerParams } from '../agents';
-import { PlanStepsResponse } from '../../schemas/PlanStepsResponse';
+import { NextActionResponse } from '../../schemas/NextActionResponse';
 import { Planner } from './Planner';
 import { Task } from '../../tools/taskManager';
 import { SchemaInliner } from '../../helpers/schemaInliner';
@@ -19,7 +19,7 @@ export class SimpleNextActionPlanner implements Planner {
         private stepExecutors: Map<string, any> = new Map()
     ) {}
 
-    public async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
+    public async planSteps(handlerParams: HandlerParams): Promise<NextActionResponse> {
         const executorMetadata = Array.from(this.stepExecutors.entries()).map(([key, executor]) => {
             const metadata = Reflect.getMetadata('executor', executor.constructor);
             return {
@@ -28,7 +28,7 @@ export class SimpleNextActionPlanner implements Planner {
             };
         });
 
-        const schema = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions).PlanStepsResponse;
+        const schema = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions).NextActionResponse;
 
         const project = handlerParams.projects[0];
         const tasks = this.projects.getAllTasks(project.id);
@@ -68,22 +68,19 @@ ${completedSteps}
 
 ${this.modelHelpers.getFinalInstructions()}`;
 
-        const response: PlanStepsResponse = await this.modelHelpers.generate({
+        const response: NextActionResponse = await this.modelHelpers.generate({
             ...handlerParams,
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
 
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);
 
-        // Only create one new task for the next action
-        if (response.steps && response.steps.length > 0) {
-            const nextStep = response.steps[0]; // Only take the first step
-            
-            // Create new task for the next action
+        // Create new task for the next action
+        if (response.action) {
             const newTask: Task = {
                 id: crypto.randomUUID(),
-                type: nextStep.actionType,
-                description: nextStep.parameters || nextStep.actionType,
+                type: response.action.actionType,
+                description: response.action.parameters || response.action.actionType,
                 creator: this.userId,
                 complete: false,
                 order: currentTasks.length // Add to end of current tasks
