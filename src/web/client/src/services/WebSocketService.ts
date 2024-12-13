@@ -1,4 +1,5 @@
-import { io as socketIO, Socket as SocketIOClient } from 'socket.io-client';
+import { Socket } from 'socket.io-client';
+import io from 'socket.io-client';
 
 export interface Message {
   id: string;
@@ -10,11 +11,11 @@ export interface Message {
 }
 
 class WebSocketService {
-  private socket: SocketIOClient | null = null;
+  private socket: Socket | null = null;
   private messageHandlers: ((message: Message) => void)[] = [];
 
   connect(url: string = 'ws://localhost:3001') {
-    this.socket = socketIO(url);
+    this.socket = io(url);
 
     this.socket.on('connect', () => {
       console.log('Connected to WebSocket server');
