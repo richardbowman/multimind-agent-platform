@@ -1,13 +1,10 @@
 import { randomUUID } from 'crypto';
 import JSON5 from "json5";
-import { Handler } from "puppeteer";
 import { ChatClient, ChatPost, ConversationContext, Message, ProjectChainResponse } from "src/chat/chatClient";
 import Logger from "src/helpers/logger";
 import { SystemPromptBuilder } from "src/helpers/systemPrompt";
-import ChromaDBService, { SearchResult } from "src/llm/chromaService";
-import LMStudioService, { StructuredOutputPrompt } from "src/llm/lmstudioService";
-import { CreateArtifact, ModelMessageResponse, RequestArtifacts } from "src/schemas/ModelResponse";
-import { InputPrompt, StructuredInputPrompt } from "src/prompts/structuredInputPrompt";
+import { CreateArtifact, ModelMessageResponse } from "src/schemas/ModelResponse";
+import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Project, Task, TaskManager } from "src/tools/taskManager";
@@ -15,6 +12,10 @@ import { ArtifactResponseSchema } from '../schemas/artifactSchema';
 import schemas from '../schemas/schema.json';
 import { ArtifactInputPrompt } from 'src/prompts/artifactInputPrompt';
 import { ModelHelpers } from 'src/llm/helpers';
+import { ILLMService } from 'src/llm/ILLMService';
+import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
+import LMStudioService from 'src/llm/lmstudioService';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 
 export interface ActionMetadata {
     activityType: string;
@@ -69,9 +70,9 @@ export abstract class Agent<Project, Task> {
     private chatClient: ChatClient;
     private threadSummaries: Map<string, ThreadSummary> = new Map();
 
-    protected lmStudioService: LMStudioService;
+    protected llmService: ILLMService;
     protected userId: string;
-    protected chromaDBService: ChromaDBService;
+    protected chromaDBService: IVectorDatabase;
     protected promptBuilder: SystemPromptBuilder;
     protected projects: TaskManager;
     protected artifactManager: ArtifactManager;
@@ -80,34 +81,40 @@ export abstract class Agent<Project, Task> {
 
     protected abstract projectCompleted(project: Project): void;
     protected abstract processTask(task: Task): Promise<void>;
+    protected abstract handlerThread(params: HandlerParams): Promise<void>;
+    protected abstract handleChannel(params: HandlerParams): Promise<void>;
 
 
-    constructor(chatClient: ChatClient, lmStudioService: LMStudioService, userId: string, projects: TaskManager, chromaDBService?: ChromaDBService) {
-        this.modelHelpers = new ModelHelpers(lmStudioService, userId);
+    constructor(chatClient: ChatClient, llmService: ILLMService, userId: string, projects: TaskManager, vectorDBService: IVectorDatabase) {
+        this.modelHelpers = new ModelHelpers(llmService, userId);
         this.chatClient = chatClient;
-        this.lmStudioService = lmStudioService;
+        this.llmService = llmService;
         this.userId = userId;
-        this.chromaDBService = chromaDBService || new ChromaDBService(lmStudioService);
+        this.chromaDBService = vectorDBService;
         this.promptBuilder = new SystemPromptBuilder();
         this.artifactManager = new ArtifactManager(this.chromaDBService);
         this.projects = projects;
 
-        this.projects.on("taskAssigned", async (event) => {
-            if (event.assignee === this.userId) {
-                await this.taskNotification(event.task);
-            }
-        });
-        this.projects.on("taskCompleted", async (event) => {
-            if (event.assignee === this.userId) {
-                await this.taskNotification(event.task);
-            }
-        });
+        if (this.projects) {
+            this.projects.on("taskAssigned", async (event) => {
+                if (event.assignee === this.userId) {
+                    await this.taskNotification(event.task);
+                }
+            });
+            this.projects.on("taskCompleted", async (event) => {
+                if (event.assignee === this.userId) {
+                    await this.taskNotification(event.task);
+                }
+            });
 
-        this.projects.on("projectCompleted", async (event) => {
-            if (event.creator === this.userId) {
-                await this.projectCompleted(event.project);
-            }
-        })
+            this.projects.on("projectCompleted", async (event) => {
+                if (event.creator === this.userId) {
+                    await this.projectCompleted(event.project);
+                }
+            })
+        } else {
+            Logger.warn(`Agent ${this.constructor.name} didn't provide access to task manager`);
+        }
     }
 
     protected async taskNotification(task: Task): Promise<void> {
@@ -219,83 +226,36 @@ export abstract class Agent<Project, Task> {
 
                 if (!post.getRootId() && post.message.startsWith(handle)) {
                     // Determine the type of activity using an LLM
-                    await this.classifyAndRespond(post, ResponseType.CHANNEL);
+                    await this.handleChannel({ userPost: post });
                 } else if (post.getRootId()) {
                     const postRootId: string = post.getRootId() || "";
 
                     Logger.verbose(`Received thread message: ${post.message} in ${channelId} from ${userId}, with root id ${postRootId}`);
 
-                    const projectChain = await this.chatClient.findProjectChain(post.channel_id, postRootId);
-                    if (projectChain && projectChain.activityType) {
-                        const originalActivityType = projectChain.activityType;
-
-                        if (!this.getMethodForActivity(originalActivityType)) {
-                            Logger.verbose("skipping processing, not a child thread of our activity types");
-                            return;
+                    const posts = await this.chatClient.getThreadChain(post);
+                    // only respond to chats directed at "me"
+                    if (posts[0].message.startsWith(handle)) {
+                        // Get all available actions for this response type
+                        const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
+                        const projects = [];
+                        for (const projectId of projectIds) {
+                            const project = this.projects.getProject(projectId);
+                            if (project) projects.push(project);
                         }
 
-                        // Determine the type of activity using an LLM
-                        const { activityType, requestedArtifacts, searchResults } = await this.classifyResponse(post, ResponseType.RESPONSE, projectChain.posts);
+                        let requestedArtifacts: string[] = [], searchResults: SearchResult[] = [];
 
-                        const allArtifacts = [...new Set([...requestedArtifacts, ...projectChain.posts.map(p => p.props["artifact-ids"] || [])].flat())];
+                        const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifact-ids"] || [])].flat())];
                         const artifacts = await this.mapRequestedArtifacts(allArtifacts);
 
-                        // Retrieve the method based on the activity type
-                        const handlerMethod = this.getMethodForResponse(activityType);
-                        if (handlerMethod) {
-                            await handlerMethod({
-                                userPost: post,
-                                artifacts,
-                                projectChain,
-                                searchResults
-                            });
-                        } else {
-                            Logger.info(`Unsupported activity type: ${activityType}`);
-                            await this.reply(post, `Sorry, I don't support ${activityType} yet.`);
-                        }
-                    } else {
-                        const posts = await this.chatClient.getThreadChain(post);
-                        // only respond to chats directed at "me"
-                        if (posts[0].message.startsWith(handle)) {
-                            // Get all available actions for this response type
-                            const actions = this.getAvailableActions(ResponseType.RESPONSE);
-                            const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
-                            const projects = [];
-                            for (const projectId of projectIds) {
-                                const project = this.projects.getProject(projectId);
-                                if (project) projects.push(project);
-                            }
-
-                            let activityType, requestedArtifacts : string[] = [], searchResults : SearchResult[] = [];
-                            if (actions.length > 1) {
-                                const classify = await this.classifyResponse(post, ResponseType.RESPONSE, posts, { userPost: post, projects });
-                                activityType = classify.activityType;
-                                requestedArtifacts = classify.requestedArtifacts;
-                                searchResults = classify.searchResults;
-                            } else {
-                                activityType = actions[0].activityType;
-                            }
-                            const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifact-ids"] || [])].flat())];
-                            const artifacts = await this.mapRequestedArtifacts(allArtifacts);
-
-                            // Retrieve the method based on the activity type
-                            const handlerMethod = this.getMethodForResponse(activityType);
-                            if (handlerMethod) {
-                                await handlerMethod({
-                                    userPost: post,
-                                    rootPost: posts[0],
-                                    artifacts,
-                                    projects,
-                                    threadPosts: posts.slice(1, -1),
-                                    searchResults
-                                });
-                            } else {
-                                Logger.info(`Unsupported activity type: ${activityType}`);
-                                await this.reply(post, {
-                                    message: `Sorry, I don't support ${activityType} yet.`
-                                });
-                            }
-                        }
+                        this.handlerThread({
+                            userPost: post,
+                            rootPost: posts[0],
+                            artifacts,
+                            projects,
+                            threadPosts: posts.slice(1, -1),
+                            searchResults
+                        });
                     }
                 }
             } else {
@@ -387,7 +347,7 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
             }
         `;
 
-        const response = await this.lmStudioService.generateStructured(post, new StructuredOutputPrompt(jsonSchema, prompt), [], undefined, 1024);
+        const response = await this.llmService.generateStructured(post, new StructuredOutputPrompt(jsonSchema, prompt), [], undefined, 1024);
 
 
         Logger.info(`Model chose ${response.activityType} because ${response.reasoning}`);
@@ -525,7 +485,7 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
         }
 
         // Get the LLM response
-        const rawResponse = await this.lmStudioService.sendMessageToLLM(history[history.length - 1].message, llmMessages, undefined, 8192, 512, {
+        const rawResponse = await this.llmService.sendMessageToLLM(history[history.length - 1].message, llmMessages, undefined, 8192, 512, {
             type: "array",
             items: { type: "string" }
         });
