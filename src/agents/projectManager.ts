@@ -14,6 +14,7 @@ import { BrainstormExecutor } from './executors/BrainstormExecutor';
 import { GenerateArtifactExecutor } from './executors/GenerateArtifactExecutor';
 import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
 import { AnswerQuestionsExecutor } from './executors/AnswerQuestionsExecutor';
+import { ComplexProjectExecutor } from './executors/ComplexProjectExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
 
 export enum ProjectManagerActivities {
@@ -66,6 +67,7 @@ Prioritize steps in this order:
         this.registerStepExecutor(new GenerateArtifactExecutor(lmStudioService, this.artifactManager));
         this.registerStepExecutor(new GoalConfirmationExecutor(lmStudioService, userId));
         this.registerStepExecutor(new AnswerQuestionsExecutor(lmStudioService, this.projects));
+        this.registerStepExecutor(new ComplexProjectExecutor(lmStudioService, this.projects));
     }
 
     
@@ -212,103 +214,6 @@ Prioritize steps in this order:
         }
     }
 
-    @HandleActivity(ProjectManagerActivities.KickoffCombinedProject, "Kickoff a combined project involving both research and content development", ResponseType.RESPONSE)
-    private async kickoffComplexProject(params: HandlerParams) {
-        const instructions = `
-            Create a new project with multiple tasks for both research and content teams based on user's request. Make sure the tasks are
-            thoroughly described, independent, and complete.
-
-            Respond in JSON format with these keys:
-            - "projectName": The name of the project
-            - "projectGoal": The goal of the project
-            - "researchTask": What is needed from the research team
-            - "contentTask": What is needed from the content team
-            - "responseMessage": A user-friendly response message to inform the user about the new project and assigned tasks
-        `;
-
-        const structuredPrompt = new StructuredOutputPrompt(
-            {
-                type: 'object',
-                properties: {
-                    projectName: { type: 'string' },
-                    projectGoal: { type: 'string' },
-                    researchTask: { type: 'string' },
-                    contentTask: { type: 'string' },
-                    responseMessage: { type: 'string' }
-                }
-            },
-            instructions
-        );
-
-        try {
-            const responseJSON = await this.lmStudioService.generateStructured(params.userPost, structuredPrompt, params.threadPosts);
-            const { projectName, projectGoal, researchTask, contentTask, responseMessage } = responseJSON;
-
-            // Create a new project
-            const projectId = randomUUID();
-            const tasks: Record<string, Task> = {};
-            
-            // Create research tasks first
-            const researchTaskIds: string[] = [];
-            let taskId = randomUUID();
-            researchTaskIds.push(taskId);
-            tasks[taskId] = {
-                id: taskId,
-                description: `${researchTask} [${projectGoal}]`,
-                creator: this.userId,
-                projectId: projectId,
-                type: ResearchActivityType.WebResearch,
-                complete: false
-            };
-
-            // Create content tasks that depend on research completion
-            taskId = randomUUID();
-            tasks[taskId] = {
-                id: taskId,
-                description: `${contentTask} [${projectGoal}]`,
-                creator: this.userId,
-                projectId: projectId,
-                type: ContentManagerActivityType.ConfirmCreateFullContent,
-                complete: false,
-                dependsOn: researchTaskIds[0] // Make content tasks depend on first research task
-            };
-
-            // Create and add the project
-            const newProject: PlanningProject = {
-                id: projectId,
-                name: projectName,
-                goal: projectGoal,
-                tasks: tasks,
-                metadata: {
-                    originalPostId: params.userPost.id,
-                },
-                description: 'A complex project involving both research and content development.'
-            };
-
-            this.projects.addProject(newProject);
-
-            // Now assign tasks to agents after project is created
-            for (const taskId of Object.keys(tasks)) {
-                const task = tasks[taskId];
-                if (task.type === ResearchActivityType.WebResearch) {
-                    this.projects.assignTaskToAgent(taskId, RESEARCH_MANAGER_USER_ID);
-                } else if (task.type === ContentManagerActivityType.ConfirmCreateFullContent) {
-                    this.projects.assignTaskToAgent(taskId, CONTENT_MANAGER_USER_ID);
-                }
-            }
-
-            await this.reply(params.userPost, {
-                message: responseMessage
-            }, {
-                "project-id": projectId
-            });
-        } catch (error) {
-            Logger.error('Error kicking off complex project:', error);
-            await this.reply(params.userPost, {
-                message: 'Failed to kickoff the complex project. Please try again later.'
-            });
-        }
-    }
 
     @HandleActivity(ProjectManagerActivities.ScheduleTask, "Schedule a recurring task", ResponseType.RESPONSE)
     private async scheduleTask(params: HandlerParams) {
