@@ -1,6 +1,6 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { ModelMessageResponse } from '../../schemas/ModelResponse';
-import { StructuredOutputPrompt } from '../../llm/lmstudioService';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import LMStudioService from '../../llm/lmstudioService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
