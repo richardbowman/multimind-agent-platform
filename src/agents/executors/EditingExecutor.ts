@@ -6,23 +6,39 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { EditingResponse } from '../../schemas/editing';
+import { ArtifactManager } from '../../tools/artifactManager';
 
 @StepExecutorDecorator('editing', 'Review and improve content quality')
 export class EditingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    private artifactManager: ArtifactManager;
 
-    constructor(llmService: ILLMService) {
+    constructor(llmService: ILLMService, artifactManager: ArtifactManager) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
+        this.artifactManager = artifactManager;
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.EditingResponse);
 
+        // Get the project metadata to find the content artifact
+        const project = await this.artifactManager.getProject(projectId);
+        if (!project.metadata.contentArtifactId) {
+            throw new Error('No content artifact found for editing');
+        }
+
+        // Load the content artifact
+        const contentArtifact = await this.artifactManager.loadArtifact(project.metadata.contentArtifactId);
+        if (!contentArtifact) {
+            throw new Error(`Could not load content artifact ${project.metadata.contentArtifactId}`);
+        }
+
         const prompt = `You are a content editor.
 Review the content for clarity, structure, style, and grammar.
 Provide specific suggestions for improvements while maintaining the original message.
 
-${previousResult ? `Review this content:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
+Content to review:
+${contentArtifact.content}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const result = await this.modelHelpers.generate<EditingResponse>({
