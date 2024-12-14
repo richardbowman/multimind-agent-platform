@@ -3,7 +3,7 @@ import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { VM } from 'vm2';
+import ivm from 'isolated-vm';
 
 interface CodeExecutionResponse {
     code: string;
@@ -14,14 +14,11 @@ interface CodeExecutionResponse {
 @StepExecutorDecorator('code-execution', 'Safely execute JavaScript code in a sandboxed environment')
 export class CodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
-    private vm: VM;
+    private isolate: ivm.Isolate;
 
     constructor(llmService: ILLMService) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
-        this.vm = new VM({
-            timeout: 5000,
-            sandbox: {}
-        });
+        this.isolate = new ivm.Isolate({ memoryLimit: 128 }); // Limit to 128MB
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
@@ -56,9 +53,22 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
 
         let executionResult;
         try {
-            executionResult = this.vm.run(result.code);
+            const context = await this.isolate.createContext();
+            const jail = context.global;
+            await jail.set('global', jail.derefInto());
+            
+            // Create a new script in the context
+            const script = await this.isolate.compileScript(result.code);
+            
+            // Run with 5 second timeout
+            executionResult = await script.run(context, { timeout: 5000 });
         } catch (error) {
             executionResult = `Error: ${error.message}`;
+        } finally {
+            // Dispose the isolate to free memory
+            await this.isolate.dispose();
+            // Create a new isolate for next execution
+            this.isolate = new ivm.Isolate({ memoryLimit: 128 });
         }
 
         result.result = executionResult;
