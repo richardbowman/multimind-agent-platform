@@ -1,4 +1,4 @@
-import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from '../../../chat/chatClient';
+import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from '../../../../chat/chatClient';
 import { webSocketService } from './WebSocketService';
 
 export class WebSocketChatClient implements ChatClient {
