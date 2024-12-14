@@ -5,11 +5,7 @@ import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import ivm from 'isolated-vm';
 
-interface CodeExecutionResponse {
-    code: string;
-    explanation: string;
-    result: any;
-}
+import { CodeExecutionResponse } from '../../schemas/ModelResponse';
 
 @StepExecutorDecorator('code-execution', 'Safely execute JavaScript code in a sandboxed environment')
 export class CodeExecutorExecutor implements StepExecutor {

@@ -15,3 +15,9 @@ export interface CreateArtifact extends ModelMessageResponse {
     artifactTitle: string;
     artifactId: string;
 }
+
+export interface CodeExecutionResponse {
+    code: string;
+    explanation: string;
+    result?: any;
+}
