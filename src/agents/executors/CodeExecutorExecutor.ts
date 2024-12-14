@@ -43,6 +43,12 @@ Provide clear explanations of what the code does.
 DO NOT use any Node.js specific APIs or file system operations.
 Only use pure JavaScript that can run in a sandboxed environment.
 
+The response of your final line will be returned for you to use the
+value. For instance:
+
+const a = 1 + 2;
+a;
+
 ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
