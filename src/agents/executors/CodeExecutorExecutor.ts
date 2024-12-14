@@ -56,12 +56,26 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             const context = await this.isolate.createContext();
             const jail = context.global;
             await jail.set('global', jail.derefInto());
+
+            // Set up console logging capture
+            let logs: string[] = [];
+            const consoleMock = {
+                log: (...args: any[]) => {
+                    logs.push(args.map(arg => String(arg)).join(' '));
+                }
+            };
+            await jail.set('console', consoleMock);
             
             // Create a new script in the context
             const script = await this.isolate.compileScript(result.code);
             
             // Run with 5 second timeout
-            executionResult = await script.run(context, { timeout: 5000 });
+            const scriptResult = await script.run(context, { timeout: 5000 });
+            
+            executionResult = {
+                returnValue: scriptResult,
+                consoleOutput: logs.join('\n')
+            };
         } catch (error) {
             executionResult = `Error: ${error.message}`;
         } finally {
@@ -77,7 +91,7 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             type: "code-execution",
             finished: true,
             response: {
-                message: `**Code:**\n\`\`\`javascript\n${result.code}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${JSON.stringify(executionResult, null, 2)}\n\`\`\``,
+                message: `**Code:**\n\`\`\`javascript\n${result.code}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${JSON.stringify(executionResult.returnValue, null, 2)}\n\`\`\`${executionResult.consoleOutput ? `\n\n**Console Output:**\n\`\`\`\n${executionResult.consoleOutput}\n\`\`\`` : ''}`,
                 data: result
             }
         };
