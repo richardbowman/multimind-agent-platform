@@ -12,7 +12,7 @@ export class WebSocketServer {
     private threads: Record<string, Thread[]> = {};
     private messages: Message[] = [];
 
-    constructor(port: number = 3001) {
+    constructor(port: number = 4001) {
         const app = express();
         const httpServer = createServer(app);
         
@@ -43,6 +43,21 @@ export class WebSocketServer {
             socket.on('get_threads', ({ channel_id }: { channel_id: string }) => {
                 const channelThreads = this.threads[channel_id] || [];
                 socket.emit('threads', channelThreads);
+            });
+
+            socket.on('get_thread', ({ channel_id, root_id }: { channel_id: string, root_id: string }) => {
+                const channelThreads = this.threads[channel_id] || [];
+                const thread = channelThreads.find(t => t.rootMessage.id === root_id);
+                if (thread) {
+                    socket.emit('threads', [thread]);
+                }
+            });
+
+            socket.on('get_messages', ({ channel_id, limit }: { channel_id: string, limit: number }) => {
+                const channelMessages = this.messages
+                    .filter(m => m.channel_id === channel_id)
+                    .slice(-limit);
+                socket.emit('messages', channelMessages);
             });
 
             // Handle messages
@@ -76,19 +91,20 @@ export class WebSocketServer {
         if (!message.thread_id || !message.channel_id) return;
 
         const channelThreads = this.threads[message.channel_id] || [];
-        const existingThread = channelThreads.find(t => t.id === message.thread_id);
+        const existingThread = channelThreads.find(t => t.rootMessage.id === message.thread_id);
 
         if (existingThread) {
+            existingThread.replies = [...existingThread.replies, message];
             existingThread.last_message_at = message.create_at;
         } else {
             const newThread: Thread = {
-                id: message.thread_id,
-                channel_id: message.channel_id,
-                title: message.message.substring(0, 50) + '...',
-                last_message_at: message.create_at
+                rootMessage: message,
+                replies: [],
+                last_message_at: message.create_at,
+                channel_id: message.channel_id
             };
             this.threads[message.channel_id] = [...channelThreads, newThread];
-            this.io.emit('threads', this.threads[message.channel_id]);
         }
+        this.io.emit('threads', this.threads[message.channel_id]);
     }
 }
