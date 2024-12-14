@@ -1,6 +1,7 @@
 import { StepBasedAgent } from './stepBasedAgent';
 import { ThinkingExecutor } from './executors/ThinkingExecutor';
 import { RefutingExecutor } from './executors/RefutingExecutor';
+import { CodeExecutorExecutor } from './executors/CodeExecutorExecutor';
 import Logger from 'src/helpers/logger';
 import { SOLVER_CHANNEL_ID } from 'src/helpers/config';
 import { ValidationExecutor } from './executors/ValidationExecutor';
@@ -49,6 +50,7 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         this.registerStepExecutor(new RefutingExecutor(params.llmService));
         this.registerStepExecutor(new ValidationExecutor(params.llmService));
         this.registerStepExecutor(new KnowledgeCheckExecutor(params.llmService, params.vectorDBService));
+        this.registerStepExecutor(new CodeExecutorExecutor(params.llmService));
         this.registerStepExecutor(new FinalResponseExecutor(modelHelpers));
 
     }
