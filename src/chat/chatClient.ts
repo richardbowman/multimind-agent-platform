@@ -40,6 +40,7 @@ export interface ChatPost extends Message {
     props: ConversationContext;
     create_at: number;
     directed_at: string;
+    thread_id?: string;
     
     getRootId(): string | null;
     isReply(): boolean;
