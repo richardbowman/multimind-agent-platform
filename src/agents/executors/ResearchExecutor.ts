@@ -63,7 +63,7 @@ Explain the rationale for each query.`;
 
 Search Results:
 ${searchResults.map(r => `
-Source: ${r.metadata?.title || 'Untitled'}
+Source: ${r.metadata?.title || 'Untitled'} (Score: ${r.score?.toFixed(3)})
 Content: ${r.text}
 ---`).join('\n')}
 
