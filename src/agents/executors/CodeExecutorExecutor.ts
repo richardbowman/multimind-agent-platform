@@ -64,13 +64,13 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             await jail.set('global', jail.derefInto());
 
             // Set up console logging capture
-            let logs: string[] = [];
-            const consoleMock = {
-                log: (...args: any[]) => {
-                    logs.push(args.map(arg => String(arg)).join(' '));
-                }
-            };
-            await jail.set('console', consoleMock);
+            // let logs: string[] = [];
+            // const consoleMock = {
+            //     log: (...args: any[]) => {
+            //         logs.push(args.map(arg => String(arg)).join(' '));
+            //     }
+            // };
+            // await jail.set('console', consoleMock);
             
             // Create a new script in the context
             const script = await this.isolate.compileScript(result.code);
