@@ -78,13 +78,21 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             // Run with 5 second timeout
             const scriptResult = await script.run(context, { timeout: 5000 });
             
-            // Convert the result to a transferable value
+            // Handle the script result
             let returnValue;
-            try {
-                returnValue = await scriptResult?.copy();
-            } catch (e) {
-                // If copy fails, try to convert to string
-                returnValue = scriptResult ? scriptResult.toString() : undefined;
+            if (typeof scriptResult === 'number' || 
+                typeof scriptResult === 'string' || 
+                typeof scriptResult === 'boolean') {
+                // Primitive values can be used directly
+                returnValue = scriptResult;
+            } else {
+                try {
+                    // Try to copy non-primitive values
+                    returnValue = await scriptResult?.copy();
+                } catch (e) {
+                    // If copy fails, convert to string
+                    returnValue = scriptResult ? scriptResult.toString() : undefined;
+                }
             }
             
             executionResult = {
