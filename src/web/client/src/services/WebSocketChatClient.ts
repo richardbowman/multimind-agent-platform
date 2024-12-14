@@ -5,18 +5,24 @@ export class WebSocketChatClient implements ChatClient {
     private handleName: string = '';
 
     async getThreadChain(post: ChatPost): Promise<ChatPost[]> {
-        if (!post.thread_id) {
+        if (!post.id) {
             return [post];
         }
         // Fetch thread messages through websocket
         return new Promise((resolve) => {
-            webSocketService.fetchThreads(post.channel_id);
+            webSocketService.fetchThread(post.channel_id, post.id);
             const unsubscribe = webSocketService.onThreads((threads) => {
-                const threadPosts = threads
-                    .filter(t => t.id === post.thread_id)
-                    .map(t => ({ ...t, props: {} } as ChatPost));
-                unsubscribe();
-                resolve(threadPosts);
+                // Find the thread with this root post
+                const thread = threads.find(t => t.rootMessage.id === post.id);
+                if (thread) {
+                    // Convert all messages to ChatPosts and include the root message
+                    const posts = [thread.rootMessage, ...thread.replies]
+                        .map(m => ({ ...m, props: m.props || {} } as ChatPost));
+                    unsubscribe();
+                    resolve(posts);
+                } else {
+                    resolve([post]); // Return just the post if no thread found
+                }
             });
         });
     }

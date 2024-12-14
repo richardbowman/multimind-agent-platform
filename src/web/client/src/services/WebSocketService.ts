@@ -7,9 +7,8 @@ export interface Channel {
 }
 
 export interface Thread {
-  id: string;
-  channel_id: string;
-  title: string;
+  rootMessage: Message;
+  replies: Message[];
   last_message_at: number;
 }
 
@@ -82,9 +81,9 @@ class WebSocketService {
     }
   }
 
-  fetchThreads(channelId: string) {
+  fetchThread(channelId: string, rootId: string) {
     if (this.socket) {
-      this.socket.emit('get_threads', { channel_id: channelId });
+      this.socket.emit('get_thread', { channel_id: channelId, root_id: rootId });
     }
   }
 
