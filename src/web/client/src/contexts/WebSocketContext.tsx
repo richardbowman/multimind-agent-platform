@@ -37,7 +37,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     const threadCleanup = webSocketService.onThreads((newThreads) => {
       if (newThreads.length > 0) {
-        const channelId = newThreads[0].channel_id;
+        const channelId = newThreads[0].rootMessage.channel_id;
         setThreads(prev => ({
           ...prev,
           [channelId]: newThreads

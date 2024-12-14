@@ -10,6 +10,7 @@ export interface Thread {
   rootMessage: Message;
   replies: Message[];
   last_message_at: number;
+  channel_id: string;
 }
 
 export interface Message {
