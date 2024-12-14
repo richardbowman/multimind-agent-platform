@@ -21,6 +21,12 @@ export interface Message {
   user_id: string;
   create_at: number;
   directed_at?: string;
+  props?: Record<string, any>;
+  
+  getRootId(): string | null;
+  isReply(): boolean;
+  hasUUID(): boolean;
+  getActivityType(): string | null;
 }
 
 class WebSocketService {
@@ -79,6 +85,12 @@ class WebSocketService {
   fetchThreads(channelId: string) {
     if (this.socket) {
       this.socket.emit('get_threads', { channel_id: channelId });
+    }
+  }
+
+  fetchMessages(channelId: string, limit: number = 50) {
+    if (this.socket) {
+      this.socket.emit('get_messages', { channel_id: channelId, limit });
     }
   }
 
