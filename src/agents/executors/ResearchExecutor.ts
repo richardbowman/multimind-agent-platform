@@ -67,7 +67,7 @@ Source: ${r.metadata?.title || 'Untitled'}
 Content: ${r.text}
 ---`).join('\n')}
 
-Analyze these results to:
+Analyze relevant results (and ignore irrelevant results):
 1. Extract key findings and their sources
 2. Identify any information gaps
 3. Recommend next steps for content creation`;
@@ -85,10 +85,10 @@ Analyze these results to:
 ${queryResult.queries.map(q => `- "${q.query}"\n  *Rationale:* ${q.rationale}`).join('\n')}
 
 ### Key Findings
-${analysis.keyFindings.map(f => `
+${analysis.keyFindings?.map(f => `
 - **Finding:** ${f.finding}
   - *Sources:* ${f.sources.join(', ')}
-  - *Relevance:* ${f.relevance}`).join('\n')}
+  - *Relevance:* ${f.relevance}`).join('\n')||"(None found)"}
 
 ### Information Gaps
 ${analysis.gaps.map(gap => `- ${gap}`).join('\n')}
