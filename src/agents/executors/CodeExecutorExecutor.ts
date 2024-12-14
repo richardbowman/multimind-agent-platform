@@ -72,8 +72,17 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             // Run with 5 second timeout
             const scriptResult = await script.run(context, { timeout: 5000 });
             
+            // Convert the result to a transferable value
+            let returnValue;
+            try {
+                returnValue = await scriptResult?.copy();
+            } catch (e) {
+                // If copy fails, try to convert to string
+                returnValue = scriptResult ? scriptResult.toString() : undefined;
+            }
+            
             executionResult = {
-                returnValue: scriptResult,
+                returnValue: returnValue,
                 consoleOutput: logs.join('\n')
             };
         } catch (error) {
