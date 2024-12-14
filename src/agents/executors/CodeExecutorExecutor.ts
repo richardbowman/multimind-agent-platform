@@ -6,6 +6,7 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import ivm from 'isolated-vm';
 
 import { CodeExecutionResponse } from '../../schemas/ModelResponse';
+import { codeExecutionSchema } from '../../schemas/CodeExecutionSchema';
 
 @StepExecutorDecorator('code-execution', 'Safely execute JavaScript code in a sandboxed environment')
 export class CodeExecutorExecutor implements StepExecutor {
@@ -18,20 +19,7 @@ export class CodeExecutorExecutor implements StepExecutor {
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = {
-            type: 'object',
-            properties: {
-                code: {
-                    type: 'string',
-                    description: 'The JavaScript code to execute'
-                },
-                explanation: {
-                    type: 'string',
-                    description: 'Explanation of what the code does'
-                }
-            },
-            required: ['code', 'explanation']
-        };
+        const schema = codeExecutionSchema;
 
         const prompt = `You are a JavaScript programming expert.
 Generate safe JavaScript code to solve the given problem.
