@@ -100,6 +100,10 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         if (metadata) {
             // Use decorator metadata if available
             this.stepExecutors.set(metadata.key, executor);
+            //todo: not great to duplicate this list
+            if (this.planner.stepExecutors) {
+                this.planner.stepExecutors.set(metadata.key, executor);
+            }
         } else {
             Logger.warn(`No metadata or description found for executor ${executor.constructor.name}`);
         }
