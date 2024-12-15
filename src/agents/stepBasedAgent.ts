@@ -261,18 +261,25 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 //TODO need a way to update project to disk
             }
 
-            if (stepResult.needsUserInput && stepResult.response) {
-                await this.reply(userPost, stepResult.response, {
-                    "project-id": stepResult.projectId||projectId
-                });
-                return;
+            // Only send replies if we have a userPost to reply to
+            if (userPost) {
+                if (stepResult.needsUserInput && stepResult.response) {
+                    await this.reply(userPost, stepResult.response, {
+                        "project-id": stepResult.projectId||projectId
+                    });
+                    return;
+                } else {
+                    const message = stepResult.response?.reasoning || stepResult.response?.message ||"";
+                    await this.reply(userPost, {
+                        message: `${message} [Finished ${task.type}, still working...]`
+                    }, {
+                        "project-id": stepResult.projectId||projectId
+                    });
+                }
             } else {
+                // Log progress when no userPost is available
                 const message = stepResult.response?.reasoning || stepResult.response?.message ||"";
-                await this.reply(userPost, {
-                    message: `${message} [Finished ${task.type}, still working...]`
-                }, {
-                    "project-id": stepResult.projectId||projectId
-                });
+                Logger.info(`Task progress: ${message} [Finished ${task.type}, continuing...]`);
             }
 
             await this.executeNextStep(projectId, userPost);
@@ -338,7 +345,7 @@ Consider the original goal and what we've learned so far.`;
     }
 
 
-    protected async generateAndSendFinalResponse(projectId: string, userPost: ChatPost): Promise<void> {
+    protected async generateAndSendFinalResponse(projectId: string, userPost?: ChatPost): Promise<void> {
         const project = this.projects.getProject(projectId);
         
         // Get all completed tasks' results
@@ -380,7 +387,11 @@ Consider the original goal and what we've learned so far.`;
             artifactTitle: artifact.metadata?.title
         };
 
-        await this.reply(userPost, response);
+        if (userPost) {
+            await this.reply(userPost, response);
+        } else {
+            Logger.info(`Final response for project ${projectId}: ${response.message}`);
+        }
     }
 
 
