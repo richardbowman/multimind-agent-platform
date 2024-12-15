@@ -128,7 +128,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         return steps;
     }
 
-    protected async executeNextStep(projectId: string, userPost: ChatPost): Promise<void> {
+    protected async executeNextStep(projectId: string, userPost?: ChatPost): Promise<void> {
         const task = this.projects.getNextTask(projectId);
         if (!task) {
             Logger.warn('No tasks found to execute');
@@ -157,25 +157,14 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
             });
             const project = await this.projects.getProject(projectId);
 
-            // Plan and execute steps
-            // Create a synthetic post for task processing
-            const syntheticPost = new InMemoryPost({
-                id: crypto.randomUUID(),
-                channel_id: 'task-processing',
-                message: task.description,
-                user_id: this.userId,
-                create_at: Date.now(),
-                props: {},
-                directed_at: this.userId
-            });
-
+            // Plan and execute steps without a synthetic post
             const params: HandlerParams = {
                 projects: [project],
-                userPost: syntheticPost
+                message: task.description // Use message field instead of userPost
             };
             
             const plan = await this.planSteps(params);
-            await this.executeNextStep(projectId, syntheticPost);
+            await this.executeNextStep(projectId);
 
         } catch (error) {
             Logger.error(`Error processing task ${task.id}`, error);
