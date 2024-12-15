@@ -1,5 +1,6 @@
 import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 import { BEDROCK_MAX_TOKENS_PER_MINUTE, BEDROCK_DEFAULT_DELAY_MS, BEDROCK_WINDOW_SIZE_MS } from "../helpers/config";
+import { RetryHelper } from "../helpers/retryHelper";
 import LMStudioService from "./lmstudioService";
 import { ILLMService } from "./ILLMService";
 import { AsyncQueue } from "../helpers/asyncQueue";
@@ -164,31 +165,28 @@ export class BedrockService implements ILLMService {
                 }
             });
 
-            try {
-                const bedrockResponse = await this.runtimeClient.send(command);
-                const result = bedrockResponse.output?.message?.content?.[0];
-                const response = {
-                    message: result?.text || ''
-                };
+            const bedrockResponse = await RetryHelper.withRetry(async () => {
+                return await this.runtimeClient.send(command);
+            }, "Bedrock generate() call");
 
-                // Track token usage from response
-                if (bedrockResponse.usage) {
-                    const inputTokens = bedrockResponse.usage.inputTokens || 0;
-                    const outputTokens = bedrockResponse.usage.outputTokens || 0;
-                    if (inputTokens + outputTokens > 0) {
-                        this.trackTokenUsage(inputTokens + outputTokens);
-                    } else {
-                        Logger.warn("Received zero token count from Bedrock API in generate()");
-                    }
+            const result = bedrockResponse.output?.message?.content?.[0];
+            const response = {
+                message: result?.text || ''
+            };
+
+            // Track token usage from response
+            if (bedrockResponse.usage) {
+                const inputTokens = bedrockResponse.usage.inputTokens || 0;
+                const outputTokens = bedrockResponse.usage.outputTokens || 0;
+                if (inputTokens + outputTokens > 0) {
+                    this.trackTokenUsage(inputTokens + outputTokens);
+                } else {
+                    Logger.warn("Received zero token count from Bedrock API in generate()");
                 }
-
-                await this.logger.logCall('generate', input, bedrockResponse);
-                return response;
-            } catch (error) {
-                Logger.error("Bedrock API error:", error);
-                await this.logger.logCall('generate', input, null, error);
-                throw error;
             }
+
+            await this.logger.logCall('generate', input, bedrockResponse);
+            return response;
         });
     }
 
@@ -436,22 +434,19 @@ export class BedrockService implements ILLMService {
             }
         });
 
-        try {
-            const response = await this.runtimeClient.send(command);
-            // Bedrock includes token counts in the response metadata
-            const tokenCount = response.usage?.inputTokens || 0;
+        const response = await RetryHelper.withRetry(async () => {
+            return await this.runtimeClient.send(command);
+        }, "Bedrock getTokenCount() call");
 
-            if (tokenCount === 0) {
-                Logger.warn("Received zero token count from Bedrock API");
-            }
+        // Bedrock includes token counts in the response metadata
+        const tokenCount = response.usage?.inputTokens || 0;
 
-            await this.logger.logCall('getTokenCount', input, tokenCount);
-            return tokenCount;
-        } catch (error) {
-            Logger.error("Token count error:", error);
-            await this.logger.logCall('getTokenCount', input, null, error);
-            throw error;
+        if (tokenCount === 0) {
+            Logger.warn("Received zero token count from Bedrock API");
         }
+
+        await this.logger.logCall('getTokenCount', input, tokenCount);
+        return tokenCount;
     }
 
 }
