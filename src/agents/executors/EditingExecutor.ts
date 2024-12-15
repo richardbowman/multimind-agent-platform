@@ -7,22 +7,25 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { EditingResponse } from '../../schemas/editing';
 import { ArtifactManager } from '../../tools/artifactManager';
+import { TaskManager } from 'src/tools/taskManager';
 
 @StepExecutorDecorator('editing', 'Review and improve content quality')
 export class EditingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
+    private taskManager: TaskManager
 
-    constructor(llmService: ILLMService, artifactManager: ArtifactManager) {
+    constructor(llmService: ILLMService, artifactManager: ArtifactManager, taskManager: TaskManager) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
         this.artifactManager = artifactManager;
+        this.taskManager = taskManager;
     }
 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.EditingResponse);
 
         // Get the project metadata to find the content artifact
-        const project = await this.artifactManager.getProject(projectId);
+        const project = await this.taskManager.getProject(projectId);
         if (!project.metadata.contentArtifactId) {
             throw new Error('No content artifact found for editing');
         }
