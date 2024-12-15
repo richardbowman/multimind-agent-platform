@@ -37,7 +37,8 @@ export class EditingExecutor implements StepExecutor {
         }
 
         const prompt = `You are a content editor.
-Review the content for clarity, structure, style, and grammar.
+First, generate a clear and concise title that captures the main topic of the content.
+Then review the content for clarity, structure, style, and grammar.
 Provide specific suggestions for improvements while maintaining the original message.
 
 Content to review:
@@ -64,7 +65,8 @@ ${contentArtifact.content}`;
             metadata: {
                 ...contentArtifact.metadata,
                 previousVersion: contentArtifact.id,
-                editingFeedback: result.overallFeedback
+                editingFeedback: result.overallFeedback,
+                title: result.title
             }
         });
 
@@ -80,7 +82,7 @@ ${contentArtifact.content}`;
             type: "editing",
             finished: true,
             response: {
-                message: `**Content Review**\n\n${result.improvements.map(imp => 
+                message: `**${result.title}**\n\n**Content Review**\n\n${result.improvements.map(imp => 
                     `### ${imp.section}\n\n${imp.suggestions.map(s =>
                         `**${s.type}**:\n- Original: ${s.original}\n- Improved: ${s.improved}\n- Why: ${s.explanation}`
                     ).join('\n\n')}`

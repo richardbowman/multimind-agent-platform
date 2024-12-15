@@ -26,6 +26,8 @@ export interface SectionImprovement {
  * Response containing content editing suggestions
  */
 export interface EditingResponse {
+    /** Generated title for the content */
+    title: string;
     /** List of section-specific improvements */
     improvements: SectionImprovement[];
     /** Overall feedback on the content */
