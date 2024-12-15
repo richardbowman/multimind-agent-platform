@@ -90,7 +90,7 @@ class ScrapeHelper {
             // Load the HTML content into Cheerio
             const $ = load(htmlContent);
 
-            const markdownContent = convertPageToMarkdown($);
+            const markdownContent = convertPageToMarkdown($, actualUrl);
 
             // Extract links
             const links: { href: string, text: string }[] = [];
@@ -138,7 +138,7 @@ class ScrapeHelper {
 export default ScrapeHelper;
 
 
-export function convertPageToMarkdown($: CheerioAPI): string {
+export function convertPageToMarkdown($: CheerioAPI, url: string): string {
     // Get the modified HTML without scripts, styles, and style attributes
     const cleanedHtml = $('body').html();
 
