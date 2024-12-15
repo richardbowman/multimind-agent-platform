@@ -25,7 +25,7 @@ export class BedrockService implements ILLMService {
     private tokenUsageWindow: number[] = [];
     private readonly WINDOW_SIZE_MS = BEDROCK_WINDOW_SIZE_MS;
     
-    private async waitForNextCall(): Promise<void> {
+    private async waitForNextCall(estimatedTokens: number = 100): Promise<void> {
         const now = Date.now();
         
         // Clean up old token usage entries
@@ -33,13 +33,22 @@ export class BedrockService implements ILLMService {
             timestamp => now - timestamp < this.WINDOW_SIZE_MS
         );
         
-        // If we're at the token limit, wait until oldest tokens expire
-        if (this.tokenUsageWindow.length >= this.MAX_TOKENS_PER_MINUTE) {
+        // Check if adding estimated tokens would exceed limit
+        while (this.tokenUsageWindow.length + estimatedTokens >= this.MAX_TOKENS_PER_MINUTE) {
             const oldestTimestamp = this.tokenUsageWindow[0];
             const timeToWait = (oldestTimestamp + this.WINDOW_SIZE_MS) - now;
+            
             if (timeToWait > 0) {
-                Logger.info(`Rate limit reached, waiting ${timeToWait}ms`);
-                await new Promise(resolve => setTimeout(resolve, timeToWait));
+                Logger.info(`Rate limit reached, waiting ${Math.ceil(timeToWait/1000)}s for ${estimatedTokens} tokens`);
+                await new Promise(resolve => setTimeout(resolve, timeToWait + 100)); // Add small buffer
+                
+                // Refresh window after waiting
+                const newNow = Date.now();
+                this.tokenUsageWindow = this.tokenUsageWindow.filter(
+                    timestamp => newNow - timestamp < this.WINDOW_SIZE_MS
+                );
+            } else {
+                break;
             }
         }
         
@@ -52,12 +61,13 @@ export class BedrockService implements ILLMService {
         this.lastCallTime = Date.now();
     }
 
-    private trackTokenUsage(tokenCount: number = 1): void {
+    private trackTokenUsage(tokenCount: number): void {
         const now = Date.now();
-        // Add a timestamp for each token used
-        for (let i = 0; i < tokenCount; i++) {
-            this.tokenUsageWindow.push(now);
-        }
+        // Pre-allocate array for better performance
+        const newTokens = new Array(tokenCount).fill(now);
+        this.tokenUsageWindow.push(...newTokens);
+        
+        Logger.debug(`Tracked ${tokenCount} tokens, window size: ${this.tokenUsageWindow.length}`);
     }
 
     constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v2:0", embeddingService?: ILLMService) {
@@ -105,9 +115,15 @@ export class BedrockService implements ILLMService {
     }
 
     async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelMessageResponse> {
-        await this.waitForNextCall();
         const messages = this.formatMessages(userPost.message, history);
         const input = { instructions, messages };
+        
+        // Estimate tokens - rough estimate based on characters
+        const totalChars = instructions.length + 
+            messages.reduce((sum, msg) => sum + msg.content.length, 0);
+        const estimatedTokens = Math.ceil(totalChars / 4); // Rough estimate of 4 chars per token
+        
+        await this.waitForNextCall(estimatedTokens);
         
         return await this.queue.enqueue(async () => {
             const command = new ConverseCommand({
