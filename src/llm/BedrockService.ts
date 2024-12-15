@@ -1,6 +1,7 @@
 import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 import LMStudioService from "./lmstudioService";
 import { ILLMService } from "./ILLMService";
+import { AsyncQueue } from "../helpers/asyncQueue";
 import { ChatPost } from "src/chat/chatClient";
 import { ModelMessageResponse } from "../schemas/ModelResponse";
 import { StructuredOutputPrompt } from "./ILLMService";
@@ -16,6 +17,7 @@ export class BedrockService implements ILLMService {
     private embeddingService?: ILLMService;
     private lastCallTime: number = 0;
     private defaultDelay: number = 1000; // 1 second delay between calls
+    private queue: AsyncQueue = new AsyncQueue();
     
     private async waitForNextCall(): Promise<void> {
         const now = Date.now();
@@ -75,25 +77,26 @@ export class BedrockService implements ILLMService {
         const messages = this.formatMessages(userPost.message, history);
         const input = { instructions, messages };
         
-        const command = new ConverseCommand({
-            modelId: this.modelId,
-            system: [{
-                text: instructions
-            }],
-            messages: messages.map(msg => ({
-                role: msg.role,
-                content: [{
-                    text: msg.content
-                }]
-            })),
-            inferenceConfig: {
-                temperature: 0.7,
-                topP: 1
-            }
-        });
+        return await this.queue.enqueue(async () => {
+            const command = new ConverseCommand({
+                modelId: this.modelId,
+                system: [{
+                    text: instructions
+                }],
+                messages: messages.map(msg => ({
+                    role: msg.role,
+                    content: [{
+                        text: msg.content
+                    }]
+                })),
+                inferenceConfig: {
+                    temperature: 0.7,
+                    topP: 1
+                }
+            });
 
-        try {
-            const bedrockResponse = await this.client.send(command);
+            try {
+                const bedrockResponse = await this.client.send(command);
             const result = bedrockResponse.output?.message?.content?.[0];
             const response = {
                 message: result?.text || ''
@@ -201,20 +204,21 @@ export class BedrockService implements ILLMService {
             });
         }
 
-        const command = new ConverseCommand({
-            modelId: this.modelId,
-            system: [{
-                text: systemPrompt
-            }],
-            messages: processedMessages,
-            inferenceConfig: {
-                temperature: 0.7,
-                topP: 1
-            }
-        });
+        return await this.queue.enqueue(async () => {
+            const command = new ConverseCommand({
+                modelId: this.modelId,
+                system: [{
+                    text: systemPrompt
+                }],
+                messages: processedMessages,
+                inferenceConfig: {
+                    temperature: 0.7,
+                    topP: 1
+                }
+            });
 
-        try {
-            const response = await this.client.send(command);
+            try {
+                const response = await this.client.send(command);
             const result = response.output?.message?.content?.[0];
             const output = result?.text || '';
             await this.logger.logCall('sendMessageToLLM', input, output);
@@ -246,26 +250,27 @@ export class BedrockService implements ILLMService {
             ]
         };
 
-        const command = new ConverseCommand({
-            modelId: this.modelId,
-            system: [{
-                "text": `${prompt} You MUST CALL "generate_structured_output" tool to submit your response.`
-            }],
-            messages: [{
-                role: "user",
-                content: [{
-                    "text": userPost.message
-                }]
-            }],
-            toolConfig: tools,
-            inferenceConfig: {
-                temperature: 1,
-                topP: 1
-            }
-        });
+        return await this.queue.enqueue(async () => {
+            const command = new ConverseCommand({
+                modelId: this.modelId,
+                system: [{
+                    "text": `${prompt} You MUST CALL "generate_structured_output" tool to submit your response.`
+                }],
+                messages: [{
+                    role: "user",
+                    content: [{
+                        "text": userPost.message
+                    }]
+                }],
+                toolConfig: tools,
+                inferenceConfig: {
+                    temperature: 1,
+                    topP: 1
+                }
+            });
 
-        try {
-            const response = await this.client.send(command);
+            try {
+                const response = await this.client.send(command);
 
             // Extract tool use from response
             const result = response.output?.message?.content?.find(c => c.toolUse);
