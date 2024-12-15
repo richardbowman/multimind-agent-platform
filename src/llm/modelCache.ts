@@ -12,7 +12,7 @@ export class ModelCache {
     private ttlMs: number;
     private cacheFile: string;
 
-    constructor(ttlMinutes: number = 60, cacheDir: string = '.cache') {
+    constructor(ttlMinutes: number = 60, cacheDir: string = '.output/cache') {
         this.cache = new Map();
         this.ttlMs = ttlMinutes * 60 * 1000;
         
