@@ -56,11 +56,25 @@ process.on("exit", async () => {
 
 // Create planners for each agent
 const researchClient = new InMemoryTestClient(RESEARCHER_USER_ID, "test", storage);
-export const researcher = new ResearchAssistant(RESEARCH_MANAGER_TOKEN_ID, RESEARCHER_USER_ID, researchClient, llmService, tasks, vectorDB);
+export const researcher = new ResearchAssistant({
+    userId: RESEARCHER_USER_ID,
+    messagingHandle: RESEARCH_MANAGER_TOKEN_ID,
+    chatClient: researchClient,
+    llmService: llmService,
+    taskManager: tasks,
+    vectorDBService: vectorDB
+});
 await researcher.initialize();
 
 const researchManagerClient = new InMemoryTestClient(RESEARCH_MANAGER_USER_ID, "test", storage);
-const researchManager = new ResearchManager(RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID, researchManagerClient, llmService, tasks, vectorDB);
+const researchManager = new ResearchManager({
+    userId: RESEARCH_MANAGER_USER_ID,
+    messagingHandle: RESEARCH_MANAGER_TOKEN_ID,
+    chatClient: researchManagerClient,
+    llmService: llmService,
+    taskManager: tasks,
+    vectorDBService: vectorDB
+});
 await researchManager.initialize();
 
 const contentClient = new InMemoryTestClient(CONTENT_MANAGER_USER_ID, "test", storage);
@@ -74,7 +88,14 @@ const contentAssistant = new ContentManager({
 await contentAssistant.initialize();
 
 const writerClient = new InMemoryTestClient(CONTENT_WRITER_USER_ID, "test", storage);
-const writerAssistant = new ContentWriter(writerClient, llmService, tasks, vectorDB);
+const writerAssistant = new ContentWriter({
+    userId: CONTENT_WRITER_USER_ID,
+    messagingHandle: "@writer",
+    chatClient: writerClient,
+    llmService: llmService,
+    taskManager: tasks,
+    vectorDBService: vectorDB
+});
 
 const pmClient = new InMemoryTestClient(PROJECT_MANAGER_USER_ID, "test", storage);
 const pmAssistant = new ProjectManager({
