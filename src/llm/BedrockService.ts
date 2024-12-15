@@ -5,7 +5,7 @@ import LMStudioService from "./lmstudioService";
 import { ILLMService } from "./ILLMService";
 import { AsyncQueue } from "../helpers/asyncQueue";
 import { ChatPost } from "src/chat/chatClient";
-import { ModelMessageResponse } from "../schemas/ModelResponse";
+import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { StructuredOutputPrompt } from "./ILLMService";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
@@ -136,7 +136,7 @@ export class BedrockService implements ILLMService {
         Logger.info("Bedrock service ready");
     }
 
-    async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelMessageResponse> {
+    async generate<M extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<M> {
         const messages = this.formatMessages(userPost.message, history);
         const input = { instructions, messages };
 
@@ -147,7 +147,7 @@ export class BedrockService implements ILLMService {
 
         await this.waitForNextCall(estimatedTokens);
 
-        return await this.queue.enqueue(async () => {
+        return await this.queue.enqueue<M>(async () : Promise<M> => {
             const command = new ConverseCommand({
                 modelId: this.modelId,
                 system: [{
@@ -181,8 +181,8 @@ export class BedrockService implements ILLMService {
                 Logger.warn("Received zero token count from Bedrock API in generate()");
             }
 
-            const response: ModelMessageResponse = {
-                message: result?.text || '',
+            const response: M = {
+                message: result?.text||"",
                 _usage: {
                     inputTokens,
                     outputTokens
@@ -326,7 +326,7 @@ export class BedrockService implements ILLMService {
         });
     }
 
-    async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<any> {
+    async generateStructured<M extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<M> {
         await this.waitForNextCall();
         const input = { userPost, instructions: instructions.getPrompt() };
         const schema = instructions.getSchema();
@@ -347,7 +347,7 @@ export class BedrockService implements ILLMService {
             ]
         };
 
-        return await this.queue.enqueue(async () => {
+        return await this.queue.enqueue(async () : Promise<M> => {
             const command = new ConverseCommand({
                 modelId: this.modelId,
                 system: [{
@@ -370,6 +370,14 @@ export class BedrockService implements ILLMService {
                 return await this.runtimeClient.send(command);
             }, "Bedrock generateStructured() call");
 
+            // Extract tool use from response
+            const result = response.output?.message?.content?.find(c => c.toolUse);
+            if (!result) {
+                throw new Error("No tool use found in response");
+            }
+
+            const output : M = result.toolUse?.input;
+
             // Track token usage from response
             if (response.usage) {
                 const inputTokens = response.usage.inputTokens || 0;
@@ -379,15 +387,13 @@ export class BedrockService implements ILLMService {
                 } else {
                     Logger.warn("Received zero token count from Bedrock API in generateStructured()");
                 }
+
+                output._usage = {
+                    inputTokens,
+                    outputTokens
+                }    
             }
 
-            // Extract tool use from response
-            const result = response.output?.message?.content?.find(c => c.toolUse);
-            if (!result) {
-                throw new Error("No tool use found in response");
-            }
-
-            const output = result.toolUse?.input;
             await this.logger.logCall('generateStructured', input, output);
             return output;
         });
