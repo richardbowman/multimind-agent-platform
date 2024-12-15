@@ -31,7 +31,18 @@ export class WebSearchExecutor implements StepExecutor {
         const scrapedUrls = await this.getScrapedUrls();
         
         if (this.visitedUrls.has(url) || scrapedUrls.has(url)) {
-            Logger.info(`Skipping already processed URL: ${url}`);
+            Logger.info(`Retrieving existing summary for URL: ${url}`);
+            const existingSummaries = await this.artifactManager.getArtifacts({
+                type: 'summary'
+            });
+            const existingSummary = existingSummaries.find(a => 
+                a.metadata?.url === url && 
+                a.metadata?.task === step
+            );
+            if (existingSummary) {
+                return existingSummary.content as string;
+            }
+            Logger.info(`No existing summary found for URL: ${url}`);
             return "";
         }
         this.visitedUrls.add(url);
