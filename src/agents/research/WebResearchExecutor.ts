@@ -82,26 +82,28 @@ export class WebSearchExecutor implements StepExecutor {
             }
         }
     
-        // Generate and save summary
-        const summary = await this.summaryHelper.summarizeContent(
+        // Generate and save summary with token tracking
+        const summaryResponse = await this.summaryHelper.summarizeContent(
             step,
             `Page Title: ${title}\nURL: ${url}\n\n${content}`,
             this.llmService
         );
 
-        if (summary !== "NOT RELEVANT") {
+        if (summaryResponse.message !== "NOT RELEVANT") {
             await this.artifactManager.saveArtifact({
                 id: crypto.randomUUID(),
                 type: 'summary',
-                content: summary,
+                content: summaryResponse.message,
                 metadata: {
                     title: `Summary Report for ${url}`,
                     url,
                     task: step,
-                    projectId
-                }
+                    projectId,
+                    tokenUsage: summaryResponse._usage
+                },
+                tokenCount: summaryResponse._usage?.outputTokens
             });
-            return summary;
+            return summaryResponse.message;
         }
         return "";
     }
@@ -149,6 +151,21 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
             message,
             instructions
         });
+
+        // Track token usage in artifact metadata
+        await this.artifactManager.saveArtifact({
+            id: crypto.randomUUID(),
+            type: 'link-selection',
+            content: JSON.stringify(response.links || []),
+            metadata: {
+                url,
+                task,
+                projectId: goal,
+                tokenUsage: response._usage
+            },
+            tokenCount: response._usage?.outputTokens
+        });
+
         return response.links || [];
     }
 
