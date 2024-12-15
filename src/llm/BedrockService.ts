@@ -170,20 +170,24 @@ export class BedrockService implements ILLMService {
             }, "Bedrock generate() call");
 
             const result = bedrockResponse.output?.message?.content?.[0];
-            const response = {
-                message: result?.text || ''
-            };
-
+            
             // Track token usage from response
-            if (bedrockResponse.usage) {
-                const inputTokens = bedrockResponse.usage.inputTokens || 0;
-                const outputTokens = bedrockResponse.usage.outputTokens || 0;
-                if (inputTokens + outputTokens > 0) {
-                    this.trackTokenUsage(inputTokens + outputTokens);
-                } else {
-                    Logger.warn("Received zero token count from Bedrock API in generate()");
-                }
+            const inputTokens = bedrockResponse.usage?.inputTokens || 0;
+            const outputTokens = bedrockResponse.usage?.outputTokens || 0;
+            
+            if (inputTokens + outputTokens > 0) {
+                this.trackTokenUsage(inputTokens + outputTokens);
+            } else {
+                Logger.warn("Received zero token count from Bedrock API in generate()");
             }
+
+            const response: ModelMessageResponse = {
+                message: result?.text || '',
+                _usage: {
+                    inputTokens,
+                    outputTokens
+                }
+            };
 
             await this.logger.logCall('generate', input, bedrockResponse);
             return response;
