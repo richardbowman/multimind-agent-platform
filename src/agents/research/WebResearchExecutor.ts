@@ -194,12 +194,35 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
             }
         }
 
+        // Get artifacts to calculate total token usage
+        const artifacts = await this.artifactManager.getArtifacts({
+            type: 'summary'
+        });
+        const relevantArtifacts = artifacts.filter(a => 
+            a.metadata?.projectId === projectId && 
+            a.metadata?.task === step
+        );
+        
+        const totalTokens = relevantArtifacts.reduce((sum, artifact) => 
+            sum + (artifact.metadata?.tokenUsage?.outputTokens || 0), 0
+        );
+
         return {
             finished: true,
             type: 'web_search_results',
-            summaries: pageSummaries,
-            query: searchQuery,
-            urls: selectedUrls
+            response: {
+                message: `Found ${pageSummaries.length} relevant pages`,
+                data: {
+                    summaries: pageSummaries,
+                    query: searchQuery,
+                    urls: selectedUrls,
+                    artifactIds: relevantArtifacts.map(a => a.id)
+                },
+                _usage: {
+                    inputTokens: 0, // We don't track input tokens for the overall process
+                    outputTokens: totalTokens
+                }
+            }
         };
     }
 
