@@ -66,6 +66,7 @@ export class MultiStepPlanner implements Planner {
             `${this.modelHelpers.getPurpose()}
 
 HIGH-LEVEL GOAL: ${project.name}
+${handlerParams.userPost?.message ? `CONTEXT: ${handlerParams.userPost.message}` : ''}
 
 The allowable step types you can execute in the plan:
 ${stepDescriptions}

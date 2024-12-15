@@ -57,6 +57,7 @@ export class SimpleNextActionPlanner implements Planner {
             `${this.modelHelpers.getPurpose()}
 
 HIGH-LEVEL GOAL: ${project.name}
+${handlerParams.userPost?.message ? `CONTEXT: ${handlerParams.userPost.message}` : ''}
 
 The allowable step types you can execute:
 ${stepDescriptions}
