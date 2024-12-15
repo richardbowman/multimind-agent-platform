@@ -4,7 +4,6 @@ import crypto from 'crypto';
 import { AsyncQueue } from "../helpers/asyncQueue";
 import path from 'path';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import LMStudioService from "./lmstudioService";
 import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
 import Logger from "../helpers/logger";
 import { saveToFile } from "../tools/storeToFile";
@@ -60,7 +59,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
                 } catch (error) {
                     // Skip if item already exists
                     if (error.message?.includes('already exists')) {
-                        Logger.warn(`Skipping duplicate item with id ${collection.ids[i]}`);
+                        Logger.verbose(`Skipping duplicate item with id ${collection.ids[i]}`, error);
                     } else {
                         throw error; // Re-throw other errors
                     }

@@ -7,7 +7,7 @@ import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ModelHelpers } from '../../llm/helpers';
+import { ModelHelpers } from '../../llm/modelHelpers';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 

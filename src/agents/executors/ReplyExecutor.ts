@@ -1,17 +1,17 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import LMStudioService from '../../llm/lmstudioService';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ModelHelpers } from '../../llm/helpers';
+import { ModelHelpers } from '../../llm/modelHelpers';
+import { ILLMService } from 'src/llm/ILLMService';
 
 @StepExecutorDecorator('reply', 'Generate user-friendly responses to messages')
 export class ReplyExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
     constructor(
-        llmService: LMStudioService,
+        llmService: ILLMService,
         private taskManager: TaskManager,
         private artifactManager: ArtifactManager
     ) {

@@ -1,11 +1,11 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { TaskManager } from 'src/tools/taskManager';
+import { Project, Task, TaskManager } from 'src/tools/taskManager';
 import { RESEARCHER_USER_ID, RESEARCH_MANAGER_USER_ID } from '../../helpers/config';
 import { ResearchTask } from '../researchAssistant';
 import { randomUUID } from 'crypto';
@@ -15,7 +15,6 @@ import { ResearchDecomposition } from '../../schemas/research-manager';
 export class ResearchDecompositionExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
-    private pendingTasks: Set<string> = new Set();
 
     constructor(llmService: ILLMService, taskManager: TaskManager) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
@@ -25,6 +24,7 @@ export class ResearchDecompositionExecutor implements StepExecutor {
     async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.ResearchDecomposition);
         const project = await this.taskManager.getProject(projectId);
+        const pendingTasks: Set<string> = new Set();
 
         const systemPrompt = `
 You are a research orchestrator. Follow these steps:
@@ -42,15 +42,47 @@ You are a research orchestrator. Follow these steps:
             project.name = result.goal;
         }
 
+        const newProjectId = this.taskManager.newProjectId();
+        const researchProject: Project<Task> = {
+            id: newProjectId,
+            name: `Research project: ${result.goal}`,
+            tasks: {},
+            metadata: {
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'active',
+                owner: RESEARCH_MANAGER_USER_ID,
+                description: goal,
+                priority: 'medium'
+            }
+        };
+
+        await this.taskManager.addProject(researchProject);
+
+
+
         // Create research tasks and assign to researchers
-        for (const task of result.researchRequested) {
-            const taskId = randomUUID();
-            const taskDescription = `${task} [${result.goal}]`;
-            this.pendingTasks.add(taskId);
+        for (const researchRequest of result.researchRequested) {
+            const id = randomUUID();
+            const description = `${researchRequest} [${result.goal}]`;
+
+            const task: Task = {
+                id,
+                type: "research",
+                projectId,
+                description,
+                creator: RESEARCH_MANAGER_USER_ID
+            }
+
+            pendingTasks.add(id);
+
             await this.taskManager.addTask(
-                project,
-                new ResearchTask(taskId, projectId, taskDescription, RESEARCHER_USER_ID)
+                researchProject,
+                task
             );
+
+            await this.taskManager.assignTaskToAgent(id, RESEARCHER_USER_ID);
+
         }
 
         return {
@@ -58,24 +90,30 @@ You are a research orchestrator. Follow these steps:
             finished: false, // Don't mark as finished until researchers complete their work
             response: {
                 message: `Research plan created:\n\n${result.strategy}\n\nTasks:\n${result.researchRequested.map(t => `- ${t}`).join('\n')}\n\nWaiting for researchers to complete their tasks...`,
-                data: result
-            }
+                data: {
+                    result,
+                    researchTasks: pendingTasks
+                }
+            },
+            projectId: researchProject.id
         };
     }
-}
+
     async onTaskNotification(task: Task): Promise<void> {
-        if (task.complete && this.pendingTasks.has(task.id)) {
-            this.pendingTasks.delete(task.id);
-            
+        if (task.complete && task.props?.result.data.researchTasks.has(task.id)) {
+            task.props?.result.data.researchTasks.delete(task.id);
+
             // If all tasks are complete, we can mark this step as finished
-            if (this.pendingTasks.size === 0) {
+            if (task.props?.result.data.researchTasks.size === 0) {
                 const project = await this.taskManager.getProject(task.projectId);
                 const decompositionTask = Object.values(project.tasks)
                     .find(t => t.type === 'decompose-research' && !t.complete);
-                
+
                 if (decompositionTask) {
                     await this.taskManager.completeTask(decompositionTask.id);
                 }
             }
         }
     }
+
+}

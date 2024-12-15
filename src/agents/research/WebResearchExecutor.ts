@@ -6,7 +6,7 @@ import SummaryHelper from '../../helpers/summaryHelper';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import Logger from '../../helpers/logger';
 import crypto from 'crypto';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ArtifactManager } from 'src/tools/artifactManager';
 
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
@@ -36,8 +36,7 @@ export class WebSearchExecutor implements StepExecutor {
                 type: 'summary'
             });
             const existingSummary = existingSummaries.find(a => 
-                a.metadata?.url === url && 
-                a.metadata?.task === step
+                a.metadata?.url === url
             );
             if (existingSummary) {
                 return existingSummary.content as string;

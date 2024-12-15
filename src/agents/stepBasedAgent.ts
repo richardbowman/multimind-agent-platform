@@ -113,18 +113,20 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
     protected async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
         const steps = await this.planner.planSteps(handlerParams);
-        
+
         // Send a progress message about the next steps
-        const nextStepsMessage = steps.steps?
+        const nextStepsMessage = steps.steps ?
             steps.steps.map((step, index) => `${index + 1}. ${step.actionType}`)
-            .join('\n') : "No steps provided";
-        
+                .join('\n') : "No steps provided";
+
         if (handlerParams.userPost) {
             await this.reply(handlerParams.userPost, {
                 message: `🔄 Planning next steps:\n${nextStepsMessage}`
+            }, {
+                "project-id": handlerParams.projects?.[0]
             });
         }
-        
+
         return steps;
     }
 
@@ -138,11 +140,51 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         await this.executeStep(projectId, task, userPost);
     }
 
-    protected async projectCompleted(project: Project): Promise<void> {
+    protected async projectCompleted(project: Project<Task>): Promise<void> {
+        Logger.info(`Project ${project.id} completed`);
+        if (project.metadata.parentTaskId) {
+            // Update parent task with combined results
+            const parentTask = await this.projects.getTaskById(project.metadata.parentTaskId);
+
+            if (!parentTask) {
+                Logger.warn(`Could not find parent task ${project.metadata.parentTaskId}`);
+                return;
+            }
+
+            // Get all completed tasks' results
+            const tasks = Object.values(project.tasks);
+            const completedResults = tasks
+                .filter(t => t.complete)
+                .map(t => t.props?.result)
+                .filter(r => r);
+
+            // Combine all results into one
+            const combinedResult = completedResults
+                .map(r => r.message || r.reasoning || '')
+                .filter(msg => msg)
+                .join('\n\n');
+
+            if (!parentTask.props) parentTask.props = {};
+            parentTask.props.result = {
+                message: combinedResult,
+                subProjectResults: completedResults
+            };
+
+            await this.projects.assignTaskToAgent(project.metadata.parentTaskId, this.userId);
+            const parentProject = await this.projects.getProject(parentTask.projectId);
+
+            // Store the combined results in the project's metadata
+            parentProject.metadata.subProjectResults = completedResults;
+
+            this.projects.completeTask(project.metadata.parentTaskId);
+        }
+
         const postId = project.metadata?.originalPostId;
-        const userPost = await this.chatClient.getPost(postId);
-        await this.generateAndSendFinalResponse(project.id, userPost);
-        return;
+        if (postId) {
+            const userPost = await this.chatClient.getPost(postId);
+            // this.reply(userPost, { message: "Task is completed"});
+            await this.generateAndSendFinalResponse(project.id, userPost);
+        }
     }
 
     protected async processTask(task: Task): Promise<void> {
@@ -152,7 +194,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 projectName: `Task: ${task.description}`,
                 tasks: [],
                 metadata: {
-                    originalTaskId: task.id
+                    parentTaskId: task.id
                 }
             });
             const project = await this.projects.getProject(projectId);
@@ -162,7 +204,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 projects: [project],
                 message: task.description // Use message field instead of userPost
             };
-            
+
             const plan = await this.planSteps(params);
             await this.executeNextStep(projectId);
 
@@ -172,7 +214,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         }
     }
 
-    protected async executeStep(projectId: string, task: Task, userPost: ChatPost): Promise<void> {
+    protected async executeStep(projectId: string, task: Task, userPost?: ChatPost): Promise<void> {
         try {
             const executor = this.stepExecutors.get(task.type);
             if (!executor) {
@@ -195,7 +237,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 .filter(r => r); // Remove undefined/null results
 
             const stepResult = await executor.execute(
-                `${userPost.message} [${project.name}]`,
+                `${userPost?.message} [Step: ${task.description}] [Project: ${project.name}]`,
                 task.type,
                 projectId,
                 priorResults
@@ -216,31 +258,12 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
                     //TODO: hacky, we don't really post this message
                     await this.planSteps({
-                        projects: [project], 
+                        projects: [project],
                         userPost: InMemoryPost.fromLoad({
                             ...userPost,
                             message: planningPrompt
                         })
                     });
-                }
-            }
-            
-            if (stepResult.finished) {
-                this.projects.completeTask(task.id);
-                Logger.info(`Completed step "${task.type}" for project "${projectId}"`);
-
-                // If this was the last planned task, add a validation step
-                const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
-                if (task.type !== 'validation' && remainingTasks.length === 0) {
-                    const validationTask: Task = {
-                        id: crypto.randomUUID(),
-                        type: 'validation',
-                        description: 'Validate solution completeness',
-                        creator: this.userId,
-                        complete: false,
-                        order: (task.order || 0) + 1
-                    };
-                    this.projects.addTask(project, validationTask);
                 }
             }
 
@@ -254,28 +277,48 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
             if (userPost) {
                 if (stepResult.needsUserInput && stepResult.response) {
                     await this.reply(userPost, stepResult.response, {
-                        "project-id": stepResult.projectId||projectId
+                        "project-id": stepResult.projectId || projectId
                     });
                     return;
                 } else {
-                    const message = stepResult.response?.reasoning || stepResult.response?.message ||"";
+                    const message = stepResult.response?.reasoning || stepResult.response?.message || "";
                     await this.reply(userPost, {
                         message: `${message} [Finished ${task.type}, still working...]`
                     }, {
-                        "project-id": stepResult.projectId||projectId
+                        "project-id": stepResult.projectId || projectId,
+                        "artifact-ids": [stepResult.response?.data?.artifactId]
                     });
                 }
-            } else {
-                // Log progress when no userPost is available
-                const message = stepResult.response?.reasoning || stepResult.response?.message ||"";
-                Logger.info(`Task progress: ${message} [Finished ${task.type}, continuing...]`);
             }
 
-            await this.executeNextStep(projectId, userPost);
+            if (stepResult.finished) {
+                this.projects.completeTask(task.id);
+                Logger.info(`Completed step "${task.type}" for project "${projectId}"`);
 
+                // If this was the last planned task, add a validation step
+                // const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
+                // if (task.type !== 'validation' && remainingTasks.length === 0) {
+                //     const validationTask: Task = {
+                //         id: crypto.randomUUID(),
+                //         type: 'validation',
+                //         description: 'Validate solution completeness',
+                //         creator: this.userId,
+                //         complete: false,
+                //         order: (task.order || 0) + 1
+                //     };
+                //     this.projects.addTask(project, validationTask);
+                // }
+
+                await this.executeNextStep(projectId, userPost);
+
+            } else {
+                // Log progress when no userPost is available
+                const message = stepResult.response?.reasoning || stepResult.response?.message || "";
+                Logger.info(`Task progress: ${message} [Finished ${task.type}, continuing...]`);
+            }
         } catch (error) {
             Logger.error(`Error in step execution ${task.description}`, error);
-            await this.reply(userPost, { message: "Sorry, I encountered an error while processing your request." });
+            if (userPost) await this.reply(userPost, { message: "Sorry, I encountered an error while processing your request." });
         }
     }
 
@@ -336,7 +379,7 @@ Consider the original goal and what we've learned so far.`;
 
     protected async generateAndSendFinalResponse(projectId: string, userPost?: ChatPost): Promise<void> {
         const project = this.projects.getProject(projectId);
-        
+
         // Get all completed tasks' results
         const tasks = Object.values(project.tasks);
         const completedResults = tasks

@@ -2,7 +2,7 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import crypto from 'crypto';
 import { ILLMService } from '../../llm/ILLMService';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
@@ -23,8 +23,8 @@ export class ResearchAggregationExecutor implements StepExecutor {
         this.vectorDB = vectorDB;
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
-        const aggregatedData = await this.aggregateResults(projectId);
+    async execute(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
+        const aggregatedData = await this.aggregateResults(goal, projectId);
         const schema = await getGeneratedSchema(SchemaType.ResearchArtifactResponse);
 
         const systemPrompt = `
@@ -35,7 +35,7 @@ Make sure you put the entire report inside the artifactContent field in Markdown
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         // Generate the research report with token tracking
-        const { response: result, usage } = await this.modelHelpers.generate<ResearchArtifactResponse>({
+        const result = await this.modelHelpers.generate<ResearchArtifactResponse>({
             message: `Original Goal: ${goal}\nAggregated Data:\n${aggregatedData}`,
             instructions
         });
@@ -44,11 +44,11 @@ Make sure you put the entire report inside the artifactContent field in Markdown
             id: crypto.randomUUID(),
             type: 'report',
             content: result.artifactContent,
-            tokenCount: usage?.outputTokens,
+            tokenCount: result._usage?.outputTokens,
             metadata: {
                 title: result.artifactTitle,
                 projectId: projectId,
-                tokenUsage: usage
+                tokenUsage: result._usage
             }
         });
 
@@ -65,14 +65,14 @@ Make sure you put the entire report inside the artifactContent field in Markdown
         };
     }
 
-    private async aggregateResults(projectId: string): Promise<string> {
+    private async aggregateResults(goal: string, projectId: string): Promise<string> {
         Logger.info(`Aggregating results for ${projectId}`);
 
-        const queryTexts = [projectId];
+        const queryTexts = [goal];
         const where: any = {
             "$and": [
                 { "type": { "$eq": "summary" } },
-                { "projectId": { "$eq": projectId } }
+                //{ "projectId": { "$eq": projectId } }
             ]
         };
         const nResults = 20;

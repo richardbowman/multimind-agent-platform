@@ -1,9 +1,16 @@
 
-export interface ModelMessageResponse {
+export interface ModelResponse {
+    _usage: {
+        inputTokens: number,
+        outputTokens:number
+    }
+}
+
+export interface ModelMessageResponse extends ModelResponse {
     message: string;
 }
 
-export interface ReasoningResponse {
+export interface ReasoningResponse extends ModelResponse {
     reasoning: string;
 }
 

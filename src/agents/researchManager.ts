@@ -5,7 +5,7 @@ import { Project, Task } from "src/tools/taskManager";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { StepBasedAgent } from './stepBasedAgent';
 import { MultiStepPlanner } from './planners/DefaultPlanner';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ResearchDecompositionExecutor } from './executors/ResearchDecompositionExecutor';
 import { ResearchAggregationExecutor } from './executors/ResearchAggregationExecutor';
 
@@ -64,39 +64,5 @@ Step 2. 'aggregate-research' to compile findings`);
         this.processTaskQueue();
     }
 
-    protected async projectCompleted(project: Project<Task>): Promise<void> {
-        if (project.metadata.parentTaskId) {
-            // Get all completed tasks' results
-            const tasks = Object.values(project.tasks);
-            const completedResults = tasks
-                .filter(t => t.complete)
-                .map(t => t.props?.result)
-                .filter(r => r);
-
-            // Combine all results into one
-            const combinedResult = completedResults
-                .map(r => r.message || r.reasoning || '')
-                .filter(msg => msg)
-                .join('\n\n');
-
-            // Update parent task with combined results
-            const parentTask = await this.projects.getTaskById(project.metadata.parentTaskId);
-            if (!parentTask.props) parentTask.props = {};
-            parentTask.props.result = {
-                message: combinedResult,
-                subProjectResults: completedResults
-            };
-
-            await this.projects.assignTaskToAgent(project.metadata.parentTaskId, CONTENT_MANAGER_USER_ID);
-            const parentProject = await this.projects.getProject(parentTask.projectId);
-
-            // Store the combined results in the project's metadata
-            parentProject.metadata.subProjectResults = completedResults;
-
-            this.projects.completeTask(project.metadata.parentTaskId);
-        } else {
-            super.projectCompleted(project);
-        }
-    }
 
 }

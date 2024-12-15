@@ -1,11 +1,6 @@
 import { StepBasedAgent } from './stepBasedAgent';
-import { ChatClient } from '../chat/chatClient';
 import 'reflect-metadata';
-import LMStudioService from '../llm/lmstudioService';
-import { TaskManager } from '../tools/taskManager';
-import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { ONBOARDING_CHANNEL_ID } from '../helpers/config';
-import ChromaDBService from '../llm/chromaService';
 import Logger from '../helpers/logger';
 import { Project, Task } from '../tools/taskManager';
 import { Artifact } from 'src/tools/artifact';

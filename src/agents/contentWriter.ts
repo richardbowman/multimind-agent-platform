@@ -1,12 +1,10 @@
 import { randomUUID } from 'crypto';
-import { Agent, HandleActivity, HandlerParams, ResponseType } from './agents';
-import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from 'src/chat/chatClient';
-import LMStudioService, { ModelMessageHistory } from 'src/llm/lmstudioService';
-import { CONTENT_CREATION_CHANNEL_ID, CONTENT_WRITER_USER_ID, PROJECTS_CHANNEL_ID } from 'src/helpers/config';
+import { Agent, HandlerParams } from './agents';
+import { ModelMessageHistory } from 'src/llm/lmstudioService';
+import { CONTENT_CREATION_CHANNEL_ID } from 'src/helpers/config';
 import Logger from 'src/helpers/logger';
-import { TaskManager } from 'src/tools/taskManager';
 import { ContentProject, ContentTask } from './contentManager';
-import ChromaDBService from 'src/llm/chromaService';
+import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 export class ContentWriter extends Agent<ContentProject, ContentTask> {
     protected handlerThread(params: HandlerParams): Promise<void> {
@@ -36,7 +34,10 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
             const sectionContent = await this.llmService.sendMessageToLLM(`Write a section on ${task.title}: ${task.description}`, history);
     
             task.content = sectionContent;
-            task.contentBlockId = randomUUID();
+            task.props = {
+                ...task.props,
+                contentBlockId: randomUUID()
+            };
         } catch (error) {
             //todo: remove failed tasks or mark completed, causes infinite loop right now
             Logger.error(`Error processing task "${task.title} ${task.description}"`, error);

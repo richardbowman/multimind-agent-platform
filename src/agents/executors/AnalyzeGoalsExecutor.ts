@@ -8,7 +8,7 @@ import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import crypto from 'crypto';
 import { Task } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ModelHelpers } from '../../llm/helpers';
+import { ModelHelpers } from '../../llm/modelHelpers';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { Artifact } from 'src/tools/artifact';

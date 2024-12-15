@@ -1,15 +1,13 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import { ModelMessageResponse } from '../../schemas/ModelResponse';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import LMStudioService from '../../llm/lmstudioService';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 
 @StepExecutorDecorator('brainstorm', 'Generate creative ideas and possibilities through brainstorming')
 export class BrainstormExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(llmService: LMStudioService) {
+    constructor(llmService: ILLMService) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 

@@ -1,9 +1,9 @@
 import Logger from "./logger";
 
 export class RetryHelper {
-    private static readonly MAX_RETRIES = 3;
+    private static readonly MAX_RETRIES = 10;
     private static readonly INITIAL_DELAY_MS = 1000;
-    private static readonly MAX_DELAY_MS = 10000;
+    private static readonly MAX_DELAY_MS = 60000;
 
     static async withRetry<T>(
         operation: () => Promise<T>,

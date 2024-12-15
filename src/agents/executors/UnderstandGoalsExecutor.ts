@@ -1,15 +1,14 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
-const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 import crypto from 'crypto';
-import LMStudioService from '../../llm/lmstudioService';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ModelHelpers } from '../../llm/helpers';
+import { ModelHelpers } from '../../llm/modelHelpers';
 import Logger from 'src/helpers/logger';
 import { IntakeQuestionsResponse } from '../../schemas/IntakeQuestionsResponse';
+const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
 @StepExecutorDecorator('understand_goals', 'Generate focused questions to understand business needs and AI service fit')
 export class UnderstandGoalsExecutor implements StepExecutor {
@@ -17,7 +16,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
     private userId: string;
 
     constructor(
-        llmService: LMStudioService,
+        llmService: ILLMService,
         private taskManager: TaskManager,
         userId: string
     ) {

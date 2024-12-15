@@ -8,7 +8,7 @@ import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { TaskManager } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import crypto from 'crypto';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 
 export class MultiStepPlanner implements Planner {
     constructor(

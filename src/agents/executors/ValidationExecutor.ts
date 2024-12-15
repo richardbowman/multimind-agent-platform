@@ -1,18 +1,17 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import LMStudioService from '../../llm/lmstudioService';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ModelHelpers } from 'src/llm/helpers';
+import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ValidationResult } from '../../schemas/validation';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
-const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
+const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
 @StepExecutorDecorator('validation', 'After doing other work steps, verify your work addresses the goal')
 export class ValidationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(llmService: LMStudioService) {
+    constructor(llmService: ILLMService) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 

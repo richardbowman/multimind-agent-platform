@@ -1,6 +1,6 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ModelHelpers } from '../../llm/helpers';
+import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { ILLMService } from '../../llm/ILLMService';
@@ -67,10 +67,9 @@ Source: ${r.metadata?.title || 'Untitled'} (Score: ${r.score?.toFixed(3)})
 Content: ${r.text}
 ---`).join('\n')}
 
-Analyze relevant results (and ignore irrelevant results):
+Analyze relevant results (skipping irrelevant results):
 1. Extract key findings and their sources
-2. Identify any information gaps
-3. Recommend next steps for content creation`;
+2. Identify any information gaps`;
 
         const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
         const analysis = await this.modelHelpers.generate<ResearchResponse>({
@@ -91,10 +90,7 @@ ${analysis.keyFindings?.map(f => `
   - *Relevance:* ${f.relevance}`).join('\n')||"(None found)"}
 
 ### Information Gaps
-${analysis.gaps.map(gap => `- ${gap}`).join('\n')}
-
-### Recommendations
-${analysis.recommendations}`;
+${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
 
         return {
             type: "research",

@@ -10,7 +10,7 @@ export class ArtifactManager {
   private artifactMetadataFile: string;
   private vectorDb: IVectorDatabase;
 
-  constructor(vectorDb: IVectorDatabase, storageDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../.output')) {
+  constructor(vectorDb: IVectorDatabase, storageDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../.output/artifacts')) {
     this.storageDir = storageDir;
     this.artifactMetadataFile = path.join(this.storageDir, 'artifact.json');
     this.vectorDb = vectorDb;

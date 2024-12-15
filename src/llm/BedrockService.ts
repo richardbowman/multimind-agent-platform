@@ -1,7 +1,6 @@
 import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 import { BEDROCK_MAX_TOKENS_PER_MINUTE, BEDROCK_DEFAULT_DELAY_MS, BEDROCK_WINDOW_SIZE_MS } from "../helpers/config";
 import { RetryHelper } from "../helpers/retryHelper";
-import LMStudioService from "./lmstudioService";
 import { ILLMService } from "./ILLMService";
 import { AsyncQueue } from "../helpers/asyncQueue";
 import { ChatPost } from "src/chat/chatClient";

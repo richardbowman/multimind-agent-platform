@@ -1,3 +1,5 @@
+import { ModelResponse } from "./ModelResponse";
+
 /**
  * Represents a content improvement suggestion
  */
@@ -25,7 +27,7 @@ export interface SectionImprovement {
 /**
  * Response containing content editing suggestions
  */
-export interface EditingResponse {
+export interface EditingResponse extends ModelResponse {
     /** Generated title for the content */
     title: string;
     /** List of section-specific improvements */

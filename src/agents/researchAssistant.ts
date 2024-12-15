@@ -1,23 +1,15 @@
 import { StepBasedAgent } from './stepBasedAgent';
-import { HandleActivity, HandlerParams, ResponseType } from './agents';
-import { ChatClient, ChatPost } from '../chat/chatClient';
-import LMStudioService from '../llm/lmstudioService';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { TaskManager } from '../tools/taskManager';
 import { Project, Task } from '../tools/taskManager';
 import { WebSearchExecutor } from './research/WebResearchExecutor';
 import SearchHelper, { DuckDuckGoProvider } from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
 import SummaryHelper from '../helpers/summaryHelper';
 import Logger from '../helpers/logger';
-import { CHROMA_COLLECTION, MAX_SEARCHES, RESEARCHER_TOKEN, WEB_RESEARCH_CHANNEL_ID } from '../helpers/config';
-import { Artifact } from 'src/tools/artifact';
-import { ModelMessageResponse, RequestArtifacts, CreateArtifact } from '../schemas/ModelResponse';
-import ChromaDBService from 'src/llm/chromaService';
+import { RESEARCHER_TOKEN, WEB_RESEARCH_CHANNEL_ID } from '../helpers/config';
 import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 
@@ -57,14 +49,12 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
         await this.scrapeHelper.initialize();
         await super.setupChatMonitor(WEB_RESEARCH_CHANNEL_ID, "@researchteam");
 
-        // asynchronously check for old tasks and keep working on them
-        this.processTaskQueue();
+        // TODO BRING BACK WHEN SAFER asynchronously check for old tasks and keep working on them
+        // this.processTaskQueue();
     }
 
 
-    protected projectCompleted(project: ResearchProject): void {
-        Logger.info(`Project ${project.id} completed`);
-    }
+
 
 }
 

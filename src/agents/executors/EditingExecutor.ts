@@ -1,7 +1,7 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
@@ -51,7 +51,7 @@ ${contentArtifact.content}`;
         });
 
         // Create a new content artifact with improvements applied
-        let updatedContent = contentArtifact.content;
+        let updatedContent = contentArtifact.content.toString();
         for (const improvement of result.improvements) {
             for (const suggestion of improvement.suggestions) {
                 updatedContent = updatedContent.replace(suggestion.original, suggestion.improved);
@@ -59,7 +59,8 @@ ${contentArtifact.content}`;
         }
 
         // Save the updated content as a new artifact
-        const newArtifact = await this.artifactManager.createArtifact({
+        const newArtifact = await this.artifactManager.saveArtifact({
+            id: crypto.randomUUID(),
             type: 'content',
             content: updatedContent,
             metadata: {
@@ -71,18 +72,17 @@ ${contentArtifact.content}`;
         });
 
         // Update the project metadata to point to the new content
-        await this.taskManager.updateProject(projectId, {
-            metadata: {
-                ...project.metadata,
-                contentArtifactId: newArtifact.id
-            }
-        });
+        project.metadata = {
+            ...project.metadata,
+            contentArtifactId: newArtifact.id
+        };
+
 
         return {
             type: "editing",
             finished: true,
             response: {
-                message: `**${result.title}**\n\n**Content Review**\n\n${result.improvements.map(imp => 
+                message: `**${result.title}**\n\n**Content Review**\n\n${result.improvements.map(imp =>
                     `### ${imp.section}\n\n${imp.suggestions.map(s =>
                         `**${s.type}**:\n- Original: ${s.original}\n- Improved: ${s.improved}\n- Why: ${s.explanation}`
                     ).join('\n\n')}`

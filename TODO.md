@@ -4,6 +4,11 @@
  - [~] means in-progress
  - [x] complete
 
+## 2024-12-14
+- [x] add to solver a code executor
+- [ ] add a form capability for question generation to use in onboarding
+
+
 ## 2024-12-13
 - [ ] need to finish transitioning project manager.
 - [ ] the content manager is getting "stuck" when the sub project completes it doesnt seem to be able to push forward with more step-based processing

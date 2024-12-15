@@ -1,7 +1,7 @@
 import { ChatPost } from "src/chat/chatClient";
 import { ILLMService } from "./ILLMService";
 import { ModelCache } from "./modelCache";
-import { ModelMessageResponse, RequestArtifacts } from "src/schemas/ModelResponse";
+import { ModelMessageResponse, ModelResponse, RequestArtifacts } from "src/schemas/ModelResponse";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { GenerateInputParams, GenerateParams, HandlerParams, ProjectHandlerParams, ThreadSummary } from "src/agents/agents";
@@ -158,7 +158,7 @@ export class ModelHelpers {
         return importantPoints;
     }
 
-    public async generateStructured<T extends ModelMessageResponse>(structure: StructuredOutputPrompt, params: GenerateParams): Promise<T> {
+    private async generateStructured<T extends ModelResponse>(structure: StructuredOutputPrompt, params: GenerateParams): Promise<T> {
         // Check cache first
         const cacheContext = {
             params,
@@ -212,7 +212,7 @@ export class ModelHelpers {
         return response;
     }
 
-    public async generate<T extends ModelMessageResponse>(params: GenerateInputParams): Promise<T> {
+    public async generate<T extends ModelResponse>(params: GenerateInputParams): Promise<T> {
         if (params.instructions instanceof StructuredOutputPrompt) {
             return this.generateStructured<T>(params.instructions, params);
         } else {
@@ -258,7 +258,7 @@ export class ModelHelpers {
         return artifact;
     }
 
-    public async generateOld(instructions: string, params: GenerateParams): Promise<ModelMessageResponse> {
+    private async generateOld(instructions: string, params: GenerateParams): Promise<ModelMessageResponse> {
         // Check cache first
         const cacheContext = { params };
         const cachedResponse = this.modelCache.get(instructions, cacheContext);

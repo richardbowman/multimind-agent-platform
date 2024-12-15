@@ -1,6 +1,5 @@
 import { ChromaClient, Collection } from "chromadb";
 import { EventEmitter } from "events";
-import LMStudioService from "./lmstudioService";
 import crypto from 'crypto';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import dotenv from 'dotenv';

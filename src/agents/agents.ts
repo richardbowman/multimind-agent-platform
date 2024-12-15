@@ -11,10 +11,9 @@ import { Project, Task, TaskManager } from "src/tools/taskManager";
 import { ArtifactResponseSchema } from '../schemas/artifactSchema';
 import schemas from '../schemas/schema.json';
 import { ArtifactInputPrompt } from 'src/prompts/artifactInputPrompt';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
 import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
-import LMStudioService from 'src/llm/lmstudioService';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 
 export interface ActionMetadata {
@@ -265,7 +264,10 @@ export abstract class Agent<Project, Task> {
     }
 
     protected async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelMessageResponse> {
-        return this.modelHelpers.generateStructured(structure, params);
+        return this.modelHelpers.generate({
+            instructions: structure, 
+            ...params
+        });
     }
 
     protected async generate(params: GenerateInputParams): Promise<ModelMessageResponse> {

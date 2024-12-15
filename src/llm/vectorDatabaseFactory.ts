@@ -1,7 +1,6 @@
 import { IVectorDatabase } from './IVectorDatabase';
 import ChromaDBService from './chromaService';
 import VectraService from './vectraService';
-import LMStudioService from './lmstudioService';
 import { ILLMService } from './ILLMService';
 
 export enum VectorDatabaseType {

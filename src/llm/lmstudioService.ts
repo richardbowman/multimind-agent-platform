@@ -5,7 +5,7 @@ import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { ChatPost } from "src/chat/chatClient";
-import { ModelMessageResponse } from "../schemas/ModelResponse";
+import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 
 class MyEmbedder implements IEmbeddingFunction {
     private embeddingModel: EmbeddingSpecificModel;
@@ -82,7 +82,7 @@ export default class LMStudioService implements ILLMService {
         }
     }
 
-    async generate(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: MessageOpts) : Promise<ModelMessageResponse> {
+    async generate<M extends ModelResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: MessageOpts) : Promise<M> {
         const messageChain = [
             ...this.mapPosts(userPost, history),
             {

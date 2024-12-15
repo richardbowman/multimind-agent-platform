@@ -1,9 +1,6 @@
-import { Project, TaskManager } from "src/tools/taskManager";
-import { ChatClient } from 'src/chat/chatClient';
-import LMStudioService from 'src/llm/lmstudioService';
+import { Project } from "src/tools/taskManager";
 import { PROJECTS_CHANNEL_ID } from 'src/helpers/config';
 import { Task } from "src/tools/taskManager";
-import ChromaDBService from 'src/llm/chromaService';
 import { BrainstormExecutor } from './executors/BrainstormExecutor';
 import { GenerateArtifactExecutor } from './executors/GenerateArtifactExecutor';
 import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
@@ -11,6 +8,7 @@ import { AnswerQuestionsExecutor } from './executors/AnswerQuestionsExecutor';
 import { ComplexProjectExecutor } from './executors/ComplexProjectExecutor';
 import { ScheduleTaskExecutor } from './executors/ScheduleTaskExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
+import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 
 export enum ProjectManagerActivities {
     AnswerQuestions = "answer-questions",

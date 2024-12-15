@@ -9,10 +9,11 @@ import { Artifact } from 'src/tools/artifact';
 import { WritingExecutor } from './executors/WritingExecutor';
 import { EditingExecutor } from './executors/EditingExecutor';
 import { OutlineExecutor } from './executors/OutlineExecutor';
-import { KnowledgeCheckExecutor } from './executors/ResearchExecutor';
+import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
 import { MultiStepPlanner } from './planners/DefaultPlanner';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
+import { ValidationExecutor } from './executors/ValidationExecutor';
 
 export interface ContentProject extends Project<ContentTask> {
     goal: string;
@@ -35,7 +36,8 @@ export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> 
         this.registerStepExecutor(new KnowledgeCheckExecutor(params.llmService, params.vectorDBService));
         this.registerStepExecutor(new OutlineExecutor(params.llmService));
         this.registerStepExecutor(new WritingExecutor(params.llmService, params.taskManager));
-        this.registerStepExecutor(new EditingExecutor(params.llmService, params.artifactManager));
+        this.registerStepExecutor(new EditingExecutor(params.llmService, this.artifactManager, params.taskManager));
+        this.registerStepExecutor(new ValidationExecutor(params.llmService));
 
         this.modelHelpers.setPurpose(`You are planning how to create high-quality content.
 Break down the content creation into steps of research, outlining, writing and editing.
@@ -46,10 +48,10 @@ IMPORTANT: Always follow this pattern:
 1. Start with a 'check-knowledge' step to gather relevant information
 2. Follow with an 'outline' step to structure the content
 3. Then you can 'assign-writers' to have the writers create the sections
-4. End with 'editing' steps to improve the final content`);
+4. End with an 'editing' step to improve the final content`);
     }
 
-    protected taskNotification(task: ContentTask): Promise<void> {
+    protected async taskNotification(task: ContentTask): Promise<void> {
         try {
             if (task.type === "assign-writers") {
                 if (task.complete) {
@@ -59,6 +61,10 @@ IMPORTANT: Always follow this pattern:
                         message: "Writers completed tasks.", 
                         projects: [project]
                     } as HandlerParams);
+
+                    const post = await this.chatClient.getPost(project.metadata.originalPostId);
+
+                    await this.executeNextStep(project.id, post);
                 }
             } else {
                 super.taskNotification(task);
@@ -90,14 +96,18 @@ IMPORTANT: Always follow this pattern:
         // Store the artifact ID in the project's metadata for editing tasks
         project.metadata.contentArtifactId = content.id;
 
-        //TODO: hack for now, we don't assign workign steps to agent right now
-        await this.projects.assignTaskToAgent(project.metadata.parentTaskId, CONTENT_MANAGER_USER_ID);
-
         if (project.metadata.parentTaskId) {
-            this.projects.completeTask(project.metadata.parentTaskId);
+            //TODO: hack for now, we don't assign workign steps to agent right now
+            await this.projects.assignTaskToAgent(project.metadata.parentTaskId, CONTENT_MANAGER_USER_ID);
+
             const parentTask = await this.projects.getTaskById(project.metadata.parentTaskId);
             const parentProject = await this.projects.getProject(parentTask.projectId);
-        
+
+            // Store the artifact ID in the project's metadata for editing tasks
+            parentProject.metadata.contentArtifactId = content.id;
+
+            this.projects.completeTask(project.metadata.parentTaskId);
+
             const post = await this.chatClient.getPost(parentProject.metadata.originalPostId);
             this.reply(post, { message: responseMessage }, {
                 "artifact-ids": [content.id]

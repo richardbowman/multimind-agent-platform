@@ -17,6 +17,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@aws-sdk/client-bedrock": "^3.712.0",
     "@aws-sdk/client-bedrock-runtime": "^3.706.0",
     "@lmstudio/sdk": "^0.3.0",
     "@mattermost/client": "^10.1.0",
@@ -38,6 +39,7 @@
     "clipboardy": "^4.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
+    "isolated-vm": "^5.0.2",
     "json5": "^2.2.3",
     "kafkajs": "^2.2.4",
     "langchain": "^0.3.5",

@@ -6,7 +6,7 @@ import { AnswerAnalysisResponse } from '../../schemas/AnswerAnalysisResponse';
 import { TaskManager } from '../../tools/taskManager';
 import { OnboardingProject } from '../goalBasedOnboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ModelHelpers } from '../../llm/helpers';
+import { ModelHelpers } from '../../llm/modelHelpers';
 
 @StepExecutorDecorator('process-answers', 'Analyze and process user responses to intake questions')
 export class AnswerQuestionsExecutor implements StepExecutor {

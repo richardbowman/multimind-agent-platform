@@ -1,8 +1,7 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import { ModelMessageResponse, RequestArtifacts } from '../../schemas/ModelResponse';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import LMStudioService from '../../llm/lmstudioService';
-import { ModelHelpers } from 'src/llm/helpers';
+import { RequestArtifacts } from '../../schemas/ModelResponse';
+import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { randomUUID } from 'crypto';
 import { ArtifactManager } from 'src/tools/artifactManager';
@@ -14,7 +13,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
 
-    constructor(llmService: LMStudioService, artifactManager: ArtifactManager) {
+    constructor(llmService: ILLMService, artifactManager: ArtifactManager) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
         this.artifactManager = artifactManager;
     }

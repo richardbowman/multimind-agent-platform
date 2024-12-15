@@ -1,13 +1,10 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import LMStudioService from '../../llm/lmstudioService';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { Project, Task } from '../../tools/taskManager';
-import { ModelMessageResponse } from '../../schemas/ModelResponse';
 import { FinalResponse } from '../../schemas/finalResponse';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 
 @StepExecutorDecorator('final_response', 'Generates final comprehensive response')
 export class FinalResponseExecutor implements StepExecutor {

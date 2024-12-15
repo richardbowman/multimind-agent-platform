@@ -9,7 +9,7 @@ import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { TaskManager } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import crypto from 'crypto';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
 
 export class SimpleNextActionPlanner implements Planner {

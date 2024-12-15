@@ -1,7 +1,6 @@
-import { ModelHelpers } from '../../llm/helpers';
+import { ModelHelpers } from '../../llm/modelHelpers';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
-import LMStudioService from '../../llm/lmstudioService';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -20,7 +19,7 @@ export class CreatePlanExecutor implements StepExecutor {
     private userId: string;
 
     constructor(
-        llmService: LMStudioService,
+        llmService: ILLMService,
         private taskManager: TaskManager,
         private artifactManager: ArtifactManager,
         userId: string

@@ -78,6 +78,82 @@
       ],
       "type": "object"
     },
+    "CodeExecutionSchema": {
+      "additionalProperties": false,
+      "properties": {
+        "properties": {
+          "additionalProperties": false,
+          "properties": {
+            "code": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "const": "The JavaScript code to execute",
+                  "type": "string"
+                },
+                "type": {
+                  "const": "string",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "description"
+              ],
+              "type": "object"
+            },
+            "explanation": {
+              "additionalProperties": false,
+              "properties": {
+                "description": {
+                  "const": "Explanation of what the code does",
+                  "type": "string"
+                },
+                "type": {
+                  "const": "string",
+                  "type": "string"
+                }
+              },
+              "required": [
+                "type",
+                "description"
+              ],
+              "type": "object"
+            }
+          },
+          "required": [
+            "code",
+            "explanation"
+          ],
+          "type": "object"
+        },
+        "required": {
+          "items": [
+            {
+              "const": "code",
+              "type": "string"
+            },
+            {
+              "const": "explanation",
+              "type": "string"
+            }
+          ],
+          "maxItems": 2,
+          "minItems": 2,
+          "type": "array"
+        },
+        "type": {
+          "const": "object",
+          "type": "string"
+        }
+      },
+      "required": [
+        "type",
+        "properties",
+        "required"
+      ],
+      "type": "object"
+    },
     "ContentDecompositionResponse": {
       "additionalProperties": false,
       "properties": {
@@ -210,9 +286,14 @@
         "overallFeedback": {
           "description": "Overall feedback on the content",
           "type": "string"
+        },
+        "title": {
+          "description": "Generated title for the content",
+          "type": "string"
         }
       },
       "required": [
+        "title",
         "improvements",
         "overallFeedback"
       ],

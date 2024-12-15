@@ -4,7 +4,7 @@ import { ILLMService } from '../../llm/ILLMService';
 import { ThinkingResponse } from '../../schemas/thinking';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { ModelHelpers } from 'src/llm/helpers';
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 
 @StepExecutorDecorator('thinking', 'Develop ideas and reasoning through careful analysis and deep thinking')

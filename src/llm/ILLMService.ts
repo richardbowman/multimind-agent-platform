@@ -1,13 +1,13 @@
 import { ChatPost } from "src/chat/chatClient";
-import { ModelMessageResponse } from "../schemas/ModelResponse";
+import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { IEmbeddingFunction } from "chromadb";
 
 export interface ILLMService {
     initializeEmbeddingModel(modelPath: string): Promise<void>;
     initializeLlamaModel(modelPath: string): Promise<void>;
-    generate(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: any): Promise<ModelMessageResponse>;
+    generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: any): Promise<T>;
     sendMessageToLLM(message: string, history: any[], seedAssistant?: string, contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string>;
-    generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<any>;
+    generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T>;
     getEmbeddingModel(): IEmbeddingFunction;
     getTokenCount(message: string): Promise<number>;
 }
