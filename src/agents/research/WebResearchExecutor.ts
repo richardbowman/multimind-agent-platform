@@ -318,6 +318,12 @@ Given the following web search results, select 1-3 URLs that are most relevant t
             instructions
         });
 
-        return response.urls.map(r => r.href);
+        // Handle potential malformed responses
+        if (!response.urls || !Array.isArray(response.urls)) {
+            Logger.warn('Received malformed URL response from LLM', response);
+            return [];
+        }
+
+        return response.urls.map(r => r.href || r).filter(url => typeof url === 'string');
     }
 }
