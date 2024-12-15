@@ -23,16 +23,25 @@ class Logger {
         if (this.logBox && level !== "verbose") this.logBox.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
     }
 
-    static info(message: string): void {
-        this.log('info', message);
+    static info(message: string, error?: any): void {
+        const infoMsg = error 
+            ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
+            : message;
+        this.log('info', infoMsg);
     }
 
-    static warn(message: string): void {
-        this.log('warn', message);
+    static warn(message: string, error?: any): void {
+        const warnMsg = error 
+            ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
+            : message;
+        this.log('warn', warnMsg);
     }
 
-    static verbose(message: string): void {
-        this.log('verbose', message);
+    static verbose(message: string, error?: any): void {
+        const verboseMsg = error 
+            ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
+            : message;
+        this.log('verbose', verboseMsg);
     }
 
     static error(message: string, error?: any): void {
