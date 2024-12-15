@@ -41,21 +41,21 @@ You are a research orchestrator. Follow these steps:
             project.name = result.goal;
         }
 
-        // Create research tasks
+        // Create research tasks and assign to researchers
         for (const task of result.researchRequested) {
             const taskId = randomUUID();
             const taskDescription = `${task} [${result.goal}]`;
             await this.taskManager.addTask(
                 project,
-                new ResearchTask(taskId, projectId, taskDescription, RESEARCH_MANAGER_USER_ID)
+                new ResearchTask(taskId, projectId, taskDescription, RESEARCHER_USER_ID)
             );
         }
 
         return {
             type: "decompose-research",
-            finished: true,
+            finished: false, // Don't mark as finished until researchers complete their work
             response: {
-                message: `Research plan created:\n\n${result.strategy}\n\nTasks:\n${result.researchRequested.map(t => `- ${t}`).join('\n')}`,
+                message: `Research plan created:\n\n${result.strategy}\n\nTasks:\n${result.researchRequested.map(t => `- ${t}`).join('\n')}\n\nWaiting for researchers to complete their tasks...`,
                 data: result
             }
         };
