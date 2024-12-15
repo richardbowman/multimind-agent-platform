@@ -90,7 +90,7 @@ export class BedrockService implements ILLMService {
         });
 
         try {
-            const response = await this.client.send(command);
+            const response = await this.runtimeClient.send(command);
             const result = JSON.parse(new TextDecoder().decode(response.body));
             return result.embeddingsByType.float;
         } catch (error) {
@@ -257,7 +257,7 @@ export class BedrockService implements ILLMService {
             });
 
             try {
-                const response = await this.client.send(command);
+                const response = await this.runtimeClient.send(command);
             const result = response.output?.message?.content?.[0];
             const output = result?.text || '';
             await this.logger.logCall('sendMessageToLLM', input, output);
@@ -310,7 +310,7 @@ export class BedrockService implements ILLMService {
             });
 
             try {
-                const response = await this.client.send(command);
+                const response = await this.runtimeClient.send(command);
 
             // Extract tool use from response
             const result = response.output?.message?.content?.find(c => c.toolUse);
@@ -358,7 +358,7 @@ export class BedrockService implements ILLMService {
         });
 
         try {
-            const response = await this.client.send(command);
+            const response = await this.runtimeClient.send(command);
             const result = JSON.parse(new TextDecoder().decode(response.body));
             const output = result.usage.input_tokens;
             await this.logger.logCall('getTokenCount', input, output);
