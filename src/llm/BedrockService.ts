@@ -22,7 +22,7 @@ export class BedrockService implements ILLMService {
     private queue: AsyncQueue = new AsyncQueue();
     
     // Rate limiting settings
-    private readonly MAX_TOKENS_PER_MINUTE = 100000; // Will be updated from actual quota
+    private readonly MAX_TOKENS_PER_MINUTE = 70000;
     private tokenUsageWindow: number[] = [];
     private readonly WINDOW_SIZE_MS = 60000; // 1 minute window
     
