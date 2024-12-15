@@ -32,6 +32,9 @@ export class BedrockService implements ILLMService {
         this.tokenUsageWindow = this.tokenUsageWindow.filter(
             timestamp => now - timestamp < this.WINDOW_SIZE_MS
         );
+
+        const currentTokenCount = this.tokenUsageWindow.length;
+        Logger.info(`Token usage: ${currentTokenCount}/${this.MAX_TOKENS_PER_MINUTE} (${Math.round(currentTokenCount/this.MAX_TOKENS_PER_MINUTE*100)}%) - Requesting ${estimatedTokens} tokens`);
         
         // Check if adding estimated tokens would exceed limit
         while (this.tokenUsageWindow.length + estimatedTokens >= this.MAX_TOKENS_PER_MINUTE) {
@@ -67,7 +70,13 @@ export class BedrockService implements ILLMService {
         const newTokens = new Array(tokenCount).fill(now);
         this.tokenUsageWindow.push(...newTokens);
         
-        Logger.debug(`Tracked ${tokenCount} tokens, window size: ${this.tokenUsageWindow.length}`);
+        const currentTokenCount = this.tokenUsageWindow.length;
+        const usagePercent = Math.round(currentTokenCount/this.MAX_TOKENS_PER_MINUTE*100);
+        
+        Logger.info(`Added ${tokenCount} tokens. Current usage: ${currentTokenCount}/${this.MAX_TOKENS_PER_MINUTE} (${usagePercent}%)`);
+        if (usagePercent > 80) {
+            Logger.warn(`High token usage: ${usagePercent}% of limit`);
+        }
     }
 
     constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v2:0", embeddingService?: ILLMService) {
