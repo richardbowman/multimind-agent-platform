@@ -61,11 +61,6 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
         this.processTaskQueue();
     }
 
-    async processTask(task: Task) {
-        Logger.info(`Notification for task ${task.id}: ${task.description}`);
-        await this.scrapeUrl(task.projectId, task.description, task.description, task.id, []);
-        await this.projects.completeTask(task.id);
-    }
 
     protected projectCompleted(project: ResearchProject): void {
         Logger.info(`Project ${project.id} completed`);
