@@ -1,5 +1,6 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import crypto from 'crypto';
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/helpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -33,7 +34,8 @@ Make sure to include sources back to the results. Do not make up information mis
 Make sure you put the entire report inside the artifactContent field in Markdown format.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const result = await this.modelHelpers.generate<ResearchArtifactResponse>({
+        // Generate the research report with token tracking
+        const { response: result, usage } = await this.modelHelpers.generate<ResearchArtifactResponse>({
             message: `Original Goal: ${goal}\nAggregated Data:\n${aggregatedData}`,
             instructions
         });
@@ -42,9 +44,11 @@ Make sure you put the entire report inside the artifactContent field in Markdown
             id: crypto.randomUUID(),
             type: 'report',
             content: result.artifactContent,
+            tokenCount: usage?.outputTokens,
             metadata: {
                 title: result.artifactTitle,
-                projectId: projectId
+                projectId: projectId,
+                tokenUsage: usage
             }
         });
 
