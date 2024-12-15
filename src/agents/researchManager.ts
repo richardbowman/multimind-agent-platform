@@ -66,14 +66,32 @@ Step 2. 'aggregate-research' to compile findings`);
 
     protected async projectCompleted(project: Project<Task>): Promise<void> {
         if (project.metadata.parentTaskId) {
-            //TODO: hack for now, we don't assign workign steps to agent right now
-            await this.projects.assignTaskToAgent(project.metadata.parentTaskId, CONTENT_MANAGER_USER_ID);
+            // Get all completed tasks' results
+            const tasks = Object.values(project.tasks);
+            const completedResults = tasks
+                .filter(t => t.complete)
+                .map(t => t.props?.result)
+                .filter(r => r);
 
+            // Combine all results into one
+            const combinedResult = completedResults
+                .map(r => r.message || r.reasoning || '')
+                .filter(msg => msg)
+                .join('\n\n');
+
+            // Update parent task with combined results
             const parentTask = await this.projects.getTaskById(project.metadata.parentTaskId);
+            if (!parentTask.props) parentTask.props = {};
+            parentTask.props.result = {
+                message: combinedResult,
+                subProjectResults: completedResults
+            };
+
+            await this.projects.assignTaskToAgent(project.metadata.parentTaskId, CONTENT_MANAGER_USER_ID);
             const parentProject = await this.projects.getProject(parentTask.projectId);
 
-            // Store the artifact ID in the project's metadata for editing tasks
-            parentProject.metadata.contentArtifactId = content.id;
+            // Store the combined results in the project's metadata
+            parentProject.metadata.subProjectResults = completedResults;
 
             this.projects.completeTask(project.metadata.parentTaskId);
         } else {
