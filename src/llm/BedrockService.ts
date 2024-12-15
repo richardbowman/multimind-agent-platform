@@ -19,13 +19,44 @@ export class BedrockService implements ILLMService {
     private defaultDelay: number = 1000; // 1 second delay between calls
     private queue: AsyncQueue = new AsyncQueue();
     
+    // Rate limiting settings
+    private readonly MAX_TOKENS_PER_MINUTE = 100000; // Adjust based on your Bedrock limits
+    private tokenUsageWindow: number[] = [];
+    private readonly WINDOW_SIZE_MS = 60000; // 1 minute window
+    
     private async waitForNextCall(): Promise<void> {
         const now = Date.now();
+        
+        // Clean up old token usage entries
+        this.tokenUsageWindow = this.tokenUsageWindow.filter(
+            timestamp => now - timestamp < this.WINDOW_SIZE_MS
+        );
+        
+        // If we're at the token limit, wait until oldest tokens expire
+        if (this.tokenUsageWindow.length >= this.MAX_TOKENS_PER_MINUTE) {
+            const oldestTimestamp = this.tokenUsageWindow[0];
+            const timeToWait = (oldestTimestamp + this.WINDOW_SIZE_MS) - now;
+            if (timeToWait > 0) {
+                Logger.info(`Rate limit reached, waiting ${timeToWait}ms`);
+                await new Promise(resolve => setTimeout(resolve, timeToWait));
+            }
+        }
+        
+        // Add basic delay between calls
         const timeSinceLastCall = now - this.lastCallTime;
         if (timeSinceLastCall < this.defaultDelay) {
             await new Promise(resolve => setTimeout(resolve, this.defaultDelay - timeSinceLastCall));
         }
+        
         this.lastCallTime = Date.now();
+    }
+
+    private trackTokenUsage(tokenCount: number = 1): void {
+        const now = Date.now();
+        // Add a timestamp for each token used
+        for (let i = 0; i < tokenCount; i++) {
+            this.tokenUsageWindow.push(now);
+        }
     }
 
     constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v2:0", embeddingService?: ILLMService) {
