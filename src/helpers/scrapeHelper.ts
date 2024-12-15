@@ -63,7 +63,7 @@ class ScrapeHelper {
             await new Promise(resolve => setTimeout(resolve, 1000));
 
             // Take a full-page screenshot
-            let screenshot: Buffer;
+            let screenshot: Buffer = Buffer.from('');
             try {
                 screenshot = await page.screenshot({ fullPage: true });
             } catch (error) {
