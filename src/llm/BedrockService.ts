@@ -1,4 +1,5 @@
 import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockClient, GetModelInvocationLoggingConfigurationCommand } from "@aws-sdk/client-bedrock";
 import LMStudioService from "./lmstudioService";
 import { ILLMService } from "./ILLMService";
 import { AsyncQueue } from "../helpers/asyncQueue";
@@ -11,7 +12,8 @@ import { LLMCallLogger } from "./LLMLogger";
 
 export class BedrockService implements ILLMService {
     private logger: LLMCallLogger;
-    private client: BedrockRuntimeClient;
+    private runtimeClient: BedrockRuntimeClient;
+    private bedrockClient: BedrockClient;
     private modelId: string;
     private embeddingModelId: string;
     private embeddingService?: ILLMService;
@@ -20,7 +22,7 @@ export class BedrockService implements ILLMService {
     private queue: AsyncQueue = new AsyncQueue();
     
     // Rate limiting settings
-    private readonly MAX_TOKENS_PER_MINUTE = 100000; // Adjust based on your Bedrock limits
+    private readonly MAX_TOKENS_PER_MINUTE = 100000; // Will be updated from actual quota
     private tokenUsageWindow: number[] = [];
     private readonly WINDOW_SIZE_MS = 60000; // 1 minute window
     
@@ -60,11 +62,17 @@ export class BedrockService implements ILLMService {
     }
 
     constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v2:0", embeddingService?: ILLMService) {
-        this.client = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
+        this.runtimeClient = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
+        this.bedrockClient = new BedrockClient({ region: process.env.AWS_REGION });
         this.modelId = modelId;
         this.embeddingModelId = embeddingModelId;
         this.embeddingService = embeddingService;
         this.logger = new LLMCallLogger('bedrock');
+        
+        // Initialize quotas
+        this.updateQuotas().catch(error => {
+            Logger.warn("Failed to fetch Bedrock quotas:", error);
+        });
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
@@ -367,5 +375,38 @@ export class BedrockService implements ILLMService {
             await this.logger.logCall('getTokenCount', input, null, error);
             throw error;
         }
+    }
+
+    private async updateQuotas(): Promise<void> {
+        try {
+            const command = new GetModelInvocationLoggingConfigurationCommand({
+                modelId: this.modelId
+            });
+            
+            const response = await this.bedrockClient.send(command);
+            
+            if (response.modelInvocationLoggingConfiguration?.tokenUsageMetering) {
+                const quotas = response.modelInvocationLoggingConfiguration.tokenUsageMetering;
+                
+                // Update our rate limiting based on actual quotas
+                if (quotas.tokensPerMinute) {
+                    this.MAX_TOKENS_PER_MINUTE = quotas.tokensPerMinute;
+                    Logger.info(`Updated token rate limit to ${this.MAX_TOKENS_PER_MINUTE} tokens per minute`);
+                }
+            }
+        } catch (error) {
+            Logger.error("Failed to fetch Bedrock quotas:", error);
+            throw error;
+        }
+    }
+
+    public async getCurrentQuotas(): Promise<{
+        tokensPerMinute: number;
+        currentUsage: number;
+    }> {
+        return {
+            tokensPerMinute: this.MAX_TOKENS_PER_MINUTE,
+            currentUsage: this.tokenUsageWindow.length
+        };
     }
 }
