@@ -28,13 +28,20 @@ export class BedrockService implements ILLMService {
     private async waitForNextCall(estimatedTokens: number = 100): Promise<void> {
         const now = Date.now();
         
-        // Clean up old token usage entries
-        this.tokenUsageWindow = this.tokenUsageWindow.filter(
-            timestamp => now - timestamp < this.WINDOW_SIZE_MS
-        );
+        // Clean up old token usage entries only if needed
+        if (this.tokenUsageWindow.length > 0 && now - this.tokenUsageWindow[0] >= this.WINDOW_SIZE_MS) {
+            this.tokenUsageWindow = this.tokenUsageWindow.filter(
+                timestamp => now - timestamp < this.WINDOW_SIZE_MS
+            );
+            
+            const currentTokenCount = this.tokenUsageWindow.length;
+            Logger.info(`Token window cleaned. Current usage: ${currentTokenCount}/${this.MAX_TOKENS_PER_MINUTE} (${Math.round(currentTokenCount/this.MAX_TOKENS_PER_MINUTE*100)}%)`);
+        }
 
-        const currentTokenCount = this.tokenUsageWindow.length;
-        Logger.info(`Token usage: ${currentTokenCount}/${this.MAX_TOKENS_PER_MINUTE} (${Math.round(currentTokenCount/this.MAX_TOKENS_PER_MINUTE*100)}%) - Requesting ${estimatedTokens} tokens`);
+        // Only log if we're approaching the limit
+        if (this.tokenUsageWindow.length + estimatedTokens >= this.MAX_TOKENS_PER_MINUTE * 0.8) {
+            Logger.warn(`High token usage: ${this.tokenUsageWindow.length}/${this.MAX_TOKENS_PER_MINUTE} - Requesting ${estimatedTokens} tokens`);
+        }
         
         // Check if adding estimated tokens would exceed limit
         while (this.tokenUsageWindow.length + estimatedTokens >= this.MAX_TOKENS_PER_MINUTE) {
@@ -42,7 +49,7 @@ export class BedrockService implements ILLMService {
             const timeToWait = (oldestTimestamp + this.WINDOW_SIZE_MS) - now;
             
             if (timeToWait > 0) {
-                Logger.info(`Rate limit reached, waiting ${Math.ceil(timeToWait/1000)}s for ${estimatedTokens} tokens`);
+                Logger.info(`Rate limit reached, waiting ${Math.ceil(timeToWait/1000)}s for token window to clear`);
                 await new Promise(resolve => setTimeout(resolve, timeToWait + 100)); // Add small buffer
                 
                 // Refresh window after waiting
@@ -51,6 +58,8 @@ export class BedrockService implements ILLMService {
                     timestamp => newNow - timestamp < this.WINDOW_SIZE_MS
                 );
             } else {
+                // Window has already cleared
+                this.tokenUsageWindow = [];
                 break;
             }
         }
