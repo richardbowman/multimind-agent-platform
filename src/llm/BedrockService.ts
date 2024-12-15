@@ -37,9 +37,14 @@ export class BedrockService implements ILLMService {
 
             const currentTokenCount = this.tokenUsageWindow.length;
             const windowPeriodMinutes = this.WINDOW_SIZE_MS / (60 * 1000);
-            const oldestTimestamp = new Date(this.tokenUsageWindow[0]).toISOString();
-            const newestTimestamp = new Date(this.tokenUsageWindow[this.tokenUsageWindow.length - 1]).toISOString();
-            Logger.info(`Token window (${windowPeriodMinutes} min, ${oldestTimestamp} to ${newestTimestamp}) cleaned. Current usage: ${currentTokenCount}/${this.MAX_TOKENS_PER_MINUTE} (${Math.round(currentTokenCount / this.MAX_TOKENS_PER_MINUTE * 100)}%)`);
+            
+            if (currentTokenCount > 0) {
+                const oldestTimestamp = new Date(this.tokenUsageWindow[0]).toISOString();
+                const newestTimestamp = new Date(this.tokenUsageWindow[this.tokenUsageWindow.length - 1]).toISOString();
+                Logger.info(`Token window (${windowPeriodMinutes} min, ${oldestTimestamp} to ${newestTimestamp}) cleaned. Current usage: ${currentTokenCount}/${this.MAX_TOKENS_PER_MINUTE} (${Math.round(currentTokenCount / this.MAX_TOKENS_PER_MINUTE * 100)}%)`);
+            } else {
+                Logger.info(`Token window (${windowPeriodMinutes} min) cleaned. Current usage: 0/${this.MAX_TOKENS_PER_MINUTE} (0%)`);
+            }
         }
 
         // Only log if we're approaching the limit
