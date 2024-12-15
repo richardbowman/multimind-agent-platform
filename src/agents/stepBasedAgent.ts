@@ -29,6 +29,7 @@ export interface StepResult {
 export interface StepExecutor {
     execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult>;
     onTaskNotification?(task: Task): Promise<void>;
+    onProjectCompleted?(project: Project): Promise<void>;
 }
 
 export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
