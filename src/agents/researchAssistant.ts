@@ -14,7 +14,7 @@ import { CHROMA_COLLECTION, MAX_SEARCHES, RESEARCHER_TOKEN, WEB_RESEARCH_CHANNEL
 import { Artifact } from 'src/tools/artifact';
 import { ModelMessageResponse, RequestArtifacts, CreateArtifact } from '../schemas/ModelResponse';
 import ChromaDBService from 'src/llm/chromaService';
-import { KnowledgeCheckExecutor } from './executors/ResearchExecutor';
+import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 
