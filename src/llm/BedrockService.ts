@@ -294,6 +294,18 @@ export class BedrockService implements ILLMService {
                 const response = await this.runtimeClient.send(command);
             const result = response.output?.message?.content?.[0];
             const output = result?.text || '';
+            
+            // Track token usage from response
+            if (response.usage) {
+                const inputTokens = response.usage.inputTokens || 0;
+                const outputTokens = response.usage.outputTokens || 0;
+                if (inputTokens + outputTokens > 0) {
+                    this.trackTokenUsage(inputTokens + outputTokens);
+                } else {
+                    Logger.warn("Received zero token count from Bedrock API in sendMessageToLLM()");
+                }
+            }
+            
             await this.logger.logCall('sendMessageToLLM', input, output);
             return output;
         } catch (error) {
@@ -345,6 +357,17 @@ export class BedrockService implements ILLMService {
 
             try {
                 const response = await this.runtimeClient.send(command);
+
+            // Track token usage from response
+            if (response.usage) {
+                const inputTokens = response.usage.inputTokens || 0;
+                const outputTokens = response.usage.outputTokens || 0;
+                if (inputTokens + outputTokens > 0) {
+                    this.trackTokenUsage(inputTokens + outputTokens);
+                } else {
+                    Logger.warn("Received zero token count from Bedrock API in generateStructured()");
+                }
+            }
 
             // Extract tool use from response
             const result = response.output?.message?.content?.find(c => c.toolUse);
