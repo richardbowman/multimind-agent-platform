@@ -108,6 +108,7 @@ export class BedrockService implements ILLMService {
             await this.logger.logCall('generate', input, null, error);
             throw error;
         }
+        });
     }
 
     private formatMessages(message: string, history?: ChatPost[]): any[] {
@@ -227,6 +228,7 @@ export class BedrockService implements ILLMService {
             await this.logger.logCall('sendMessageToLLM', input, null, error);
             throw error;
         }
+        });
     }
 
     async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<any> {
