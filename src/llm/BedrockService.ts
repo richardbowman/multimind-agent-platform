@@ -1,4 +1,5 @@
 import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BEDROCK_MAX_TOKENS_PER_MINUTE, BEDROCK_DEFAULT_DELAY_MS, BEDROCK_WINDOW_SIZE_MS } from "../helpers/config";
 import LMStudioService from "./lmstudioService";
 import { ILLMService } from "./ILLMService";
 import { AsyncQueue } from "../helpers/asyncQueue";
@@ -16,13 +17,13 @@ export class BedrockService implements ILLMService {
     private embeddingModelId: string;
     private embeddingService?: ILLMService;
     private lastCallTime: number = 0;
-    private defaultDelay: number = 1000; // 1 second delay between calls
+    private defaultDelay: number = BEDROCK_DEFAULT_DELAY_MS;
     private queue: AsyncQueue = new AsyncQueue();
     
     // Rate limiting settings
-    private readonly MAX_TOKENS_PER_MINUTE = 70000;
+    private readonly MAX_TOKENS_PER_MINUTE = BEDROCK_MAX_TOKENS_PER_MINUTE;
     private tokenUsageWindow: number[] = [];
-    private readonly WINDOW_SIZE_MS = 60000; // 1 minute window
+    private readonly WINDOW_SIZE_MS = BEDROCK_WINDOW_SIZE_MS;
     
     private async waitForNextCall(): Promise<void> {
         const now = Date.now();
