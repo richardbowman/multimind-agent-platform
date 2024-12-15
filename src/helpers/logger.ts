@@ -36,8 +36,10 @@ class Logger {
     }
 
     static error(message: string, error?: any): void {
-        this.log('error', message);
-        if (error) this.log('error', `Error:${error.message}\nStack:${error.stack}`);
+        const errorMsg = error 
+            ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
+            : message;
+        this.log('error', errorMsg);
     }
 }
 
