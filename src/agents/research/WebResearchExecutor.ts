@@ -1,14 +1,13 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import SearchHelper, { DuckDuckGoProvider, GoogleSearchProvider } from '../../helpers/searchHelper';
+import SearchHelper, { DuckDuckGoProvider } from '../../helpers/searchHelper';
 import ScrapeHelper from '../../helpers/scrapeHelper';
 import SummaryHelper from '../../helpers/summaryHelper';
-import LMStudioService from '../../llm/lmstudioService';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import Logger from '../../helpers/logger';
-import { ArtifactManager } from '../../tools/artifact';
 import crypto from 'crypto';
 import { ModelHelpers } from 'src/llm/helpers';
+import { ArtifactManager } from 'src/tools/artifactManager';
 
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
@@ -16,7 +15,7 @@ export class WebSearchExecutor implements StepExecutor {
         private searchHelper: SearchHelper = new SearchHelper(new DuckDuckGoProvider(this.artifactManager)),
         private scrapeHelper: ScrapeHelper,
         private summaryHelper: SummaryHelper,
-        private lmStudioService: LMStudioService,
+        private llmService: ILLMService,
         private artifactManager: ArtifactManager,
         private modelHelpers: ModelHelpers
     ) {}
@@ -87,7 +86,7 @@ export class WebSearchExecutor implements StepExecutor {
         const summary = await this.summaryHelper.summarizeContent(
             step,
             `Page Title: ${title}\nURL: ${url}\n\n${content}`,
-            this.lmStudioService
+            this.llmService
         );
 
         if (summary !== "NOT RELEVANT") {
