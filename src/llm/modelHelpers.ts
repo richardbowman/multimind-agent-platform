@@ -1,5 +1,6 @@
 import { ChatPost } from "src/chat/chatClient";
 import { ILLMService } from "./ILLMService";
+import { ModelCache } from "./modelCache";
 import { ModelMessageResponse, RequestArtifacts } from "src/schemas/ModelResponse";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
@@ -21,6 +22,7 @@ export class ModelHelpers {
     protected model: ILLMService;
     protected isMemoryEnabled: boolean = false;
     protected purpose: string = 'You are a helpful agent.';
+    private modelCache: ModelCache;
     private threadSummaries: Map<string, ThreadSummary> = new Map();
     protected userId: string;
     protected finalInstructions?: string;
@@ -29,6 +31,7 @@ export class ModelHelpers {
         this.userId = userId;
         this.model = model;
         this.finalInstructions = finalInstructions;
+        this.modelCache = new ModelCache();
     }
 
     protected addDateToSystemPrompt(content: string): string {
@@ -156,6 +159,16 @@ export class ModelHelpers {
     }
 
     public async generateStructured<T extends ModelMessageResponse>(structure: StructuredOutputPrompt, params: GenerateParams): Promise<T> {
+        // Check cache first
+        const cacheContext = {
+            params,
+            schema: structure.getSchema()
+        };
+        const cachedResponse = this.modelCache.get(structure.getPrompt(), cacheContext);
+        if (cachedResponse) {
+            return cachedResponse as T;
+        }
+
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = structure.getPrompt();
         if (this.isMemoryEnabled) {
@@ -192,6 +205,10 @@ export class ModelHelpers {
 
         const response = await this.model.generateStructured<T>(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
         response.artifactIds = params.artifacts?.map(a => a.id);
+        
+        // Cache the response
+        this.modelCache.set(structure.getPrompt(), cacheContext, response);
+        
         return response;
     }
 
@@ -242,6 +259,13 @@ export class ModelHelpers {
     }
 
     public async generateOld(instructions: string, params: GenerateParams): Promise<ModelMessageResponse> {
+        // Check cache first
+        const cacheContext = { params };
+        const cachedResponse = this.modelCache.get(instructions, cacheContext);
+        if (cachedResponse) {
+            return cachedResponse;
+        }
+
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`);
 
@@ -274,6 +298,9 @@ export class ModelHelpers {
         const history = (params as HandlerParams).threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
         const response = await this.model.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:params.message||""}, history);
         (response as RequestArtifacts).artifactIds = params.artifacts?.map(a => a.id);
+        
+        // Cache the response
+        this.modelCache.set(instructions, cacheContext, response);
         
         return response;
     }
