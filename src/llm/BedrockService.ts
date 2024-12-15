@@ -132,6 +132,12 @@ export class BedrockService implements ILLMService {
             const response = {
                 message: result?.text || ''
             };
+            
+            // Track token usage from response
+            const inputTokens = bedrockResponse.usage?.inputTokens || 1;
+            const outputTokens = bedrockResponse.usage?.outputTokens || 1;
+            this.trackTokenUsage(inputTokens + outputTokens);
+            
             await this.logger.logCall('generate', input, bedrockResponse);
             return response;
         } catch (error) {
