@@ -147,17 +147,6 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
     protected async processTask(task: Task): Promise<void> {
         try {
-            // Create a synthetic post to represent the task
-            const syntheticPost = InMemoryPost.fromLoad({
-                id: task.id,
-                message: task.description,
-                user_id: task.creator,
-                channel_id: '', // Could be set to a specific channel if needed
-                create_at: Date.now(),
-                props: {},
-                directed_at: ''
-            });
-
             // Get or create a project for this task
             const { projectId } = await this.addNewProject({
                 projectName: `Task: ${task.description}`,
@@ -170,7 +159,6 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
             // Plan and execute steps
             const params: HandlerParams = {
-                userPost: syntheticPost,
                 projects: [project]
             };
             
