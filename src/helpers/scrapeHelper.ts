@@ -158,7 +158,7 @@ export function convertPageToMarkdown($: CheerioAPI): string {
                 $(element).attr(attr, absoluteUrl);
             } catch (e) {
                 // Log the error but don't modify the original URL
-                Logger.warn(`Failed to process ${attr} URL: ${value}`, e);
+                Logger.error(`Failed to process ${attr} URL: ${value}`, e);
             }
         });
     });
