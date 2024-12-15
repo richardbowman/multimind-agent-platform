@@ -60,16 +60,10 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, ResearchTask> {
     private scrapeHelper = new ScrapeHelper(this.artifactManager);
     private summaryHelper = new SummaryHelper();
 
-    constructor(
-        userToken: string, 
-        userId: string, 
-        chatClient: ChatClient, 
-        llmService: LMStudioService, 
-        taskManager: TaskManager,
-        vectorDBService: ChromaDBService
-    ) {
-        super({chatClient, llmService, userId, taskManager, vectorDBService});
-        this.modelHelpers.setPurpose("You are a research assisant who thoroughly summarizes web results.");
+    constructor(params: AgentConstructorParams) {
+        super(params);
+        this.modelHelpers = new ModelHelpers(params.llmService, params.userId);
+        this.modelHelpers.setPurpose("You are a research assistant who thoroughly summarizes web results.");
         this.modelHelpers.setFinalInstructions("PROPER PROCESS: do a 'check-knowledge' first, then a 'validation' step to see if you can meet the goals. If not, then add 'web_search' and 'validation' as needed until you get the answer. Make sure your final step is a `final_response`");
 
         // Register step executors
