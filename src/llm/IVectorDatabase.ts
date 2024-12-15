@@ -1,4 +1,5 @@
 import { ConversationContext } from "../chat/chatClient";
+import { EventEmitter } from "events";
 
 export interface SearchResult {
     id: string;
@@ -7,7 +8,7 @@ export interface SearchResult {
     score: number;
 }
 
-export interface IVectorDatabase {
+export interface IVectorDatabase extends EventEmitter {
     initializeCollection(name: string): Promise<void>;
     addDocuments(collection: { ids: string[], metadatas: any[], documents: string[] }): Promise<void>;
     query(queryTexts: string[], where: any, nResults: number): Promise<SearchResult[]>;
