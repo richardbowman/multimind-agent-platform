@@ -286,6 +286,7 @@ export class BedrockService implements ILLMService {
             await this.logger.logCall('generateStructured', input, null, error);
             throw error;
         }
+        });
     }
 
     getEmbeddingModel(): IEmbeddingFunction {
