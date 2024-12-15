@@ -409,6 +409,11 @@ export class BedrockService implements ILLMService {
         };
     }
 
+    /**
+     * Understand how large a particular text block is
+     * @param text the content to be counted
+     * @returns 
+     */
     async getTokenCount(text: string): Promise<number> {
         await this.waitForNextCall();
         const input = { text };
