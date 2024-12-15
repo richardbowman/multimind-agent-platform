@@ -362,34 +362,30 @@ export class BedrockService implements ILLMService {
                 }
             });
 
-            try {
-                const response = await this.runtimeClient.send(command);
+            const response = await RetryHelper.withRetry(async () => {
+                return await this.runtimeClient.send(command);
+            }, "Bedrock generateStructured() call");
 
-                // Track token usage from response
-                if (response.usage) {
-                    const inputTokens = response.usage.inputTokens || 0;
-                    const outputTokens = response.usage.outputTokens || 0;
-                    if (inputTokens + outputTokens > 0) {
-                        this.trackTokenUsage(inputTokens + outputTokens);
-                    } else {
-                        Logger.warn("Received zero token count from Bedrock API in generateStructured()");
-                    }
+            // Track token usage from response
+            if (response.usage) {
+                const inputTokens = response.usage.inputTokens || 0;
+                const outputTokens = response.usage.outputTokens || 0;
+                if (inputTokens + outputTokens > 0) {
+                    this.trackTokenUsage(inputTokens + outputTokens);
+                } else {
+                    Logger.warn("Received zero token count from Bedrock API in generateStructured()");
                 }
-
-                // Extract tool use from response
-                const result = response.output?.message?.content?.find(c => c.toolUse);
-                if (!result) {
-                    throw new Error("No tool use found in response");
-                }
-
-                const output = result.toolUse?.input;
-                await this.logger.logCall('generateStructured', input, output);
-                return output;
-            } catch (error) {
-                Logger.error("Structured generation error:", error);
-                await this.logger.logCall('generateStructured', input, null, error);
-                throw error;
             }
+
+            // Extract tool use from response
+            const result = response.output?.message?.content?.find(c => c.toolUse);
+            if (!result) {
+                throw new Error("No tool use found in response");
+            }
+
+            const output = result.toolUse?.input;
+            await this.logger.logCall('generateStructured', input, output);
+            return output;
         });
     }
 
