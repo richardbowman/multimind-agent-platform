@@ -49,6 +49,33 @@ ${contentArtifact.content}`;
             instructions
         });
 
+        // Create a new content artifact with improvements applied
+        let updatedContent = contentArtifact.content;
+        for (const improvement of result.improvements) {
+            for (const suggestion of improvement.suggestions) {
+                updatedContent = updatedContent.replace(suggestion.original, suggestion.improved);
+            }
+        }
+
+        // Save the updated content as a new artifact
+        const newArtifact = await this.artifactManager.createArtifact({
+            type: 'content',
+            content: updatedContent,
+            metadata: {
+                ...contentArtifact.metadata,
+                previousVersion: contentArtifact.id,
+                editingFeedback: result.overallFeedback
+            }
+        });
+
+        // Update the project metadata to point to the new content
+        await this.taskManager.updateProject(projectId, {
+            metadata: {
+                ...project.metadata,
+                contentArtifactId: newArtifact.id
+            }
+        });
+
         return {
             type: "editing",
             finished: true,
@@ -57,8 +84,11 @@ ${contentArtifact.content}`;
                     `### ${imp.section}\n\n${imp.suggestions.map(s =>
                         `**${s.type}**:\n- Original: ${s.original}\n- Improved: ${s.improved}\n- Why: ${s.explanation}`
                     ).join('\n\n')}`
-                ).join('\n\n')}\n\n**Overall Feedback:**\n${result.overallFeedback}`,
-                data: result
+                ).join('\n\n')}\n\n**Overall Feedback:**\n${result.overallFeedback}\n\n*Updated content saved as artifact ${newArtifact.id}*`,
+                data: {
+                    ...result,
+                    updatedArtifactId: newArtifact.id
+                }
             }
         };
     }
