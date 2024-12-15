@@ -385,6 +385,12 @@ export class BedrockService implements ILLMService {
             
             const response = await this.bedrockClient.send(command);
             
+            // Log the full quota configuration
+            await this.logger.logCall('updateQuotas', 
+                { modelId: this.modelId }, 
+                response.modelInvocationLoggingConfiguration
+            );
+            
             if (response.modelInvocationLoggingConfiguration?.tokenUsageMetering) {
                 const quotas = response.modelInvocationLoggingConfiguration.tokenUsageMetering;
                 
@@ -392,10 +398,18 @@ export class BedrockService implements ILLMService {
                 if (quotas.tokensPerMinute) {
                     this.MAX_TOKENS_PER_MINUTE = quotas.tokensPerMinute;
                     Logger.info(`Updated token rate limit to ${this.MAX_TOKENS_PER_MINUTE} tokens per minute`);
+                    
+                    // Log detailed quota information
+                    Logger.info(`Bedrock quota details:
+                        Model: ${this.modelId}
+                        Tokens per minute: ${quotas.tokensPerMinute}
+                        Current window usage: ${this.tokenUsageWindow.length}
+                    `);
                 }
             }
         } catch (error) {
             Logger.error("Failed to fetch Bedrock quotas:", error);
+            await this.logger.logCall('updateQuotas', { modelId: this.modelId }, null, error);
             throw error;
         }
     }
