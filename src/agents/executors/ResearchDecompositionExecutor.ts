@@ -15,6 +15,7 @@ import { ResearchDecomposition } from '../../schemas/research-manager';
 export class ResearchDecompositionExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
+    private pendingTasks: Set<string> = new Set();
 
     constructor(llmService: ILLMService, taskManager: TaskManager) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
@@ -45,6 +46,7 @@ You are a research orchestrator. Follow these steps:
         for (const task of result.researchRequested) {
             const taskId = randomUUID();
             const taskDescription = `${task} [${result.goal}]`;
+            this.pendingTasks.add(taskId);
             await this.taskManager.addTask(
                 project,
                 new ResearchTask(taskId, projectId, taskDescription, RESEARCHER_USER_ID)
@@ -61,3 +63,19 @@ You are a research orchestrator. Follow these steps:
         };
     }
 }
+    async onTaskNotification(task: Task): Promise<void> {
+        if (task.complete && this.pendingTasks.has(task.id)) {
+            this.pendingTasks.delete(task.id);
+            
+            // If all tasks are complete, we can mark this step as finished
+            if (this.pendingTasks.size === 0) {
+                const project = await this.taskManager.getProject(task.projectId);
+                const decompositionTask = Object.values(project.tasks)
+                    .find(t => t.type === 'decompose-research' && !t.complete);
+                
+                if (decompositionTask) {
+                    await this.taskManager.completeTask(decompositionTask.id);
+                }
+            }
+        }
+    }
