@@ -19,39 +19,39 @@ export class BedrockService implements ILLMService {
     private lastCallTime: number = 0;
     private defaultDelay: number = BEDROCK_DEFAULT_DELAY_MS;
     private queue: AsyncQueue = new AsyncQueue();
-    
+
     // Rate limiting settings
     private readonly MAX_TOKENS_PER_MINUTE = BEDROCK_MAX_TOKENS_PER_MINUTE;
     private tokenUsageWindow: number[] = [];
     private readonly WINDOW_SIZE_MS = BEDROCK_WINDOW_SIZE_MS;
-    
+
     private async waitForNextCall(estimatedTokens: number = 100): Promise<void> {
         const now = Date.now();
-        
+
         // Clean up old token usage entries only if needed
         if (this.tokenUsageWindow.length > 0 && now - this.tokenUsageWindow[0] >= this.WINDOW_SIZE_MS) {
             this.tokenUsageWindow = this.tokenUsageWindow.filter(
                 timestamp => now - timestamp < this.WINDOW_SIZE_MS
             );
-            
+
             const currentTokenCount = this.tokenUsageWindow.length;
-            Logger.info(`Token window cleaned. Current usage: ${currentTokenCount}/${this.MAX_TOKENS_PER_MINUTE} (${Math.round(currentTokenCount/this.MAX_TOKENS_PER_MINUTE*100)}%)`);
+            Logger.info(`Token window cleaned. Current usage: ${currentTokenCount}/${this.MAX_TOKENS_PER_MINUTE} (${Math.round(currentTokenCount / this.MAX_TOKENS_PER_MINUTE * 100)}%)`);
         }
 
         // Only log if we're approaching the limit
         if (this.tokenUsageWindow.length + estimatedTokens >= this.MAX_TOKENS_PER_MINUTE * 0.8) {
             Logger.warn(`High token usage: ${this.tokenUsageWindow.length}/${this.MAX_TOKENS_PER_MINUTE} - Requesting ${estimatedTokens} tokens`);
         }
-        
+
         // Check if adding estimated tokens would exceed limit
         while (this.tokenUsageWindow.length + estimatedTokens >= this.MAX_TOKENS_PER_MINUTE) {
             const oldestTimestamp = this.tokenUsageWindow[0];
             const timeToWait = (oldestTimestamp + this.WINDOW_SIZE_MS) - now;
-            
+
             if (timeToWait > 0) {
-                Logger.info(`Rate limit reached, waiting ${Math.ceil(timeToWait/1000)}s for token window to clear`);
+                Logger.info(`Rate limit reached, waiting ${Math.ceil(timeToWait / 1000)}s for token window to clear`);
                 await new Promise(resolve => setTimeout(resolve, timeToWait + 100)); // Add small buffer
-                
+
                 // Refresh window after waiting
                 const newNow = Date.now();
                 this.tokenUsageWindow = this.tokenUsageWindow.filter(
@@ -63,13 +63,13 @@ export class BedrockService implements ILLMService {
                 break;
             }
         }
-        
+
         // Add basic delay between calls
         const timeSinceLastCall = now - this.lastCallTime;
         if (timeSinceLastCall < this.defaultDelay) {
             await new Promise(resolve => setTimeout(resolve, this.defaultDelay - timeSinceLastCall));
         }
-        
+
         this.lastCallTime = Date.now();
     }
 
@@ -78,10 +78,10 @@ export class BedrockService implements ILLMService {
         // Pre-allocate array for better performance
         const newTokens = new Array(tokenCount).fill(now);
         this.tokenUsageWindow.push(...newTokens);
-        
+
         const currentTokenCount = this.tokenUsageWindow.length;
-        const usagePercent = Math.round(currentTokenCount/this.MAX_TOKENS_PER_MINUTE*100);
-        
+        const usagePercent = Math.round(currentTokenCount / this.MAX_TOKENS_PER_MINUTE * 100);
+
         Logger.info(`Added ${tokenCount} tokens. Current usage: ${currentTokenCount}/${this.MAX_TOKENS_PER_MINUTE} (${usagePercent}%)`);
         if (usagePercent > 80) {
             Logger.warn(`High token usage: ${usagePercent}% of limit`);
@@ -135,14 +135,14 @@ export class BedrockService implements ILLMService {
     async generate(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<ModelMessageResponse> {
         const messages = this.formatMessages(userPost.message, history);
         const input = { instructions, messages };
-        
+
         // Estimate tokens - rough estimate based on characters
-        const totalChars = instructions.length + 
+        const totalChars = instructions.length +
             messages.reduce((sum, msg) => sum + msg.content.length, 0);
         const estimatedTokens = Math.ceil(totalChars / 4); // Rough estimate of 4 chars per token
-        
+
         await this.waitForNextCall(estimatedTokens);
-        
+
         return await this.queue.enqueue(async () => {
             const command = new ConverseCommand({
                 modelId: this.modelId,
@@ -163,29 +163,29 @@ export class BedrockService implements ILLMService {
 
             try {
                 const bedrockResponse = await this.runtimeClient.send(command);
-            const result = bedrockResponse.output?.message?.content?.[0];
-            const response = {
-                message: result?.text || ''
-            };
-            
-            // Track token usage from response
-            if (bedrockResponse.usage) {
-                const inputTokens = bedrockResponse.usage.inputTokens || 0;
-                const outputTokens = bedrockResponse.usage.outputTokens || 0;
-                if (inputTokens + outputTokens > 0) {
-                    this.trackTokenUsage(inputTokens + outputTokens);
-                } else {
-                    Logger.warn("Received zero token count from Bedrock API in generate()");
+                const result = bedrockResponse.output?.message?.content?.[0];
+                const response = {
+                    message: result?.text || ''
+                };
+
+                // Track token usage from response
+                if (bedrockResponse.usage) {
+                    const inputTokens = bedrockResponse.usage.inputTokens || 0;
+                    const outputTokens = bedrockResponse.usage.outputTokens || 0;
+                    if (inputTokens + outputTokens > 0) {
+                        this.trackTokenUsage(inputTokens + outputTokens);
+                    } else {
+                        Logger.warn("Received zero token count from Bedrock API in generate()");
+                    }
                 }
+
+                await this.logger.logCall('generate', input, bedrockResponse);
+                return response;
+            } catch (error) {
+                Logger.error("Bedrock API error:", error);
+                await this.logger.logCall('generate', input, null, error);
+                throw error;
             }
-            
-            await this.logger.logCall('generate', input, bedrockResponse);
-            return response;
-        } catch (error) {
-            Logger.error("Bedrock API error:", error);
-            await this.logger.logCall('generate', input, null, error);
-            throw error;
-        }
         });
     }
 
@@ -298,26 +298,26 @@ export class BedrockService implements ILLMService {
 
             try {
                 const response = await this.runtimeClient.send(command);
-            const result = response.output?.message?.content?.[0];
-            const output = result?.text || '';
-            
-            // Track token usage from response
-            if (response.usage) {
-                const inputTokens = response.usage.inputTokens || 0;
-                const outputTokens = response.usage.outputTokens || 0;
-                if (inputTokens + outputTokens > 0) {
-                    this.trackTokenUsage(inputTokens + outputTokens);
-                } else {
-                    Logger.warn("Received zero token count from Bedrock API in sendMessageToLLM()");
+                const result = response.output?.message?.content?.[0];
+                const output = result?.text || '';
+
+                // Track token usage from response
+                if (response.usage) {
+                    const inputTokens = response.usage.inputTokens || 0;
+                    const outputTokens = response.usage.outputTokens || 0;
+                    if (inputTokens + outputTokens > 0) {
+                        this.trackTokenUsage(inputTokens + outputTokens);
+                    } else {
+                        Logger.warn("Received zero token count from Bedrock API in sendMessageToLLM()");
+                    }
                 }
+
+                await this.logger.logCall('sendMessageToLLM', input, output);
+                return output;
+            } catch (error) {
+                await this.logger.logCall('sendMessageToLLM', input, null, error);
+                throw error;
             }
-            
-            await this.logger.logCall('sendMessageToLLM', input, output);
-            return output;
-        } catch (error) {
-            await this.logger.logCall('sendMessageToLLM', input, null, error);
-            throw error;
-        }
         });
     }
 
@@ -364,31 +364,31 @@ export class BedrockService implements ILLMService {
             try {
                 const response = await this.runtimeClient.send(command);
 
-            // Track token usage from response
-            if (response.usage) {
-                const inputTokens = response.usage.inputTokens || 0;
-                const outputTokens = response.usage.outputTokens || 0;
-                if (inputTokens + outputTokens > 0) {
-                    this.trackTokenUsage(inputTokens + outputTokens);
-                } else {
-                    Logger.warn("Received zero token count from Bedrock API in generateStructured()");
+                // Track token usage from response
+                if (response.usage) {
+                    const inputTokens = response.usage.inputTokens || 0;
+                    const outputTokens = response.usage.outputTokens || 0;
+                    if (inputTokens + outputTokens > 0) {
+                        this.trackTokenUsage(inputTokens + outputTokens);
+                    } else {
+                        Logger.warn("Received zero token count from Bedrock API in generateStructured()");
+                    }
                 }
-            }
 
-            // Extract tool use from response
-            const result = response.output?.message?.content?.find(c => c.toolUse);
-            if (!result) {
-                throw new Error("No tool use found in response");
-            }
+                // Extract tool use from response
+                const result = response.output?.message?.content?.find(c => c.toolUse);
+                if (!result) {
+                    throw new Error("No tool use found in response");
+                }
 
-            const output = result.toolUse?.input;
-            await this.logger.logCall('generateStructured', input, output);
-            return output;
-        } catch (error) {
-            Logger.error("Structured generation error:", error);
-            await this.logger.logCall('generateStructured', input, null, error);
-            throw error;
-        }
+                const output = result.toolUse?.input;
+                await this.logger.logCall('generateStructured', input, output);
+                return output;
+            } catch (error) {
+                Logger.error("Structured generation error:", error);
+                await this.logger.logCall('generateStructured', input, null, error);
+                throw error;
+            }
         });
     }
 
@@ -409,7 +409,7 @@ export class BedrockService implements ILLMService {
     async getTokenCount(text: string): Promise<number> {
         await this.waitForNextCall();
         const input = { text };
-        
+
         // For Bedrock, we'll make a real conversation request but with minimal output
         const command = new ConverseCommand({
             modelId: this.modelId,
@@ -432,11 +432,11 @@ export class BedrockService implements ILLMService {
             const response = await this.runtimeClient.send(command);
             // Bedrock includes token counts in the response metadata
             const tokenCount = response.usage?.inputTokens || 0;
-            
+
             if (tokenCount === 0) {
                 Logger.warn("Received zero token count from Bedrock API");
             }
-            
+
             await this.logger.logCall('getTokenCount', input, tokenCount);
             return tokenCount;
         } catch (error) {
