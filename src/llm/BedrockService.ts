@@ -380,23 +380,36 @@ export class BedrockService implements ILLMService {
     async getTokenCount(text: string): Promise<number> {
         await this.waitForNextCall();
         const input = { text };
-        const command = new InvokeModelCommand({
+        
+        // For Bedrock, we'll make a real conversation request but with minimal output
+        const command = new ConverseCommand({
             modelId: this.modelId,
-            body: JSON.stringify({
-                anthropic_version: "bedrock-2023-05-31",
-                messages: [
-                    { role: "user", content: text }
-                ],
-                max_tokens: 1  // We don't need any tokens generated
-            })
+            system: [{
+                text: "Count tokens only."
+            }],
+            messages: [{
+                role: "user",
+                content: [{
+                    text: text
+                }]
+            }],
+            inferenceConfig: {
+                temperature: 0,
+                maxTokens: 1  // Minimize output tokens
+            }
         });
 
         try {
             const response = await this.runtimeClient.send(command);
-            const result = JSON.parse(new TextDecoder().decode(response.body));
-            const output = result.usage.input_tokens;
-            await this.logger.logCall('getTokenCount', input, output);
-            return output;
+            // Bedrock includes token counts in the response metadata
+            const tokenCount = response.usage?.inputTokens || 0;
+            
+            if (tokenCount === 0) {
+                Logger.warn("Received zero token count from Bedrock API");
+            }
+            
+            await this.logger.logCall('getTokenCount', input, tokenCount);
+            return tokenCount;
         } catch (error) {
             Logger.error("Token count error:", error);
             await this.logger.logCall('getTokenCount', input, null, error);
