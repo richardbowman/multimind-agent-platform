@@ -1,113 +1,67 @@
 import Logger from "src/helpers/logger";
-import LMStudioService from '../llm/lmstudioService'; // Import the LMStudioService
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { WEB_RESEARCH_CHANNEL_ID, PROJECTS_CHANNEL_ID, CHROMA_COLLECTION, RESEARCH_MANAGER_USER_ID, RESEARCHER_USER_ID } from '../helpers/config';
-import { randomUUID } from 'crypto';
-import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from '../chat/chatClient';
-import 'reflect-metadata';
-import { Agent, HandleActivity, HandlerParams, ProjectHandlerParams, ResponseType } from "./agents";
-import { Project, TaskManager } from "src/tools/taskManager";
+import { PROJECTS_CHANNEL_ID } from '../helpers/config';
+import { ChatPost, ConversationContext } from '../chat/chatClient';
+import { HandlerParams } from "./agents";
+import { Project } from "src/tools/taskManager";
 import { ResearchTask } from "./researchAssistant";
-import { Artifact } from "src/tools/artifact";
-import { ArtifactManager } from "src/tools/artifactManager";
-import { ArtifactResponseSchema } from "../schemas/artifactSchema";
-import { IVectorDatabase } from "src/llm/IVectorDatabase";
-import { getGeneratedSchema } from '../helpers/schemaUtils';
-import { SchemaType } from '../schemas/SchemaTypes';
-import { ResearchDecomposition, ResearchArtifactResponse } from '../schemas/research-manager';
+import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
+import { StepBasedAgent } from './stepBasedAgent';
+import { MultiStepPlanner } from './planners/DefaultPlanner';
+import { ModelHelpers } from 'src/llm/helpers';
+import { ResearchDecompositionExecutor } from './executors/ResearchDecompositionExecutor';
+import { ResearchAggregationExecutor } from './executors/ResearchAggregationExecutor';
 
-export enum ResearchActivityType {
-    DraftEmail = "draft-email",
-    WebResearch = "web-research"
+export interface ResearchProject extends Project<ResearchTask> {
+    goal: string;
 }
 
-interface ResearchManagerContext extends ConversationContext {
-    activityType: ResearchActivityType;
-}
+export class ResearchManager extends StepBasedAgent<ResearchProject, ResearchTask> {
+    constructor(params: AgentConstructorParams) {
+        const modelHelpers = new ModelHelpers(params.llmService, params.userId);
+        const planner = new MultiStepPlanner(params.llmService, params.taskManager, params.userId, modelHelpers);
+        super(params, planner);
+        
+        // Register research-specific executors
+        this.registerStepExecutor(new ResearchDecompositionExecutor(params.llmService, params.taskManager));
+        this.registerStepExecutor(new ResearchAggregationExecutor(params.llmService, this.artifactManager, params.vectorDBService));
 
+        this.modelHelpers.setPurpose(`You are planning how to conduct research effectively.
+Break down research requests into specific tasks and aggregate findings.
+Use 'decompose-research' steps to break down requests,
+'assign-researchers' to distribute tasks, and
+'aggregate-research' to compile findings into a final report.
 
-export class ResearchManager extends Agent<Project<ResearchTask>, ResearchTask> {
-    private USER_TOKEN: string;
-    private artifactManager: ArtifactManager;
-    private vectorDB: IVectorDatabase;
-
-    constructor(chatUserToken: string, userId: string, chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager, vectorDB: IVectorDatabase) {
-        super(chatClient, lmStudioService, userId, projects);
-        this.USER_TOKEN = chatUserToken;
-        this.vectorDB = vectorDB;
-        this.artifactManager = new ArtifactManager(this.vectorDB);
+IMPORTANT: Always follow this pattern:
+1. Start with a 'decompose-research' step to break down the request
+2. Use 'assign-researchers' to distribute tasks
+3. End with an 'aggregate-research' to compile findings`);
     }
 
-    public async initialize() {
-        await super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@research");
-    }
+    protected async taskNotification(task: ResearchTask): Promise<void> {
+        try {
+            if (task.type === "assign-researchers") {
+                if (task.complete) {
+                    const project = this.projects.getProject(task.projectId);
+                    this.planSteps({ 
+                        message: "Researchers completed tasks.", 
+                        projects: [project]
+                    } as HandlerParams);
 
-    protected async processTask(task: ResearchTask): Promise<void> {
-        const parentProject = await this.projects.getProject(task.projectId);
-        if (!parentProject) {
-            Logger.error(`Could not find project with ID ${task.projectId}`);
-            return;
-        }
-
-        Logger.info(`Starting research for task ${task.id} in project ${parentProject.id}`);
-
-        // Create a new research project for this task
-        const researchProject = this.addProject();
-        researchProject.name = task.description;
-        researchProject.metadata.parentTaskId = task.id;  // Link back to original task
-
-        // Decompose the task into sub-tasks
-        await this.decomposeTask(researchProject.id, task.description);
-
-        // Assign tasks to researchers
-        await this.assignResearcherTasks(researchProject.id);
-
-        const post = await this.getMessage(parentProject.metadata.originalPostId);
-
-        // Post the task list to the channel
-        const projectPost = await this.replyWithProjectId(task.type as ResearchActivityType, researchProject.id, PROJECTS_CHANNEL_ID, post);
-        await this.postTaskList(researchProject.id, PROJECTS_CHANNEL_ID, projectPost);
-    }
-
-    protected async projectCompleted(project: ResearchProject): Promise<void> {
-        const aggregatedData = await this.aggregateResults(project);
-
-        const artifactResponse = await this.createFinalReport(project, aggregatedData);
-
-        // Save the report to an artifact
-        const artifact: Artifact = {
-            id: crypto.randomUUID(),
-            type: 'report',
-            content: artifactResponse.artifactContent,
-            metadata: {
-                title: artifactResponse.artifactTitle,
-                projectName: project.name,
-                projectId: project.id
+                    const post = await this.chatClient.getPost(project.metadata.originalPostId);
+                    await this.executeNextStep(project.id, post);
+                }
+            } else {
+                super.taskNotification(task);
             }
-        };
-
-        await this.artifactManager.saveArtifact(artifact);
-
-        // find my original post
-        const posts = await this.chatClient.fetchPreviousMessages(PROJECTS_CHANNEL_ID);
-        const post = posts.find(c => c.props['project-id'] === project.id && c.user_id == this.userId && !c.getRootId());
-
-        if (post) {
-            await this.reply(post, {
-                message: artifactResponse.message
-            });
-        } else {
-            await this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, artifactResponse.message, {
-                "artifact-id": artifact.id
-            });
+        } catch (error) {
+            Logger.error('Error handling task:', error);
+            throw error;
         }
+    }
 
-        // If this project was created for a task, mark that task as complete
-        if (project.metadata.parentTaskId) {
-            await this.projects.completeTask(project.metadata.parentTaskId);
-        }
-
-        Logger.info(`Report saved as artifact with ID ${project.id} and title "${artifactResponse.artifactTitle}"`);
+    public async initialize(): Promise<void> {
+        await super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@research");
+        this.processTaskQueue();
     }
 
     private async replyWithProjectId(activityType: ResearchActivityType, projectId: string, channelId: string, post: ChatPost): Promise<ChatPost> {
