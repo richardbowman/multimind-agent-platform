@@ -153,12 +153,19 @@ export function convertPageToMarkdown($: CheerioAPI, url: string): string {
             if (!value) return;
 
             try {
-                // Use the page's URL as the base for relative URLs
-                const absoluteUrl = new URL(value, url).toString();
-                $(element).attr(attr, absoluteUrl);
+                // Handle relative URLs that start with "/"
+                if (value.startsWith('/')) {
+                    const baseUrl = new URL(url);
+                    const absoluteUrl = `${baseUrl.protocol}//${baseUrl.host}${value}`;
+                    $(element).attr(attr, absoluteUrl);
+                } else {
+                    // Use the page's URL as the base for other relative URLs
+                    const absoluteUrl = new URL(value, url).toString();
+                    $(element).attr(attr, absoluteUrl);
+                }
             } catch (e) {
                 // Log the error but don't modify the original URL
-                Logger.error(`Failed to process ${attr} URL: ${value}`, e);
+                Logger.warn(`Skipping invalid ${attr} URL: ${value}`);
             }
         });
     });
