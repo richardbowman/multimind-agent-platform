@@ -16,8 +16,8 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
         throw new Error('Method not implemented.');
     }
 
-    constructor(chatClient: ChatClient, lmStudioService: LMStudioService, projects: TaskManager, chromaDBService: ChromaDBService) {
-        super(chatClient, lmStudioService, CONTENT_WRITER_USER_ID, projects, chromaDBService);
+    constructor(params: AgentConstructorParams) {
+        super(params.chatClient, params.llmService, params.userId, params.taskManager, params.vectorDBService);
         super.setupChatMonitor(CONTENT_CREATION_CHANNEL_ID, "@writer");
     }
 
