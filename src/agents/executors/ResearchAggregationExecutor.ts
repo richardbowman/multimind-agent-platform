@@ -38,7 +38,8 @@ Make sure you put the entire report inside the artifactContent field in Markdown
             instructions
         });
 
-        const artifact = await this.artifactManager.createArtifact({
+        const artifact = await this.artifactManager.saveArtifact({
+            id: crypto.randomUUID(),
             type: 'report',
             content: result.artifactContent,
             metadata: {
