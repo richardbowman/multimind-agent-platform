@@ -36,7 +36,10 @@ export const ThreadList: React.FC<ThreadListProps> = ({
                     className={`thread-item ${currentThreadId === null ? 'active' : ''}`}
                     onClick={() => onThreadSelect('')}
                 >
-                    (Root) - Main Channel
+                    <div className="thread-content">
+                        <div className="thread-title">Main Channel</div>
+                        <div className="thread-meta">Channel Root</div>
+                    </div>
                 </li>
                 {channelThreads.map(thread => (
                     <li
@@ -44,10 +47,17 @@ export const ThreadList: React.FC<ThreadListProps> = ({
                         className={`thread-item ${currentThreadId === thread.rootMessage.id ? 'active' : ''}`}
                         onClick={() => onThreadSelect(thread.rootMessage.id)}
                     >
-                        {thread.rootMessage.message.substring(0, 50)}
-                        {thread.rootMessage.message.length > 50 ? '...' : ''}
-                        <div className="thread-meta">
-                            {thread.replies.length} replies • Last activity: {new Date(thread.last_message_at).toLocaleString()}
+                        <div className="thread-content">
+                            <div className="thread-title">
+                                {thread.rootMessage.message.substring(0, 50)}
+                                {thread.rootMessage.message.length > 50 ? '...' : ''}
+                            </div>
+                            <div className="thread-meta">
+                                <span className="reply-count">{thread.replies.length} replies</span>
+                                <span className="activity-time">
+                                    {new Date(thread.last_message_at).toLocaleString()}
+                                </span>
+                            </div>
                         </div>
                     </li>
                 ))}
