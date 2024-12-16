@@ -199,11 +199,25 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
             sum + (artifact.metadata?.tokenUsage?.outputTokens || 0), 0
         );
 
+        // Create a detailed message summarizing the findings
+        const summaryMessage = [
+            `## Web Research Results`,
+            `\nSearch Query: "${searchQuery}"`,
+            `\nFound ${pageSummaries.length} relevant pages out of ${searchResults.length} search results.`,
+            `\n### Analyzed URLs:`,
+            ...selectedUrls.map(url => `- ${url}`),
+            `\n### Key Findings:`,
+            ...pageSummaries.map((summary, index) => `\n#### Source ${index + 1}:\n${summary}`),
+            `\n### Usage Statistics:`,
+            `- Total Output Tokens: ${totalTokens}`,
+            `- Artifacts Generated: ${relevantArtifacts.length}`
+        ].join('\n');
+
         return {
             finished: true,
             type: 'web_search_results',
             response: {
-                message: `Found ${pageSummaries.length} relevant pages`,
+                message: summaryMessage,
                 data: {
                     summaries: pageSummaries,
                     query: searchQuery,
