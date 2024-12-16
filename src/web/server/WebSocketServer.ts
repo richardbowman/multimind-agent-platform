@@ -163,8 +163,9 @@ export class WebSocketServer {
                     create_at: Date.now(),
                     directed_at: message.directed_at,
                     props: message.props || {},
+                    thread_id: message.thread_id,
                     getRootId: function() { 
-                        return message.thread_id || null;
+                        return this.thread_id || null;
                     }
                 };
 
@@ -184,7 +185,8 @@ export class WebSocketServer {
                     create_at: fullMessage.create_at,
                     directed_at: fullMessage.directed_at,
                     props: fullMessage.props,
-                    thread_id: fullMessage.getRootId()
+                    thread_id: fullMessage.thread_id,
+                    getRootId: () => fullMessage.getRootId()
                 });
 
                 // If this is a threaded message, update the thread
