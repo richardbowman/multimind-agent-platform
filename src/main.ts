@@ -134,7 +134,7 @@ await solverAgent.initialize();
 
 // Initialize WebSocket server with our storage
 import { WebSocketServer } from './web/server/WebSocketServer';
-const wsServer = new WebSocketServer(storage);
+const wsServer = new WebSocketServer(storage, tasks);
 
 setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
 
