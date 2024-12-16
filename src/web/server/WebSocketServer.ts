@@ -52,22 +52,26 @@ export class WebSocketServer {
                 const threadMap = new Map<string, any>();
                 
                 posts.forEach(post => {
-                    if (post.thread_id) {
+                    const rootId = post.getRootId();
+                    if (rootId) {
                         // This is a reply - add to existing thread
-                        if (threadMap.has(post.thread_id)) {
-                            threadMap.get(post.thread_id).replies.push({
+                        if (threadMap.has(rootId)) {
+                            threadMap.get(rootId).replies.push({
                                 id: post.id,
                                 channel_id: post.channel_id,
-                                thread_id: post.thread_id,
                                 message: post.message,
                                 user_id: post.user_id,
                                 create_at: post.create_at,
                                 directed_at: post.directed_at,
                                 props: post.props
                             });
+                            // Update last_message_at if this reply is newer
+                            if (post.create_at > threadMap.get(rootId).last_message_at) {
+                                threadMap.get(rootId).last_message_at = post.create_at;
+                            }
                         }
                     } else {
-                        // This could be a root message - create new thread
+                        // This is a root message - create new thread
                         threadMap.set(post.id, {
                             rootMessage: {
                                 id: post.id,
@@ -109,21 +113,25 @@ export class WebSocketServer {
 
             // Handle messages
             socket.on('message', (message: Partial<Message>) => {
-                const fullMessage: Message = {
+                const fullMessage = {
                     id: Date.now().toString(),
                     channel_id: message.channel_id!,
-                    thread_id: message.thread_id,
                     message: message.message!,
                     user_id: message.user_id || 'anonymous',
                     create_at: Date.now(),
-                    directed_at: message.directed_at
+                    directed_at: message.directed_at,
+                    props: message.props || {},
+                    getRootId: function() { 
+                        return message.thread_id || null;
+                    }
                 };
 
                 this.messages.push(fullMessage);
                 this.io.emit('message', fullMessage);
 
                 // If this is a threaded message, update the thread
-                if (message.thread_id) {
+                const rootId = fullMessage.getRootId();
+                if (rootId) {
                     this.updateThread(fullMessage);
                 }
             });
@@ -135,10 +143,11 @@ export class WebSocketServer {
     }
 
     private updateThread(message: Message) {
-        if (!message.thread_id || !message.channel_id) return;
+        const rootId = message.getRootId();
+        if (!rootId || !message.channel_id) return;
 
         const channelThreads = this.threads[message.channel_id] || [];
-        const existingThread = channelThreads.find(t => t.rootMessage.id === message.thread_id);
+        const existingThread = channelThreads.find(t => t.rootMessage.id === rootId);
 
         if (existingThread) {
             existingThread.replies = [...existingThread.replies, message];
