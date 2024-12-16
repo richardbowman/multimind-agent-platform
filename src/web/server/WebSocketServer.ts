@@ -12,31 +12,18 @@ export class WebSocketServer {
     private io: Server;
     private storage: InMemoryChatStorage;
     private threads: Record<string, Thread[]> = {};
-    private messages: Message[] = [];
     private projects: TaskManager;
     private artifactManager: ArtifactManager;
+    private userClient: InMemoryTestClient;
 
     constructor(storage: InMemoryChatStorage, projects: TaskManager, artifactManager: ArtifactManager, userClient: InMemoryTestClient, port: number = 4001) {
         this.storage = storage;
         this.projects = projects;
         this.artifactManager = artifactManager;
+        this.userClient = userClient;
         
         // Set up message receiving for the user client
         userClient.receiveMessages((post: ChatPost) => {
-            this.io.emit('message', {
-                id: post.id,
-                channel_id: post.channel_id,
-                message: post.message,
-                user_id: post.user_id,
-                create_at: post.create_at,
-                directed_at: post.directed_at,
-                props: post.props,
-                thread_id: post.getRootId()
-            });
-        });
-
-        // Set up storage callback for new messages
-        this.storage.addCallback((post: ChatPost) => {
             this.io.emit('message', {
                 id: post.id,
                 channel_id: post.channel_id,
@@ -178,11 +165,10 @@ export class WebSocketServer {
                 };
 
                 // Send the message through the storage system
-                const client = new InMemoryTestClient(fullMessage.user_id, "test", this.storage);
                 if (fullMessage.getRootId()) {
-                    client.postReply(fullMessage.getRootId(), fullMessage.channel_id, fullMessage.message, fullMessage.props);
+                    this.userClient.postReply(fullMessage.getRootId(), fullMessage.channel_id, fullMessage.message, fullMessage.props);
                 } else {
-                    client.postInChannel(fullMessage.channel_id, fullMessage.message, fullMessage.props);
+                    this.userClient.postInChannel(fullMessage.channel_id, fullMessage.message, fullMessage.props);
                 }
                 
                 // Emit to all clients including sender
