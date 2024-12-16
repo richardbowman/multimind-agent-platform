@@ -20,7 +20,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
         <div className="task-panel">
             <h2>Tasks</h2>
             <ul>
-                {tasks.map(task => (
+                {(tasks || []).map(task => (
                     <li key={task.id} className={`task-item status-${task.status.toLowerCase().replace(' ', '-')}`}>
                         <span className="task-status">{task.status}</span>
                         <span className="task-description">{task.description}</span>
