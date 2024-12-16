@@ -253,8 +253,15 @@ export class WebSocketServer {
             socket.on('get_all_artifacts', async () => {
                 try {
                     const artifacts = await this.artifactManager.listArtifacts();
-                    Logger.log('Sending all artifacts:', artifacts);
-                    socket.emit('artifacts', artifacts);
+                    // Convert Buffer content to string before sending
+                    const processedArtifacts = artifacts.map(artifact => ({
+                        ...artifact,
+                        content: Buffer.isBuffer(artifact.content) 
+                            ? artifact.content.toString('utf8')
+                            : artifact.content
+                    }));
+                    Logger.log('Sending all artifacts:', processedArtifacts);
+                    socket.emit('artifacts', processedArtifacts);
                 } catch (error) {
                     Logger.error('Error fetching all artifacts:', error);
                     socket.emit('artifacts', []);
