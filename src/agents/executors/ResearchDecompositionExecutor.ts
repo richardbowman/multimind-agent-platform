@@ -21,7 +21,14 @@ export class ResearchDecompositionExecutor implements StepExecutor {
         this.taskManager = taskManager;
     }
 
-    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
+        const { goal, projectId, previousResult } = params;
+        
+        // Extract any relevant context from previous results
+        const previousContext = previousResult?.length ? previousResult
+            .map((result: any) => result.reasoning || result.message)
+            .filter(Boolean)
+            .join('\n\n') : '';
         const schema = await getGeneratedSchema(SchemaType.ResearchDecomposition);
         const project = await this.taskManager.getProject(projectId);
         const pendingTasks: Set<string> = new Set();
@@ -29,12 +36,16 @@ export class ResearchDecompositionExecutor implements StepExecutor {
         const systemPrompt = `
 You are a research orchestrator. Follow these steps:
 1) Restate the user's goal.
-2) Analyze the request and explain how you will satisfy it.
-3) Specify a MAXIMUM of ${process.env.MAX_RESEARCH_REQUESTS} research requests. Use as FEW AS POSSIBLE.`;
+2) Consider the previous research context provided (if any).
+3) Analyze the request and explain how you will satisfy it.
+4) Specify a MAXIMUM of ${process.env.MAX_RESEARCH_REQUESTS} research requests. Use as FEW AS POSSIBLE.
+
+Previous research context:
+${previousContext}`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const result = await this.modelHelpers.generate<ResearchDecomposition>({
-            message: goal,
+            message: `${goal}\n\nConsider this previous context when planning the research:\n${previousContext}`,
             instructions
         });
 
