@@ -64,19 +64,8 @@ export class MultiStepPlanner implements Planner {
             .map(({ key, description }) => `${key}\n    Description: ${description}`)
             .join("\n\n");
 
-        // Validate that userPost is a proper ChatPost
-        const isValidChatPost = (post: any): post is ChatPost => {
-            return post && 
-                   typeof post.id === 'string' &&
-                   typeof post.channel_id === 'string' &&
-                   typeof post.message === 'string' &&
-                   typeof post.user_id === 'string' &&
-                   typeof post.create_at === 'number' &&
-                   typeof post.directed_at === 'string' &&
-                   typeof post.props === 'object';
-        };
-
-        const userContext = handlerParams.userPost && isValidChatPost(handlerParams.userPost) 
+        //TODO: opportunity here to better organize context of the chat chain to include info
+        const userContext = handlerParams.userPost?.message
             ? `CONTEXT: ${handlerParams.userPost.message}` 
             : '';
 
