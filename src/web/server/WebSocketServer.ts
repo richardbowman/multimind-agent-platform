@@ -130,12 +130,19 @@ export class WebSocketServer {
 
             socket.on('get_messages', ({ channel_id, thread_id, limit }: { channel_id: string, thread_id?: string, limit: number }) => {
                 Logger.log('Received get_messages request:', { channel_id, thread_id, limit });
+                
                 const channelMessages = this.storage.posts
                     .filter(post => {
+                        // First filter by channel
                         if (post.channel_id !== channel_id) return false;
-                        if (thread_id === '') return !post.getRootId(); // Root messages only
-                        if (thread_id) return post.getRootId() === thread_id; // Thread messages
-                        return true; // All messages if no thread_id specified
+                        
+                        if (thread_id) {
+                            // In thread view: show root message and all replies
+                            return post.id === thread_id || post.getRootId() === thread_id;
+                        } else {
+                            // In channel view: only show root messages
+                            return !post.getRootId();
+                        }
                     })
                     .map(post => ({
                         id: post.id,
@@ -144,9 +151,11 @@ export class WebSocketServer {
                         user_id: post.user_id,
                         create_at: post.create_at,
                         directed_at: post.directed_at,
-                        props: post.props
+                        props: post.props,
+                        thread_id: post.getRootId()
                     }))
                     .slice(-limit);
+
                 Logger.log('Sending messages to client:', channelMessages);
                 socket.emit('messages', channelMessages);
             });
