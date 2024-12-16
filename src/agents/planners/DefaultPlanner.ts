@@ -5,6 +5,7 @@ import { Task } from '../../tools/taskManager';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
+import { EXECUTOR_METADATA_KEY } from '../decorators/executorDecorator';
 import { TaskManager } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import crypto from 'crypto';
@@ -21,7 +22,7 @@ export class MultiStepPlanner implements Planner {
 
     public async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
         const executorMetadata = Array.from(this.stepExecutors.entries()).map(([key, executor]) => {
-            const metadata = Reflect.getMetadata('executor', executor.constructor);
+            const metadata = Reflect.getMetadata(EXECUTOR_METADATA_KEY, executor.constructor);
             return {
                 key,
                 description: metadata?.description || 'No description available'
