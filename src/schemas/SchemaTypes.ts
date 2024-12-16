@@ -1,4 +1,5 @@
 export enum SchemaType {
     // ... existing types ...
-    WebSearchResponse = 'WebSearchResponse'
+    WebSearchResponse = 'WebSearchResponse',
+    SearchQueryResponse = 'SearchQueryResponse'
 }

@@ -9,6 +9,7 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { WebSearchResponse } from '../../schemas/WebSearchResponse';
+import { SearchQueryResponse } from '../../schemas/SearchQueryResponse';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 
@@ -224,22 +225,8 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
         };
     }
 
-    private async generateSearchQuery(goal: string, task: string, previousResult?: any): Promise<{ searchQuery: string, category: string}> {
-        const schema = {
-            type: "object",
-            properties: {
-                searchQuery: {
-                    type: "string",
-                    description: "A broad web search query without special keywords or operators"
-                },
-                category: {
-                    type: "string",
-                    enum: ["general", "news"],
-                    description: "The search category - use 'news' for current events, otherwise 'general'"
-                }
-            },
-            required: ["searchQuery", "category"]
-        };
+    private async generateSearchQuery(goal: string, task: string, previousResult?: any): Promise<SearchQueryResponse> {
+        const schema = await getGeneratedSchema(SchemaType.SearchQueryResponse);
 
         const previousFindings = previousResult?.data?.analysis?.keyFindings || [];
         const previousGaps = previousResult?.data?.analysis?.gaps || [];
