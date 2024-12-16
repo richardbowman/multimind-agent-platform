@@ -137,16 +137,22 @@ export class WebSocketServer {
                             return !post.getRootId();
                         }
                     })
-                    .map(post => ({
-                        id: post.id,
-                        channel_id: post.channel_id,
-                        message: post.message,
-                        user_id: post.user_id,
-                        create_at: post.create_at,
-                        directed_at: post.directed_at,
-                        props: post.props,
-                        thread_id: post.getRootId()
-                    }))
+                    .map(post => {
+                        // Count replies for this message
+                        const replyCount = this.storage.posts.filter(p => p.getRootId() === post.id).length;
+                        
+                        return {
+                            id: post.id,
+                            channel_id: post.channel_id,
+                            message: post.message,
+                            user_id: post.user_id,
+                            create_at: post.create_at,
+                            directed_at: post.directed_at,
+                            props: post.props,
+                            thread_id: post.getRootId(),
+                            reply_count: replyCount
+                        };
+                    })
                     .slice(-limit);
 
                 Logger.log('Sending messages to client:', channelMessages);
