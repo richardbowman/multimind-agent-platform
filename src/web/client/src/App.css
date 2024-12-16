@@ -375,11 +375,6 @@
 }
 
 /* Global Artifact Viewer Styles */
-.artifacts-tab {
-    flex: 1;
-    height: calc(100vh - 48px);
-    overflow: hidden;
-}
 
 .global-artifact-viewer {
     height: 100%;

@@ -61,9 +61,7 @@ const App: React.FC = () => {
                 </div>
                 </>
             ) : (
-                <div className="artifacts-tab">
-                    <GlobalArtifactViewer />
-                </div>
+                <GlobalArtifactViewer />
             )}
         </div>
       </WebSocketProvider>
