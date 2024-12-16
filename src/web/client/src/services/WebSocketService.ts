@@ -172,6 +172,12 @@ class WebSocketService {
       this.socket.emit('get_artifacts', { channel_id: channelId, thread_id: threadId });
     }
   }
+
+  fetchAllArtifacts() {
+    if (this.socket) {
+      this.socket.emit('get_all_artifacts');
+    }
+  }
 }
 
 export const webSocketService = new WebSocketService();
