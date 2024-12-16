@@ -15,6 +15,7 @@ interface WebSocketContextType {
   fetchTasks: (channelId: string, threadId: string | null) => void;
   fetchArtifacts: (channelId: string, threadId: string | null) => void;
   fetchAllArtifacts: () => void;
+  fetchLogs: () => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
