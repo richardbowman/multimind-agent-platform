@@ -36,10 +36,16 @@ class WebSocketService {
   private threadHandlers: ((threads: Thread[]) => void)[] = [];
 
   connect(url: string = 'ws://localhost:4001') {
-    this.socket = io(url);
+    this.socket = io(url, {
+      transports: ['websocket'],
+      reconnection: true,
+      reconnectionAttempts: 5
+    });
 
     this.socket.on('connect', () => {
       console.log('Connected to WebSocket server');
+      // Fetch initial data upon connection
+      this.fetchChannels();
     });
 
     this.socket.on('message', (message: Message) => {
@@ -78,7 +84,10 @@ class WebSocketService {
 
   fetchChannels() {
     if (this.socket) {
+      console.log('Fetching channels...');
       this.socket.emit('get_channels');
+    } else {
+      console.warn('Socket not connected while trying to fetch channels');
     }
   }
 

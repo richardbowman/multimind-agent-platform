@@ -26,7 +26,16 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [threads, setThreads] = useState<Record<string, Thread[]>>({});
 
   useEffect(() => {
+    // Connect to WebSocket server
     webSocketService.connect();
+
+    // Initial data fetch
+    const initializeData = () => {
+      fetchChannels();
+    };
+
+    // Call initialize after a short delay to ensure socket is connected
+    const initTimer = setTimeout(initializeData, 500);
 
     const messageCleanup = webSocketService.onMessage((message) => {
       setMessages(prev => [...prev, message]);

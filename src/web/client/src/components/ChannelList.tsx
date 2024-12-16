@@ -19,7 +19,8 @@ export const ChannelList: React.FC<ChannelListProps> = ({
 
     return (
         <div className="channel-list">
-            <h2>Channels</h2>
+            <h2>Channels ({channels.length})</h2>
+            {channels.length === 0 && <div>Loading channels...</div>}
             <ul>
                 {channels.map(channel => (
                     <li
