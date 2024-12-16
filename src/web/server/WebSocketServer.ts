@@ -20,6 +20,20 @@ export class WebSocketServer {
         this.storage = storage;
         this.projects = projects;
         this.artifactManager = artifactManager;
+
+        // Set up storage callback for new messages
+        this.storage.addCallback((post: ChatPost) => {
+            this.io.emit('message', {
+                id: post.id,
+                channel_id: post.channel_id,
+                message: post.message,
+                user_id: post.user_id,
+                create_at: post.create_at,
+                directed_at: post.directed_at,
+                props: post.props,
+                thread_id: post.getRootId()
+            });
+        });
         
         const app = express();
         const httpServer = createServer(app);
@@ -157,8 +171,8 @@ export class WebSocketServer {
                     client.postInChannel(fullMessage.channel_id, fullMessage.message, fullMessage.props);
                 }
                 
-                // Emit to all clients except sender
-                socket.broadcast.emit('message', {
+                // Emit to all clients including sender
+                this.io.emit('message', {
                     id: fullMessage.id,
                     channel_id: fullMessage.channel_id,
                     message: fullMessage.message,

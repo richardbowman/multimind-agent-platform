@@ -13,7 +13,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     currentThreadId,
 }) => {
     const { messages, sendMessage } = useWebSocket();
-    const [localMessages, setMessages] = useState<any[]>([]);
     const [userId] = useState('user-' + Math.random().toString(36).substr(2, 9));
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -40,7 +39,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             props: {}
         };
         
-        sendMessage(message);
+        // Add message to local state immediately
+        const fullMessage = {
+            ...message,
+            id: Date.now().toString(),
+            create_at: Date.now()
+        };
+        
+        sendMessage(fullMessage);
     };
 
     return (
