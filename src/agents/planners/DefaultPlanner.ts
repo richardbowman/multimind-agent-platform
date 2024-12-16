@@ -45,7 +45,8 @@ export class MultiStepPlanner implements Planner {
         const formatCurrentTasks = (tasks: Task[]) => {
             return tasks.map(t => {
                 const type = t.type ? `**Type**: ${t.type}` : '';
-                return `- ${t.description}\n  ${type}\n  **ID**: ${t.id}`;
+                const status = t.inProgress ? '🔄 *In Progress*' : '';
+                return `- ${t.description}\n  ${type}\n  **ID**: ${t.id}${status ? `\n  ${status}` : ''}`;
             }).join('\n');
         };
 
