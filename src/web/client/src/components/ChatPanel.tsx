@@ -21,12 +21,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
+    const [isLoading, setIsLoading] = useState(true);
+
     useEffect(() => {
         if (currentChannelId) {
-            webSocketService.fetchMessages(currentChannelId, currentThreadId);
+            setIsLoading(true);
+            webSocketService.fetchMessages(currentChannelId, currentThreadId || '');
         }
-        scrollToBottom();
     }, [currentChannelId, currentThreadId]);
+
+    useEffect(() => {
+        if (messages.length > 0) {
+            setIsLoading(false);
+            scrollToBottom();
+        }
+    }, [messages]);
 
     const handleSendMessage = async (content: string) => {
         if (!currentChannelId) return;
@@ -46,6 +55,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     return (
         <div className="chat-panel">
             <div className="messages">
+                {isLoading ? (
+                    <div className="loading-message">Loading messages...</div>
+                ) : messages.length === 0 ? (
+                    <div className="no-messages">No messages yet</div>
+                ) : (
                 {(messages||[])
                     .filter(message => {
                         if (currentThreadId) {
