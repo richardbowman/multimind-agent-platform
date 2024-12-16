@@ -140,8 +140,20 @@ export class WebSocketServer {
                     }
                 };
 
-                this.messages.push(fullMessage);
-                socket.broadcast.emit('message', fullMessage); // Only send to other clients
+                // Store the message in storage instead of this.messages
+                this.storage.posts.push(fullMessage);
+                
+                // Emit to all clients except sender
+                socket.broadcast.emit('message', {
+                    id: fullMessage.id,
+                    channel_id: fullMessage.channel_id,
+                    message: fullMessage.message,
+                    user_id: fullMessage.user_id,
+                    create_at: fullMessage.create_at,
+                    directed_at: fullMessage.directed_at,
+                    props: fullMessage.props,
+                    thread_id: fullMessage.getRootId()
+                });
 
                 // If this is a threaded message, update the thread
                 const rootId = fullMessage.getRootId();

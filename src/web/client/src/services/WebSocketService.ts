@@ -103,9 +103,14 @@ class WebSocketService {
     }
   }
 
-  fetchMessages(channelId: string, threadId?: string, limit: number = 50) {
+  fetchMessages(channelId: string, threadId: string | null = null, limit: number = 50) {
     if (this.socket) {
-      this.socket.emit('get_messages', { channel_id: channelId, thread_id: threadId, limit });
+      console.log('Fetching messages:', { channel_id: channelId, thread_id: threadId || '', limit });
+      this.socket.emit('get_messages', { 
+        channel_id: channelId, 
+        thread_id: threadId || '', 
+        limit 
+      });
     }
   }
 
