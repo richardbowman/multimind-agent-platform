@@ -129,6 +129,7 @@ export class WebSocketServer {
             });
 
             socket.on('get_messages', ({ channel_id, thread_id, limit }: { channel_id: string, thread_id?: string, limit: number }) => {
+                Logger.log('Received get_messages request:', { channel_id, thread_id, limit });
                 const channelMessages = this.storage.posts
                     .filter(post => {
                         if (post.channel_id !== channel_id) return false;
@@ -146,6 +147,7 @@ export class WebSocketServer {
                         props: post.props
                     }))
                     .slice(-limit);
+                Logger.log('Sending messages to client:', channelMessages);
                 socket.emit('messages', channelMessages);
             });
 

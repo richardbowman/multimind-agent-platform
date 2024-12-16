@@ -118,6 +118,9 @@ class WebSocketService {
   fetchMessages(channelId: string, threadId: string | null = null, limit: number = 50) {
     if (this.socket) {
       console.log('Fetching messages:', { channel_id: channelId, thread_id: threadId || '', limit });
+      this.socket.on('messages', (messages: Message[]) => {
+        console.log('Received messages in service:', messages);
+      });
       this.socket.emit('get_messages', { 
         channel_id: channelId, 
         thread_id: threadId || '', 

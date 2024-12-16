@@ -60,10 +60,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     // Handle bulk messages from server
-    webSocketService.socket?.on('messages', (newMessages: Message[]) => {
+    const messagesHandler = (newMessages: Message[]) => {
       console.log('Received messages from server:', newMessages);
       setMessages(newMessages);
-    });
+      setIsLoading(false);
+    };
+
+    webSocketService.socket?.on('messages', messagesHandler);
 
     // Handle individual real-time messages
     const messageCleanup = webSocketService.onMessage((message) => {
@@ -104,6 +107,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       threadCleanup();
       taskCleanup();
       artifactCleanup();
+      webSocketService.socket?.off('messages', messagesHandler);
       webSocketService.disconnect();
     };
   }, []);
