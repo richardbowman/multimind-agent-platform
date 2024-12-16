@@ -47,13 +47,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         <div className="chat-panel">
             <div className="messages">
                 {(messages||[])
-                    .filter(message => 
-                        // If we're in a thread, only show messages from that thread
-                        // If we're not in a thread, only show messages without a thread_id
-                        currentThreadId 
-                            ? message.thread_id === currentThreadId
-                            : !message.thread_id
-                    )
+                    .filter(message => {
+                        if (currentThreadId) {
+                            // In a thread, show the root message and all replies
+                            return message.id === currentThreadId || message.thread_id === currentThreadId;
+                        } else {
+                            // In channel view, only show messages without thread_id
+                            return !message.thread_id;
+                        }
+                    })
                     .map((message) => (
                         <div key={message.id} className="message">
                             <div className="message-header">
