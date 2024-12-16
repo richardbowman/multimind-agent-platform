@@ -1,10 +1,10 @@
 .app {
     display: grid;
     grid-template-columns: 250px 1fr 300px;
-    height: 100vh;
+    height: calc(100vh - 48px);
     background-color: #1a1a1a;
     color: #ffffff;
-    margin-top: 48px; /* Add margin to account for fixed tab bar */
+    margin-top: 48px;
 }
 
 .sidebar {
@@ -12,7 +12,7 @@
     flex-direction: column;
     border-right: 1px solid #333;
     background-color: #2a2a2a;
-    height: 100vh;
+    height: calc(100vh - 48px);
     overflow: hidden;
 }
 
@@ -104,15 +104,15 @@
 .chat-panel {
     display: flex;
     flex-direction: column;
-    height: 100vh;
-    max-height: 100vh;
+    height: calc(100vh - 48px);
+    max-height: calc(100vh - 48px);
 }
 
 .messages {
     flex: 1;
     overflow-y: auto;
     padding: 1rem;
-    max-height: calc(100vh - 80px); /* Account for input height */
+    max-height: calc(100vh - 128px); /* Account for input height + tab bar */
 }
 
 .message {
