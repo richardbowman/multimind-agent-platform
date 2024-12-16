@@ -19,8 +19,16 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     };
 
     useEffect(() => {
+        if (currentChannelId) {
+            // Fetch messages whenever channel or thread changes
+            sendMessage({
+                channel_id: currentChannelId,
+                thread_id: currentThreadId || '',
+                limit: 50
+            });
+        }
         scrollToBottom();
-    }, [messages]);
+    }, [currentChannelId, currentThreadId, messages]);
 
     const handleSendMessage = async (content: string) => {
         if (!currentChannelId) return;

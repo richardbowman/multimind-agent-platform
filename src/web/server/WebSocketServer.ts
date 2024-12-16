@@ -104,9 +104,23 @@ export class WebSocketServer {
                 }
             });
 
-            socket.on('get_messages', ({ channel_id, limit }: { channel_id: string, limit: number }) => {
-                const channelMessages = this.messages
-                    .filter(m => m.channel_id === channel_id)
+            socket.on('get_messages', ({ channel_id, thread_id, limit }: { channel_id: string, thread_id?: string, limit: number }) => {
+                const channelMessages = this.storage.posts
+                    .filter(post => {
+                        if (post.channel_id !== channel_id) return false;
+                        if (thread_id === '') return !post.getRootId(); // Root messages only
+                        if (thread_id) return post.getRootId() === thread_id; // Thread messages
+                        return true; // All messages if no thread_id specified
+                    })
+                    .map(post => ({
+                        id: post.id,
+                        channel_id: post.channel_id,
+                        message: post.message,
+                        user_id: post.user_id,
+                        create_at: post.create_at,
+                        directed_at: post.directed_at,
+                        props: post.props
+                    }))
                     .slice(-limit);
                 socket.emit('messages', channelMessages);
             });
