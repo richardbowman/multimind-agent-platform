@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { TaskStatus } from '../../../../schemas/reviewProgress';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface TaskPanelProps {
     channelId: string | null;

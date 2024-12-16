@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Artifact } from '../../../../tools/artifact';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface ArtifactPanelProps {
     channelId: string | null;
