@@ -1,7 +1,7 @@
 import { Agent } from './agents';
 import { getExecutorMetadata } from './decorators/executorDecorator';
 import 'reflect-metadata';
-import { ChatClient, ChatPost } from '../chat/chatClient';
+import { ChatClient, ChatPost, isValidChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
@@ -38,7 +38,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
     constructor(params: AgentConstructorParams, planner?: Planner) {
         super(params.chatClient, params.llmService, params.userId, params.taskManager, params.vectorDBService);
-        this.planner = planner || new SimpleNextActionPlanner(
+        this.planner = planner || new MultiStepPlanner(
             params.llmService,
             params.taskManager,
             params.userId,
@@ -119,7 +119,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
             steps.steps.map((step, index) => `${index + 1}. ${step.actionType}`)
                 .join('\n') : "No steps provided";
 
-        if (handlerParams.userPost) {
+        if (isValidChatPost(handlerParams.userPost)) {
             await this.reply(handlerParams.userPost, {
                 message: `🔄 Planning next steps:\n${nextStepsMessage}`
             }, {
