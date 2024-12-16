@@ -14,7 +14,20 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
-    // ... other methods remain the same ...
+    private searchHelper: SearchHelper;
+    private scrapeHelper: ScrapeHelper;
+    private modelHelpers: ModelHelpers;
+    private artifactManager: ArtifactManager;
+
+    constructor(
+        llmService: ILLMService,
+        searchProvider: DuckDuckGoProvider = new DuckDuckGoProvider()
+    ) {
+        this.searchHelper = new SearchHelper(searchProvider);
+        this.scrapeHelper = new ScrapeHelper();
+        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+        this.artifactManager = new ArtifactManager();
+    }
 
     private async selectRelevantSearchResults(
         task: string,
@@ -53,5 +66,71 @@ Given the following web search results, select 1-3 URLs that are most relevant t
         return response.urls.filter(url => typeof url === 'string');
     }
 
-    // ... rest of the class remains the same ...
+    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+        const searchQuery = await this.modelHelpers.generate<ModelMessageResponse>({
+            message: `Create a precise search query to help research: ${goal}`,
+            instructions: {
+                type: 'object',
+                properties: {
+                    query: { type: 'string', description: 'Concise search query' }
+                }
+            }
+        });
+
+        const searchResults = await this.searchHelper.search(searchQuery.message, 8);
+        
+        const selectedUrls = await this.selectRelevantSearchResults(step, goal, searchResults, previousResult);
+        
+        const scrapedResults = await Promise.all(
+            selectedUrls.map(url => this.scrapeHelper.scrape(url))
+        );
+
+        const analysisPrompt = `Analyze the following web search results in the context of our goal: ${goal}
+
+Search Results:
+${scrapedResults.map((result, i) => `URL: ${selectedUrls[i]}\nContent: ${result.slice(0, 500)}...`).join('\n\n')}`;
+
+        const analysis = await this.modelHelpers.generate<ModelMessageResponse>({
+            message: analysisPrompt,
+            instructions: {
+                type: 'object',
+                properties: {
+                    keyFindings: {
+                        type: 'array',
+                        items: {
+                            type: 'object',
+                            properties: {
+                                finding: { type: 'string' },
+                                confidence: { type: 'number' }
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        const artifactId = crypto.randomBytes(16).toString('hex');
+        await this.artifactManager.saveArtifact(projectId, artifactId, {
+            type: 'web_research',
+            data: {
+                goal,
+                step,
+                searchQuery: searchQuery.message,
+                urls: selectedUrls,
+                analysis: analysis
+            }
+        });
+
+        return {
+            type: 'web_search',
+            finished: true,
+            response: {
+                message: analysis.keyFindings.map(f => f.finding).join('\n'),
+                urls: selectedUrls
+            },
+            data: {
+                artifactId
+            }
+        };
+    }
 }
