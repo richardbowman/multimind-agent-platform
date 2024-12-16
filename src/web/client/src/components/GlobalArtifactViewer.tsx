@@ -77,10 +77,10 @@ export const GlobalArtifactViewer: React.FC = () => {
                             </div>
                         </div>
                         <div className="artifact-content">
-                            {selectedArtifact.type === 'markdown' || selectedArtifact.metadata?.format === 'markdown' ? (
-                                <ReactMarkdown>{selectedArtifact.content as string}</ReactMarkdown>
-                            ) : (
+                            {selectedArtifact.type === 'binary' || selectedArtifact.metadata?.format === 'binary' ? (
                                 <pre>{selectedArtifact.content as string}</pre>
+                            ) : (
+                                <ReactMarkdown>{selectedArtifact.content as string}</ReactMarkdown>
                             )}
                         </div>
                     </>
