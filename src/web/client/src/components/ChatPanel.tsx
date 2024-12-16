@@ -46,7 +46,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     return (
         <div className="chat-panel">
             <div className="messages">
-                {messages
+                {(messages||[])
                     .filter(message => 
                         // If we're in a thread, only show messages from that thread
                         // If we're not in a thread, only show messages without a thread_id
