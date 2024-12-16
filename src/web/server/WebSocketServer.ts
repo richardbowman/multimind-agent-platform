@@ -5,6 +5,7 @@ import { Channel, Thread, Message } from '../client/src/services/WebSocketServic
 import { InMemoryChatStorage } from '../../chat/inMemoryChatClient';
 import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
+import { ArtifactManager } from 'src/tools/artifactManager';
 
 export class WebSocketServer {
     private io: Server;
@@ -217,7 +218,7 @@ export class WebSocketServer {
                 // Get artifacts from storage that match these IDs
                 const artifacts = artifactIds.map(id => {
                     try {
-                        return this.artifactManager.getArtifact(id);
+                        return this.artifactManager.loadArtifact(id);
                     } catch (error) {
                         Logger.error(`Error fetching artifact ${id}:`, error);
                         return null;
