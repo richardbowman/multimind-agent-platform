@@ -48,6 +48,7 @@ const App: React.FC = () => {
                     <ChatPanel
                         currentChannelId={currentChannelId}
                         currentThreadId={currentThreadId}
+                        setCurrentThreadId={setCurrentThreadId}
                     />
                 </div>
                 <div className="right-sidebar">

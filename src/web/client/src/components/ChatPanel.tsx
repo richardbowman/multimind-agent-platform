@@ -7,6 +7,7 @@ import webSocketService from '../services/WebSocketService';
 interface ChatPanelProps {
     currentChannelId: string | null;
     currentThreadId: string | null;
+    setCurrentThreadId: (threadId: string | null) => void;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({
@@ -34,8 +35,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         if (messages.length > 0) {
             setIsLoading(false);
             scrollToBottom();
+            
+            // Check for new threaded responses and select that thread
+            const latestMessage = messages[messages.length - 1];
+            if (latestMessage.thread_id && !currentThreadId) {
+                // Only switch to thread view if we're not already in a thread
+                const threadRoot = messages.find(m => m.id === latestMessage.thread_id);
+                if (threadRoot) {
+                    setCurrentThreadId(threadRoot.id);
+                }
+            }
         }
-    }, [messages]);
+    }, [messages, currentThreadId]);
 
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 

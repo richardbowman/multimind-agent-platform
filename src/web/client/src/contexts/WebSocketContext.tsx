@@ -58,6 +58,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setMessages(prev => {
         // Check if message already exists to prevent duplicates
         if (!prev.some(m => m.id === message.id)) {
+          // If this is a threaded response, fetch the thread
+          if (message.thread_id) {
+            webSocketService.fetchThreads(message.channel_id);
+          }
           return [...prev, message].sort((a, b) => a.create_at - b.create_at);
         }
         return prev;
