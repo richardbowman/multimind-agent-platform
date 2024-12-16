@@ -3,15 +3,20 @@ import { createServer } from 'http';
 import express from 'express';
 import { Channel, Thread, Message } from '../client/src/services/WebSocketService';
 import { InMemoryChatStorage } from '../../chat/inMemoryChatClient';
+import { TaskManager } from 'src/tools/taskManager';
+import Logger from 'src/helpers/logger';
 
 export class WebSocketServer {
     private io: Server;
     private storage: InMemoryChatStorage;
     private threads: Record<string, Thread[]> = {};
     private messages: Message[] = [];
+    private projects: TaskManager;
 
-    constructor(storage: InMemoryChatStorage, port: number = 4001) {
+    constructor(storage: InMemoryChatStorage, projects: TaskManager, port: number = 4001) {
         this.storage = storage;
+        this.projects = projects;
+        
         const app = express();
         const httpServer = createServer(app);
         
@@ -25,13 +30,13 @@ export class WebSocketServer {
         this.setupSocketHandlers();
         
         httpServer.listen(port, () => {
-            console.log(`WebSocket server running on port ${port}`);
+            Logger.log(`WebSocket server running on port ${port}`);
         });
     }
 
     private setupSocketHandlers() {
         this.io.on('connection', (socket) => {
-            console.log('Client connected');
+            Logger.log('Client connected');
 
             // Handle channel requests
             socket.on('get_channels', () => {
@@ -178,13 +183,13 @@ export class WebSocketServer {
                 
                 // Get tasks from storage that match these project IDs
                 const tasks = projectIds.flatMap(projectId => {
-                    const project = this.storage.tasks?.getProject(projectId);
+                    const project = this.projects.getProject(projectId);
                     return project ? Object.values(project.tasks) : [];
                 });
 
                 // Ensure we're sending an array even if no tasks found
                 const tasksToSend = tasks || [];
-                console.log('Sending tasks:', tasksToSend);
+                Logger.log('Sending tasks:', tasksToSend);
                 socket.emit('tasks', tasksToSend);
             });
 
@@ -194,7 +199,7 @@ export class WebSocketServer {
             });
 
             socket.on('disconnect', () => {
-                console.log('Client disconnected');
+                Logger.log('Client disconnected');
             });
         });
     }
