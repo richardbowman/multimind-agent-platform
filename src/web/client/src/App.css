@@ -151,6 +151,22 @@
     line-height: 1.4;
 }
 
+.thread-indicator {
+    margin-top: 8px;
+    padding: 4px 8px;
+    background-color: #333;
+    border-radius: 4px;
+    color: #4a9eff;
+    cursor: pointer;
+    display: inline-block;
+    font-size: 0.9em;
+}
+
+.thread-indicator:hover {
+    background-color: #444;
+    text-decoration: underline;
+}
+
 /* Markdown styles */
 .message-content h1 {
     font-size: 1.5em;
