@@ -77,18 +77,6 @@ export class WebSearchExecutor implements StepExecutor {
                         this.visitedUrls.add(normalizedUrl);
 
                         const { content: followContent, title: followTitle } = await this.scrapeHelper.scrapePage(normalizedUrl);
-
-                        await this.artifactManager.saveArtifact({
-                            id: crypto.randomUUID(),
-                            type: 'webpage',
-                            content: followContent,
-                            metadata: {
-                                title: followTitle,
-                                url: normalizedUrl,
-                                task: step,
-                                projectId
-                            }
-                        });
                     }
                 } catch (error) {
                     Logger.error(`Error processing followed page ${link.href}`, error);
@@ -145,7 +133,7 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
             .map((l, i) => `${i + 1}. URL: ${l.href}\nText: ${l.text}`)
             .join("\n\n");
 
-        const response = await this.modelHelpers.generate({
+        const response = await this.modelHelpers.generate<LinkSelectionResponse>({
             message,
             instructions
         });
@@ -153,7 +141,7 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
         return response.links || [];
     }
 
-    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const { searchQuery, category } = await this.generateSearchQuery(goal, step, previousResult);
         const searchResults = await this.searchHelper.search(searchQuery, category);
 
