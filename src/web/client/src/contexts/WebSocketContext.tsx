@@ -13,6 +13,7 @@ interface WebSocketContextType {
   fetchThread: (channelId: string, rootId: string) => void;
   fetchTasks: (channelId: string, threadId: string | null) => void;
   fetchArtifacts: (channelId: string, threadId: string | null) => void;
+  fetchAllArtifacts: () => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -126,6 +127,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.fetchArtifacts(channelId, threadId);
   };
 
+  const fetchAllArtifacts = () => {
+    webSocketService.fetchAllArtifacts();
+  };
+
   return (
     <WebSocketContext.Provider value={{ 
       messages, 
@@ -138,7 +143,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       fetchThreads,
       fetchThread,
       fetchTasks,
-      fetchArtifacts
+      fetchArtifacts,
+      fetchAllArtifacts
     }}>
       {children}
     </WebSocketContext.Provider>
