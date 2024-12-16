@@ -24,7 +24,7 @@ export const GlobalArtifactViewer: React.FC = () => {
     }, [selectedType, artifacts]);
 
     const types = artifacts 
-        ? ['All Types', ...new Set(artifacts.map(a => a.type))]
+        ? ['All Types', ...Array.from(new Set(artifacts.map(a => a.type)))]
         : ['All Types'];
 
     return (
