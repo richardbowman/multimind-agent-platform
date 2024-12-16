@@ -54,17 +54,20 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.socket?.on('messages', messagesHandler);
 
     // Handle individual real-time messages
-    const messageCleanup = webSocketService.onMessage((message) => {
+    const messageCleanup = webSocketService.onMessage((messages) => {
       setMessages(prev => {
-        // Check if message already exists to prevent duplicates
-        if (!prev.some(m => m.id === message.id)) {
-          // If this is a threaded response, fetch the thread
+        const newMessages = messages.filter(message => 
+          !prev.some(m => m.id === message.id)
+        );
+        
+        // If any new message is a threaded response, fetch the thread
+        newMessages.forEach(message => {
           if (message.thread_id) {
             webSocketService.fetchThreads(message.channel_id);
           }
-          return [...prev, message].sort((a, b) => a.create_at - b.create_at);
-        }
-        return prev;
+        });
+        
+        return [...prev, ...newMessages].sort((a, b) => a.create_at - b.create_at);
       });
     });
 
