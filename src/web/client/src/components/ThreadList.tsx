@@ -31,6 +31,13 @@ export const ThreadList: React.FC<ThreadListProps> = ({
         <div className="thread-list">
             <h2>Threads</h2>
             <ul>
+                <li
+                    key="root"
+                    className={`thread-item ${currentThreadId === null ? 'active' : ''}`}
+                    onClick={() => onThreadSelect('')}
+                >
+                    (Root) - Main Channel
+                </li>
                 {channelThreads.map(thread => (
                     <li
                         key={thread.rootMessage.id}
