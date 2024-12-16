@@ -59,11 +59,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     });
 
-    // Handle incoming messages from get_messages
+    // Handle bulk messages from server
     webSocketService.socket?.on('messages', (newMessages: Message[]) => {
+      console.log('Received messages from server:', newMessages);
       setMessages(newMessages);
     });
 
+    // Handle individual real-time messages
     const messageCleanup = webSocketService.onMessage((message) => {
       setMessages(prev => {
         // Check if message already exists to prevent duplicates
