@@ -13,6 +13,7 @@ interface ChatPanelProps {
 export const ChatPanel: React.FC<ChatPanelProps> = ({
     currentChannelId,
     currentThreadId,
+    setCurrentThreadId,
 }) => {
     const { messages, sendMessage } = useWebSocket();
     const [userId] = useState('user-' + Math.random().toString(36).substr(2, 9));
