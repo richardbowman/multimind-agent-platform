@@ -8,6 +8,7 @@ import { MultiStepPlanner } from './planners/DefaultPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ResearchDecompositionExecutor } from './executors/ResearchDecompositionExecutor';
 import { ResearchAggregationExecutor } from './executors/ResearchAggregationExecutor';
+import { UnderstandGoalsExecutor } from "./executors/UnderstandGoalsExecutor";
 
 export interface ResearchProject extends Project<Task> {
     goal: string;
@@ -28,7 +29,7 @@ export class ResearchManager extends StepBasedAgent<ResearchProject, Task> {
         this.registerStepExecutor(new ResearchDecompositionExecutor(params.llmService, params.taskManager));
         this.registerStepExecutor(new ResearchAggregationExecutor(params.llmService, this.artifactManager, params.vectorDBService));
 
-        this.modelHelpers.setPurpose(`You are planning how to conduct research effectively.`);
+        this.modelHelpers.setPurpose(`You are planning how to conduct Web-based research effectively.`);
         this.modelHelpers.setFinalInstructions(`
 Break down research requests into specific tasks and aggregate findings.
 
