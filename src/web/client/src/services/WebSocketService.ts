@@ -67,6 +67,11 @@ class WebSocketService {
       this.taskHandlers.forEach(handler => handler(tasks));
     });
 
+    this.socket.on('artifacts', (artifacts: any[]) => {
+      console.log('Received artifacts:', artifacts);
+      this.artifactHandlers.forEach(handler => handler(artifacts));
+    });
+
     this.socket.on('disconnect', () => {
       console.log('Disconnected from WebSocket server');
     });

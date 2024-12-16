@@ -198,6 +198,34 @@ export class WebSocketServer {
                 this.io.emit('tasks', tasks);
             });
 
+            // Handle artifact requests
+            socket.on('get_artifacts', ({ channel_id, thread_id }: { channel_id: string, thread_id: string | null }) => {
+                // Get all posts for this channel/thread
+                const posts = this.storage.posts.filter(post => {
+                    if (post.channel_id !== channel_id) return false;
+                    if (thread_id) {
+                        return post.getRootId() === thread_id || post.id === thread_id;
+                    }
+                    return true;
+                });
+
+                // Extract artifact IDs from posts
+                const artifactIds = [...new Set(posts.flatMap(p => p.props["artifact-ids"] || []))];
+                
+                // Get artifacts from storage that match these IDs
+                const artifacts = artifactIds.map(id => {
+                    try {
+                        return this.storage.artifacts?.get(id);
+                    } catch (error) {
+                        Logger.error(`Error fetching artifact ${id}:`, error);
+                        return null;
+                    }
+                }).filter(Boolean);
+
+                Logger.log('Sending artifacts:', artifacts);
+                socket.emit('artifacts', artifacts);
+            });
+
             socket.on('disconnect', () => {
                 Logger.log('Client disconnected');
             });
