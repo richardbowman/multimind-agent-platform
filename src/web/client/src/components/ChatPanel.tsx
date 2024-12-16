@@ -1,6 +1,7 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { CommandInput } from './CommandInput';
 import { useWebSocket } from '../contexts/WebSocketContext';
+import webSocketService from '../services/WebSocketService';
 
 interface ChatPanelProps {
     currentChannelId: string | null;
@@ -12,6 +13,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     currentThreadId,
 }) => {
     const { messages, sendMessage } = useWebSocket();
+    const [localMessages, setMessages] = useState([]);
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
