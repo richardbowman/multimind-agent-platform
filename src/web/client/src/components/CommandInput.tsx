@@ -1,28 +1,130 @@
-import React, { useState, KeyboardEvent } from 'react';
+import React, { useState, KeyboardEvent, useEffect, useRef } from 'react';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface CommandInputProps {
     onSendMessage: (message: string) => void;
 }
 
+const COMMANDS = [
+    { command: '/retry', description: 'Retry last message' },
+    { command: '/artifacts', description: 'List artifacts in current thread' },
+    { command: '/tasks', description: 'List tasks in current thread' },
+    { command: '/channel', description: 'Send message to channel root' }
+];
+
 export const CommandInput: React.FC<CommandInputProps> = ({ onSendMessage }) => {
     const [input, setInput] = useState('');
+    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const suggestionsRef = useRef<HTMLDivElement>(null);
+    const inputRef = useRef<HTMLInputElement>(null);
+    const { channels } = useWebSocket();
+
+    // Get all user handles from channels (placeholder - need to get from actual user data)
+    const userHandles = channels.map(c => '@' + c.name); // This should be replaced with actual user handles
+
+    useEffect(() => {
+        const handleClickOutside = (event: MouseEvent) => {
+            if (suggestionsRef.current && !suggestionsRef.current.contains(event.target as Node)) {
+                setShowSuggestions(false);
+            }
+        };
+
+        document.addEventListener('mousedown', handleClickOutside);
+        return () => document.removeEventListener('mousedown', handleClickOutside);
+    }, []);
+
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setInput(value);
+
+        // Handle command suggestions
+        if (value.startsWith('/')) {
+            const filtered = COMMANDS
+                .filter(cmd => cmd.command.toLowerCase().startsWith(value.toLowerCase()))
+                .map(cmd => `${cmd.command} - ${cmd.description}`);
+            setSuggestions(filtered);
+            setShowSuggestions(filtered.length > 0);
+        }
+        // Handle user handle suggestions
+        else if (value.includes('@')) {
+            const lastWord = value.split(' ').pop() || '';
+            if (lastWord.startsWith('@')) {
+                const filtered = userHandles.filter(handle => 
+                    handle.toLowerCase().startsWith(lastWord.toLowerCase())
+                );
+                setSuggestions(filtered);
+                setShowSuggestions(filtered.length > 0);
+            } else {
+                setShowSuggestions(false);
+            }
+        } else {
+            setShowSuggestions(false);
+        }
+    };
 
     const handleKeyPress = (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter' && input.trim()) {
             onSendMessage(input.trim());
             setInput('');
+            setShowSuggestions(false);
+        } else if (event.key === 'Tab' && showSuggestions) {
+            event.preventDefault();
+            const suggestion = suggestions[0];
+            if (suggestion) {
+                if (suggestion.includes(' - ')) {
+                    // Command suggestion
+                    setInput(suggestion.split(' - ')[0] + ' ');
+                } else {
+                    // Handle suggestion
+                    const words = input.split(' ');
+                    words[words.length - 1] = suggestion;
+                    setInput(words.join(' ') + ' ');
+                }
+                setShowSuggestions(false);
+            }
+        } else if (event.key === 'Escape') {
+            setShowSuggestions(false);
         }
+    };
+
+    const handleSuggestionClick = (suggestion: string) => {
+        if (suggestion.includes(' - ')) {
+            // Command suggestion
+            setInput(suggestion.split(' - ')[0] + ' ');
+        } else {
+            // Handle suggestion
+            const words = input.split(' ');
+            words[words.length - 1] = suggestion;
+            setInput(words.join(' ') + ' ');
+        }
+        setShowSuggestions(false);
+        inputRef.current?.focus();
     };
 
     return (
         <div className="command-input">
             <input
+                ref={inputRef}
                 type="text"
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyPress={handleKeyPress}
-                placeholder="Type a message..."
+                onChange={handleInputChange}
+                onKeyDown={handleKeyPress}
+                placeholder="Type a message... (Use / for commands, @ for mentions)"
             />
+            {showSuggestions && (
+                <div ref={suggestionsRef} className="suggestions-dropdown">
+                    {suggestions.map((suggestion, index) => (
+                        <div
+                            key={index}
+                            className="suggestion-item"
+                            onClick={() => handleSuggestionClick(suggestion)}
+                        >
+                            {suggestion}
+                        </div>
+                    ))}
+                </div>
+            )}
         </div>
     );
 };
