@@ -2,17 +2,16 @@ import { Server } from 'socket.io';
 import { createServer } from 'http';
 import express from 'express';
 import { Channel, Thread, Message } from '../client/src/services/WebSocketService';
+import { InMemoryChatStorage } from '../../chat/inMemoryChatClient';
 
 export class WebSocketServer {
     private io: Server;
-    private channels: Channel[] = [
-        { id: '1', name: 'General', description: 'General discussion' },
-        { id: '2', name: 'Development', description: 'Development chat' }
-    ];
+    private storage: InMemoryChatStorage;
     private threads: Record<string, Thread[]> = {};
     private messages: Message[] = [];
 
-    constructor(port: number = 4001) {
+    constructor(storage: InMemoryChatStorage, port: number = 4001) {
+        this.storage = storage;
         const app = express();
         const httpServer = createServer(app);
         
@@ -36,7 +35,12 @@ export class WebSocketServer {
 
             // Handle channel requests
             socket.on('get_channels', () => {
-                socket.emit('channels', this.channels);
+                const channels = this.storage.getChannels().map(channel => ({
+                    id: channel.id,
+                    name: channel.name.replace('#', ''),
+                    description: channel.description
+                }));
+                socket.emit('channels', channels);
             });
 
             // Handle thread requests
