@@ -60,7 +60,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 ) : messages.length === 0 ? (
                     <div className="no-messages">No messages yet</div>
                 ) : (
-                {(messages||[])
+                (messages||[])
                     .filter(message => {
                         if (currentThreadId) {
                             // In a thread, show the root message and all replies
@@ -82,7 +82,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                                 <ReactMarkdown>{message.message}</ReactMarkdown>
                             </div>
                         </div>
-                    ))}
+                    )))}
                 <div ref={messagesEndRef} />
             </div>
             <CommandInput onSendMessage={handleSendMessage} />
