@@ -45,8 +45,51 @@ export class WebSocketServer {
 
             // Handle thread requests
             socket.on('get_threads', ({ channel_id }: { channel_id: string }) => {
-                const channelThreads = this.threads[channel_id] || [];
-                socket.emit('threads', channelThreads);
+                // Get all posts for this channel
+                const posts = this.storage.posts.filter(post => post.channel_id === channel_id);
+                
+                // Group posts by thread_id
+                const threadMap = new Map<string, any>();
+                
+                posts.forEach(post => {
+                    if (post.thread_id) {
+                        // This is a reply - add to existing thread
+                        if (threadMap.has(post.thread_id)) {
+                            threadMap.get(post.thread_id).replies.push({
+                                id: post.id,
+                                channel_id: post.channel_id,
+                                thread_id: post.thread_id,
+                                message: post.message,
+                                user_id: post.user_id,
+                                create_at: post.create_at,
+                                directed_at: post.directed_at,
+                                props: post.props
+                            });
+                        }
+                    } else {
+                        // This could be a root message - create new thread
+                        threadMap.set(post.id, {
+                            rootMessage: {
+                                id: post.id,
+                                channel_id: post.channel_id,
+                                message: post.message,
+                                user_id: post.user_id,
+                                create_at: post.create_at,
+                                directed_at: post.directed_at,
+                                props: post.props
+                            },
+                            replies: [],
+                            last_message_at: post.create_at,
+                            channel_id: post.channel_id
+                        });
+                    }
+                });
+
+                // Convert map to array and sort by last_message_at
+                const threads = Array.from(threadMap.values())
+                    .sort((a, b) => b.last_message_at - a.last_message_at);
+
+                socket.emit('threads', threads);
             });
 
             socket.on('get_thread', ({ channel_id, root_id }: { channel_id: string, root_id: string }) => {
