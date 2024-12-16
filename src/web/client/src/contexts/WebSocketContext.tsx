@@ -29,7 +29,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.connect();
 
     const messageCleanup = webSocketService.onMessage((message) => {
-      setMessages(prev => [...prev, message]);
+      setMessages(prev => {
+        // Check if message already exists to prevent duplicates
+        if (!prev.some(m => m.id === message.id)) {
+          return [...prev, message];
+        }
+        return prev;
+      });
     });
 
     const channelCleanup = webSocketService.onChannels((newChannels) => {

@@ -33,12 +33,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     const handleSendMessage = async (content: string) => {
         if (!currentChannelId) return;
 
-        sendMessage({
+        const messageId = Date.now().toString();
+        const message = {
+            id: messageId,
             channel_id: currentChannelId,
             thread_id: currentThreadId || undefined,
             message: content,
             create_at: Date.now(),
-        });
+        };
+        
+        // Optimistically add message to local state
+        setMessages(prev => [...prev, message]);
+        
+        // Send to server
+        sendMessage(message);
     };
 
     return (

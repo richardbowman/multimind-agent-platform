@@ -141,7 +141,7 @@ export class WebSocketServer {
                 };
 
                 this.messages.push(fullMessage);
-                this.io.emit('message', fullMessage);
+                socket.broadcast.emit('message', fullMessage); // Only send to other clients
 
                 // If this is a threaded message, update the thread
                 const rootId = fullMessage.getRootId();
