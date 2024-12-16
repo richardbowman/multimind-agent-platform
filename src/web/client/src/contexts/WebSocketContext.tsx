@@ -33,6 +33,9 @@ const WebSocketContext = createContext<WebSocketContextType>({
   },
   fetchArtifacts: function (channelId: string, threadId: string | null): void {
     throw new Error('Function not implemented.');
+  },
+  fetchAllArtifacts: function (): void {
+    throw new Error('Function not implemented.');
   }
 });
 
