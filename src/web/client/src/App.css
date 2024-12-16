@@ -126,6 +126,8 @@
 .task-panel,
 .artifact-panel {
     padding: 1rem;
+    max-height: 50vh;
+    overflow-y: auto;
 }
 
 .task-panel h2,
