@@ -51,19 +51,9 @@ export class WebSearchExecutor implements StepExecutor {
         }
         this.visitedUrls.add(url);
 
-        const { content, links, title } = await this.scrapeHelper.scrapePage(url);
-
-        // Save the full webpage content
-        await this.artifactManager.saveArtifact({
-            id: crypto.randomUUID(),
-            type: 'webpage',
-            content,
-            metadata: {
-                title,
-                url,
-                task: step,
-                projectId
-            }
+        const { content, links, title } = await this.scrapeHelper.scrapePage(url, {
+            task: step,
+            projectId
         });
 
         // Generate and save summary with token tracking

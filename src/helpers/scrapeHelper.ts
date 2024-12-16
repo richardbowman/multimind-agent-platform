@@ -32,7 +32,7 @@ class ScrapeHelper {
             this.browser = null;
         }
     }
-    async scrapePage(url: string): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot: Buffer, artifactId: string }> {
+    async scrapePage(url: string, metadata: Record<string, any> = {}): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot: Buffer, artifactId: string }> {
         if (!this.browser) {
             await this.initialize();
         }
@@ -116,7 +116,8 @@ class ScrapeHelper {
                     url,
                     title,
                     scrapedAt: new Date().toISOString(),
-                    links
+                    links,
+                    ...metadata
                 }
             });
 
