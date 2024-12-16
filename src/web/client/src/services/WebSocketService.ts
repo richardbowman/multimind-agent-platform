@@ -22,6 +22,7 @@ export interface Message {
   create_at: number;
   directed_at?: string;
   props?: Record<string, any>;
+  reply_count: number;
   
   getRootId(): string | null;
   isReply(): boolean;

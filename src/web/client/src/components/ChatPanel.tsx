@@ -137,12 +137,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                             </div>
                             <div className="message-content">
                                 <ReactMarkdown>{message.message}</ReactMarkdown>
-                                {!currentThreadId && messages.some(m => m.getRootId() === message.id) && (
+                                {!currentThreadId && message.reply_count > 0 && (
                                     <div 
                                         className="thread-indicator"
                                         onClick={() => setCurrentThreadId(message.id)}
                                     >
-                                        View thread ({messages.filter(m => m.getRootId() === message.id).length} responses)
+                                        View thread ({message.reply_count} responses)
                                     </div>
                                 )}
                             </div>
