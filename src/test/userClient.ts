@@ -18,7 +18,7 @@ const COMMANDS = [
     { command: '/channel', description: 'Send message to channel root' }
 ];
 
-export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager, taskManager: TaskManager) {
+export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager, taskManager: TaskManager): Promise<InMemoryTestClient> {
     // Show splash screen with animation
     splashBox.show();
     screen.render();

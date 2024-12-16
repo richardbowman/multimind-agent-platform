@@ -16,10 +16,24 @@ export class WebSocketServer {
     private projects: TaskManager;
     private artifactManager: ArtifactManager;
 
-    constructor(storage: InMemoryChatStorage, projects: TaskManager, artifactManager: ArtifactManager, port: number = 4001) {
+    constructor(storage: InMemoryChatStorage, projects: TaskManager, artifactManager: ArtifactManager, userClient: InMemoryTestClient, port: number = 4001) {
         this.storage = storage;
         this.projects = projects;
         this.artifactManager = artifactManager;
+        
+        // Set up message receiving for the user client
+        userClient.receiveMessages((post: ChatPost) => {
+            this.io.emit('message', {
+                id: post.id,
+                channel_id: post.channel_id,
+                message: post.message,
+                user_id: post.user_id,
+                create_at: post.create_at,
+                directed_at: post.directed_at,
+                props: post.props,
+                thread_id: post.getRootId()
+            });
+        });
 
         // Set up storage callback for new messages
         this.storage.addCallback((post: ChatPost) => {

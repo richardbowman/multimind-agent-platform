@@ -136,7 +136,8 @@ await solverAgent.initialize();
 import { WebSocketServer } from './web/server/WebSocketServer';
 const wsServer = new WebSocketServer(storage, tasks, artifactManager);
 
-setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
+const userClient = await setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
+return userClient;
 
 // Parse command line arguments
 const { values } = parseArgs({
