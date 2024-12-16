@@ -145,7 +145,8 @@ export class WebSocketServer {
                     props: message.props || {},
                     getRootId: function() { 
                         return message.thread_id || null;
-                    }
+                    },
+                    parent_post_id: message.thread_id || null
                 };
 
                 // Store the message in storage instead of this.messages

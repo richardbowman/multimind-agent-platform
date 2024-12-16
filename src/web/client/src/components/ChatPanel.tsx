@@ -13,7 +13,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     currentThreadId,
 }) => {
     const { messages, sendMessage } = useWebSocket();
-    const [localMessages, setMessages] = useState([]);
+    const [localMessages, setMessages] = useState<any[]>([]);
+    const [userId] = useState('user-' + Math.random().toString(36).substr(2, 9));
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -30,19 +31,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     const handleSendMessage = async (content: string) => {
         if (!currentChannelId) return;
 
-        const messageId = Date.now().toString();
         const message = {
-            id: messageId,
             channel_id: currentChannelId,
             thread_id: currentThreadId || undefined,
             message: content,
+            user_id: userId,
             create_at: Date.now(),
+            props: {}
         };
         
-        // Optimistically add message to local state
-        setMessages(prev => [...prev, message]);
-        
-        // Send to server
         sendMessage(message);
     };
 
