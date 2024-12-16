@@ -271,13 +271,7 @@ Focus on filling knowledge gaps and expanding on existing findings.`;
             properties: {
                 urls: {
                     type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            href: { type: "string" }
-                        },
-                        required: ["href"]
-                    }
+                    items: { type: "string" }
                 }
             },
             required: ["urls"]
@@ -309,7 +303,7 @@ Given the following web search results, select 1-3 URLs that are most relevant t
             return [];
         }
 
-        return response.urls.map(r => r.href || r).filter(url => typeof url === 'string');
+        return response.urls.filter(url => typeof url === 'string');
     }
 
     async summarizeContent(task: string, content: string, llmService: ILLMService): Promise<ModelMessageResponse> {
