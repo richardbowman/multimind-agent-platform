@@ -278,3 +278,59 @@
     color: #666;
     font-size: 0.8rem;
 }
+
+.artifact-viewer-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.75);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+}
+
+.artifact-viewer {
+    background-color: #2a2a2a;
+    border-radius: 8px;
+    width: 80%;
+    max-width: 1000px;
+    max-height: 80vh;
+    position: relative;
+    border: 1px solid #444;
+}
+
+.artifact-content {
+    padding: 2rem;
+    overflow-y: auto;
+    max-height: calc(80vh - 4rem);
+}
+
+.close-button {
+    position: absolute;
+    top: 1rem;
+    right: 1rem;
+    background: none;
+    border: none;
+    color: #999;
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0.5rem;
+    line-height: 1;
+    border-radius: 4px;
+}
+
+.close-button:hover {
+    background-color: #333;
+    color: #fff;
+}
+
+.artifact-item {
+    cursor: pointer;
+}
+
+.artifact-item:hover {
+    background-color: #333;
+}

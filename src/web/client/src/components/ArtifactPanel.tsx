@@ -1,6 +1,7 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/WebSocketContext';
+import { ArtifactViewer } from './ArtifactViewer';
 
 interface ArtifactPanelProps {
     channelId: string | null;
@@ -9,6 +10,7 @@ interface ArtifactPanelProps {
 
 export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
     const { artifacts, fetchArtifacts } = useWebSocket();
+    const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
 
     useEffect(() => {
         let isSubscribed = true;
@@ -31,12 +33,20 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
             <h2>Artifacts</h2>
             <ul>
                 {(artifacts || []).map(artifact => (
-                    <li key={artifact.id} className={`artifact-item type-${artifact.type}`}>
+                    <li 
+                        key={artifact.id} 
+                        className={`artifact-item type-${artifact.type}`}
+                        onClick={() => setSelectedArtifact(artifact)}
+                    >
                         <span className="artifact-type">{artifact.type}</span>
                         <span className="artifact-id">#{artifact.id}</span>
                     </li>
                 ))}
             </ul>
+            <ArtifactViewer 
+                artifact={selectedArtifact} 
+                onClose={() => setSelectedArtifact(null)}
+            />
         </div>
     );
 };
