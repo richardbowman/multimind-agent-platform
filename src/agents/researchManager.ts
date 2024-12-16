@@ -9,6 +9,7 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ResearchDecompositionExecutor } from './executors/ResearchDecompositionExecutor';
 import { ResearchAggregationExecutor } from './executors/ResearchAggregationExecutor';
 import { UnderstandGoalsExecutor } from "./executors/UnderstandGoalsExecutor";
+import { ResearchGoalsExecutor } from "./executors/ResearchGoalsExecutor";
 
 export interface ResearchProject extends Project<Task> {
     goal: string;
@@ -26,6 +27,7 @@ export class ResearchManager extends StepBasedAgent<ResearchProject, Task> {
         this.modelHelpers = modelHelpers;
 
         // Register research-specific executors
+        this.registerStepExecutor(new ResearchGoalsExecutor(params.llmService, params.taskManager));
         this.registerStepExecutor(new ResearchDecompositionExecutor(params.llmService, params.taskManager));
         this.registerStepExecutor(new ResearchAggregationExecutor(params.llmService, this.artifactManager, params.vectorDBService));
 
@@ -34,8 +36,9 @@ export class ResearchManager extends StepBasedAgent<ResearchProject, Task> {
 Break down research requests into specific tasks and aggregate findings.
 
 IMPORTANT: For incoming new requests, follow this pattern:
-Step 1. 'decompose-research' step to break down the request
-Step 2. 'aggregate-research' to compile findings`);
+Step 1. 'understand-research-goals' to ensure clarity of request
+Step 2. 'decompose-research' step to break down the request
+Step 3. 'aggregate-research' to compile findings`);
     }
 
     protected async taskNotification(task: Task): Promise<void> {
