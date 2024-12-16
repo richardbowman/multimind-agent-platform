@@ -39,6 +39,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                         onClick={() => setSelectedArtifact(artifact)}
                     >
                         <span className="artifact-type">{artifact.type}</span>
+                        <span className="artifact-title">{artifact.metadata?.title || 'Untitled'}</span>
                         <span className="artifact-id">#{artifact.id}</span>
                     </li>
                 ))}
