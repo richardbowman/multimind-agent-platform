@@ -33,11 +33,15 @@ export const ThreadList: React.FC<ThreadListProps> = ({
             <ul>
                 {channelThreads.map(thread => (
                     <li
-                        key={thread.id}
-                        className={`thread-item ${currentThreadId === thread.id ? 'active' : ''}`}
-                        onClick={() => onThreadSelect(thread.id)}
+                        key={thread.rootMessage.id}
+                        className={`thread-item ${currentThreadId === thread.rootMessage.id ? 'active' : ''}`}
+                        onClick={() => onThreadSelect(thread.rootMessage.id)}
                     >
-                        Thread {thread.id}
+                        {thread.rootMessage.message.substring(0, 50)}
+                        {thread.rootMessage.message.length > 50 ? '...' : ''}
+                        <div className="thread-meta">
+                            {thread.replies.length} replies • Last activity: {new Date(thread.last_message_at).toLocaleString()}
+                        </div>
                     </li>
                 ))}
             </ul>
