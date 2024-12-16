@@ -28,7 +28,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     webSocketService.connect();
 
-    const messageCleanup = webSocketService.onMessage((message) => {
+    webSocketService.onMessage((message) => {
       setMessages(prev => {
         // Check if message already exists to prevent duplicates
         if (!prev.some(m => m.id === message.id)) {
@@ -36,6 +36,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         }
         return prev;
       });
+    });
+
+    // Handle incoming messages from get_messages
+    webSocketService.socket?.on('messages', (newMessages: Message[]) => {
+      setMessages(newMessages);
     });
 
     const channelCleanup = webSocketService.onChannels((newChannels) => {

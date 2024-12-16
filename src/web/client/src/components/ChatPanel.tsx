@@ -52,12 +52,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                 {messages.map((message) => (
                     <div key={message.id} className="message">
                         <div className="message-header">
-                            <span className="username">{message.userId}</span>
+                            <span className="username">{message.user_id}</span>
                             <span className="timestamp">
-                                {new Date(message.timestamp).toLocaleString()}
+                                {new Date(message.create_at).toLocaleString()}
                             </span>
                         </div>
-                        <div className="message-content">{message.content}</div>
+                        <div className="message-content">{message.message}</div>
                     </div>
                 ))}
                 <div ref={messagesEndRef} />

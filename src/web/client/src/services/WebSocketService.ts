@@ -30,7 +30,7 @@ export interface Message {
 }
 
 class WebSocketService {
-  private socket: SocketIOClient.Socket | null = null;
+  socket: SocketIOClient.Socket | null = null;
   private messageHandlers: ((message: Message) => void)[] = [];
   private channelHandlers: ((channels: Channel[]) => void)[] = [];
   private threadHandlers: ((threads: Thread[]) => void)[] = [];
