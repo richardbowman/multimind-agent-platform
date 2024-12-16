@@ -7,12 +7,6 @@ interface TaskPanelProps {
 }
 
 export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => {
-    const [tasks, setTasks] = useState<Array<{
-        id: string;
-        description: string;
-        status: TaskStatus;
-    }>>([]);
-
     const { tasks, fetchTasks } = useWebSocket();
 
     useEffect(() => {

@@ -28,8 +28,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [messages, setMessages] = useState<Message[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [threads, setThreads] = useState<Record<string, Thread[]>>({});
-  const [tasks, setTasks] = useState<any[]>([]);
-  const [artifacts, setArtifacts] = useState<any[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
+  const [artifacts, setArtifacts] = useState<Artifact[]>([]);
 
   useEffect(() => {
     webSocketService.connect();

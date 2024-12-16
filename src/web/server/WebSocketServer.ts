@@ -162,6 +162,29 @@ export class WebSocketServer {
                 }
             });
 
+            // Handle task requests
+            socket.on('get_tasks', ({ channel_id, thread_id }: { channel_id: string, thread_id: string | null }) => {
+                // Get all posts for this channel/thread
+                const posts = this.storage.posts.filter(post => {
+                    if (post.channel_id !== channel_id) return false;
+                    if (thread_id) {
+                        return post.getRootId() === thread_id || post.id === thread_id;
+                    }
+                    return true;
+                });
+
+                // Extract project IDs from posts
+                const projectIds = [...new Set(posts.map(p => p.props["project-id"]).filter(Boolean))];
+                
+                // Get tasks from storage that match these project IDs
+                const tasks = projectIds.flatMap(projectId => {
+                    const project = this.storage.tasks?.getProject(projectId);
+                    return project ? Object.values(project.tasks) : [];
+                });
+
+                socket.emit('tasks', tasks);
+            });
+
             socket.on('disconnect', () => {
                 console.log('Client disconnected');
             });
