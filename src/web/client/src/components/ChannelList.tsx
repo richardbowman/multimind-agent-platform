@@ -14,8 +14,12 @@ export const ChannelList: React.FC<ChannelListProps> = ({
     const { channels, fetchChannels } = useWebSocket();
 
     useEffect(() => {
-        fetchChannels();
-    }, [fetchChannels]);
+        const timer = setTimeout(() => {
+            fetchChannels();
+        }, 500);
+        
+        return () => clearTimeout(timer);
+    }, []); // Only run once on mount
 
     return (
         <div className="channel-list">
