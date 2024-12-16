@@ -247,12 +247,22 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 .map(t => t.props?.result)
                 .filter(r => r); // Remove undefined/null results
 
-            const stepResult = await executor.execute(
-                `${userPost?.message} [Step: ${task.description}] [Project: ${project.name}]`,
-                task.type,
-                projectId,
-                priorResults
-            );
+            let stepResult: StepResult;
+            if (executor.executeV2) {
+                stepResult = await executor.executeV2({
+                    goal: `${userPost?.message} [Step: ${task.description}] [Project: ${project.name}]`,
+                    step: task.type,
+                    projectId: projectId,
+                    previousResult: priorResults
+                });
+            } else {
+                stepResult = await executor.execute(
+                    `${userPost?.message} [Step: ${task.description}] [Project: ${project.name}]`,
+                    task.type,
+                    projectId,
+                    priorResults
+                );
+            }
 
             // Store the result in task props
             if (!task.props) task.props = {};
