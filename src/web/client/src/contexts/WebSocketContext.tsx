@@ -25,9 +25,6 @@ const WebSocketContext = createContext<WebSocketContextType>({
   fetchThreads: () => { },
   tasks: [],
   artifacts: [],
-  fetchThread: function (channelId: string, rootId: string): void {
-    throw new Error('Function not implemented.');
-  },
   fetchTasks: function (channelId: string, threadId: string | null): void {
     throw new Error('Function not implemented.');
   },
@@ -150,7 +147,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       sendMessage, 
       fetchChannels, 
       fetchThreads,
-      fetchThread,
       fetchTasks,
       fetchArtifacts,
       fetchAllArtifacts

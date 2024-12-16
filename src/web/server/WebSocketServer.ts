@@ -120,13 +120,6 @@ export class WebSocketServer {
                 socket.emit('threads', threads);
             });
 
-            socket.on('get_thread', ({ channel_id, root_id }: { channel_id: string, root_id: string }) => {
-                const channelThreads = this.threads[channel_id] || [];
-                const thread = channelThreads.find(t => t.rootMessage.id === root_id);
-                if (thread) {
-                    socket.emit('threads', [thread]);
-                }
-            });
 
             socket.on('get_messages', ({ channel_id, thread_id, limit }: { channel_id: string, thread_id?: string, limit: number }) => {
                 Logger.log('Received get_messages request:', { channel_id, thread_id, limit });

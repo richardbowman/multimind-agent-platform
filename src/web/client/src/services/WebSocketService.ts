@@ -109,11 +109,6 @@ class WebSocketService {
     }
   }
 
-  fetchThread(channelId: string, rootId: string) {
-    if (this.socket) {
-      this.socket.emit('get_thread', { channel_id: channelId, root_id: rootId });
-    }
-  }
 
   fetchMessages(channelId: string, threadId: string | null = null, limit: number = 50) {
     if (this.socket) {
