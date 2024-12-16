@@ -13,7 +13,7 @@
 
 .artifacts-layout,
 .log-viewer {
-    height: 100%;
+    height: calc(100vh - 48px);
     width: 100%;
 }
 
@@ -21,6 +21,7 @@
     background-color: #1a1a1a;
     padding: 1rem;
     overflow-y: auto;
+    height: calc(100vh - 48px);
 }
 
 .log-content {
