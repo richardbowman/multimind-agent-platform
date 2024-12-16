@@ -62,6 +62,11 @@ class WebSocketService {
       this.threadHandlers.forEach(handler => handler(threads));
     });
 
+    this.socket.on('tasks', (tasks: any[]) => {
+      console.log('Received tasks:', tasks);
+      this.taskHandlers.forEach(handler => handler(tasks));
+    });
+
     this.socket.on('disconnect', () => {
       console.log('Disconnected from WebSocket server');
     });

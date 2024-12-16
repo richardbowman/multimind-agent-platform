@@ -182,7 +182,15 @@ export class WebSocketServer {
                     return project ? Object.values(project.tasks) : [];
                 });
 
-                socket.emit('tasks', tasks);
+                // Ensure we're sending an array even if no tasks found
+                const tasksToSend = tasks || [];
+                console.log('Sending tasks:', tasksToSend);
+                socket.emit('tasks', tasksToSend);
+            });
+
+            // Handle task updates
+            socket.on('tasks', (tasks: any[]) => {
+                this.io.emit('tasks', tasks);
             });
 
             socket.on('disconnect', () => {
