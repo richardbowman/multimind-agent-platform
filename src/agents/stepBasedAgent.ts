@@ -26,8 +26,16 @@ export interface StepResult {
     response: ModelMessageResponse;
 }
 
+export interface ExecuteParams {
+    goal: string;
+    step: string;
+    projectId: string;
+    previousResult?: any;
+}
+
 export interface StepExecutor {
     execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult>;
+    executeV2?(params: ExecuteParams): Promise<StepResult>;
     onTaskNotification?(task: Task): Promise<void>;
     onProjectCompleted?(project: Project): Promise<void>;
 }
