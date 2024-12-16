@@ -79,6 +79,18 @@ export const GlobalArtifactViewer: React.FC = () => {
                                 <span className="artifact-id">#{selectedArtifact.id}</span>
                             </div>
                         </div>
+                        <div className="artifact-metadata-card">
+                            <div className="metadata-grid">
+                                {selectedArtifact.metadata && Object.entries(selectedArtifact.metadata)
+                                    .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
+                                    .map(([key, value]) => (
+                                        <div key={key} className="meta-item">
+                                            <strong>{key}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value}
+                                        </div>
+                                    ))
+                                }
+                            </div>
+                        </div>
                         <div className="artifact-content">
                             {selectedArtifact.type === 'binary' || selectedArtifact.metadata?.format === 'binary' ? (
                                 <pre>{selectedArtifact.content as string}</pre>

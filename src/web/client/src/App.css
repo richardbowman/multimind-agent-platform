@@ -420,6 +420,19 @@
     overflow-y: auto;
 }
 
+.artifact-metadata-card {
+    background-color: #2a2a2a;
+    border: 1px solid #444;
+    border-radius: 8px;
+    padding: 1rem;
+}
+
+.metadata-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 0.5rem;
+}
+
 .artifact-detail-header {
     padding-bottom: 1rem;
     border-bottom: 1px solid #444;
