@@ -34,6 +34,8 @@ class WebSocketService {
   private messageHandlers: ((message: Message) => void)[] = [];
   private channelHandlers: ((channels: Channel[]) => void)[] = [];
   private threadHandlers: ((threads: Thread[]) => void)[] = [];
+  private taskHandlers: ((tasks: any[]) => void)[] = [];
+  private artifactHandlers: ((artifacts: any[]) => void)[] = [];
 
   connect(url: string = 'ws://localhost:4001') {
     this.socket = io(url, {
@@ -133,6 +135,32 @@ class WebSocketService {
     return () => {
       this.threadHandlers = this.threadHandlers.filter(h => h !== handler);
     };
+  }
+
+  onTasks(handler: (tasks: any[]) => void) {
+    this.taskHandlers.push(handler);
+    return () => {
+      this.taskHandlers = this.taskHandlers.filter(h => h !== handler);
+    };
+  }
+
+  onArtifacts(handler: (artifacts: any[]) => void) {
+    this.artifactHandlers.push(handler);
+    return () => {
+      this.artifactHandlers = this.artifactHandlers.filter(h => h !== handler);
+    };
+  }
+
+  fetchTasks(channelId: string, threadId: string | null) {
+    if (this.socket) {
+      this.socket.emit('get_tasks', { channel_id: channelId, thread_id: threadId });
+    }
+  }
+
+  fetchArtifacts(channelId: string, threadId: string | null) {
+    if (this.socket) {
+      this.socket.emit('get_artifacts', { channel_id: channelId, thread_id: threadId });
+    }
   }
 }
 

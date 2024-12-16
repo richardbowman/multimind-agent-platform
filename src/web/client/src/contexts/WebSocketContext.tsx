@@ -5,10 +5,14 @@ interface WebSocketContextType {
   messages: Message[];
   channels: Channel[];
   threads: Record<string, Thread[]>; // Keyed by channel_id
+  tasks: any[];
+  artifacts: any[];
   sendMessage: (message: Partial<Message>) => void;
   fetchChannels: () => void;
   fetchThreads: (channelId: string) => void;
   fetchThread: (channelId: string, rootId: string) => void;
+  fetchTasks: (channelId: string, threadId: string | null) => void;
+  fetchArtifacts: (channelId: string, threadId: string | null) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -24,6 +28,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [messages, setMessages] = useState<Message[]>([]);
   const [channels, setChannels] = useState<Channel[]>([]);
   const [threads, setThreads] = useState<Record<string, Thread[]>>({});
+  const [tasks, setTasks] = useState<any[]>([]);
+  const [artifacts, setArtifacts] = useState<any[]>([]);
 
   useEffect(() => {
     webSocketService.connect();
@@ -67,10 +73,20 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     });
 
+    const taskCleanup = webSocketService.onTasks((newTasks) => {
+      setTasks(newTasks);
+    });
+
+    const artifactCleanup = webSocketService.onArtifacts((newArtifacts) => {
+      setArtifacts(newArtifacts);
+    });
+
     return () => {
       messageCleanup();
       channelCleanup();
       threadCleanup();
+      taskCleanup();
+      artifactCleanup();
       webSocketService.disconnect();
     };
   }, []);

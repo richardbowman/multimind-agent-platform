@@ -9,15 +9,13 @@ interface ArtifactPanelProps {
 export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
     const [artifacts, setArtifacts] = useState<Artifact[]>([]);
 
+    const { artifacts, fetchArtifacts } = useWebSocket();
+
     useEffect(() => {
-        // TODO: Implement actual artifact fetching
         if (channelId) {
-            setArtifacts([
-                { id: '1', type: 'report', content: 'Sample Report', metadata: { created: new Date() } },
-                { id: '2', type: 'draft-email', content: 'Draft Email Content', metadata: { created: new Date() } },
-            ]);
+            fetchArtifacts(channelId, threadId);
         }
-    }, [channelId, threadId]);
+    }, [channelId, threadId, fetchArtifacts]);
 
     return (
         <div className="artifact-panel">

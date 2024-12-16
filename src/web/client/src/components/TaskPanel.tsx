@@ -13,15 +13,13 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
         status: TaskStatus;
     }>>([]);
 
+    const { tasks, fetchTasks } = useWebSocket();
+
     useEffect(() => {
-        // TODO: Implement actual task fetching
         if (channelId) {
-            setTasks([
-                { id: '1', description: 'Review code', status: 'Not Started' },
-                { id: '2', description: 'Update documentation', status: 'In Progress' },
-            ]);
+            fetchTasks(channelId, threadId);
         }
-    }, [channelId, threadId]);
+    }, [channelId, threadId, fetchTasks]);
 
     return (
         <div className="task-panel">
