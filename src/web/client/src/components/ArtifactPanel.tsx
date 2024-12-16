@@ -32,7 +32,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
         <div className="artifact-panel">
             <h2>Artifacts</h2>
             <ul>
-                {(artifacts || []).map(artifact => (
+                {(artifacts || []).map((artifact : Artifact) => (
                     <li 
                         key={artifact.id} 
                         className={`artifact-item type-${artifact.type}`}
