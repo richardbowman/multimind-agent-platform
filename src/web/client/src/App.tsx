@@ -30,39 +30,41 @@ const App: React.FC = () => {
                     Artifacts
                 </button>
             </div>
-            {currentTab === 'chat' ? (
-                <>
-                <div className="sidebar">
-                <ChannelList 
-                    onChannelSelect={setCurrentChannelId}
-                    currentChannelId={currentChannelId}
-                />
-                <ThreadList
-                    channelId={currentChannelId}
-                    onThreadSelect={setCurrentThreadId}
-                    currentThreadId={currentThreadId}
-                />
-            </div>
-            <div className="main-content">
-                <ChatPanel
-                    currentChannelId={currentChannelId}
-                    currentThreadId={currentThreadId}
-                />
-            </div>
-            <div className="right-sidebar">
-                <TaskPanel
-                    channelId={currentChannelId}
-                    threadId={currentThreadId}
-                />
-                <ArtifactPanel
-                    channelId={currentChannelId}
-                    threadId={currentThreadId}
-                />
+            <div className={currentTab === 'chat' ? 'chat-layout' : 'artifacts-layout'}>
+                {currentTab === 'chat' ? (
+                    <>
+                    <div className="sidebar">
+                    <ChannelList 
+                        onChannelSelect={setCurrentChannelId}
+                        currentChannelId={currentChannelId}
+                    />
+                    <ThreadList
+                        channelId={currentChannelId}
+                        onThreadSelect={setCurrentThreadId}
+                        currentThreadId={currentThreadId}
+                    />
                 </div>
-                </>
-            ) : (
-                <GlobalArtifactViewer />
-            )}
+                <div className="main-content">
+                    <ChatPanel
+                        currentChannelId={currentChannelId}
+                        currentThreadId={currentThreadId}
+                    />
+                </div>
+                <div className="right-sidebar">
+                    <TaskPanel
+                        channelId={currentChannelId}
+                        threadId={currentThreadId}
+                    />
+                    <ArtifactPanel
+                        channelId={currentChannelId}
+                        threadId={currentThreadId}
+                    />
+                    </div>
+                    </>
+                ) : (
+                    <GlobalArtifactViewer />
+                )}
+            </div>
         </div>
       </WebSocketProvider>
     );
