@@ -107,15 +107,27 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.fetchThread(channelId, rootId);
   };
 
+  const fetchTasks = (channelId: string, threadId: string | null) => {
+    webSocketService.fetchTasks(channelId, threadId);
+  };
+
+  const fetchArtifacts = (channelId: string, threadId: string | null) => {
+    webSocketService.fetchArtifacts(channelId, threadId);
+  };
+
   return (
     <WebSocketContext.Provider value={{ 
       messages, 
       channels, 
-      threads, 
+      threads,
+      tasks,
+      artifacts, 
       sendMessage, 
       fetchChannels, 
       fetchThreads,
-      fetchThread
+      fetchThread,
+      fetchTasks,
+      fetchArtifacts
     }}>
       {children}
     </WebSocketContext.Provider>
