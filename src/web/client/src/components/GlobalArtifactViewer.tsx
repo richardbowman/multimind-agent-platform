@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/WebSocketContext';
-import { ArtifactViewer } from './ArtifactViewer';
 
 export const GlobalArtifactViewer: React.FC = () => {
     const { artifacts, fetchAllArtifacts } = useWebSocket();
@@ -29,45 +28,67 @@ export const GlobalArtifactViewer: React.FC = () => {
 
     return (
         <div className="global-artifact-viewer">
-            <div className="type-filter">
-                <select 
-                    value={selectedType} 
-                    onChange={(e) => setSelectedType(e.target.value)}
-                    className="type-select"
-                >
-                    {types.map(type => (
-                        <option key={type} value={type}>{type}</option>
-                    ))}
-                </select>
-            </div>
-            <div className="artifacts-grid">
-                {filteredArtifacts.map(artifact => (
-                    <div 
-                        key={artifact.id} 
-                        className="artifact-card"
-                        onClick={() => setSelectedArtifact(artifact)}
+            <div className="artifact-list-panel">
+                <div className="type-filter">
+                    <select 
+                        value={selectedType} 
+                        onChange={(e) => setSelectedType(e.target.value)}
+                        className="type-select"
                     >
-                        <div className="artifact-card-header">
-                            <span className="artifact-type-badge">{artifact.type}</span>
-                            <span className="artifact-id">#{artifact.id}</span>
+                        {types.map(type => (
+                            <option key={type} value={type}>{type}</option>
+                        ))}
+                    </select>
+                </div>
+                <div className="artifacts-grid">
+                    {filteredArtifacts.map(artifact => (
+                        <div 
+                            key={artifact.id} 
+                            className={`artifact-card ${selectedArtifact?.id === artifact.id ? 'selected' : ''}`}
+                            onClick={() => setSelectedArtifact(artifact)}
+                        >
+                            <div className="artifact-card-header">
+                                <span className="artifact-type-badge">{artifact.type}</span>
+                                <span className="artifact-id">#{artifact.id}</span>
+                            </div>
+                            <div className="artifact-card-title">
+                                {artifact.metadata?.title || artifact.id}
+                            </div>
+                            <div className="artifact-card-meta">
+                                {artifact.metadata?.tokenCount && (
+                                    <span className="token-count">
+                                        {artifact.metadata.tokenCount} tokens
+                                    </span>
+                                )}
+                            </div>
                         </div>
-                        <div className="artifact-card-title">
-                            {artifact.metadata?.title || artifact.id}
+                    ))}
+                </div>
+            </div>
+            <div className="artifact-detail-panel">
+                {selectedArtifact ? (
+                    <>
+                        <div className="artifact-detail-header">
+                            <h2>{selectedArtifact.metadata?.title || selectedArtifact.id}</h2>
+                            <div className="artifact-meta">
+                                <span className="artifact-type-badge">{selectedArtifact.type}</span>
+                                <span className="artifact-id">#{selectedArtifact.id}</span>
+                            </div>
                         </div>
-                        <div className="artifact-card-meta">
-                            {artifact.metadata?.tokenCount && (
-                                <span className="token-count">
-                                    {artifact.metadata.tokenCount} tokens
-                                </span>
+                        <div className="artifact-content">
+                            {typeof selectedArtifact.content === 'string' ? (
+                                <pre>{selectedArtifact.content}</pre>
+                            ) : (
+                                <div>Binary content</div>
                             )}
                         </div>
+                    </>
+                ) : (
+                    <div className="no-selection">
+                        Select an artifact to view its details
                     </div>
-                ))}
+                )}
             </div>
-            <ArtifactViewer 
-                artifact={selectedArtifact} 
-                onClose={() => setSelectedArtifact(null)}
-            />
         </div>
     );
 };
