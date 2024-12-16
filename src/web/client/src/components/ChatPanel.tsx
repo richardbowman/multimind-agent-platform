@@ -46,19 +46,27 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     return (
         <div className="chat-panel">
             <div className="messages">
-                {messages.map((message) => (
-                    <div key={message.id} className="message">
-                        <div className="message-header">
-                            <span className="username">{message.user_id}</span>
-                            <span className="timestamp">
-                                {new Date(message.create_at).toLocaleString()}
-                            </span>
+                {messages
+                    .filter(message => 
+                        // If we're in a thread, only show messages from that thread
+                        // If we're not in a thread, only show messages without a thread_id
+                        currentThreadId 
+                            ? message.thread_id === currentThreadId
+                            : !message.thread_id
+                    )
+                    .map((message) => (
+                        <div key={message.id} className="message">
+                            <div className="message-header">
+                                <span className="username">{message.user_id}</span>
+                                <span className="timestamp">
+                                    {new Date(message.create_at).toLocaleString()}
+                                </span>
+                            </div>
+                            <div className="message-content">
+                                <ReactMarkdown>{message.message}</ReactMarkdown>
+                            </div>
                         </div>
-                        <div className="message-content">
-                            <ReactMarkdown>{message.message}</ReactMarkdown>
-                        </div>
-                    </div>
-                ))}
+                    ))}
                 <div ref={messagesEndRef} />
             </div>
             <CommandInput onSendMessage={handleSendMessage} />
