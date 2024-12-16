@@ -99,21 +99,5 @@ You are a research orchestrator. Follow these steps:
         };
     }
 
-    async onTaskNotification(task: Task): Promise<void> {
-        if (task.complete && task.props?.result.data.researchTasks.has(task.id)) {
-            task.props?.result.data.researchTasks.delete(task.id);
-
-            // If all tasks are complete, we can mark this step as finished
-            if (task.props?.result.data.researchTasks.size === 0) {
-                const project = await this.taskManager.getProject(task.projectId);
-                const decompositionTask = Object.values(project.tasks)
-                    .find(t => t.type === 'decompose-research' && !t.complete);
-
-                if (decompositionTask) {
-                    await this.taskManager.completeTask(decompositionTask.id);
-                }
-            }
-        }
-    }
 
 }

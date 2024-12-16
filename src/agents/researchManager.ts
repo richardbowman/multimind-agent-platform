@@ -39,7 +39,7 @@ Step 2. 'aggregate-research' to compile findings`);
 
     protected async taskNotification(task: Task): Promise<void> {
         try {
-            if (task.type === "assign-researchers") {
+            if (task.type === "decompose-research") {
                 if (task.complete) {
                     const project = this.projects.getProject(task.projectId);
                     this.planSteps({

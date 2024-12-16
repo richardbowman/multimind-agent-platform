@@ -2,19 +2,18 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import SearchHelper, { DuckDuckGoProvider } from '../../helpers/searchHelper';
 import ScrapeHelper from '../../helpers/scrapeHelper';
-import SummaryHelper from '../../helpers/summaryHelper';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import Logger from '../../helpers/logger';
 import crypto from 'crypto';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ArtifactManager } from 'src/tools/artifactManager';
+import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
     constructor(
         private searchHelper: SearchHelper = new SearchHelper(new DuckDuckGoProvider(this.artifactManager)),
         private scrapeHelper: ScrapeHelper,
-        private summaryHelper: SummaryHelper,
         private llmService: ILLMService,
         private artifactManager: ArtifactManager,
         private modelHelpers: ModelHelpers
@@ -93,7 +92,7 @@ export class WebSearchExecutor implements StepExecutor {
         }
     
         // Generate and save summary with token tracking
-        const summaryResponse = await this.summaryHelper.summarizeContent(
+        const summaryResponse = await this.summarizeContent(
             step,
             `Page Title: ${title}\nURL: ${url}\n\n${content}`,
             this.llmService
@@ -160,20 +159,6 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
         const response = await this.modelHelpers.generate({
             message,
             instructions
-        });
-
-        // Track token usage in artifact metadata
-        await this.artifactManager.saveArtifact({
-            id: crypto.randomUUID(),
-            type: 'link-selection',
-            content: JSON.stringify(response.links || []),
-            metadata: {
-                url,
-                task,
-                projectId: goal,
-                tokenUsage: response._usage
-            },
-            tokenCount: response._usage?.outputTokens
         });
 
         return response.links || [];
@@ -325,5 +310,16 @@ Given the following web search results, select 1-3 URLs that are most relevant t
         }
 
         return response.urls.map(r => r.href || r).filter(url => typeof url === 'string');
+    }
+
+    async summarizeContent(task: string, content: string, llmService: ILLMService): Promise<ModelMessageResponse> {
+        const systemPrompt = `You are a research assistant. The goal is to summarize a web search result for the user's goal of: ${task}.
+        Create a report in Markdown of all of the specific information from the provided web page that is relevant to our goal.
+        If the page has no relevant information to the goal, respond with NOT RELEVANT.`;
+
+        const userPrompt = "Web Search Result:" + content;
+        const summary = await llmService.generate(systemPrompt, { message: userPrompt } );
+
+        return summary;
     }
 }

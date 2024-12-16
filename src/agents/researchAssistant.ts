@@ -20,7 +20,6 @@ export interface ResearchProject extends Project<Task> {
 class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
     private searchHelper = new SearchHelper(new DuckDuckGoProvider(this.artifactManager));
     private scrapeHelper = new ScrapeHelper(this.artifactManager);
-    private summaryHelper = new SummaryHelper();
 
     constructor(params: AgentConstructorParams) {
         super(params);
@@ -32,7 +31,6 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
         this.registerStepExecutor(new WebSearchExecutor(
             this.searchHelper,
             this.scrapeHelper,
-            this.summaryHelper,
             params.llmService,
             this.artifactManager,
             this.modelHelpers

@@ -4,6 +4,12 @@
  - [~] means in-progress
  - [x] complete
 
+## 2024-12-15
+- [ ] added some very rough features like model response caches
+- [ ] research manager is losing its steps when it kicks off children, it never moves on to aggregate.
+- [ ] i'm not geting any research summaries saved, or webpage summaries.
+- [ ] research assistants are not doing a multistep process, the plan only comes back with web-research (are they using single step planner?)
+
 ## 2024-12-14
 - [x] add to solver a code executor
 - [ ] add a form capability for question generation to use in onboarding
