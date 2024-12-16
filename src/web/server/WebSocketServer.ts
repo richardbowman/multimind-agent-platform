@@ -2,7 +2,7 @@ import { Server } from 'socket.io';
 import { createServer } from 'http';
 import express from 'express';
 import { Channel, Thread, Message } from '../client/src/services/WebSocketService';
-import { InMemoryChatStorage } from '../../chat/inMemoryChatClient';
+import { InMemoryChatStorage, InMemoryTestClient } from '../../chat/inMemoryChatClient';
 import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ArtifactManager } from 'src/tools/artifactManager';
@@ -149,8 +149,13 @@ export class WebSocketServer {
                     parent_post_id: message.thread_id || null
                 };
 
-                // Store the message in storage instead of this.messages
-                this.storage.posts.push(fullMessage);
+                // Send the message through the storage system
+                const client = new InMemoryTestClient(fullMessage.user_id, "test", this.storage);
+                if (fullMessage.getRootId()) {
+                    client.postReply(fullMessage.getRootId(), fullMessage.channel_id, fullMessage.message, fullMessage.props);
+                } else {
+                    client.postInChannel(fullMessage.channel_id, fullMessage.message, fullMessage.props);
+                }
                 
                 // Emit to all clients except sender
                 socket.broadcast.emit('message', {
