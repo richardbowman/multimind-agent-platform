@@ -35,10 +35,10 @@ export class WebSocketServer {
 
             // Handle channel requests
             socket.on('get_channels', () => {
-                const channels = this.storage.getChannels().map(channel => ({
-                    id: channel.id,
-                    name: channel.name.replace('#', ''),
-                    description: channel.description
+                const channels = Object.entries(this.storage.channelNames).map(([id, name]) => ({
+                    id: id,
+                    name: name.replace('#', ''),
+                    description: '' // Optional description field
                 }));
                 socket.emit('channels', channels);
             });
