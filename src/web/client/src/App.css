@@ -4,6 +4,7 @@
     height: 100vh;
     background-color: #1a1a1a;
     color: #ffffff;
+    margin-top: 48px; /* Add margin to account for fixed tab bar */
 }
 
 .sidebar {
@@ -341,6 +342,12 @@
     background-color: #2a2a2a;
     border-bottom: 1px solid #444;
     padding: 0.5rem 1rem;
+    width: 100%;
+    position: fixed;
+    top: 0;
+    left: 0;
+    z-index: 100;
+    height: 48px;
 }
 
 .tab-button {
@@ -352,6 +359,9 @@
     cursor: pointer;
     border-radius: 4px;
     transition: all 0.2s;
+    height: 32px;
+    display: flex;
+    align-items: center;
 }
 
 .tab-button:hover {
