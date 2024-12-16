@@ -11,8 +11,7 @@
     height: 100%;
 }
 
-.artifacts-layout,
-.log-viewer {
+.artifacts-layout {
     height: calc(100vh - 48px);
     width: 100%;
 }
@@ -21,7 +20,11 @@
     background-color: #1a1a1a;
     padding: 1rem;
     overflow-y: auto;
-    height: calc(100vh - 48px);
+    position: absolute;
+    top: 48px;
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 
 .log-content {
