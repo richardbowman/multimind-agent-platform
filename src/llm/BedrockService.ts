@@ -423,7 +423,9 @@ export class BedrockService implements ILLMService {
      * @returns 
      */
     async getTokenCount(text: string): Promise<number> {
-        await this.waitForNextCall();
+        const estimatedTokens = Math.ceil(text.length / 4); // Rough estimate of 4 chars per token
+
+        await this.waitForNextCall(estimatedTokens);
         const input = { text };
 
         // For Bedrock, we'll make a real conversation request but with minimal output
