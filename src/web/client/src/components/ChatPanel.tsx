@@ -39,14 +39,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             props: {}
         };
         
-        // Add message to local state immediately
-        const fullMessage = {
-            ...message,
-            id: Date.now().toString(),
-            create_at: Date.now()
-        };
-        
-        sendMessage(fullMessage);
+        sendMessage(message);
     };
 
     return (
