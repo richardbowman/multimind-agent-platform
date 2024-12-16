@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import webSocketService from '../services/WebSocketService';
@@ -53,7 +54,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                                 {new Date(message.create_at).toLocaleString()}
                             </span>
                         </div>
-                        <div className="message-content">{message.message}</div>
+                        <div className="message-content">
+                            <ReactMarkdown>{message.message}</ReactMarkdown>
+                        </div>
                     </div>
                 ))}
                 <div ref={messagesEndRef} />

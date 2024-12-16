@@ -141,6 +141,79 @@
     line-height: 1.4;
 }
 
+/* Markdown styles */
+.message-content h1 {
+    font-size: 1.5em;
+    margin: 0.5em 0;
+}
+
+.message-content h2 {
+    font-size: 1.3em;
+    margin: 0.5em 0;
+}
+
+.message-content h3 {
+    font-size: 1.1em;
+    margin: 0.5em 0;
+}
+
+.message-content p {
+    margin: 0.5em 0;
+}
+
+.message-content ul, 
+.message-content ol {
+    margin: 0.5em 0;
+    padding-left: 1.5em;
+}
+
+.message-content code {
+    background-color: #333;
+    padding: 0.2em 0.4em;
+    border-radius: 3px;
+    font-family: monospace;
+}
+
+.message-content pre {
+    background-color: #333;
+    padding: 1em;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.message-content blockquote {
+    border-left: 3px solid #4a9eff;
+    margin: 0.5em 0;
+    padding-left: 1em;
+    color: #999;
+}
+
+.message-content a {
+    color: #4a9eff;
+    text-decoration: none;
+}
+
+.message-content a:hover {
+    text-decoration: underline;
+}
+
+.message-content table {
+    border-collapse: collapse;
+    margin: 0.5em 0;
+    width: 100%;
+}
+
+.message-content th,
+.message-content td {
+    border: 1px solid #444;
+    padding: 0.5em;
+    text-align: left;
+}
+
+.message-content th {
+    background-color: #333;
+}
+
 .command-input {
     padding: 1rem;
     background-color: #2a2a2a;
