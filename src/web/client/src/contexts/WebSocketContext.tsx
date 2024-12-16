@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import webSocketService, { Message, Channel, Thread } from '../services/WebSocketService';
+import { Artifact } from '../../../../tools/artifact';
 
 interface WebSocketContextType {
   messages: Message[];
   channels: Channel[];
   threads: Record<string, Thread[]>; // Keyed by channel_id
   tasks: any[];
-  artifacts: any[];
+  artifacts: Artifact[];
   sendMessage: (message: Partial<Message>) => void;
   fetchChannels: () => void;
   fetchThreads: (channelId: string) => void;
