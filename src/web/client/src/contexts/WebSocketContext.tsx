@@ -8,6 +8,7 @@ interface WebSocketContextType {
   threads: Record<string, Thread[]>; // Keyed by channel_id
   tasks: any[];
   artifacts: Artifact[];
+  logs: any[];
   sendMessage: (message: Partial<Message>) => void;
   fetchChannels: () => void;
   fetchThreads: (channelId: string) => void;
@@ -33,6 +34,10 @@ const WebSocketContext = createContext<WebSocketContextType>({
   },
   fetchAllArtifacts: function (): void {
     throw new Error('Function not implemented.');
+  },
+  logs: [],
+  fetchLogs: function (): void {
+    throw new Error('Function not implemented.');
   }
 });
 
@@ -42,6 +47,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [threads, setThreads] = useState<Record<string, Thread[]>>({});
   const [tasks, setTasks] = useState<any[]>([]);
   const [artifacts, setArtifacts] = useState<any[]>([]);
+  const [logs, setLogs] = useState<any[]>([]);
 
   useEffect(() => {
     webSocketService.connect();
@@ -94,6 +100,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setArtifacts(newArtifacts);
     });
 
+    webSocketService.socket?.on('logs', (newLogs: any[]) => {
+      setLogs(newLogs);
+    });
+
     return () => {
       messageCleanup();
       channelCleanup();
@@ -130,6 +140,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.fetchAllArtifacts();
   };
 
+  const fetchLogs = () => {
+    webSocketService.fetchLogs();
+  };
+
   return (
     <WebSocketContext.Provider value={{ 
       messages, 
@@ -142,7 +156,9 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       fetchThreads,
       fetchTasks,
       fetchArtifacts,
-      fetchAllArtifacts
+      fetchAllArtifacts,
+      logs,
+      fetchLogs
     }}>
       {children}
     </WebSocketContext.Provider>

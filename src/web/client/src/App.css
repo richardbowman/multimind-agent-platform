@@ -11,9 +11,56 @@
     height: 100%;
 }
 
-.artifacts-layout {
+.artifacts-layout,
+.log-viewer {
     height: 100%;
     width: 100%;
+}
+
+.log-viewer {
+    background-color: #1a1a1a;
+    padding: 1rem;
+    overflow-y: auto;
+}
+
+.log-content {
+    font-family: monospace;
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+
+.log-entry {
+    padding: 0.25rem 0.5rem;
+    border-bottom: 1px solid #333;
+    display: flex;
+    gap: 1rem;
+    align-items: flex-start;
+}
+
+.log-entry:hover {
+    background-color: #2a2a2a;
+}
+
+.log-timestamp {
+    color: #666;
+    white-space: nowrap;
+}
+
+.log-level {
+    font-weight: bold;
+    text-transform: uppercase;
+    min-width: 70px;
+}
+
+.log-entry.info .log-level { color: #4a9eff; }
+.log-entry.error .log-level { color: #ff4a4a; }
+.log-entry.warn .log-level { color: #ffaa4a; }
+.log-entry.debug .log-level { color: #4aff4a; }
+
+.log-message {
+    color: #fff;
+    white-space: pre-wrap;
+    word-break: break-word;
 }
 
 .sidebar {

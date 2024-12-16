@@ -181,6 +181,12 @@ class WebSocketService {
       this.socket.emit('get_all_artifacts');
     }
   }
+
+  fetchLogs() {
+    if (this.socket) {
+      this.socket.emit('get_logs');
+    }
+  }
 }
 
 export const webSocketService = new WebSocketService();
