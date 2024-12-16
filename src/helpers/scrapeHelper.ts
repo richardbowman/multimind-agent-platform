@@ -143,15 +143,7 @@ export function convertPageToMarkdown($: CheerioAPI, url: string): string {
     const cleanedHtml = $('body').html();
 
     // Remove unwanted elements and attributes
-    $('script, style, iframe, noscript, svg').remove();
-    
-    // Handle images - remove data URIs and keep only regular image URLs
-    $('img').each((_, el) => {
-        const src = $(el).attr('src');
-        if (!src || src.startsWith('data:')) {
-            $(el).remove();
-        }
-    });
+    $('script, style, iframe, noscript, svg, img').remove();
     
     // Remove all style-related attributes
     $('*').each((_, el) => {
@@ -217,18 +209,6 @@ export function convertPageToMarkdown($: CheerioAPI, url: string): string {
         }
     });
 
-    turndownService.addRule('cleanImages', {
-        filter: 'img',
-        replacement: function(content, node) {
-            const element = node as HTMLElement;
-            const src = element.getAttribute('src');
-            const alt = element.getAttribute('alt') || '';
-            if (!src || src.startsWith('data:')) {
-                return '';
-            }
-            return `![${alt}](${src})`;
-        }
-    });
     
     // Configure link formatting
     turndownService.addRule('links', {
