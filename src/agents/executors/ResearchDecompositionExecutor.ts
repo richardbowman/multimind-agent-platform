@@ -21,7 +21,7 @@ export class ResearchDecompositionExecutor implements StepExecutor {
         this.taskManager = taskManager;
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.ResearchDecomposition);
         const project = await this.taskManager.getProject(projectId);
         const pendingTasks: Set<string> = new Set();
