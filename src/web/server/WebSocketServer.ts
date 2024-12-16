@@ -249,6 +249,18 @@ export class WebSocketServer {
                 socket.emit('artifacts', artifacts);
             });
 
+            // Handle get_all_artifacts request
+            socket.on('get_all_artifacts', async () => {
+                try {
+                    const artifacts = await this.artifactManager.listArtifacts();
+                    Logger.log('Sending all artifacts:', artifacts);
+                    socket.emit('artifacts', artifacts);
+                } catch (error) {
+                    Logger.error('Error fetching all artifacts:', error);
+                    socket.emit('artifacts', []);
+                }
+            });
+
             socket.on('disconnect', () => {
                 Logger.log('Client disconnected');
             });
