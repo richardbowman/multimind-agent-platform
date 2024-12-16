@@ -169,9 +169,18 @@ export class BedrockService implements ILLMService {
                 }
             });
 
-            const bedrockResponse = await RetryHelper.withRetry(async () => {
-                return await this.runtimeClient.send(command);
-            }, "Bedrock generate() call");
+            let bedrockResponse;
+            try {
+                bedrockResponse = await this.runtimeClient.send(command);
+            } catch (error: any) {
+                if (error?.name === 'ThrottlingException') {
+                    bedrockResponse = await RetryHelper.withRetry(async () => {
+                        return await this.runtimeClient.send(command);
+                    }, "Bedrock generate() call - throttled");
+                } else {
+                    throw error;
+                }
+            }
 
             const result = bedrockResponse.output?.message?.content?.[0];
             
@@ -370,9 +379,18 @@ export class BedrockService implements ILLMService {
                 }
             });
 
-            const response = await RetryHelper.withRetry(async () => {
-                return await this.runtimeClient.send(command);
-            }, "Bedrock generateStructured() call");
+            let response;
+            try {
+                response = await this.runtimeClient.send(command);
+            } catch (error: any) {
+                if (error?.name === 'ThrottlingException') {
+                    response = await RetryHelper.withRetry(async () => {
+                        return await this.runtimeClient.send(command);
+                    }, "Bedrock generateStructured() call - throttled");
+                } else {
+                    throw error;
+                }
+            }
 
             // Extract tool use from response
             const result = response.output?.message?.content?.find(c => c.toolUse);
@@ -446,9 +464,18 @@ export class BedrockService implements ILLMService {
             }
         });
 
-        const response = await RetryHelper.withRetry(async () => {
-            return await this.runtimeClient.send(command);
-        }, "Bedrock getTokenCount() call");
+        let response;
+        try {
+            response = await this.runtimeClient.send(command);
+        } catch (error: any) {
+            if (error?.name === 'ThrottlingException') {
+                response = await RetryHelper.withRetry(async () => {
+                    return await this.runtimeClient.send(command);
+                }, "Bedrock getTokenCount() call - throttled");
+            } else {
+                throw error;
+            }
+        }
 
         // Bedrock includes token counts in the response metadata
         const tokenCount = response.usage?.inputTokens || 0;
