@@ -1,7 +1,6 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
-import { ChatPost } from '../../../../chat/chatClient';
+import React, { useEffect, useRef } from 'react';
 import { CommandInput } from './CommandInput';
-import { WebSocketMessage, ChatMessage } from '../../../shared/types';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface ChatPanelProps {
     currentChannelId: string | null;
@@ -12,8 +11,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     currentChannelId,
     currentThreadId,
 }) => {
-    const [messages, setMessages] = useState<ChatMessage[]>([]);
-    const [wsConnection, setWsConnection] = useState<WebSocket | null>(null);
+    const { messages, sendMessage } = useWebSocket();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
@@ -24,53 +22,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         scrollToBottom();
     }, [messages]);
 
-    useEffect(() => {
-        const ws = new WebSocket(`ws://${window.location.host}`);
-        
-        ws.onopen = () => {
-            console.log('WebSocket connected');
-            setWsConnection(ws);
-        };
-
-        ws.onmessage = (event) => {
-            const message: WebSocketMessage = JSON.parse(event.data);
-            if (message.type === 'CHAT') {
-                handleIncomingMessage(message.payload);
-            }
-        };
-
-        ws.onclose = () => {
-            console.log('WebSocket disconnected');
-            setWsConnection(null);
-        };
-
-        return () => {
-            ws.close();
-        };
-    }, []);
-
-    const handleIncomingMessage = (message: ChatMessage) => {
-        if (message.channelId === currentChannelId &&
-            (!currentThreadId || message.threadId === currentThreadId)) {
-            setMessages(prev => [...prev, message]);
-        }
-    };
-
     const handleSendMessage = async (content: string) => {
-        if (!wsConnection || !currentChannelId) return;
+        if (!currentChannelId) return;
 
-        const message: WebSocketMessage = {
-            type: 'CHAT',
-            action: 'CREATE',
-            payload: {
-                channelId: currentChannelId,
-                threadId: currentThreadId,
-                content,
-                timestamp: Date.now(),
-            }
-        };
-
-        wsConnection.send(JSON.stringify(message));
+        sendMessage({
+            channel_id: currentChannelId,
+            thread_id: currentThreadId || undefined,
+            message: content,
+            create_at: Date.now(),
+        });
     };
 
     return (

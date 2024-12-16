@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect } from 'react';
 import { Thread } from '../../../shared/types';
+import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface ThreadListProps {
     channelId: string | null;
@@ -12,21 +13,15 @@ export const ThreadList: React.FC<ThreadListProps> = ({
     onThreadSelect,
     currentThreadId
 }) => {
-    const [threads, setThreads] = useState<Thread[]>([]);
+    const { threads, fetchThreads } = useWebSocket();
 
     useEffect(() => {
-        if (!channelId) {
-            setThreads([]);
-            return;
+        if (channelId) {
+            fetchThreads(channelId);
         }
+    }, [channelId, fetchThreads]);
 
-        // TODO: Replace with actual WebSocket connection
-        const mockThreads: Thread[] = [
-            { id: 'thread1', channelId, rootMessageId: 'msg1' },
-            { id: 'thread2', channelId, rootMessageId: 'msg2' },
-        ];
-        setThreads(mockThreads);
-    }, [channelId]);
+    const channelThreads = channelId ? threads[channelId] || [] : [];
 
     if (!channelId) {
         return <div className="thread-list">Select a channel to view threads</div>;
@@ -36,7 +31,7 @@ export const ThreadList: React.FC<ThreadListProps> = ({
         <div className="thread-list">
             <h2>Threads</h2>
             <ul>
-                {threads.map(thread => (
+                {channelThreads.map(thread => (
                     <li
                         key={thread.id}
                         className={`thread-item ${currentThreadId === thread.id ? 'active' : ''}`}
