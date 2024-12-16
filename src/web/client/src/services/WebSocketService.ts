@@ -32,7 +32,7 @@ export interface Message {
 
 class WebSocketService {
   socket: SocketIOClient.Socket | null = null;
-  private messageHandlers: ((message: Message) => void)[] = [];
+  private messageHandlers: ((messages: Message[]) => void)[] = [];
   private channelHandlers: ((channels: Channel[]) => void)[] = [];
   private threadHandlers: ((threads: Thread[]) => void)[] = [];
   private taskHandlers: ((tasks: any[]) => void)[] = [];
@@ -52,7 +52,7 @@ class WebSocketService {
     });
 
     this.socket.on('message', (message: Message) => {
-      this.messageHandlers.forEach(handler => handler(message));
+      this.messageHandlers.forEach(handler => handler([message]));
     });
 
     this.socket.on('channels', (channels: Channel[]) => {
@@ -129,7 +129,7 @@ class WebSocketService {
     }
   }
 
-  onMessage(handler: (message: Message) => void) {
+  onMessage(handler: (messages: Message[]) => void) {
     this.messageHandlers.push(handler);
     return () => {
       this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
