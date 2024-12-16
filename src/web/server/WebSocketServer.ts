@@ -265,9 +265,19 @@ export class WebSocketServer {
                 })));
 
                 const artifacts = artifactsList.filter(a => a?.id);
+                
+                // Process artifacts content before sending
+                const processedArtifacts = artifacts.map(artifact => {
+                    const content = Buffer.isBuffer(artifact.content)
+                        ? artifact.metadata?.binary 
+                            ? artifact.content.toString('base64')  // Binary content as base64
+                            : artifact.content.toString('utf8')    // Text content as UTF-8
+                        : artifact.content;
+                    return { ...artifact, content };
+                });
 
-                Logger.info(`Sending ${artifacts.length} artifacts`);
-                socket.emit('artifacts', artifacts);
+                Logger.info(`Sending ${processedArtifacts.length} artifacts`);
+                socket.emit('artifacts', processedArtifacts);
             });
 
             // Handle get_all_artifacts request
