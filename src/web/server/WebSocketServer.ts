@@ -2,10 +2,11 @@ import { Server } from 'socket.io';
 import { createServer } from 'http';
 import express from 'express';
 import { Channel, Thread, Message } from '../client/src/services/WebSocketService';
-import { InMemoryChatStorage, InMemoryTestClient } from '../../chat/inMemoryChatClient';
+import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from '../../chat/inMemoryChatClient';
 import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ArtifactManager } from 'src/tools/artifactManager';
+import { ChatPost, isValidChatPost } from 'src/chat/chatClient';
 
 export class WebSocketServer {
     private io: Server;
@@ -135,7 +136,7 @@ export class WebSocketServer {
 
             // Handle messages
             socket.on('message', (message: Partial<Message>) => {
-                const fullMessage = {
+                const fullMessage : InMemoryPost = {
                     id: Date.now().toString(),
                     channel_id: message.channel_id!,
                     message: message.message!,
@@ -145,8 +146,7 @@ export class WebSocketServer {
                     props: message.props || {},
                     getRootId: function() { 
                         return message.thread_id || null;
-                    },
-                    parent_post_id: message.thread_id || null
+                    }
                 };
 
                 // Send the message through the storage system
