@@ -4,19 +4,24 @@ import { fileURLToPath } from 'url';
 import Logger from '../helpers/logger';
 import { IVectorDatabase } from '../llm/IVectorDatabase';
 import { Artifact } from './artifact';
+import { AsyncQueue } from '../helpers/asyncQueue';
 
 export class ArtifactManager {
   private storageDir: string;
   private artifactMetadataFile: string;
   private vectorDb: IVectorDatabase;
+  private fileQueue: AsyncQueue;
 
   constructor(vectorDb: IVectorDatabase, storageDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../.output/artifacts')) {
     this.storageDir = storageDir;
     this.artifactMetadataFile = path.join(this.storageDir, 'artifact.json');
     this.vectorDb = vectorDb;
+    this.fileQueue = new AsyncQueue();
 
     // Ensure the .output directory exists
-    fs.mkdir(this.storageDir, { recursive: true }).catch(err => Logger.error('Error creating output directory:', err));
+    this.fileQueue.enqueue(() => 
+      fs.mkdir(this.storageDir, { recursive: true })
+    ).catch(err => Logger.error('Error creating output directory:', err));
   }
 
   async getArtifacts(filter: { type?: string } = {}): Promise<Artifact[]> {
@@ -31,7 +36,9 @@ export class ArtifactManager {
   
   private async loadArtifactMetadata(): Promise<Record<string, any>> {
     try {
-      const data = await fs.readFile(this.artifactMetadataFile, 'utf-8');
+      const data = await this.fileQueue.enqueue(() =>
+        fs.readFile(this.artifactMetadataFile, 'utf-8')
+      );
       return JSON.parse(data);
     } catch (error) {
       if (error.code === 'ENOENT') {
@@ -43,7 +50,9 @@ export class ArtifactManager {
   }
 
   private async saveArtifactMetadata(metadata: Record<string, any>): Promise<void> {
-    await fs.writeFile(this.artifactMetadataFile, JSON.stringify(metadata, null, 2));
+    await this.fileQueue.enqueue(() =>
+      fs.writeFile(this.artifactMetadataFile, JSON.stringify(metadata, null, 2))
+    );
   }
 
   async saveArtifact(artifact: Artifact): Promise<Artifact> {
@@ -58,7 +67,9 @@ export class ArtifactManager {
     }
 
     try {
-      await fs.mkdir(artifactDir, { recursive: true });
+      await this.fileQueue.enqueue(() => 
+        fs.mkdir(artifactDir, { recursive: true })
+      );
     } catch (error) {
       Logger.error('Error creating directory:', error);
     }
@@ -69,7 +80,9 @@ export class ArtifactManager {
     }
 
     const filePath = path.join(artifactDir, `${artifact.type}_v${version}.md`);
-    await fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content));
+    await this.fileQueue.enqueue(() =>
+      fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content))
+    );
 
     // Update or add the artifact metadata
     metadata[artifact.id] = {
@@ -110,7 +123,7 @@ export class ArtifactManager {
     }
 
     try {
-      const content = await fs.readFile(contentPath);
+      const content = await this.fileQueue.enqueue(() => fs.readFile(contentPath));
       const type = metadata[artifactId].type; // Retrieve the artifact type from metadata
       return { id: artifactId, type, content, metadata: metadata[artifactId] };
     } catch (error) {
@@ -152,7 +165,9 @@ export class ArtifactManager {
       const artifactDir = path.join(this.storageDir, artifactId);
 
       // Delete all files in the artifact directory
-      await fs.rm(artifactDir, { recursive: true, force: true });
+      await this.fileQueue.enqueue(() =>
+        fs.rm(artifactDir, { recursive: true, force: true })
+      );
 
       // Remove from metadata
       delete metadata[artifactId];
