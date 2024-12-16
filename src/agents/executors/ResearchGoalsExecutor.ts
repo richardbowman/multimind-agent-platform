@@ -22,7 +22,7 @@ export class ResearchGoalsExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = {
             type: "object",
             properties: {
@@ -61,8 +61,12 @@ Consider:
 5. Are there any unstated assumptions that need verification?`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        // Include previous results in the context if available
+        const previousContext = params.previousResult ? 
+            `\nPrevious findings:\n${params.previousResult.message || params.previousResult.reasoning}` : '';
+
         const result = await this.modelHelpers.generate<ResearchUnderstandingResponse>({
-            message: goal,
+            message: `${params.goal}${previousContext}`,
             instructions
         });
 
@@ -80,7 +84,7 @@ Consider:
         }
 
         return {
-            type: "understand-research-goals",
+            type: step,
             finished: true,
             response: {
                 message: `I understand your research goals:\n\n${result.understanding}\n\nProceeding with research plan creation.`
