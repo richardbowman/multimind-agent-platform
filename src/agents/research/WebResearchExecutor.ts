@@ -10,6 +10,7 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { WebSearchResponse } from '../../schemas/WebSearchResponse';
 import { SearchQueryResponse } from '../../schemas/SearchQueryResponse';
+import { LinkSelectionResponse } from '../../schemas/LinkSelectionResponse';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 
@@ -126,30 +127,14 @@ export class WebSearchExecutor implements StepExecutor {
         goal: string,
         title: string,
         links: { href: string, text: string }[]
-    ): Promise<{ href: string, text: string }[]> {
+    ): Promise<LinkSelectionResponse['links']> {
         const MAX_FOLLOWS = parseInt(process.env.MAX_FOLLOWS || "0");
         
         if (MAX_FOLLOWS === 0) {
             return [];
         }
 
-        const schema = {
-            type: "object",
-            properties: {
-                links: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            href: { type: "string" },
-                            text: { type: "string" }
-                        },
-                        required: ["href"]
-                    }
-                }
-            },
-            required: ["links"]
-        };
+        const schema = await getGeneratedSchema(SchemaType.LinkSelectionResponse);
 
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}. 
 Given a list of links from the page entitled "${title}", decide IF there are any relevant links on the page.
