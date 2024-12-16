@@ -45,21 +45,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     webSocketService.connect();
 
-    webSocketService.onMessage((message) => {
-      setMessages(prev => {
-        // Check if message already exists to prevent duplicates
-        if (!prev.some(m => m.id === message.id)) {
-          return [...prev, message];
-        }
-        return prev;
-      });
-    });
-
     // Handle bulk messages from server
     const messagesHandler = (newMessages: Message[]) => {
       console.log('Received messages from server:', newMessages);
       setMessages(newMessages);
-      // setIsLoading(false);
     };
 
     webSocketService.socket?.on('messages', messagesHandler);
@@ -69,7 +58,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setMessages(prev => {
         // Check if message already exists to prevent duplicates
         if (!prev.some(m => m.id === message.id)) {
-          return [...prev, message];
+          return [...prev, message].sort((a, b) => a.create_at - b.create_at);
         }
         return prev;
       });
