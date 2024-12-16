@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { Thread } from '../../../shared/types';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
@@ -14,6 +14,13 @@ export const ThreadList: React.FC<ThreadListProps> = ({
     currentThreadId
 }) => {
     const { threads, fetchThreads } = useWebSocket();
+    const activeThreadRef = useRef<HTMLLIElement>(null);
+
+    useEffect(() => {
+        if (activeThreadRef.current) {
+            activeThreadRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        }
+    }, [currentThreadId]);
 
     useEffect(() => {
         if (channelId) {
@@ -32,6 +39,7 @@ export const ThreadList: React.FC<ThreadListProps> = ({
             <h2>Threads</h2>
             <ul>
                 <li
+                    ref={currentThreadId === null ? activeThreadRef : null}
                     key="root"
                     className={`thread-item ${currentThreadId === null ? 'active' : ''}`}
                     onClick={() => onThreadSelect('')}
@@ -43,6 +51,7 @@ export const ThreadList: React.FC<ThreadListProps> = ({
                 </li>
                 {channelThreads.map(thread => (
                     <li
+                        ref={currentThreadId === thread.rootMessage.id ? activeThreadRef : null}
                         key={thread.rootMessage.id}
                         className={`thread-item ${currentThreadId === thread.rootMessage.id ? 'active' : ''}`}
                         onClick={() => onThreadSelect(thread.rootMessage.id)}
