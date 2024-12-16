@@ -56,11 +56,14 @@ export const GlobalArtifactViewer: React.FC = () => {
                                 {artifact.metadata?.title || artifact.id}
                             </div>
                             <div className="artifact-card-meta">
-                                {artifact.metadata?.tokenCount && (
-                                    <span className="token-count">
-                                        {artifact.metadata.tokenCount} tokens
-                                    </span>
-                                )}
+                                {artifact.metadata && Object.entries(artifact.metadata)
+                                    .filter(([key]) => key !== 'binary' && key !== 'format')
+                                    .map(([key, value]) => (
+                                        <span key={key} className="meta-item">
+                                            {key}: {typeof value === 'object' ? JSON.stringify(value) : value}
+                                        </span>
+                                    ))
+                                }
                             </div>
                         </div>
                     ))}

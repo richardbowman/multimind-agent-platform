@@ -614,9 +614,23 @@
     color: #999;
 }
 
-.token-count {
+.artifact-card-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-top: 0.5rem;
+}
+
+.meta-item {
     display: inline-block;
     padding: 0.2rem 0.5rem;
     background-color: #333;
     border-radius: 4px;
+    font-size: 0.8rem;
+    color: #999;
+}
+
+.meta-item:hover {
+    background-color: #444;
+    color: #fff;
 }
