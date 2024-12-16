@@ -458,10 +458,27 @@
     padding: 1rem;
 }
 
-.metadata-grid {
-    display: grid;
-    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-    gap: 0.5rem;
+.metadata-table {
+    width: 100%;
+    border-collapse: collapse;
+}
+
+.metadata-row {
+    border-bottom: 1px solid #444;
+}
+
+.metadata-label {
+    padding: 8px;
+    width: 150px;
+    color: #999;
+    font-weight: 500;
+    vertical-align: top;
+}
+
+.metadata-value {
+    padding: 8px;
+    color: #fff;
+    word-break: break-word;
 }
 
 .artifact-detail-header {

@@ -80,16 +80,21 @@ export const GlobalArtifactViewer: React.FC = () => {
                             </div>
                         </div>
                         <div className="artifact-metadata-card">
-                            <div className="metadata-grid">
-                                {selectedArtifact.metadata && Object.entries(selectedArtifact.metadata)
-                                    .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
-                                    .map(([key, value]) => (
-                                        <div key={key} className="meta-item">
-                                            <strong>{key}:</strong> {typeof value === 'object' ? JSON.stringify(value) : value}
-                                        </div>
-                                    ))
-                                }
-                            </div>
+                            <table className="metadata-table">
+                                <tbody>
+                                    {selectedArtifact.metadata && Object.entries(selectedArtifact.metadata)
+                                        .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
+                                        .map(([key, value]) => (
+                                            <tr key={key} className="metadata-row">
+                                                <td className="metadata-label">{key}</td>
+                                                <td className="metadata-value">
+                                                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
+                                                </td>
+                                            </tr>
+                                        ))
+                                    }
+                                </tbody>
+                            </table>
                         </div>
                         <div className="artifact-content">
                             {selectedArtifact.type === 'binary' || selectedArtifact.metadata?.format === 'binary' ? (
