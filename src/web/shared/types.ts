@@ -1,5 +1,5 @@
 export interface WebSocketMessage {
-    type: 'CHAT' | 'CHANNEL' | 'THREAD' | 'TASK' | 'ARTIFACT';
+    type: 'CHAT' | 'CHANNEL' | 'THREAD' | 'TASK' | 'ARTIFACT' | 'LOG';
     action: 'CREATE' | 'UPDATE' | 'DELETE' | 'LIST';
     payload: any;
 }
