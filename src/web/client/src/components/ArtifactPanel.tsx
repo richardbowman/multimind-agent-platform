@@ -7,8 +7,6 @@ interface ArtifactPanelProps {
 }
 
 export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
-    const [artifacts, setArtifacts] = useState<Artifact[]>([]);
-
     const { artifacts, fetchArtifacts } = useWebSocket();
 
     useEffect(() => {
