@@ -12,10 +12,12 @@ export class WebSocketServer {
     private threads: Record<string, Thread[]> = {};
     private messages: Message[] = [];
     private projects: TaskManager;
+    private artifactManager: ArtifactManager;
 
-    constructor(storage: InMemoryChatStorage, projects: TaskManager, port: number = 4001) {
+    constructor(storage: InMemoryChatStorage, projects: TaskManager, artifactManager: ArtifactManager, port: number = 4001) {
         this.storage = storage;
         this.projects = projects;
+        this.artifactManager = artifactManager;
         
         const app = express();
         const httpServer = createServer(app);
@@ -215,7 +217,7 @@ export class WebSocketServer {
                 // Get artifacts from storage that match these IDs
                 const artifacts = artifactIds.map(id => {
                     try {
-                        return this.storage.artifacts?.get(id);
+                        return this.artifactManager.getArtifact(id);
                     } catch (error) {
                         Logger.error(`Error fetching artifact ${id}:`, error);
                         return null;
