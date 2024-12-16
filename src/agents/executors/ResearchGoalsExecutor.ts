@@ -22,7 +22,7 @@ export class ResearchGoalsExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
         const schema = {
             type: "object",
             properties: {
@@ -72,7 +72,7 @@ Consider:
                 finished: false,
                 needsUserInput: true,
                 response: {
-                    message: `Before proceeding with the research, I need some clarification:\n\n${
+                    message: `Here is what I understand so far: ${result.understanding} Before proceeding with the research, I need some clarification:\n\n${
                         result.clarifyingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n\n')
                     }\n\nPlease provide answers to these questions so I can better understand your research needs.`
                 }
