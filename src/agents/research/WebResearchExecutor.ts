@@ -33,6 +33,7 @@ export class WebSearchExecutor implements StepExecutor {
 
     private async processPage(url: string, step: string, goal: string, projectId: string): Promise<string> {
         const scrapedUrls = await this.getScrapedUrls();
+        let summaries : string[] = [];
 
         if (this.visitedUrls.has(url) || scrapedUrls.has(url)) {
             Logger.info(`Retrieving existing summary for URL: ${url}`);
@@ -65,6 +66,14 @@ export class WebSearchExecutor implements StepExecutor {
             }
         });
 
+        // Generate and save summary with token tracking
+        const summaryResponse = await this.summarizeContent(
+            step,
+            `Page Title: ${title}\nURL: ${url}\n\n${content}`,
+            this.llmService
+        );        
+        summaries.push(summaryResponse.message);
+
         const selectedLinks = await this.selectRelevantLinks(step, goal, title, links);
 
         if (selectedLinks.length > 0) {
@@ -77,6 +86,32 @@ export class WebSearchExecutor implements StepExecutor {
                         this.visitedUrls.add(normalizedUrl);
 
                         const { content: followContent, title: followTitle } = await this.scrapeHelper.scrapePage(normalizedUrl);
+
+                        // Generate and save summary with token tracking
+                        const followupSummaryResponse = await this.summarizeContent(
+                            step,
+                            `Page Title: ${followTitle}\nURL: ${normalizedUrl}\n\n${followContent}`,
+                            this.llmService
+                        );
+                        if (followupSummaryResponse.message !== "NOT RELEVANT") {
+                            summaries
+                            await this.artifactManager.saveArtifact({
+                                id: crypto.randomUUID(),
+                                type: 'summary',
+                                content: followupSummaryResponse.message,
+                                metadata: {
+                                    title: `Summary Report for ${normalizedUrl}`,
+                                    url,
+                                    task: step,
+                                    projectId,
+                                    tokenUsage: followupSummaryResponse._usage
+                                },
+                                tokenCount: followupSummaryResponse._usage?.outputTokens
+                            });
+                
+                        }
+                        summaries.push(followupSummaryResponse.message);
+
                     }
                 } catch (error) {
                     Logger.error(`Error processing followed page ${link.href}`, error);
@@ -84,14 +119,8 @@ export class WebSearchExecutor implements StepExecutor {
             }
         }
 
-        // Generate and save summary with token tracking
-        const summaryResponse = await this.summarizeContent(
-            step,
-            `Page Title: ${title}\nURL: ${url}\n\n${content}`,
-            this.llmService
-        );
-
         if (summaryResponse.message !== "NOT RELEVANT") {
+            summaries
             await this.artifactManager.saveArtifact({
                 id: crypto.randomUUID(),
                 type: 'summary',
@@ -105,9 +134,10 @@ export class WebSearchExecutor implements StepExecutor {
                 },
                 tokenCount: summaryResponse._usage?.outputTokens
             });
-            return summaryResponse.message;
+
         }
-        return "";
+
+        return summaries.join("\n\n");
     }
 
     private async selectRelevantLinks(

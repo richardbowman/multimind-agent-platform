@@ -53,7 +53,7 @@ class ScrapeHelper {
             try {
                 await page.goto(url, { 
                     waitUntil: 'networkidle',
-                    timeout: 3000 
+                    timeout: 5000 
                 });
             } catch (error) {
                 Logger.warn(`Element 'body' did not load within the specified timeout. Continuing with the current content.`);
@@ -143,9 +143,6 @@ export default ScrapeHelper;
 
 
 export function convertPageToMarkdown($: CheerioAPI, url: string): string {
-    // Get the modified HTML without scripts, styles, and style attributes
-    const cleanedHtml = $('body').html();
-
     // Remove unwanted elements and attributes
     $('script, style, iframe, noscript, svg, img').remove();
     
@@ -192,6 +189,9 @@ export function convertPageToMarkdown($: CheerioAPI, url: string): string {
             }
         });
     });
+    
+    // Get the modified HTML without scripts, styles, and style attributes
+    const cleanedHtml = $('body').html();
 
     const fullHtmlWithoutIndentation = (cleanedHtml||"")
         .replace(/\t/g, '') // Remove tabs
