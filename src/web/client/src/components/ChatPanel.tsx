@@ -142,7 +142,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                                         className="thread-indicator"
                                         onClick={() => setCurrentThreadId(message.id)}
                                     >
-                                        View thread responses
+                                        View thread ({messages.filter(m => m.thread_id === message.id).length} responses)
                                     </div>
                                 )}
                             </div>

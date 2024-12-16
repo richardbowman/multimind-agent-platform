@@ -158,13 +158,22 @@
     border-radius: 4px;
     color: #4a9eff;
     cursor: pointer;
-    display: inline-block;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
     font-size: 0.9em;
+    transition: all 0.2s ease;
 }
 
 .thread-indicator:hover {
     background-color: #444;
-    text-decoration: underline;
+    transform: translateY(-1px);
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.thread-indicator:active {
+    transform: translateY(0);
+    box-shadow: none;
 }
 
 /* Markdown styles */
