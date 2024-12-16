@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
+import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
@@ -71,38 +71,7 @@ export const GlobalArtifactViewer: React.FC = () => {
             </div>
             <div className="artifact-detail-panel">
                 {selectedArtifact ? (
-                    <>
-                        <div className="artifact-detail-header">
-                            <h2>{selectedArtifact.metadata?.title || selectedArtifact.id}</h2>
-                            <div className="artifact-meta">
-                                <span className="artifact-type-badge">{selectedArtifact.type}</span>
-                                <span className="artifact-id">#{selectedArtifact.id}</span>
-                            </div>
-                        </div>
-                        <div className="artifact-metadata-card">
-                            <table className="metadata-table">
-                                <tbody>
-                                    {selectedArtifact.metadata && Object.entries(selectedArtifact.metadata)
-                                        .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
-                                        .map(([key, value]) => (
-                                            <tr key={key} className="metadata-row">
-                                                <td className="metadata-label">{key}</td>
-                                                <td className="metadata-value">
-                                                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
-                                                </td>
-                                            </tr>
-                                        ))
-                                    }
-                                </tbody>
-                            </table>
-                        </div>
-                        <div className="artifact-content">
-                            {selectedArtifact.type === 'binary' || selectedArtifact.metadata?.format === 'binary' ? (
-                                <pre>{selectedArtifact.content as string}</pre>
-                            ) : (
-                                <ReactMarkdown>{selectedArtifact.content as string}</ReactMarkdown>
-                            )}
-                        </div>
+                    <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
                     </>
                 ) : (
                     <div className="no-selection">
