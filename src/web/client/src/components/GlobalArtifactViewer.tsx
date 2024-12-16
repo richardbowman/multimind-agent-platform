@@ -76,11 +76,7 @@ export const GlobalArtifactViewer: React.FC = () => {
                             </div>
                         </div>
                         <div className="artifact-content">
-                            <pre>
-                                {selectedArtifact.content instanceof ArrayBuffer
-                                    ? '[Binary content]'
-                                    : selectedArtifact.content}
-                            </pre>
+                            <pre>{selectedArtifact.content}</pre>
                         </div>
                     </>
                 ) : (

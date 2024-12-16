@@ -254,12 +254,14 @@ export class WebSocketServer {
                 try {
                     const artifacts = await this.artifactManager.listArtifacts();
                     // Convert Buffer content to string before sending
-                    const processedArtifacts = artifacts.map(artifact => ({
-                        ...artifact,
-                        content: Buffer.isBuffer(artifact.content) 
-                            ? artifact.content.toString('utf8')
-                            : artifact.content
-                    }));
+                    const processedArtifacts = artifacts.map(artifact => {
+                        const content = Buffer.isBuffer(artifact.content)
+                            ? artifact.metadata?.binary 
+                                ? artifact.content.toString('base64')  // Binary content as base64
+                                : artifact.content.toString('utf8')    // Text content as UTF-8
+                            : artifact.content;
+                        return { ...artifact, content };
+                    });
                     Logger.log('Sending all artifacts:', processedArtifacts);
                     socket.emit('artifacts', processedArtifacts);
                 } catch (error) {
