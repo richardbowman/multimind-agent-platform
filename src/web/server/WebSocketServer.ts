@@ -2,6 +2,7 @@ import { Server } from 'socket.io';
 import { createServer } from 'http';
 import express from 'express';
 import { Channel, Thread, Message } from '../client/src/services/WebSocketService';
+import { LogReader } from './LogReader';
 import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from '../../chat/inMemoryChatClient';
 import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
@@ -15,8 +16,10 @@ export class WebSocketServer {
     private projects: TaskManager;
     private artifactManager: ArtifactManager;
     private userClient: InMemoryTestClient;
+    private logReader: LogReader;
 
     constructor(storage: InMemoryChatStorage, projects: TaskManager, artifactManager: ArtifactManager, userClient: InMemoryTestClient, port: number = 4001) {
+        this.logReader = new LogReader();
         this.storage = storage;
         this.projects = projects;
         this.artifactManager = artifactManager;
@@ -299,6 +302,12 @@ export class WebSocketServer {
                     Logger.error('Error fetching all artifacts:', error);
                     socket.emit('artifacts', []);
                 }
+            });
+
+            // Handle log requests
+            socket.on('get_logs', () => {
+                const logs = this.logReader.readLogs();
+                socket.emit('logs', logs);
             });
 
             socket.on('disconnect', () => {
