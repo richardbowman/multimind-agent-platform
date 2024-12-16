@@ -11,10 +11,20 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     const { artifacts, fetchArtifacts } = useWebSocket();
 
     useEffect(() => {
-        if (channelId) {
-            fetchArtifacts(channelId, threadId);
-        }
-    }, [channelId, threadId, fetchArtifacts]);
+        let isSubscribed = true;
+
+        const loadArtifacts = async () => {
+            if (channelId && isSubscribed) {
+                await fetchArtifacts(channelId, threadId);
+            }
+        };
+
+        loadArtifacts();
+
+        return () => {
+            isSubscribed = false;
+        };
+    }, [channelId, threadId]);
 
     return (
         <div className="artifact-panel">

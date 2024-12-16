@@ -11,10 +11,20 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
     const { tasks, fetchTasks } = useWebSocket();
 
     useEffect(() => {
-        if (channelId) {
-            fetchTasks(channelId, threadId);
-        }
-    }, [channelId, threadId, fetchTasks]);
+        let isSubscribed = true;
+
+        const loadTasks = async () => {
+            if (channelId && isSubscribed) {
+                await fetchTasks(channelId, threadId);
+            }
+        };
+
+        loadTasks();
+
+        return () => {
+            isSubscribed = false;
+        };
+    }, [channelId, threadId]);
 
     return (
         <div className="task-panel">
