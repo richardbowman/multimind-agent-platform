@@ -78,7 +78,7 @@ TASK GOAL:
 
 ${completedSteps}
 
-${currentTasks}
+${currentSteps}
 
 ${this.modelHelpers.getFinalInstructions()}`;
 
