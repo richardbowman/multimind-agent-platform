@@ -241,7 +241,7 @@ export class WebSocketServer {
             });
 
             // Handle artifact requests
-            socket.on('get_artifacts', ({ channel_id, thread_id }: { channel_id: string, thread_id: string | null }) => {
+            socket.on('get_artifacts', async ({ channel_id, thread_id }: { channel_id: string, thread_id: string | null }) => {
                 // Get all posts for this channel/thread
                 const posts = this.storage.posts.filter(post => {
                     if (post.channel_id !== channel_id) return false;
@@ -255,16 +255,18 @@ export class WebSocketServer {
                 const artifactIds = [...new Set(posts.flatMap(p => p.props["artifact-ids"] || []))];
                 
                 // Get artifacts from storage that match these IDs
-                const artifacts = artifactIds.map(id => {
+                const artifactsList = (await Promise.all(artifactIds.map(id => {
                     try {
                         return this.artifactManager.loadArtifact(id);
                     } catch (error) {
                         Logger.error(`Error fetching artifact ${id}:`, error);
                         return null;
                     }
-                }).filter(Boolean);
+                })));
 
-                Logger.log('Sending artifacts:', artifacts);
+                const artifacts = artifactsList.filter(a => a?.id);
+
+                Logger.info(`Sending ${artifacts.length} artifacts`);
                 socket.emit('artifacts', artifacts);
             });
 
@@ -281,7 +283,7 @@ export class WebSocketServer {
                             : artifact.content;
                         return { ...artifact, content };
                     });
-                    Logger.log('Sending all artifacts:', processedArtifacts);
+                    Logger.info('Sending all artifacts');
                     socket.emit('artifacts', processedArtifacts);
                 } catch (error) {
                     Logger.error('Error fetching all artifacts:', error);
@@ -290,7 +292,7 @@ export class WebSocketServer {
             });
 
             socket.on('disconnect', () => {
-                Logger.log('Client disconnected');
+                Logger.info('Client disconnected');
             });
         });
     }
