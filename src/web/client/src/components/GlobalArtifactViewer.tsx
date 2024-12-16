@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
@@ -76,7 +77,11 @@ export const GlobalArtifactViewer: React.FC = () => {
                             </div>
                         </div>
                         <div className="artifact-content">
-                            <pre>{selectedArtifact.content}</pre>
+                            {selectedArtifact.type === 'markdown' || selectedArtifact.metadata?.format === 'markdown' ? (
+                                <ReactMarkdown>{selectedArtifact.content as string}</ReactMarkdown>
+                            ) : (
+                                <pre>{selectedArtifact.content as string}</pre>
+                            )}
                         </div>
                     </>
                 ) : (
