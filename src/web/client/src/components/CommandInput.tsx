@@ -65,6 +65,16 @@ export const CommandInput: React.FC<CommandInputProps> = ({ onSendMessage }) => 
 
     const handleKeyPress = (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter' && input.trim()) {
+            // Special handling for /artifacts and /tasks commands
+            if (input.trim() === '/artifacts' || input.trim() === '/tasks') {
+                // These commands are handled by the UI through the WebSocket context
+                // So we just pass them through
+                onSendMessage(input.trim());
+                setInput('');
+                setShowSuggestions(false);
+                return;
+            }
+
             onSendMessage(input.trim());
             setInput('');
             setShowSuggestions(false);

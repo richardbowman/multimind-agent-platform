@@ -37,8 +37,53 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         }
     }, [messages]);
 
+    const [lastMessage, setLastMessage] = useState<string | null>(null);
+
     const handleSendMessage = async (content: string) => {
         if (!currentChannelId) return;
+
+        // Handle special commands
+        if (content.startsWith('/')) {
+            const [command, ...args] = content.split(' ');
+            
+            switch (command) {
+                case '/retry':
+                    if (lastMessage) {
+                        sendMessage({
+                            channel_id: currentChannelId,
+                            thread_id: currentThreadId || undefined,
+                            message: lastMessage,
+                            user_id: userId,
+                            create_at: Date.now(),
+                            props: {}
+                        });
+                    }
+                    return;
+                    
+                case '/channel':
+                    // Send message to channel root regardless of current thread
+                    const channelMessage = args.join(' ');
+                    if (channelMessage) {
+                        sendMessage({
+                            channel_id: currentChannelId,
+                            message: channelMessage,
+                            user_id: userId,
+                            create_at: Date.now(),
+                            props: {}
+                        });
+                    }
+                    return;
+
+                default:
+                    // If not a special command, send as regular message
+                    break;
+            }
+        }
+
+        // Store non-command messages for /retry
+        if (!content.startsWith('/')) {
+            setLastMessage(content);
+        }
 
         const message = {
             channel_id: currentChannelId,
