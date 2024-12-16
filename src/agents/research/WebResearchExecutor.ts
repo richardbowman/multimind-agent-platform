@@ -22,7 +22,7 @@ export class WebSearchExecutor implements StepExecutor {
         private llmService: ILLMService,
         private artifactManager: ArtifactManager,
         private modelHelpers: ModelHelpers
-    ) {}
+    ) { }
 
     private visitedUrls: Set<string> = new Set();
 
@@ -33,13 +33,13 @@ export class WebSearchExecutor implements StepExecutor {
 
     private async processPage(url: string, step: string, goal: string, projectId: string): Promise<string> {
         const scrapedUrls = await this.getScrapedUrls();
-        
+
         if (this.visitedUrls.has(url) || scrapedUrls.has(url)) {
             Logger.info(`Retrieving existing summary for URL: ${url}`);
             const existingSummaries = await this.artifactManager.getArtifacts({
                 type: 'summary'
             });
-            const existingSummary = existingSummaries.find(a => 
+            const existingSummary = existingSummaries.find(a =>
                 a.metadata?.url === url
             );
             if (existingSummary) {
@@ -49,9 +49,9 @@ export class WebSearchExecutor implements StepExecutor {
             return "";
         }
         this.visitedUrls.add(url);
-    
+
         const { content, links, title } = await this.scrapeHelper.scrapePage(url);
-    
+
         // Save the full webpage content
         await this.artifactManager.saveArtifact({
             id: crypto.randomUUID(),
@@ -64,20 +64,20 @@ export class WebSearchExecutor implements StepExecutor {
                 projectId
             }
         });
-    
+
         const selectedLinks = await this.selectRelevantLinks(step, goal, title, links);
-    
+
         if (selectedLinks.length > 0) {
             Logger.info(`Following selected links: ${selectedLinks.map(l => l.href).join(', ')}`);
             for (const link of selectedLinks) {
                 try {
                     const normalizedUrl = this.scrapeHelper.normalizeUrl(url, link.href);
-    
+
                     if (!this.visitedUrls.has(normalizedUrl) && !scrapedUrls.has(normalizedUrl)) {
                         this.visitedUrls.add(normalizedUrl);
-    
+
                         const { content: followContent, title: followTitle } = await this.scrapeHelper.scrapePage(normalizedUrl);
-                        
+
                         await this.artifactManager.saveArtifact({
                             id: crypto.randomUUID(),
                             type: 'webpage',
@@ -95,7 +95,7 @@ export class WebSearchExecutor implements StepExecutor {
                 }
             }
         }
-    
+
         // Generate and save summary with token tracking
         const summaryResponse = await this.summarizeContent(
             step,
@@ -129,7 +129,7 @@ export class WebSearchExecutor implements StepExecutor {
         links: { href: string, text: string }[]
     ): Promise<LinkSelectionResponse['links']> {
         const MAX_FOLLOWS = parseInt(process.env.MAX_FOLLOWS || "0");
-        
+
         if (MAX_FOLLOWS === 0) {
             return [];
         }
@@ -156,14 +156,22 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
     async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const { searchQuery, category } = await this.generateSearchQuery(goal, step, previousResult);
         const searchResults = await this.searchHelper.search(searchQuery, category);
-        
+
         if (searchResults.length === 0) {
-            return { type: 'no_results', finished: true };
+            return {
+                type: 'no_results', finished: true, response: {
+                    message: `No search results found for ${goal}: ${step}`
+                }
+            };
         }
 
         const selectedUrls = await this.selectRelevantSearchResults(step, goal, searchResults, previousResult);
         if (selectedUrls.length === 0) {
-            return { type: 'no_relevant_results', finished: true };
+            return {
+                type: 'no_relevant_results', finished: true, response: {
+                    message: `Selected zero links. No relervant search results found for ${goal}: ${step}`
+                }
+            };
         }
 
         const pageSummaries: string[] = [];
@@ -182,12 +190,12 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
         const artifacts = await this.artifactManager.getArtifacts({
             type: 'summary'
         });
-        const relevantArtifacts = artifacts.filter(a => 
-            a.metadata?.projectId === projectId && 
+        const relevantArtifacts = artifacts.filter(a =>
+            a.metadata?.projectId === projectId &&
             a.metadata?.task === step
         );
-        
-        const totalTokens = relevantArtifacts.reduce((sum, artifact) => 
+
+        const totalTokens = relevantArtifacts.reduce((sum, artifact) =>
             sum + (artifact.metadata?.tokenUsage?.outputTokens || 0), 0
         );
 
@@ -229,10 +237,12 @@ Generate a broad web search query without special keywords or operators based on
 Focus on filling knowledge gaps and expanding on existing findings.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        return await this.modelHelpers.generate({
+        const response = await this.modelHelpers.generate<SearchQueryResponse>({
             message: `Task: ${task}`,
             instructions
         });
+
+        return response;
     }
 
     private async selectRelevantSearchResults(
@@ -244,7 +254,7 @@ Focus on filling knowledge gaps and expanding on existing findings.`;
         const schema = await getGeneratedSchema(SchemaType.WebSearchResponse);
 
         const previousFindings = previousResult?.data?.analysis?.keyFindings || [];
-        
+
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
 
 Previous Research Findings:
@@ -278,7 +288,7 @@ Given the following web search results, select 1-3 URLs that are most relevant t
         If the page has no relevant information to the goal, respond with NOT RELEVANT.`;
 
         const userPrompt = "Web Search Result:" + content;
-        const summary = await llmService.generate(systemPrompt, { message: userPrompt } );
+        const summary = await llmService.generate(systemPrompt, { message: userPrompt });
 
         return summary;
     }
