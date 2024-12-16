@@ -34,6 +34,9 @@ export interface ExecuteParams {
 }
 
 export interface StepExecutor {
+    /**
+     * @deprecated Use executeV2 instead which provides better parameter organization
+     */
     execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult>;
     executeV2?(params: ExecuteParams): Promise<StepResult>;
     onTaskNotification?(task: Task): Promise<void>;
