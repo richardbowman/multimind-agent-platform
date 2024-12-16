@@ -11,11 +11,19 @@
     flex-direction: column;
     border-right: 1px solid #333;
     background-color: #2a2a2a;
+    height: 100vh;
+    overflow: hidden;
 }
 
-.channel-list,
+.channel-list {
+    padding: 1rem;
+    flex: 0 0 auto;
+}
+
 .thread-list {
     padding: 1rem;
+    flex: 1 1 auto;
+    overflow-y: auto;
 }
 
 .channel-list h2,
