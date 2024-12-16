@@ -78,6 +78,8 @@ export const GlobalArtifactViewer: React.FC = () => {
                         <div className="artifact-content">
                             {typeof selectedArtifact.content === 'string' ? (
                                 <pre>{selectedArtifact.content}</pre>
+                            ) : Buffer.isBuffer(selectedArtifact.content) ? (
+                                <pre>{selectedArtifact.content.toString('utf8')}</pre>
                             ) : (
                                 <div>Binary content</div>
                             )}
