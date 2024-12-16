@@ -63,7 +63,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const messagesHandler = (newMessages: Message[]) => {
       console.log('Received messages from server:', newMessages);
       setMessages(newMessages);
-      setIsLoading(false);
+      // setIsLoading(false);
     };
 
     webSocketService.socket?.on('messages', messagesHandler);
