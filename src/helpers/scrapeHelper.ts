@@ -73,9 +73,13 @@ class ScrapeHelper {
 
             const actualUrl = page.url();
 
-            // Scroll to the bottom of the page
+            // Scroll to the bottom of the page with error handling
             await page.evaluate(() => {
-                window.scrollTo(0, document.body.scrollHeight);
+                if (document.body) {
+                    window.scrollTo(0, document.body.scrollHeight);
+                }
+            }).catch(error => {
+                Logger.warn('Could not scroll page, continuing anyway:', error);
             });
 
             // Wait for additional content to load after scrolling
