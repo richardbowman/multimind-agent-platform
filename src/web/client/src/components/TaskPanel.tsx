@@ -31,8 +31,10 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
             <h2>Tasks</h2>
             <ul>
                 {(tasks || []).map(task => (
-                    <li key={task.id} className={`task-item status-${task.status.toLowerCase().replace(' ', '-')}`}>
-                        <span className="task-status">{task.status}</span>
+                    <li key={task.id} className={`task-item ${task.complete ? 'status-complete' : (task.inProgress ? 'status-in-progress' : 'status-not-started')}`}>
+                        <span className="task-status">
+                            {task.complete ? 'Complete' : (task.inProgress ? 'In Progress' : 'Not Started')}
+                        </span>
                         <span className="task-description">{task.description}</span>
                     </li>
                 ))}
