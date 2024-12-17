@@ -38,8 +38,10 @@ class WebSocketService {
   private threadHandlers: ((threads: ClientThread[]) => void)[] = [];
   private taskHandlers: ((tasks: any[]) => void)[] = [];
   private artifactHandlers: ((artifacts: any[]) => void)[] = [];
+  private handleHandlers: ((handles: string[]) => void)[] = [];
 
   connect(url: string = 'ws://localhost:4001') {
+    this.fetchHandles();
     this.fetchHandles();
     this.socket = io(url, {
       transports: ['websocket'],
@@ -212,6 +214,25 @@ class WebSocketService {
     if (this.socket) {
       this.socket.emit('get_all_artifacts');
     }
+  }
+
+  fetchHandles() {
+    if (this.socket) {
+      this.socket.emit('get_handles');
+    }
+  }
+
+  onHandles(handler: (handles: string[]) => void) {
+    this.handleHandlers.push(handler);
+    if (this.socket) {
+      this.socket.on('handles', handler);
+    }
+    return () => {
+      this.handleHandlers = this.handleHandlers.filter(h => h !== handler);
+      if (this.socket) {
+        this.socket.off('handles', handler);
+      }
+    };
   }
 
   fetchLogs(logType: 'llm' | 'system' | 'api') {

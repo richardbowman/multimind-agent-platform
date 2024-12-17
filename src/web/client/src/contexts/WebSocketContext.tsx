@@ -27,9 +27,11 @@ const WebSocketContext = createContext<WebSocketContextType>({
   messages: [],
   channels: [],
   threads: {},
+  handles: [],
   sendMessage: () => { },
   fetchChannels: () => { },
   fetchThreads: () => { },
+  fetchHandles: () => { },
   tasks: [],
   artifacts: [],
   fetchTasks: function (channelId: string, threadId: string | null): void {
@@ -199,7 +201,9 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       fetchArtifacts,
       fetchAllArtifacts,
       logs,
-      fetchLogs
+      fetchLogs,
+      handles,
+      fetchHandles
     }}>
       {children}
     </WebSocketContext.Provider>
