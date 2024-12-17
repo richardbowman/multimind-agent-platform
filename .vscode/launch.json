@@ -1,13 +1,25 @@
 {
-    "name": "Attach to process",
-    "type": "node",
-    "request": "attach",
-    "port": 9229,
-    "skipFiles": [
-        // Node.js internal core modules
-        "<node_internals>/**",
-
-        // Ignore all dependencies (optional)
-        "${workspaceFolder}/node_modules/**",
-    ],
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Launch Chrome",
+            "type": "chrome",
+            "request": "launch",
+            "url": "http://localhost:3000",
+            "webRoot": "${workspaceFolder}/src",
+            "sourceMapPathOverrides": {
+                "webpack:///src/*": "${webRoot}/*"
+            }
+        },
+        {
+            "name": "Attach to Node Process",
+            "type": "node",
+            "request": "attach",
+            "port": 9229,
+            "skipFiles": [
+                "<node_internals>/**",
+                "${workspaceFolder}/node_modules/**"
+            ]
+        }
+    ]
 }
