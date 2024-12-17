@@ -6,6 +6,7 @@ import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { ChatPost } from "src/chat/chatClient";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
+import { LLMCallLogger } from "./LLMLogger";
 
 class MyEmbedder implements IEmbeddingFunction {
     private embeddingModel: EmbeddingSpecificModel;
@@ -39,11 +40,13 @@ export default class LMStudioService implements ILLMService {
     private lmStudioClient: LMStudioClient;
     private embeddingModel?: IEmbeddingFunction;
     private chatModel?: LLMSpecificModel;
+    private logger: LLMCallLogger;
 
     constructor() {
         this.lmStudioClient = new LMStudioClient({
             baseUrl: process.env.LMSTUDIO_BASEURL!
         });
+        this.logger = new LLMCallLogger('lmstudio');
     }
     getTokenCount(message: string): Promise<number> {
         if (!this.chatModel) throw new Error("LM Studio not initalized");
@@ -82,7 +85,8 @@ export default class LMStudioService implements ILLMService {
         }
     }
 
-    async generate<M extends ModelResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: MessageOpts) : Promise<M> {
+    async generate<M extends ModelResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: MessageOpts): Promise<M> {
+        const input = { instructions, userPost, history };
         const messageChain = [
             ...this.mapPosts(userPost, history),
             {
@@ -91,13 +95,17 @@ export default class LMStudioService implements ILLMService {
             }            
         ];
         const result = await this.getChatModel().respond(messageChain, {});
-        return {
+        const output = {
             message: result.content
         };
+            
+        await this.logger.logCall('generate', input, output);
+        return output;
     }
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string, 
         contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string> {
+        const input = { message, history, seedAssistant, contextWindowLength, maxTokens, schema };
         if (!this.chatModel) {
             throw new Error("LLaMA model is not initialized.");
         }
@@ -180,8 +188,15 @@ export default class LMStudioService implements ILLMService {
         // Set the maxTokens parameter for the LLaMA model
         const prediction = this.chatModel.respond(messageChain, opts);
         const finalResult = await prediction;
-        const resultBody = finalResult.content;
-        return JSON5.parse(resultBody);
+        try {
+            const resultBody = finalResult.content;
+            const output = JSON5.parse(resultBody);
+            await this.logger.logCall('generateStructured', input, output);
+            return output;
+        } catch (error) {
+            await this.logger.logCall('generateStructured', input, null, error);
+            throw error;
+        }
     }
 
     async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[],  
