@@ -45,10 +45,14 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
                                 Method: {log.method}<br/>
                                 Input: {JSON.stringify(log.input, null, 2)}<br/>
                                 Output: {JSON.stringify(log.output, null, 2)}
-                                {log.error && <>
-                                    <br/>Error: {log.error.message}
-                                    <br/>Stack: {log.error.stack}
-                                </>}
+                                {log.error && (
+                                    <div className="error-details">
+                                        <div>Error: {log.error.message}</div>
+                                        {log.error.stack && (
+                                            <pre>{log.error.stack}</pre>
+                                        )}
+                                    </div>
+                                )}
                             </span>
                         </div>
                     ))

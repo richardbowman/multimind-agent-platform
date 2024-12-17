@@ -96,6 +96,22 @@
     color: #fff;
     white-space: pre-wrap;
     word-break: break-word;
+    font-family: monospace;
+}
+
+.log-message pre {
+    margin: 4px 0;
+    padding: 8px;
+    background-color: #333;
+    border-radius: 4px;
+    overflow-x: auto;
+}
+
+.log-message .error-details {
+    color: #ff4a4a;
+    margin-top: 4px;
+    padding-left: 8px;
+    border-left: 2px solid #ff4a4a;
 }
 
 .sidebar {
