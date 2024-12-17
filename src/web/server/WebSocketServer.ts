@@ -191,22 +191,6 @@ export class WebSocketServer {
                 // Count replies for this message
                 const replyCount = this.storage.posts.filter(p => p.getRootId() === fullMessage.id).length;
 
-                // Emit to all clients including sender
-                this.io.emit('message', {
-                    id: fullMessage.id,
-                    channel_id: fullMessage.channel_id,
-                    message: fullMessage.message,
-                    user_id: fullMessage.user_id,
-                    create_at: fullMessage.create_at,
-                    directed_at: fullMessage.directed_at,
-                    props: fullMessage.props,
-                    thread_id: fullMessage.thread_id || null,
-                    reply_count: replyCount,
-                    getRootId: function() { 
-                        return this.thread_id || null;
-                    }
-                });
-
                 // If this is a threaded message, update the thread
                 const rootId = fullMessage.getRootId();
                 if (rootId) {

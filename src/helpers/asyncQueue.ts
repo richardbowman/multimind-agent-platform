@@ -22,7 +22,6 @@ export class AsyncQueue {
             this.waitingOperations = this.waitingOperations.filter(op => op.stack !== stack);
         }
 
-        const stack = new Error().stack;
         Logger.verbose(`AsyncQueue executing operation from:\n${stack}`);
         
         try {
