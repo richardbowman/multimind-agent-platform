@@ -41,8 +41,6 @@ class WebSocketService {
   private handleHandlers: ((handles: {id: string, handle: string}[]) => void)[] = [];
 
   connect(url: string = 'ws://localhost:4001') {
-    this.fetchHandles();
-    this.fetchHandles();
     this.socket = io(url, {
       transports: ['websocket'],
       reconnection: true,
@@ -53,6 +51,7 @@ class WebSocketService {
       console.log('Connected to WebSocket server');
       // Fetch initial data upon connection
       this.fetchChannels();
+      this.fetchHandles();
       
       // Set up system log listener
       this.socket!.on('system_log', (logEntry: any) => {
