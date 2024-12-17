@@ -3,12 +3,14 @@ import Logger from './logger';
 export class AsyncQueue {
     private queue: Promise<any> = Promise.resolve();
     private locked = false;
-    private waitingCount = 0;
+    private waitingOperations: { stack: string }[] = [];
 
     async enqueue<T>(operation: () => Promise<T>): Promise<T> {
+        const stack = new Error().stack || 'No stack trace available';
+        
         if (this.locked) {
-            this.waitingCount++;
-            Logger.info(`AsyncQueue: ${this.waitingCount} operations waiting`);
+            this.waitingOperations.push({ stack });
+            Logger.info(`AsyncQueue: ${this.waitingOperations.length} operations waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
         }
 
         while (this.locked) {
@@ -16,8 +18,8 @@ export class AsyncQueue {
         }
         
         this.locked = true;
-        if (this.waitingCount > 0) {
-            this.waitingCount--;
+        if (this.waitingOperations.length > 0) {
+            this.waitingOperations = this.waitingOperations.filter(op => op.stack !== stack);
         }
 
         const stack = new Error().stack;
@@ -32,8 +34,8 @@ export class AsyncQueue {
         } finally {
             this.queue = Promise.resolve();
             this.locked = false;
-            if (this.waitingCount > 0) {
-                Logger.info(`AsyncQueue: ${this.waitingCount} operations still waiting`);
+            if (this.waitingOperations.length > 0) {
+                Logger.info(`AsyncQueue: ${this.waitingOperations.length} operations still waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
             }
         }
     }
