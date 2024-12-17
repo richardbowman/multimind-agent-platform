@@ -197,10 +197,16 @@ class WebSocketService {
   }
 
   fetchLogs(logType: 'llm' | 'system' | 'api') {
-    if (this.socket) {
-      console.log('WebSocketService: Fetching logs for type:', logType);
-      this.socket.emit('get_logs', logType);
+    if (!this.socket) {
+      console.warn('Socket not connected while trying to fetch logs');
+      return;
     }
+    if (!['llm', 'system', 'api'].includes(logType)) {
+      console.error('Invalid log type:', logType);
+      return;
+    }
+    console.log('WebSocketService: Fetching logs for type:', logType);
+    this.socket.emit('get_logs', logType);
   }
 }
 

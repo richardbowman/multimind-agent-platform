@@ -61,7 +61,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     llm: Record<string, LLMLogEntry[]>;
     system: any[];
     api: any[];
-    unknown?: never;
   }>({
     llm: {},
     system: [],
@@ -128,15 +127,16 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setArtifacts(newArtifacts);
     });
 
-    webSocketService.socket?.on('logs', (newLogs: { type: 'llm' | 'system' | 'api', data: any }) => {
+    webSocketService.socket?.on('logs', (newLogs: { type: string, data: any }) => {
       console.log('Received logs:', newLogs);
-      if (newLogs.type === 'llm' || newLogs.type === 'system' || newLogs.type === 'api') {
-        setLogs(prev => ({
-          llm: newLogs.type === 'llm' ? newLogs.data : prev.llm,
-          system: newLogs.type === 'system' ? newLogs.data : prev.system,
-          api: newLogs.type === 'api' ? newLogs.data : prev.api
-        }));
+      if (!['llm', 'system', 'api'].includes(newLogs.type)) {
+        console.warn('Received unknown log type:', newLogs.type);
+        return;
       }
+      setLogs(prev => ({
+        ...prev,
+        [newLogs.type]: newLogs.data
+      }));
     });
 
     return () => {
