@@ -121,7 +121,7 @@ class WebSocketService {
 
   sendMessage(message: Partial<ClientMessage>) {
     if (this.socket) {
-      this.socket.emit('message', message);
+      this.socket.emit('send_message', message);
     }
   }
 
