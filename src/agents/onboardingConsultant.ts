@@ -36,11 +36,10 @@ class OnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
         await super.setupChatMonitor(ONBOARDING_CHANNEL_ID, "@onboarding");
 
         // Check if welcome message exists in channel
-        const existingWelcome = await this.chatClient.getMessages(ONBOARDING_CHANNEL_ID, {
-            props: { messageType: 'welcome' }
-        });
+        const channelMessages = await this.chatClient.fetchPreviousMessages(ONBOARDING_CHANNEL_ID);
+        const existingWelcome = channelMessages.find(c => c.props.messageType === 'welcome');
 
-        if (!existingWelcome.length) {
+        if (!existingWelcome) {
             const welcomeMessage = {
                 message: `👋 Welcome! I'm your Goal-Based Onboarding Consultant.
                 

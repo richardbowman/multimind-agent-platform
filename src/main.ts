@@ -15,7 +15,7 @@ import { ArtifactManager } from "./tools/artifactManager";
 import { createVectorDatabase } from "./llm/vectorDatabaseFactory";
 import { ProjectManager } from "./agents/projectManager";
 import Logger from "./helpers/logger";
-import GoalBasedOnboardingConsultant from "./agents/onboardingConsultant";
+import OnboardingConsultant from "./agents/onboardingConsultant";
 
 const llmService = LLMServiceFactory.createService(LLM_PROVIDER as LLMProvider);
 // Initialize the embedding and LLaMA models
@@ -108,7 +108,7 @@ const pmAssistant = new ProjectManager({
 });
 
 const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
-const onboardingAssistant = new GoalBasedOnboardingConsultant({
+const onboardingAssistant = new OnboardingConsultant({
     chatClient: onboardingClient,
     llmService: llmService,
     userId: ONBOARDING_CONSULTANT_USER_ID,
@@ -135,7 +135,9 @@ await solverAgent.initialize();
 // Initialize WebSocket server with our storage
 import { WebSocketServer } from './web/server/WebSocketServer';
 
-const userClient = await setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
+const USER_ID = "test";
+const userClient = new InMemoryTestClient(USER_ID, "test", storage);
+//await setupUserAgent(userClient, storage, chatBox, inputBox, artifactManager, tasks);
 
 const wsServer = new WebSocketServer(storage, tasks, artifactManager, userClient);
 

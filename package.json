@@ -4,13 +4,14 @@
   "main": "index.js",
   "type": "module",
   "scripts": {
-    "start": "tsx src/main.ts",
+    "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
+    "start:server": "tsx src/main.ts",
+    "start:client": "cd src/web/client && npm start",
     "watch": "tsx --watch src/main.ts",
     "schemas": "ts-json-schema-generator --path 'src/schemas/**/*.ts' --type '*' -o src/schemas/schema.json --no-type-check",
     "build": "tsc",
     "build:web": "cd src/web/client && npm run build",
-    "build:all": "npm run build && npm run build:web",
-    "start:server": "tsx src/web/server/index.ts"
+    "build:all": "npm run build && npm run build:web"
   },
   "keywords": [],
   "author": "",
@@ -66,6 +67,7 @@
   "devDependencies": {
     "@types/node-cron": "^3.0.11",
     "@types/turndown": "^5.0.5",
+    "concurrently": "^9.1.0",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2"

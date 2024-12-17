@@ -4,7 +4,7 @@ import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface ThreadListProps {
     channelId: string | null;
-    onThreadSelect: (threadId: string) => void;
+    onThreadSelect: (threadId: string|null) => void;
     currentThreadId: string | null;
 }
 
@@ -42,7 +42,7 @@ export const ThreadList: React.FC<ThreadListProps> = ({
                     ref={currentThreadId === null ? activeThreadRef : null}
                     key="root"
                     className={`thread-item ${currentThreadId === null ? 'active' : ''}`}
-                    onClick={() => onThreadSelect('')}
+                    onClick={() => onThreadSelect(null)}
                 >
                     <div className="thread-content">
                         <div className="thread-title">Main Channel</div>
