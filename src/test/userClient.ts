@@ -140,21 +140,22 @@ export async function setupUserAgent(UserClient: InMemoryTestClient, storage: In
     await refreshLists(PROJECTS_CHANNEL_ID, null);
 
     channelList.on('select', async (item, index) => {
-        await pickChannel(item, index);
-    });
-
-    async function pickChannel(item, index) {
         const selectedChannelId = Object.keys(storage.channelNames)[index];
         if (!selectedChannelId) return;
 
         currentChannelId = selectedChannelId;
+        currentThreadId = null;
 
         // Load main channel messages
         await loadMessagesForThread(null);
 
-        // Populate the thread list with threads under the selected channel and "(root)" entry
+        // Populate the thread list with threads under the selected channel
         await refreshLists(selectedChannelId, null);
-    }
+        
+        // Select the root thread by default
+        threadList.select(0);
+        screen.render();
+    });
 
     // Attach an event listener to handle thread selection
     threadList.on('select', async (item, index) => {
