@@ -305,10 +305,10 @@ export class WebSocketServer {
             });
 
             // Handle log requests
-            socket.on('get_logs', async () => {
-                Logger.info('Received get_logs request with type:', socket.handshake.query.logType);
+            socket.on('get_logs', async (logType: string) => {
+                Logger.info('Received get_logs request with type:', logType);
                 try {
-                    switch (socket.handshake.query.logType) {
+                    switch (logType) {
                         case 'llm':
                             const llmLogs = await LLMCallLogger.getAllLogs();
                             Logger.info('Sending LLM logs:', llmLogs);

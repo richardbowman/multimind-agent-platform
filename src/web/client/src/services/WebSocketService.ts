@@ -198,7 +198,8 @@ class WebSocketService {
 
   fetchLogs(logType: 'llm' | 'system' | 'api') {
     if (this.socket) {
-      this.socket.emit('get_logs', { logType });
+      console.log('WebSocketService: Fetching logs for type:', logType);
+      this.socket.emit('get_logs', logType);
     }
   }
 }
