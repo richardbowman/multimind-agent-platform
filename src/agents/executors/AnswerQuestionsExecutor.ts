@@ -39,14 +39,22 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         const modelResponse = await this.modelHelpers.generate<AnswerAnalysisResponse>({
             message: response,
             instructions: new StructuredOutputPrompt(schema,
-                `Analyze the user's response against these pending questions:
+                `Here is the current state of our questions and answers:
+
+                Previously Answered Questions:
+                ${project.metadata.answers?.map(a => 
+                    `Question: ${a.question}\nAnswer: ${a.answer}\n`
+                ).join('\n') || 'No previous answers'}
+
+                Pending Questions to Analyze:
                 ${intakeQuestions.map(q => `ID ${q.id}: ${q.description}`).join('\n')}
                 
-                For each question:
+                For each pending question:
                 1. Determine if the question was answered completely and meaningfully
                 2. Extract the specific answer from the response (mark as "Not provided" if unclear or incomplete)
                 3. Provide a detailed analysis of the answer quality and completeness
-                4. Be specific about what information was provided or what's still missing`)
+                4. Be specific about what information was provided or what's still missing
+                5. Consider how this answer relates to or conflicts with any previous answers`)
         });
 
         // Initialize answers array if it doesn't exist
