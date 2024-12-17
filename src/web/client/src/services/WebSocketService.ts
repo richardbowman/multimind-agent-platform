@@ -75,12 +75,16 @@ class WebSocketService {
         // This is a live message
         console.log('receiving message', message);
         
-        // If this is a reply or creates a new thread, fetch updated thread info
-        if (message.thread_id || message.reply_count > 0) {
-          this.fetchThreads(message.channel_id);
+        if (message.thread_id) {
+          // This is a reply - update the parent message's reply count
+          this.messageHandlers.forEach(handler => {
+            handler([message], true);
+            // Create an updated version of the parent message with incremented reply_count
+            const parentMessage = this.socket!.emit('get_message', message.thread_id);
+          });
+        } else {
+          this.messageHandlers.forEach(handler => handler([message], true));
         }
-        
-        this.messageHandlers.forEach(handler => handler([message], true));
       });
   
       this.socket!.on('channels', (channels: ClientChannel[]) => {

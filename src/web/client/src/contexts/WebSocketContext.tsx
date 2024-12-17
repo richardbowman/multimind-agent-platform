@@ -92,18 +92,18 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           !prev.some(m => m.id === message.id)
         );
         
-        // Only fetch threads once per channel
-        const uniqueChannels = new Set(
-          newMessages
-            .filter(message => message.thread_id)
-            .map(message => message.channel_id)
-        );
-        
-        uniqueChannels.forEach(channelId => {
-          if (channelId) webSocketService.fetchThreads(channelId);
-        });
-        
-        return [...prev, ...newMessages].sort((a, b) => a.create_at - b.create_at);
+        // Update messages array, handling both new messages and reply count updates
+        return prev.map(existingMsg => {
+          // If this is a parent message that just got a new reply
+          if (newMessages.some(newMsg => newMsg.thread_id === existingMsg.id)) {
+            return {
+              ...existingMsg,
+              reply_count: (existingMsg.reply_count || 0) + 1
+            };
+          }
+          return existingMsg;
+        }).concat(newMessages)
+        .sort((a, b) => a.create_at - b.create_at);
       });
     });
 
