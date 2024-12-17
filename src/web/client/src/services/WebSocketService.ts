@@ -39,6 +39,7 @@ class WebSocketService {
   private taskHandlers: ((tasks: any[]) => void)[] = [];
   private artifactHandlers: ((artifacts: any[]) => void)[] = [];
   private handleHandlers: ((handles: {id: string, handle: string}[]) => void)[] = [];
+  private logHandlers: ((logs: { type: string, data: any }) => void)[] = [];
 
   connect(url: string = 'ws://localhost:4001') {
     // Clean up any existing socket connection
@@ -111,6 +112,7 @@ class WebSocketService {
           return;
         }
         console.log('WebSocketService: Received logs:', newLogs);
+        this.logHandlers.forEach(handler => handler(newLogs));
       });
   
       this.socket!.on('disconnect', () => {
@@ -266,6 +268,13 @@ class WebSocketService {
     }
     console.log('WebSocketService: Fetching logs for type:', logType);
     this.socket.emit('get_logs', logType);
+  }
+
+  onLogs(handler: (logs: { type: string, data: any }) => void) {
+    this.logHandlers.push(handler);
+    return () => {
+      this.logHandlers = this.logHandlers.filter(h => h !== handler);
+    };
   }
 }
 

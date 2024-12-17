@@ -136,7 +136,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setArtifacts(newArtifacts);
     });
 
-    webSocketService.socket?.on('logs', (newLogs: { type: string, data: any }) => {
+    const logsCleanup = webSocketService.onLogs((newLogs) => {
       console.log('WebSocketContext: Received logs:', newLogs);
       if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
         console.warn('WebSocketContext: Received invalid log type:', newLogs?.type);
@@ -155,6 +155,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       taskCleanup();
       artifactCleanup();
       handlesCleanup();
+      logsCleanup();
       webSocketService.disconnect();
     };
   }, []);
