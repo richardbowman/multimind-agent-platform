@@ -9,10 +9,11 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     const { logs, fetchLogs } = useWebSocket();
 
     useEffect(() => {
+        console.log('LogViewer: Fetching logs for type:', logType);
         fetchLogs();
         const interval = setInterval(fetchLogs, 5000); // Refresh logs every 5 seconds
         return () => clearInterval(interval);
-    }, [logType]); // Re-fetch when log type changes
+    }, [logType, fetchLogs]); // Re-fetch when log type changes
 
     const renderLogs = () => {
         switch (logType) {

@@ -306,22 +306,30 @@ export class WebSocketServer {
 
             // Handle log requests
             socket.on('get_logs', async () => {
-                switch (socket.handshake.query.logType) {
-                    case 'llm':
-                        const llmLogs = await LLMCallLogger.getAllLogs();
-                        socket.emit('logs', { type: 'llm', data: llmLogs });
-                        break;
-                    case 'system':
-                        const systemLogs = this.logReader.readLogs();
-                        socket.emit('logs', { type: 'system', data: systemLogs });
-                        break;
-                    case 'api':
-                        // TODO: Implement API logs
-                        socket.emit('logs', { type: 'api', data: [] });
-                        break;
-                    default:
-                        Logger.warn('Unknown log type requested');
-                        socket.emit('logs', { type: 'unknown', data: [] });
+                Logger.info('Received get_logs request with type:', socket.handshake.query.logType);
+                try {
+                    switch (socket.handshake.query.logType) {
+                        case 'llm':
+                            const llmLogs = await LLMCallLogger.getAllLogs();
+                            Logger.info('Sending LLM logs:', llmLogs);
+                            socket.emit('logs', { type: 'llm', data: llmLogs });
+                            break;
+                        case 'system':
+                            const systemLogs = this.logReader.readLogs();
+                            Logger.info('Sending system logs:', systemLogs);
+                            socket.emit('logs', { type: 'system', data: systemLogs });
+                            break;
+                        case 'api':
+                            // TODO: Implement API logs
+                            socket.emit('logs', { type: 'api', data: [] });
+                            break;
+                        default:
+                            Logger.warn('Unknown log type requested');
+                            socket.emit('logs', { type: 'unknown', data: [] });
+                    }
+                } catch (error) {
+                    Logger.error('Error fetching logs:', error);
+                    socket.emit('logs', { type: socket.handshake.query.logType, data: [] });
                 }
             });
 

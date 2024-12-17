@@ -128,10 +128,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     webSocketService.socket?.on('logs', (newLogs: { type: string, data: any }) => {
-      setLogs(prev => ({
-        ...prev,
-        [newLogs.type]: newLogs.data
-      }));
+      console.log('Received logs:', newLogs);
+      setLogs(prev => {
+        const updated = {
+          ...prev,
+          [newLogs.type]: newLogs.data
+        };
+        console.log('Updated logs state:', updated);
+        return updated;
+      });
     });
 
     return () => {
