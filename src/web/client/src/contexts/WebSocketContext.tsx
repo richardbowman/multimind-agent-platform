@@ -129,9 +129,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
     webSocketService.socket?.on('logs', (newLogs: { type: string, data: any }) => {
       console.log('WebSocketContext: Received logs:', newLogs);
+      if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
+        console.warn('WebSocketContext: Received invalid log type:', newLogs?.type);
+        return;
+      }
       setLogs(prev => ({
         ...prev,
-        [newLogs.type]: newLogs.data
+        [newLogs.type]: newLogs.data || []
       }));
     });
 

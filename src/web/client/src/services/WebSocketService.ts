@@ -75,8 +75,8 @@ class WebSocketService {
     });
 
     this.socket.on('logs', (newLogs: { type: string, data: any }) => {
-      if (!['llm', 'system', 'api'].includes(newLogs.type)) {
-        console.warn('Received unknown log type:', newLogs.type);
+      if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
+        console.warn('WebSocketService: Received unknown log type:', newLogs?.type);
         return;
       }
       console.log('WebSocketService: Received logs:', newLogs);
