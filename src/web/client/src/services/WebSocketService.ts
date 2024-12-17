@@ -222,7 +222,7 @@ class WebSocketService {
     }
   }
 
-  onHandles(handler: (handles: string[]) => void) {
+  onHandles(handler: (handles: Array<{id: string, handle: string}>) => void) {
     this.handleHandlers.push(handler);
     if (this.socket) {
       this.socket.on('handles', handler);

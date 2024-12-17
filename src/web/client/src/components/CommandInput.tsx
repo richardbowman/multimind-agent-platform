@@ -20,8 +20,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({ onSendMessage }) => 
     const inputRef = useRef<HTMLInputElement>(null);
     const { channels } = useWebSocket();
 
-    // Get all user handles from channels (placeholder - need to get from actual user data)
-    const userHandles = channels.map(c => '@' + c.name); // This should be replaced with actual user handles
+    const { handles } = useWebSocket();
+    const userHandles = handles.map(h => h.handle);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {

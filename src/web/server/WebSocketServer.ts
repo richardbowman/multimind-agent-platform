@@ -337,7 +337,10 @@ export class WebSocketServer {
 
             // Handle user handles requests
             socket.on('get_handles', () => {
-                const handles = Object.values(this.storage.userIdToHandleName).map(name => '@' + name);
+                const handles = Object.entries(this.storage.userIdToHandleName).map(([id, name]) => ({
+                    id,
+                    handle: '@' + name
+                }));
                 socket.emit('handles', handles);
             });
 
