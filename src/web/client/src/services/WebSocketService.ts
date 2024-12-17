@@ -207,6 +207,16 @@ class WebSocketService {
     }
     console.log('WebSocketService: Fetching logs for type:', logType);
     this.socket.emit('get_logs', logType);
+    
+    // Set up system log listener if not already set
+    if (logType === 'system' && !this.socket.hasListeners('system_log')) {
+      this.socket.on('system_log', (logEntry: any) => {
+        this.socket.emit('logs', {
+          type: 'system',
+          data: [logEntry]
+        });
+      });
+    }
   }
 }
 
