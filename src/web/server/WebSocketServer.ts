@@ -305,9 +305,24 @@ export class WebSocketServer {
             });
 
             // Handle log requests
-            socket.on('get_logs', () => {
-                const logs = this.logReader.readLogs();
-                socket.emit('logs', logs);
+            socket.on('get_logs', async () => {
+                switch (socket.handshake.query.logType) {
+                    case 'llm':
+                        const llmLogs = await LLMCallLogger.getAllLogs();
+                        socket.emit('logs', { type: 'llm', data: llmLogs });
+                        break;
+                    case 'system':
+                        const systemLogs = this.logReader.readLogs();
+                        socket.emit('logs', { type: 'system', data: systemLogs });
+                        break;
+                    case 'api':
+                        // TODO: Implement API logs
+                        socket.emit('logs', { type: 'api', data: [] });
+                        break;
+                    default:
+                        Logger.warn('Unknown log type requested');
+                        socket.emit('logs', { type: 'unknown', data: [] });
+                }
             });
 
             socket.on('disconnect', () => {

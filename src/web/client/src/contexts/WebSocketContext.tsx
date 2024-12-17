@@ -8,7 +8,11 @@ interface WebSocketContextType {
   threads: Record<string, Thread[]>; // Keyed by channel_id
   tasks: any[];
   artifacts: Artifact[];
-  logs: any[];
+  logs: {
+    llm: Record<string, LLMLogEntry[]>;
+    system: any[];
+    api: any[];
+  };
   sendMessage: (message: Partial<Message>) => void;
   fetchChannels: () => void;
   fetchThreads: (channelId: string) => void;
@@ -36,7 +40,11 @@ const WebSocketContext = createContext<WebSocketContextType>({
   fetchAllArtifacts: function (): void {
     throw new Error('Function not implemented.');
   },
-  logs: [],
+  logs: {
+    llm: {},
+    system: [],
+    api: []
+  },
   fetchLogs: function (): void {
     throw new Error('Function not implemented.');
   }
@@ -48,7 +56,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [threads, setThreads] = useState<Record<string, Thread[]>>({});
   const [tasks, setTasks] = useState<any[]>([]);
   const [artifacts, setArtifacts] = useState<any[]>([]);
-  const [logs, setLogs] = useState<any[]>([]);
+  const [logs, setLogs] = useState<{
+    llm: Record<string, LLMLogEntry[]>;
+    system: any[];
+    api: any[];
+  }>({
+    llm: {},
+    system: [],
+    api: []
+  });
 
   useEffect(() => {
     webSocketService.connect();
