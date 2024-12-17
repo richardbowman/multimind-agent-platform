@@ -18,6 +18,61 @@ export class CodeExecutorExecutor implements StepExecutor {
         this.isolate = new ivm.Isolate({ memoryLimit: 128 }); // Limit to 128MB
     }
 
+    private async executeCodeInSandbox(code: string): Promise<{returnValue: any, consoleOutput?: string}> {
+        const context = await this.isolate.createContext();
+        const jail = context.global;
+        await jail.set('global', jail.derefInto());
+
+        // Set up console logging capture
+        let logs: string[] = [];
+        const consoleMock = {
+            log: function(...args) {
+                logs.push(args.map(arg => String(arg)).join(' '));
+                return undefined;
+            }
+        };
+        await jail.set('console', new ivm.Reference(consoleMock));
+        
+        let setResult;
+        const resultFn = function(value: any) {
+            setResult = String(value);
+            return value;
+        };
+        await jail.set('result', new ivm.Reference(resultFn));
+        
+        // Create a new script in the context
+        const script = await this.isolate.compileScript(code);
+        
+        // Run with 5 second timeout
+        const scriptResult = await script.run(context, { timeout: 5000 });
+        
+        if (!scriptResult && setResult) {
+            scriptResult = setResult;
+        }
+
+        // Handle the script result
+        let returnValue;
+        if (typeof scriptResult === 'number' || 
+            typeof scriptResult === 'string' || 
+            typeof scriptResult === 'boolean') {
+            // Primitive values can be used directly
+            returnValue = scriptResult;
+        } else {
+            try {
+                // Try to copy non-primitive values
+                returnValue = await scriptResult?.copy();
+            } catch (e) {
+                // If copy fails, convert to string
+                returnValue = scriptResult ? scriptResult.toString() : undefined;
+            }
+        }
+        
+        return {
+            returnValue: returnValue || (logs.length > 0 ? logs[0] : undefined),
+            consoleOutput: logs.join('\n')
+        };
+    }
+
     async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const schema = codeExecutionSchema;
 
@@ -43,58 +98,7 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
 
         let executionResult;
         try {
-            const context = await this.isolate.createContext();
-            const jail = context.global;
-            await jail.set('global', jail.derefInto());
-
-            // Set up console logging capture
-            let logs: string[] = [];
-            const consoleMock = {
-                log: function(...args) {
-                    logs.push(args.map(arg => String(arg)).join(' '));
-                    return undefined;
-                }
-            };
-            await jail.set('console', new ivm.Reference(consoleMock));
-            
-            let setResult;
-            const resultFn = function(value: any) {
-                setResult = String(value);
-                return value;
-            };
-            await jail.set('result', new ivm.Reference(resultFn));
-            
-            // Create a new script in the context
-            const script = await this.isolate.compileScript(result.code);
-            
-            // Run with 5 second timeout
-            const scriptResult = await script.run(context, { timeout: 5000 });
-            
-            if (!scriptResult && setResult) {
-                scriptResult = setResult;
-            }
-
-            // Handle the script result
-            let returnValue;
-            if (typeof scriptResult === 'number' || 
-                typeof scriptResult === 'string' || 
-                typeof scriptResult === 'boolean') {
-                // Primitive values can be used directly
-                returnValue = scriptResult;
-            } else {
-                try {
-                    // Try to copy non-primitive values
-                    returnValue = await scriptResult?.copy();
-                } catch (e) {
-                    // If copy fails, convert to string
-                    returnValue = scriptResult ? scriptResult.toString() : undefined;
-                }
-            }
-            
-            executionResult = {
-                returnValue: returnValue || (logs.length > 0 ? logs[0] : undefined),
-                consoleOutput: logs.join('\n')
-            };
+            executionResult = await this.executeCodeInSandbox(result.code);
         } catch (error) {
             // If there's an error, try again with error feedback
             const errorPrompt = `${prompt}\n\nThe previous attempt resulted in this error:\n${error.message}\n\nPlease fix the code and try again.`;
@@ -105,50 +109,8 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
                 model: "qwen2.5-coder-14b-instruct"
             });
 
-            // Try executing the new code
             try {
-                const retryContext = await this.isolate.createContext();
-                const retryJail = retryContext.global;
-                await retryJail.set('global', retryJail.derefInto());
-
-                let retryLogs: string[] = [];
-                const retryConsoleMock = {
-                    log: function(...args) {
-                        retryLogs.push(args.map(arg => String(arg)).join(' '));
-                        return undefined;
-                    }
-                };
-                await retryJail.set('console', new ivm.Reference(retryConsoleMock));
-                
-                let retrySetResult;
-                const retryResultFn = function(value: any) {
-                    retrySetResult = value;
-                    return value;
-                };
-                await retryJail.set('result', new ivm.Reference(retryResultFn));
-                
-                const retryScript = await this.isolate.compileScript(retryResult.code);
-                const retryScriptResult = await retryScript.run(retryContext, { timeout: 5000 });
-                
-                let retryReturnValue;
-                if (!retryScriptResult && retrySetResult) {
-                    retryReturnValue = retrySetResult;
-                } else if (typeof retryScriptResult === 'number' || 
-                    typeof retryScriptResult === 'string' || 
-                    typeof retryScriptResult === 'boolean') {
-                    retryReturnValue = retryScriptResult;
-                } else {
-                    try {
-                        retryReturnValue = await retryScriptResult?.copy();
-                    } catch (e) {
-                        retryReturnValue = retryScriptResult ? retryScriptResult.toString() : undefined;
-                    }
-                }
-                
-                executionResult = {
-                    returnValue: retryReturnValue || (retryLogs.length > 0 ? retryLogs[0] : undefined),
-                    consoleOutput: retryLogs.join('\n')
-                };
+                executionResult = await this.executeCodeInSandbox(retryResult.code);
                 result = retryResult;
             } catch (retryError) {
                 executionResult = `Error: ${error.message}\nRetry Error: ${retryError.message}`;
