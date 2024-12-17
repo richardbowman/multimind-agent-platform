@@ -18,7 +18,7 @@ const COMMANDS = [
     { command: '/channel', description: 'Send message to channel root' }
 ];
 
-export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager, taskManager: TaskManager): Promise<InMemoryTestClient> {
+export async function setupUserAgent(UserClient: InMemoryTestClient, storage: InMemoryChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager, taskManager: TaskManager): Promise<InMemoryTestClient> {
     // Show splash screen with animation
     splashBox.show();
     screen.render();
@@ -32,9 +32,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
         splashBox.hide();
         screen.render();
     }, 3000);
-
-    const USER_ID = "test";
-    const UserClient = new InMemoryTestClient(USER_ID, "test", storage);
+    
     let tasks: Task[] = [];
     let taskIds: string[] = [];
     let artifacts: Artifact[] = [];
@@ -339,8 +337,7 @@ export async function setupUserAgent(storage: InMemoryChatStorage, chatBox: bles
                 currentThreadId = null;
                 threadList.select(0);
             }
-
-            await loadMessagesForThread(currentThreadId);
+            // Remove the loadMessagesForThread call here since messages will be handled by the receiveMessages callback
         } catch (error) {
             Logger.error('Error sending message:', error);
         }
