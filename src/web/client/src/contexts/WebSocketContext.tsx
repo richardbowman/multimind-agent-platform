@@ -20,7 +20,7 @@ interface WebSocketContextType {
   fetchTasks: (channelId: string, threadId: string | null) => void;
   fetchArtifacts: (channelId: string, threadId: string | null) => void;
   fetchAllArtifacts: () => void;
-  fetchLogs: () => void;
+  fetchLogs: (logType: 'llm' | 'system' | 'api') => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
@@ -46,7 +46,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
     system: [],
     api: []
   },
-  fetchLogs: function (): void {
+  fetchLogs: function (logType: 'llm' | 'system' | 'api'): void {
     throw new Error('Function not implemented.');
   }
 });
@@ -176,7 +176,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.fetchAllArtifacts();
   };
 
-  const fetchLogs = (logType: string) => {
+  const fetchLogs = (logType: 'llm' | 'system' | 'api') => {
     webSocketService.fetchLogs(logType);
   };
 
