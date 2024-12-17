@@ -27,10 +27,10 @@ Provide clear explanations of what the code does.
 DO NOT use any Node.js specific APIs or file system operations.
 Only use pure JavaScript that can run in a sandboxed environment.
 
-To provide the answer you want to share, call the "result" function. For instance:
+To provide the answer, call the "result" function with a string. For instance:
 
 const a = 1 + 2;
-result(a);
+result(\`The answer is \$\{a\}\`);
 
 ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
