@@ -28,7 +28,7 @@ export class LogReader {
                 .filter(line => line.trim())
                 .map(line => {
                     // Parse log line format: [timestamp] LEVEL: message
-                    const match = line.match(/\[(.*?)\] ([A-Z]+): (.*)/);
+                    const match = line.match(/^\[(.*?)\] ([A-Z]+): (.*)/);
                     if (match) {
                         return {
                             timestamp: match[1],
@@ -36,9 +36,22 @@ export class LogReader {
                             message: match[3]
                         };
                     }
-                    return null;
+                    // If line doesn't start with timestamp, treat as continuation of previous message
+                    return {
+                        timestamp: '',  // Will be filtered out if first line
+                        level: '',
+                        message: line
+                    };
                 })
-                .filter((entry): entry is LogEntry => entry !== null)
+                // Group continuation lines with their headers
+                .reduce((acc: LogEntry[], entry) => {
+                    if (entry.timestamp) {
+                        acc.push(entry);
+                    } else if (acc.length > 0) {
+                        acc[acc.length - 1].message += '\n' + entry.message;
+                    }
+                    return acc;
+                }, [])
                 .slice(-1000); // Limit to last 1000 entries
         } catch (error) {
             console.error('Error reading logs:', error);
