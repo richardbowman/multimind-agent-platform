@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
+import { Spinner } from './Spinner';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import webSocketService, { Message } from '../services/WebSocketService';
 
@@ -147,6 +148,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                             </div>
                             <div className="message-content">
                                 <ReactMarkdown>{message.message}</ReactMarkdown>
+                                {message.inProgress && <Spinner />}
                                 {!currentThreadId && message.reply_count > 0 && (
                                     <div 
                                         className="thread-indicator"
