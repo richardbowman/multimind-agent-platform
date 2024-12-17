@@ -38,7 +38,7 @@ class WebSocketService {
   private threadHandlers: ((threads: ClientThread[]) => void)[] = [];
   private taskHandlers: ((tasks: any[]) => void)[] = [];
   private artifactHandlers: ((artifacts: any[]) => void)[] = [];
-  private handleHandlers: ((handles: string[]) => void)[] = [];
+  private handleHandlers: ((handles: {id: string, handle: string}[]) => void)[] = [];
 
   connect(url: string = 'ws://localhost:4001') {
     this.fetchHandles();
