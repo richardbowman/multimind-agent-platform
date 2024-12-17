@@ -80,7 +80,7 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             }
             
             executionResult = {
-                returnValue: returnValue,
+                returnValue: returnValue || (logs.length > 0 ? logs[0] : undefined),
                 consoleOutput: logs.join('\n')
             };
         } catch (error) {
