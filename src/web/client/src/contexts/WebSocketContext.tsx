@@ -176,8 +176,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.fetchAllArtifacts();
   };
 
-  const fetchLogs = () => {
-    webSocketService.fetchLogs();
+  const fetchLogs = (logType: string) => {
+    webSocketService.fetchLogs(logType);
   };
 
   return (
