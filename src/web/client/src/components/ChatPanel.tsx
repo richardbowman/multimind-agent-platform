@@ -32,22 +32,32 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         }
     }, [currentChannelId, currentThreadId]);
 
+    // Handle scrolling and loading state
     useEffect(() => {
         if (messages.length > 0) {
             setIsLoading(false);
             scrollToBottom();
-            
-            // Check for new threaded responses and select that thread
-            const latestMessage = messages[messages.length - 1];
-            if (latestMessage.thread_id && !currentThreadId) {
+        }
+    }, [messages]);
+
+    // Handle live message thread selection
+    useEffect(() => {
+        const handleNewMessage = (message: any) => {
+            if (message.thread_id && !currentThreadId) {
                 // Only switch to thread view if we're not already in a thread
-                const threadRoot = messages.find(m => m.id === latestMessage.thread_id);
+                const threadRoot = messages.find(m => m.id === message.thread_id);
                 if (threadRoot) {
                     setCurrentThreadId(threadRoot.id);
                 }
             }
-        }
-    }, [messages, currentThreadId]);
+        };
+
+        webSocketService.on('message', handleNewMessage);
+        
+        return () => {
+            webSocketService.off('message', handleNewMessage);
+        };
+    }, [messages, currentThreadId, setCurrentThreadId]);
 
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
