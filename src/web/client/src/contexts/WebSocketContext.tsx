@@ -127,8 +127,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setArtifacts(newArtifacts);
     });
 
-    webSocketService.socket?.on('logs_update', (newLogs: { type: string, data: any }) => {
-      console.log('Received logs update:', newLogs);
+    webSocketService.socket?.on('logs', (newLogs: { type: string, data: any }) => {
+      console.log('WebSocketContext: Received logs:', newLogs);
       setLogs(prev => ({
         ...prev,
         [newLogs.type]: newLogs.data

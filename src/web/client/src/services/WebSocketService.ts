@@ -79,10 +79,7 @@ class WebSocketService {
         console.warn('Received unknown log type:', newLogs.type);
         return;
       }
-      // Emit the logs event to be handled by the context
-      if (this.socket) {
-        this.socket.emit('logs_update', newLogs);
-      }
+      console.log('WebSocketService: Received logs:', newLogs);
     });
 
     this.socket.on('disconnect', () => {
