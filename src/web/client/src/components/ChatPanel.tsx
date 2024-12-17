@@ -140,8 +140,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                             // In a thread, show the root message and all replies
                             return message.id === currentThreadId || message.thread_id === currentThreadId;
                         } else {
-                            // In channel view, only show messages without thread_id
-                            return !message.thread_id;
+                            // In channel view, show root messages and messages without threads
+                            return message.thread_id === undefined;
                         }
                     })
                     .map((message) => (
@@ -157,7 +157,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                             <div className="message-content">
                                 <ReactMarkdown>{message.message}</ReactMarkdown>
                                 {message.inProgress && <Spinner />}
-                                {!currentThreadId && message.reply_count > 0 && (
+                                {!currentThreadId && (message.reply_count > 0 || messages.some(m => m.thread_id === message.id)) && (
                                     <div 
                                         className="thread-indicator"
                                         onClick={() => setCurrentThreadId(message.id)}
