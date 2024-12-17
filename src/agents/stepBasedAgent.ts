@@ -97,15 +97,16 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
         // Handle response to existing project
         const currentTask = Object.values(project.tasks).find(t => t.inProgress);
-        if (!currentTask) {
-            Logger.info("No active task, treating as new query in existing project");
+        const remainingTasks = Object.values(project.tasks).filter(t => !t.complete);
+
+        if (!currentTask && remainingTasks.length === 0) {
+            Logger.info("No remaining tasks, planning new steps");
             const plan = await this.planSteps(params);
             await this.executeNextStep(project.id, params.userPost);
             return;
         }
 
-        // Handle response to active task
-        const plan = await this.planSteps(params);
+        // Continue with existing tasks without replanning
         await this.executeNextStep(project.id, params.userPost);
     }
 
