@@ -30,7 +30,7 @@ export interface OnboardingProject extends Project<Task> {
     welcomeSent?: boolean;
 }
 
-class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
+class OnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
 
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Onboarding Consultant`);
@@ -83,4 +83,4 @@ are trained and educated on what the user is trying to achieve using our system.
     }
 }
 
-export default GoalBasedOnboardingConsultant;
+export default OnboardingConsultant;
