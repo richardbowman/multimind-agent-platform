@@ -10,10 +10,22 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
 
     useEffect(() => {
         console.log('LogViewer: Fetching logs for type:', logType);
-        fetchLogs(logType);
-        const interval = setInterval(() => fetchLogs(logType), 5000); // Refresh logs every 5 seconds
-        return () => clearInterval(interval);
-    }, [logType, fetchLogs]); // Re-fetch when log type changes
+        let isSubscribed = true;
+
+        const fetchLogsIfSubscribed = () => {
+            if (isSubscribed) {
+                fetchLogs(logType);
+            }
+        };
+
+        fetchLogsIfSubscribed(); // Initial fetch
+        const interval = setInterval(fetchLogsIfSubscribed, 5000);
+
+        return () => {
+            isSubscribed = false;
+            clearInterval(interval);
+        };
+    }, [logType]); // Remove fetchLogs from dependencies to prevent re-renders
 
     const renderLogs = () => {
         switch (logType) {
