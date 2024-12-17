@@ -18,9 +18,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ onSendMessage }) => 
     const [showSuggestions, setShowSuggestions] = useState(false);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { channels } = useWebSocket();
-
-    const { handles } = useWebSocket();
+    const { channels, handles } = useWebSocket();
     const userHandles = handles.map(h => h.handle);
 
     useEffect(() => {

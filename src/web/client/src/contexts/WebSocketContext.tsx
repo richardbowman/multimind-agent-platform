@@ -9,6 +9,7 @@ interface WebSocketContextType {
   threads: Record<string, Thread[]>; // Keyed by channel_id
   tasks: any[];
   artifacts: Artifact[];
+  handles: Array<{id: string, handle: string}>;
   logs: {
     llm: Record<string, LLMLogEntry[]>;
     system: any[];
