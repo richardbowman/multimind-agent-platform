@@ -56,6 +56,9 @@ class WebSocketService {
     // Set up connect handler only once
     this.socket.once('connect', () => {
       console.log('Connected to WebSocket server');
+
+      this.socket!.removeAllListeners();
+  
       // Fetch initial data upon connection
       this.fetchChannels();
       this.fetchHandles();
