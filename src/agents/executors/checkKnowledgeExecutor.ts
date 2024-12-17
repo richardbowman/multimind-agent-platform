@@ -24,18 +24,7 @@ export class KnowledgeCheckExecutor implements StepExecutor {
     }
 
     private async executeQuick(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const querySchema = {
-            type: "object",
-            properties: {
-                queries: {
-                    type: "array",
-                    items: {
-                        type: "string",
-                        description: "A search query"
-                    }
-                }
-            }
-        };
+        const querySchema = await getGeneratedSchema(SchemaType.QuickQueriesResponse);
 
         const queryPrompt = `You are a research specialist crafting search queries.
 Given this content goal: "${goal}"
