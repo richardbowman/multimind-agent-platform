@@ -19,29 +19,26 @@ export class CodeExecutorExecutor implements StepExecutor {
     }
 
     private async executeCodeInSandbox(code: string): Promise<{returnValue: any, consoleOutput?: string}> {
-        const context = await this.isolate.createContext();
+        const context = this.isolate.createContextSync();
         const jail = context.global;
-        await jail.set('global', jail.derefInto());
+        jail.setSync('global', jail.derefInto());
 
         // Set up console logging capture
         let logs: string[] = [];
-        const consoleMock = {
-            log: function(...args) {
-                logs.push(args.map(arg => String(arg)).join(' '));
-                return undefined;
-            }
-        };
-        await jail.set('console', new ivm.Reference(consoleMock));
+        jail.setSync('log', (...args: any[]) => {
+            logs.push(args.map(arg => String(arg)).join(' '));
+        });
         
-        let setResult;
-        const resultFn = function(value: any) {
-            setResult = String(value);
-            return value;
-        };
-        await jail.set('result', new ivm.Reference(resultFn));
+        // Set up console.log as an alias to log
+        context.evalSync(`console = { log: log }`);
+        
+        let setResult: any;
+        jail.setSync('result', (value: any) => {
+            setResult = value;
+        });
         
         // Create a new script in the context
-        const script = await this.isolate.compileScript(code);
+        const script = this.isolate.compileScriptSync(code);
         
         // Run with 5 second timeout
         const scriptResult = await script.run(context, { timeout: 5000 });
