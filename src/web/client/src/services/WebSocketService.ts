@@ -40,6 +40,7 @@ class WebSocketService {
   private artifactHandlers: ((artifacts: any[]) => void)[] = [];
 
   connect(url: string = 'ws://localhost:4001') {
+    this.fetchHandles();
     this.socket = io(url, {
       transports: ['websocket'],
       reconnection: true,

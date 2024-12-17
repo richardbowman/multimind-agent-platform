@@ -69,6 +69,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     webSocketService.connect();
+    
+    const handlesCleanup = webSocketService.onHandles((newHandles) => {
+      setHandles(newHandles);
+    });
 
     // Handle both bulk and individual messages
     const messageCleanup = webSocketService.onMessage((messages, isLive) => {
@@ -145,6 +149,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       threadCleanup();
       taskCleanup();
       artifactCleanup();
+      handlesCleanup();
       webSocketService.disconnect();
     };
   }, []);
