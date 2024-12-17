@@ -42,7 +42,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
     // Handle live message thread selection
     useEffect(() => {
-        const handleNewMessage = (messages: Message[]) => {
+        const handleNewMessage = (messages: Message[], isLive: boolean) => {
+            if (!isLive) return; // Only process live messages
+            
             const message = messages[0]; // We receive an array but handle one message
             if (message?.thread_id && !currentThreadId) {
                 // Only switch to thread view if we're not already in a thread

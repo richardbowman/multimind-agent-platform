@@ -52,7 +52,8 @@ class WebSocketService {
     });
 
     this.socket.on('message', (message: Message) => {
-      this.messageHandlers.forEach(handler => handler([message]));
+      // This is a live message
+      this.messageHandlers.forEach(handler => handler([message], true));
     });
 
     this.socket.on('channels', (channels: Channel[]) => {
@@ -118,8 +119,9 @@ class WebSocketService {
       this.socket.off('messages');
       // Add new handler
       this.socket.on('messages', (messages: Message[]) => {
-        console.log('Received messages in service:', messages);
-        this.messageHandlers.forEach(handler => handler(messages));
+        console.log('Received historical messages in service:', messages);
+        // Don't trigger message handlers for historical messages
+        this.messageHandlers.forEach(handler => handler(messages, false));
       });
       this.socket.emit('get_messages', { 
         channel_id: channelId, 
@@ -141,7 +143,7 @@ class WebSocketService {
     }
   }
 
-  onMessage(handler: (messages: Message[]) => void) {
+  onMessage(handler: (messages: Message[], isLive: boolean) => void) {
     this.messageHandlers.push(handler);
     return () => {
       this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
