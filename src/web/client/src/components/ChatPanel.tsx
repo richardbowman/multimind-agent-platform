@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
 import { useWebSocket } from '../contexts/WebSocketContext';
-import webSocketService, { Message } from '../services/WebSocketService';
+import webSocketService, { ClientMessage } from '../services/WebSocketService';
 
 interface ChatPanelProps {
     currentChannelId: string | null;
@@ -43,7 +43,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
     // Handle live message thread selection
     useEffect(() => {
-        const handleNewMessage = (messages: Message[], isLive: boolean) => {
+        const handleNewMessage = (messages: ClientMessage[], isLive: boolean) => {
             if (!isLive) return; // Only process live messages
             
             const message = messages[0]; // We receive an array but handle one message

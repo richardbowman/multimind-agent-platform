@@ -1,19 +1,19 @@
 import io from 'socket.io-client';
 
-export interface Channel {
+export interface ClientChannel {
   id: string;
   name: string;
   description?: string;
 }
 
-export interface Thread {
-  rootMessage: Message;
-  replies: Message[];
+export interface ClientThread {
+  rootMessage: ClientMessage;
+  replies: ClientMessage[];
   last_message_at: number;
   channel_id: string;
 }
 
-export interface Message {
+export interface ClientMessage {
   id: string;
   channel_id: string;
   thread_id?: string;
@@ -22,6 +22,7 @@ export interface Message {
   create_at: number;
   directed_at?: string;
   props?: Record<string, any>;
+  inProgress?: boolean;
   reply_count: number;
   
   getRootId(): string | null;
@@ -32,9 +33,9 @@ export interface Message {
 
 class WebSocketService {
   socket: SocketIOClient.Socket | null = null;
-  private messageHandlers: ((messages: Message[], isLive: boolean) => void)[] = [];
-  private channelHandlers: ((channels: Channel[]) => void)[] = [];
-  private threadHandlers: ((threads: Thread[]) => void)[] = [];
+  private messageHandlers: ((messages: ClientMessage[], isLive: boolean) => void)[] = [];
+  private channelHandlers: ((channels: ClientChannel[]) => void)[] = [];
+  private threadHandlers: ((threads: ClientThread[]) => void)[] = [];
   private taskHandlers: ((tasks: any[]) => void)[] = [];
   private artifactHandlers: ((artifacts: any[]) => void)[] = [];
 
@@ -51,51 +52,51 @@ class WebSocketService {
       this.fetchChannels();
       
       // Set up system log listener
-      this.socket.on('system_log', (logEntry: any) => {
-        this.socket.emit('logs', {
+      this.socket!.on('system_log', (logEntry: any) => {
+        this.socket!.emit('logs', {
           type: 'system',
           data: [logEntry]
         });
       });
-    });
 
-    this.socket.on('message', (message: Message) => {
-      // This is a live message
-      this.messageHandlers.forEach(handler => handler([message], true));
-    });
-
-    this.socket.on('channels', (channels: Channel[]) => {
-      this.channelHandlers.forEach(handler => handler(channels));
-    });
-
-    this.socket.on('threads', (threads: Thread[]) => {
-      this.threadHandlers.forEach(handler => handler(threads));
-    });
-
-    this.socket.on('tasks', (tasks: any[]) => {
-      console.log('Received tasks:', tasks);
-      this.taskHandlers.forEach(handler => handler(tasks));
-    });
-
-    this.socket.on('artifacts', (artifacts: any[]) => {
-      console.log('Received artifacts:', artifacts);
-      this.artifactHandlers.forEach(handler => handler(artifacts));
-    });
-
-    this.socket.on('logs', (newLogs: { type: string, data: any }) => {
-      if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
-        console.warn('WebSocketService: Received unknown log type:', newLogs?.type);
-        return;
-      }
-      console.log('WebSocketService: Received logs:', newLogs);
-    });
-
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
-    });
-
-    this.socket.on('error', (error: Error) => {
-      console.error('WebSocket error:', error);
+      this.socket!.on('message', (message: ClientMessage) => {
+        // This is a live message
+        this.messageHandlers.forEach(handler => handler([message], true));
+      });
+  
+      this.socket!.on('channels', (channels: ClientChannel[]) => {
+        this.channelHandlers.forEach(handler => handler(channels));
+      });
+  
+      this.socket!.on('threads', (threads: ClientThread[]) => {
+        this.threadHandlers.forEach(handler => handler(threads));
+      });
+  
+      this.socket!.on('tasks', (tasks: any[]) => {
+        console.log('Received tasks:', tasks);
+        this.taskHandlers.forEach(handler => handler(tasks));
+      });
+  
+      this.socket!.on('artifacts', (artifacts: any[]) => {
+        console.log('Received artifacts:', artifacts);
+        this.artifactHandlers.forEach(handler => handler(artifacts));
+      });
+  
+      this.socket!.on('logs', (newLogs: { type: string, data: any }) => {
+        if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
+          console.warn('WebSocketService: Received unknown log type:', newLogs?.type);
+          return;
+        }
+        console.log('WebSocketService: Received logs:', newLogs);
+      });
+  
+      this.socket!.on('disconnect', () => {
+        console.log('Disconnected from WebSocket server');
+      });
+  
+      this.socket!.on('error', (error: Error) => {
+        console.error('WebSocket error:', error);
+      });
     });
   }
 
@@ -106,7 +107,7 @@ class WebSocketService {
     }
   }
 
-  sendMessage(message: Partial<Message>) {
+  sendMessage(message: Partial<ClientMessage>) {
     if (this.socket) {
       this.socket.emit('message', message);
     }
@@ -134,7 +135,7 @@ class WebSocketService {
       // Remove any existing messages handler to prevent duplicates
       this.socket.off('messages');
       // Add new handler
-      this.socket.on('messages', (messages: Message[]) => {
+      this.socket.on('messages', (messages: ClientMessage[]) => {
         console.log('Received historical messages in service:', messages);
         // Don't trigger message handlers for historical messages
         this.messageHandlers.forEach(handler => handler(messages, false));
@@ -159,21 +160,21 @@ class WebSocketService {
     }
   }
 
-  onMessage(handler: (messages: Message[], isLive: boolean) => void) {
+  onMessage(handler: (messages: ClientMessage[], isLive: boolean) => void) {
     this.messageHandlers.push(handler);
     return () => {
       this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
     };
   }
 
-  onChannels(handler: (channels: Channel[]) => void) {
+  onChannels(handler: (channels: ClientChannel[]) => void) {
     this.channelHandlers.push(handler);
     return () => {
       this.channelHandlers = this.channelHandlers.filter(h => h !== handler);
     };
   }
 
-  onThreads(handler: (threads: Thread[]) => void) {
+  onThreads(handler: (threads: ClientThread[]) => void) {
     this.threadHandlers.push(handler);
     return () => {
       this.threadHandlers = this.threadHandlers.filter(h => h !== handler);
