@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import webSocketService, { Message, Channel, Thread } from '../services/WebSocketService';
 import { Artifact } from '../../../../tools/artifact';
-import { LLMLogEntry } from '../../../../llm/LLMLogger';
+import type { LLMLogEntry } from '../../../../llm/LLMLogger';
 
 interface WebSocketContextType {
   messages: Message[];
