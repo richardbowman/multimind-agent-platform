@@ -166,7 +166,7 @@ export class WebSocketServer {
             });
 
             // Handle messages
-            socket.on('message', (message: Partial<ClientMessage>) => {
+            socket.on('send_message', (message: Partial<ClientMessage>) => {
                 const fullMessage : InMemoryPost = {
                     id: Date.now().toString(),
                     channel_id: message.channel_id!,

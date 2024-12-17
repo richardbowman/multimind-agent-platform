@@ -161,6 +161,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const sendMessage = (message: Partial<ClientMessage>) => {
     webSocketService.sendMessage(message);
+    // Don't emit locally - wait for server response
   };
 
   const fetchChannels = () => {
