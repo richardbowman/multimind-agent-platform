@@ -19,8 +19,11 @@ export class KnowledgeCheckExecutor implements StepExecutor {
         this.vectorDB = vectorDB;
     }
 
-    async execute(goal: string, step: string, projectId: string, previousResult?: any, mode: 'quick' | 'detailed' = 'quick'): Promise<StepResult> {
-        return mode === 'quick' ? this.executeQuick(goal, step, projectId, previousResult) : this.executeDetailed(goal, step, projectId, previousResult);
+    async execute(params: ExecuteParams): Promise<StepResult> {
+        const mode = params.mode as ('quick' | 'detailed') || 'quick';
+        return mode === 'quick' ? 
+            this.executeQuick(params.goal, params.step, params.projectId, params.previousResult) : 
+            this.executeDetailed(params.goal, params.step, params.projectId, params.previousResult);
     }
 
     private async executeQuick(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {

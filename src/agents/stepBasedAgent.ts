@@ -31,6 +31,7 @@ export interface ExecuteParams {
     step: string;
     projectId: string;
     previousResult?: ModelMessageResponse;
+    mode?: 'quick' | 'detailed';
 }
 
 export interface StepExecutor {
