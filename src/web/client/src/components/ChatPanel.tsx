@@ -16,7 +16,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     currentThreadId,
     setCurrentThreadId,
 }) => {
-    const { messages, sendMessage } = useWebSocket();
+    const { messages, sendMessage, handles } = useWebSocket();
     const [userId] = useState('test');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -141,7 +141,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                     .map((message) => (
                         <div key={message.id} className="message">
                             <div className="message-header">
-                                <span className="username">{message.user_id}</span>
+                                <span className="username">
+                                    {handles.find(h => h.id === message.user_id)?.handle || message.user_id}
+                                </span>
                                 <span className="timestamp">
                                     {new Date(message.create_at).toLocaleString()}
                                 </span>
