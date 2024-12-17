@@ -73,7 +73,13 @@ class WebSocketService {
 
       this.socket!.on('message', (message: ClientMessage) => {
         // This is a live message
-        console.log('recieving message', message);
+        console.log('receiving message', message);
+        
+        // If this is a reply or creates a new thread, fetch updated thread info
+        if (message.thread_id || message.reply_count > 0) {
+          this.fetchThreads(message.channel_id);
+        }
+        
         this.messageHandlers.forEach(handler => handler([message], true));
       });
   
