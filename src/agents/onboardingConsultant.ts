@@ -27,7 +27,6 @@ export interface OnboardingProject extends Project<Task> {
     serviceRequirements?: string;
     existingPlan?: Artifact;
     answers?: QuestionAnswer[];
-    welcomeSent?: boolean;
 }
 
 class OnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
@@ -36,8 +35,12 @@ class OnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
         Logger.info(`Initialized Onboarding Consultant`);
         await super.setupChatMonitor(ONBOARDING_CHANNEL_ID, "@onboarding");
 
-        const project = await this.taskManager.getProject();
-        if (!project.welcomeSent) {
+        // Check if welcome message exists in channel
+        const existingWelcome = await this.chatClient.getMessages(ONBOARDING_CHANNEL_ID, {
+            props: { messageType: 'welcome' }
+        });
+
+        if (!existingWelcome.length) {
             const welcomeMessage = {
                 message: `👋 Welcome! I'm your Goal-Based Onboarding Consultant.
                 
@@ -47,16 +50,11 @@ I help you achieve your business objectives by:
 - Tracking progress
 - Adapting strategies as needed
 
-Let's start by discussing your main business goals. What would you like to achieve?`
+Let's start by discussing your main business goals. What would you like to achieve?`,
+                props: { messageType: 'welcome' }
             };
 
             await this.send(welcomeMessage, ONBOARDING_CHANNEL_ID);
-            
-            // Update project to mark welcome as sent
-            await this.taskManager.updateProject({
-                ...project,
-                welcomeSent: true
-            });
         }
         
         // asynchronously check for old tasks and keep working on them
