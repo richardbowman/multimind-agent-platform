@@ -16,7 +16,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     setCurrentThreadId,
 }) => {
     const { messages, sendMessage } = useWebSocket();
-    const [userId] = useState('user-' + Math.random().toString(36).substr(2, 9));
+    const [userId] = useState('test');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const scrollToBottom = () => {
