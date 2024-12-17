@@ -51,10 +51,15 @@ storage.registerChannel(SOLVER_CHANNEL_ID, "#solver");
 // Handle graceful shutdown
 async function shutdown() {
     console.log('Shutting down gracefully...');
-    await wsServer.close();
-    await tasks.save();
-    await storage.save();
-    process.exit(0);
+    try {
+        await wsServer.close();
+        await tasks.save();
+        await storage.save();
+        process.exit(0);
+    } catch (error) {
+        console.error('Error during shutdown:', error);
+        process.exit(1);
+    }
 }
 
 process.on('SIGTERM', shutdown);

@@ -12,6 +12,7 @@ import { LLMCallLogger } from 'src/llm/LLMLogger';
 
 export class WebSocketServer {
     private io: Server;
+    private httpServer: ReturnType<typeof createServer>;
     private storage: InMemoryChatStorage;
     private threads: Record<string, ClientThread[]> = {};
     private projects: TaskManager;
@@ -41,9 +42,9 @@ export class WebSocketServer {
         });
         
         const app = express();
-        const httpServer = createServer(app);
+        this.httpServer = createServer(app);
         
-        this.io = new Server(httpServer, {
+        this.io = new Server(this.httpServer, {
             cors: {
                 origin: "http://localhost:3000",
                 methods: ["GET", "POST"]
@@ -52,7 +53,7 @@ export class WebSocketServer {
 
         this.setupSocketHandlers();
         
-        httpServer.listen(port, () => {
+        this.httpServer.listen(port, () => {
             Logger.log(`WebSocket server running on port ${port}`);
         });
     }
@@ -336,6 +337,16 @@ export class WebSocketServer {
 
             socket.on('disconnect', () => {
                 Logger.info('Client disconnected');
+            });
+        });
+    }
+
+    async close(): Promise<void> {
+        return new Promise((resolve) => {
+            this.io.close(() => {
+                this.httpServer.close(() => {
+                    resolve();
+                });
             });
         });
     }
