@@ -116,7 +116,7 @@ ${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
         };
     }
 
-    private async executeDetailed
+    private async executeDetailed(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const querySchema = await getGeneratedSchema(SchemaType.QueriesResponse);
         const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
 
