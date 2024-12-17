@@ -32,21 +32,12 @@ export class CodeExecutorExecutor implements StepExecutor {
         // Set up console.log as an alias to log
         context.evalSync(`console = { log: log }`);
         
-        let setResult: any;
-        jail.setSync('result', (value: any) => {
-            setResult = value;
-        });
-        
         // Create a new script in the context
         const script = this.isolate.compileScriptSync(code);
         
         // Run with 5 second timeout
         const scriptResult = await script.run(context, { timeout: 5000 });
         
-        if (!scriptResult && setResult) {
-            scriptResult = setResult;
-        }
-
         // Handle the script result
         let returnValue;
         if (typeof scriptResult === 'number' || 
@@ -65,7 +56,7 @@ export class CodeExecutorExecutor implements StepExecutor {
         }
         
         return {
-            returnValue: returnValue || (logs.length > 0 ? logs[0] : undefined),
+            returnValue: returnValue,
             consoleOutput: logs.join('\n')
         };
     }
@@ -78,11 +69,12 @@ Generate safe JavaScript code to solve the given problem.
 Provide clear explanations of what the code does.
 DO NOT use any Node.js specific APIs or file system operations.
 Only use pure JavaScript that can run in a sandboxed environment.
+The return value of the last line of your script will be shared as the answer.
 
-To provide the answer, call the "result" function with a string. For instance:
-
+Example:
 const a = 1 + 2;
-result(\`The answer is \$\{a\}\`);
+console.log(\`The answer is \$\{a\}\`);
+a;  // send 3 back as the answer
 
 ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
@@ -125,7 +117,7 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             type: "code-execution",
             finished: true,
             response: {
-                message: `**Code:**\n\`\`\`javascript\n${result.code}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${JSON.stringify(executionResult.returnValue, null, 2)}\n\`\`\`${executionResult.consoleOutput ? `\n\n**Console Output:**\n\`\`\`\n${executionResult.consoleOutput}\n\`\`\`` : ''}`,
+                message: `**Code:**\n\`\`\`javascript\n${result.code}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${JSON.stringify(executionResult.returnValue, null, 2)}\n\`\`\`${executionResult.consoleOutput ? `\n\n**Console Output:**\n\`\`\`\n${executionResult.consoleOutput}\n\`\`\`\n` : ''}`,
                 data: result
             }
         };
