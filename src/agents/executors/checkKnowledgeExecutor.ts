@@ -19,7 +19,104 @@ export class KnowledgeCheckExecutor implements StepExecutor {
         this.vectorDB = vectorDB;
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    async execute(goal: string, step: string, projectId: string, previousResult?: any, mode: 'quick' | 'detailed' = 'detailed'): Promise<StepResult> {
+        return mode === 'quick' ? this.executeQuick(goal, step, projectId, previousResult) : this.executeDetailed(goal, step, projectId, previousResult);
+    }
+
+    private async executeQuick(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+        const querySchema = {
+            type: "object",
+            properties: {
+                queries: {
+                    type: "array",
+                    items: {
+                        type: "string",
+                        description: "A search query"
+                    }
+                }
+            }
+        };
+
+        const queryPrompt = `You are a research specialist crafting search queries.
+Given this content goal: "${goal}"
+Generate 2-3 different search queries that will help find relevant information.`;
+
+        const queryInstructions = new StructuredOutputPrompt(querySchema, queryPrompt);
+        const queryResult = await this.modelHelpers.generate<{queries: string[]}>({
+            message: goal,
+            instructions: queryInstructions
+        });
+
+        // Execute searches using our vector DB
+        const searchResults = [];
+        const seenContent = new Set();
+        
+        for (const query of queryResult.queries) {
+            try {
+                const results = await this.vectorDB.query(
+                    [query], 
+                    undefined, 
+                    5
+                );
+                
+                for (const result of results) {
+                    if (!seenContent.has(result.text)) {
+                        seenContent.add(result.text);
+                        searchResults.push(result);
+                    }
+                }
+            } catch (error) {
+                Logger.error(`Error querying ChromaDB: ${error}`);
+            }
+        }
+
+        const analysisPrompt = `You are analyzing research results for: "${goal}"
+
+Search Results:
+${searchResults.map(r => `
+Source: ${r.metadata?.title || 'Untitled'} (Score: ${r.score?.toFixed(3)})
+Content: ${r.text}
+---`).join('\n')}
+
+Analyze relevant results (skipping irrelevant results):
+1. Extract key findings and their sources
+2. Identify any information gaps`;
+
+        const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
+        const analysis = await this.modelHelpers.generate<ResearchResponse>({
+            message: goal,
+            instructions: analysisInstructions
+        });
+
+        const responseMessage = `## Quick Research Results
+
+### Search Queries Used
+${queryResult.queries.map(q => `- "${q}"`).join('\n')}
+
+### Key Findings
+${analysis.keyFindings?.map(f => `
+- **Finding:** ${f.finding}
+  - *Sources:* ${f.sources.join(', ')}
+  - *Relevance:* ${f.relevance}`).join('\n')||"(None found)"}
+
+### Information Gaps
+${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
+
+        return {
+            type: "research",
+            finished: true,
+            response: {
+                message: responseMessage,
+                data: {
+                    queries: queryResult.queries,
+                    searchResults,
+                    analysis
+                }
+            }
+        };
+    }
+
+    private async executeDetailed
         const querySchema = await getGeneratedSchema(SchemaType.QueriesResponse);
         const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
 
