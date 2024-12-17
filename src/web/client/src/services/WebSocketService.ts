@@ -196,9 +196,9 @@ class WebSocketService {
     }
   }
 
-  fetchLogs() {
+  fetchLogs(logType: 'llm' | 'system' | 'api') {
     if (this.socket) {
-      this.socket.emit('get_logs');
+      this.socket.emit('get_logs', { logType });
     }
   }
 }
