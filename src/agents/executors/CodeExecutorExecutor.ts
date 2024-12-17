@@ -27,18 +27,18 @@ Provide clear explanations of what the code does.
 DO NOT use any Node.js specific APIs or file system operations.
 Only use pure JavaScript that can run in a sandboxed environment.
 
-The response of your final line will be returned for you to use the
-value. For instance:
+To provide the answer you want to share, call the "result" function. For instance:
 
 const a = 1 + 2;
-a;
+result(a);
 
 ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const result = await this.modelHelpers.generate<CodeExecutionResponse>({
             message: goal,
-            instructions
+            instructions,
+            model: "qwen2.5-coder-14b-instruct"
         });
 
         let executionResult;
@@ -57,12 +57,22 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             };
             await jail.set('console', new ivm.Reference(consoleMock));
             
+            let setResult;
+            const result = function(result: any) {
+                setResult = result;
+            };
+            await jail.set('result', new ivm.Reference(result));
+            
             // Create a new script in the context
             const script = await this.isolate.compileScript(result.code);
             
             // Run with 5 second timeout
             const scriptResult = await script.run(context, { timeout: 5000 });
             
+            if (!scriptResult && setResult) {
+                scriptResult = setResult;
+            }
+
             // Handle the script result
             let returnValue;
             if (typeof scriptResult === 'number' || 
