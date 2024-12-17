@@ -82,6 +82,7 @@ Analyze relevant results (skipping irrelevant results):
 1. Extract key findings and their sources
 2. Identify any information gaps`;
 
+        const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
         const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
         const analysis = await this.modelHelpers.generate<ResearchResponse>({
             message: goal,
