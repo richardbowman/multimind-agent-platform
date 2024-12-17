@@ -140,10 +140,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                             // In a thread, show the root message and all replies
                             return message.id === currentThreadId || message.thread_id === currentThreadId;
                         } else {
-                            // In channel view, show root messages and messages without threads
-                            return message.thread_id === undefined;
+                            // In channel view, show messages that aren't replies
+                            return !message.thread_id;
                         }
                     })
+                    .filter(message => message.channel_id === currentChannelId)
                     .map((message) => (
                         <div key={message.id} className="message">
                             <div className="message-header">
