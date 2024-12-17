@@ -49,12 +49,13 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
 
             // Set up console logging capture
             let logs: string[] = [];
-            const consoleMock = new ivm.Reference({
-                log: (...args: any[]) => {
+            const consoleMock = {
+                log: function(...args) {
                     logs.push(args.map(arg => String(arg)).join(' '));
+                    return undefined;
                 }
-            });
-            await jail.set('console', consoleMock);
+            };
+            await jail.set('console', new ivm.Reference(consoleMock));
             
             // Create a new script in the context
             const script = await this.isolate.compileScript(result.code);
