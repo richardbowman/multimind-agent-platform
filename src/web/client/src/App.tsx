@@ -13,6 +13,7 @@ const App: React.FC = () => {
     const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
     const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs'>('chat');
+    const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('llm');
 
     return (
       <WebSocketProvider>
@@ -72,7 +73,29 @@ const App: React.FC = () => {
                 ) : currentTab === 'artifacts' ? (
                     <GlobalArtifactViewer />
                 ) : (
-                    <LogViewer />
+                    <div className="logs-container">
+                        <div className="logs-subtabs">
+                            <button 
+                                className={`subtab-button ${currentLogTab === 'llm' ? 'active' : ''}`}
+                                onClick={() => setCurrentLogTab('llm')}
+                            >
+                                LLM Logs
+                            </button>
+                            <button 
+                                className={`subtab-button ${currentLogTab === 'system' ? 'active' : ''}`}
+                                onClick={() => setCurrentLogTab('system')}
+                            >
+                                System Logs
+                            </button>
+                            <button 
+                                className={`subtab-button ${currentLogTab === 'api' ? 'active' : ''}`}
+                                onClick={() => setCurrentLogTab('api')}
+                            >
+                                API Logs
+                            </button>
+                        </div>
+                        <LogViewer logType={currentLogTab} />
+                    </div>
                 )}
             </div>
         </div>
