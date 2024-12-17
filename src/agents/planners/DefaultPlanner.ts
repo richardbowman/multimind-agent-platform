@@ -65,6 +65,7 @@ export class MultiStepPlanner implements Planner {
             `## Current Plan\n*No tasks in current plan*\n\n`;
 
         const stepDescriptions = executorMetadata
+            .filter(metadata => metadata.planner)
             .map(({ key, description }) => `[${key}]: ${description}`)
             .join("\n");
 
