@@ -127,8 +127,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setArtifacts(newArtifacts);
     });
 
-    webSocketService.socket?.on('logs', (newLogs: any[]) => {
-      setLogs(newLogs);
+    webSocketService.socket?.on('logs', (newLogs: { type: string, data: any }) => {
+      setLogs(prev => ({
+        ...prev,
+        [newLogs.type]: newLogs.data
+      }));
     });
 
     return () => {
