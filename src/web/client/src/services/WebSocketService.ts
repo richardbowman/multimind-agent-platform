@@ -129,6 +129,18 @@ class WebSocketService {
     }
   }
 
+  on(event: string, handler: Function) {
+    if (this.socket) {
+      this.socket.on(event, handler);
+    }
+  }
+
+  off(event: string, handler: Function) {
+    if (this.socket) {
+      this.socket.off(event, handler);
+    }
+  }
+
   onMessage(handler: (messages: Message[]) => void) {
     this.messageHandlers.push(handler);
     return () => {

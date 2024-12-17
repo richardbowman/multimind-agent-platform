@@ -42,8 +42,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
     // Handle live message thread selection
     useEffect(() => {
-        const handleNewMessage = (message: any) => {
-            if (message.thread_id && !currentThreadId) {
+        const handleNewMessage = (messages: Message[]) => {
+            const message = messages[0]; // We receive an array but handle one message
+            if (message?.thread_id && !currentThreadId) {
                 // Only switch to thread view if we're not already in a thread
                 const threadRoot = messages.find(m => m.id === message.thread_id);
                 if (threadRoot) {
@@ -52,11 +53,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             }
         };
 
-        webSocketService.on('message', handleNewMessage);
-        
-        return () => {
-            webSocketService.off('message', handleNewMessage);
-        };
+        const cleanup = webSocketService.onMessage(handleNewMessage);
+        return cleanup;
     }, [messages, currentThreadId, setCurrentThreadId]);
 
     const [lastMessage, setLastMessage] = useState<string | null>(null);
