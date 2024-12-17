@@ -62,8 +62,8 @@ export class MultiStepPlanner implements Planner {
             `## Current Plan\n*No tasks in current plan*\n\n`;
 
         const stepDescriptions = executorMetadata
-            .map(({ key, description }) => ` - ${key}: ${description}`)
-            .join("\n\n");
+            .map(({ key, description }) => `[${key}]: ${description}`)
+            .join("\n");
 
         //TODO: opportunity here to better organize context of the chat chain to include info
         const userContext = handlerParams.userPost?.message
@@ -115,7 +115,7 @@ ${this.modelHelpers.getFinalInstructions()}`;
                     const existingTask = existingTaskMap.get(step.existingId)!;
                     existingTask.order = index;
                     if (step.actionType) existingTask.type = step.actionType;
-                    if (step.goals) existingTask.description = step.goals;
+                    if (step.context) existingTask.description = step.context;
                     mentionedTaskIds.add(step.existingId);
                 } else {
                     // Create new task
