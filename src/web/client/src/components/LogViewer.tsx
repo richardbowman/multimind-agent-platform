@@ -9,23 +9,27 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     const { logs, fetchLogs } = useWebSocket();
 
     useEffect(() => {
-        console.log('LogViewer: Fetching logs for type:', logType);
+        console.log('LogViewer: Setting up log fetching for type:', logType);
         let isSubscribed = true;
 
-        const fetchLogsIfSubscribed = () => {
-            if (isSubscribed) {
+        // Initial fetch
+        fetchLogs(logType);
+
+        // Set up polling interval
+        const interval = setInterval(() => {
+            if (isSubscribed && document.visibilityState === 'visible') {
+                console.log('LogViewer: Polling logs for type:', logType);
                 fetchLogs(logType);
             }
-        };
+        }, 5000);
 
-        fetchLogsIfSubscribed(); // Initial fetch
-        const interval = setInterval(fetchLogsIfSubscribed, 5000);
-
+        // Clean up function
         return () => {
+            console.log('LogViewer: Cleaning up log fetching for type:', logType);
             isSubscribed = false;
             clearInterval(interval);
         };
-    }, [logType]); // Remove fetchLogs from dependencies to prevent re-renders
+    }, [logType, fetchLogs]); // Include fetchLogs to properly handle context changes
 
     const renderLogs = () => {
         switch (logType) {
