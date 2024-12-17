@@ -90,10 +90,17 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const threadCleanup = webSocketService.onThreads((newThreads) => {
       if (newThreads.length > 0) {
         const channelId = newThreads[0].rootMessage.channel_id;
-        setThreads(prev => ({
-          ...prev,
-          [channelId]: newThreads
-        }));
+        setThreads(prev => {
+          // Only update if the threads have actually changed
+          const currentThreads = prev[channelId] || [];
+          const hasChanges = newThreads.length !== currentThreads.length || 
+            newThreads.some((thread, i) => thread.rootMessage.id !== currentThreads[i]?.rootMessage.id);
+            
+          return hasChanges ? {
+            ...prev,
+            [channelId]: newThreads
+          } : prev;
+        });
       }
     });
 
