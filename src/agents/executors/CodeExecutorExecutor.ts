@@ -79,11 +79,18 @@ a;  // send 3 back as the answer
 ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.modelHelpers.generate<CodeExecutionResponse>({
+        let result = await this.modelHelpers.generate<CodeExecutionResponse>({
             message: goal,
             instructions,
             model: "qwen2.5-coder-14b-instruct"
         });
+
+        // Remove code block markers if present
+        if (result.code.startsWith('```javascript\n')) {
+            result.code = result.code.replace(/^```javascript\n/, '').replace(/\n```$/, '');
+        } else if (result.code.startsWith('```js\n')) {
+            result.code = result.code.replace(/^```js\n/, '').replace(/\n```$/, '');
+        }
 
         let executionResult;
         try {
@@ -92,11 +99,18 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             // If there's an error, try again with error feedback
             const errorPrompt = `${prompt}\n\nThe previous attempt resulted in this error:\n${error.message}\n\nPlease fix the code and try again.`;
             const retryInstructions = new StructuredOutputPrompt(schema, errorPrompt);
-            const retryResult = await this.modelHelpers.generate<CodeExecutionResponse>({
+            let retryResult = await this.modelHelpers.generate<CodeExecutionResponse>({
                 message: goal,
                 instructions: retryInstructions,
                 model: "qwen2.5-coder-14b-instruct"
             });
+
+            // Remove code block markers if present
+            if (retryResult.code.startsWith('```javascript\n')) {
+                retryResult.code = retryResult.code.replace(/^```javascript\n/, '').replace(/\n```$/, '');
+            } else if (retryResult.code.startsWith('```js\n')) {
+                retryResult.code = retryResult.code.replace(/^```js\n/, '').replace(/\n```$/, '');
+            }
 
             try {
                 executionResult = await this.executeCodeInSandbox(retryResult.code);
