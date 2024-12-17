@@ -58,10 +58,11 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             await jail.set('console', new ivm.Reference(consoleMock));
             
             let setResult;
-            const result = function(result: any) {
-                setResult = result;
+            const resultFn = function(value: any) {
+                setResult = value;
+                return value;
             };
-            await jail.set('result', new ivm.Reference(result));
+            await jail.set('result', new ivm.Reference(resultFn));
             
             // Create a new script in the context
             const script = await this.isolate.compileScript(result.code);
@@ -120,8 +121,9 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
                 await retryJail.set('console', new ivm.Reference(retryConsoleMock));
                 
                 let retrySetResult;
-                const retryResultFn = function(result: any) {
-                    retrySetResult = result;
+                const retryResultFn = function(value: any) {
+                    retrySetResult = value;
+                    return value;
                 };
                 await retryJail.set('result', new ivm.Reference(retryResultFn));
                 
