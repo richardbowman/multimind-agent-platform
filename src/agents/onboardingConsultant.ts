@@ -9,6 +9,7 @@ import { AnswerQuestionsExecutor } from './executors/AnswerQuestionsExecutor';
 import { CreatePlanExecutor } from './executors/CreatePlanExecutor';
 import { ReviewProgressExecutor } from './executors/ReviewProgressExecutor';
 import { UnderstandGoalsExecutor } from './executors/UnderstandGoalsExecutor';
+import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 
 
@@ -29,13 +30,6 @@ export interface OnboardingProject extends Project<Task> {
 }
 
 class GoalBasedOnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
-    protected projectCompleted(project: OnboardingProject): void {
-        // this.chatClient.postInChannel()
-    }
-    protected processTask(task: Task): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-
 
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Onboarding Consultant`);
@@ -67,7 +61,6 @@ Let's start by discussing your main business goals. What would you like to achie
         // this.registerStepExecutor(new ReplyExecutor(lmStudioService, projects, this.artifactManager));
         this.registerStepExecutor(new AnswerQuestionsExecutor(params.llmService, params.taskManager));
         this.registerStepExecutor(new UnderstandGoalsExecutor(params.llmService, params.taskManager, params.userId));
-        // this.registerStepExecutor(new AnalyzeGoalsExecutor(params.llmService, params.taskManager, this.artifactManager, params.userId));
         this.registerStepExecutor(new CreatePlanExecutor(params.llmService, params.taskManager, this.artifactManager, params.userId));
         this.registerStepExecutor(new ReviewProgressExecutor(params.llmService, params.taskManager, this.artifactManager));
         this.registerStepExecutor(new ValidationExecutor(params.llmService));

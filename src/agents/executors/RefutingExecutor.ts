@@ -15,7 +15,7 @@ export class RefutingExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.RefutingResponse);
 
         const prompt = `You are a critical thinker tasked with finding potential flaws in an argument or conclusion.

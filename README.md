@@ -197,7 +197,7 @@ protected async handleConversation(params: HandlerParams): Promise<void> {
 
 ## Development with LLMs
 ```
-aider --model bedrock/anthropic.claude-3-5-sonnet-20241022-v2:0
+aider --model bedrock/us.anthropic.claude-3-5-haiku-20241022-v1:0 --weak-model us.anthropic.claude-3-5-haiku-20241022-v1:0
 ```
 
 ## License

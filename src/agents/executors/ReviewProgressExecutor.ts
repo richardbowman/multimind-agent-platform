@@ -5,7 +5,7 @@ import { ReviewProgressResponse } from '../../schemas/reviewProgress';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
-import { OnboardingProject } from '../goalBasedOnboardingConsultant';
+import { OnboardingProject } from '../onboardingConsultant';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -23,7 +23,7 @@ export class ReviewProgressExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
         const tasks = this.taskManager.getAllTasks(projectId);
 

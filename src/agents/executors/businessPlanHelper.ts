@@ -1,5 +1,5 @@
 import { Artifact } from "../../tools/artifact";
-import { OnboardingProject } from "../goalBasedOnboardingConsultant";
+import { OnboardingProject } from "../onboardingConsultant";
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ArtifactManager } from "../../tools/artifactManager";
 import { ModelHelpers } from "../../llm/modelHelpers";

@@ -55,16 +55,6 @@ export const GlobalArtifactViewer: React.FC = () => {
                             <div className="artifact-card-title">
                                 {artifact.metadata?.title || artifact.id}
                             </div>
-                            <div className="artifact-card-meta">
-                                {artifact.metadata && Object.entries(artifact.metadata)
-                                    .filter(([key]) => key !== 'binary' && key !== 'format')
-                                    .map(([key, value]) => (
-                                        <span key={key} className="meta-item">
-                                            {key}: {typeof value === 'object' ? JSON.stringify(value) : value}
-                                        </span>
-                                    ))
-                                }
-                            </div>
                         </div>
                     ))}
                 </div>
@@ -72,7 +62,6 @@ export const GlobalArtifactViewer: React.FC = () => {
             <div className="artifact-detail-panel">
                 {selectedArtifact ? (
                     <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
-                    </>
                 ) : (
                     <div className="no-selection">
                         Select an artifact to view its details

@@ -10,7 +10,7 @@ import { Planner } from './planners/Planner';
 import { MultiStepPlanner } from './planners/DefaultPlanner';
 import crypto from 'crypto';
 import Logger from '../helpers/logger';
-import { CreateArtifact, ModelMessageResponse } from '../schemas/ModelResponse';
+import { CreateArtifact, ModelMessageResponse, ModelResponse, ReasoningResponse } from '../schemas/ModelResponse';
 import ChromaDBService from 'src/llm/chromaService';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/inMemoryChatClient';
@@ -23,24 +23,24 @@ export interface StepResult {
     finished?: boolean;
     [key: string]: any;
     needsUserInput?: boolean;
-    response: ModelMessageResponse;
+    response: ModelResponse;
 }
 
 export interface ExecuteParams {
     goal: string;
     step: string;
     projectId: string;
-    previousResult?: any;
+    previousResult?: ModelMessageResponse;
 }
 
 export interface StepExecutor {
     /**
      * @deprecated Use executeV2 instead which provides better parameter organization
      */
-    execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult>;
-    executeV2?(params: ExecuteParams): Promise<StepResult>;
+    executeOld?(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult>;
+    execute?(params: ExecuteParams): Promise<StepResult>;
     onTaskNotification?(task: Task): Promise<void>;
-    onProjectCompleted?(project: Project): Promise<void>;
+    onProjectCompleted?(project: Project<Task>): Promise<void>;
 }
 
 export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
@@ -189,13 +189,6 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
             this.projects.completeTask(project.metadata.parentTaskId);
         }
-
-        const postId = project.metadata?.originalPostId;
-        if (postId) {
-            const userPost = await this.chatClient.getPost(postId);
-            // this.reply(userPost, { message: "Task is completed"});
-            await this.generateAndSendFinalResponse(project.id, userPost);
-        }
     }
 
     protected async processTask(task: Task): Promise<void> {
@@ -248,15 +241,15 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 .filter(r => r); // Remove undefined/null results
 
             let stepResult: StepResult;
-            if (executor.executeV2) {
-                stepResult = await executor.executeV2({
+            if (executor.execute) {
+                stepResult = await executor.execute({
                     goal: `${userPost?.message} [Step: ${task.description}] [Project: ${project.name}]`,
                     step: task.type,
                     projectId: projectId,
                     previousResult: priorResults
                 });
             } else {
-                stepResult = await executor.execute(
+                stepResult = await executor.executeOld(
                     `${userPost?.message} [Step: ${task.description}] [Project: ${project.name}]`,
                     task.type,
                     projectId,
@@ -396,57 +389,6 @@ Consider the original goal and what we've learned so far.`;
             instructions
         });
     }
-
-
-    protected async generateAndSendFinalResponse(projectId: string, userPost?: ChatPost): Promise<void> {
-        const project = this.projects.getProject(projectId);
-
-        // Get all completed tasks' results
-        const tasks = Object.values(project.tasks);
-        const completedResults = tasks
-            .filter(t => t.complete)
-            .map(t => t.props?.result)
-            .filter(r => r);
-
-        // Execute final response executor
-        const executor = this.stepExecutors.get('final_response');
-        if (!executor) {
-            throw new Error('Final response executor not found');
-        }
-
-        const finalResult = await executor.execute(project.name, 'final_response', projectId, completedResults);
-        const finalResponse = finalResult.response;
-
-        const artifactId = crypto.randomUUID();
-        if (!finalResponse?.message) {
-            throw new Error('Final response message is undefined');
-        }
-
-        const artifact = await this.artifactManager.saveArtifact({
-            id: artifactId,
-            type: 'summary',
-            content: finalResponse.message,
-            metadata: {
-                title: `Summary: ${project.name}`,
-                query: project.name,
-                type: 'summary',
-                steps: tasks.map(t => t.description)
-            }
-        });
-
-        const response: CreateArtifact = {
-            message: `${finalResponse.message}\n\n---\nYou can ask follow-up questions by replying with your question.`,
-            artifactId: artifact.id,
-            artifactTitle: artifact.metadata?.title
-        };
-
-        if (userPost) {
-            await this.reply(userPost, response);
-        } else {
-            Logger.info(`Final response for project ${projectId}: ${response.message}`);
-        }
-    }
-
 
     @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
     protected async handleConversation(params: HandlerParams): Promise<void> {

@@ -84,7 +84,7 @@ Consider:
         }
 
         return {
-            type: step,
+            type: "understand-research-goals",
             finished: true,
             response: {
                 message: `I understand your research goals:\n\n${result.understanding}\n\nProceeding with research plan creation.`

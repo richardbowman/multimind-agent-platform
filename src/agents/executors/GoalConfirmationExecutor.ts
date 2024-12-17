@@ -15,7 +15,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, userId);
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<any> {
+    async executeOld(goal: string, step: string, projectId: string): Promise<any> {
         const schema = await getGeneratedSchema(SchemaType.GoalConfirmationResponse);
 
         const prompt = `As an AI assistant, your task is to:

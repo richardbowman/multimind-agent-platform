@@ -19,7 +19,7 @@ export class KnowledgeCheckExecutor implements StepExecutor {
         this.vectorDB = vectorDB;
     }
 
-    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const querySchema = await getGeneratedSchema(SchemaType.QueriesResponse);
         const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
 

@@ -23,7 +23,7 @@ export class ResearchAggregationExecutor implements StepExecutor {
         this.vectorDB = vectorDB;
     }
 
-    async execute(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
         const aggregatedData = await this.aggregateResults(goal, projectId);
         const schema = await getGeneratedSchema(SchemaType.ResearchArtifactResponse);
 

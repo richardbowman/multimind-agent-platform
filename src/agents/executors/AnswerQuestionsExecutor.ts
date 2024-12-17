@@ -4,7 +4,7 @@ import { ILLMService } from '../../llm/ILLMService';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { AnswerAnalysisResponse } from '../../schemas/AnswerAnalysisResponse';
 import { TaskManager } from '../../tools/taskManager';
-import { OnboardingProject } from '../goalBasedOnboardingConsultant';
+import { OnboardingProject } from '../onboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 
@@ -19,7 +19,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async execute(response: string, step: string, projectId: string): Promise<StepResult> {
+    async executeOld(response: string, step: string, projectId: string): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
 
         const project = this.taskManager.getProject(projectId) as OnboardingProject;

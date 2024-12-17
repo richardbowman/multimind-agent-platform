@@ -83,10 +83,11 @@ export class DuckDuckGoProvider implements ISearchProvider {
 
             // Extract the title of the page
             const title = await page.title();
+            const actualUrl = page.url();
 
             // Load the HTML content into Cheerio
             const $ = load(htmlContent);
-            const markdownContent = convertPageToMarkdown($);
+            const markdownContent = convertPageToMarkdown($, actualUrl);
 
             const artifactId = crypto.randomUUID();
             await this.artifactManager.saveArtifact({

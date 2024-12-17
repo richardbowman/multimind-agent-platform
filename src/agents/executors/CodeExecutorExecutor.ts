@@ -18,7 +18,7 @@ export class CodeExecutorExecutor implements StepExecutor {
         this.isolate = new ivm.Isolate({ memoryLimit: 128 }); // Limit to 128MB
     }
 
-    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const schema = codeExecutionSchema;
 
         const prompt = `You are a JavaScript programming expert.

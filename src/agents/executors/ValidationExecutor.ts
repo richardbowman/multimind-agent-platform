@@ -15,7 +15,7 @@ export class ValidationExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async execute(goal: string, step: string, projectId: string, previousResults: any[]): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResults: any[]): Promise<StepResult> {
         const schema = generatedSchemaDef.ValidationResult;
 
         const systemPrompt = `You are validating whether a proposed solution fully addresses the original goal.

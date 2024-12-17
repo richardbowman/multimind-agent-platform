@@ -1,4 +1,4 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -10,6 +10,7 @@ import { RESEARCHER_USER_ID, RESEARCH_MANAGER_USER_ID } from '../../helpers/conf
 import { ResearchTask } from '../researchAssistant';
 import { randomUUID } from 'crypto';
 import { ResearchDecomposition } from '../../schemas/research-manager';
+import { ModelResponse } from 'src/schemas/ModelResponse';
 
 @StepExecutorDecorator('decompose-research', 'Break down research request into specific tasks')
 export class ResearchDecompositionExecutor implements StepExecutor {
@@ -26,7 +27,7 @@ export class ResearchDecompositionExecutor implements StepExecutor {
         
         // Extract any relevant context from previous results
         const previousContext = previousResult?.length ? previousResult
-            .map((result: any) => result.reasoning || result.message)
+            .map(function processContext<M extends ModelResponse>(result: M) { return result.reasoning || result.message })
             .filter(Boolean)
             .join('\n\n') : '';
         const schema = await getGeneratedSchema(SchemaType.ResearchDecomposition);
@@ -34,7 +35,11 @@ export class ResearchDecompositionExecutor implements StepExecutor {
         const pendingTasks: Set<string> = new Set();
 
         const systemPrompt = `
-You are a research orchestrator. Follow these steps:
+You are a Web Research manager. You develop a list of one or more research requests for your team of research assistants who will search the Internet
+based on your research requests and provide you with the results they find. Make sure each research request is complete with
+all details necessary to perform a high quality Internet search. Make sure they are not duplicative.
+
+Follow these steps:
 1) Restate the user's goal.
 2) Consider the previous research context provided (if any).
 3) Analyze the request and explain how you will satisfy it.

@@ -81,7 +81,8 @@ ${stepDescriptions}
 
 TASK GOAL:
 - If the user's high-level goal is not solved, look at the Current Plan and decide if you need to change anything to achieve the goal.
-- If no change to the plan is needed, just return the same steps and include their ID. 
+- If no change to the plan is needed, just return the same steps and include their ID.
+- If the current step is in-progress, don't remove it so it can process the new conversation from the user unless its clear we need to replan.
 - Return a steps list in the order to perform.
 
 ${completedSteps}

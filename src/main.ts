@@ -15,7 +15,7 @@ import { ArtifactManager } from "./tools/artifactManager";
 import { createVectorDatabase } from "./llm/vectorDatabaseFactory";
 import { ProjectManager } from "./agents/projectManager";
 import Logger from "./helpers/logger";
-import GoalBasedOnboardingConsultant from "./agents/goalBasedOnboardingConsultant";
+import GoalBasedOnboardingConsultant from "./agents/onboardingConsultant";
 
 const llmService = LLMServiceFactory.createService(LLM_PROVIDER as LLMProvider);
 // Initialize the embedding and LLaMA models
@@ -134,10 +134,10 @@ await solverAgent.initialize();
 
 // Initialize WebSocket server with our storage
 import { WebSocketServer } from './web/server/WebSocketServer';
-const wsServer = new WebSocketServer(storage, tasks, artifactManager);
 
 const userClient = await setupUserAgent(storage, chatBox, inputBox, artifactManager, tasks);
-return userClient;
+
+const wsServer = new WebSocketServer(storage, tasks, artifactManager, userClient);
 
 // Parse command line arguments
 const { values } = parseArgs({

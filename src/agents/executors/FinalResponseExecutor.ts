@@ -11,7 +11,7 @@ export class FinalResponseExecutor implements StepExecutor {
     constructor(private modelHelpers: ModelHelpers) {
     }
 
-    async execute(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.FinalResponse);
 
         const systemPrompt = `You are an AI assistant generating a final response.

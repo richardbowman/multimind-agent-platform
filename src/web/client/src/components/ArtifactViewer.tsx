@@ -25,7 +25,7 @@ Type: ${artifact.type}
 ${formatMetadata(artifact.metadata)}
 
 ## Content
-${artifact.content.toString()}`;
+${artifact.content?.toString()||"(no content available)"}`;
 
     return (
         <div className="artifact-viewer-overlay" onClick={onClose}>

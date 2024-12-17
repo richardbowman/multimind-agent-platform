@@ -20,7 +20,7 @@ export class ComplexProjectExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
         const structuredPrompt = new StructuredOutputPrompt(
             {
                 type: 'object',

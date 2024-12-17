@@ -1,9 +1,20 @@
+import { response } from "express";
+import { StringMap } from "ts-json-schema-generator";
 
-export interface ModelResponse {
+export interface ModelResponse extends Record<string, any> {
+
+}
+
+export interface ModelResponseMetadata {
     _usage: {
         inputTokens: number,
         outputTokens:number
     }
+}
+
+export interface GenerateOutputParams<M extends ModelResponse> {
+    response: M;
+    metadata: ModelResponseMetadata;
 }
 
 export interface ModelMessageResponse extends ModelResponse {

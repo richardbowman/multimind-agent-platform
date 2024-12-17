@@ -1,4 +1,6 @@
-export interface SearchQueryResponse {
+import { ModelResponse } from "./ModelResponse";
+
+export interface SearchQueryResponse extends ModelResponse {
     /**
      * A broad web search query without special keywords or operators
      */

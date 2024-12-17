@@ -4,7 +4,7 @@ import { ILLMService } from '../../llm/ILLMService';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
-import { OnboardingProject } from '../goalBasedOnboardingConsultant';
+import { OnboardingProject } from '../onboardingConsultant';
 import crypto from 'crypto';
 import { Task } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -31,7 +31,7 @@ export class AnalyzeGoalsExecutor implements StepExecutor {
         this.userId = userId;
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
         const analyzedGoals = await this.breakdownBusinessGoals(goal);
         const tasks = await this.createGoalTasks(project, analyzedGoals);

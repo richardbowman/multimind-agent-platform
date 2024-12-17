@@ -60,6 +60,7 @@
     "ts-json-schema-generator": "^2.3.0",
     "turndown": "^7.2.0",
     "typescript": "^5.7.2",
+    "vectra": "^0.9.0",
     "ws": "^8.18.0"
   },
   "devDependencies": {

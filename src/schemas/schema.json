@@ -45,7 +45,6 @@
       "type": "object"
     },
     "ArtifactResponseSchema": {
-      "additionalProperties": false,
       "properties": {
         "artifactContent": {
           "type": "string"
@@ -253,7 +252,6 @@
       "type": "object"
     },
     "CreateArtifact": {
-      "additionalProperties": false,
       "properties": {
         "artifactId": {
           "type": "string"
@@ -273,7 +271,6 @@
       "type": "object"
     },
     "EditingResponse": {
-      "additionalProperties": false,
       "description": "Response containing content editing suggestions",
       "properties": {
         "improvements": {
@@ -407,6 +404,37 @@
       ],
       "type": "object"
     },
+    "LinkSelectionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "links": {
+          "description": "Array of selected links that are relevant to the research goal",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "href": {
+                "description": "The URL of the link",
+                "type": "string"
+              },
+              "text": {
+                "description": "The visible text of the link",
+                "type": "string"
+              }
+            },
+            "required": [
+              "href",
+              "text"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "links"
+      ],
+      "type": "object"
+    },
     "LookupResearchResponse": {
       "additionalProperties": false,
       "properties": {
@@ -424,7 +452,6 @@
       "type": "object"
     },
     "ModelMessageResponse": {
-      "additionalProperties": false,
       "properties": {
         "message": {
           "type": "string"
@@ -432,6 +459,35 @@
       },
       "required": [
         "message"
+      ],
+      "type": "object"
+    },
+    "ModelResponse": {
+      "properties": {},
+      "type": "object"
+    },
+    "ModelResponseMetadata": {
+      "additionalProperties": false,
+      "properties": {
+        "_usage": {
+          "additionalProperties": false,
+          "properties": {
+            "inputTokens": {
+              "type": "number"
+            },
+            "outputTokens": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "inputTokens",
+            "outputTokens"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "_usage"
       ],
       "type": "object"
     },
@@ -452,7 +508,6 @@
       "type": "object"
     },
     "NextActionResponse": {
-      "additionalProperties": false,
       "properties": {
         "action": {
           "$ref": "#/definitions/NextAction"
@@ -468,7 +523,6 @@
       "type": "object"
     },
     "OnboardingConsultantResponse": {
-      "additionalProperties": false,
       "properties": {
         "completedTasks": {
           "items": {
@@ -589,7 +643,6 @@
       "type": "object"
     },
     "PlanStepsResponse": {
-      "additionalProperties": false,
       "properties": {
         "reasoning": {
           "type": "string"
@@ -649,7 +702,6 @@
       "type": "object"
     },
     "ReasoningResponse": {
-      "additionalProperties": false,
       "properties": {
         "reasoning": {
           "type": "string"
@@ -688,7 +740,6 @@
       "type": "object"
     },
     "RequestArtifacts": {
-      "additionalProperties": false,
       "properties": {
         "artifactIds": {
           "items": {
@@ -706,7 +757,6 @@
       "type": "object"
     },
     "ResearchArtifactResponse": {
-      "additionalProperties": false,
       "properties": {
         "artifactContent": {
           "type": "string"
@@ -719,8 +769,8 @@
         }
       },
       "required": [
-        "artifactTitle",
         "artifactContent",
+        "artifactTitle",
         "message"
       ],
       "type": "object"
@@ -856,7 +906,10 @@
         "ResearchArtifactResponse",
         "ReviewProgressResponse",
         "WritingResponse",
-        "ThinkingResponse"
+        "ThinkingResponse",
+        "WebSearchResponse",
+        "SearchQueryResponse",
+        "LinkSelectionResponse"
       ],
       "type": "string"
     },
@@ -876,6 +929,27 @@
       "required": [
         "query",
         "rationale"
+      ],
+      "type": "object"
+    },
+    "SearchQueryResponse": {
+      "properties": {
+        "category": {
+          "description": "The search category - use 'news' for current events, otherwise 'general'",
+          "enum": [
+            "general",
+            "news"
+          ],
+          "type": "string"
+        },
+        "searchQuery": {
+          "description": "A broad web search query without special keywords or operators",
+          "type": "string"
+        }
+      },
+      "required": [
+        "searchQuery",
+        "category"
       ],
       "type": "object"
     },
@@ -990,6 +1064,23 @@
       "required": [
         "isComplete",
         "message"
+      ],
+      "type": "object"
+    },
+    "WebSearchResponse": {
+      "additionalProperties": false,
+      "description": "Represents the structured response for web search results selection",
+      "properties": {
+        "urls": {
+          "description": "Array of selected URLs most relevant to the research goal",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "urls"
       ],
       "type": "object"
     },

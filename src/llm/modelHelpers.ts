@@ -170,7 +170,7 @@ export class ModelHelpers {
         }
 
         // Fetch the latest memory artifact for the channel
-        let augmentedInstructions = structure.getPrompt();
+        let augmentedInstructions = this.addDateToSystemPrompt(structure.getPrompt());
         if (this.isMemoryEnabled) {
             const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
 
@@ -204,7 +204,10 @@ export class ModelHelpers {
         const { contextWindow, maxTokens } = params;
 
         const response = await this.model.generateStructured<T>(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
-        response.artifactIds = params.artifacts?.map(a => a.id);
+
+        if (params.artifacts) {
+            response.artifactIds = params.artifacts?.map(a => a.id);
+        }
         
         // Cache the response
         this.modelCache.set(structure.getPrompt(), cacheContext, response);
@@ -218,7 +221,6 @@ export class ModelHelpers {
         } else {
             return this.generateOld(params.instructions.toString(), params);
         }
-        
     }
 
     /**

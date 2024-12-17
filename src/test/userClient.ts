@@ -714,5 +714,5 @@ ${selectedArtifact.content.toString()}`;
     // Initially show chat tab
     showTab1();
 
-
+    return UserClient;
 }

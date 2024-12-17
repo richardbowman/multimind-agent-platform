@@ -75,7 +75,10 @@ export class WebSearchExecutor implements StepExecutor {
                     if (!this.visitedUrls.has(normalizedUrl) && !scrapedUrls.has(normalizedUrl)) {
                         this.visitedUrls.add(normalizedUrl);
 
-                        const { content: followContent, title: followTitle } = await this.scrapeHelper.scrapePage(normalizedUrl);
+                        const { content: followContent, title: followTitle } = await this.scrapeHelper.scrapePage(normalizedUrl, {
+                            task: step,
+                            projectId
+                        });
 
                         // Generate and save summary with token tracking
                         const followupSummaryResponse = await this.summarizeContent(

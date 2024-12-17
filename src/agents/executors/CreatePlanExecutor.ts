@@ -4,7 +4,7 @@ import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { OnboardingProject, QuestionAnswer } from '../goalBasedOnboardingConsultant';
+import { OnboardingProject, QuestionAnswer } from '../onboardingConsultant';
 import { CreateArtifact } from '../../schemas/ModelResponse';
 import { OperationalGuideResponse, QAItem } from '../../schemas/OperationalGuideResponse';
 import { StepExecutor, StepResult } from '../stepBasedAgent';
@@ -28,7 +28,7 @@ export class CreatePlanExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
         const businessGoals = Object.values(project.tasks).filter(t => t.type === 'create-plan');
 

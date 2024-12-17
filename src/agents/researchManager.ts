@@ -33,9 +33,9 @@ export class ResearchManager extends StepBasedAgent<ResearchProject, Task> {
 
         this.modelHelpers.setPurpose(`You are planning how to conduct Web-based research effectively.`);
         this.modelHelpers.setFinalInstructions(`
-Break down research requests into specific tasks and aggregate findings.
+Break down Internet research requests into specific tasks and aggregate findings.
 
-IMPORTANT: For incoming new requests, follow this pattern:
+For incoming new user requests, you should typically follow this order:
 Step 1. 'understand-research-goals' to ensure clarity of request
 Step 2. 'decompose-research' step to break down the request
 Step 3. 'aggregate-research' to compile findings`);

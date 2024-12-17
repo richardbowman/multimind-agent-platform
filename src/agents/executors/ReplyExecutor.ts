@@ -1,7 +1,7 @@
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
-import { OnboardingProject } from '../goalBasedOnboardingConsultant';
+import { OnboardingProject } from '../onboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
@@ -18,7 +18,7 @@ export class ReplyExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
         const reply = await this.modelHelpers.generate({
             message: `${step} [${goal}]`,

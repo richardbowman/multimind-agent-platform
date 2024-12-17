@@ -47,3 +47,15 @@ export interface ChatPost extends Message {
     hasUUID(): boolean;
     getActivityType(): string | null;
 }
+
+// Validate that userPost is a proper ChatPost
+export const isValidChatPost = (post: any): post is ChatPost => {
+    return post && 
+           typeof post.id === 'string' &&
+           typeof post.channel_id === 'string' &&
+           typeof post.message === 'string' &&
+           typeof post.user_id === 'string' &&
+           typeof post.create_at === 'number' &&
+           typeof post.directed_at === 'string' &&
+           typeof post.props === 'object';
+};
