@@ -135,6 +135,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                     <div className="no-messages">No messages yet</div>
                 ) : (
                 (messages||[])
+                    .filter(message => message.channel_id === currentChannelId)
                     .filter(message => {
                         if (currentThreadId) {
                             // In a thread, show the root message and all replies
@@ -144,7 +145,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                             return !message.thread_id;
                         }
                     })
-                    .filter(message => message.channel_id === currentChannelId)
                     .map((message) => (
                         <div key={message.id} className="message">
                             <div className="message-header">
