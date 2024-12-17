@@ -12,16 +12,18 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
         console.log('LogViewer: Setting up log fetching for type:', logType);
         let isSubscribed = true;
 
-        // Initial fetch
-        fetchLogs(logType);
-
-        // Set up polling interval
-        const interval = setInterval(() => {
+        const fetchLogsIfVisible = () => {
             if (isSubscribed && document.visibilityState === 'visible') {
                 console.log('LogViewer: Polling logs for type:', logType);
                 fetchLogs(logType);
             }
-        }, 5000);
+        };
+
+        // Initial fetch
+        fetchLogsIfVisible();
+
+        // Set up polling interval
+        const interval = setInterval(fetchLogsIfVisible, 5000);
 
         // Clean up function
         return () => {
@@ -29,7 +31,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
             isSubscribed = false;
             clearInterval(interval);
         };
-    }, [logType, fetchLogs]); // Include fetchLogs to properly handle context changes
+    }, [logType]); // Remove fetchLogs from dependencies
 
     const renderLogs = () => {
         switch (logType) {
