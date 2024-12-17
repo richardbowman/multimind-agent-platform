@@ -23,7 +23,7 @@ export class LLMCallLogger {
     constructor(serviceName: string) {
         this.sessionId = new Date().toISOString().replace(/[:.]/g, '-');
         this.logDir = path.join(process.cwd(), '.output', 'llm');
-        this.logFile = path.join(this.logDir, `${serviceName}-${this.sessionId}.json`);
+        this.logFile = path.join(this.logDir, `${serviceName}-${this.sessionId}.jsonl`);
         
         // Ensure .output and llm directories exist
         const outputDir = path.join(process.cwd(), '.output');
@@ -52,7 +52,7 @@ export class LLMCallLogger {
             await LLMCallLogger.fileQueue.enqueue(async () => {
                 await fs.promises.appendFile(
                     this.logFile,
-                    JSON.stringify(logEntry, null, 2) + '\n',
+                    JSON.stringify(logEntry) + '\n',
                     'utf8'
                 );
             });
@@ -89,7 +89,7 @@ export class LLMCallLogger {
             const logs: Record<string, LLMLogEntry[]> = {};
 
             for (const file of files) {
-                if (!file.endsWith('.json')) continue;
+                if (!file.endsWith('.jsonl')) continue;
                 
                 const content = await LLMCallLogger.fileQueue.enqueue(async () => {
                     return await fs.promises.readFile(

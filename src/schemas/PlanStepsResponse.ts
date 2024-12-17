@@ -1,11 +1,9 @@
-import { ReasoningResponse } from "./ModelResponse";
-
 export interface PlanStepTask {
     existingId?: string;
     actionType: string;
-    parameters: string;
+    goals: string;
 }
 
-export interface PlanStepsResponse extends ReasoningResponse {
+export interface PlanStepsResponse {
     steps: PlanStepTask[];
 }

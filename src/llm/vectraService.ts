@@ -25,7 +25,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     async initializeCollection(name: string): Promise<void> {
         await syncQueue.enqueue(async () => {
             this.collectionName = name;
-            const indexPath = path.join(process.cwd(), 'data', 'vectra', name);
+            const indexPath = path.join(process.cwd(), '.output', 'vectra', name);
             this.index = new LocalIndex(indexPath);
             
             if (!(await this.index.isIndexCreated())) {

@@ -632,21 +632,19 @@
         "existingId": {
           "type": "string"
         },
-        "parameters": {
+        "goals": {
           "type": "string"
         }
       },
       "required": [
         "actionType",
-        "parameters"
+        "goals"
       ],
       "type": "object"
     },
     "PlanStepsResponse": {
+      "additionalProperties": false,
       "properties": {
-        "reasoning": {
-          "type": "string"
-        },
         "steps": {
           "items": {
             "$ref": "#/definitions/PlanStepTask"
@@ -655,7 +653,6 @@
         }
       },
       "required": [
-        "reasoning",
         "steps"
       ],
       "type": "object"
@@ -698,6 +695,23 @@
       "required": [
         "queries",
         "rationale"
+      ],
+      "type": "object"
+    },
+    "QuickQueriesResponse": {
+      "additionalProperties": false,
+      "description": "Interface for quick mode queries response",
+      "properties": {
+        "queries": {
+          "description": "Array of search query strings",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "queries"
       ],
       "type": "object"
     },
@@ -909,7 +923,8 @@
         "ThinkingResponse",
         "WebSearchResponse",
         "SearchQueryResponse",
-        "LinkSelectionResponse"
+        "LinkSelectionResponse",
+        "QuickQueriesResponse"
       ],
       "type": "string"
     },

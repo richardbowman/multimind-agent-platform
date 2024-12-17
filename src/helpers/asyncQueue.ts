@@ -21,7 +21,7 @@ export class AsyncQueue {
         }
 
         const stack = new Error().stack;
-        Logger.debug(`AsyncQueue executing operation from:\n${stack}`);
+        Logger.info(`AsyncQueue executing operation from:\n${stack}`);
         
         try {
             const result = await this.queue.then(operation);

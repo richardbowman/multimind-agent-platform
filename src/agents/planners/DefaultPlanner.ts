@@ -62,7 +62,7 @@ export class MultiStepPlanner implements Planner {
             `## Current Plan\n*No tasks in current plan*\n\n`;
 
         const stepDescriptions = executorMetadata
-            .map(({ key, description }) => `${key}\n    Description: ${description}`)
+            .map(({ key, description }) => ` - ${key}: ${description}`)
             .join("\n\n");
 
         //TODO: opportunity here to better organize context of the chat chain to include info
@@ -73,25 +73,26 @@ export class MultiStepPlanner implements Planner {
         const systemPrompt =
             `${this.modelHelpers.getPurpose()}
 
-HIGH-LEVEL GOAL: ${project.name}
+## HIGH-LEVEL GOAL: ${project.name}
 ${userContext}
 
-The allowable step types you can execute in the plan:
+## AVAILABLE ACTION TYPES (and descriptions of when to use them):
 ${stepDescriptions}
 
-TASK GOAL:
+## TASK GOAL:
 - If the user's high-level goal is not solved, look at the Current Plan and decide if you need to change anything to achieve the goal.
-- If no change to the plan is needed, just return the same steps and include their ID.
 - If the current step is in-progress, don't remove it so it can process the new conversation from the user unless its clear we need to replan.
-- Return a steps list in the order to perform.
+
+- Provide a complete plan of all steps INCLUDING EXISTING STEPS required using actions from the available action types in the order to perform.
 
 ${completedSteps}
 
 ${currentSteps}
 
+## INSTRUCTIONS:
 ${this.modelHelpers.getFinalInstructions()}`;
 
-        const response: PlanStepsResponse = await this.modelHelpers.generate({
+        const response = await this.modelHelpers.generate<PlanStepsResponse>({
             ...handlerParams,
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
@@ -114,7 +115,7 @@ ${this.modelHelpers.getFinalInstructions()}`;
                     const existingTask = existingTaskMap.get(step.existingId)!;
                     existingTask.order = index;
                     if (step.actionType) existingTask.type = step.actionType;
-                    if (step.parameters) existingTask.description = step.parameters;
+                    if (step.goals) existingTask.description = step.goals;
                     mentionedTaskIds.add(step.existingId);
                 } else {
                     // Create new task

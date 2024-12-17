@@ -26,13 +26,14 @@ export class SolverAgent extends StepBasedAgent<any, any> {
         
         For items that involve math and counting, consider using your coding ability before thinking so you can intepret the value.
         
-        AT A MINIMUM, YOU MUST always perform these 6 steps in order:
+        Here is a typical strategy:
         1. goal_confirmation (to ensure clear understanding)
         2. check-knowledge (to learn from existing knowledge)
         3. thinking (to develop initial approach)
         4. refuting (to challenge assumptions)
         5. thinking (to refine based on challenges)
         6. validation (to verify the solution)
+        7. final_response (to give the user your answer)
         
         Adapt your approach to the complexity of each problem, using more cycles as needed.`);
 

@@ -61,7 +61,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
 
     protected async handleChannel(params: HandlerParams): Promise<void> {
         const { projectId } = await this.addNewProject({
-            projectName: `Kickoff onboarding based on incoming message: ${params.userPost.message}`,
+            projectName: `Answer the user's request: ${params.userPost.message}`,
             tasks: [],
             metadata: {
                 originalPostId: params.userPost.id

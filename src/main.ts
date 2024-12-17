@@ -44,7 +44,7 @@ storage.registerChannel(ONBOARDING_CHANNEL_ID, "#onboarding");
 storage.registerChannel(PROJECTS_CHANNEL_ID, "#projects");
 storage.registerChannel(WEB_RESEARCH_CHANNEL_ID, "#research");
 storage.registerChannel(CONTENT_CREATION_CHANNEL_ID, "#content");
-storage.registerChannel(FACT_CHECK_CHANNEL_ID, "#fact-check");
+//storage.registerChannel(FACT_CHECK_CHANNEL_ID, "#fact-check");
 storage.registerChannel(SOLVER_CHANNEL_ID, "#solver");
 
 

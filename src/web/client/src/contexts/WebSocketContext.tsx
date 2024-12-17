@@ -1,12 +1,12 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import webSocketService, { Message, Channel, Thread } from '../services/WebSocketService';
+import webSocketService, { ClientMessage, ClientChannel, ClientThread } from '../services/WebSocketService';
 import { Artifact } from '../../../../tools/artifact';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
 
 interface WebSocketContextType {
-  messages: Message[];
-  channels: Channel[];
-  threads: Record<string, Thread[]>; // Keyed by channel_id
+  messages: ClientMessage[];
+  channels: ClientChannel[];
+  threads: Record<string, ClientThread[]>; // Keyed by channel_id
   tasks: any[];
   artifacts: Artifact[];
   handles: Array<{id: string, handle: string}>;
@@ -15,12 +15,13 @@ interface WebSocketContextType {
     system: any[];
     api: any[];
   };
-  sendMessage: (message: Partial<Message>) => void;
+  sendMessage: (message: Partial<ClientMessage>) => void;
   fetchChannels: () => void;
   fetchThreads: (channelId: string) => void;
   fetchTasks: (channelId: string, threadId: string | null) => void;
   fetchArtifacts: (channelId: string, threadId: string | null) => void;
   fetchAllArtifacts: () => void;
+  fetchHandles: () => void;
   fetchLogs: (logType: 'llm' | 'system' | 'api') => void;
 }
 
@@ -55,9 +56,9 @@ const WebSocketContext = createContext<WebSocketContextType>({
 });
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [messages, setMessages] = useState<Message[]>([]);
-  const [channels, setChannels] = useState<Channel[]>([]);
-  const [threads, setThreads] = useState<Record<string, Thread[]>>({});
+  const [messages, setMessages] = useState<ClientMessage[]>([]);
+  const [channels, setChannels] = useState<ClientChannel[]>([]);
+  const [threads, setThreads] = useState<Record<string, ClientThread[]>>({});
   const [handles, setHandles] = useState<Array<{id: string, handle: string}>>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [artifacts, setArtifacts] = useState<any[]>([]);
@@ -158,7 +159,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     };
   }, []);
 
-  const sendMessage = (message: Partial<Message>) => {
+  const sendMessage = (message: Partial<ClientMessage>) => {
     webSocketService.sendMessage(message);
   };
 
@@ -172,6 +173,9 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     }
   };
 
+  const fetchHandles = () => {
+    webSocketService.fetchHandles();
+  };
 
   const fetchTasks = (channelId: string, threadId: string | null) => {
     webSocketService.fetchTasks(channelId, threadId);

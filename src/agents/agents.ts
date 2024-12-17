@@ -35,6 +35,7 @@ export interface HandlerParams extends GenerateParams {
 export interface GenerateInputParams extends GenerateParams {
     instructions: string | InputPrompt | StructuredOutputPrompt;
     threadPosts?: ChatPost[];
+    model?: string;
 }
 
 export interface GenerateParams {

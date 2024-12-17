@@ -3,7 +3,6 @@ import { Project, Task } from '../tools/taskManager';
 import { WebSearchExecutor } from './research/WebResearchExecutor';
 import SearchHelper, { DuckDuckGoProvider } from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
-import SummaryHelper from '../helpers/summaryHelper';
 import Logger from '../helpers/logger';
 import { RESEARCHER_TOKEN, WEB_RESEARCH_CHANNEL_ID } from '../helpers/config';
 import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';

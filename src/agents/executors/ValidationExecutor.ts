@@ -7,7 +7,7 @@ import * as schemaJson from "../../schemas/schema.json";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
-@StepExecutorDecorator('validation', 'After doing other work steps, verify your work addresses the goal')
+@StepExecutorDecorator('validation', 'Before providing your final response, verify your work addresses the goal')
 export class ValidationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
@@ -18,20 +18,17 @@ export class ValidationExecutor implements StepExecutor {
     async executeOld(goal: string, step: string, projectId: string, previousResults: any[]): Promise<StepResult> {
         const schema = generatedSchemaDef.ValidationResult;
 
-        const systemPrompt = `You are validating whether a proposed solution fully addresses the original goal.
-Carefully analyze the previous steps and their results to determine if all aspects have been properly addressed.
+        const systemPrompt = `You are validating whether a proposed solution addresses the original goal. 
+Analyze the previous steps and their results to determine if all aspects have been properly addressed.
 
 Original Goal: ${goal}
 
 Previous Results:
 ${previousResults.map((r, i) => `Step ${i + 1}: ${r.message}`).join('\n\n')}
 
-Evaluate whether:
-1. The solution completely addresses the original goal
-2. All important aspects have been considered
-3. The reasoning is sound and well-supported
+Evaluate whether the solution addresses the original goal, and the reasoning is sound and well-supported.
 
-If the solution is incomplete, list the specific aspects that still need to be addressed.`;
+If the solution is wrong, list the specific aspects that must be addressed.`;
 
         const response = await this.modelHelpers.generate<ValidationResult>({
             message: "Validate solution completeness",

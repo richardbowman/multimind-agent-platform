@@ -1,4 +1,4 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -17,6 +17,8 @@ export class KnowledgeCheckExecutor implements StepExecutor {
     constructor(llmService: ILLMService, vectorDB: IVectorDatabase) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
         this.vectorDB = vectorDB;
+        this.modelHelpers.setPurpose(`You are a research specialist crafting search queries.`);
+        this.modelHelpers.setFinalInstructions(`Use only the provided search results to answer. Do not make up any information.`);
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
@@ -29,8 +31,7 @@ export class KnowledgeCheckExecutor implements StepExecutor {
     private async executeQuick(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const querySchema = await getGeneratedSchema(SchemaType.QuickQueriesResponse);
 
-        const queryPrompt = `You are a research specialist crafting search queries.
-Given this content goal: "${goal}"
+        const queryPrompt = `Given this content goal: "${goal}"
 Generate 2-3 different search queries that will help find relevant information.`;
 
         const queryInstructions = new StructuredOutputPrompt(querySchema, queryPrompt);

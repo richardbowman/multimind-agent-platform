@@ -7,6 +7,7 @@ import { TaskManager } from '../../tools/taskManager';
 import { OnboardingProject } from '../onboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
+import { SchemaType } from 'src/schemas/SchemaTypes';
 
 @StepExecutorDecorator('process-answers', 'Analyze and process user responses to intake questions')
 export class AnswerQuestionsExecutor implements StepExecutor {
@@ -49,22 +50,18 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         });
 
         // Initialize answers array if it doesn't exist
-        if (!project.answers) {
-            project.answers = [];
+        if (!project.metadata.answers) {
+            project.metadata.answers = [];
         }
 
         // Update tasks and store answers based on analysis
         for (const answer of modelResponse.answers) {
             const task = project.tasks[answer.questionId];
             if (task && answer.answered) {
-                const isAnswerMeaningful = this.validateAnswer(answer);
-
-                if (isAnswerMeaningful) {
-                    await this.storeAnswer(project, task, answer);
-                    await this.taskManager.completeTask(answer.questionId);
-                } else {
-                    await this.markIncomplete(task, answer);
-                }
+                await this.storeAnswer(project, task, answer);
+                await this.taskManager.completeTask(answer.questionId);
+            } else if (task) {
+                await this.markIncomplete(task, answer);
             }
         }
 
@@ -80,16 +77,8 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         };
     }
 
-    private validateAnswer(answer: any): boolean {
-        return answer.extractedAnswer.length > 10 && 
-            !answer.extractedAnswer.toLowerCase().includes("not provided") &&
-            !answer.extractedAnswer.toLowerCase().includes("no answer") &&
-            !answer.analysis.toLowerCase().includes("insufficient") &&
-            !answer.analysis.toLowerCase().includes("unclear");
-    }
-
     private async storeAnswer(project: OnboardingProject, task: any, answer: any) {
-        project.answers.push({
+        project.metadata.answers.push({
             questionId: answer.questionId,
             question: task.description,
             answer: answer.extractedAnswer,
@@ -117,7 +106,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
     }
 
     private analyzeProgress(project: OnboardingProject, intakeQuestions: any[], modelResponse: any) {
-        const answeredQuestions = project.answers?.length || 0;
+        const answeredQuestions = project.metadata.answers?.length || 0;
         const totalQuestions = intakeQuestions.length;
         const minimumQuestionsNeeded = Math.ceil(totalQuestions * 0.75);
 

@@ -2,6 +2,12 @@
 
 ## 2024-12-16
 
+- [ ] in progress was incorrectly implemented in ChatPanel, its not looking at tasks
+- [ ] /retry doesn’t work after reload, its not actually looking at current chanenl
+- [ ] duplicate posts for user post
+- [ ] onboarding agent seems to work but don’t see reply
+- [ ] allow a specialized model for coding in solver, added the variable LMSTUDIO_CODE_MODEL
+- [ ] live posts don’t trigger the thread view switch
 - [ ] i think modelhelpers is augmenting every schema with artifactIds??
 - [ ] fix where we store model output tokens, right now we’re jamming a _usage on the actual responses, but we should make a new generate signature that can return these
 
