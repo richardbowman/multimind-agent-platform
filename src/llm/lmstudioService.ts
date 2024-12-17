@@ -201,6 +201,7 @@ export default class LMStudioService implements ILLMService {
 
     async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[],  
         contextWindowLength?: number, maxTokens?: number): Promise<any> {
+        const input = { userPost, instructions: instructions.getPrompt(), history, contextWindowLength, maxTokens };
         if (!this.chatModel) {
             throw new Error("LLaMA model is not initialized.");
         }
@@ -215,10 +216,17 @@ export default class LMStudioService implements ILLMService {
         const opts : LLMPredictionOpts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens  };
         
         // Set the maxTokens parameter for the LLaMA model
-        const prediction = this.chatModel.respond(messageChain, opts);
-        const finalResult = await prediction;
-        const resultBody = finalResult.content;
-        return JSON5.parse(resultBody);
+        try {
+            const prediction = this.chatModel.respond(messageChain, opts);
+            const finalResult = await prediction;
+            const resultBody = finalResult.content;
+            const output = JSON5.parse(resultBody);
+            await this.logger.logCall('generateStructured', input, output);
+            return output;
+        } catch (error) {
+            await this.logger.logCall('generateStructured', input, null, error);
+            throw error;
+        }
     }
 
     getEmbeddingModel() : IEmbeddingFunction {
