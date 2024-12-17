@@ -1,18 +1,19 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import express from 'express';
-import { Channel, Thread, Message } from '../client/src/services/WebSocketService';
+import { ClientChannel, ClientThread, ClientMessage } from '../client/src/services/WebSocketService';
 import { LogReader } from './LogReader';
 import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from '../../chat/inMemoryChatClient';
 import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ChatPost, isValidChatPost } from 'src/chat/chatClient';
+import { LLMCallLogger } from 'src/llm/LLMLogger';
 
 export class WebSocketServer {
     private io: Server;
     private storage: InMemoryChatStorage;
-    private threads: Record<string, Thread[]> = {};
+    private threads: Record<string, ClientThread[]> = {};
     private projects: TaskManager;
     private artifactManager: ArtifactManager;
     private userClient: InMemoryTestClient;
@@ -164,7 +165,7 @@ export class WebSocketServer {
             });
 
             // Handle messages
-            socket.on('message', (message: Partial<Message>) => {
+            socket.on('message', (message: Partial<ClientMessage>) => {
                 const fullMessage : InMemoryPost = {
                     id: Date.now().toString(),
                     channel_id: message.channel_id!,
@@ -279,7 +280,7 @@ export class WebSocketServer {
                     return { ...artifact, content };
                 });
 
-                Logger.info(`Sending ${processedArtifacts.length} artifacts`);
+                Logger.verbose(`Sending ${processedArtifacts.length} artifacts`);
                 socket.emit('artifacts', processedArtifacts);
             });
 
@@ -296,7 +297,7 @@ export class WebSocketServer {
                             : artifact.content;
                         return { ...artifact, content };
                     });
-                    Logger.info('Sending all artifacts');
+                    Logger.verbose('Sending all artifacts');
                     socket.emit('artifacts', processedArtifacts);
                 } catch (error) {
                     Logger.error('Error fetching all artifacts:', error);
@@ -311,12 +312,12 @@ export class WebSocketServer {
                     switch (logType) {
                         case 'llm':
                             const llmLogs = await LLMCallLogger.getAllLogs();
-                            Logger.info('Sending LLM logs:', llmLogs);
+                            Logger.verbose(`Sending LLM ${Object.keys(llmLogs).length} logs:`);
                             socket.emit('logs', { type: 'llm', data: llmLogs });
                             break;
                         case 'system':
                             const systemLogs = this.logReader.readLogs();
-                            Logger.info('Sending system logs:', systemLogs);
+                            Logger.verbose(`Sending ${systemLogs.length} system logs`);
                             socket.emit('logs', { type: 'system', data: systemLogs });
                             break;
                         case 'api':
@@ -339,7 +340,7 @@ export class WebSocketServer {
         });
     }
 
-    private updateThread(message: Message) {
+    private updateThread(message: ClientMessage) {
         const rootId = message.getRootId();
         if (!rootId || !message.channel_id) return;
 
@@ -350,7 +351,7 @@ export class WebSocketServer {
             existingThread.replies = [...existingThread.replies, message];
             existingThread.last_message_at = message.create_at;
         } else {
-            const newThread: Thread = {
+            const newThread: ClientThread = {
                 rootMessage: message,
                 replies: [],
                 last_message_at: message.create_at,
