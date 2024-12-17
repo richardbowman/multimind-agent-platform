@@ -48,11 +48,17 @@ storage.registerChannel(FACT_CHECK_CHANNEL_ID, "#fact-check");
 storage.registerChannel(SOLVER_CHANNEL_ID, "#solver");
 
 
-process.on("exit", async () => {
-    console.log('Saving tasks before exiting...');
-    //await tasks.save();
-    //await storage.save();
-});
+// Handle graceful shutdown
+async function shutdown() {
+    console.log('Shutting down gracefully...');
+    await wsServer.close();
+    await tasks.save();
+    await storage.save();
+    process.exit(0);
+}
+
+process.on('SIGTERM', shutdown);
+process.on('SIGINT', shutdown);
 
 // Create planners for each agent
 const researchClient = new InMemoryTestClient(RESEARCHER_USER_ID, "test", storage);
