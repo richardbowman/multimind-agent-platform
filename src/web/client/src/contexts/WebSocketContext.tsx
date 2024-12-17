@@ -127,12 +127,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setArtifacts(newArtifacts);
     });
 
-    webSocketService.socket?.on('logs', (newLogs: { type: string, data: any }) => {
-      console.log('Received logs:', newLogs);
-      if (!['llm', 'system', 'api'].includes(newLogs.type)) {
-        console.warn('Received unknown log type:', newLogs.type);
-        return;
-      }
+    webSocketService.socket?.on('logs_update', (newLogs: { type: string, data: any }) => {
+      console.log('Received logs update:', newLogs);
       setLogs(prev => ({
         ...prev,
         [newLogs.type]: newLogs.data

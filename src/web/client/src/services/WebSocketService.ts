@@ -74,6 +74,17 @@ class WebSocketService {
       this.artifactHandlers.forEach(handler => handler(artifacts));
     });
 
+    this.socket.on('logs', (newLogs: { type: string, data: any }) => {
+      if (!['llm', 'system', 'api'].includes(newLogs.type)) {
+        console.warn('Received unknown log type:', newLogs.type);
+        return;
+      }
+      // Emit the logs event to be handled by the context
+      if (this.socket) {
+        this.socket.emit('logs_update', newLogs);
+      }
+    });
+
     this.socket.on('disconnect', () => {
       console.log('Disconnected from WebSocket server');
     });
