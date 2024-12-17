@@ -351,19 +351,12 @@ export async function setupUserAgent(UserClient: InMemoryTestClient, storage: In
             const handleName = storage.getHandleNameForUserId(userId);
             const displayName = handleName ? `{bold}{red-fg}${handleName}{/red-fg}{/bold}` : `{bold}{red-fg}${userId}{/red-fg}{/bold}`;
 
-            // stay in the latest thread
-            if (post.getRootId()) currentThreadId = post.getRootId();
+            // Only update UI if the message belongs to current channel/thread
+            const messageThread = post.getRootId();
+            if (messageThread === currentThreadId || (!messageThread && !currentThreadId)) {
+                await loadMessagesForThread(currentThreadId);
+            }
         }
-
-        // Refresh the channel and thread lists when a new message is received
-        await refreshLists(null, null);
-        await refreshLists(currentChannelId, currentThreadId);
-
-        if (currentThreadId) {
-            threadList.select(threadIds.indexOf(currentThreadId));
-        }
-
-        await loadMessagesForThread(currentThreadId);
 
     });
 
