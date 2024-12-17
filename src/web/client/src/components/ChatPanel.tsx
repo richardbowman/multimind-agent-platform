@@ -39,7 +39,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             setIsLoading(false);
             scrollToBottom();
         }
-    }, [messages]);
+    }, [messages, messages.length]);
+
+    // Scroll to bottom when messages are updated or when a message's inProgress status changes
+    useEffect(() => {
+        const messagesWithProgress = messages.some(m => m.inProgress);
+        scrollToBottom();
+    }, [messages, messages.some(m => m.inProgress)]);
 
     // Handle live message thread selection
     useEffect(() => {
