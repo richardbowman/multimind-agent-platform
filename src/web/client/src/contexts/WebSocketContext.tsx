@@ -53,17 +53,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     webSocketService.connect();
 
-    // Handle bulk messages from server
-    const messagesHandler = (newMessages: Message[]) => {
-      console.log('Received messages from server:', newMessages);
-      setMessages(newMessages);
-    };
-
-    webSocketService.socket?.on('messages', messagesHandler);
-
-    // Handle individual real-time messages
-    const messageCleanup = webSocketService.onMessage((messages) => {
+    // Handle both bulk and individual messages
+    const messageCleanup = webSocketService.onMessage((messages, isLive) => {
       setMessages(prev => {
+        if (!isLive) {
+          // For historical messages, replace the entire list
+          return messages;
+        }
+        
+        // For live messages, append only new ones
         const newMessages = messages.filter(message => 
           !prev.some(m => m.id === message.id)
         );
@@ -122,7 +120,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       threadCleanup();
       taskCleanup();
       artifactCleanup();
-      webSocketService.socket?.off('messages', messagesHandler);
       webSocketService.disconnect();
     };
   }, []);
