@@ -45,9 +45,9 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
                                 Method: {log.method}<br/>
                                 Input: {JSON.stringify(log.input, null, 2)}<br/>
                                 Output: {JSON.stringify(log.output, null, 2)}
-                                {log.error && log.error.message && (
+                                {log.error && (
                                     <div className="error-details">
-                                        <div>Error: {log.error.message}</div>
+                                        <div>Error: {typeof log.error === 'string' ? log.error : log.error.message || 'Unknown error'}</div>
                                         {log.error.stack && (
                                             <pre>{log.error.stack}</pre>
                                         )}
