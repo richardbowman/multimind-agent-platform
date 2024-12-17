@@ -95,7 +95,62 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
                 consoleOutput: logs.join('\n')
             };
         } catch (error) {
-            executionResult = `Error: ${error.message}`;
+            // If there's an error, try again with error feedback
+            const errorPrompt = `${prompt}\n\nThe previous attempt resulted in this error:\n${error.message}\n\nPlease fix the code and try again.`;
+            const retryInstructions = new StructuredOutputPrompt(schema, errorPrompt);
+            const retryResult = await this.modelHelpers.generate<CodeExecutionResponse>({
+                message: goal,
+                instructions: retryInstructions,
+                model: "qwen2.5-coder-14b-instruct"
+            });
+
+            // Try executing the new code
+            try {
+                const retryContext = await this.isolate.createContext();
+                const retryJail = retryContext.global;
+                await retryJail.set('global', retryJail.derefInto());
+
+                let retryLogs: string[] = [];
+                const retryConsoleMock = {
+                    log: function(...args) {
+                        retryLogs.push(args.map(arg => String(arg)).join(' '));
+                        return undefined;
+                    }
+                };
+                await retryJail.set('console', new ivm.Reference(retryConsoleMock));
+                
+                let retrySetResult;
+                const retryResultFn = function(result: any) {
+                    retrySetResult = result;
+                };
+                await retryJail.set('result', new ivm.Reference(retryResultFn));
+                
+                const retryScript = await this.isolate.compileScript(retryResult.code);
+                const retryScriptResult = await retryScript.run(retryContext, { timeout: 5000 });
+                
+                let retryReturnValue;
+                if (!retryScriptResult && retrySetResult) {
+                    retryReturnValue = retrySetResult;
+                } else if (typeof retryScriptResult === 'number' || 
+                    typeof retryScriptResult === 'string' || 
+                    typeof retryScriptResult === 'boolean') {
+                    retryReturnValue = retryScriptResult;
+                } else {
+                    try {
+                        retryReturnValue = await retryScriptResult?.copy();
+                    } catch (e) {
+                        retryReturnValue = retryScriptResult ? retryScriptResult.toString() : undefined;
+                    }
+                }
+                
+                executionResult = {
+                    returnValue: retryReturnValue || (retryLogs.length > 0 ? retryLogs[0] : undefined),
+                    consoleOutput: retryLogs.join('\n')
+                };
+                result = retryResult;
+            } catch (retryError) {
+                executionResult = `Error: ${error.message}\nRetry Error: ${retryError.message}`;
+            }
         } finally {
             // Dispose the isolate to free memory
             await this.isolate.dispose();
