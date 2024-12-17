@@ -159,12 +159,9 @@ export async function setupUserAgent(UserClient: InMemoryTestClient, storage: In
     // Attach an event listener to handle thread selection
     threadList.on('select', async (item, index) => {
         const selectedThreadIdStr = threadIds[index];
-
-        if (selectedThreadIdStr === null) {
-            // Switch back to viewing main channel messages
-            await loadMessagesForThread(null);
-            currentThreadId = null;
-        } else {
+        currentThreadId = selectedThreadIdStr;
+        await loadMessagesForThread(currentThreadId);
+        if (selectedThreadIdStr !== null) {
             currentThreadId = selectedThreadIdStr;
             await loadMessagesForThread(currentThreadId);
             await loadTasksAndArtifacts();
