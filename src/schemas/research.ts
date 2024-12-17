@@ -49,6 +49,16 @@ export interface QueriesResponse {
 }
 
 /**
+ * Interface for quick mode queries response
+ */
+export interface QuickQueriesResponse {
+    /**
+     * Array of search query strings
+     */
+    queries: string[];
+}
+
+/**
  * Interface for research response
  */
 export interface ResearchResponse {
