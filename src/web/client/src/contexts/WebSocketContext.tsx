@@ -136,7 +136,9 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   const fetchThreads = (channelId: string) => {
-    webSocketService.fetchThreads(channelId);
+    if (!threads[channelId]) {
+      webSocketService.fetchThreads(channelId);
+    }
   };
 
 
