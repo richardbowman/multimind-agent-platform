@@ -61,6 +61,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     llm: Record<string, LLMLogEntry[]>;
     system: any[];
     api: any[];
+    unknown?: never;
   }>({
     llm: {},
     system: [],
@@ -127,16 +128,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setArtifacts(newArtifacts);
     });
 
-    webSocketService.socket?.on('logs', (newLogs: { type: string, data: any }) => {
+    webSocketService.socket?.on('logs', (newLogs: { type: 'llm' | 'system' | 'api', data: any }) => {
       console.log('Received logs:', newLogs);
-      setLogs(prev => {
-        const updated = {
-          ...prev,
-          [newLogs.type]: newLogs.data
-        };
-        console.log('Updated logs state:', updated);
-        return updated;
-      });
+      if (newLogs.type === 'llm' || newLogs.type === 'system' || newLogs.type === 'api') {
+        setLogs(prev => ({
+          llm: newLogs.type === 'llm' ? newLogs.data : prev.llm,
+          system: newLogs.type === 'system' ? newLogs.data : prev.system,
+          api: newLogs.type === 'api' ? newLogs.data : prev.api
+        }));
+      }
     });
 
     return () => {
