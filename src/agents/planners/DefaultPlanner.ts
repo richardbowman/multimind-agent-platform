@@ -22,13 +22,16 @@ export class MultiStepPlanner implements Planner {
     ) {}
 
     public async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
-        const executorMetadata = Array.from(this.stepExecutors.entries()).map(([key, executor]) => {
-            const metadata = Reflect.getMetadata(EXECUTOR_METADATA_KEY, executor.constructor);
-            return {
-                key,
-                description: metadata?.description || 'No description available'
-            };
-        });
+        const executorMetadata = Array.from(this.stepExecutors.entries())
+            .map(([key, executor]) => {
+                const metadata = Reflect.getMetadata(EXECUTOR_METADATA_KEY, executor.constructor);
+                return {
+                    key,
+                    description: metadata?.description || 'No description available',
+                    planner: metadata?.planner !== false // Default to true if not specified
+                };
+            })
+            .filter(metadata => metadata.planner); // Only include executors marked for planner
 
         const schema = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions).PlanStepsResponse;
 
