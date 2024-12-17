@@ -22,9 +22,12 @@ export class AsyncQueue {
 
         try {
             const result = await this.queue.then(operation);
-            this.queue = Promise.resolve();
             return result;
+        } catch (error) {
+            Logger.error('AsyncQueue operation failed:', error);
+            throw error;
         } finally {
+            this.queue = Promise.resolve();
             this.locked = false;
             if (this.waitingCount > 0) {
                 Logger.info(`AsyncQueue: ${this.waitingCount} operations still waiting`);
