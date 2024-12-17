@@ -20,11 +20,14 @@ export class AsyncQueue {
             this.waitingCount--;
         }
 
+        const stack = new Error().stack;
+        Logger.debug(`AsyncQueue executing operation from:\n${stack}`);
+        
         try {
             const result = await this.queue.then(operation);
             return result;
         } catch (error) {
-            Logger.error('AsyncQueue operation failed:', error);
+            Logger.error(`AsyncQueue operation failed from:\n${stack}\nError:`, error);
             throw error;
         } finally {
             this.queue = Promise.resolve();
