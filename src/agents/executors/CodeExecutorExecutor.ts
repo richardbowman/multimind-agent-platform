@@ -59,7 +59,7 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             
             let setResult;
             const resultFn = function(value: any) {
-                setResult = value;
+                setResult = String(value);
                 return value;
             };
             await jail.set('result', new ivm.Reference(resultFn));
