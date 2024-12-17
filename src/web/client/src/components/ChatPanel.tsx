@@ -2,7 +2,7 @@ import React, { useEffect, useRef, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { useWebSocket } from '../contexts/WebSocketContext';
-import webSocketService from '../services/WebSocketService';
+import webSocketService, { Message } from '../services/WebSocketService';
 
 interface ChatPanelProps {
     currentChannelId: string | null;
