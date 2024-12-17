@@ -41,13 +41,20 @@ class WebSocketService {
   private handleHandlers: ((handles: {id: string, handle: string}[]) => void)[] = [];
 
   connect(url: string = 'ws://localhost:4001') {
+    // Clean up any existing socket connection
+    if (this.socket) {
+      this.socket.removeAllListeners();
+      this.socket.disconnect();
+    }
+
     this.socket = io(url, {
       transports: ['websocket'],
       reconnection: true,
       reconnectionAttempts: 5
     });
 
-    this.socket.on('connect', () => {
+    // Set up connect handler only once
+    this.socket.once('connect', () => {
       console.log('Connected to WebSocket server');
       // Fetch initial data upon connection
       this.fetchChannels();
