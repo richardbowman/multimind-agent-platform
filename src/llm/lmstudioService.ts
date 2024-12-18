@@ -174,6 +174,7 @@ export default class LMStudioService implements ILLMService {
         // Set the maxTokens parameter for the LLaMA model
         const prediction = this.chatModel.respond(messageChain, opts);
         const finalResult = await prediction;
+        const input = { message, instructions: instructions.getPrompt(), history, contextWindowLength, maxTokens };
         try {
             const resultBody = finalResult.content;
             const output = JSON5.parse(resultBody);
