@@ -256,13 +256,13 @@ export class BedrockService implements ILLMService {
         }
 
         try {
-            const result = await this.sendLLMRequest({
+            const result = await this.sendLLMRequest<ModelMessageResponse>({
                 messages,
                 systemPrompt
             });
 
             await this.logger.logCall('sendMessageToLLM', input, result);
-            return (result.response as ModelMessageResponse).message || '';
+            return (result.response).message || '';
         } catch (error) {
             await this.logger.logCall('sendMessageToLLM', input, null, error);
             throw error;
