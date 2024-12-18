@@ -185,6 +185,21 @@ export class BedrockService extends BaseLLMService {
         await this.waitForNextCall(estimatedTokens);
 
         return await this.queue.enqueue(async () => {
+            // Transform tools format if present
+            let toolConfig;
+            if (params.opts?.tools) {
+                toolConfig = {
+                    tools: params.opts.tools.map((tool: any) => ({
+                        toolSpec: {
+                            name: tool.name,
+                            description: tool.description,
+                            inputSchema: {
+                                json: tool.parameters
+                            }
+                        }
+                    }))
+                };
+            }
             const command = new ConverseCommand({
                 modelId: this.modelId,
                 system: [{
@@ -196,7 +211,7 @@ export class BedrockService extends BaseLLMService {
                         text: msg.content
                     }]
                 })),
-                toolConfig: params.opts?.tools,
+                toolConfig: toolConfig,
                 inferenceConfig: {
                     temperature: params.opts?.temperature || 0.7,
                     topP: params.opts?.topP || 1,

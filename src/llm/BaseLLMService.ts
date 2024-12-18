@@ -83,8 +83,8 @@ export abstract class BaseLLMService implements ILLMService {
 
     protected convertToToolFormat(schema: any, prompt: string): any {
         return {
-            name: "json_output",
-            description: prompt,
+            name: "generate_structured_output",
+            description: `Generate structured data according to the following instructions: ${prompt}`,
             parameters: schema
         };
     }
