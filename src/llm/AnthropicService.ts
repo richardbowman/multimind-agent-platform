@@ -93,10 +93,14 @@ export class AnthropicService extends BaseLLMService {
                 );
 
                 let content: any;
-                const body = response.content[0].text;
+                let body = response.content[0].text;
                 
                 if (params.parseJSON || params.opts?.structured) {
                     try {
+                        // Pre-insert "{" if it's not already present
+                        if (!body.trimStart().startsWith('{')) {
+                            body = '{' + body;
+                        }
                         // Extract JSON from the response if it's wrapped in code blocks
                         const jsonMatch = body.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, body];
                         const jsonContent = jsonMatch[1].trim();
