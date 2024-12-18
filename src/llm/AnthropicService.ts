@@ -51,6 +51,15 @@ export class AnthropicService extends BaseLLMService {
             finalSystemPrompt += `\nYou MUST return your response as a JSON object matching this schema:\n${JSON.stringify(opts.structured.jsonSchema, null, 2)}`;
         }
 
+        // Insert an assistant message with "{" before the actual request
+        const messagesWithBrace = [...messages];
+        if (opts.structured || opts.parseJSON) {
+            messagesWithBrace.push({
+                role: 'assistant',
+                content: '{'
+            });
+        }
+
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
