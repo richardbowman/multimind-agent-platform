@@ -103,10 +103,8 @@ export default class LMStudioService implements ILLMService {
         ];
 
         const result = await this.sendLLMRequest({ messages });
-        const output = { message: result };
-        
-        await this.logger.logCall('generate', input, output);
-        return output as M;
+        await this.logger.logCall('generate', input, result);
+        return result.response as M;
     }
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string, 

@@ -162,10 +162,7 @@ export class BedrockService implements ILLMService {
             systemPrompt: instructions
         });
 
-        const response = {
-            message: result || "",
-            _usage: result._usage
-        } as M;
+        const response = result.response as M;
 
         await this.logger.logCall('generate', input, response);
         return response;
@@ -265,7 +262,7 @@ export class BedrockService implements ILLMService {
             });
 
             await this.logger.logCall('sendMessageToLLM', input, result);
-            return result || '';
+            return (result.response as ModelMessageResponse).message || '';
         } catch (error) {
             await this.logger.logCall('sendMessageToLLM', input, null, error);
             throw error;
