@@ -96,7 +96,7 @@ export class AnthropicService extends BaseLLMService {
                 const body = response.content[0];
                 
                 if (body.type === 'tool_use') {
-                    content = body.tool_calls[0].parameters;
+                    content = body.input;
                 } else if (params.parseJSON && body.type === 'text') {
                     try {
                         const jsonMatch = body.text.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, body.text];
