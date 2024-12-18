@@ -14,6 +14,25 @@ import { LinkSelectionResponse } from '../../schemas/LinkSelectionResponse';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 
+/**
+ * WebSearchExecutor - An intelligent web research agent that:
+ * - Generates contextual search queries based on research goals
+ * - Performs web searches using configurable search providers
+ * - Evaluates and filters search results for relevance
+ * - Scrapes and summarizes webpage content
+ * - Follows and analyzes relevant links within pages
+ * - Tracks visited URLs to avoid duplicates
+ * - Manages research artifacts and summaries
+ * - Provides detailed research reports with token usage tracking
+ * 
+ * Features:
+ * - Configurable max follow links (MAX_FOLLOWS env var)
+ * - PDF detection and filtering
+ * - Intelligent link selection based on research context
+ * - Token usage tracking and optimization
+ * - Structured output using JSON schemas
+ * - Artifact management for persistence
+ */
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
     constructor(
