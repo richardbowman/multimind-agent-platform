@@ -4,6 +4,19 @@
 Error processing page https://www.unite.ai/best-large-language-models-llms/ Error: Trying to keep the first 22333 tokens when context the overflows. However, the model is loaded with context length of only 16384 tokens, which is not enough. Try to load the model with a larger context length, or provide a shorter input
 
 
+Errors
+
+* In the process that uses schema “Array of selected URLs most relevant to the research goal”, seeing “You are a research assistant. Our overall goal is **undefined**:” in logs
+* <https://openai.com/index/best-practices-for-deploying-language-models/>
+  * this page just had this saved… “Application error: a client-side exception has occurred (see the browser console for more information).”
+* Also seems like its potentially making up links… getting a number of bad website URLs
+* \
+  * [	https://www.openai.com/blog/new-model-release](https://www.openai.com/blog/new-model-release)
+  * [	https://huggingface.co/blog/latest-llm-releases](https://huggingface.co/blog/latest-llm-releases)
+  * [	https://developer.ibm.com/languages/python/tutorials/llms-introduction/](https://developer.ibm.com/languages/python/tutorials/llms-introduction/)
+
+
+- [ ] we should add timing to model logs (and add usage tokens to LM Studio logging)
 - [ ] context window is being exceeded for web summarization - we’ll have to chunk these
 - [ ] add brave-search (<https://github.com/erik-balfe/brave-search>)
 - [ ] add direct Anthropic support (<https://www.npmjs.com/package/@anthropic-ai/sdk>)
