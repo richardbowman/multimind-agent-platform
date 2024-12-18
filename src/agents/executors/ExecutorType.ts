@@ -11,5 +11,6 @@ export enum ExecutorType {
     REFUTING = 'refuting',
     REPLY = 'reply',
     RESEARCH_AGGREGATION = 'aggregate-research',
-    RESEARCH_DECOMPOSITION = 'decompose-research'
+    RESEARCH_DECOMPOSITION = 'decompose-research',
+    THINKING = 'thinking'
 }
