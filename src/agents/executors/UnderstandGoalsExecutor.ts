@@ -28,12 +28,31 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         let message = `${goal}\n\n`;
 
         // Include existing Q&A if available
-        if (project.answers?.length > 0) {
+        if (project.metadata?.answers?.length > 0) {
             message += "📋 Previously Gathered Information:\n";
-            project.answers.forEach((answer: any) => {
-                const question = project.tasks[answer.questionId]?.description || '';
-                message += `Q: ${question}\nA: ${answer.answer}\n\n`;
+            project.metadata.answers.forEach((answer: any) => {
+                message += `Q: ${answer.question}\nA: ${answer.answer}\n`;
+                if (answer.analysis) {
+                    message += `Analysis: ${answer.analysis}\n`;
+                }
+                message += '\n';
             });
+        }
+
+        // Include any pending questions
+        const pendingQuestions = Object.values(project.tasks || {})
+            .filter((t: any) => t.type === 'process-answers' && !t.complete);
+        
+        if (pendingQuestions.length > 0) {
+            message += "❓ Currently Pending Questions:\n";
+            pendingQuestions.forEach((task: any) => {
+                message += `- ${task.description}\n`;
+                if (task.metadata?.partialAnswer) {
+                    message += `  Partial Answer: ${task.metadata.partialAnswer}\n`;
+                    message += `  Needs: ${task.metadata.analysis}\n`;
+                }
+            });
+            message += '\n';
         }
 
         return message;
@@ -48,7 +67,13 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         const response : IntakeQuestionsResponse = await this.modelHelpers.generate({
             message: formattedMessage,
             instructions: new StructuredOutputPrompt(schema,
-                `Based on the user's initial business goals and any previously gathered information, generate focused questions to understand both their business needs and how our AI service fits in. Avoid asking questions that have already been answered.
+                `Based on the user's initial business goals and any previously gathered information, generate focused questions to understand both their business needs and how our AI service fits in. 
+                
+                IMPORTANT: 
+                - Review any previous answers carefully to avoid redundant questions
+                - Build upon partial answers to get more specific details
+                - Focus on areas not yet covered or needing clarification
+                - If a topic has been partially addressed, ask follow-up questions for deeper understanding
                 Each question should help gather specific information about:
 
                 Business Understanding:
