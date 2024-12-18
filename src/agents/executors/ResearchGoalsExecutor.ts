@@ -24,19 +24,24 @@ export class ResearchGoalsExecutor implements StepExecutor {
 
         const systemPrompt = `
 As a research coordinator, try to build an effective research project that helps the users meet their goals.
-If anything is ambiguous or missing critical details, identify specific questions needed.
+When details are ambiguous or missing, propose specific details and make educated assumptions to move the project forward.
 
 Consider:
-1. Is the scope clearly defined?
-2. Are there any ambiguous terms or concepts?
-3. Are the expected outcomes clear?
-4. Is the context sufficient?
-5. Are there any unstated assumptions that need verification?
+1. What specific scope boundaries can we assume?
+2. What technical or domain-specific interpretations should we make?
+3. What timeline or resource constraints might be reasonable?
+4. What methodological approaches would be most appropriate?
+5. What success criteria can we establish?
+
+For each proposed detail:
+- Explain why it matters
+- Rate your confidence in the assumption
+- Provide reasoning that the user can correct if needed
 
 Goal: ${params.goal}
 Previous Context: ${previousContext}
 
-In your response, provide a fully restated goal that contains all of the project details fully specified. This will be used to decompose the project.
+In your response, provide a fully restated goal incorporating your proposed details. This will be used to decompose the project.
 `;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
