@@ -66,7 +66,7 @@ export interface ThreadSummary {
     messageCount: number;
 }
 
-export abstract class Agent<Project, Task> {
+export abstract class Agent<P extends Project<T>, T extends Task> {
     private chatClient: ChatClient;
     private threadSummaries: Map<string, ThreadSummary> = new Map();
 
@@ -77,6 +77,7 @@ export abstract class Agent<Project, Task> {
     protected projects: TaskManager;
     protected artifactManager: ArtifactManager;
     protected isWorking: boolean = false;
+    protected isMemoryEnabled: boolean = false;
     protected modelHelpers: ModelHelpers;
 
     protected abstract projectCompleted(project: Project): void;
@@ -163,11 +164,12 @@ export abstract class Agent<Project, Task> {
         this.modelHelpers.setPurpose(purpose)
     }
 
-    protected enableMemory() {
+    protected enableMemory(): void {
+        this.isMemoryEnabled = true;
         this.modelHelpers.enableMemory();
     }
 
-    protected async send(post: Message, channelId: string) {
+    protected async send(post: Message, channelId: string): Promise<void> {
         try {
             // Assuming you have a chatClient or similar service to send messages to the channel
             await this.chatClient.postInChannel(channelId, post.message, post.props);
