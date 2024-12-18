@@ -8,9 +8,10 @@ import { AsyncQueue } from "../helpers/asyncQueue";
 import { BaseLLMService } from "./BaseLLMService";
 import { ANTHROPIC_API_KEY, ANTHROPIC_MODEL, ANTHROPIC_MAX_TOKENS_PER_MINUTE, ANTHROPIC_DEFAULT_DELAY_MS, ANTHROPIC_WINDOW_SIZE_MS } from "../helpers/config";
 import JSON5 from 'json5';
+import Anthropic from '@anthropic-ai/sdk';
 
 export class AnthropicService extends BaseLLMService {
-    private apiKey: string;
+    private client: Anthropic;
     private model: string;
     private logger: LLMCallLogger;
     private queue: AsyncQueue = new AsyncQueue();
@@ -18,7 +19,9 @@ export class AnthropicService extends BaseLLMService {
 
     constructor(apiKey: string = ANTHROPIC_API_KEY, model: string = ANTHROPIC_MODEL, embeddingService?: ILLMService) {
         super();
-        this.apiKey = apiKey;
+        this.client = new Anthropic({
+            apiKey: apiKey
+        });
         this.model = model;
         this.embeddingService = embeddingService;
         this.logger = new LLMCallLogger('anthropic');
@@ -45,7 +48,6 @@ export class AnthropicService extends BaseLLMService {
     }
 
     private async makeAnthropicRequest(messages: any[], systemPrompt?: string, opts: any = {}) {
-        let finalSystemPrompt = systemPrompt || "";
         const tools = opts.tools?.map(tool => ({
             type: "function",
             name: tool.name,
@@ -56,32 +58,22 @@ export class AnthropicService extends BaseLLMService {
             }
         }));
 
-        const messagesWithBrace = [...messages];
-
-        const response = await fetch('https://api.anthropic.com/v1/messages', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'x-api-key': this.apiKey,
-                'anthropic-version': '2023-06-01'
-            },
-            body: JSON.stringify({
+        try {
+            const response = await this.client.messages.create({
                 model: this.model,
                 messages: messages,
-                system: finalSystemPrompt,
-                max_tokens: opts.maxTokens||2048,
+                system: systemPrompt || "",
+                max_tokens: opts.maxTokens || 2048,
                 temperature: opts.temperature,
                 top_p: opts.topP,
                 ...(tools && { tools })
-            })
-        });
+            });
 
-        if (!response.ok) {
-            const error = await response.text();
-            throw new Error(`Anthropic API error: ${error}`);
+            return response;
+        } catch (error: any) {
+            Logger.error("Anthropic API error:", error);
+            throw error;
         }
-
-        return await response.json();
     }
 
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(
