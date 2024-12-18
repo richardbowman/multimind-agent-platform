@@ -12,6 +12,7 @@ import { randomUUID } from 'crypto';
 import { ResearchDecomposition } from '../../schemas/research-manager';
 import { ModelResponse } from 'src/schemas/ModelResponse';
 
+// add an overview of the functionality of this executor and refactor out its key to the enum AI!
 @StepExecutorDecorator('decompose-research', 'Break down research request into specific tasks')
 export class ResearchDecompositionExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
