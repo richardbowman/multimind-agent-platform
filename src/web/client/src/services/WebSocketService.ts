@@ -97,6 +97,11 @@ class WebSocketService {
       this.socket!.on('threads', (threads: ClientThread[]) => {
         this.threadHandlers.forEach(handler => handler(threads));
       });
+
+      this.socket!.on('handles', (handles: Array<{id: string, handle: string}>) => {
+        console.log('WebSocketService: Received handles in connection:', handles);
+        this.handleHandlers.forEach(handler => handler(handles));
+      });
   
       this.socket!.on('tasks', (tasks: any[]) => {
         console.log('Received tasks:', tasks);
