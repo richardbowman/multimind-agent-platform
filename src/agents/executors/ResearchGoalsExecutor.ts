@@ -19,6 +19,9 @@ export class ResearchGoalsExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.ResearchUnderstandingResponse);
 
+        const previousContext = params.previousResult?.length||0 > 0 ? 
+        `\nPrevious findings:\n${params.previousResult?.[0].message || params.previousResult?.[0].reasoning}` : '';
+
         const systemPrompt = `
 As a research coordinator, try to build an effective research project that helps the users meet their goals.
 If anything is ambiguous or missing critical details, identify specific questions needed.
@@ -28,15 +31,19 @@ Consider:
 2. Are there any ambiguous terms or concepts?
 3. Are the expected outcomes clear?
 4. Is the context sufficient?
-5. Are there any unstated assumptions that need verification?`;
+5. Are there any unstated assumptions that need verification?
+
+Goal: ${params.goal}
+Previous Context: ${previousContext}
+
+In your response, provide a fully restated goal that contains all of the project details fully specified. This will be used to decompose the project.
+`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         // Include previous results in the context if available
-        const previousContext = params.previousResult?.length > 0 ? 
-            `\nPrevious findings:\n${params.previousResult[0].message || params.previousResult[0].reasoning}` : '';
 
         const result = await this.modelHelpers.generate<ResearchUnderstandingResponse>({
-            message: `${params.goal}${previousContext}`,
+            message: `${params.message}`,
             instructions
         });
 
@@ -58,7 +65,8 @@ Consider:
             finished: true,
             response: {
                 message: `I understand your research goals:\n\n${result.goal}\n\nProceeding with research plan creation.`
-            }
+            },
+            goal: result.goal
         };
     }
 }
