@@ -229,7 +229,7 @@ export default class LMStudioService implements ILLMService {
         return this.chatModel;
     }
 
-    private async sendLLMRequest<T = string>(params: LLMRequestParams): Promise<T> {
+    private async sendLLMRequest<T = string>(params: LLMRequestParams): Promise<LLMResponse<T>> {
         if (!this.chatModel) {
             throw new Error("LLaMA model is not initialized.");
         }
