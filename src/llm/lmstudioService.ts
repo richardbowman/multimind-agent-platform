@@ -183,8 +183,8 @@ export default class LMStudioService implements ILLMService {
         }
     }
 
-    async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[],  
-        contextWindowLength?: number, maxTokens?: number): Promise<any> {
+    async generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[],  
+        contextWindowLength?: number, maxTokens?: number): Promise<T> {
         const input = { userPost, instructions: instructions.getPrompt(), history, contextWindowLength, maxTokens };
         
         const messages = [
@@ -201,7 +201,7 @@ export default class LMStudioService implements ILLMService {
         };
 
         try {
-            const output = await this.sendLLMRequest({
+            const result = await this.sendLLMRequest<T>({
                 messages,
                 systemPrompt: instructions.getPrompt(),
                 opts,
@@ -209,8 +209,8 @@ export default class LMStudioService implements ILLMService {
                 parseJSON: true
             });
             
-            await this.logger.logCall('generateStructured', input, output);
-            return output;
+            await this.logger.logCall('generateStructured', input, result);
+            return result.response;
         } catch (error) {
             await this.logger.logCall('generateStructured', input, null, error);
             throw error;

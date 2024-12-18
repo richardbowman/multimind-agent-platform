@@ -269,7 +269,7 @@ export class BedrockService implements ILLMService {
         }
     }
 
-    async generateStructured<M extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<M> {
+    async generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<T> {
         const input = { userPost, instructions: instructions.getPrompt() };
         const schema = instructions.getSchema();
         const prompt = instructions.getPrompt();
@@ -288,7 +288,7 @@ export class BedrockService implements ILLMService {
         };
 
         try {
-            const result = await this.sendLLMRequest({
+            const result = await this.sendLLMRequest<T>({
                 messages: [{
                     role: ModelRole.USER,
                     content: userPost.message
@@ -303,7 +303,7 @@ export class BedrockService implements ILLMService {
             });
 
             await this.logger.logCall('generateStructured', input, result);
-            return result as M;
+            return result.response;
         } catch (error) {
             await this.logger.logCall('generateStructured', input, null, error);
             throw error;
