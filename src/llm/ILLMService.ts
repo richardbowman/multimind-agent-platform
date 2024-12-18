@@ -4,7 +4,7 @@ import { IEmbeddingFunction } from "chromadb";
 
 export interface ILLMService {
     initializeEmbeddingModel(modelPath: string): Promise<void>;
-    initializeLlamaModel(modelPath: string): Promise<void>;
+    initializeChatModel(modelPath: string): Promise<void>;
     generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: any): Promise<T>;
     sendMessageToLLM(message: string, history: any[], seedAssistant?: string, contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string>;
     generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T>;
