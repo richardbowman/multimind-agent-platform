@@ -35,7 +35,12 @@ export class MultiStepPlanner implements Planner {
 
         const schema = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions).PlanStepsResponse;
 
-        const project = handlerParams.projects[0];
+        const project = handlerParams.projects?.[0];
+
+        if (!project) {
+            throw new Error(`Project not found`);
+        }
+
         const tasks = this.projects.getAllTasks(project.id);
 
         const formatCompletedTasks = (tasks: Task[]) => {
@@ -125,8 +130,9 @@ ${this.modelHelpers.getFinalInstructions()}`;
                     // Create new task
                     const newTask: Task = {
                         id: crypto.randomUUID(),
+                        projectId: project.id,
                         type: step.actionType,
-                        description: step.parameters || step.actionType,
+                        description: step.context || step.actionType,
                         creator: this.userId,
                         complete: false,
                         order: index

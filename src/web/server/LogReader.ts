@@ -52,6 +52,7 @@ export class LogReader {
                     }
                     return acc;
                 }, [])
+                .filter(l => l.level !== "VERBOSE")
                 .slice(-1000); // Limit to last 1000 entries
         } catch (error) {
             console.error('Error reading logs:', error);

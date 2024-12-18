@@ -235,7 +235,7 @@ class SimpleTaskManager extends EventEmitter implements TaskManager {
         
         // Filter for not started tasks and sort by order
         const availableTasks = tasks
-            .filter(t => !t.complete && !t.inProgress)
+            .filter(t => !t.complete)
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
 
         // Return the first task or null if none found

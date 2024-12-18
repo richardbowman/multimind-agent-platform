@@ -1,4 +1,4 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -37,9 +37,11 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         }
 
         const modelResponse = await this.modelHelpers.generate<AnswerAnalysisResponse>({
-            message: params.goal,
+            message: params.message||params.stepGoal,
             instructions: new StructuredOutputPrompt(schema,
-                `Here is the current state of our questions and answers:
+                `OVERALL GOAL: ${params.overallGoal}
+                
+                Here is the current state of our questions and answers:
 
                 Previously Answered Questions:
                 ${project.metadata.answers?.map(a => 

@@ -34,28 +34,28 @@ class Logger {
     }
 
     static info(message: string, error?: any): void {
-        const infoMsg = error 
+        const infoMsg = error?.message 
             ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
             : message;
         this.log('info', infoMsg);
     }
 
     static warn(message: string, error?: any): void {
-        const warnMsg = error 
+        const warnMsg = error ?.message
             ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
             : message;
         this.log('warn', warnMsg);
     }
 
     static verbose(message: string, error?: any): void {
-        const verboseMsg = error 
+        const verboseMsg = error?.message 
             ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
             : message;
         this.log('verbose', verboseMsg);
     }
 
     static error(message: string, error?: any): void {
-        const errorMsg = error 
+        const errorMsg = error?.message 
             ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
             : message;
         this.log('error', errorMsg);

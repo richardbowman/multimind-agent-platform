@@ -72,15 +72,14 @@ Let's start by discussing your main business goals. What would you like to achie
         this.registerStepExecutor(new ReviewProgressExecutor(params.llmService, params.taskManager, this.artifactManager));
         this.registerStepExecutor(new ValidationExecutor(params.llmService));
 
-        this.modelHelpers.setPurpose(`I am an Onboarding Agent focused on helping users achieve their business goals with our AI Agent tools. This service is designed
+        this.modelHelpers.setPurpose(`You are an Onboarding Agent focused on helping users achieve their business goals with our AI Agent tools. This service is designed
 to help businesses automate tasks automatically including research and content creation. My goal is to ensure that the rest of the agents in the platform
 are trained and educated on what the user is trying to achieve using our system. This means I build an understanding of their business goals, market, strategy,
     and brand standards. When all of that is complete, I build and maintain a comprehensive on-boarding guide, and then introduce the user to the other agents.`);
 this.modelHelpers.setFinalInstructions(`To kickoff with a new user, create the following steps in this order:
 1. understand_goals
-2. process-answers
-3. validation
-4. create_revise_plan
+2. validation
+3. create_revise_plan
 `);
         }
 }

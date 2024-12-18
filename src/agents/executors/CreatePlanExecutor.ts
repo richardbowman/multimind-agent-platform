@@ -89,9 +89,9 @@ export class CreatePlanExecutor implements StepExecutor {
     }
 
     private getAnswersForType(project: OnboardingProject, questionType: string): QuestionAnswer[] {
-        if (!project.answers) return [];
+        if (!project.metadata.answers) return [];
         
-        return project.answers.filter(answer => {
+        return project.metadata.answers.filter(answer => {
             const task = project.tasks[answer.questionId];
             return task?.type === questionType;
         });

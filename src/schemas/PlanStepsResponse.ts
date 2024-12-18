@@ -1,7 +1,7 @@
 export interface PlanStepTask {
-    existingId?: string;
     actionType: string;
-    goals: string;
+    context: string;
+    existingId?: string;
 }
 
 export interface PlanStepsResponse {

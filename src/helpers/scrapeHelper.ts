@@ -116,7 +116,6 @@ class ScrapeHelper {
                     url,
                     title,
                     scrapedAt: new Date().toISOString(),
-                    links,
                     ...metadata
                 }
             });

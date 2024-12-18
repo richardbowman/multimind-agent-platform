@@ -20,13 +20,11 @@
       "required": [
         "questionId",
         "answered",
-        "analysis",
-        "extractedAnswer"
+        "analysis"
       ],
       "type": "object"
     },
     "AnswerAnalysisResponse": {
-      "additionalProperties": false,
       "properties": {
         "answers": {
           "items": {
@@ -34,13 +32,13 @@
           },
           "type": "array"
         },
-        "summary": {
+        "message": {
           "type": "string"
         }
       },
       "required": [
         "answers",
-        "summary"
+        "message"
       ],
       "type": "object"
     },
@@ -629,16 +627,16 @@
         "actionType": {
           "type": "string"
         },
-        "existingId": {
+        "context": {
           "type": "string"
         },
-        "goals": {
+        "existingId": {
           "type": "string"
         }
       },
       "required": [
         "actionType",
-        "goals"
+        "context"
       ],
       "type": "object"
     },
@@ -877,6 +875,32 @@
       ],
       "type": "object"
     },
+    "ResearchUnderstandingResponse": {
+      "description": "Response interface for research goal understanding analysis",
+      "properties": {
+        "goal": {
+          "description": "Your understanding of the research goal",
+          "type": "string"
+        },
+        "proceedWithResearch": {
+          "description": "Whether the research request is clear enough to proceed",
+          "type": "boolean"
+        },
+        "questions": {
+          "description": "Questions needed to clarify any ambiguous aspects of the research goals",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "proceedWithResearch",
+        "questions",
+        "goal"
+      ],
+      "type": "object"
+    },
     "ReviewProgressResponse": {
       "additionalProperties": false,
       "properties": {
@@ -924,7 +948,8 @@
         "WebSearchResponse",
         "SearchQueryResponse",
         "LinkSelectionResponse",
-        "QuickQueriesResponse"
+        "QuickQueriesResponse",
+        "ResearchUnderstandingResponse"
       ],
       "type": "string"
     },

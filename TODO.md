@@ -1,5 +1,12 @@
 # TODO List
 
+
+Error processing page https://www.unite.ai/best-large-language-models-llms/ Error: Trying to keep the first 22333 tokens when context the overflows. However, the model is loaded with context length of only 16384 tokens, which is not enough. Try to load the model with a larger context length, or provide a shorter input
+
+
+- [ ] add brave-search (<https://github.com/erik-balfe/brave-search>)
+- [ ] add direct Anthropic support (<https://www.npmjs.com/package/@anthropic-ai/sdk>)
+
 ## 2024-12-16
 
 - [ ] in progress was incorrectly implemented in ChatPanel, its not looking at tasks

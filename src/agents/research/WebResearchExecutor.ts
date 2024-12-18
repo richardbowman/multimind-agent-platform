@@ -93,8 +93,8 @@ export class WebSearchExecutor implements StepExecutor {
                                 type: 'summary',
                                 content: followupSummaryResponse.message,
                                 metadata: {
-                                    title: `Summary Report for ${normalizedUrl}`,
-                                    url,
+                                    title: `Summary Report for ${followTitle}`,
+                                    url: normalizedUrl,
                                     task: step,
                                     projectId,
                                     tokenUsage: followupSummaryResponse._usage
@@ -119,7 +119,7 @@ export class WebSearchExecutor implements StepExecutor {
                 type: 'summary',
                 content: summaryResponse.message,
                 metadata: {
-                    title: `Summary Report for ${url}`,
+                    title: `Summary Report for ${title}`,
                     url,
                     task: step,
                     projectId,
