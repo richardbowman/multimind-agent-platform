@@ -7,6 +7,7 @@ import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ILLMService } from "../../llm/ILLMService";
 
+// add overall functionality overview, and refactor out the step executor key AI!
 @StepExecutorDecorator('goal_confirmation', 'Confirm the goals of the user.')
 export class GoalConfirmationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
