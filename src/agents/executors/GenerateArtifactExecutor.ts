@@ -8,6 +8,7 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
 
+// add overall functionality overview AI!
 @StepExecutorDecorator('generate-artifact', 'Create/revise a Markdown document')
 export class GenerateArtifactExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
