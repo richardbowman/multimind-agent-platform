@@ -229,15 +229,28 @@ export class BedrockService extends BaseLLMService {
             }
 
             // Extract content from response
-            // Extract and parse content from response
-            const rawContent = params.opts?.tools ? 
+            let rawContent = params.opts?.tools ? 
                 response.output?.message?.content?.find(c => c.toolUse)?.toolUse?.input :
                 response.output?.message?.content?.[0]?.text || '';
 
+            // Remove code fence blocks if present
+            if (typeof rawContent === 'string' && rawContent.includes('```json')) {
+                rawContent = rawContent.replace(/```json\n?|\n?```/g, '');
+            }
+
             // Parse JSON if requested and create final content
-            const parsedContent = params.parseJSON && typeof rawContent === 'string' 
-                ? JSON5.parse(rawContent) 
-                : rawContent;
+            let parsedContent;
+            if (params.parseJSON && typeof rawContent === 'string') {
+                try {
+                    parsedContent = JSON5.parse(rawContent);
+                } catch (e) {
+                    Logger.error("Failed to parse JSON response:", e);
+                    Logger.error("Raw content was:", rawContent);
+                    throw e;
+                }
+            } else {
+                parsedContent = rawContent;
+            }
 
             const content = params.parseJSON ? 
                 (parsedContent as T) : 
