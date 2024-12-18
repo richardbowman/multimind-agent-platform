@@ -1,6 +1,7 @@
 import { ILLMService } from "./ILLMService";
 import LMStudioService from "./lmstudioService";
 import { BedrockService } from "./BedrockService";
+import { AnthropicService } from "./AnthropicService";
 import { LLM_HEAVY_MODEL, LLM_WEAK_MODEL } from "src/helpers/config";
 
 export enum LLMProvider {
@@ -14,6 +15,7 @@ export interface LLMServiceConfig {
     embeddingProvider?: LLMProvider;
     modelId?: string;
     embeddingModelId?: string;
+    apiKey?: string;
 }
 
 export class LLMServiceFactory {
@@ -47,9 +49,12 @@ export class LLMServiceFactory {
                     embeddingService
                 );
             case LLMProvider.ANTHROPIC:
+                if (!embeddingService) {
+                    throw new Error("Anthropic requires an embedding service to be configured");
+                }
                 return new AnthropicService(
-                    undefined, // Use default API key from config
-                    undefined, // Use default model from config
+                    config.apiKey, // Will use default from config if undefined
+                    config.modelId, // Will use default from config if undefined
                     embeddingService
                 );
             default:
