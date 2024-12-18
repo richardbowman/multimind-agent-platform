@@ -17,6 +17,12 @@ export interface ILLMService {
     generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T>;
 }
 
+export interface LLMTool {
+    name: string;
+    description: string;
+    parameters: Record<string, any>;
+}
+
 export interface LLMPredictionOpts {
     temperature?: number;
     topP?: number;
@@ -25,7 +31,7 @@ export interface LLMPredictionOpts {
         type: string;
         jsonSchema: any;
     };
-    tools?: any;
+    tools?: LLMTool[];
     contextWindowLength?: number;
 }
 
