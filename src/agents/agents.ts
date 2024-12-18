@@ -616,7 +616,7 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
         };
     }
 
-    protected async getMessage(messageId: string): Promise<ChatPost> {
+    protected async getMessage(messageId: string): Promise<ChatPost | undefined> {
         return this.chatClient.getPost(messageId);
     }
 }
