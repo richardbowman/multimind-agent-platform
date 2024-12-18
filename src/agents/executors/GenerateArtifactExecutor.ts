@@ -8,7 +8,20 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
 
-// add overall functionality overview AI!
+/**
+ * Executor that generates and manages Markdown document artifacts.
+ * Key capabilities:
+ * - Creates new Markdown documents with structured content
+ * - Revises existing artifacts while maintaining version history
+ * - Generates appropriate titles and metadata
+ * - Handles both creation and update workflows
+ * - Supports artifact versioning and tracking
+ * - Manages artifact storage and retrieval
+ * - Provides confirmation messages for operations
+ * - Handles errors gracefully with logging
+ * - Generates unique IDs for new artifacts
+ * - Preserves existing IDs during revisions
+ */
 @StepExecutorDecorator('generate-artifact', 'Create/revise a Markdown document')
 export class GenerateArtifactExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
