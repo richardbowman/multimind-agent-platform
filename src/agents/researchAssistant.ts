@@ -46,8 +46,8 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
         await this.scrapeHelper.initialize();
         await super.setupChatMonitor(WEB_RESEARCH_CHANNEL_ID, "@researchteam");
 
-        // TODO BRING BACK WHEN SAFER asynchronously check for old tasks and keep working on them
-        // this.processTaskQueue();
+        // TODO BRING BACK WHEN SAFER check for old tasks on boot and keep working on them
+        this.processTaskQueue();
     }
 
 
