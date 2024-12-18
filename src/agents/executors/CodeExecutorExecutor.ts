@@ -69,7 +69,7 @@ export class CodeExecutorExecutor implements StepExecutor {
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = codeExecutionSchema;
+        const schema = await getGeneratedSchema(SchemaType.CodeExecution);
 
         const prompt = `You are a JavaScript programming expert.
 Generate safe JavaScript code to solve the given problem.
