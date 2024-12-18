@@ -23,6 +23,7 @@ interface WebSocketContextType {
   fetchAllArtifacts: () => void;
   fetchHandles: () => void;
   fetchLogs: (logType: 'llm' | 'system' | 'api') => void;
+  deleteArtifact: (artifactId: string) => void;
 }
 
 const WebSocketContext = createContext<WebSocketContextType>({
