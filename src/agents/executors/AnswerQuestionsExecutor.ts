@@ -9,7 +9,17 @@ import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/ex
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 
-// add a descriptive overview of the capabilities of this. AI!
+/**
+ * Executor that analyzes and processes user responses to intake questions.
+ * Key capabilities:
+ * - Tracks and analyzes responses to a set of onboarding/intake questions
+ * - Evaluates answer completeness and quality
+ * - Stores validated answers in project metadata
+ * - Manages question completion state
+ * - Provides intelligent feedback on missing or incomplete answers
+ * - Determines when enough information has been gathered (75% threshold)
+ * - Generates contextual progress messages and next steps
+ */
 @StepExecutorDecorator('process-answers', 'Analyze and process user responses to intake questions', false)
 export class AnswerQuestionsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
