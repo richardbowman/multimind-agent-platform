@@ -74,6 +74,13 @@ export const BEDROCK_MAX_TOKENS_PER_MINUTE = parseInt(process.env.BEDROCK_MAX_TO
 export const BEDROCK_DEFAULT_DELAY_MS = parseInt(process.env.BEDROCK_DEFAULT_DELAY_MS || '1000');
 export const BEDROCK_WINDOW_SIZE_MS = parseInt(process.env.BEDROCK_WINDOW_SIZE_MS || '60000');
 
-export const HOST = parseInt( process.env.HOST || 'localhost');
-export const PORT = parseInt( process.env.PORT || '3000');
-export const PROTOCOL = parseInt( process.env.PROTOCOL || 'https');
+// Anthropic settings
+export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!;
+export const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-opus-20240229';
+export const ANTHROPIC_MAX_TOKENS_PER_MINUTE = parseInt(process.env.ANTHROPIC_MAX_TOKENS_PER_MINUTE || '50000');
+export const ANTHROPIC_DEFAULT_DELAY_MS = parseInt(process.env.ANTHROPIC_DEFAULT_DELAY_MS || '1000');
+export const ANTHROPIC_WINDOW_SIZE_MS = parseInt(process.env.ANTHROPIC_WINDOW_SIZE_MS || '60000');
+
+export const HOST = parseInt(process.env.HOST || 'localhost');
+export const PORT = parseInt(process.env.PORT || '3000');
+export const PROTOCOL = parseInt(process.env.PROTOCOL || 'https');
