@@ -135,7 +135,7 @@ export class BedrockService implements ILLMService {
         }
     }
 
-    async initializeLlamaModel(modelPath: string): Promise<void> {
+    async initializeChatModel(modelPath: string): Promise<void> {
         // No initialization needed for Bedrock
         Logger.info("Bedrock service ready");
     }
