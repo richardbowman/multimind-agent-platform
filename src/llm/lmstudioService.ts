@@ -43,7 +43,9 @@ export interface MessageOpts {
 
 import { ILLMService, ModelRole, StructuredOutputPrompt } from "./ILLMService";
 
-export default class LMStudioService implements ILLMService {
+import { BaseLLMService } from "./BaseLLMService";
+
+export default class LMStudioService extends BaseLLMService {
     private lmStudioClient: LMStudioClient;
     private embeddingModel?: IEmbeddingFunction;
     private chatModel?: LLMSpecificModel;
