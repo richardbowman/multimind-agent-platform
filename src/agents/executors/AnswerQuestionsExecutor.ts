@@ -20,7 +20,9 @@ import { SchemaType } from 'src/schemas/SchemaTypes';
  * - Determines when enough information has been gathered (75% threshold)
  * - Generates contextual progress messages and next steps
  */
-@StepExecutorDecorator('process-answers', 'Analyze and process user responses to intake questions', false)
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.ANSWER_QUESTIONS, 'Analyze and process user responses to intake questions', false)
 export class AnswerQuestionsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 

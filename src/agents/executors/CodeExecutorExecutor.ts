@@ -21,7 +21,9 @@ import { codeExecutionSchema } from '../../schemas/CodeExecutionSchema';
  * - Enforces 5 second execution timeout
  * - Limits memory usage to 128MB per execution
  */
-@StepExecutorDecorator('code-execution', 'Safely execute JavaScript code in a sandboxed environment')
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.CODE_EXECUTION, 'Safely execute JavaScript code in a sandboxed environment')
 export class CodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private modelHelpers: ModelHelpers;

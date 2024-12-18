@@ -22,7 +22,9 @@ import Logger from '../../helpers/logger';
  * - Generates unique IDs for new artifacts
  * - Preserves existing IDs during revisions
  */
-@StepExecutorDecorator('generate-artifact', 'Create/revise a Markdown document')
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.GENERATE_ARTIFACT, 'Create/revise a Markdown document')
 export class GenerateArtifactExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;

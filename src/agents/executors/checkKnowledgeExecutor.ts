@@ -21,7 +21,9 @@ import Logger from '../../helpers/logger';
  * - Identifies information gaps for further research
  * - Provides structured research reports with sources and relevance scores
  */
-@StepExecutorDecorator('check-knowledge', 'Check my existing knowledgebase (useful to do upfront)')
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.CHECK_KNOWLEDGE, 'Check my existing knowledgebase (useful to do upfront)')
 export class KnowledgeCheckExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private vectorDB: IVectorDatabase;

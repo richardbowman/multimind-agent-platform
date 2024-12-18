@@ -24,7 +24,9 @@ import { SchemaType } from '../../schemas/SchemaTypes';
  * - Manages artifact storage and retrieval
  * - Tracks task completion and dependencies
  */
-@StepExecutorDecorator('create_revise_plan', `Create (or revise) a guide for our agents of the user's desired business goals.`)
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.CREATE_PLAN, `Create (or revise) a guide for our agents of the user's desired business goals.`)
 export class CreatePlanExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private userId: string;
