@@ -84,7 +84,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             await this.taskManager.addTask(project, {
                 id: crypto.randomUUID(),
                 type: 'process-answers',
-                description: `Q: ${q.question}\nPurpose: ${q.purpose}`,
+                description: `Gather answer to Q: ${q.question}; Purpose: ${q.purpose}`,
                 creator: this.userId,
                 complete: false,
                 order: i + 1
