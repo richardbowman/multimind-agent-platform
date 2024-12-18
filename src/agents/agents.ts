@@ -80,6 +80,9 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
     protected isMemoryEnabled: boolean = false;
     protected modelHelpers: ModelHelpers;
 
+    // Index signature for handler methods
+    [key: string]: any;
+
     protected abstract projectCompleted(project: Project): void;
     protected abstract processTask(task: Task): Promise<void>;
     protected abstract handlerThread(params: HandlerParams): Promise<void>;
@@ -119,7 +122,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
     }
 
     protected async taskNotification(task: Task): Promise<void> {
-        await this.processTaskQueue(task);
+        await this.processTaskQueue();
     }
 
     async processTaskQueue(): Promise<void> {
@@ -133,7 +136,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
 
         try {
             while (true) {
-                const task: Task = await this.projects.getNextTaskForUser(this.userId);
+                const task = await this.projects.getNextTaskForUser(this.userId);
                 if (!task) {
                     Logger.info(`Task queue processing complete. Processed ${processedCount} tasks.`);
                     return;
@@ -226,7 +229,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
 
                 let context: ConversationContext | undefined;
 
-                if (!post.getRootId() && post.message.startsWith(handle)) {
+                if (!post.getRootId() && handle && post.message.startsWith(handle)) {
                     // Determine the type of activity using an LLM
                     await this.handleChannel({ userPost: post });
                 } else if (post.getRootId()) {
@@ -295,8 +298,8 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
     private cleanupOldSummaries(maxAge: number = 1000 * 60 * 60) { // default 1 hour
         const now = Date.now();
         for (const [threadId, summary] of this.threadSummaries.entries()) {
-            const message = this.getMessage(summary.lastProcessedMessageId);
-            if (now - message.create_at > maxAge) {
+            const message = await this.getMessage(summary.lastProcessedMessageId);
+            if (message && now - message.create_at > maxAge) {
                 this.threadSummaries.delete(threadId);
             }
         }
@@ -504,9 +507,9 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
     private async reviseMemoryArtifact(channelId: string, importantPoints: string[], previousMemory?: string): Promise<void> {
         const newMemoryContent = previousMemory ? `${previousMemory}\n${importantPoints.join('\n')}` : importantPoints.join('\n');
 
-        const artifact = {
+        const artifact: Artifact = {
             id: `${channelId}-${this.userId}-memory`,
-
+            type: 'memory',
             content: newMemoryContent,
             metadata: {
                 channel_id: channelId,
