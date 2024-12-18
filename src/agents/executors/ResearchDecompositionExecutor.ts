@@ -12,8 +12,23 @@ import { randomUUID } from 'crypto';
 import { ResearchDecomposition } from '../../schemas/research-manager';
 import { ModelResponse } from 'src/schemas/ModelResponse';
 
-// add an overview of the functionality of this executor and refactor out its key to the enum AI!
-@StepExecutorDecorator('decompose-research', 'Break down research request into specific tasks')
+/**
+ * Executor that breaks down research requests into manageable tasks.
+ * Key capabilities:
+ * - Analyzes complex research goals and requirements
+ * - Decomposes goals into specific research tasks
+ * - Creates structured research plans with clear objectives
+ * - Assigns tasks to appropriate research agents
+ * - Manages task dependencies and sequencing
+ * - Tracks research project progress
+ * - Coordinates between multiple research agents
+ * - Ensures comprehensive coverage of research topics
+ * - Maintains research context across tasks
+ * - Handles both broad and focused research requests
+ */
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.RESEARCH_DECOMPOSITION, 'Break down research request into specific tasks')
 export class ResearchDecompositionExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;

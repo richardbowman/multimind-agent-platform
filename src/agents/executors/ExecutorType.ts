@@ -6,5 +6,6 @@ export enum ExecutorType {
     GENERATE_ARTIFACT = 'generate-artifact',
     GOAL_CONFIRMATION = 'goal_confirmation',
     OUTLINE = 'outline',
-    REFUTING = 'refuting'
+    REFUTING = 'refuting',
+    RESEARCH_DECOMPOSITION = 'decompose-research'
 }
