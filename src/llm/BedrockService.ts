@@ -281,7 +281,7 @@ export class BedrockService extends BaseLLMService {
                 (parsedContent as T) : 
                 ({ message: parsedContent } as ModelMessageResponse as T);
 
-            return {
+            const result = {
                 response: content,
                 metadata: {
                     _usage: {
@@ -290,6 +290,16 @@ export class BedrockService extends BaseLLMService {
                     }
                 }
             };
+
+            // Log the LLM call
+            const input = {
+                messages: params.messages,
+                systemPrompt: params.systemPrompt,
+                opts: params.opts
+            };
+            await this.logger.logCall('sendLLMRequest', input, result.response);
+
+            return result;
         });
     }
 
