@@ -7,9 +7,21 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ContentOutline } from 'src/schemas/outline';
 
+/**
+ * Executor that creates structured content outlines for documents.
+ * Key capabilities:
+ * - Generates hierarchical document outlines
+ * - Creates logical section breakdowns
+ * - Provides section descriptions and key points
+ * - Incorporates research findings into outline structure
+ * - Suggests content development strategies
+ * - Maintains consistent document organization
+ * - Supports both new outlines and revisions
+ * - Integrates with content generation workflow
+ */
+import { ExecutorType } from './ExecutorType';
 
-// add an overview of the functionality of this executor and refactor out its key to the enum AI!
-@StepExecutorDecorator('outline', 'Create structured content outlines')
+@StepExecutorDecorator(ExecutorType.OUTLINE, 'Create structured content outlines')
 export class OutlineExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
