@@ -4,7 +4,7 @@ import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
 export const GlobalArtifactViewer: React.FC = () => {
-    const { artifacts, fetchAllArtifacts } = useWebSocket();
+    const { artifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
     const [selectedType, setSelectedType] = useState<string>('All Types');
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [filteredArtifacts, setFilteredArtifacts] = useState<Artifact[]>([]);
