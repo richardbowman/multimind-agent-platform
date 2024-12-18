@@ -171,12 +171,7 @@ export class BedrockService extends BaseLLMService {
         };
     }
 
-    /**
-     * Understand how large a particular text block is
-     * @param text the content to be counted
-     * @returns 
-     */
-    private async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>> {
+    public async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>> {
         // Estimate tokens based on total text length
         const totalChars = params.systemPrompt?.length || 0 +
             params.messages.reduce((sum, msg) => sum + msg.content.length, 0);
