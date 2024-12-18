@@ -9,7 +9,20 @@ import { EditingResponse } from '../../schemas/editing';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from 'src/tools/taskManager';
 
-// add overall functionality overview AI!
+/**
+ * Executor that reviews and improves content quality.
+ * Key capabilities:
+ * - Analyzes content structure and organization
+ * - Improves clarity and readability
+ * - Fixes grammar and style issues
+ * - Suggests content improvements
+ * - Maintains version history of edits
+ * - Provides detailed edit rationales
+ * - Tracks content revisions
+ * - Generates improved content versions
+ * - Preserves original message intent
+ * - Creates structured edit summaries
+ */
 @StepExecutorDecorator('editing', 'Review and improve content quality')
 export class EditingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
