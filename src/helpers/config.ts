@@ -70,6 +70,10 @@ export const LLM_HEAVY_MODEL = process.env.LLM_HEAVY_MODEL;
 export const VECTOR_DATABASE_TYPE = process.env.VECTOR_DATABASE_TYPE || 'vectra';
 
 // Bedrock rate limiting settings
-export const BEDROCK_MAX_TOKENS_PER_MINUTE = parseInt(process.env.BEDROCK_MAX_TOKENS_PER_MINUTE || '50000', 10);
-export const BEDROCK_DEFAULT_DELAY_MS = parseInt(process.env.BEDROCK_DEFAULT_DELAY_MS || '1000', 10);
-export const BEDROCK_WINDOW_SIZE_MS = parseInt(process.env.BEDROCK_WINDOW_SIZE_MS || '60000', 10);
+export const BEDROCK_MAX_TOKENS_PER_MINUTE = parseInt(process.env.BEDROCK_MAX_TOKENS_PER_MINUTE || '50000');
+export const BEDROCK_DEFAULT_DELAY_MS = parseInt(process.env.BEDROCK_DEFAULT_DELAY_MS || '1000');
+export const BEDROCK_WINDOW_SIZE_MS = parseInt(process.env.BEDROCK_WINDOW_SIZE_MS || '60000');
+
+export const HOST = parseInt( process.env.HOST || 'localhost');
+export const PORT = parseInt( process.env.PORT || '3000');
+export const PROTOCOL = parseInt( process.env.PROTOCOL || 'https');
