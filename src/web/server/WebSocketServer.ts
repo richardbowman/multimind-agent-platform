@@ -346,6 +346,8 @@ export class WebSocketServer {
                     id,
                     handle: name
                 }));
+                Logger.log('Sending handles to client:', handles);
+                Logger.log('Raw userIdToHandleName:', this.storage.userIdToHandleName);
                 socket.emit('handles', handles);
             });
 

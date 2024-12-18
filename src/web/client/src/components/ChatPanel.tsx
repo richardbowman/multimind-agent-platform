@@ -151,7 +151,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                         <div key={message.id} className="message">
                             <div className="message-header">
                                 <span className="username">
-                                    {handles.find(h => h.id === message.user_id)?.handle || 'Unknown User'}
+                                    {(() => {
+                                        const handle = handles.find(h => h.id === message.user_id)?.handle;
+                                        console.log('ChatPanel: Looking up handle for user_id:', message.user_id, 'Found:', handle);
+                                        console.log('ChatPanel: Available handles:', handles);
+                                        return handle || 'Unknown User';
+                                    })()}
                                 </span>
                                 <span className="timestamp">
                                     {new Date(message.create_at).toLocaleString()}

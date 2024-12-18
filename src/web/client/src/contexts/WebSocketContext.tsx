@@ -70,6 +70,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.connect();
     
     const handlesCleanup = webSocketService.onHandles((newHandles) => {
+      console.log('WebSocketContext: Received handles:', newHandles);
       setHandles(newHandles);
     });
 
