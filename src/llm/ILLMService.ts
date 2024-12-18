@@ -1,16 +1,20 @@
 import { ChatPost } from "src/chat/chatClient";
-import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
+import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { IEmbeddingFunction } from "chromadb";
 
 export interface ILLMService {
     initializeEmbeddingModel(modelPath: string): Promise<void>;
     initializeChatModel(modelPath: string): Promise<void>;
-    generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: any): Promise<T>;
-    sendMessageToLLM(message: string, history: any[], seedAssistant?: string, contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string>;
-    generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T>;
+    sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     getEmbeddingModel(): IEmbeddingFunction;
     countTokens(content: string): Promise<number>;
-    sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
+
+    /** @deprecated */
+    generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: any): Promise<T>;
+    /** @deprecated */
+    sendMessageToLLM(message: string, history: any[], seedAssistant?: string, contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string>;
+    /** @deprecated */
+    generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T>;
 }
 
 export interface LLMPredictionOpts {
@@ -22,6 +26,7 @@ export interface LLMPredictionOpts {
         jsonSchema: any;
     };
     tools?: any;
+    contextWindowLength?: number;
 }
 
 export interface LLMRequestParams {
@@ -30,6 +35,7 @@ export interface LLMRequestParams {
     opts?: LLMPredictionOpts;
     parseJSON?: boolean;
 }
+
 export class StructuredOutputPrompt {
     private schema: any;
     private prompt: string;
