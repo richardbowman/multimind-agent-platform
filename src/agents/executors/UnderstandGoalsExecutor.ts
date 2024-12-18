@@ -39,11 +39,11 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         return message;
     }
 
-    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = generatedSchemaDef.IntakeQuestionsResponse;
-        const project = this.taskManager.getProject(projectId);
+        const project = this.taskManager.getProject(params.projectId);
         
-        const formattedMessage = this.formatMessage(goal, project);
+        const formattedMessage = this.formatMessage(params.goal, project);
 
         const response : IntakeQuestionsResponse = await this.modelHelpers.generate({
             message: formattedMessage,
@@ -76,7 +76,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         }
         
         // Get existing tasks and their current max order
-        const existingTasks = this.taskManager.getAllTasks(projectId);
+        const existingTasks = this.taskManager.getAllTasks(params.projectId);
         
         // Create tasks for each intake question with sequential ordering starting at 1
         for (let i = 0; i < response.intakeQuestions.length; i++) {
