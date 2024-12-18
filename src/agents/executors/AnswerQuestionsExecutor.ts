@@ -20,10 +20,10 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async executeOld(response: string, step: string, projectId: string): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
 
-        const project = this.taskManager.getProject(projectId) as OnboardingProject;
+        const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
         const intakeQuestions = Object.values(project.tasks).filter(t => t.type === 'process-answers' && !t.complete);
 
         if (intakeQuestions.length === 0) {
@@ -37,7 +37,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         }
 
         const modelResponse = await this.modelHelpers.generate<AnswerAnalysisResponse>({
-            message: response,
+            message: params.goal,
             instructions: new StructuredOutputPrompt(schema,
                 `Here is the current state of our questions and answers:
 
