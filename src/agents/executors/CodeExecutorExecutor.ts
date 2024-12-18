@@ -8,6 +8,7 @@ import { getQuickJS } from 'quickjs-emscripten';
 import { CodeExecutionResponse } from '../../schemas/ModelResponse';
 import { codeExecutionSchema } from '../../schemas/CodeExecutionSchema';
 
+// add overall functionality overview AI!
 @StepExecutorDecorator('code-execution', 'Safely execute JavaScript code in a sandboxed environment')
 export class CodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
