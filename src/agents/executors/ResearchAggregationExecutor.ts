@@ -11,8 +11,23 @@ import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { ResearchArtifactResponse } from '../../schemas/research-manager';
 import Logger from '../../helpers/logger';
 
-// add an overview of the functionality of this executor and refactor out its key to the enum AI!
-@StepExecutorDecorator('aggregate-research', 'Combine research findings into final report')
+/**
+ * Executor that combines and synthesizes research findings into comprehensive reports.
+ * Key capabilities:
+ * - Aggregates results from multiple research tasks
+ * - Synthesizes findings into coherent narratives
+ * - Maintains source attribution and citations
+ * - Generates structured research reports
+ * - Handles both summary and detailed reporting modes
+ * - Supports vector database querying for context
+ * - Manages artifact creation and storage
+ * - Provides relevance scoring for sources
+ * - Creates clear section organization
+ * - Ensures consistent formatting and style
+ */
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.RESEARCH_AGGREGATION, 'Combine research findings into final report')
 export class ResearchAggregationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;

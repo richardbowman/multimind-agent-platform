@@ -8,5 +8,6 @@ export enum ExecutorType {
     OUTLINE = 'outline',
     REFUTING = 'refuting',
     REPLY = 'reply',
+    RESEARCH_AGGREGATION = 'aggregate-research',
     RESEARCH_DECOMPOSITION = 'decompose-research'
 }
