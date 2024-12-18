@@ -9,6 +9,7 @@ import Logger from 'src/helpers/logger';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ChatPost, isValidChatPost } from 'src/chat/chatClient';
 import { LLMCallLogger } from 'src/llm/LLMLogger';
+import { HOST, PORT, PROTOCOL } from 'src/helpers/config';
 
 export class WebSocketServer {
     private io: Server;
@@ -46,7 +47,7 @@ export class WebSocketServer {
         
         this.io = new Server(this.httpServer, {
             cors: {
-                origin: "http://localhost:3000",
+                origin: `${PROTOCOL}://${HOST}:${PORT}`,
                 methods: ["GET", "POST"]
             }
         });
