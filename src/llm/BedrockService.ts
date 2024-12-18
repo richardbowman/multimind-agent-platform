@@ -382,14 +382,15 @@ export class BedrockService implements ILLMService {
             }
 
             // Extract content from response
-            const content = params.opts?.tools ? 
+            // Extract and parse content from response
+            const rawContent = params.opts?.tools ? 
                 response.output?.message?.content?.find(c => c.toolUse)?.toolUse?.input :
                 response.output?.message?.content?.[0]?.text || '';
 
-            // Parse JSON if requested
-            const parsedContent = params.parseJSON && typeof content === 'string' 
-                ? JSON5.parse(content) 
-                : content;
+            // Parse JSON if requested and create final content
+            const parsedContent = params.parseJSON && typeof rawContent === 'string' 
+                ? JSON5.parse(rawContent) 
+                : rawContent;
 
             const content = params.parseJSON ? 
                 (parsedContent as T) : 
