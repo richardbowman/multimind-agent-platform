@@ -75,6 +75,10 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 1. answered: If the question was answered completely and meaningfully
                 2. analysis: If answered, restate the specific answer from the response
                 3. extractedAnswer: Analyze the answer quality and completeness.
+
+                Additionally, analyze the overall progress and provide:
+                1. shouldContinue: true if we have enough information to proceed (roughly 75% of questions answered meaningfully), false if we need more answers
+                2. message: A clear explanation of what information is still needed, or confirmation we can proceed
                 `)
         });
 
@@ -94,14 +98,12 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             }
         }
 
-        const { responseMessage, shouldContinue } = this.analyzeProgress(project, intakeQuestions, modelResponse);
-
         return {
             type: 'answer_analysis',
-            finished: shouldContinue,
-            needsUserInput: !shouldContinue,
+            finished: modelResponse.shouldContinue,
+            needsUserInput: !modelResponse.shouldContinue,
             response: {
-                message: responseMessage
+                message: modelResponse.message
             }
         };
     }
@@ -135,60 +137,4 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         };
     }
 
-    private analyzeProgress(project: OnboardingProject, intakeQuestions: any[], modelResponse: any) {
-        const answeredQuestions = project.metadata.answers?.length || 0;
-        const totalQuestions = intakeQuestions.length;
-        const minimumQuestionsNeeded = Math.ceil(totalQuestions * 0.75);
-
-        const remainingQuestions = intakeQuestions.filter(q => 
-            !q.metadata?.isComplete
-        );
-
-        const hasEnoughInformation = answeredQuestions >= minimumQuestionsNeeded;
-
-        let responseMessage = modelResponse.message + "\n\n";
-        
-        if (remainingQuestions.length > 0) {
-            responseMessage += this.formatRemainingQuestions(remainingQuestions, modelResponse);
-        }
-
-        responseMessage += this.getProgressMessage(hasEnoughInformation, remainingQuestions.length);
-
-        return {
-            responseMessage,
-            shouldContinue: hasEnoughInformation && remainingQuestions.length === 0
-        };
-    }
-
-    private formatRemainingQuestions(remainingQuestions: any[], modelResponse: any): string {
-        let message = "I still need more information:\n\n";
-        remainingQuestions.forEach(q => {
-            // Get the corresponding answer from modelResponse
-            const answer = Array.isArray(modelResponse.answers) ? 
-                modelResponse.answers.find((a: any) => a.questionId === q.id) : 
-                undefined;
-
-            message += `${q.description}\n`;
-            
-            // Check task metadata instead of answer for partial information
-            if (q.metadata?.partialAnswer) {
-                message += `Current answer: ${q.metadata.partialAnswer}\n`;
-                message += `Additional info needed: ${q.metadata.analysis}\n`;
-            } else if (answer?.analysis) {
-                message += `Feedback: ${answer.analysis}\n`;
-            }
-            message += "\n";
-        });
-        return message;
-    }
-
-    private getProgressMessage(hasEnoughInformation: boolean, remainingCount: number): string {
-        if (hasEnoughInformation && remainingCount === 0) {
-            return "All questions have been answered sufficiently. I'll analyze the information to create a plan.";
-        } else if (hasEnoughInformation) {
-            return "\nWhile we could proceed with the current information, providing answers to the remaining questions would help create a more detailed plan.";
-        } else {
-            return "\nPlease provide more detailed answers so I can create an effective plan.";
-        }
-    }
 }
