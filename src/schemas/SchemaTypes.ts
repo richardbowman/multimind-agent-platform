@@ -27,5 +27,6 @@ export enum SchemaType {
     WebSearchResponse = 'WebSearchResponse',
     SearchQueryResponse = 'SearchQueryResponse',
     LinkSelectionResponse = 'LinkSelectionResponse',
-    QuickQueriesResponse = 'QuickQueriesResponse'
+    QuickQueriesResponse = 'QuickQueriesResponse',
+    ResearchUnderstandingResponse = 'ResearchUnderstandingResponse'
 }
