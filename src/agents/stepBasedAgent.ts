@@ -27,10 +27,13 @@ export interface StepResult {
 }
 
 export interface ExecuteParams {
+    message?: string;
+    stepGoal?: string;
+    overallGoal?: string;
     goal: string;
     step: string;
     projectId: string;
-    previousResult?: ModelMessageResponse;
+    previousResult?: ModelMessageResponse[];
     mode?: 'quick' | 'detailed';
 }
 
@@ -96,14 +99,11 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         }
 
         // Handle response to existing project
-        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
-        const remainingTasks = Object.values(project.tasks).filter(t => !t.complete);
+        const task = this.projects.getNextTask(project.id);
 
-        if (!currentTask && remainingTasks.length === 0) {
+        if (!task) {
             Logger.info("No remaining tasks, planning new steps");
             const plan = await this.planSteps(params);
-            await this.executeNextStep(project.id, params.userPost);
-            return;
         }
 
         // Continue with existing tasks without replanning
@@ -248,7 +248,10 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                     goal: `${userPost?.message} [Step: ${task.description}] [Project: ${project.name}]`,
                     step: task.type,
                     projectId: projectId,
-                    previousResult: priorResults
+                    previousResult: priorResults,
+                    message: userPost?.message,
+                    stepGoal: task.description,
+                    overallGoal: project.name
                 });
             } else {
                 stepResult = await executor.executeOld(
@@ -295,7 +298,6 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                     await this.reply(userPost, stepResult.response, {
                         "project-id": stepResult.projectId || projectId
                     });
-                    return;
                 } else {
                     const message = stepResult.response?.reasoning || stepResult.response?.message || "";
                     await this.reply(userPost, {
@@ -325,7 +327,9 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 //     this.projects.addTask(project, validationTask);
                 // }
 
-                await this.executeNextStep(projectId, userPost);
+                if (!stepResult.needsUserInput) {
+                    await this.executeNextStep(projectId, userPost);
+                }
 
             } else {
                 // Log progress when no userPost is available
