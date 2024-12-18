@@ -8,9 +8,10 @@ import { OnboardingProject, QuestionAnswer } from '../onboardingConsultant';
 import { CreateArtifact } from '../../schemas/ModelResponse';
 import { OperationalGuideResponse, QAItem } from '../../schemas/OperationalGuideResponse';
 import { StepExecutor, StepResult } from '../stepBasedAgent';
-import { updateBusinessPlan } from './businessPlanHelper';
+import { updateBusinessPlan } from '../../helpers/businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
 
+// add overall functionality overview AI!
 @StepExecutorDecorator('create_revise_plan', `Create (or revise) a guide for our agents of the user's desired business goals.`)
 export class CreatePlanExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
