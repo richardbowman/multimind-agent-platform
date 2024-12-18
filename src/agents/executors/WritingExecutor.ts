@@ -10,8 +10,9 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { WritingResponse } from '../../schemas/writing';
 
+// add summary of capabilities and refactor decorator ID AI!
 @StepExecutorDecorator('assign-writers', 'Take an existing outline and break out sections to writers.')
-export class WritingExecutor implements StepExecutor {
+export class AssignWritersExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
 
