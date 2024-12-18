@@ -57,7 +57,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 Here is the current state of our questions and answers:
 
                 Previously Answered Questions:
-                ${project.metadata.answers?.map(a => 
+                ${project.metadata.answers?.map(a : QuestionRes => 
                     `Question: ${a.question}\nAnswer: ${a.answer}\n`
                 ).join('\n') || 'No previous answers'}
 
@@ -100,6 +100,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
     }
 
     private async storeAnswer(project: OnboardingProject, task: any, answer: any) {
+        // create an interface for this AI!
         project.metadata.answers.push({
             questionId: answer.questionId,
             question: task.description,
