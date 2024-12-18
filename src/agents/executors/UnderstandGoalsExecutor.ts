@@ -29,11 +29,11 @@ export class UnderstandGoalsExecutor implements StepExecutor {
 
         // Include existing Q&A if available
         if (project.metadata?.answers?.length > 0) {
-            message += "📋 Previously Gathered Information:\n";
-            project.metadata.answers.forEach((answer: any) => {
-                message += `Q: ${answer.question}\nA: ${answer.answer}\n`;
+            message += `📋 Previously Gathered Information (${project.metadata.answers.length} answers):\n\n`;
+            project.metadata.answers.forEach((answer: any, index: number) => {
+                message += `${index + 1}. Q: ${answer.question}\n   A: ${answer.answer}\n`;
                 if (answer.analysis) {
-                    message += `Analysis: ${answer.analysis}\n`;
+                    message += `   Analysis: ${answer.analysis}\n`;
                 }
                 message += '\n';
             });
