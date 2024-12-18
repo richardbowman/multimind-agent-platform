@@ -90,7 +90,16 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // For live messages, append only new ones
         const newMessages = messages.filter(message => 
           !prev.some(m => m.id === message.id)
-        );
+        ).map(message => {
+          // If message has a root-id in props, set it as thread_id
+          if (message.props && message.props['root-id']) {
+            return {
+              ...message,
+              thread_id: message.props['root-id']
+            };
+          }
+          return message;
+        });
         
         // Update messages array, handling both new messages and reply count updates
         return prev.map(existingMsg => {
