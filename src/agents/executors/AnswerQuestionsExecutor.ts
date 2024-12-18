@@ -114,7 +114,8 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             answer: answer.extractedAnswer,
             analysis: answer.analysis,
             answeredAt: new Date().toISOString()
-        });
+        };
+        project.metadata.answers.push(answerMetadata);
 
         task.metadata = {
             ...task.metadata,
