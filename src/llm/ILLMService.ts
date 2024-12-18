@@ -10,6 +10,19 @@ export interface ILLMService {
     generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T>;
     getEmbeddingModel(): IEmbeddingFunction;
     getTokenCount(message: string): Promise<number>;
+    protected sendLLMRequest(params: LLMRequestParams): Promise<any>;
+}
+
+export interface LLMRequestParams {
+    messages: { role: string; content: string }[];
+    systemPrompt?: string;
+    opts?: {
+        temperature?: number;
+        topP?: number;
+        maxTokens?: number;
+        tools?: any;
+    };
+    parseJSON?: boolean;
 }
 export class StructuredOutputPrompt {
     private schema: any;
