@@ -10,7 +10,7 @@ export interface ILLMService {
     generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T>;
     getEmbeddingModel(): IEmbeddingFunction;
     countTokens(content: string): Promise<number>;
-    sendLLMRequest(params: LLMRequestParams): Promise<any>;
+    sendLLMRequest<T = string>(params: LLMRequestParams): Promise<T>;
 }
 
 export interface LLMPredictionOpts {
