@@ -9,6 +9,7 @@ import { EditingResponse } from '../../schemas/editing';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from 'src/tools/taskManager';
 
+// add overall functionality overview AI!
 @StepExecutorDecorator('editing', 'Review and improve content quality')
 export class EditingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
