@@ -56,7 +56,7 @@ export class AnthropicService extends BaseLLMService {
                 model: this.model,
                 messages: messages,
                 system: systemPrompt,
-                max_tokens: opts.maxTokens,
+                max_tokens: opts.maxTokens||2048,
                 temperature: opts.temperature,
                 top_p: opts.topP
             })
@@ -89,7 +89,8 @@ export class AnthropicService extends BaseLLMService {
                 let content: any;
                 if (params.parseJSON) {
                     try {
-                        content = JSON5.parse(response.content[0].text);
+                        const body = response.content[0].text;
+                        content = JSON5.parse(body);
                     } catch (e) {
                         Logger.error("Failed to parse JSON response:", e);
                         throw e;
