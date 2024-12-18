@@ -9,6 +9,7 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import Logger from '../../helpers/logger';
 
+// add overall functionality overview AI!
 @StepExecutorDecorator('check-knowledge', 'Check my existing knowledgebase (useful to do upfront)')
 export class KnowledgeCheckExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
