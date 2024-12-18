@@ -1,6 +1,14 @@
 import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
+
+interface AnswerMetadata {
+    questionId: string;
+    question: string;
+    answer: string;
+    analysis: string;
+    answeredAt: string;
+}
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { AnswerAnalysisResponse } from '../../schemas/AnswerAnalysisResponse';
 import { TaskManager } from '../../tools/taskManager';
@@ -100,8 +108,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
     }
 
     private async storeAnswer(project: OnboardingProject, task: any, answer: any) {
-        // create an interface for this AI!
-        project.metadata.answers.push({
+        const answerMetadata: AnswerMetadata = {
             questionId: answer.questionId,
             question: task.description,
             answer: answer.extractedAnswer,
