@@ -1,6 +1,6 @@
 // lmstudioService.ts
 
-import { EmbeddingSpecificModel,LLMPredictionOpts,LLMSpecificModel,LMStudioClient } from "@lmstudio/sdk";
+import { EmbeddingSpecificModel, LLMSpecificModel, LMStudioClient } from "@lmstudio/sdk";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
@@ -8,12 +8,11 @@ import { ChatPost } from "src/chat/chatClient";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 
-interface LLMRequestParams {
+import { LLMPredictionOpts, LLMRequestParams } from "./ILLMService";
+
+interface LMStudioRequestParams extends LLMRequestParams {
     messages: ModelMessageHistory[];
-    systemPrompt?: string;
-    opts?: LLMPredictionOpts;
     contextWindowLength?: number;
-    parseJSON?: boolean;
 }
 
 class MyEmbedder implements IEmbeddingFunction {

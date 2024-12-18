@@ -13,15 +13,21 @@ export interface ILLMService {
     sendLLMRequest(params: LLMRequestParams): Promise<any>;
 }
 
+export interface LLMPredictionOpts {
+    temperature?: number;
+    topP?: number;
+    maxPredictedTokens?: number;
+    structured?: {
+        type: string;
+        jsonSchema: any;
+    };
+    tools?: any;
+}
+
 export interface LLMRequestParams {
     messages: { role: string; content: string }[];
     systemPrompt?: string;
-    opts?: {
-        temperature?: number;
-        topP?: number;
-        maxTokens?: number;
-        tools?: any;
-    };
+    opts?: LLMPredictionOpts;
     parseJSON?: boolean;
 }
 export class StructuredOutputPrompt {
