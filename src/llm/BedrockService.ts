@@ -17,7 +17,7 @@ interface LLMRequestParams {
 }
 import { AsyncQueue } from "../helpers/asyncQueue";
 import { ChatPost } from "src/chat/chatClient";
-import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
+import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { StructuredOutputPrompt } from "./ILLMService";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
