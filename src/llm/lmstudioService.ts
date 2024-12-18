@@ -69,7 +69,7 @@ export default class LMStudioService implements ILLMService {
         }
     }
 
-    async initializeLlamaModel(modelPath: string): Promise<void> {
+    async initializeChatModel(modelPath: string): Promise<void> {
         try {
             const loaded = await this.lmStudioClient.llm.listLoaded();
             if (loaded.find((model) => model.identifier === modelPath) !== undefined) {
