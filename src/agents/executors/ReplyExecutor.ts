@@ -6,6 +6,7 @@ import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/ex
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
 
+// add an overview of the functionality of this executor and refactor out its key to the enum AI!
 @StepExecutorDecorator('reply', 'Generate user-friendly responses to messages')
 export class ReplyExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
