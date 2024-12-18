@@ -94,53 +94,8 @@ export default class LMStudioService extends BaseLLMService {
         }
     }
 
-    async generate<M extends ModelResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: MessageOpts): Promise<M> {
-        const input = { instructions, userPost, history };
-        const messages = [
-            ...this.mapPosts(userPost, history),
-            {
-                role: ModelRole.USER,
-                content: userPost.message
-            }
-        ];
 
-        const result = await this.sendLLMRequest({ messages });
-        await this.logger.logCall('generate', input, result);
-        return result.response as M;
-    }
 
-    async sendMessageToLLM(message: string, history: any[], seedAssistant?: string, 
-        contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string> {
-        const input = { message, history, seedAssistant, contextWindowLength, maxTokens, schema };
-        
-        const messages = [...history];
-        messages.push({ role: ModelRole.USER, content: message });
-
-        if (seedAssistant) {
-            messages.push({ role: ModelRole.ASSISTANT, content: seedAssistant });
-        }
-
-        const opts: LLMPredictionOpts = { maxPredictedTokens: maxTokens };
-        if (schema) {
-            opts.structured = { type: "json", jsonSchema: schema }; 
-        }
-
-        const resultBody = await this.sendLLMRequest({
-            messages,
-            opts,
-            contextWindowLength
-        });
-
-        return resultBody.length > 0 ? ((seedAssistant || "") + resultBody.trim()) : "";
-    }
-
-    mapPosts(userPost: ChatPost, posts?: ChatPost[]) : ModelMessageHistory[] {
-        if (!posts) return [];
-        return posts.map(h => ({
-            role: h.user_id === userPost.user_id ? ModelRole.USER : ModelRole.ASSISTANT,
-            content: h.message
-        }));
-    }
 
     async sendStructuredRequest(message: string, instructions: StructuredOutputPrompt, history?: any[],  
         contextWindowLength?: number, maxTokens?: number): Promise<any> {
@@ -185,39 +140,6 @@ export default class LMStudioService extends BaseLLMService {
         }
     }
 
-    async generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[],  
-        contextWindowLength?: number, maxTokens?: number): Promise<T> {
-        const input = { userPost, instructions: instructions.getPrompt(), history, contextWindowLength, maxTokens };
-        
-        const messages = [
-            ...this.mapPosts(userPost, history),
-            {
-                role: ModelRole.USER,
-                content: userPost.message
-            }
-        ];
-
-        const opts: LLMPredictionOpts = { 
-            structured: { type: "json", jsonSchema: instructions.getSchema() }, 
-            maxPredictedTokens: maxTokens 
-        };
-
-        try {
-            const result = await this.sendLLMRequest<T>({
-                messages,
-                systemPrompt: instructions.getPrompt(),
-                opts,
-                contextWindowLength,
-                parseJSON: true
-            });
-            
-            await this.logger.logCall('generateStructured', input, result);
-            return result.response;
-        } catch (error) {
-            await this.logger.logCall('generateStructured', input, null, error);
-            throw error;
-        }
-    }
 
     getEmbeddingModel() : IEmbeddingFunction {
         if (!this.embeddingModel) throw new Error("LMStudioService not initalized");
