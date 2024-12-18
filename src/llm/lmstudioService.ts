@@ -113,47 +113,26 @@ export default class LMStudioService implements ILLMService {
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string, 
         contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string> {
         const input = { message, history, seedAssistant, contextWindowLength, maxTokens, schema };
-        if (!this.chatModel) {
-            throw new Error("LLaMA model is not initialized.");
-        }
-
-        // Add the current message to the history
-        const userMessage = { role: "user", content: message };
-        history.push(userMessage);
+        
+        const messages = [...history];
+        messages.push({ role: ModelRole.USER, content: message });
 
         if (seedAssistant) {
-            // Add the assistant's message to the history
-            const assistantMessage = { role: "assistant", content: seedAssistant };
-            history.push(assistantMessage);
+            messages.push({ role: ModelRole.ASSISTANT, content: seedAssistant });
         }
 
-        // // If contextWindowLength is provided, truncate the history
-        // const contextLength = parseInt(process.env.CONTEXT_SIZE||"") || contextWindowLength || 4096;
-        // let tokenCount = 0;
-        // for (let i = history.length - 1; i >= 0; i--) {
-        //     const messageTokens = await this.chatModel.unstable_countTokens(history[i].content);
-        //     tokenCount += messageTokens;
-
-        //     if (tokenCount > contextLength) {
-        //         history = history.slice(i + 1);
-        //         break;
-        //     }
-        // }
-
-        const opts : LLMPredictionOpts = { maxPredictedTokens: maxTokens  };
+        const opts: LLMPredictionOpts = { maxPredictedTokens: maxTokens };
         if (schema) {
             opts.structured = { type: "json", jsonSchema: schema }; 
         }
 
-        // Set the maxTokens parameter for the LLaMA model
-        const prediction = this.chatModel.respond(history, opts);
-        const finalResult = await prediction;
-        const resultBody = finalResult.content;
+        const resultBody = await this.sendLLMRequest({
+            messages,
+            opts,
+            contextWindowLength
+        });
 
-        const inclSeed = (resultBody.length > 0 ? ((seedAssistant || "") + resultBody.trim()) : "");
-
-        // Remove the last message from the history (user's message)
-        return inclSeed;
+        return resultBody.length > 0 ? ((seedAssistant || "") + resultBody.trim()) : "";
     }
 
     mapPosts(userPost: ChatPost, posts?: ChatPost[]) : ModelMessageHistory[] {
