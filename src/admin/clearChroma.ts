@@ -13,7 +13,7 @@ async function deleteCollection(collectionName: string) {
         await chromaDBService.initializeCollection(collectionName);
 
         if (chromaDBService) {
-            await chromaDBService.chromaDB.deleteCollection({name: collectionName});
+            await chromaDBService.deleteCollection(collectionName);
             Logger.info(`Collection "${collectionName}" has been successfully deleted.`);
         } else {
             Logger.info(`Collection "${collectionName}" does not exist.`);
