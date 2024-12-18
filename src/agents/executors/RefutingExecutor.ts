@@ -7,8 +7,21 @@ import { RefutingResponse } from '../../schemas/refuting';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 
-// add an overview of the functionality of this executor and refactor out its key to the enum AI!
-@StepExecutorDecorator('refuting', 'Challenge assumptions and identify potential flaws in the current reasoning')
+/**
+ * Executor that critically analyzes arguments and identifies potential flaws.
+ * Key capabilities:
+ * - Generates counterarguments to challenge assumptions
+ * - Evaluates logical consistency of arguments
+ * - Identifies hidden assumptions and biases
+ * - Provides balanced analysis of opposing viewpoints
+ * - Assesses evidence quality and relevance
+ * - Suggests alternative perspectives
+ * - Delivers structured critique with final verdict
+ * - Maintains objective analytical approach
+ */
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.REFUTING, 'Challenge assumptions and identify potential flaws in the current reasoning')
 export class RefutingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 

@@ -5,5 +5,6 @@ export enum ExecutorType {
     CREATE_PLAN = 'create_revise_plan',
     GENERATE_ARTIFACT = 'generate-artifact',
     GOAL_CONFIRMATION = 'goal_confirmation',
-    OUTLINE = 'outline'
+    OUTLINE = 'outline',
+    REFUTING = 'refuting'
 }
