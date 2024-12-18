@@ -9,7 +9,7 @@ import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/ex
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 
-@StepExecutorDecorator('process-answers', 'Analyze and process user responses to intake questions')
+@StepExecutorDecorator('process-answers', 'Analyze and process user responses to intake questions', false)
 export class AnswerQuestionsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
@@ -47,14 +47,13 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 ).join('\n') || 'No previous answers'}
 
                 Pending Questions to Analyze:
-                ${intakeQuestions.map(q => `ID ${q.id}: ${q.description}`).join('\n')}
+                ${intakeQuestions.map((q, i) => `${i+1}. ID ${q.id}: ${q.description}`).join('\n')}
                 
-                For each pending question:
-                1. Determine if the question was answered completely and meaningfully
-                2. Extract the specific answer from the response (mark as "Not provided" if unclear or incomplete)
-                3. Provide a detailed analysis of the answer quality and completeness
-                4. Be specific about what information was provided or what's still missing
-                5. Consider how this answer relates to or conflicts with any previous answers`)
+                Use the "answers" key to provide a JSON array with an item for EACH of the ${intakeQuestions.length} pending questions that includes:
+                1. answered: If the question was answered completely and meaningfully
+                2. analysis: If answered, restate the specific answer from the response
+                3. extractedAnswer: Analyze the answer quality and completeness.
+                `)
         });
 
         // Initialize answers array if it doesn't exist
@@ -124,7 +123,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
 
         const hasEnoughInformation = answeredQuestions >= minimumQuestionsNeeded;
 
-        let responseMessage = modelResponse.summary + "\n\n";
+        let responseMessage = modelResponse.message + "\n\n";
         
         if (remainingQuestions.length > 0) {
             responseMessage += this.formatRemainingQuestions(remainingQuestions, modelResponse);
