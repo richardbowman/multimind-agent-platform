@@ -6,8 +6,23 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 
-// add overall functionality overview AI!
-@StepExecutorDecorator('final_response', 'Provide final response to the user (include at the end of your plan)')
+/**
+ * Executor that synthesizes all previous results into a final response.
+ * Key capabilities:
+ * - Combines results from multiple execution steps
+ * - Creates coherent narrative from disparate sources
+ * - Maintains clear source attribution
+ * - Formats response in structured Markdown
+ * - Preserves context from original goal
+ * - Handles large result sets (16K token context)
+ * - Provides comprehensive yet concise summaries
+ * - Ensures all key points are addressed
+ * - Maintains consistent formatting and style
+ * - Includes relevant citations and references
+ */
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.FINAL_RESPONSE, 'Provide final response to the user (include at the end of your plan)')
 export class FinalResponseExecutor implements StepExecutor {
     constructor(private modelHelpers: ModelHelpers) {
     }
