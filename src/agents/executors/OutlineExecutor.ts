@@ -7,6 +7,8 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ContentOutline } from 'src/schemas/outline';
 
+
+// add an overview of the functionality of this executor and refactor out its key to the enum AI!
 @StepExecutorDecorator('outline', 'Create structured content outlines')
 export class OutlineExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
