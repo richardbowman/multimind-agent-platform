@@ -1,7 +1,20 @@
 import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 import { BEDROCK_MAX_TOKENS_PER_MINUTE, BEDROCK_DEFAULT_DELAY_MS, BEDROCK_WINDOW_SIZE_MS } from "../helpers/config";
+import JSON5 from 'json5';
 import { RetryHelper } from "../helpers/retryHelper";
-import { ILLMService } from "./ILLMService";
+import { ILLMService, ModelRole } from "./ILLMService";
+
+interface LLMRequestParams {
+    messages: { role: string; content: string }[];
+    systemPrompt?: string;
+    opts?: {
+        temperature?: number;
+        topP?: number;
+        maxTokens?: number;
+        tools?: any;
+    };
+    parseJSON?: boolean;
+}
 import { AsyncQueue } from "../helpers/asyncQueue";
 import { ChatPost } from "src/chat/chatClient";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
@@ -144,67 +157,18 @@ export class BedrockService implements ILLMService {
         const messages = this.formatMessages(userPost.message, history);
         const input = { instructions, messages };
 
-        // Estimate tokens - rough estimate based on characters
-        const totalChars = instructions.length +
-            messages.reduce((sum, msg) => sum + msg.content.length, 0);
-        const estimatedTokens = Math.ceil(totalChars / 4); // Rough estimate of 4 chars per token
-
-        await this.waitForNextCall(estimatedTokens);
-
-        return await this.queue.enqueue<M>(async () : Promise<M> => {
-            const command = new ConverseCommand({
-                modelId: this.modelId,
-                system: [{
-                    text: instructions
-                }],
-                messages: messages.map(msg => ({
-                    role: msg.role,
-                    content: [{
-                        text: msg.content
-                    }]
-                })),
-                inferenceConfig: {
-                    temperature: 0.7,
-                    topP: 1
-                }
-            });
-
-            let bedrockResponse;
-            try {
-                bedrockResponse = await this.runtimeClient.send(command);
-            } catch (error: any) {
-                if (error?.name === 'ThrottlingException') {
-                    bedrockResponse = await RetryHelper.withRetry(async () => {
-                        return await this.runtimeClient.send(command);
-                    }, "Bedrock generate() call - throttled");
-                } else {
-                    throw error;
-                }
-            }
-
-            const result = bedrockResponse.output?.message?.content?.[0];
-            
-            // Track token usage from response
-            const inputTokens = bedrockResponse.usage?.inputTokens || 0;
-            const outputTokens = bedrockResponse.usage?.outputTokens || 0;
-            
-            if (inputTokens + outputTokens > 0) {
-                this.trackTokenUsage(inputTokens + outputTokens);
-            } else {
-                Logger.warn("Received zero token count from Bedrock API in generate()");
-            }
-
-            const response: M = {
-                message: result?.text||"",
-                _usage: {
-                    inputTokens,
-                    outputTokens
-                }
-            };
-
-            await this.logger.logCall('generate', input, bedrockResponse);
-            return response;
+        const result = await this.sendLLMRequest({
+            messages,
+            systemPrompt: instructions
         });
+
+        const response = {
+            message: result || "",
+            _usage: result._usage
+        } as M;
+
+        await this.logger.logCall('generate', input, response);
+        return response;
     }
 
     private formatMessages(message: string, history?: ChatPost[]): any[] {
@@ -262,163 +226,91 @@ export class BedrockService implements ILLMService {
     }
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string): Promise<string> {
-        await this.waitForNextCall();
         const input = { message, history, seedAssistant };
         let systemPrompt = "You are a helpful assistant";
-        const processedMessages = [];
+        const messages = [];
 
         // Extract system message and process history
         for (const msg of history) {
             if (msg.role === "system") {
                 systemPrompt = msg.content;
             } else {
-                processedMessages.push({
+                messages.push({
                     role: msg.role,
-                    content: [{
-                        text: msg.content
-                    }]
+                    content: msg.content
                 });
             }
         }
 
         // Add current message
         if (message.trim()) {
-            processedMessages.push({
-                role: "user",
-                content: [{
-                    text: message
-                }]
+            messages.push({
+                role: ModelRole.USER,
+                content: message
             });
         }
 
         // Add seed assistant message if provided
         if (seedAssistant) {
-            processedMessages.push({
-                role: "assistant",
-                content: [{
-                    text: seedAssistant
-                }]
+            messages.push({
+                role: ModelRole.ASSISTANT,
+                content: seedAssistant
             });
         }
 
-        return await this.queue.enqueue(async () => {
-            const command = new ConverseCommand({
-                modelId: this.modelId,
-                system: [{
-                    text: systemPrompt
-                }],
-                messages: processedMessages,
-                inferenceConfig: {
-                    temperature: 0.7,
-                    topP: 1
-                }
+        try {
+            const result = await this.sendLLMRequest({
+                messages,
+                systemPrompt
             });
 
-            try {
-                const response = await this.runtimeClient.send(command);
-                const result = response.output?.message?.content?.[0];
-                const output = result?.text || '';
-
-                // Track token usage from response
-                if (response.usage) {
-                    const inputTokens = response.usage.inputTokens || 0;
-                    const outputTokens = response.usage.outputTokens || 0;
-                    if (inputTokens + outputTokens > 0) {
-                        this.trackTokenUsage(inputTokens + outputTokens);
-                    } else {
-                        Logger.warn("Received zero token count from Bedrock API in sendMessageToLLM()");
-                    }
-                }
-
-                await this.logger.logCall('sendMessageToLLM', input, output);
-                return output;
-            } catch (error) {
-                await this.logger.logCall('sendMessageToLLM', input, null, error);
-                throw error;
-            }
-        });
+            await this.logger.logCall('sendMessageToLLM', input, result);
+            return result || '';
+        } catch (error) {
+            await this.logger.logCall('sendMessageToLLM', input, null, error);
+            throw error;
+        }
     }
 
     async generateStructured<M extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt): Promise<M> {
-        await this.waitForNextCall();
         const input = { userPost, instructions: instructions.getPrompt() };
         const schema = instructions.getSchema();
         const prompt = instructions.getPrompt();
 
         // Create a tool that enforces our schema
         const tools = {
-            tools: [
-                {
-                    "toolSpec": {
-                        "name": "generate_structured_output",
-                        "description": `Generate structured data according to the following instructions: ${prompt}`,
-                        "inputSchema": {
-                            "json": schema
-                        }
+            tools: [{
+                "toolSpec": {
+                    "name": "generate_structured_output",
+                    "description": `Generate structured data according to the following instructions: ${prompt}`,
+                    "inputSchema": {
+                        "json": schema
                     }
                 }
-            ]
+            }]
         };
 
-        return await this.queue.enqueue(async () : Promise<M> => {
-            const command = new ConverseCommand({
-                modelId: this.modelId,
-                system: [{
-                    "text": `${prompt} You MUST CALL "generate_structured_output" tool to submit your response.`
-                }],
+        try {
+            const result = await this.sendLLMRequest({
                 messages: [{
-                    role: "user",
-                    content: [{
-                        "text": userPost.message
-                    }]
+                    role: ModelRole.USER,
+                    content: userPost.message
                 }],
-                toolConfig: tools,
-                inferenceConfig: {
+                systemPrompt: `${prompt} You MUST CALL "generate_structured_output" tool to submit your response.`,
+                opts: {
                     temperature: 1,
-                    topP: 1
-                }
+                    topP: 1,
+                    tools
+                },
+                parseJSON: true
             });
 
-            let response;
-            try {
-                response = await this.runtimeClient.send(command);
-            } catch (error: any) {
-                if (error?.name === 'ThrottlingException') {
-                    response = await RetryHelper.withRetry(async () => {
-                        return await this.runtimeClient.send(command);
-                    }, "Bedrock generateStructured() call - throttled");
-                } else {
-                    throw error;
-                }
-            }
-
-            // Extract tool use from response
-            const result = response.output?.message?.content?.find(c => c.toolUse);
-            if (!result) {
-                throw new Error("No tool use found in response");
-            }
-
-            const output : M = result.toolUse?.input;
-
-            // Track token usage from response
-            if (response.usage) {
-                const inputTokens = response.usage.inputTokens || 0;
-                const outputTokens = response.usage.outputTokens || 0;
-                if (inputTokens + outputTokens > 0) {
-                    this.trackTokenUsage(inputTokens + outputTokens);
-                } else {
-                    Logger.warn("Received zero token count from Bedrock API in generateStructured()");
-                }
-
-                output._usage = {
-                    inputTokens,
-                    outputTokens
-                }    
-            }
-
-            await this.logger.logCall('generateStructured', input, output);
-            return output;
-        });
+            await this.logger.logCall('generateStructured', input, result);
+            return result as M;
+        } catch (error) {
+            await this.logger.logCall('generateStructured', input, null, error);
+            throw error;
+        }
     }
 
     getEmbeddingModel(): IEmbeddingFunction {
@@ -440,6 +332,71 @@ export class BedrockService implements ILLMService {
      * @param text the content to be counted
      * @returns 
      */
+    private async sendLLMRequest(params: LLMRequestParams): Promise<any> {
+        // Estimate tokens based on total text length
+        const totalChars = params.systemPrompt?.length || 0 +
+            params.messages.reduce((sum, msg) => sum + msg.content.length, 0);
+        const estimatedTokens = Math.ceil(totalChars / 4);
+
+        await this.waitForNextCall(estimatedTokens);
+
+        return await this.queue.enqueue(async () => {
+            const command = new ConverseCommand({
+                modelId: this.modelId,
+                system: [{
+                    text: params.systemPrompt || "You are a helpful assistant"
+                }],
+                messages: params.messages.map(msg => ({
+                    role: msg.role,
+                    content: [{
+                        text: msg.content
+                    }]
+                })),
+                toolConfig: params.opts?.tools,
+                inferenceConfig: {
+                    temperature: params.opts?.temperature || 0.7,
+                    topP: params.opts?.topP || 1,
+                    maxTokens: params.opts?.maxTokens
+                }
+            });
+
+            let response;
+            try {
+                response = await this.runtimeClient.send(command);
+            } catch (error: any) {
+                if (error?.name === 'ThrottlingException') {
+                    response = await RetryHelper.withRetry(async () => {
+                        return await this.runtimeClient.send(command);
+                    }, "Bedrock sendLLMRequest() call - throttled");
+                } else {
+                    throw error;
+                }
+            }
+
+            // Track token usage
+            if (response.usage) {
+                const inputTokens = response.usage.inputTokens || 0;
+                const outputTokens = response.usage.outputTokens || 0;
+                if (inputTokens + outputTokens > 0) {
+                    this.trackTokenUsage(inputTokens + outputTokens);
+                } else {
+                    Logger.warn("Received zero token count from Bedrock API");
+                }
+            }
+
+            // Handle tool use responses
+            const result = params.opts?.tools ? 
+                response.output?.message?.content?.find(c => c.toolUse)?.toolUse?.input :
+                response.output?.message?.content?.[0]?.text || '';
+
+            if (params.parseJSON && typeof result === 'string') {
+                return JSON5.parse(result);
+            }
+
+            return result;
+        });
+    }
+
     async getTokenCount(text: string): Promise<number> {
         const estimatedTokens = Math.ceil(text.length / 4); // Rough estimate of 4 chars per token
 
