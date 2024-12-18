@@ -6,6 +6,7 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 
+// add overall functionality overview AI!
 @StepExecutorDecorator('final_response', 'Provide final response to the user (include at the end of your plan)')
 export class FinalResponseExecutor implements StepExecutor {
     constructor(private modelHelpers: ModelHelpers) {
