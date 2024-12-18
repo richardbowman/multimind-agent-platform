@@ -7,8 +7,21 @@ import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ILLMService } from "../../llm/ILLMService";
 
-// add overall functionality overview, and refactor out the step executor key AI!
-@StepExecutorDecorator('goal_confirmation', 'Confirm the goals of the user.')
+/**
+ * Executor that validates and confirms user goals before proceeding.
+ * Key capabilities:
+ * - Restates goals to demonstrate understanding
+ * - Validates goal clarity and completeness
+ * - Identifies missing or ambiguous information
+ * - Provides structured feedback on goal viability
+ * - Requests clarification when needed
+ * - Ensures alignment between user intent and system understanding
+ * - Tracks goal confirmation status
+ * - Manages goal revision workflow
+ */
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.GOAL_CONFIRMATION, 'Confirm the goals of the user.')
 export class GoalConfirmationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 

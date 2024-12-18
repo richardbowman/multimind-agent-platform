@@ -3,5 +3,6 @@ export enum ExecutorType {
     CHECK_KNOWLEDGE = 'check-knowledge',
     CODE_EXECUTION = 'code-execution',
     CREATE_PLAN = 'create_revise_plan',
-    GENERATE_ARTIFACT = 'generate-artifact'
+    GENERATE_ARTIFACT = 'generate-artifact',
+    GOAL_CONFIRMATION = 'goal_confirmation'
 }
