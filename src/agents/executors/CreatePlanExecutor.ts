@@ -11,7 +11,19 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { updateBusinessPlan } from '../../helpers/businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
 
-// add overall functionality overview AI!
+/**
+ * Executor that creates and revises operational business guides based on user requirements.
+ * Key capabilities:
+ * - Synthesizes business plans from user responses and goals
+ * - Maintains version history of plan revisions
+ * - Integrates answers from intake questionnaires
+ * - Categorizes and prioritizes business objectives
+ * - Generates actionable implementation steps
+ * - Updates existing plans while preserving context
+ * - Creates structured guides for other agent consumption
+ * - Manages artifact storage and retrieval
+ * - Tracks task completion and dependencies
+ */
 @StepExecutorDecorator('create_revise_plan', `Create (or revise) a guide for our agents of the user's desired business goals.`)
 export class CreatePlanExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
