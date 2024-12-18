@@ -50,10 +50,11 @@ export class AnthropicService extends BaseLLMService {
     private async makeAnthropicRequest(messages: any[], systemPrompt?: string, opts: any = {}) {
         const tools = opts.tools?.map(tool => ({
             name: tool.name,
-            function: {
-                name: tool.name,
-                description: tool.description,
-                parameters: tool.parameters
+            description: tool.description,
+            input_schema: {
+                type: "object",
+                properties: tool.parameters.properties,
+                required: tool.parameters.required || []
             }
         }));
 
