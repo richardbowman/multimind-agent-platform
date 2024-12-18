@@ -95,7 +95,7 @@ export class AnthropicService extends BaseLLMService {
                 let content: any;
                 const body = response.content[0];
                 
-                if (body.type === 'tool_calls') {
+                if (body.type === 'tool_use') {
                     content = body.tool_calls[0].parameters;
                 } else if (params.parseJSON && body.type === 'text') {
                     try {
