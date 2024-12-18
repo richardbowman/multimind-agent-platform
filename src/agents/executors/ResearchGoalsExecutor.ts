@@ -1,5 +1,5 @@
 import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';

@@ -73,7 +73,8 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         const project = await this.projects.getProject(projectId);
 
         params.projects = [...params.projects || [], project]
-        const plan = await this.planSteps(params);
+        const posts = [params.userPost];
+        const plan = await this.planSteps(projectId, posts);
         await this.executeNextStep(projectId, params.userPost);
     }
 
@@ -124,7 +125,13 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         }
     }
 
-    protected async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
+    protected async planSteps(projectId: string, posts: ChatPost[]): Promise<PlanStepsResponse> {
+        const project = await this.projects.getProject(projectId);
+        const handlerParams: HandlerParams = {
+            projects: [project],
+            posts: posts,
+            userPost: posts[posts.length - 1]
+        };
         const steps = await this.planner.planSteps(handlerParams);
 
         // Send a progress message about the next steps
