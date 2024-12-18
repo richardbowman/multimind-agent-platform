@@ -1,4 +1,4 @@
-import { BedrockRuntimeClient, ConverseCommand, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
+import { BedrockRuntimeClient, ConversationRole, ConverseCommand, InvokeModelCommand } from "@aws-sdk/client-bedrock-runtime";
 import { BEDROCK_MAX_TOKENS_PER_MINUTE, BEDROCK_DEFAULT_DELAY_MS, BEDROCK_WINDOW_SIZE_MS } from "../helpers/config";
 import JSON5 from 'json5';
 import { RetryHelper } from "../helpers/retryHelper";
@@ -112,6 +112,7 @@ export class BedrockService extends BaseLLMService {
     }
 
     constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v2:0", embeddingService?: ILLMService) {
+        super();
         this.runtimeClient = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
         this.modelId = modelId;
         this.embeddingModelId = embeddingModelId;
@@ -190,7 +191,7 @@ export class BedrockService extends BaseLLMService {
                     text: params.systemPrompt || "You are a helpful assistant"
                 }],
                 messages: params.messages.map(msg => ({
-                    role: msg.role,
+                    role: msg.role as ConversationRole,
                     content: [{
                         text: msg.content
                     }]
