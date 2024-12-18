@@ -8,6 +8,14 @@ import { ChatPost } from "src/chat/chatClient";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 
+interface LLMRequestParams {
+    messages: ModelMessageHistory[];
+    systemPrompt?: string;
+    opts?: LLMPredictionOpts;
+    contextWindowLength?: number;
+    parseJSON?: boolean;
+}
+
 class MyEmbedder implements IEmbeddingFunction {
     private embeddingModel: EmbeddingSpecificModel;
 
@@ -87,20 +95,19 @@ export default class LMStudioService implements ILLMService {
 
     async generate<M extends ModelResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: MessageOpts): Promise<M> {
         const input = { instructions, userPost, history };
-        const messageChain = [
+        const messages = [
             ...this.mapPosts(userPost, history),
             {
                 role: ModelRole.USER,
                 content: userPost.message
-            }            
+            }
         ];
-        const result = await this.getChatModel().respond(messageChain, {});
-        const output = {
-            message: result.content
-        };
-            
+
+        const result = await this.sendLLMRequest({ messages });
+        const output = { message: result };
+        
         await this.logger.logCall('generate', input, output);
-        return output;
+        return output as M;
     }
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string, 
@@ -202,25 +209,29 @@ export default class LMStudioService implements ILLMService {
     async generateStructured(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[],  
         contextWindowLength?: number, maxTokens?: number): Promise<any> {
         const input = { userPost, instructions: instructions.getPrompt(), history, contextWindowLength, maxTokens };
-        if (!this.chatModel) {
-            throw new Error("LLaMA model is not initialized.");
-        }
-
-        // Add the current message to the history
-        const systemMessage = { role: "system", content: instructions.getPrompt() };
-        const userMessage = { role: "user", content: userPost.message };
-        let messageChain = [
-            systemMessage, ...this.mapPosts(userPost, history), userMessage
+        
+        const messages = [
+            ...this.mapPosts(userPost, history),
+            {
+                role: ModelRole.USER,
+                content: userPost.message
+            }
         ];
 
-        const opts : LLMPredictionOpts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens  };
-        
-        // Set the maxTokens parameter for the LLaMA model
+        const opts: LLMPredictionOpts = { 
+            structured: { type: "json", jsonSchema: instructions.getSchema() }, 
+            maxPredictedTokens: maxTokens 
+        };
+
         try {
-            const prediction = this.chatModel.respond(messageChain, opts);
-            const finalResult = await prediction;
-            const resultBody = finalResult.content;
-            const output = JSON5.parse(resultBody);
+            const output = await this.sendLLMRequest({
+                messages,
+                systemPrompt: instructions.getPrompt(),
+                opts,
+                contextWindowLength,
+                parseJSON: true
+            });
+            
             await this.logger.logCall('generateStructured', input, output);
             return output;
         } catch (error) {
@@ -237,5 +248,40 @@ export default class LMStudioService implements ILLMService {
     getChatModel() : LLMSpecificModel {
         if (!this.chatModel) throw new Error("LMStudioService not initalized");
         return this.chatModel;
+    }
+
+    private async sendLLMRequest(params: LLMRequestParams): Promise<string | any> {
+        if (!this.chatModel) {
+            throw new Error("LLaMA model is not initialized.");
+        }
+
+        let messageChain = [...params.messages];
+        if (params.systemPrompt) {
+            messageChain.unshift({ role: ModelRole.ASSISTANT, content: params.systemPrompt });
+        }
+
+        // Handle context window truncation if needed
+        if (params.contextWindowLength) {
+            const contextLength = parseInt(process.env.CONTEXT_SIZE || "") || params.contextWindowLength || 4096;
+            let tokenCount = 0;
+            for (let i = messageChain.length - 1; i >= 0; i--) {
+                const messageTokens = await this.chatModel.unstable_countTokens(messageChain[i].content);
+                tokenCount += messageTokens;
+
+                if (tokenCount > contextLength) {
+                    messageChain = messageChain.slice(i + 1);
+                    break;
+                }
+            }
+        }
+
+        const prediction = await this.chatModel.respond(messageChain, params.opts || {});
+        const resultBody = prediction.content;
+
+        if (params.parseJSON) {
+            return JSON5.parse(resultBody);
+        }
+        
+        return resultBody;
     }
 }
