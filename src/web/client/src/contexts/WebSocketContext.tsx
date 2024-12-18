@@ -37,26 +37,16 @@ const WebSocketContext = createContext<WebSocketContextType>({
   fetchHandles: () => { },
   tasks: [],
   artifacts: [],
-  fetchTasks: function (channelId: string, threadId: string | null): void {
-    throw new Error('Function not implemented.');
-  },
-  fetchArtifacts: function (channelId: string, threadId: string | null): void {
-    throw new Error('Function not implemented.');
-  },
-  fetchAllArtifacts: function (): void {
-    throw new Error('Function not implemented.');
-  },
-  deleteArtifact: function (artifactId: string): void {
-    throw new Error('Function not implemented.');
-  },
+  fetchTasks: (channelId: string, threadId: string | null) => { },
+  fetchArtifacts: (channelId: string, threadId: string | null) => { },
+  fetchAllArtifacts: () => { },
+  deleteArtifact: (artifactId: string) => { },
   logs: {
     llm: {},
     system: [],
     api: []
   },
-  fetchLogs: function (logType: 'llm' | 'system' | 'api'): void {
-    throw new Error('Function not implemented.');
-  }
+  fetchLogs: (logType: 'llm' | 'system' | 'api') => { }
 });
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
