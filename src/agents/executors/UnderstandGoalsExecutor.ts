@@ -128,7 +128,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             finished: true,
             needsUserInput: true,
             response: {
-                message: `To help me better understand your goals, I have a few questions:\n\n${
+                message: `To help me better understand your goals, I have ${response.intakeQuestions.length} questions:\n\n${
                     response.intakeQuestions.map((q, i) => `${i + 1}. ${q.question}`).join('\n\n')
                 }\n\nPlease respond to these questions so I can create a more tailored plan.`
             }
