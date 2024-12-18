@@ -27,6 +27,7 @@ export interface LLMPredictionOpts {
     temperature?: number;
     topP?: number;
     maxPredictedTokens?: number;
+    /** deprecated - use tools instead */
     structured?: {
         type: string;
         jsonSchema: any;
