@@ -21,6 +21,12 @@ export interface LLMTool {
     name: string;
     description: string;
     parameters: Record<string, any>;
+    type?: "function";  // Claude specific
+    function?: {        // Claude specific
+        name: string;
+        parameters: Record<string, any>;
+        description?: string;
+    };
 }
 
 export interface LLMPredictionOpts {

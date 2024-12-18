@@ -45,22 +45,17 @@ export class AnthropicService extends BaseLLMService {
     }
 
     private async makeAnthropicRequest(messages: any[], systemPrompt?: string, opts: any = {}) {
-        // If there are tools, append them to the system prompt
         let finalSystemPrompt = systemPrompt || "";
-        if (opts.tools?.length) {
-            const tool = opts.tools[0]; // We only support one tool for now
-            finalSystemPrompt += `\nYou MUST return your response as a JSON object matching this schema:\n${JSON.stringify(tool.parameters, null, 2)}`;
-            finalSystemPrompt += `\nThis output is for the following purpose: ${tool.description}`;
-        }
+        const tools = opts.tools?.map(tool => ({
+            type: "function",
+            function: {
+                name: tool.name,
+                description: tool.description,
+                parameters: tool.parameters
+            }
+        }));
 
-        // Insert an assistant message with "{" before the actual request
         const messagesWithBrace = [...messages];
-        if (opts.tools?.length || opts.parseJSON) {
-            messagesWithBrace.push({
-                role: 'assistant',
-                content: '{'
-            });
-        }
 
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
@@ -75,7 +70,8 @@ export class AnthropicService extends BaseLLMService {
                 system: finalSystemPrompt,
                 max_tokens: opts.maxTokens||2048,
                 temperature: opts.temperature,
-                top_p: opts.topP
+                top_p: opts.topP,
+                ...(tools && { tools })
             })
         });
 
@@ -104,31 +100,22 @@ export class AnthropicService extends BaseLLMService {
                 );
 
                 let content: any;
-                let body = response.content[0].text;
+                const body = response.content[0];
                 
-                if (params.parseJSON || params.opts?.tools?.length) {
+                if (body.type === 'tool_call') {
+                    content = body.tool_call.parameters;
+                } else if (params.parseJSON) {
                     try {
-                        // Pre-insert "{" if it's not already present
-                        if (!body.trimStart().startsWith('{')) {
-                            body = '{' + body;
-                        }
-                        // Extract JSON from the response if it's wrapped in code blocks
-                        const jsonMatch = body.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, body];
+                        const jsonMatch = body.text.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, body.text];
                         const jsonContent = jsonMatch[1].trim();
                         content = JSON5.parse(jsonContent);
-                        
-                        // Validate against schema if structured output was requested
-                        if (params.opts?.structured?.jsonSchema) {
-                            // TODO: Add JSON schema validation here if needed
-                            Logger.info("Structured output received:", content);
-                        }
                     } catch (e) {
                         Logger.error("Failed to parse JSON response:", e);
-                        Logger.error("Raw response:", body);
+                        Logger.error("Raw response:", body.text);
                         throw e;
                     }
                 } else {
-                    content = { message: body };
+                    content = { message: body.text };
                 }
 
                 const result = {
