@@ -7,6 +7,7 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 
+// write a summary of the capabilities, and refactor the decorator id AI!
 @StepExecutorDecorator('thinking', 'Develop ideas and reasoning through careful analysis and deep thinking')
 export class ThinkingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
