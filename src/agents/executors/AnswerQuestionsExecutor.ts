@@ -1,14 +1,6 @@
 import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
-
-interface AnswerMetadata {
-    questionId: string;
-    question: string;
-    answer: string;
-    analysis: string;
-    answeredAt: string;
-}
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { AnswerAnalysisResponse } from '../../schemas/AnswerAnalysisResponse';
 import { TaskManager } from '../../tools/taskManager';
@@ -16,6 +8,15 @@ import { OnboardingProject } from '../onboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { SchemaType } from 'src/schemas/SchemaTypes';
+import { ExecutorType } from './ExecutorType';
+
+export interface AnswerMetadata {
+    questionId: string;
+    question: string;
+    answer: string;
+    analysis: string;
+    answeredAt: string;
+}
 
 /**
  * Executor that analyzes and processes user responses to intake questions.
@@ -28,8 +29,6 @@ import { SchemaType } from 'src/schemas/SchemaTypes';
  * - Determines when enough information has been gathered (75% threshold)
  * - Generates contextual progress messages and next steps
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.ANSWER_QUESTIONS, 'Analyze and process user responses to intake questions', false)
 export class AnswerQuestionsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
@@ -65,7 +64,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 Here is the current state of our questions and answers:
 
                 Previously Answered Questions:
-                ${project.metadata.answers?.map(a : QuestionRes => 
+                ${project.metadata.answers?.map((a : AnswerMetadata) => 
                     `Question: ${a.question}\nAnswer: ${a.answer}\n`
                 ).join('\n') || 'No previous answers'}
 
