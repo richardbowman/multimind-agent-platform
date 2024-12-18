@@ -9,7 +9,18 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import Logger from '../../helpers/logger';
 
-// add overall functionality overview AI!
+/**
+ * Executor that searches and analyzes existing knowledge in the vector database.
+ * Key capabilities:
+ * - Generates targeted search queries based on research goals
+ * - Supports both quick and detailed search modes
+ * - Quick mode: Rapid knowledge check with basic query generation
+ * - Detailed mode: In-depth analysis with query rationales
+ * - Deduplicates search results to avoid redundancy
+ * - Extracts and summarizes key findings from relevant sources
+ * - Identifies information gaps for further research
+ * - Provides structured research reports with sources and relevance scores
+ */
 @StepExecutorDecorator('check-knowledge', 'Check my existing knowledgebase (useful to do upfront)')
 export class KnowledgeCheckExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
