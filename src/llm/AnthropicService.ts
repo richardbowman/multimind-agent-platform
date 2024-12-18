@@ -45,6 +45,12 @@ export class AnthropicService extends BaseLLMService {
     }
 
     private async makeAnthropicRequest(messages: any[], systemPrompt?: string, opts: any = {}) {
+        // If there's a structured output schema, append it to the system prompt
+        let finalSystemPrompt = systemPrompt || "";
+        if (opts.structured) {
+            finalSystemPrompt += `\nYou MUST return your response as a JSON object matching this schema:\n${JSON.stringify(opts.structured.jsonSchema, null, 2)}`;
+        }
+
         const response = await fetch('https://api.anthropic.com/v1/messages', {
             method: 'POST',
             headers: {
@@ -55,7 +61,7 @@ export class AnthropicService extends BaseLLMService {
             body: JSON.stringify({
                 model: this.model,
                 messages: messages,
-                system: systemPrompt,
+                system: finalSystemPrompt,
                 max_tokens: opts.maxTokens||2048,
                 temperature: opts.temperature,
                 top_p: opts.topP
@@ -87,16 +93,27 @@ export class AnthropicService extends BaseLLMService {
                 );
 
                 let content: any;
-                if (params.parseJSON) {
+                const body = response.content[0].text;
+                
+                if (params.parseJSON || params.opts?.structured) {
                     try {
-                        const body = response.content[0].text;
-                        content = JSON5.parse(body);
+                        // Extract JSON from the response if it's wrapped in code blocks
+                        const jsonMatch = body.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, body];
+                        const jsonContent = jsonMatch[1].trim();
+                        content = JSON5.parse(jsonContent);
+                        
+                        // Validate against schema if structured output was requested
+                        if (params.opts?.structured?.jsonSchema) {
+                            // TODO: Add JSON schema validation here if needed
+                            Logger.info("Structured output received:", content);
+                        }
                     } catch (e) {
                         Logger.error("Failed to parse JSON response:", e);
+                        Logger.error("Raw response:", body);
                         throw e;
                     }
                 } else {
-                    content = { message: response.content[0].text };
+                    content = { message: body };
                 }
 
                 const result = {
