@@ -8,9 +8,23 @@ import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/ex
 import { ModelHelpers } from '../../llm/modelHelpers';
 import Logger from 'src/helpers/logger';
 import { IntakeQuestionsResponse } from '../../schemas/IntakeQuestionsResponse';
+import { ExecutorType } from './ExecutorType';
 
-// add summary of capabilities and refactor decorator ID AI!
-@StepExecutorDecorator('understand_goals', 'Generate focused questions to understand business needs and AI service fit')
+/**
+ * Executor that generates targeted questions to understand user requirements.
+ * Key capabilities:
+ * - Analyzes business goals and objectives
+ * - Generates relevant intake questions
+ * - Tracks previous answers to avoid redundancy
+ * - Creates follow-up questions for clarity
+ * - Manages question ordering and dependencies
+ * - Integrates with task management system
+ * - Provides question purpose explanations
+ * - Maintains conversation context
+ * - Ensures comprehensive requirement gathering
+ * - Supports iterative question refinement
+ */
+@StepExecutorDecorator(ExecutorType.UNDERSTAND_GOALS, 'Generate focused questions to understand business needs and AI service fit')
 export class OnboardingGoalsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private userId: string;
