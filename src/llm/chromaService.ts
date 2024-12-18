@@ -167,4 +167,19 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
     }
 }
 
+    public async listCollections() {
+        return await this.chromaDB.listCollections();
+    }
+
+    public async hasCollection(name: string): Promise<boolean> {
+        const collections = await this.listCollections();
+        return collections.some(c => c.name === name);
+    }
+
+    public async getItems() {
+        if (!this.collection) throw new Error("Collection not initialized");
+        return await this.collection.get({});
+    }
+}
+
 export default ChromaDBService;

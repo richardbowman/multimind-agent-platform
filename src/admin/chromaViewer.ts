@@ -141,7 +141,7 @@ async function runSearchTool() {
     });
 
     // Populate the collections list box with collections
-    const collections = await chromaDBService.chromaDB.listCollections();
+    const collections = await chromaDBService.listCollections();
     listBoxCollections.setItems(collections.map(collection => collection.name));
 
     // Handle selection change for collections
@@ -151,14 +151,14 @@ async function runSearchTool() {
         listBoxItems.setContent('');
         detailBox.setContent('');
 
-        if (!chromaDBService.collection || chromaDBService.collection.name !== item.content) {
+        if (!await chromaDBService.hasCollection(item.content)) {
             await chromaDBService.initializeCollection(item.content);
         }
 
-        const items = await chromaDBService.collection.get({});
+        const items = await chromaDBService.getItems();
 
         // Extract the title from each item's metadata
-        const itemTitles = items.metadatas.map((metadata, index) => metadata.title||items.ids[index]);
+        const itemTitles = items.metadatas.map((metadata: any, index: number) => metadata.title || items.ids[index]);
 
         listBoxItems.setItems(itemTitles);
 
