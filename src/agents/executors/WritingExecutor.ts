@@ -10,8 +10,21 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { WritingResponse } from '../../schemas/writing';
 
-// add summary of capabilities and refactor decorator ID AI!
-@StepExecutorDecorator('assign-writers', 'Take an existing outline and break out sections to writers.')
+/**
+ * Executor that manages content writing task assignments and coordination.
+ * Key capabilities:
+ * - Breaks down content outlines into assignable sections
+ * - Creates structured writing tasks with clear objectives
+ * - Assigns tasks to appropriate content writers
+ * - Tracks task dependencies and sequencing
+ * - Provides section-specific context and requirements
+ * - Manages writing project workflow
+ * - Coordinates multiple writer contributions
+ * - Ensures consistent content style
+ * - Preserves research context in assignments
+ * - Maintains project-wide content strategy
+ */
+@StepExecutorDecorator(ExecutorType.WRITING, 'Take an existing outline and break out sections to writers.')
 export class AssignWritersExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;

@@ -14,5 +14,6 @@ export enum ExecutorType {
     RESEARCH_DECOMPOSITION = 'decompose-research',
     THINKING = 'thinking',
     UNDERSTAND_GOALS = 'understand_goals',
-    VALIDATION = 'validation'
+    VALIDATION = 'validation',
+    WRITING = 'assign-writers'
 }
