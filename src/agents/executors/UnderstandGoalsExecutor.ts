@@ -8,7 +8,9 @@ import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/ex
 import { ModelHelpers } from '../../llm/modelHelpers';
 import Logger from 'src/helpers/logger';
 import { IntakeQuestionsResponse } from '../../schemas/IntakeQuestionsResponse';
-const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
+
+const schemaInliner = new SchemaInliner(schemaJson);
+const generatedSchemaDef = schemaInliner.inlineReferences(schemaJson.definitions.IntakeQuestionsResponse);
 
 @StepExecutorDecorator('understand_goals', 'Generate focused questions to understand business needs and AI service fit')
 export class UnderstandGoalsExecutor implements StepExecutor {
