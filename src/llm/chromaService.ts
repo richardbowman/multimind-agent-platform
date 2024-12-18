@@ -1,4 +1,4 @@
-import { ChromaClient } from "chromadb";
+import { ChromaClient, Collection } from "chromadb";
 import { EventEmitter } from "events";
 import crypto from 'crypto';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
@@ -166,7 +166,7 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
         return this.lmStudioService.getTokenCount(content);
     }
 
-    public async listCollections() {
+    public async listCollections(): Promise<Collection[]> {
         return await this.chromaDB.listCollections();
     }
 
@@ -175,7 +175,7 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
         return collections.some(c => c.name === name);
     }
 
-    public async getItems() {
+    public async getItems(): Promise<{ ids: string[], metadatas: any[], documents: string[] }> {
         if (!this.collection) throw new Error("Collection not initialized");
         return await this.collection.get({});
     }

@@ -12,12 +12,8 @@ async function deleteCollection(collectionName: string) {
         // Initialize the collection to ensure it exists and load the embedding model
         await chromaDBService.initializeCollection(collectionName);
 
-        if (chromaDBService) {
-            await chromaDBService.deleteCollection(collectionName);
-            Logger.info(`Collection "${collectionName}" has been successfully deleted.`);
-        } else {
-            Logger.info(`Collection "${collectionName}" does not exist.`);
-        }
+        await chromaDBService.deleteCollection(collectionName);
+        Logger.info(`Collection "${collectionName}" has been successfully deleted.`);
     } catch (error) {
         Logger.error('Error deleting collection:', error);
     }
