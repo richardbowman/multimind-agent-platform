@@ -11,6 +11,7 @@ import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { ResearchArtifactResponse } from '../../schemas/research-manager';
 import Logger from '../../helpers/logger';
 
+// add an overview of the functionality of this executor and refactor out its key to the enum AI!
 @StepExecutorDecorator('aggregate-research', 'Combine research findings into final report')
 export class ResearchAggregationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
