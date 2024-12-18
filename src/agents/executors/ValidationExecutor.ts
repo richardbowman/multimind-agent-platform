@@ -7,6 +7,7 @@ import * as schemaJson from "../../schemas/schema.json";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
+// add summary of capabilities and refactor decorator ID AI!
 @StepExecutorDecorator('validation', 'Before providing your final response, verify your work addresses the goal')
 export class ValidationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
