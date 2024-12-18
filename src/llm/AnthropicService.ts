@@ -93,22 +93,28 @@ export class AnthropicService extends BaseLLMService {
                 );
 
                 let content: any;
-                const body = response.content[0];
                 
-                if (body.type === 'tool_use') {
-                    content = body.input;
-                } else if (params.parseJSON && body.type === 'text') {
+                // Handle both text and tool_use responses
+                const responses = response.content;
+                const textResponse = responses.find(r => r.type === 'text');
+                const toolResponse = responses.find(r => r.type === 'tool_use');
+                
+                if (toolResponse) {
+                    content = toolResponse.input;
+                } else if (params.parseJSON && textResponse) {
                     try {
-                        const jsonMatch = body.text.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, body.text];
+                        const jsonMatch = textResponse.text.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, textResponse.text];
                         const jsonContent = jsonMatch[1].trim();
                         content = JSON5.parse(jsonContent);
                     } catch (e) {
                         Logger.error("Failed to parse JSON response:", e);
-                        Logger.error("Raw response:", body.text);
+                        Logger.error("Raw response:", textResponse.text);
                         throw e;
                     }
+                } else if (textResponse) {
+                    content = { message: textResponse.text };
                 } else {
-                    content = { message: body.text };
+                    throw new Error("No valid response content found");
                 }
 
                 const result = {
