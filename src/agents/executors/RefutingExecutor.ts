@@ -7,6 +7,7 @@ import { RefutingResponse } from '../../schemas/refuting';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 
+// add an overview of the functionality of this executor and refactor out its key to the enum AI!
 @StepExecutorDecorator('refuting', 'Challenge assumptions and identify potential flaws in the current reasoning')
 export class RefutingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
