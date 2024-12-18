@@ -171,6 +171,19 @@ export class BedrockService extends BaseLLMService {
         };
     }
 
+    private mergeConsecutiveMessages(messages: { role: string; content: string }[]): { role: string; content: string }[] {
+        return messages.reduce((acc: { role: string; content: string }[], curr) => {
+            if (acc.length > 0 && acc[acc.length - 1].role === curr.role) {
+                // Merge with previous message of same role
+                acc[acc.length - 1].content += '\n' + curr.content;
+            } else {
+                // Add as new message
+                acc.push({ ...curr });
+            }
+            return acc;
+        }, []);
+    }
+
     public async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>> {
         // Estimate tokens based on total text length
         const totalChars = params.systemPrompt?.length || 0 +
@@ -180,6 +193,8 @@ export class BedrockService extends BaseLLMService {
         await this.waitForNextCall(estimatedTokens);
 
         return await this.queue.enqueue(async () => {
+            // Merge consecutive messages from same role
+            const mergedMessages = this.mergeConsecutiveMessages(params.messages);
             // Transform tools format if present
             let toolConfig;
             if (params.opts?.tools) {
@@ -200,7 +215,7 @@ export class BedrockService extends BaseLLMService {
                 system: [{
                     text: params.systemPrompt || "You are a helpful assistant"
                 }],
-                messages: params.messages.map(msg => ({
+                messages: mergedMessages.map(msg => ({
                     role: msg.role as ConversationRole,
                     content: [{
                         text: msg.content
