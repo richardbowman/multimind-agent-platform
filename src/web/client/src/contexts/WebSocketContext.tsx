@@ -45,6 +45,9 @@ const WebSocketContext = createContext<WebSocketContextType>({
   fetchAllArtifacts: function (): void {
     throw new Error('Function not implemented.');
   },
+  deleteArtifact: function (artifactId: string): void {
+    throw new Error('Function not implemented.');
+  },
   logs: {
     llm: {},
     system: [],
@@ -200,6 +203,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.fetchAllArtifacts();
   };
 
+  const deleteArtifact = (artifactId: string) => {
+    webSocketService.deleteArtifact(artifactId);
+  };
+
   const fetchLogs = (logType: 'llm' | 'system' | 'api') => {
     webSocketService.fetchLogs(logType);
   };
@@ -220,7 +227,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       logs,
       fetchLogs,
       handles,
-      fetchHandles
+      fetchHandles,
+      deleteArtifact
     }}>
       {children}
     </WebSocketContext.Provider>

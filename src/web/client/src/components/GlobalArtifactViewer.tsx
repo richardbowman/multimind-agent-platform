@@ -50,7 +50,20 @@ export const GlobalArtifactViewer: React.FC = () => {
                         >
                             <div className="artifact-card-header">
                                 <span className="artifact-type-badge">{artifact.type}</span>
-                                <span className="artifact-id">#{artifact.id}</span>
+                                <div className="artifact-card-actions">
+                                    <span className="artifact-id">#{artifact.id}</span>
+                                    <button 
+                                        className="delete-artifact-btn"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            if (window.confirm('Are you sure you want to delete this artifact?')) {
+                                                deleteArtifact(artifact.id);
+                                            }
+                                        }}
+                                    >
+                                        ×
+                                    </button>
+                                </div>
                             </div>
                             <div className="artifact-card-title">
                                 {artifact.metadata?.title || artifact.id}

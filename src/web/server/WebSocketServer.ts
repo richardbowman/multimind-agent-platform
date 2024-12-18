@@ -290,6 +290,26 @@ export class WebSocketServer {
                 }
             });
 
+            socket.on('delete_artifact', async (artifactId: string) => {
+                try {
+                    await this.artifactManager.deleteArtifact(artifactId);
+                    Logger.info(`Deleted artifact ${artifactId}`);
+                    // Refresh artifacts list for all clients
+                    const artifacts = await this.artifactManager.listArtifacts();
+                    const processedArtifacts = artifacts.map(artifact => {
+                        const content = Buffer.isBuffer(artifact.content)
+                            ? artifact.metadata?.binary 
+                                ? artifact.content.toString('base64')
+                                : artifact.content.toString('utf8')
+                            : artifact.content;
+                        return { ...artifact, content };
+                    });
+                    this.io.emit('artifacts', processedArtifacts);
+                } catch (error) {
+                    Logger.error(`Error deleting artifact ${artifactId}:`, error);
+                }
+            });
+
             // Handle log requests
             socket.on('get_logs', async (logType: string) => {
                 Logger.info('Received get_logs request with type:', logType);

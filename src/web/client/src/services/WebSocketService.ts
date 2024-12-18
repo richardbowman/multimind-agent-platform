@@ -238,6 +238,12 @@ class WebSocketService {
     }
   }
 
+  deleteArtifact(artifactId: string) {
+    if (this.socket) {
+      this.socket.emit('delete_artifact', artifactId);
+    }
+  }
+
   fetchHandles() {
     if (this.socket) {
       this.socket.emit('get_handles');

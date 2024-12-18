@@ -779,6 +779,29 @@
     margin-bottom: 0.5rem;
 }
 
+.artifact-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.delete-artifact-btn {
+    background: none;
+    border: none;
+    color: #ff4a4a;
+    font-size: 1.2rem;
+    cursor: pointer;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    line-height: 1;
+    transition: all 0.2s;
+}
+
+.delete-artifact-btn:hover {
+    background-color: #ff4a4a;
+    color: white;
+}
+
 .artifact-type-badge {
     background-color: #333;
     color: #4a9eff;
