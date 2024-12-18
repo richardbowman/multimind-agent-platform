@@ -19,5 +19,11 @@ async function deleteCollection(collectionName: string) {
     }
 }
 
-// Replace 'your-collection-name' with the actual name of the collection you want to delete
-await deleteCollection(CHROMA_COLLECTION);
+async function main() {
+    await deleteCollection(CHROMA_COLLECTION);
+}
+
+main().catch(error => {
+    Logger.error('Fatal error:', error);
+    process.exit(1);
+});

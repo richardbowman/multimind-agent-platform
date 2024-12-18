@@ -52,7 +52,9 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
     }
 
     async addDocuments(addCollection: { ids: string[], metadatas: any[], documents: string[] }): Promise<void> {
-        if (!this.collection) throw new Error("Collection not initialized");
+        if (!this.collection) {
+            throw new Error("Collection not initialized - call initializeCollection() first");
+        }
         await this.collection.add(addCollection);
     }
 
@@ -77,13 +79,13 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
         }));
     }
 
-    computeHash(content: string): string {
+    private computeHash(content: string): string {
         const hash = crypto.createHash('sha256');
         hash.update(content);
         return hash.digest('hex');
     }
 
-    async handleContentChunks(content: string, url: string, task: string, projectId: string, title: string, type = 'content', artifactId?: string) {
+    async handleContentChunks(content: string, url: string, task: string, projectId: string, title: string, type = 'content', artifactId?: string): Promise<void> {
         const splitter = new RecursiveCharacterTextSplitter({
             chunkSize: 2000,
             chunkOverlap: 100,
