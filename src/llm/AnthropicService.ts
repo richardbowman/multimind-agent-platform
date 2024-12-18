@@ -45,15 +45,17 @@ export class AnthropicService extends BaseLLMService {
     }
 
     private async makeAnthropicRequest(messages: any[], systemPrompt?: string, opts: any = {}) {
-        // If there's a structured output schema, append it to the system prompt
+        // If there are tools, append them to the system prompt
         let finalSystemPrompt = systemPrompt || "";
-        if (opts.structured) {
-            finalSystemPrompt += `\nYou MUST return your response as a JSON object matching this schema:\n${JSON.stringify(opts.structured.jsonSchema, null, 2)}`;
+        if (opts.tools?.length) {
+            const tool = opts.tools[0]; // We only support one tool for now
+            finalSystemPrompt += `\nYou MUST return your response as a JSON object matching this schema:\n${JSON.stringify(tool.parameters, null, 2)}`;
+            finalSystemPrompt += `\nThis output is for the following purpose: ${tool.description}`;
         }
 
         // Insert an assistant message with "{" before the actual request
         const messagesWithBrace = [...messages];
-        if (opts.structured || opts.parseJSON) {
+        if (opts.tools?.length || opts.parseJSON) {
             messagesWithBrace.push({
                 role: 'assistant',
                 content: '{'
@@ -104,7 +106,7 @@ export class AnthropicService extends BaseLLMService {
                 let content: any;
                 let body = response.content[0].text;
                 
-                if (params.parseJSON || params.opts?.structured) {
+                if (params.parseJSON || params.opts?.tools?.length) {
                     try {
                         // Pre-insert "{" if it's not already present
                         if (!body.trimStart().startsWith('{')) {
