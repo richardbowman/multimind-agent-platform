@@ -145,6 +145,17 @@ export class WebSearchExecutor implements StepExecutor {
             return [];
         }
 
+        // Filter out already scraped URLs
+        const scrapedUrls = await this.getScrapedUrls();
+        const newLinks = links.filter(link => {
+            const normalizedUrl = this.scrapeHelper.normalizeUrl('', link.href);
+            return !scrapedUrls.has(normalizedUrl) && !this.visitedUrls.has(normalizedUrl);
+        });
+
+        if (newLinks.length === 0) {
+            return [];
+        }
+
         const schema = await getGeneratedSchema(SchemaType.LinkSelectionResponse);
 
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}. 
