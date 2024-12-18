@@ -7,5 +7,6 @@ export enum ExecutorType {
     GOAL_CONFIRMATION = 'goal_confirmation',
     OUTLINE = 'outline',
     REFUTING = 'refuting',
+    REPLY = 'reply',
     RESEARCH_DECOMPOSITION = 'decompose-research'
 }

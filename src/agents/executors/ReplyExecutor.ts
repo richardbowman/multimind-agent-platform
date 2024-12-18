@@ -6,8 +6,22 @@ import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/ex
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
 
-// add an overview of the functionality of this executor and refactor out its key to the enum AI!
-@StepExecutorDecorator('reply', 'Generate user-friendly responses to messages')
+/**
+ * Executor that generates user-friendly responses to messages.
+ * Key capabilities:
+ * - Creates natural, conversational replies
+ * - Maintains consistent tone and style
+ * - Incorporates project context in responses
+ * - Handles both direct replies and follow-up messages
+ * - Loads and references relevant artifacts
+ * - Manages conversation flow and context
+ * - Provides clear and actionable responses
+ * - Supports multi-turn dialogue
+ * - Ensures responses align with project goals
+ */
+import { ExecutorType } from './ExecutorType';
+
+@StepExecutorDecorator(ExecutorType.REPLY, 'Generate user-friendly responses to messages')
 export class ReplyExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
