@@ -24,7 +24,16 @@ export const ThreadList: React.FC<ThreadListProps> = ({
 
     useEffect(() => {
         if (channelId) {
+            // Initial fetch
             fetchThreads(channelId);
+            
+            // Set up periodic refresh
+            const refreshInterval = setInterval(() => {
+                fetchThreads(channelId);
+            }, 5000); // Refresh every 5 seconds
+            
+            // Cleanup interval on unmount or channel change
+            return () => clearInterval(refreshInterval);
         }
     }, [channelId, fetchThreads]);
 
