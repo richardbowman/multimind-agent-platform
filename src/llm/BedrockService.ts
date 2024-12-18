@@ -332,7 +332,7 @@ export class BedrockService implements ILLMService {
      * @param text the content to be counted
      * @returns 
      */
-    private async sendLLMRequest<T = string>(params: LLMRequestParams): Promise<LLMResponse<T>> {
+    private async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>> {
         // Estimate tokens based on total text length
         const totalChars = params.systemPrompt?.length || 0 +
             params.messages.reduce((sum, msg) => sum + msg.content.length, 0);
@@ -394,13 +394,18 @@ export class BedrockService implements ILLMService {
                 ? JSON5.parse(content) 
                 : content;
 
+            const content = params.parseJSON ? 
+                (parsedContent as T) : 
+                ({ message: parsedContent } as ModelMessageResponse as T);
+
             return {
-                content: parsedContent as T,
-                usage: response.usage ? {
-                    inputTokens: response.usage.inputTokens || 0,
-                    outputTokens: response.usage.outputTokens || 0
-                } : undefined,
-                raw: response
+                response: content,
+                metadata: {
+                    _usage: {
+                        inputTokens: response.usage?.inputTokens || 0,
+                        outputTokens: response.usage?.outputTokens || 0
+                    }
+                }
             };
         });
     }
