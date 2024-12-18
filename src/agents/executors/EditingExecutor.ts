@@ -23,7 +23,7 @@ import { TaskManager } from 'src/tools/taskManager';
  * - Preserves original message intent
  * - Creates structured edit summaries
  */
-@StepExecutorDecorator('editing', 'Review and improve content quality')
+@StepExecutorDecorator(ExecutorType.EDITING, 'Review and improve content quality')
 export class EditingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
