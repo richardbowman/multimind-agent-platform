@@ -65,7 +65,7 @@ export abstract class BaseLLMService implements ILLMService {
             systemPrompt: prompt,
             opts: {
                 maxPredictedTokens: maxTokens,
-                structured: { type: "json", jsonSchema: schema }
+                tools: [this.convertToToolFormat(schema, prompt)]
             },
             parseJSON: true
         });
@@ -79,5 +79,13 @@ export abstract class BaseLLMService implements ILLMService {
             role: h.user_id === userPost.user_id ? "user" : "assistant",
             content: h.message
         }));
+    }
+
+    protected convertToToolFormat(schema: any, prompt: string): any {
+        return {
+            name: "json_output",
+            description: prompt,
+            parameters: schema
+        };
     }
 }
