@@ -151,7 +151,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                         <div key={message.id} className="message">
                             <div className="message-header">
                                 <span className="username">
-                                    {handles.find(h => h.id === message.user_id)?.handle || message.user_id}
+                                    {handles.find(h => h.id === message.user_id)?.handle || 'Unknown User'}
                                 </span>
                                 <span className="timestamp">
                                     {new Date(message.create_at).toLocaleString()}
