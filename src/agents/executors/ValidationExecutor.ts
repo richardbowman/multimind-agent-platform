@@ -5,10 +5,24 @@ import { ValidationResult } from '../../schemas/validation';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ExecutorType } from './ExecutorType';
 const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
-// add summary of capabilities and refactor decorator ID AI!
-@StepExecutorDecorator('validation', 'Before providing your final response, verify your work addresses the goal')
+/**
+ * Executor that validates solution completeness and correctness.
+ * Key capabilities:
+ * - Verifies solutions against original goals
+ * - Evaluates reasoning soundness and logic
+ * - Identifies missing or incomplete aspects
+ * - Provides structured validation feedback
+ * - Ensures comprehensive goal coverage
+ * - Maintains solution quality standards
+ * - Tracks validation status
+ * - Generates improvement suggestions
+ * - Validates cross-step consistency
+ * - Creates detailed validation reports
+ */
+@StepExecutorDecorator(ExecutorType.VALIDATION, 'Before providing your final response, verify your work addresses the goal')
 export class ValidationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 

@@ -13,5 +13,6 @@ export enum ExecutorType {
     RESEARCH_AGGREGATION = 'aggregate-research',
     RESEARCH_DECOMPOSITION = 'decompose-research',
     THINKING = 'thinking',
-    UNDERSTAND_GOALS = 'understand_goals'
+    UNDERSTAND_GOALS = 'understand_goals',
+    VALIDATION = 'validation'
 }
