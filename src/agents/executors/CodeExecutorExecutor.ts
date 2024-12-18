@@ -8,7 +8,19 @@ import { getQuickJS } from 'quickjs-emscripten';
 import { CodeExecutionResponse } from '../../schemas/ModelResponse';
 import { codeExecutionSchema } from '../../schemas/CodeExecutionSchema';
 
-// add overall functionality overview AI!
+/**
+ * Executor that safely runs JavaScript code in an isolated sandbox environment.
+ * Key capabilities:
+ * - Executes JavaScript code with strict memory and time limits
+ * - Uses isolated-vm for secure sandboxed execution
+ * - Prevents access to Node.js APIs and file system
+ * - Captures console output and return values
+ * - Handles both primitive and complex return types
+ * - Provides automatic error recovery and retry with AI-generated fixes
+ * - Supports console.log capture for debugging
+ * - Enforces 5 second execution timeout
+ * - Limits memory usage to 128MB per execution
+ */
 @StepExecutorDecorator('code-execution', 'Safely execute JavaScript code in a sandboxed environment')
 export class CodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
