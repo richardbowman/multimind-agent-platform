@@ -1,4 +1,4 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
 import crypto from 'crypto';
@@ -9,11 +9,9 @@ import { ModelHelpers } from '../../llm/modelHelpers';
 import Logger from 'src/helpers/logger';
 import { IntakeQuestionsResponse } from '../../schemas/IntakeQuestionsResponse';
 
-const schemaInliner = new SchemaInliner(schemaJson);
-const generatedSchemaDef = schemaInliner.inlineReferences(schemaJson.definitions.IntakeQuestionsResponse);
-
+// add summary of capabilities and refactor decorator ID AI!
 @StepExecutorDecorator('understand_goals', 'Generate focused questions to understand business needs and AI service fit')
-export class UnderstandGoalsExecutor implements StepExecutor {
+export class OnboardingGoalsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private userId: string;
 
@@ -61,7 +59,9 @@ export class UnderstandGoalsExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const schema = generatedSchemaDef.IntakeQuestionsResponse;
+        const schemaInliner = new SchemaInliner(schemaJson);
+        const schema = schemaInliner.inlineReferences(schemaJson.definitions.IntakeQuestionsResponse);
+        
         const project = this.taskManager.getProject(params.projectId);
         
         const formattedMessage = this.formatMessage(params.goal, project);
