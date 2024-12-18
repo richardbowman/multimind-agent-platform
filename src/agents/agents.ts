@@ -305,7 +305,18 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
         }
     }
 
-    private async classifyResponse(post: ChatPost, channelType: ResponseType, history?: ChatPost[], params?: HandlerParams): Promise<{ activityType: string, requestedArtifacts: string[], searchQuery: string, searchResults: SearchResult[] }> {
+    private async classifyResponse(
+        post: ChatPost, 
+        channelType: ResponseType, 
+        history?: ChatPost[], 
+        params?: HandlerParams
+    ): Promise<{
+        activityType: string;
+        requestedArtifacts: string[];
+        searchQuery: string;
+        searchResults: SearchResult[];
+        reasoning?: string;
+    }> {
         const artifactList = await this.getArtifactList();
         const availableActions = history ? this.getAvailableActions(ResponseType.RESPONSE) : this.getAvailableActions(ResponseType.CHANNEL);
 
@@ -524,12 +535,12 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
 
     // Convenience method to add a new project
     public async addNewProject({ projectName, tasks, metadata }: {
-        projectName: string,
+        projectName: string;
         tasks: {
             description: string;
             type: string;
-        }[],
-        metadata?: Record<string, any>
+        }[];
+        metadata?: ProjectMetadata
     }): Promise<{ projectId: string, taskIds: string[] }> {
         const projectId = randomUUID();
         const project = {
@@ -592,7 +603,10 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
     public async generateArtifactResponse(
         instructions: string,
         params: HandlerParams
-    ): Promise<CreateArtifact> {
+    ): Promise<CreateArtifact & {
+        artifactTitle: string;
+        artifactContent: string;
+    }> {
         // Generate the response
         const response: ArtifactResponseSchema = await this.generateStructured(new StructuredOutputPrompt(
             schemas.definitions.ArtifactResponseSchema,

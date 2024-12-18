@@ -16,7 +16,7 @@ import { Task } from "../tools/taskManager";
 export interface PlanStepTask {
     type: string;
     description?: string;
-    existingId: string;
+    existingId?: string;
 };
 
 export interface PlanStepsResponse extends ModelMessageResponse {
