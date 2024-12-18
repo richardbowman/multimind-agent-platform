@@ -47,15 +47,17 @@ In your response, provide a fully restated goal that contains all of the project
             instructions
         });
 
-        if (!result.proceedWithResearch && result.questions.length > 0) {
+        if (!result.proceedWithResearch && result.proposedDetails.length > 0) {
+            const detailsList = result.proposedDetails
+                .map((d, i) => `${i + 1}. ${d.detail}\n   Confidence: ${Math.round(d.confidence * 100)}%\n   Reasoning: ${d.reasoning}`)
+                .join('\n\n');
+                
             return {
                 type: "understand-research-goals",
                 finished: false,
                 needsUserInput: true,
                 response: {
-                    message: `Here is what I understand so far: ${result.goal} Before proceeding with the research, I need some clarification:\n\n${
-                        result.questions.map((q, i) => `${i + 1}. ${q}`).join('\n\n')
-                    }\n\nPlease provide answers to these questions so I can better understand your research needs.`
+                    message: `Here is what I understand so far: ${result.goal}\n\nI've made the following assumptions to clarify the scope. Please correct any that don't align with your intentions:\n\n${detailsList}\n\nPlease confirm or adjust these details so we can proceed with your research.`
                 }
             };
         }

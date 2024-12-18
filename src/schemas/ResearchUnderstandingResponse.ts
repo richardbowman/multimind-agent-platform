@@ -8,8 +8,15 @@ export interface ResearchUnderstandingResponse extends ModelResponse {
     /** Whether the research request is clear enough to proceed */
     proceedWithResearch: boolean;
 
-    /** Questions needed to clarify any ambiguous aspects of the research goals */
-    questions: string[];
+    /** Proposed details and assumptions to clarify the research scope */
+    proposedDetails: {
+        /** The specific detail or assumption being proposed */
+        detail: string;
+        /** Confidence level in this assumption (0-1) */
+        confidence: number;
+        /** Explanation of why this detail matters */
+        reasoning: string;
+    }[];
 
     /** Your understanding of the research goal */
     goal: string;
