@@ -2,14 +2,10 @@ import React, { useEffect } from 'react';
 import { Channel } from '../../../shared/types';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
-interface ChannelListProps {
-    onChannelSelect: (channelId: string) => void;
-    currentChannelId: string | null;
-}
+interface ChannelListProps {}
 
-export const ChannelList: React.FC<ChannelListProps> = ({
-    onChannelSelect,
-    currentChannelId
+export const ChannelList: React.FC<ChannelListProps> = () => {
+    const { channels, fetchChannels, currentChannelId, setCurrentChannelId 
 }) => {
     const { channels, fetchChannels } = useWebSocket();
 
@@ -30,7 +26,7 @@ export const ChannelList: React.FC<ChannelListProps> = ({
                     <li
                         key={channel.id}
                         className={`channel-item ${currentChannelId === channel.id ? 'active' : ''}`}
-                        onClick={() => onChannelSelect(channel.id)}
+                        onClick={() => setCurrentChannelId(channel.id)}
                     >
                         # {channel.name}
                     </li>

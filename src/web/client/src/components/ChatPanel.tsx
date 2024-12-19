@@ -7,17 +7,15 @@ import webSocketService, { ClientMessage } from '../services/WebSocketService';
 import remarkGfm from 'remark-gfm'
 
 interface ChatPanelProps {
-    currentChannelId: string | null;
     currentThreadId: string | null;
     setCurrentThreadId: (threadId: string | null) => void;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({
-    currentChannelId,
     currentThreadId,
     setCurrentThreadId,
 }) => {
-    const { messages, sendMessage, handles } = useWebSocket();
+    const { messages, sendMessage, handles, currentChannelId } = useWebSocket();
     const [userId] = useState('test');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
