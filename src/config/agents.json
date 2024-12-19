@@ -18,5 +18,53 @@
             "maxSearches": 3,
             "maxDepth": 2
         }
+    },
+    "ResearchManager": {
+        "className": "ResearchManager",
+        "sourcePath": "../agents/ResearchManager",
+        "userId": "research-manager",
+        "handle": "@research-manager",
+        "description": "Manages and coordinates research activities",
+        "enabled": true
+    },
+    "ContentManager": {
+        "className": "ContentManager",
+        "sourcePath": "../agents/ContentManager",
+        "userId": "content-manager",
+        "handle": "@content-manager",
+        "description": "Manages content creation and organization",
+        "enabled": true
+    },
+    "ContentWriter": {
+        "className": "ContentWriter",
+        "sourcePath": "../agents/ContentWriter",
+        "userId": "content-writer",
+        "handle": "@writer",
+        "description": "Writes and generates content",
+        "enabled": true
+    },
+    "ProjectManager": {
+        "className": "ProjectManager",
+        "sourcePath": "../agents/ProjectManager",
+        "userId": "project-manager",
+        "handle": "@pm",
+        "description": "Manages projects and coordinates tasks",
+        "enabled": true
+    },
+    "OnboardingConsultant": {
+        "className": "OnboardingConsultant",
+        "sourcePath": "../agents/OnboardingConsultant",
+        "userId": "onboarding-consultant",
+        "handle": "@onboarding",
+        "description": "Handles user onboarding processes",
+        "enabled": true
+    },
+    "SolverAgent": {
+        "className": "SolverAgent",
+        "sourcePath": "../agents/SolverAgent",
+        "userId": "solver-agent",
+        "handle": "@solver",
+        "description": "Solves problems and provides solutions",
+        "enabled": true
     }
 }
