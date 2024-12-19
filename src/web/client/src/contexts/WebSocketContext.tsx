@@ -11,6 +11,8 @@ interface WebSocketContextType {
   handles: Array<{id: string, handle: string}>;
   currentChannelId: string | null;
   setCurrentChannelId: (channelId: string | null) => void;
+  currentThreadId: string | null;
+  setCurrentThreadId: (threadId: string | null) => void;
   logs: {
     llm: Record<string, LLMLogEntry[]>;
     system: any[];
@@ -54,6 +56,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [channels, setChannels] = useState<ClientChannel[]>([]);
   const [handles, setHandles] = useState<Array<{id: string, handle: string}>>([]);
   const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
+  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<any[]>([]);
   const [artifacts, setArtifacts] = useState<any[]>([]);
   const [logs, setLogs] = useState<{
@@ -194,7 +197,9 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       fetchHandles,
       deleteArtifact,
       currentChannelId,
-      setCurrentChannelId
+      setCurrentChannelId,
+      currentThreadId,
+      setCurrentThreadId
     }}>
       {children}
     </WebSocketContext.Provider>

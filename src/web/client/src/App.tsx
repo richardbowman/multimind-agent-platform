@@ -11,8 +11,7 @@ import { WebSocketProvider } from './contexts/WebSocketContext';
 import './App.css';
 
 const App: React.FC = () => {
-    const { currentChannelId } = useWebSocket();
-    const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
+    const { currentChannelId, currentThreadId, setCurrentThreadId } = useWebSocket();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs'>('chat');
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('llm');
 

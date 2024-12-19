@@ -3,16 +3,12 @@ import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface ThreadListProps {
     channelId: string | null;
-    onThreadSelect: (threadId: string|null) => void;
-    currentThreadId: string | null;
 }
 
 export const ThreadList: React.FC<ThreadListProps> = ({
-    channelId,
-    onThreadSelect,
-    currentThreadId
+    channelId
 }) => {
-    const { messages } = useWebSocket();
+    const { messages, currentThreadId, setCurrentThreadId } = useWebSocket();
     const activeThreadRef = useRef<HTMLLIElement>(null);
 
     useEffect(() => {
@@ -49,7 +45,7 @@ export const ThreadList: React.FC<ThreadListProps> = ({
                     ref={currentThreadId === null ? activeThreadRef : null}
                     key="root"
                     className={`thread-item ${currentThreadId === null ? 'active' : ''}`}
-                    onClick={() => onThreadSelect(null)}
+                    onClick={() => setCurrentThreadId(null)}
                 >
                     <div className="thread-content">
                         <div className="thread-title">Main Channel</div>
@@ -61,7 +57,7 @@ export const ThreadList: React.FC<ThreadListProps> = ({
                         ref={currentThreadId === thread.rootMessage.id ? activeThreadRef : null}
                         key={thread.rootMessage.id}
                         className={`thread-item ${currentThreadId === thread.rootMessage.id ? 'active' : ''}`}
-                        onClick={() => onThreadSelect(thread.rootMessage.id)}
+                        onClick={() => setCurrentThreadId(thread.rootMessage.id)}
                     >
                         <div className="thread-content">
                             <div className="thread-title">

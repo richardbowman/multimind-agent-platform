@@ -6,16 +6,10 @@ import { useWebSocket } from '../contexts/WebSocketContext';
 import webSocketService, { ClientMessage } from '../services/WebSocketService';
 import remarkGfm from 'remark-gfm'
 
-interface ChatPanelProps {
-    currentThreadId: string | null;
-    setCurrentThreadId: (threadId: string | null) => void;
-}
+interface ChatPanelProps {}
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({
-    currentThreadId,
-    setCurrentThreadId,
-}) => {
-    const { messages, sendMessage, handles, currentChannelId } = useWebSocket();
+export const ChatPanel: React.FC<ChatPanelProps> = () => {
+    const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId } = useWebSocket();
     const [userId] = useState('test');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
