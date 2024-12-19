@@ -103,6 +103,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
             message: content,
             user_id: userId,
             create_at: Date.now(),
+            thread_id: currentThreadId || undefined,
             props: currentThreadId ? { 'root-id': currentThreadId } : {}
         };
         
