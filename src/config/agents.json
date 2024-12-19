@@ -10,7 +10,7 @@
     "ResearchAgent": {
         "className": "ResearchAgent", 
         "sourcePath": "../agents/ResearchAgent",
-        "userId": "researcher-agent",
+        "userId": "rg7fwbna43byucb174hm7nnuwr",
         "handle": "@researcher",
         "description": "Conducts web research and information gathering",
         "enabled": true,
@@ -22,7 +22,7 @@
     "ResearchManager": {
         "className": "ResearchManager",
         "sourcePath": "../agents/ResearchManager",
-        "userId": "research-manager",
+        "userId": "xi8rrsssmidwjnfwf4qx9qr33o",
         "handle": "@research-manager",
         "description": "Manages and coordinates research activities",
         "enabled": true
@@ -30,7 +30,7 @@
     "ContentManager": {
         "className": "ContentManager",
         "sourcePath": "../agents/ContentManager",
-        "userId": "content-manager",
+        "userId": "9d039c4e-f99d-4fb7-a160-452ac261569c",
         "handle": "@content-manager",
         "description": "Manages content creation and organization",
         "enabled": true
@@ -38,7 +38,7 @@
     "ContentWriter": {
         "className": "ContentWriter",
         "sourcePath": "../agents/ContentWriter",
-        "userId": "content-writer",
+        "userId": "66025743-45bc-4625-a27f-52aa09dde128",
         "handle": "@writer",
         "description": "Writes and generates content",
         "enabled": true
@@ -46,7 +46,7 @@
     "ProjectManager": {
         "className": "ProjectManager",
         "sourcePath": "../agents/ProjectManager",
-        "userId": "project-manager",
+        "userId": "2e330aba-4888-42b8-8685-ecdc7f4b1b43",
         "handle": "@pm",
         "description": "Manages projects and coordinates tasks",
         "enabled": true
@@ -54,7 +54,7 @@
     "OnboardingConsultant": {
         "className": "OnboardingConsultant",
         "sourcePath": "../agents/OnboardingConsultant",
-        "userId": "onboarding-consultant",
+        "userId": "c7776380-6cda-44b9-8113-890706cd1ec1",
         "handle": "@onboarding",
         "description": "Handles user onboarding processes",
         "enabled": true
@@ -62,7 +62,7 @@
     "SolverAgent": {
         "className": "SolverAgent",
         "sourcePath": "../agents/SolverAgent",
-        "userId": "solver-agent",
+        "userId": "b8f7d3e1-9c24-4b9a-8e5f-2d6a91f0e3d2",
         "handle": "@solver",
         "description": "Solves problems and provides solutions",
         "enabled": true
