@@ -67,18 +67,19 @@ export interface ThreadSummary {
 }
 
 export abstract class Agent<P extends Project<T>, T extends Task> {
-    private chatClient: ChatClient;
-    private threadSummaries: Map<string, ThreadSummary> = new Map();
+    private readonly chatClient: ChatClient;
+    private readonly threadSummaries: Map<string, ThreadSummary> = new Map();
+    private readonly messagingHandle?: string;
 
-    protected llmService: ILLMService;
-    protected userId: string;
-    protected chromaDBService: IVectorDatabase;
-    protected promptBuilder: SystemPromptBuilder;
-    protected projects: TaskManager;
-    protected artifactManager: ArtifactManager;
+    protected readonly llmService: ILLMService;
+    protected readonly userId: string;
+    protected readonly chromaDBService: IVectorDatabase;
+    protected readonly promptBuilder: SystemPromptBuilder;
+    protected readonly projects: TaskManager;
+    protected readonly artifactManager: ArtifactManager;
+    protected readonly modelHelpers: ModelHelpers;
     protected isWorking: boolean = false;
     protected isMemoryEnabled: boolean = false;
-    protected modelHelpers: ModelHelpers;
 
     // Index signature for handler methods
     [key: string]: any;
@@ -88,16 +89,17 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
     protected abstract handlerThread(params: HandlerParams): Promise<void>;
     protected abstract handleChannel(params: HandlerParams): Promise<void>;
 
-
-    constructor(chatClient: ChatClient, llmService: ILLMService, userId: string, projects: TaskManager, vectorDBService: IVectorDatabase) {
-        this.modelHelpers = new ModelHelpers(llmService, userId);
-        this.chatClient = chatClient;
-        this.llmService = llmService;
-        this.userId = userId;
-        this.chromaDBService = vectorDBService;
+    constructor(params: AgentConstructorParams) {
+        this.chatClient = params.chatClient;
+        this.llmService = params.llmService;
+        this.userId = params.userId;
+        this.chromaDBService = params.vectorDBService;
+        this.projects = params.taskManager;
+        this.messagingHandle = params.messagingHandle;
+        
+        this.modelHelpers = new ModelHelpers(this.llmService, this.userId);
         this.promptBuilder = new SystemPromptBuilder();
-        this.artifactManager = new ArtifactManager(this.chromaDBService);
-        this.projects = projects;
+        this.artifactManager = params.artifactManager || new ArtifactManager(this.chromaDBService);
 
         if (this.projects) {
             this.projects.on("taskAssigned", async (event) => {
