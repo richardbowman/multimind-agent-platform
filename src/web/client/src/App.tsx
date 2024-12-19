@@ -43,7 +43,10 @@ const App: React.FC = () => {
                     <>
                     <div className="sidebar">
                     <ChannelList 
-                        onChannelSelect={setCurrentChannelId}
+                        onChannelSelect={(channelId) => {
+                            setCurrentChannelId(channelId);
+                            setCurrentThreadId(null);
+                        }}
                         currentChannelId={currentChannelId}
                     />
                     <ThreadList
