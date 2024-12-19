@@ -31,8 +31,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         if (currentChannelId) {
             setIsLoading(true);
             webSocketService.fetchMessages(currentChannelId, currentThreadId || '');
-            // Scroll after a short delay to ensure messages are rendered
-            setTimeout(scrollToBottom, 100);
         }
     }, [currentChannelId, currentThreadId]);
 
