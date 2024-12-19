@@ -79,11 +79,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setHandles(newHandles);
     });
 
-    // Fetch messages whenever channel or thread changes
-    if (currentChannelId) {
-      webSocketService.fetchMessages(currentChannelId, currentThreadId || '');
-    }
-
     // Handle both bulk and individual messages
     const messageCleanup = webSocketService.onMessage((messages, isLive) => {
       setMessages(prev => {
@@ -147,6 +142,16 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       webSocketService.disconnect();
     };
   }, []);
+
+  // Fetch messages whenever channel or thread changes
+  useEffect(() => {
+    if (currentChannelId) {
+      webSocketService.fetchMessages(currentChannelId, currentThreadId || '');
+      // Also fetch related data
+      fetchTasks(currentChannelId, currentThreadId);
+      fetchArtifacts(currentChannelId, currentThreadId);
+    }
+  }, [currentChannelId, currentThreadId]);
 
   const sendMessage = (message: Partial<ClientMessage>) => {
     webSocketService.sendMessage(message);
