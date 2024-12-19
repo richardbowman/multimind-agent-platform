@@ -120,11 +120,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
         const message = {
             channel_id: currentChannelId,
-            props: currentThreadId ? { 'root-id': currentThreadId } : {},
             message: content,
             user_id: userId,
             create_at: Date.now(),
-            props: {}
+            props: currentThreadId ? { 'root-id': currentThreadId } : {}
         };
         
         sendMessage(message);
