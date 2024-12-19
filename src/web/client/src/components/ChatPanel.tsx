@@ -9,7 +9,7 @@ import remarkGfm from 'remark-gfm'
 interface ChatPanelProps {}
 
 export const ChatPanel: React.FC<ChatPanelProps> = () => {
-    const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId } = useWebSocket();
+    const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading } = useWebSocket();
     const [userId] = useState('test');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -17,16 +17,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
         messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
     };
 
-    const [isLoading, setIsLoading] = useState(true);
-
+    // Handle scrolling
     useEffect(() => {
-        setIsLoading(true);
-    }, [currentChannelId, currentThreadId]);
-
-    // Handle scrolling and loading state
-    useEffect(() => {
-        // Set not loading once we've received the messages response
-        setIsLoading(false);
         if (messages.length > 0) {
             scrollToBottom();
         }

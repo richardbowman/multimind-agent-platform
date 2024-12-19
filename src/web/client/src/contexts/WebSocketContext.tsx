@@ -9,6 +9,7 @@ interface WebSocketContextType {
   tasks: any[];
   artifacts: Artifact[];
   handles: Array<{id: string, handle: string}>;
+  isLoading: boolean;
   currentChannelId: string | null;
   setCurrentChannelId: (channelId: string | null) => void;
   currentThreadId: string | null;
@@ -51,6 +52,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
   setCurrentChannelId: () => { },
   currentThreadId: null,
   setCurrentThreadId: () => { },
+  isLoading: true,
 });
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -70,6 +72,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     system: [],
     api: []
   });
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     webSocketService.connect();
@@ -146,12 +149,18 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   // Fetch messages whenever channel or thread changes
   useEffect(() => {
     if (currentChannelId) {
+      setIsLoading(true);
       webSocketService.fetchMessages(currentChannelId, currentThreadId || '');
       // Also fetch related data
       fetchTasks(currentChannelId, currentThreadId);
       fetchArtifacts(currentChannelId, currentThreadId);
     }
   }, [currentChannelId, currentThreadId]);
+
+  // Update loading state when messages are received
+  useEffect(() => {
+    setIsLoading(false);
+  }, [messages]);
 
   const sendMessage = (message: Partial<ClientMessage>) => {
     webSocketService.sendMessage(message);
@@ -206,7 +215,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       currentChannelId,
       setCurrentChannelId,
       currentThreadId,
-      setCurrentThreadId
+      setCurrentThreadId,
+      isLoading
     }}>
       {children}
     </WebSocketContext.Provider>
