@@ -10,7 +10,6 @@ import { WebSocketProvider } from './contexts/WebSocketContext';
 import './App.css';
 
 const App: React.FC = () => {
-    const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
     const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs'>('chat');
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('llm');
@@ -42,13 +41,7 @@ const App: React.FC = () => {
                 {currentTab === 'chat' ? (
                     <>
                     <div className="sidebar">
-                    <ChannelList 
-                        onChannelSelect={(channelId) => {
-                            setCurrentChannelId(channelId);
-                            setCurrentThreadId(null);
-                        }}
-                        currentChannelId={currentChannelId}
-                    />
+                    <ChannelList />
                     <ThreadList
                         channelId={currentChannelId}
                         onThreadSelect={setCurrentThreadId}
@@ -57,7 +50,6 @@ const App: React.FC = () => {
                 </div>
                 <div className="main-content">
                     <ChatPanel
-                        currentChannelId={currentChannelId}
                         currentThreadId={currentThreadId}
                         setCurrentThreadId={setCurrentThreadId}
                     />
