@@ -1,0 +1,22 @@
+{
+    "RouterAgent": {
+        "className": "RouterAgent",
+        "sourcePath": "../agents/RouterAgent",
+        "userId": "router-agent",
+        "handle": "@router",
+        "description": "Routes requests to appropriate specialized agents",
+        "enabled": true
+    },
+    "ResearchAgent": {
+        "className": "ResearchAgent", 
+        "sourcePath": "../agents/ResearchAgent",
+        "userId": "researcher-agent",
+        "handle": "@researcher",
+        "description": "Conducts web research and information gathering",
+        "enabled": true,
+        "config": {
+            "maxSearches": 3,
+            "maxDepth": 2
+        }
+    }
+}
