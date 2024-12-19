@@ -7,11 +7,11 @@
         "description": "Routes requests to appropriate specialized agents",
         "enabled": true
     },
-    "ResearchAgent": {
-        "className": "ResearchAgent", 
-        "sourcePath": "../agents/ResearchAgent",
+    "ResearchAssistant": {
+        "className": "ResearchAssistant", 
+        "sourcePath": "../agents/researchAssistant",
         "userId": "rg7fwbna43byucb174hm7nnuwr",
-        "handle": "@researcher",
+        "handle": "@researchteam",
         "description": "Conducts web research and information gathering",
         "enabled": true,
         "config": {
@@ -21,23 +21,23 @@
     },
     "ResearchManager": {
         "className": "ResearchManager",
-        "sourcePath": "../agents/ResearchManager",
+        "sourcePath": "../agents/researchManager",
         "userId": "xi8rrsssmidwjnfwf4qx9qr33o",
-        "handle": "@research-manager",
+        "handle": "@research",
         "description": "Manages and coordinates research activities",
         "enabled": true
     },
     "ContentManager": {
         "className": "ContentManager",
-        "sourcePath": "../agents/ContentManager",
+        "sourcePath": "../agents/contentManager",
         "userId": "9d039c4e-f99d-4fb7-a160-452ac261569c",
-        "handle": "@content-manager",
+        "handle": "@content",
         "description": "Manages content creation and organization",
         "enabled": true
     },
     "ContentWriter": {
         "className": "ContentWriter",
-        "sourcePath": "../agents/ContentWriter",
+        "sourcePath": "../agents/contentWriter",
         "userId": "66025743-45bc-4625-a27f-52aa09dde128",
         "handle": "@writer",
         "description": "Writes and generates content",
@@ -45,7 +45,7 @@
     },
     "ProjectManager": {
         "className": "ProjectManager",
-        "sourcePath": "../agents/ProjectManager",
+        "sourcePath": "../agents/projectManager",
         "userId": "2e330aba-4888-42b8-8685-ecdc7f4b1b43",
         "handle": "@pm",
         "description": "Manages projects and coordinates tasks",
@@ -53,7 +53,7 @@
     },
     "OnboardingConsultant": {
         "className": "OnboardingConsultant",
-        "sourcePath": "../agents/OnboardingConsultant",
+        "sourcePath": "../agents/onboardingConsultant",
         "userId": "c7776380-6cda-44b9-8113-890706cd1ec1",
         "handle": "@onboarding",
         "description": "Handles user onboarding processes",
@@ -61,7 +61,7 @@
     },
     "SolverAgent": {
         "className": "SolverAgent",
-        "sourcePath": "../agents/SolverAgent",
+        "sourcePath": "../agents/solverAgent",
         "userId": "b8f7d3e1-9c24-4b9a-8e5f-2d6a91f0e3d2",
         "handle": "@solver",
         "description": "Solves problems and provides solutions",
