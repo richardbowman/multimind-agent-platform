@@ -178,12 +178,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     <WebSocketContext.Provider value={{ 
       messages, 
       channels, 
-      threads,
       tasks,
       artifacts, 
       sendMessage, 
       fetchChannels, 
-      fetchThreads,
       fetchTasks,
       fetchArtifacts,
       fetchAllArtifacts,
