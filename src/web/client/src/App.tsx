@@ -45,14 +45,10 @@ const App: React.FC = () => {
                     <ChannelList />
                     <ThreadList
                         channelId={currentChannelId}
-                        onThreadSelect={setCurrentThreadId}
-                        currentThreadId={currentThreadId}
                     />
                 </div>
                 <div className="main-content">
                     <ChatPanel
-                        currentThreadId={currentThreadId}
-                        setCurrentThreadId={setCurrentThreadId}
                     />
                 </div>
                 <div className="right-sidebar">
