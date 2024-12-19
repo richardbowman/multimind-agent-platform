@@ -90,7 +90,6 @@ const AppContent: React.FC = () => {
                 )}
             </div>
         </div>
-      </WebSocketProvider>
     );
 };
 
