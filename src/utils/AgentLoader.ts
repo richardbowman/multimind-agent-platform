@@ -1,39 +1,29 @@
 import { Agent } from '../agents/agents';
 import { AgentConstructorParams } from '../agents/interfaces/AgentConstructorParams';
-import { readdirSync } from 'fs';
-import { join } from 'path';
 import Logger from '../helpers/logger';
+import { agentDefinitions } from '../agents/agentDefinitions';
 
 export class AgentLoader {
     static async loadAgents(params: AgentConstructorParams): Promise<Map<string, Agent<any, any>>> {
         const agentsMap = new Map<string, Agent<any, any>>();
-        const agentsDir = join(process.cwd(), 'src', 'agents');
         
         try {
-            const files = readdirSync(agentsDir)
-                .filter(file => 
-                    file.endsWith('.ts') && 
-                    !file.includes('test') &&
-                    !file.includes('interface') &&
-                    !file.includes('agents.ts'));
-
-            for (const file of files) {
+            for (const [agentName, definition] of Object.entries(agentDefinitions)) {
                 try {
-                    const module = await import(join(agentsDir, file));
-                    const agentClass = Object.values(module)[0];
+                    const agent = new definition.className({
+                        ...params,
+                        userId: definition.userId,
+                        messagingHandle: definition.handle
+                    });
                     
-                    if (typeof agentClass === 'function') {
-                        const agent = new agentClass(params);
-                        const agentName = file.replace('.ts', '');
-                        agentsMap.set(agentName, agent);
-                        Logger.info(`Loaded agent: ${agentName}`);
-                    }
+                    agentsMap.set(agentName, agent);
+                    Logger.info(`Loaded agent: ${agentName} with handle ${definition.handle}`);
                 } catch (error) {
-                    Logger.error(`Failed to load agent from ${file}:`, error);
+                    Logger.error(`Failed to load agent ${agentName}:`, error);
                 }
             }
         } catch (error) {
-            Logger.error('Failed to read agents directory:', error);
+            Logger.error('Failed to load agents:', error);
         }
 
         return agentsMap;
