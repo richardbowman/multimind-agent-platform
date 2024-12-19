@@ -34,8 +34,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
     // Handle scrolling and loading state
     useEffect(() => {
+        // Set not loading once we've received the messages response
+        setIsLoading(false);
         if (messages.length > 0) {
-            setIsLoading(false);
             scrollToBottom();
         }
     }, [messages.length]);

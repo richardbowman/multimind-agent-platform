@@ -151,8 +151,8 @@ export class WebSocketServer {
                     .slice(-limit);
 
                 Logger.log('Sending messages to client:', channelMessages);
-                // Ensure we always send an array, even if empty
-                socket.emit('messages', channelMessages || []);
+                // Always emit an empty array if no messages found
+                socket.emit('messages', channelMessages);
             });
 
             // Handle messages
