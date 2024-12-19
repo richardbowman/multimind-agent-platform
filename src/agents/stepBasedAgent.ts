@@ -1,26 +1,24 @@
 import { Agent } from './agents';
 import { getExecutorMetadata } from './decorators/executorDecorator';
 import 'reflect-metadata';
-import { ChatClient, ChatPost, isValidChatPost } from '../chat/chatClient';
+import { ChatPost, isValidChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { Project, Task, TaskManager } from '../tools/taskManager';
+import { Project, Task } from '../tools/taskManager';
 import { Planner } from './planners/Planner';
 import { MultiStepPlanner } from './planners/DefaultPlanner';
-import crypto from 'crypto';
 import Logger from '../helpers/logger';
-import { CreateArtifact, ModelMessageResponse, ModelResponse, ReasoningResponse } from '../schemas/ModelResponse';
-import ChromaDBService from 'src/llm/chromaService';
+import { ModelMessageResponse, ModelResponse } from '../schemas/ModelResponse';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/inMemoryChatClient';
-import { SimpleNextActionPlanner } from './planners/SimpleNextActionPlanner';
 
 export interface StepResult {
     type?: string;
     projectId?: string;
     taskId?: string;
     finished?: boolean;
+    goal?: string;
     [key: string]: any;
     needsUserInput?: boolean;
     response: ModelResponse;
@@ -79,36 +77,34 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     }
 
     protected async handlerThread(params: HandlerParams): Promise<void> {
-        const project = params.projects?.[0];
+        const { id: projectId } = params.projects?.[0]||{id: undefined};
 
         // If no active project, treat it as a new conversation
-        if (!project) {
+        if (!projectId) {
             Logger.info("No active project found, starting new conversation");
-            const { projectId } = await this.addNewProject({
+            let { projectId } = await this.addNewProject({
                 projectName: params.userPost.message,
                 tasks: [],
                 metadata: {
                     originalPostId: params.userPost.id
                 }
             });
-            const project = await this.projects.getProject(projectId);
-            params.projects = [...params.projects || [], project]
 
-            const plan = await this.planSteps(params);
+            const plan = await this.planSteps(projectId, [params.rootPost||{message: "(missing root post)"}, ...params.threadPosts||[], params.userPost]);
             await this.executeNextStep(projectId, params.userPost);
             return;
         }
 
         // Handle response to existing project
-        const task = this.projects.getNextTask(project.id);
+        const task = this.projects.getNextTask(projectId);
 
         if (!task) {
             Logger.info("No remaining tasks, planning new steps");
-            const plan = await this.planSteps(params);
+            const plan = await this.planSteps(projectId, [params.rootPost||{message: "(missing root post)"},...params.threadPosts||[], params.userPost]);
         }
 
         // Continue with existing tasks without replanning
-        await this.executeNextStep(project.id, params.userPost);
+        await this.executeNextStep(projectId, params.userPost);
     }
 
     protected registerStepExecutor(executor: StepExecutor): void {
@@ -129,8 +125,8 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         const project = await this.projects.getProject(projectId);
         const handlerParams: HandlerParams = {
             projects: [project],
-            posts: posts,
-            userPost: posts[posts.length - 1]
+            threadPosts: posts?.slice(0,-1),
+            userPost: posts?.[posts?.length - 1]
         };
         const steps = await this.planner.planSteps(handlerParams);
 
@@ -210,15 +206,11 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                     parentTaskId: task.id
                 }
             });
-            const project = await this.projects.getProject(projectId);
 
-            // Plan and execute steps without a synthetic post
-            const params: HandlerParams = {
-                projects: [project],
-                message: task.description // Use message field instead of userPost
-            };
+            const plan = await this.planSteps(projectId, [{
+                message: task.description
+            }]);
 
-            const plan = await this.planSteps(params);
             await this.executeNextStep(projectId);
 
         } catch (error) {
@@ -244,7 +236,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
             // Get all prior completed tasks' results
             const tasks = this.projects.getAllTasks(projectId);
             const priorResults = tasks
-                .filter(t => t.complete && t.order !== undefined && t.order < (task.order || Infinity))
+                .filter(t => t.complete || t.inProgress && t.order !== undefined && t.order < (task.order || Infinity))
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
                 .map(t => t.props?.result)
                 .filter(r => r); // Remove undefined/null results
@@ -269,6 +261,11 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                 );
             }
 
+            // step wants to revise overall goal
+            if (stepResult.goal) {
+                project.name = stepResult.goal;
+            }
+
             // Store the result in task props
             if (!task.props) task.props = {};
             task.props.result = stepResult.response;
@@ -283,13 +280,11 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
                         `${stepResult.missingAspects.map((aspect: string) => `- ${aspect}`).join('\n')}`;
 
                     //TODO: hacky, we don't really post this message
-                    await this.planSteps({
-                        projects: [project],
-                        userPost: InMemoryPost.fromLoad({
+                    await this.planSteps(project.id, [InMemoryPost.fromLoad({
                             ...userPost,
                             message: planningPrompt
-                        })
-                    });
+                        })]
+                    );
                 }
             }
 
