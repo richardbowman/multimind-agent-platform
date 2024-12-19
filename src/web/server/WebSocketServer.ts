@@ -131,18 +131,7 @@ export class WebSocketServer {
                 Logger.log('Received get_messages request:', { channel_id, thread_id, limit });
                 
                 let channelMessages = this.storage.posts
-                    .filter(post => {
-                        // First filter by channel
-                        if (post.channel_id !== channel_id) return false;
-                        
-                        if (thread_id) {
-                            // In thread view: show root message and all replies
-                            return post.id === thread_id || post.getRootId() === thread_id;
-                        } else {
-                            // In channel view: only show root messages
-                            return !post.getRootId();
-                        }
-                    })
+                    .filter(post => post.channel_id === channel_id)
                     .map(post => {
                         // Count replies for this message
                         const replyCount = this.storage.posts.filter(p => p.getRootId() === post.id).length;
