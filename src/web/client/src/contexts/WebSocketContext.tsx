@@ -74,6 +74,11 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setHandles(newHandles);
     });
 
+    // Fetch messages whenever channel or thread changes
+    if (currentChannelId) {
+      webSocketService.fetchMessages(currentChannelId, currentThreadId || '');
+    }
+
     // Handle both bulk and individual messages
     const messageCleanup = webSocketService.onMessage((messages, isLive) => {
       setMessages(prev => {

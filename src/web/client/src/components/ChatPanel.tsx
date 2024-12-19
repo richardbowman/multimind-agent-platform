@@ -26,10 +26,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
     const [isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
-        if (currentChannelId) {
-            setIsLoading(true);
-            webSocketService.fetchMessages(currentChannelId, currentThreadId || '');
-        }
+        setIsLoading(true);
     }, [currentChannelId, currentThreadId]);
 
     // Handle scrolling and loading state
