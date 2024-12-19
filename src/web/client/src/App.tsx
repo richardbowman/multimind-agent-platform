@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { useWebSocket } from './contexts/WebSocketContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
@@ -10,6 +11,7 @@ import { WebSocketProvider } from './contexts/WebSocketContext';
 import './App.css';
 
 const App: React.FC = () => {
+    const { currentChannelId } = useWebSocket();
     const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs'>('chat');
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('llm');
