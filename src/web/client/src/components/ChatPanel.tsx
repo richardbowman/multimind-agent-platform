@@ -120,7 +120,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
 
         const message = {
             channel_id: currentChannelId,
-            thread_id: currentThreadId || undefined,
+            props: currentThreadId ? { 'root-id': currentThreadId } : {},
             message: content,
             user_id: userId,
             create_at: Date.now(),
@@ -144,12 +144,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                         if (currentThreadId) {
                             // In a thread, show the root message and all replies
                             return message.id === currentThreadId || 
-                                   message.thread_id === currentThreadId || 
-                                   (message.props && message.props['root-id'] === currentThreadId) ||
-                                   message.props?.['conversation-root'] === currentThreadId;
+                                   message.props?.['root-id'] === currentThreadId;
                         } else {
-                            // In channel view, show messages that aren't replies
-                            return !message.thread_id && !message.props?.['root-id'] && !message.props?.['conversation-root'];
+                            // In channel view, show only root messages
+                            return !message.props?.['root-id'];
                         }
                     })
                     .map((message) => (
@@ -170,7 +168,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                             <div className="message-content">
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.message}</ReactMarkdown>
                                 {message.inProgress && <Spinner />}
-                                {!currentThreadId && (message.reply_count > 0 || messages.some(m => m.thread_id === message.id)) && (
+                                {!currentThreadId && messages.some(m => m.props?.['root-id'] === message.id) && (
                                     <div 
                                         className="thread-indicator"
                                         onClick={() => setCurrentThreadId(message.id)}

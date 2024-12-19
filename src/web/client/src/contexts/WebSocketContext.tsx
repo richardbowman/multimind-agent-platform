@@ -85,16 +85,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // For live messages, append only new ones
         const newMessages = messages.filter(message => 
           !prev.some(m => m.id === message.id)
-        ).map(message => {
-          // If message has a root-id in props, set it as thread_id
-          if (message.props && message.props['root-id']) {
-            return {
-              ...message,
-              thread_id: message.props['root-id']
-            };
-          }
-          return message;
-        });
+        );
 
         // If we got new messages, trigger a thread refresh for the channel
         if (newMessages.length > 0) {
@@ -105,7 +96,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         // Update messages array, handling both new messages and reply count updates
         return prev.map(existingMsg => {
           // If this is a parent message that just got a new reply
-          if (newMessages.some(newMsg => newMsg.thread_id === existingMsg.id)) {
+          if (newMessages.some(newMsg => newMsg.props?.['root-id'] === existingMsg.id)) {
             return {
               ...existingMsg,
               reply_count: (existingMsg.reply_count || 0) + 1
