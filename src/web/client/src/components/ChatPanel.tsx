@@ -4,6 +4,7 @@ import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import webSocketService, { ClientMessage } from '../services/WebSocketService';
+import remarkGfm from 'remark-gfm'
 
 interface ChatPanelProps {
     currentChannelId: string | null;
@@ -163,7 +164,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
                                 </span>
                             </div>
                             <div className="message-content">
-                                <ReactMarkdown>{message.message}</ReactMarkdown>
+                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.message}</ReactMarkdown>
                                 {message.inProgress && <Spinner />}
                                 {!currentThreadId && (message.reply_count > 0 || messages.some(m => m.thread_id === message.id)) && (
                                     <div 
