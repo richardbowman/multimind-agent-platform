@@ -5,9 +5,7 @@ import { useWebSocket } from '../contexts/WebSocketContext';
 interface ChannelListProps {}
 
 export const ChannelList: React.FC<ChannelListProps> = () => {
-    const { channels, fetchChannels, currentChannelId, setCurrentChannelId 
-}) => {
-    const { channels, fetchChannels } = useWebSocket();
+    const { channels, fetchChannels, currentChannelId, setCurrentChannelId } = useWebSocket();
 
     useEffect(() => {
         const timer = setTimeout(() => {
