@@ -18,7 +18,6 @@ interface WebSocketContextType {
   };
   sendMessage: (message: Partial<ClientMessage>) => void;
   fetchChannels: () => void;
-  fetchThreads: (channelId: string) => void;
   fetchTasks: (channelId: string, threadId: string | null) => void;
   fetchArtifacts: (channelId: string, threadId: string | null) => void;
   fetchAllArtifacts: () => void;
@@ -48,7 +47,6 @@ const WebSocketContext = createContext<WebSocketContextType>({
   fetchLogs: (logType: 'llm' | 'system' | 'api') => { },
   currentChannelId: null,
   setCurrentChannelId: () => { },
-  fetchThreads: () => { }
 });
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -88,12 +86,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         const newMessages = messages.filter(message => 
           !prev.some(m => m.id === message.id)
         );
-
-        // If we got new messages, trigger a thread refresh for the channel
-        if (newMessages.length > 0) {
-          const channelId = newMessages[0].channel_id;
-          webSocketService.fetchThreads(channelId);
-        }
         
         // Update messages array, handling both new messages and reply count updates
         return prev.map(existingMsg => {
