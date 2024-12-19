@@ -45,7 +45,10 @@ const WebSocketContext = createContext<WebSocketContextType>({
     system: [],
     api: []
   },
-  fetchLogs: (logType: 'llm' | 'system' | 'api') => { }
+  fetchLogs: (logType: 'llm' | 'system' | 'api') => { },
+  currentChannelId: null,
+  setCurrentChannelId: () => { },
+  fetchThreads: () => { }
 });
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
