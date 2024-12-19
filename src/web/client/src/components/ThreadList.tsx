@@ -1,5 +1,4 @@
 import React, { useEffect, useRef } from 'react';
-import { Thread } from '../../../shared/types';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface ThreadListProps {
@@ -13,7 +12,7 @@ export const ThreadList: React.FC<ThreadListProps> = ({
     onThreadSelect,
     currentThreadId
 }) => {
-    const { threads, fetchThreads } = useWebSocket();
+    const { messages } = useWebSocket();
     const activeThreadRef = useRef<HTMLLIElement>(null);
 
     useEffect(() => {
@@ -22,17 +21,25 @@ export const ThreadList: React.FC<ThreadListProps> = ({
         }
     }, [currentThreadId]);
 
-    useEffect(() => {
-        if (channelId) {
-            fetchThreads(channelId);
-        }
-    }, [channelId, fetchThreads]);
-
-    const channelThreads = channelId ? threads[channelId] || [] : [];
-
     if (!channelId) {
         return <div className="thread-list">Select a channel to view threads</div>;
     }
+
+    // Get root messages that have replies
+    const threadsInChannel = messages
+        .filter(msg => msg.channel_id === channelId && !msg.props?.['root-id'])
+        .filter(msg => messages.some(reply => reply.props?.['root-id'] === msg.id))
+        .map(rootMsg => ({
+            rootMessage: rootMsg,
+            replies: messages.filter(msg => msg.props?.['root-id'] === rootMsg.id),
+            last_message_at: Math.max(
+                rootMsg.create_at,
+                ...messages
+                    .filter(msg => msg.props?.['root-id'] === rootMsg.id)
+                    .map(msg => msg.create_at)
+            )
+        }))
+        .sort((a, b) => b.last_message_at - a.last_message_at);
 
     return (
         <div className="thread-list">
@@ -49,7 +56,7 @@ export const ThreadList: React.FC<ThreadListProps> = ({
                         <div className="thread-meta">Channel Root</div>
                     </div>
                 </li>
-                {channelThreads.map(thread => (
+                {threadsInChannel.map(thread => (
                     <li
                         ref={currentThreadId === thread.rootMessage.id ? activeThreadRef : null}
                         key={thread.rootMessage.id}

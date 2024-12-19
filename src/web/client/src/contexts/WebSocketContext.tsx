@@ -6,7 +6,6 @@ import type { LLMLogEntry } from '../../../../llm/LLMLogger';
 interface WebSocketContextType {
   messages: ClientMessage[];
   channels: ClientChannel[];
-  threads: Record<string, ClientThread[]>; // Keyed by channel_id
   tasks: any[];
   artifacts: Artifact[];
   handles: Array<{id: string, handle: string}>;
@@ -29,11 +28,9 @@ interface WebSocketContextType {
 const WebSocketContext = createContext<WebSocketContextType>({
   messages: [],
   channels: [],
-  threads: {},
   handles: [],
   sendMessage: () => { },
   fetchChannels: () => { },
-  fetchThreads: () => { },
   fetchHandles: () => { },
   tasks: [],
   artifacts: [],
@@ -52,7 +49,6 @@ const WebSocketContext = createContext<WebSocketContextType>({
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ClientChannel[]>([]);
-  const [threads, setThreads] = useState<Record<string, ClientThread[]>>({});
   const [handles, setHandles] = useState<Array<{id: string, handle: string}>>([]);
   const [tasks, setTasks] = useState<any[]>([]);
   const [artifacts, setArtifacts] = useState<any[]>([]);
@@ -112,15 +108,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setChannels(newChannels);
     });
 
-    const threadCleanup = webSocketService.onThreads((newThreads) => {
-      if (newThreads.length > 0) {
-        const channelId = newThreads[0].rootMessage.channel_id;
-        setThreads(prev => ({
-          ...prev,
-          [channelId]: newThreads
-        }));
-      }
-    });
 
     const taskCleanup = webSocketService.onTasks((newTasks) => {
       setTasks(newTasks);
@@ -145,7 +132,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     return () => {
       messageCleanup();
       channelCleanup();
-      threadCleanup();
       taskCleanup();
       artifactCleanup();
       handlesCleanup();
@@ -163,11 +149,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     webSocketService.fetchChannels();
   };
 
-  const fetchThreads = (channelId: string) => {
-    if (!threads[channelId]) {
-      webSocketService.fetchThreads(channelId);
-    }
-  };
 
   const fetchHandles = () => {
     webSocketService.fetchHandles();
