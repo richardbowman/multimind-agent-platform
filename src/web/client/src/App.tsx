@@ -10,13 +10,12 @@ import { LogViewer } from './components/LogViewer';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import './App.css';
 
-const App: React.FC = () => {
+const AppContent: React.FC = () => {
     const { currentChannelId, currentThreadId, setCurrentThreadId } = useWebSocket();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs'>('chat');
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('llm');
 
     return (
-      <WebSocketProvider>
         <div className="app">
             <div className="tab-bar">
                 <button 
@@ -92,6 +91,14 @@ const App: React.FC = () => {
             </div>
         </div>
       </WebSocketProvider>
+    );
+};
+
+const App: React.FC = () => {
+    return (
+        <WebSocketProvider>
+            <AppContent />
+        </WebSocketProvider>
     );
 };
 
