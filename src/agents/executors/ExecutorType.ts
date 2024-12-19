@@ -12,6 +12,7 @@ export enum ExecutorType {
     REPLY = 'reply',
     RESEARCH_AGGREGATION = 'aggregate-research',
     RESEARCH_DECOMPOSITION = 'decompose-research',
+    ROUTE_REQUEST = 'route-request',
     THINKING = 'thinking',
     UNDERSTAND_GOALS = 'understand_goals',
     VALIDATION = 'validation',
