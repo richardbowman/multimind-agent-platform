@@ -31,6 +31,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
         if (currentChannelId) {
             setIsLoading(true);
             webSocketService.fetchMessages(currentChannelId, currentThreadId || '');
+            // Scroll after a short delay to ensure messages are rendered
+            setTimeout(scrollToBottom, 100);
         }
     }, [currentChannelId, currentThreadId]);
 
@@ -40,13 +42,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({
             setIsLoading(false);
             scrollToBottom();
         }
-    }, [messages, messages.length]);
+    }, [messages.length]);
 
     // Scroll to bottom when messages are updated or when a message's inProgress status changes
     useEffect(() => {
-        const messagesWithProgress = messages.some(m => m.inProgress);
-        scrollToBottom();
-    }, [messages, messages.some(m => m.inProgress)]);
+        if (messages.some(m => m.inProgress)) {
+            scrollToBottom();
+        }
+    }, [messages]);
 
     // Handle live message thread selection
     useEffect(() => {
