@@ -22,6 +22,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.33.1",
     "@aws-sdk/client-bedrock": "^3.712.0",
     "@aws-sdk/client-bedrock-runtime": "^3.706.0",
     "@lmstudio/sdk": "^0.3.0",
@@ -72,6 +73,7 @@
   },
   "devDependencies": {
     "@types/fs-extra": "^11.0.4",
+    "@dotenvx/dotenvx": "^1.31.0",
     "@types/node-cron": "^3.0.11",
     "@types/turndown": "^5.0.5",
     "concurrently": "^9.1.0",
