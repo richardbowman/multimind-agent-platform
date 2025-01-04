@@ -80,5 +80,10 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "wait-on": "^8.0.1"
+  },
+  "config": {
+    "node_gyp_options": {
+      "cxxflags": ["-std=c++20"]
+    }
   }
 }
