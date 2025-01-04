@@ -4,10 +4,12 @@
     "module": "CommonJS",
     "outDir": "./",
     "rootDir": "./",
-    "strict": true,
+    "strict": false,
+    "noImplicitAny": false,
     "esModuleInterop": true,
     "skipLibCheck": true,
-    "forceConsistentCasingInFileNames": true
+    "forceConsistentCasingInFileNames": true,
+    "allowJs": true
   },
   "include": ["main.electron.ts"],
   "exclude": ["node_modules"]
