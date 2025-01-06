@@ -45,7 +45,6 @@
     "clipboardy": "^4.0.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.2",
-    "isolated-vm": "^5.0.2",
     "json5": "^2.2.3",
     "kafkajs": "^2.2.4",
     "langchain": "^0.3.5",
@@ -80,10 +79,5 @@
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",
     "wait-on": "^8.0.1"
-  },
-  "config": {
-    "node_gyp_options": {
-      "cxxflags": ["-std=c++20"]
-    }
   }
 }
