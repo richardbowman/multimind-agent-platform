@@ -5,8 +5,16 @@ import path from 'path';
 import { app } from 'electron';
 
 // Determine the base directory for config files
-const isDev = !app?.isPackaged;
-const baseDir = isDev ? '.' : path.dirname(process.execPath);
+let baseDir = '.';
+try {
+    // Check if we're running in Electron
+    if (process.versions['electron']) {
+        const isDev = !app?.isPackaged;
+        baseDir = isDev ? '.' : path.dirname(process.execPath);
+    }
+} catch (error) {
+    Logger.info('Not running in Electron, using current directory for config');
+}
 
 // Load environment variables from config files
 dotenv.config({ path: path.join(baseDir, 'env.defaults') });
