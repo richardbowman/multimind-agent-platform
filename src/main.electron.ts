@@ -21,11 +21,15 @@ async function createWindow() {
       mainWindow?.loadURL('http://localhost:3000');
       mainWindow?.webContents.openDevTools();
     } else {
-      mainWindow?.loadFile(path.join(__dirname, '../web/client/build/index.html'));
+      const indexPath = path.join(process.resourcesPath, 'app.asar/web/client/build/index.html');
+      console.log('Loading index from:', indexPath);
+      mainWindow?.loadFile(indexPath);
     }
   } catch (err) {
     console.error('Failed to load app:', err);
-    mainWindow?.loadFile(path.join(__dirname, '../web/client/build/index.html'));
+    const fallbackPath = path.join(process.resourcesPath, 'app.asar/web/client/build/index.html');
+    console.log('Trying fallback path:', fallbackPath);
+    mainWindow?.loadFile(fallbackPath);
   }
 
   mainWindow.on('closed', () => {

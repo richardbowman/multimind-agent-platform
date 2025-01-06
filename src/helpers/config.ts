@@ -9,8 +9,15 @@ let baseDir = '.';
 try {
     // Check if we're running in Electron
     if (process.versions['electron']) {
-        const isDev = !app?.isPackaged;
-        baseDir = isDev ? '.' : path.dirname(process.execPath);
+        const electron = require('electron');
+        const app = electron.app || electron.remote?.app;
+        
+        if (app) {
+            const isDev = !app.isPackaged;
+            // When packaged, configs are in resources/app.asar
+            baseDir = isDev ? '.' : path.join(process.resourcesPath, 'app.asar');
+            Logger.info(`Running in Electron (${isDev ? 'dev' : 'prod'}), using base dir: ${baseDir}`);
+        }
     }
 } catch (error) {
     Logger.info('Not running in Electron, using current directory for config');
