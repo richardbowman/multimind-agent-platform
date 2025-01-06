@@ -1,9 +1,16 @@
 "use strict";
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
+};
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.LLM_PROVIDER = exports.LMSTUDIO_API_KEY = exports.PROJECT_MANAGER_USER_ID = exports.ONBOARDING_CHANNEL_ID = exports.ONBOARDING_CONSULTANT_USER_ID = exports.RESEARCH_MANAGER_TOKEN_ID = exports.RESEARCH_MANAGER_USER_ID = exports.SEARXNG_URL = exports.MAX_SEARCHES = exports.EMBEDDING_MODEL = exports.CHAT_MODEL = exports.LM_STUDIO_BASE_URL = exports.CHROMA_COLLECTION = exports.CHROMADB_URL = exports.CONTENT_WRITER_USER_ID = exports.CONTENT_MANAGER_USER_ID = exports.CONTENT_CREATION_CHANNEL_ID = exports.PROJECTS_CHANNEL_ID = exports.RESEARCHER_USER_ID = exports.RESEARCHER_TOKEN = exports.WEB_RESEARCH_CHANNEL_ID = void 0;
+exports.BEDROCK_WINDOW_SIZE_MS = exports.BEDROCK_DEFAULT_DELAY_MS = exports.BEDROCK_MAX_TOKENS_PER_MINUTE = exports.VECTOR_DATABASE_TYPE = exports.LLM_HEAVY_MODEL = exports.LLM_WEAK_MODEL = exports.LLM_PROVIDER = exports.LMSTUDIO_API_KEY = exports.SOLVER_CHANNEL_ID = exports.SOLVER_AGENT_TOKEN = exports.SOLVER_AGENT_USER_ID = exports.FACT_CHECK_CHANNEL_ID = exports.FACT_CHECKER_USER_ID = exports.PROJECT_MANAGER_USER_ID = exports.ONBOARDING_CHANNEL_ID = exports.ONBOARDING_CONSULTANT_USER_ID = exports.RESEARCH_MANAGER_TOKEN_ID = exports.RESEARCH_MANAGER_USER_ID = exports.SEARXNG_URL = exports.MAX_SEARCHES = exports.EMBEDDING_MODEL = exports.CHAT_MODEL = exports.LM_STUDIO_BASE_URL = exports.CHROMA_COLLECTION = exports.CHROMADB_URL = exports.CONTENT_WRITER_USER_ID = exports.CONTENT_MANAGER_USER_ID = exports.CONTENT_CREATION_CHANNEL_ID = exports.PROJECTS_CHANNEL_ID = exports.RESEARCHER_USER_ID = exports.RESEARCHER_TOKEN = exports.WEB_RESEARCH_CHANNEL_ID = void 0;
 // config.ts
-var dotenv_1 = require("dotenv");
-dotenv_1.default.config({ path: ['env.defaults', '.env.local', "./.env"] });
+const dotenv_1 = __importDefault(require("dotenv"));
+const logger_1 = __importDefault(require("./logger"));
+dotenv_1.default.config({ path: 'env.defaults' });
+dotenv_1.default.config({ path: '.env', override: true });
+dotenv_1.default.config({ path: '.env.local', override: true });
+logger_1.default.info(JSON.stringify(process.env, undefined, " "));
 exports.WEB_RESEARCH_CHANNEL_ID = process.env.WEB_RESEARCH_CHANNEL_ID;
 exports.RESEARCHER_TOKEN = process.env.RESEARCHER_TOKEN;
 exports.RESEARCHER_USER_ID = process.env.RESEARCHER_USER_ID;
@@ -23,5 +30,17 @@ exports.RESEARCH_MANAGER_TOKEN_ID = process.env.RESEARCH_MANAGER_TOKEN_ID;
 exports.ONBOARDING_CONSULTANT_USER_ID = process.env.ONBOARDING_CONSULTANT_USER_ID;
 exports.ONBOARDING_CHANNEL_ID = process.env.ONBOARDING_CHANNEL_ID;
 exports.PROJECT_MANAGER_USER_ID = process.env.PROJECT_MANAGER_USER_ID;
+exports.FACT_CHECKER_USER_ID = process.env.FACT_CHECKER_USER_ID;
+exports.FACT_CHECK_CHANNEL_ID = process.env.FACT_CHECK_CHANNEL_ID;
+exports.SOLVER_AGENT_USER_ID = process.env.SOLVER_AGENT_USER_ID;
+exports.SOLVER_AGENT_TOKEN = process.env.SOLVER_AGENT_TOKEN;
+exports.SOLVER_CHANNEL_ID = process.env.SOLVER_CHANNEL_ID;
 exports.LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY;
 exports.LLM_PROVIDER = process.env.LLM_PROVIDER || 'lmstudio';
+exports.LLM_WEAK_MODEL = process.env.LLM_WEAK_MODEL;
+exports.LLM_HEAVY_MODEL = process.env.LLM_HEAVY_MODEL;
+exports.VECTOR_DATABASE_TYPE = process.env.VECTOR_DATABASE_TYPE || 'vectra';
+// Bedrock rate limiting settings
+exports.BEDROCK_MAX_TOKENS_PER_MINUTE = parseInt(process.env.BEDROCK_MAX_TOKENS_PER_MINUTE || '50000', 10);
+exports.BEDROCK_DEFAULT_DELAY_MS = parseInt(process.env.BEDROCK_DEFAULT_DELAY_MS || '1000', 10);
+exports.BEDROCK_WINDOW_SIZE_MS = parseInt(process.env.BEDROCK_WINDOW_SIZE_MS || '60000', 10);

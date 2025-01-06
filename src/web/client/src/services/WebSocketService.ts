@@ -41,7 +41,9 @@ class WebSocketService {
   private handleHandlers: ((handles: {id: string, handle: string}[]) => void)[] = [];
   private logHandlers: ((logs: { type: string, data: any }) => void)[] = [];
 
-  connect(url: string = 'ws://localhost:4001') {
+  connect(url: string = typeof window !== 'undefined' && (window as any).electron
+  ? 'ws://localhost:4001'
+  : process.env.REACT_APP_WS_URL || 'ws://localhost:4001') {
     // Clean up any existing socket connection
     if (this.socket) {
       this.socket.removeAllListeners();

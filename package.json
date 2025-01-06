@@ -1,7 +1,7 @@
 {
   "name": "multi-agent",
   "version": "1.0.0",
-  "main": "dist/main.electron.js",
+  "main": "dist/src/main.electron.js",
   "type": "module",
   "scripts": {
     "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
@@ -44,6 +44,7 @@
     "chromadb-default-embed": "^2.13.2",
     "clipboardy": "^4.0.0",
     "dotenv": "^16.4.5",
+    "electron-is-dev": "^3.0.1",
     "express": "^4.21.2",
     "json5": "^2.2.3",
     "kafkajs": "^2.2.4",
@@ -74,7 +75,6 @@
     "concurrently": "^9.1.0",
     "electron": "^33.2.1",
     "electron-builder": "^25.1.8",
-    "electron-is-dev": "^3.0.1",
     "nodemon": "^3.1.9",
     "ts-node": "^10.9.2",
     "tsx": "^4.19.2",

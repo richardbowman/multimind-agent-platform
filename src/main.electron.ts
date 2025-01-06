@@ -42,4 +42,4 @@ app.on('activate', () => {
 });
 
 // Start the backend server
-import('./src/main');
+import('./main');

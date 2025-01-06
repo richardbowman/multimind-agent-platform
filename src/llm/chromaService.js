@@ -1,260 +1,162 @@
 "use strict";
-var __awaiter = (this && this.__awaiter) || function (thisArg, _arguments, P, generator) {
-    function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-    return new (P || (P = Promise))(function (resolve, reject) {
-        function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-        function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-        function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-        step((generator = generator.apply(thisArg, _arguments || [])).next());
-    });
-};
-var __generator = (this && this.__generator) || function (thisArg, body) {
-    var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g = Object.create((typeof Iterator === "function" ? Iterator : Object).prototype);
-    return g.next = verb(0), g["throw"] = verb(1), g["return"] = verb(2), typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-    function verb(n) { return function (v) { return step([n, v]); }; }
-    function step(op) {
-        if (f) throw new TypeError("Generator is already executing.");
-        while (g && (g = 0, op[0] && (_ = 0)), _) try {
-            if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-            if (y = 0, t) op = [op[0] & 2, t.value];
-            switch (op[0]) {
-                case 0: case 1: t = op; break;
-                case 4: _.label++; return { value: op[1], done: false };
-                case 5: _.label++; y = op[1]; op = [0]; continue;
-                case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                default:
-                    if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                    if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                    if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                    if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                    if (t[2]) _.ops.pop();
-                    _.trys.pop(); continue;
-            }
-            op = body.call(thisArg, _);
-        } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-        if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-    }
+var __importDefault = (this && this.__importDefault) || function (mod) {
+    return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-var chromadb_1 = require("chromadb");
-var crypto_1 = require("crypto");
-var text_splitter_1 = require("langchain/text_splitter");
-var dotenv_1 = require("dotenv");
-var config_1 = require("../helpers/config");
-var logger_1 = require("src/helpers/logger");
-var storeToFile_1 = require("src/tools/storeToFile");
+const chromadb_1 = require("chromadb");
+const events_1 = require("events");
+const crypto_1 = __importDefault(require("crypto"));
+const text_splitter_1 = require("langchain/text_splitter");
+const dotenv_1 = __importDefault(require("dotenv"));
+const config_1 = require("../helpers/config");
+const logger_1 = __importDefault(require("src/helpers/logger"));
+const storeToFile_1 = require("src/tools/storeToFile");
 dotenv_1.default.config();
-var ChromaDBService = /** @class */ (function () {
-    function ChromaDBService(lmStudioService) {
+class ChromaDBService extends events_1.EventEmitter {
+    constructor(lmStudioService) {
+        super();
         this.collection = null;
         this.chromaDB = new chromadb_1.ChromaClient({ path: config_1.CHROMADB_URL });
         this.lmStudioService = lmStudioService;
     }
-    ChromaDBService.prototype.initializeCollection = function (name) {
-        return __awaiter(this, void 0, void 0, function () {
-            var collections, existingCollection, _a, _b;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
-                    case 0: return [4 /*yield*/, this.chromaDB.listCollections()];
-                    case 1:
-                        collections = _c.sent();
-                        existingCollection = collections.find(function (c) { return c.name === name; });
-                        if (!existingCollection) return [3 /*break*/, 3];
-                        _a = this;
-                        return [4 /*yield*/, this.chromaDB.getCollection({
-                                name: name,
-                                embeddingFunction: this.lmStudioService.getEmbeddingModel()
-                            })];
-                    case 2:
-                        _a.collection = _c.sent();
-                        logger_1.default.info("ChromaDB Collection found and loaded: ".concat(name));
-                        return [3 /*break*/, 5];
-                    case 3:
-                        _b = this;
-                        return [4 /*yield*/, this.chromaDB.createCollection({
-                                name: name,
-                                embeddingFunction: this.lmStudioService.getEmbeddingModel()
-                            })];
-                    case 4:
-                        _b.collection = _c.sent();
-                        logger_1.default.info("ChromaDB Collection created: ".concat(name));
-                        _c.label = 5;
-                    case 5: return [2 /*return*/];
-                }
+    async initializeCollection(name) {
+        const collections = await this.chromaDB.listCollections();
+        const existingCollection = collections.find(c => c.name === name);
+        if (existingCollection) {
+            this.collection = await this.chromaDB.getCollection({
+                name,
+                embeddingFunction: this.lmStudioService.getEmbeddingModel()
             });
-        });
-    };
-    ChromaDBService.prototype.addDocuments = function (addCollection) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!this.collection)
-                            throw new Error("Collection not initialized");
-                        return [4 /*yield*/, this.collection.add(addCollection)];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
+            // Check if collection has any data
+            const count = (await this.collection.count());
+            if (count === 0) {
+                logger_1.default.warn(`ChromaDB Collection ${name} is empty - needs reindexing`);
+                this.emit('needsReindex');
+            }
+            else {
+                logger_1.default.info(`ChromaDB Collection found and loaded: ${name} with ${count} items`);
+            }
+        }
+        else {
+            this.collection = await this.chromaDB.createCollection({
+                name,
+                embeddingFunction: this.lmStudioService.getEmbeddingModel()
             });
-        });
-    };
+            logger_1.default.warn(`ChromaDB Collection created: ${name} - needs initial indexing`);
+            this.emit('needsReindex');
+        }
+    }
+    async addDocuments(addCollection) {
+        if (!this.collection) {
+            throw new Error("Collection not initialized - call initializeCollection() first");
+        }
+        await this.collection.add(addCollection);
+    }
     /**
      * @deprecated
      */
-    ChromaDBService.prototype.queryOld = function (queryTexts, where, nResults) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!this.collection)
-                            throw new Error("Collection not initialized");
-                        return [4 /*yield*/, this.collection.query({ queryTexts: queryTexts, where: where, nResults: nResults })];
-                    case 1: return [2 /*return*/, _a.sent()];
-                }
-            });
-        });
-    };
-    ChromaDBService.prototype.query = function (queryTexts, where, nResults) {
-        return __awaiter(this, void 0, void 0, function () {
-            var rawResults;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        if (!this.collection)
-                            throw new Error("Collection not initialized");
-                        return [4 /*yield*/, this.collection.query({ queryTexts: queryTexts, where: where, nResults: nResults })];
-                    case 1:
-                        rawResults = _a.sent();
-                        return [2 /*return*/, rawResults.ids[0].map(function (result, index) { return ({
-                                id: result,
-                                metadata: rawResults.metadatas[0][index],
-                                text: rawResults.documents[0][index],
-                                score: rawResults.distances[0] ? rawResults.distances[0][index] : undefined
-                            }); })];
-                }
-            });
-        });
-    };
-    ChromaDBService.prototype.computeHash = function (content) {
-        var hash = crypto_1.default.createHash('sha256');
+    async queryOld(queryTexts, where, nResults) {
+        if (!this.collection)
+            throw new Error("Collection not initialized");
+        return await this.collection.query({ queryTexts, where, nResults });
+    }
+    async query(queryTexts, where, nResults) {
+        if (!this.collection)
+            throw new Error("Collection not initialized");
+        const rawResults = await this.collection.query({ queryTexts, where, nResults });
+        return rawResults.ids[0].map((result, index) => ({
+            id: result,
+            metadata: rawResults.metadatas[0][index],
+            text: rawResults.documents[0][index],
+            score: rawResults.distances[0] ? rawResults.distances[0][index] : undefined
+        }));
+    }
+    computeHash(content) {
+        const hash = crypto_1.default.createHash('sha256');
         hash.update(content);
         return hash.digest('hex');
-    };
-    ChromaDBService.prototype.handleContentChunks = function (content_1, url_1, task_1, projectId_1, title_1) {
-        return __awaiter(this, arguments, void 0, function (content, url, task, projectId, title, type, artifactId) {
-            var splitter, docId, chunks, addCollection;
-            var _this = this;
-            if (type === void 0) { type = 'content'; }
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        splitter = new text_splitter_1.RecursiveCharacterTextSplitter({
-                            chunkSize: 2000,
-                            chunkOverlap: 100,
-                        });
-                        docId = crypto_1.default.randomUUID();
-                        return [4 /*yield*/, (0, storeToFile_1.saveToFile)(projectId, type, docId, content)];
-                    case 1:
-                        _a.sent();
-                        return [4 /*yield*/, splitter.createDocuments([content])];
-                    case 2:
-                        chunks = _a.sent();
-                        addCollection = {
-                            ids: [],
-                            metadatas: [],
-                            documents: []
-                        };
-                        chunks.forEach(function (c, index) { return __awaiter(_this, void 0, void 0, function () {
-                            var chunkContent, hashId, metadata;
-                            return __generator(this, function (_a) {
-                                chunkContent = c.pageContent;
-                                hashId = this.computeHash(chunkContent);
-                                if (addCollection.ids.includes(hashId))
-                                    return [2 /*return*/];
-                                addCollection.ids.push(hashId);
-                                metadata = {
-                                    url: url,
-                                    projectId: projectId,
-                                    title: title,
-                                    docId: docId,
-                                    chunkId: index + 1,
-                                    chunkTotal: chunks.length,
-                                    artifactId: artifactId
-                                };
-                                if (type === 'summary') {
-                                    metadata.task = task;
-                                    metadata.type = type;
-                                }
-                                addCollection.metadatas.push(metadata);
-                                addCollection.documents.push(chunkContent);
-                                return [2 /*return*/];
-                            });
-                        }); });
-                        return [4 /*yield*/, this.addDocuments(addCollection)];
-                    case 3:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
+    }
+    async handleContentChunks(content, url, task, projectId, title, type = 'content', artifactId) {
+        const splitter = new text_splitter_1.RecursiveCharacterTextSplitter({
+            chunkSize: 2000,
+            chunkOverlap: 100,
         });
-    };
-    ChromaDBService.prototype.listCollectionsAndItems = function () {
-        return __awaiter(this, void 0, void 0, function () {
-            var collections, _loop_1, this_1, _i, collections_1, param;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, this.chromaDB.listCollections()];
-                    case 1:
-                        collections = _a.sent();
-                        _loop_1 = function (param) {
-                            var collection, items;
-                            return __generator(this, function (_b) {
-                                switch (_b.label) {
-                                    case 0:
-                                        console.log("Collection: ".concat(param.name));
-                                        return [4 /*yield*/, this_1.chromaDB.getCollection(param)];
-                                    case 1:
-                                        collection = _b.sent();
-                                        return [4 /*yield*/, collection.get({})];
-                                    case 2:
-                                        items = _b.sent();
-                                        console.log("Items in collection \"".concat(collection.name, "\":"));
-                                        items.documents.forEach(function (doc, index) {
-                                            console.log("Item ".concat(index + 1, ":"));
-                                            console.log("  ID: ".concat(items.ids[index]));
-                                            console.log("  Metadata: ".concat(JSON.stringify(items.metadatas[index])));
-                                            console.log("  Document: ".concat(doc));
-                                        });
-                                        return [2 /*return*/];
-                                }
-                            });
-                        };
-                        this_1 = this;
-                        _i = 0, collections_1 = collections;
-                        _a.label = 2;
-                    case 2:
-                        if (!(_i < collections_1.length)) return [3 /*break*/, 5];
-                        param = collections_1[_i];
-                        return [5 /*yield**/, _loop_1(param)];
-                    case 3:
-                        _a.sent();
-                        _a.label = 4;
-                    case 4:
-                        _i++;
-                        return [3 /*break*/, 2];
-                    case 5: return [2 /*return*/];
-                }
-            });
+        // Save the page to a file
+        const docId = crypto_1.default.randomUUID();
+        await (0, storeToFile_1.saveToFile)(projectId, type, docId, content);
+        // Logger.info(`Saving content to db: ${url}`);
+        const chunks = await splitter.createDocuments([content]);
+        const addCollection = {
+            ids: [],
+            metadatas: [],
+            documents: []
+        };
+        chunks.forEach(async (c, index) => {
+            const chunkContent = c.pageContent;
+            const hashId = this.computeHash(chunkContent);
+            if (addCollection.ids.includes(hashId))
+                return;
+            addCollection.ids.push(hashId);
+            const metadata = {
+                url,
+                projectId,
+                title,
+                docId,
+                chunkId: index + 1,
+                chunkTotal: chunks.length,
+                artifactId
+            };
+            if (type === 'summary') {
+                metadata.task = task;
+                metadata.type = type;
+            }
+            addCollection.metadatas.push(metadata);
+            addCollection.documents.push(chunkContent);
         });
-    };
-    ChromaDBService.prototype.getTokenCount = function (content) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                return [2 /*return*/, this.lmStudioService.getChatModel().unstable_countTokens(content)];
+        await this.addDocuments(addCollection);
+    }
+    async listCollectionsAndItems() {
+        const collections = await this.chromaDB.listCollections();
+        for (const param of collections) {
+            console.log(`Collection: ${param.name}`);
+            const collection = await this.chromaDB.getCollection(param);
+            const items = await collection.get({});
+            console.log(`Items in collection "${collection.name}":`);
+            items.documents.forEach((doc, index) => {
+                console.log(`Item ${index + 1}:`);
+                console.log(`  ID: ${items.ids[index]}`);
+                console.log(`  Metadata: ${JSON.stringify(items.metadatas[index])}`);
+                console.log(`  Document: ${doc}`);
             });
-        });
-    };
-    return ChromaDBService;
-}());
+        }
+    }
+    async clearCollection() {
+        if (!this.collection)
+            throw new Error("Collection not initialized");
+        logger_1.default.info("Clearing ChromaDB collection");
+        await this.collection.delete();
+    }
+    async reindexCollection(name) {
+        await this.clearCollection();
+        await this.initializeCollection(name);
+    }
+    async getTokenCount(content) {
+        return this.lmStudioService.getTokenCount(content);
+    }
+    async listCollections() {
+        return await this.chromaDB.listCollections();
+    }
+    async hasCollection(name) {
+        const collections = await this.listCollections();
+        return collections.some(c => c.name === name);
+    }
+    async getItems() {
+        if (!this.collection)
+            throw new Error("Collection not initialized");
+        return await this.collection.get({});
+    }
+    async deleteCollection(name) {
+        await this.chromaDB.deleteCollection({ name });
+    }
+}
 exports.default = ChromaDBService;

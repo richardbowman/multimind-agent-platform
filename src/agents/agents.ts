@@ -7,7 +7,7 @@ import { CreateArtifact, ModelMessageResponse } from "src/schemas/ModelResponse"
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
-import { Project, Task, TaskManager } from "src/tools/taskManager";
+import { Project, ProjectMetadata, Task, TaskManager } from "src/tools/taskManager";
 import { ArtifactResponseSchema } from '../schemas/artifactSchema';
 import schemas from '../schemas/schema.json';
 import { ArtifactInputPrompt } from 'src/prompts/artifactInputPrompt';
@@ -239,7 +239,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
 
                     const posts = await this.chatClient.getThreadChain(post);
                     // only respond to chats directed at "me"
-                    if (posts[0].message.startsWith(handle)) {
+                    if (posts[0].message.startsWith(handle||"")) {
                         // Get all available actions for this response type
                         const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
                         const projects = [];
@@ -269,6 +269,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
         });
     }
 
+    // @deprecated
     protected async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelMessageResponse> {
         return this.modelHelpers.generate({
             instructions: structure, 
@@ -295,7 +296,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
         return this.modelHelpers.getThreadSummary(posts);
     }
 
-    private cleanupOldSummaries(maxAge: number = 1000 * 60 * 60) { // default 1 hour
+    private async cleanupOldSummaries(maxAge: number = 1000 * 60 * 60) { // default 1 hour
         const now = Date.now();
         for (const [threadId, summary] of this.threadSummaries.entries()) {
             const message = await this.getMessage(summary.lastProcessedMessageId);
