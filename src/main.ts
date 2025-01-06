@@ -1,12 +1,10 @@
 import { ResearchManager } from "./agents/researchManager";
-import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, VECTOR_DATABASE_TYPE, RESEARCH_MANAGER_TOKEN_ID as RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID as RESEARCH_MANAGER_USER_ID, PROJECT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID, ONBOARDING_CHANNEL_ID, ONBOARDING_CONSULTANT_USER_ID, CONTENT_CREATION_CHANNEL_ID, FACT_CHECK_CHANNEL_ID, SOLVER_AGENT_USER_ID, SOLVER_CHANNEL_ID } from "./helpers/config";
+import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, VECTOR_DATABASE_TYPE, RESEARCH_MANAGER_TOKEN_ID as RESEARCH_MANAGER_TOKEN_ID, RESEARCH_MANAGER_USER_ID as RESEARCH_MANAGER_USER_ID, PROJECT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID, RESEARCHER_USER_ID, WEB_RESEARCH_CHANNEL_ID, ONBOARDING_CHANNEL_ID, ONBOARDING_CONSULTANT_USER_ID, CONTENT_CREATION_CHANNEL_ID, SOLVER_AGENT_USER_ID, SOLVER_CHANNEL_ID } from "./helpers/config";
 import { parseArgs } from 'node:util';
 import { SolverAgent } from "./agents/solverAgent";
 import { LLMServiceFactory, LLMProvider } from "./llm/LLMServiceFactory";
 import ResearchAssistant from "./agents/researchAssistant";
-import { chatBox, inputBox } from "./test/ui";
 import { ContentManager } from "src/agents/contentManager";
-import { setupUserAgent } from './test/userClient';
 import { CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID } from "./helpers/config";
 import { InMemoryChatStorage, InMemoryTestClient } from "./chat/inMemoryChatClient";
 import { ContentWriter } from "./agents/contentWriter";
@@ -40,30 +38,30 @@ export async function initializeBackend() {
     await tasks.load();
     await storage.load();
 
-storage.registerChannel(ONBOARDING_CHANNEL_ID, "#onboarding");
-storage.registerChannel(PROJECTS_CHANNEL_ID, "#projects");
-storage.registerChannel(WEB_RESEARCH_CHANNEL_ID, "#research");
-storage.registerChannel(CONTENT_CREATION_CHANNEL_ID, "#content");
-//storage.registerChannel(FACT_CHECK_CHANNEL_ID, "#fact-check");
-storage.registerChannel(SOLVER_CHANNEL_ID, "#solver");
+    storage.registerChannel(ONBOARDING_CHANNEL_ID, "#onboarding");
+    storage.registerChannel(PROJECTS_CHANNEL_ID, "#projects");
+    storage.registerChannel(WEB_RESEARCH_CHANNEL_ID, "#research");
+    storage.registerChannel(CONTENT_CREATION_CHANNEL_ID, "#content");
+    //storage.registerChannel(FACT_CHECK_CHANNEL_ID, "#fact-check");
+    storage.registerChannel(SOLVER_CHANNEL_ID, "#solver");
 
 
-// Handle graceful shutdown
-async function shutdown() {
-    console.log('Shutting down gracefully...');
-    try {
-        await wsServer.close();
-        await tasks.save();
-        await storage.save();
-        process.exit(0);
-    } catch (error) {
-        console.error('Error during shutdown:', error);
-        process.exit(1);
+    // Handle graceful shutdown
+    async function shutdown() {
+        console.log('Shutting down gracefully...');
+        try {
+            await wsServer.close();
+            await tasks.save();
+            await storage.save();
+            process.exit(0);
+        } catch (error) {
+            console.error('Error during shutdown:', error);
+            process.exit(1);
+        }
     }
-}
 
-process.on('SIGTERM', shutdown);
-process.on('SIGINT', shutdown);
+    process.on('SIGTERM', shutdown);
+    process.on('SIGINT', shutdown);
 
     // Create planners for each agent
     const researchClient = new InMemoryTestClient(RESEARCHER_USER_ID, "test", storage);
@@ -77,78 +75,78 @@ process.on('SIGINT', shutdown);
     });
     await researcher.initialize();
 
-const researchManagerClient = new InMemoryTestClient(RESEARCH_MANAGER_USER_ID, "test", storage);
-const researchManager = new ResearchManager({
-    userId: RESEARCH_MANAGER_USER_ID,
-    messagingHandle: RESEARCH_MANAGER_TOKEN_ID,
-    chatClient: researchManagerClient,
-    llmService: llmService,
-    taskManager: tasks,
-    vectorDBService: vectorDB
-});
-await researchManager.initialize();
+    const researchManagerClient = new InMemoryTestClient(RESEARCH_MANAGER_USER_ID, "test", storage);
+    const researchManager = new ResearchManager({
+        userId: RESEARCH_MANAGER_USER_ID,
+        messagingHandle: RESEARCH_MANAGER_TOKEN_ID,
+        chatClient: researchManagerClient,
+        llmService: llmService,
+        taskManager: tasks,
+        vectorDBService: vectorDB
+    });
+    await researchManager.initialize();
 
-const contentClient = new InMemoryTestClient(CONTENT_MANAGER_USER_ID, "test", storage);
-const contentAssistant = new ContentManager({
-    chatClient: contentClient,
-    llmService: llmService,
-    userId: CONTENT_MANAGER_USER_ID,
-    taskManager: tasks,
-    vectorDBService: vectorDB
-});
-await contentAssistant.initialize();
+    const contentClient = new InMemoryTestClient(CONTENT_MANAGER_USER_ID, "test", storage);
+    const contentAssistant = new ContentManager({
+        chatClient: contentClient,
+        llmService: llmService,
+        userId: CONTENT_MANAGER_USER_ID,
+        taskManager: tasks,
+        vectorDBService: vectorDB
+    });
+    await contentAssistant.initialize();
 
-const writerClient = new InMemoryTestClient(CONTENT_WRITER_USER_ID, "test", storage);
-const writerAssistant = new ContentWriter({
-    userId: CONTENT_WRITER_USER_ID,
-    messagingHandle: "@writer",
-    chatClient: writerClient,
-    llmService: llmService,
-    taskManager: tasks,
-    vectorDBService: vectorDB
-});
+    const writerClient = new InMemoryTestClient(CONTENT_WRITER_USER_ID, "test", storage);
+    const writerAssistant = new ContentWriter({
+        userId: CONTENT_WRITER_USER_ID,
+        messagingHandle: "@writer",
+        chatClient: writerClient,
+        llmService: llmService,
+        taskManager: tasks,
+        vectorDBService: vectorDB
+    });
 
-const pmClient = new InMemoryTestClient(PROJECT_MANAGER_USER_ID, "test", storage);
-const pmAssistant = new ProjectManager({
-    userId: PROJECT_MANAGER_USER_ID,
-    messagingHandle: "@pm",
-    chatClient: pmClient,
-    llmService: llmService,
-    vectorDBService: vectorDB,
-    taskManager: tasks
-});
+    const pmClient = new InMemoryTestClient(PROJECT_MANAGER_USER_ID, "test", storage);
+    const pmAssistant = new ProjectManager({
+        userId: PROJECT_MANAGER_USER_ID,
+        messagingHandle: "@pm",
+        chatClient: pmClient,
+        llmService: llmService,
+        vectorDBService: vectorDB,
+        taskManager: tasks
+    });
 
-const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
-const onboardingAssistant = new OnboardingConsultant({
-    chatClient: onboardingClient,
-    llmService: llmService,
-    userId: ONBOARDING_CONSULTANT_USER_ID,
-    taskManager: tasks,
-    vectorDBService: vectorDB
-});
-await onboardingAssistant.initialize();
+    const onboardingClient = new InMemoryTestClient(ONBOARDING_CONSULTANT_USER_ID, "test", storage);
+    const onboardingAssistant = new OnboardingConsultant({
+        chatClient: onboardingClient,
+        llmService: llmService,
+        userId: ONBOARDING_CONSULTANT_USER_ID,
+        taskManager: tasks,
+        vectorDBService: vectorDB
+    });
+    await onboardingAssistant.initialize();
 
-// const factCheckerClient = new InMemoryTestClient(FACT_CHECKER_USER_ID, "test", storage);
-// const factChecker = new FactChecker(factCheckerClient, llmService, tasks);
-// factChecker.setupChatMonitor(FACT_CHECK_CHANNEL_ID, "@factcheck");
+    // const factCheckerClient = new InMemoryTestClient(FACT_CHECKER_USER_ID, "test", storage);
+    // const factChecker = new FactChecker(factCheckerClient, llmService, tasks);
+    // factChecker.setupChatMonitor(FACT_CHECK_CHANNEL_ID, "@factcheck");
 
-// Initialize Solver Agent
-const solverClient = new InMemoryTestClient(SOLVER_AGENT_USER_ID, "test", storage);
-const solverAgent = new SolverAgent({
-    chatClient: solverClient,
-    llmService: llmService,
-    userId: SOLVER_AGENT_USER_ID,
-    taskManager: tasks,
-    vectorDBService: vectorDB
-});
-await solverAgent.initialize();
+    // Initialize Solver Agent
+    const solverClient = new InMemoryTestClient(SOLVER_AGENT_USER_ID, "test", storage);
+    const solverAgent = new SolverAgent({
+        chatClient: solverClient,
+        llmService: llmService,
+        userId: SOLVER_AGENT_USER_ID,
+        taskManager: tasks,
+        vectorDBService: vectorDB
+    });
+    await solverAgent.initialize();
 
-// Initialize WebSocket server with our storage
-import { WebSocketServer } from './web/server/WebSocketServer';
+    // Initialize WebSocket server with our storage
+    import { WebSocketServer } from './web/server/WebSocketServer';
 
-const USER_ID = "test";
-const userClient = new InMemoryTestClient(USER_ID, "test", storage);
-//await setupUserAgent(userClient, storage, chatBox, inputBox, artifactManager, tasks);
+    const USER_ID = "test";
+    const userClient = new InMemoryTestClient(USER_ID, "test", storage);
+    //await setupUserAgent(userClient, storage, chatBox, inputBox, artifactManager, tasks);
 
     const wsServer = new WebSocketServer(storage, tasks, artifactManager, userClient);
 
@@ -180,7 +178,6 @@ const userClient = new InMemoryTestClient(USER_ID, "test", storage);
         solverAgent
     };
 }
-
 
 // const project = await tasks.getProject("58b88241-5bf8-4e74-9184-963baa9d7664");
 
