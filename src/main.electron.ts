@@ -1,6 +1,5 @@
 import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
-import * as isDev from 'electron-is-dev';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -15,12 +14,14 @@ function createWindow() {
   });
 
   // Load the app
-  if (isDev) {
-    mainWindow.loadURL('http://localhost:3000');
-    mainWindow.webContents.openDevTools();
-  } else {
-    mainWindow.loadFile(path.join(__dirname, './src/web/client/build/index.html'));
-  }
+  import('electron-is-dev').then(isDev => {
+    if (isDev.default) {
+      mainWindow.loadURL('http://localhost:3000');
+      mainWindow.webContents.openDevTools();
+    } else {
+      mainWindow.loadFile(path.join(__dirname, './src/web/client/build/index.html'));
+    }
+  });
 
   mainWindow.on('closed', () => {
     mainWindow = null;
