@@ -4,7 +4,7 @@ import { parseArgs } from 'node:util';
 import { SolverAgent } from "./agents/solverAgent";
 import { LLMServiceFactory, LLMProvider } from "./llm/LLMServiceFactory";
 import ResearchAssistant from "./agents/researchAssistant";
-import { ContentManager } from "src/agents/contentManager";
+import { ContentManager } from "./agents/contentManager";
 import { CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID } from "./helpers/config";
 import { InMemoryChatStorage, InMemoryTestClient } from "./chat/inMemoryChatClient";
 import { ContentWriter } from "./agents/contentWriter";
@@ -14,6 +14,7 @@ import { createVectorDatabase } from "./llm/vectorDatabaseFactory";
 import { ProjectManager } from "./agents/projectManager";
 import Logger from "./helpers/logger";
 import OnboardingConsultant from "./agents/onboardingConsultant";
+import { WebSocketServer } from './web/server/WebSocketServer';
 
 export async function initializeBackend() {
     const llmService = LLMServiceFactory.createService(LLM_PROVIDER as LLMProvider);
@@ -141,9 +142,6 @@ export async function initializeBackend() {
     });
     await solverAgent.initialize();
 
-    // Initialize WebSocket server with our storage
-    import { WebSocketServer } from './web/server/WebSocketServer';
-
     const USER_ID = "test";
     const userClient = new InMemoryTestClient(USER_ID, "test", storage);
     //await setupUserAgent(userClient, storage, chatBox, inputBox, artifactManager, tasks);
@@ -178,6 +176,8 @@ export async function initializeBackend() {
         solverAgent
     };
 }
+
+initializeBackend();
 
 // const project = await tasks.getProject("58b88241-5bf8-4e74-9184-963baa9d7664");
 

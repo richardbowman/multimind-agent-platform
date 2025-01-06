@@ -1,19 +1,14 @@
 {
   "compilerOptions": {
     "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "node16",
+    "module": "CommonJS",
+    "moduleResolution": "node",
     "strict": true,
     "noImplicitAny": true,
     "sourceMap": false,
     "outDir": "dist",
     "resolveJsonModule": true,
     "baseUrl": ".",
-    "paths": {
-      "*": [
-        "node_modules/*"
-      ]
-    },
   },
   "include": [
     "src/**/*"

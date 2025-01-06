@@ -11,8 +11,6 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { updateBusinessPlan } from './businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
 
-const schema = await getGeneratedSchema(SchemaType.OperationalGuideResponse);
-
 @StepExecutorDecorator('create_revise_plan', `Create (or revise) a guide for our agents of the user's desired business goals.`)
 export class CreatePlanExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
@@ -44,6 +42,8 @@ export class CreatePlanExecutor implements StepExecutor {
                 category: project.tasks[a.questionId]?.type
             }))
         );
+
+        const schema = await getGeneratedSchema(SchemaType.OperationalGuideResponse);
 
         const response = await this.modelHelpers.generate<OperationalGuideResponse>({
             message: formattedMessage,
