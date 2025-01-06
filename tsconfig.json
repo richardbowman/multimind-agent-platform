@@ -8,7 +8,10 @@
       "skipLibCheck": true,
       "forceConsistentCasingInFileNames": true,
       "resolveJsonModule": true,
-      "baseUrl": "./",
+      "baseUrl": ".",
+      "paths": {
+        "src/*": ["src/*"]
+      },
       "experimentalDecorators": true,
       "emitDecoratorMetadata": true,
       "outDir": "./dist",
