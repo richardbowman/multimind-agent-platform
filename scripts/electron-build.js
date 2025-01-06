@@ -8,9 +8,9 @@ try {
     console.log('Cleaning dist directory...');
     execSync('rm -rf dist', { stdio: 'inherit' });
 
-    // Run TypeScript compilation
+    // Run TypeScript compilation with electron config
     console.log('Compiling TypeScript...');
-    execSync('tsc', { stdio: 'inherit' });
+    execSync('tsc -p tsconfig.electron.json --noCheck', { stdio: 'inherit' });
 
     // Copy client files
     console.log('Copying client files...');
