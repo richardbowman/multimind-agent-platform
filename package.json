@@ -1,7 +1,7 @@
 {
   "name": "multi-agent",
   "version": "1.0.0",
-  "main": "./dist/main.electron.js",
+  "main": "dist/main.electron.js",
   "type": "module",
   "scripts": {
     "start": "concurrently \"npm run start:server\" \"npm run start:client\"",
@@ -15,7 +15,7 @@
     "build:all": "npm run build && npm run build:web",
     "electron:dev": "concurrently \"npm run start:server\" \"npm run start:client\" \"npm run electron:start\"",
     "electron:start": "wait-on http://localhost:3000 && electron .",
-    "electron:build": "tsc -p tsconfig.electron.json --noCheck && npm run build:all && electron-builder --dir",
+    "electron:build": "tsc -p tsconfig.electron.json --noCheck && npm run build:all && electron-builder",
     "electron:package": "electron-builder build --mac --win --linux"
   },
   "keywords": [],
