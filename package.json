@@ -14,7 +14,7 @@
     "build:all": "npm run build && npm run build:web",
     "electron:dev": "concurrently \"npm run start:server\" \"npm run start:client\" \"npm run electron:start\"",
     "electron:start": "wait-on http://localhost:3000 && electron .",
-    "electron:build": "tsc -p tsconfig.electron.json --noCheck && npm run build:all && electron-builder",
+    "electron:build": "node scripts/electron-build.js",
     "electron:package": "electron-builder build --mac --win --linux"
   },
   "keywords": [],
