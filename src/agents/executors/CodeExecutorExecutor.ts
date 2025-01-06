@@ -3,7 +3,7 @@ import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import ivm from 'isolated-vm';
+import { getQuickJS } from 'quickjs-emscripten';
 
 import { CodeExecutionResponse } from '../../schemas/ModelResponse';
 import { codeExecutionSchema } from '../../schemas/CodeExecutionSchema';
@@ -11,54 +11,49 @@ import { codeExecutionSchema } from '../../schemas/CodeExecutionSchema';
 @StepExecutorDecorator('code-execution', 'Safely execute JavaScript code in a sandboxed environment')
 export class CodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
-    private isolate: ivm.Isolate;
+    private modelHelpers: ModelHelpers;
 
     constructor(llmService: ILLMService) {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
-        this.isolate = new ivm.Isolate({ memoryLimit: 128 }); // Limit to 128MB
     }
 
     private async executeCodeInSandbox(code: string): Promise<{returnValue: any, consoleOutput?: string}> {
-        const context = this.isolate.createContextSync();
-        const jail = context.global;
-        jail.setSync('global', jail.derefInto());
-
-        // Set up console logging capture
+        const QuickJS = await getQuickJS();
+        const vm = QuickJS.newContext();
         let logs: string[] = [];
-        jail.setSync('log', (...args: any[]) => {
-            logs.push(args.map(arg => String(arg)).join(' '));
+
+        // Set up console.log
+        const logHandle = vm.newFunction("log", (...args) => {
+            logs.push(args.map(arg => String(vm.dump(arg))).join(' '));
         });
-        
-        // Set up console.log as an alias to log
-        context.evalSync(`console = { log: log }`);
-        
-        // Create a new script in the context
-        const script = this.isolate.compileScriptSync(code);
-        
-        // Run with 5 second timeout
-        const scriptResult = await script.run(context, { timeout: 5000 });
-        
-        // Handle the script result
-        let returnValue;
-        if (typeof scriptResult === 'number' || 
-            typeof scriptResult === 'string' || 
-            typeof scriptResult === 'boolean') {
-            // Primitive values can be used directly
-            returnValue = scriptResult;
-        } else {
-            try {
-                // Try to copy non-primitive values
-                returnValue = await scriptResult?.copy();
-            } catch (e) {
-                // If copy fails, convert to string
-                returnValue = scriptResult ? scriptResult.toString() : undefined;
+        const consoleHandle = vm.newObject();
+        vm.setProp(consoleHandle, "log", logHandle);
+        vm.setProp(vm.global, "console", consoleHandle);
+        consoleHandle.dispose();
+        logHandle.dispose();
+
+        try {
+            // Execute with 5 second timeout
+            const result = vm.evalCode(code, {
+                shouldInterrupt: () => false, // TODO: Implement timeout
+                memoryLimitBytes: 128 * 1024 * 1024 // 128MB
+            });
+
+            let returnValue;
+            if (result.error) {
+                throw new Error(vm.dump(result.error));
+            } else {
+                returnValue = vm.dump(result.value);
+                result.value.dispose();
             }
+
+            return {
+                returnValue,
+                consoleOutput: logs.join('\n')
+            };
+        } finally {
+            vm.dispose();
         }
-        
-        return {
-            returnValue: returnValue,
-            consoleOutput: logs.join('\n')
-        };
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
@@ -118,11 +113,6 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             } catch (retryError) {
                 executionResult = `Error: ${error.message}\nRetry Error: ${retryError.message}`;
             }
-        } finally {
-            // Dispose the isolate to free memory
-            await this.isolate.dispose();
-            // Create a new isolate for next execution
-            this.isolate = new ivm.Isolate({ memoryLimit: 128 });
         }
 
         result.result = executionResult;
