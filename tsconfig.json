@@ -9,11 +9,6 @@
       "forceConsistentCasingInFileNames": true,
       "resolveJsonModule": true,
       "baseUrl": ".",
-      "paths": {
-        "src/*": ["./src/*"]
-      },
-      "experimentalDecorators": true,
-      "emitDecoratorMetadata": true,
       "outDir": "./dist",
       "rootDir": "./src",
       "jsx": "react-jsx",
