@@ -1,6 +1,8 @@
-require('../register-paths');
+require('./register-paths');
+
 import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
+import isDev from 'electron-is-dev';
 
 let mainWindow: BrowserWindow | null = null;
 
@@ -16,8 +18,7 @@ async function createWindow() {
 
   // Load the app
   try {
-    const isDev = await import('electron-is-dev');
-    if (isDev.default) {
+    if (isDev) {
       mainWindow?.loadURL('http://localhost:3000');
       mainWindow?.webContents.openDevTools();
     } else {
