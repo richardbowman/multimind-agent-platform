@@ -49,10 +49,16 @@ app.on('activate', () => {
 // Start the backend server
 async function startBackend() {
   try {
-    const main = await import('./main');
+    const { initializeBackend } = await import('./main');
+    const backend = await initializeBackend();
+    return backend;
   } catch (err) {
     console.error('Failed to start backend:', err);
+    throw err;
   }
 }
 
-startBackend().catch(console.error);
+startBackend().catch(err => {
+  console.error('Fatal error starting backend:', err);
+  app.quit();
+});

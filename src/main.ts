@@ -17,28 +17,28 @@ import { ProjectManager } from "./agents/projectManager";
 import Logger from "./helpers/logger";
 import OnboardingConsultant from "./agents/onboardingConsultant";
 
-const llmService = LLMServiceFactory.createService(LLM_PROVIDER as LLMProvider);
-// Initialize the embedding and LLaMA models
-await llmService.initializeEmbeddingModel(EMBEDDING_MODEL);
-await llmService.initializeLlamaModel(CHAT_MODEL);
+export async function initializeBackend() {
+    const llmService = LLMServiceFactory.createService(LLM_PROVIDER as LLMProvider);
+    // Initialize the embedding and LLaMA models
+    await llmService.initializeEmbeddingModel(EMBEDDING_MODEL);
+    await llmService.initializeLlamaModel(CHAT_MODEL);
 
-const vectorDB = createVectorDatabase(VECTOR_DATABASE_TYPE, llmService);
-const artifactManager = new ArtifactManager(vectorDB);
+    const vectorDB = createVectorDatabase(VECTOR_DATABASE_TYPE, llmService);
+    const artifactManager = new ArtifactManager(vectorDB);
 
-vectorDB.on("needsReindex", async () => {
-    Logger.info("Reindexing");
-    await artifactManager.indexArtifacts();
-});
+    vectorDB.on("needsReindex", async () => {
+        Logger.info("Reindexing");
+        await artifactManager.indexArtifacts();
+    });
 
-await vectorDB.initializeCollection(CHROMA_COLLECTION);
+    await vectorDB.initializeCollection(CHROMA_COLLECTION);
 
+    const storage = new InMemoryChatStorage(".output/chats.json");
+    const tasks = new SimpleTaskManager(".output/tasks.json");
 
-const storage = new InMemoryChatStorage(".output/chats.json");
-const tasks = new SimpleTaskManager(".output/tasks.json");
-
-// Load previously saved tasks
-await tasks.load();
-await storage.load();
+    // Load previously saved tasks
+    await tasks.load();
+    await storage.load();
 
 storage.registerChannel(ONBOARDING_CHANNEL_ID, "#onboarding");
 storage.registerChannel(PROJECTS_CHANNEL_ID, "#projects");
@@ -65,17 +65,17 @@ async function shutdown() {
 process.on('SIGTERM', shutdown);
 process.on('SIGINT', shutdown);
 
-// Create planners for each agent
-const researchClient = new InMemoryTestClient(RESEARCHER_USER_ID, "test", storage);
-export const researcher = new ResearchAssistant({
-    userId: RESEARCHER_USER_ID,
-    messagingHandle: RESEARCH_MANAGER_TOKEN_ID,
-    chatClient: researchClient,
-    llmService: llmService,
-    taskManager: tasks,
-    vectorDBService: vectorDB
-});
-await researcher.initialize();
+    // Create planners for each agent
+    const researchClient = new InMemoryTestClient(RESEARCHER_USER_ID, "test", storage);
+    const researcher = new ResearchAssistant({
+        userId: RESEARCHER_USER_ID,
+        messagingHandle: RESEARCH_MANAGER_TOKEN_ID,
+        chatClient: researchClient,
+        llmService: llmService,
+        taskManager: tasks,
+        vectorDBService: vectorDB
+    });
+    await researcher.initialize();
 
 const researchManagerClient = new InMemoryTestClient(RESEARCH_MANAGER_USER_ID, "test", storage);
 const researchManager = new ResearchManager({
@@ -150,21 +150,35 @@ const USER_ID = "test";
 const userClient = new InMemoryTestClient(USER_ID, "test", storage);
 //await setupUserAgent(userClient, storage, chatBox, inputBox, artifactManager, tasks);
 
-const wsServer = new WebSocketServer(storage, tasks, artifactManager, userClient);
+    const wsServer = new WebSocketServer(storage, tasks, artifactManager, userClient);
 
-// Parse command line arguments
-const { values } = parseArgs({
-    options: {
-        reindex: { type: 'boolean' }
+    // Parse command line arguments
+    const { values } = parseArgs({
+        options: {
+            reindex: { type: 'boolean' }
+        }
+    });
+
+    // Handle reindex flag
+    if (values.reindex) {
+        Logger.info("Reindexing artifacts...");
+        await artifactManager.indexArtifacts();
+        process.exit(0);
     }
-});
 
-// Handle reindex flag
-if (values.reindex) {
-    Logger.info("Reindexing artifacts...");
-    //await vectorDB.reindexCollection(CHROMA_COLLECTION);
-    await artifactManager.indexArtifacts();
-    process.exit(0);
+    return {
+        storage,
+        tasks,
+        artifactManager,
+        wsServer,
+        researcher,
+        researchManager,
+        contentAssistant,
+        writerAssistant,
+        pmAssistant,
+        onboardingAssistant,
+        solverAgent
+    };
 }
 
 
