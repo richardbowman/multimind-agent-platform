@@ -3,7 +3,7 @@ import * as path from 'path';
 
 let mainWindow: BrowserWindow | null = null;
 
-function createWindow() {
+async function createWindow() {
   mainWindow = new BrowserWindow({
     width: 1200,
     height: 800,
@@ -14,14 +14,18 @@ function createWindow() {
   });
 
   // Load the app
-  import('electron-is-dev').then(isDev => {
+  try {
+    const isDev = await import('electron-is-dev');
     if (isDev.default) {
-      mainWindow.loadURL('http://localhost:3000');
-      mainWindow.webContents.openDevTools();
+      mainWindow?.loadURL('http://localhost:3000');
+      mainWindow?.webContents.openDevTools();
     } else {
-      mainWindow.loadFile(path.join(__dirname, './src/web/client/build/index.html'));
+      mainWindow?.loadFile(path.join(__dirname, './src/web/client/build/index.html'));
     }
-  });
+  } catch (err) {
+    console.error('Failed to load app:', err);
+    mainWindow?.loadFile(path.join(__dirname, './src/web/client/build/index.html'));
+  }
 
   mainWindow.on('closed', () => {
     mainWindow = null;
@@ -43,4 +47,12 @@ app.on('activate', () => {
 });
 
 // Start the backend server
-import('./main');
+async function startBackend() {
+  try {
+    const main = await import('./main');
+  } catch (err) {
+    console.error('Failed to start backend:', err);
+  }
+}
+
+startBackend().catch(console.error);
