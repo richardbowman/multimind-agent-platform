@@ -1,11 +1,19 @@
 // config.ts
 import dotenv from 'dotenv';
 import Logger from './logger';
+import path from 'path';
+import { app } from 'electron';
 
-dotenv.config({ path: 'env.defaults' });
-dotenv.config({ path: '.env', override: true });
-dotenv.config({ path: '.env.local', override: true });
+// Determine the base directory for config files
+const isDev = !app?.isPackaged;
+const baseDir = isDev ? '.' : path.dirname(process.execPath);
 
+// Load environment variables from config files
+dotenv.config({ path: path.join(baseDir, 'env.defaults') });
+dotenv.config({ path: path.join(baseDir, '.env'), override: true });
+dotenv.config({ path: path.join(baseDir, '.env.local'), override: true });
+
+Logger.info(`Loading config from ${baseDir}`);
 Logger.info(JSON.stringify(process.env, undefined, " "));
 
 export const WEB_RESEARCH_CHANNEL_ID = process.env.WEB_RESEARCH_CHANNEL_ID!;

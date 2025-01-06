@@ -12,9 +12,13 @@ try {
     console.log('Compiling TypeScript...');
     execSync('tsc -p tsconfig.electron.json --noCheck', { stdio: 'inherit' });
 
-    // Copy client files
-    console.log('Copying client files...');
+    // Copy client files and config
+    console.log('Copying client files and config...');
     require('./copy-client-files.js');
+    
+    // Copy env.defaults
+    console.log('Copying env.defaults...');
+    execSync('cp env.defaults dist/', { stdio: 'inherit' });
 
     // Run electron-builder
     console.log('Building Electron app...');
