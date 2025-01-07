@@ -10,8 +10,41 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
     protected handlerThread(params: HandlerParams): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    protected handleChannel(params: HandlerParams): Promise<void> {
-        throw new Error('Method not implemented.');
+    protected async handleChannel(params: HandlerParams): Promise<void> {
+        if (params.userPost.channel_id !== CONTENT_CREATION_CHANNEL_ID) {
+            return;
+        }
+
+        const projectId = params.userPost.props["project-id"];
+        if (!projectId) {
+            Logger.warn("No project ID provided in content creation message");
+            return;
+        }
+
+        try {
+            const project = await this.projects.getProject(projectId);
+            if (!project) {
+                Logger.warn(`Project ${projectId} not found`);
+                return;
+            }
+
+            // Create a new content task from the message
+            const task: ContentTask = {
+                id: randomUUID(),
+                projectId: projectId,
+                title: "Content Section",
+                description: params.userPost.message,
+                type: "content",
+                creator: params.userPost.user_id,
+                complete: false,
+                inProgress: false
+            };
+
+            await this.projects.addTask(task);
+            await this.processTask(task);
+        } catch (error) {
+            Logger.error("Error handling content creation message", error);
+        }
     }
 
     async processTask(task: ContentTask) {
