@@ -13,6 +13,7 @@ export interface ChatClient {
 
     registerHandle(handleName: string): void;
     getChannels(): Promise<[string, string][]>;
+    getHandles(): Promise<Record<string, string>>;
 }
 
 export interface ProjectChainResponse {

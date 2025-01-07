@@ -157,6 +157,10 @@ export class LocalTestClient implements ChatClient {
         );
     }
 
+    public getHandles(): Promise<Record<string, string>> {
+        return Promise.resolve(this.storage.userIdToHandleName);
+    }
+
     public getPosts() {
         return this.storage.posts;
     }
