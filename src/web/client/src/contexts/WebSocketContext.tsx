@@ -79,15 +79,17 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    webSocketService.connect();
-    
-    const handlesCleanup = webSocketService.onHandles((newHandles) => {
-      console.log('WebSocketContext: Received handles:', newHandles);
-      setHandles(newHandles);
-    });
+    // Check if we're running in Electron
+    const isElectron = !!(window as any).electron;
 
-    // Handle both bulk and individual messages
-    const messageCleanup = webSocketService.onMessage((messages, isLive) => {
+    if (isElectron) {
+      // Set up Electron IPC handlers
+      const handlesCleanup = (window as any).electron.onHandles((newHandles: any) => {
+        console.log('WebSocketContext: Received handles:', newHandles);
+        setHandles(newHandles);
+      });
+
+      const messageCleanup = (window as any).electron.onMessage((messages: any[], isLive: boolean) => {
       setMessages(prev => {
         if (!isLive) {
           // For historical messages, replace the entire list
@@ -114,20 +116,32 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     });
 
-    const channelCleanup = webSocketService.onChannels((newChannels) => {
-      setChannels(newChannels);
-    });
+    const channelCleanup = isElectron 
+      ? (window as any).electron.onChannels((newChannels: any) => {
+          setChannels(newChannels);
+        })
+      : webSocketService.onChannels((newChannels) => {
+          setChannels(newChannels);
+        });
 
+    const taskCleanup = isElectron
+      ? (window as any).electron.onTasks((newTasks: any) => {
+          setTasks(newTasks);
+        })
+      : webSocketService.onTasks((newTasks) => {
+          setTasks(newTasks);
+        });
 
-    const taskCleanup = webSocketService.onTasks((newTasks) => {
-      setTasks(newTasks);
-    });
+    const artifactCleanup = isElectron
+      ? (window as any).electron.onArtifacts((newArtifacts: any) => {
+          setArtifacts(newArtifacts);
+        })
+      : webSocketService.onArtifacts((newArtifacts) => {
+          setArtifacts(newArtifacts);
+        });
 
-    const artifactCleanup = webSocketService.onArtifacts((newArtifacts) => {
-      setArtifacts(newArtifacts);
-    });
-
-    const logsCleanup = webSocketService.onLogs((newLogs) => {
+    const logsCleanup = isElectron
+      ? (window as any).electron.onLogs((newLogs: any) => {
       console.log('WebSocketContext: Received logs:', newLogs);
       if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
         console.warn('WebSocketContext: Received invalid log type:', newLogs?.type);
@@ -140,13 +154,22 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     });
 
     return () => {
-      messageCleanup();
-      channelCleanup();
-      taskCleanup();
-      artifactCleanup();
-      handlesCleanup();
-      logsCleanup();
-      webSocketService.disconnect();
+      if (isElectron) {
+        messageCleanup();
+        channelCleanup();
+        taskCleanup();
+        artifactCleanup();
+        handlesCleanup();
+        logsCleanup();
+      } else {
+        messageCleanup();
+        channelCleanup();
+        taskCleanup();
+        artifactCleanup();
+        handlesCleanup();
+        logsCleanup();
+        webSocketService.disconnect();
+      }
     };
   }, []);
 
@@ -166,38 +189,70 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     setIsLoading(false);
   }, [messages]);
 
+  const isElectron = !!(window as any).electron;
+
   const sendMessage = (message: Partial<ClientMessage>) => {
-    webSocketService.sendMessage(message);
-    // Don't emit locally - wait for server response
+    if (isElectron) {
+      (window as any).electron.sendMessage(message);
+    } else {
+      webSocketService.sendMessage(message);
+    }
   };
 
   const fetchChannels = () => {
-    webSocketService.fetchChannels();
+    if (isElectron) {
+      (window as any).electron.getChannels();
+    } else {
+      webSocketService.fetchChannels();
+    }
   };
 
-
   const fetchHandles = () => {
-    webSocketService.fetchHandles();
+    if (isElectron) {
+      (window as any).electron.getHandles();
+    } else {
+      webSocketService.fetchHandles();
+    }
   };
 
   const fetchTasks = (channelId: string, threadId: string | null) => {
-    webSocketService.fetchTasks(channelId, threadId);
+    if (isElectron) {
+      (window as any).electron.getTasks(channelId, threadId);
+    } else {
+      webSocketService.fetchTasks(channelId, threadId);
+    }
   };
 
   const fetchArtifacts = (channelId: string, threadId: string | null) => {
-    webSocketService.fetchArtifacts(channelId, threadId);
+    if (isElectron) {
+      (window as any).electron.getArtifacts(channelId, threadId);
+    } else {
+      webSocketService.fetchArtifacts(channelId, threadId);
+    }
   };
 
   const fetchAllArtifacts = () => {
-    webSocketService.fetchAllArtifacts();
+    if (isElectron) {
+      (window as any).electron.getAllArtifacts();
+    } else {
+      webSocketService.fetchAllArtifacts();
+    }
   };
 
   const deleteArtifact = (artifactId: string) => {
-    webSocketService.deleteArtifact(artifactId);
+    if (isElectron) {
+      (window as any).electron.deleteArtifact(artifactId);
+    } else {
+      webSocketService.deleteArtifact(artifactId);
+    }
   };
 
   const fetchLogs = (logType: 'llm' | 'system' | 'api') => {
-    webSocketService.fetchLogs(logType);
+    if (isElectron) {
+      (window as any).electron.getLogs(logType);
+    } else {
+      webSocketService.fetchLogs(logType);
+    }
   };
 
   return (
@@ -221,8 +276,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       currentThreadId,
       setCurrentThreadId,
       isLoading,
-      getSettings: webSocketService.getSettings.bind(webSocketService),
-      updateSettings: webSocketService.updateSettings.bind(webSocketService)
+      getSettings: isElectron 
+        ? (window as any).electron.getSettings
+        : webSocketService.getSettings.bind(webSocketService),
+      updateSettings: isElectron
+        ? (window as any).electron.updateSettings
+        : webSocketService.updateSettings.bind(webSocketService)
     }}>
       {children}
     </WebSocketContext.Provider>
