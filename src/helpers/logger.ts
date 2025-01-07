@@ -1,9 +1,11 @@
 // logger.ts
 import { appendFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
+import { getDataPath } from './paths';
+import path from 'path';
 
 class Logger {
-    private static logFilePath = `./.output/output-${new Date().toISOString().split('T')[0]}.log`;
+    private static logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.log`);
 
     private static ensureLogDirectoryExists(): void {
         const dir = dirname(Logger.logFilePath);

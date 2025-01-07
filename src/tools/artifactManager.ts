@@ -1,6 +1,7 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import { fileURLToPath } from 'url';
+import { getDataPath } from '../helpers/paths';
 import Logger from '../helpers/logger';
 import { IVectorDatabase } from '../llm/IVectorDatabase';
 import { Artifact } from './artifact';
@@ -13,7 +14,7 @@ export class ArtifactManager {
   private fileQueue: AsyncQueue;
 
   constructor(vectorDb: IVectorDatabase, storageDir?: string) {
-    this.storageDir = storageDir || path.join(__dirname, '../../.output/artifacts');
+    this.storageDir = storageDir || path.join(getDataPath(), 'artifacts');
     this.artifactMetadataFile = path.join(this.storageDir, 'artifact.json');
     this.vectorDb = vectorDb;
     this.fileQueue = new AsyncQueue();

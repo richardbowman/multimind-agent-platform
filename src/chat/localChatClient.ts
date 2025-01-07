@@ -1,6 +1,8 @@
 import Logger from "src/helpers/logger";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "./chatClient";
 import fs from "fs/promises";
+import { getDataPath } from "../helpers/paths";
+import path from "path";
 
 export class InMemoryPost implements ChatPost {
     static fromLoad(postData: any) : InMemoryPost {
