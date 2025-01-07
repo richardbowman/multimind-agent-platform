@@ -89,7 +89,7 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
     }
 
     protected projectCompleted(project: ContentProject): void {
-        throw new Error('Method not implemented.');
+        
     }
 
 
