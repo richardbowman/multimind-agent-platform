@@ -6,6 +6,7 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ContentOutline } from 'src/schemas/outline';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that creates structured content outlines for documents.
@@ -19,8 +20,6 @@ import { ContentOutline } from 'src/schemas/outline';
  * - Supports both new outlines and revisions
  * - Integrates with content generation workflow
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.OUTLINE, 'Create structured content outlines')
 export class OutlineExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;

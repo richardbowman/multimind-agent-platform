@@ -8,7 +8,7 @@ import { ValidationExecutor } from './executors/ValidationExecutor';
 import { AnswerQuestionsExecutor } from './executors/AnswerQuestionsExecutor';
 import { CreatePlanExecutor } from './executors/CreatePlanExecutor';
 import { ReviewProgressExecutor } from './executors/ReviewProgressExecutor';
-import { UnderstandGoalsExecutor } from './executors/UnderstandGoalsExecutor';
+import { OnboardingGoalsExecutor } from './executors/UnderstandGoalsExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 
@@ -29,7 +29,7 @@ export interface OnboardingProject extends Project<Task> {
     answers?: QuestionAnswer[];
 }
 
-class OnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
+export class OnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
 
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Onboarding Consultant`);
@@ -67,7 +67,7 @@ Let's start by discussing your main business goals. What would you like to achie
         // Register our specialized executors
         // this.registerStepExecutor(new ReplyExecutor(lmStudioService, projects, this.artifactManager));
         this.registerStepExecutor(new AnswerQuestionsExecutor(params.llmService, params.taskManager));
-        this.registerStepExecutor(new UnderstandGoalsExecutor(params.llmService, params.taskManager, params.userId));
+        this.registerStepExecutor(new OnboardingGoalsExecutor(params.llmService, params.taskManager, params.userId));
         this.registerStepExecutor(new CreatePlanExecutor(params.llmService, params.taskManager, this.artifactManager, params.userId));
         this.registerStepExecutor(new ReviewProgressExecutor(params.llmService, params.taskManager, this.artifactManager));
         this.registerStepExecutor(new ValidationExecutor(params.llmService));
@@ -83,5 +83,3 @@ this.modelHelpers.setFinalInstructions(`To kickoff with a new user, create the f
 `);
         }
 }
-
-export default OnboardingConsultant;

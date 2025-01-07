@@ -10,6 +10,7 @@ import { ArtifactManager } from '../../tools/artifactManager';
 import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { ResearchArtifactResponse } from '../../schemas/research-manager';
 import Logger from '../../helpers/logger';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that combines and synthesizes research findings into comprehensive reports.
@@ -25,8 +26,6 @@ import Logger from '../../helpers/logger';
  * - Creates clear section organization
  * - Ensures consistent formatting and style
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.RESEARCH_AGGREGATION, 'Combine research findings into final report')
 export class ResearchAggregationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;

@@ -52,12 +52,14 @@ export default class LMStudioService extends BaseLLMService {
     private logger: LLMCallLogger;
 
     constructor() {
+        super();
         this.lmStudioClient = new LMStudioClient({
             baseUrl: process.env.LMSTUDIO_BASEURL!
         });
         this.logger = new LLMCallLogger('lmstudio');
     }
-    getTokenCount(message: string): Promise<number> {
+
+    countTokens(message: string): Promise<number> {
         if (!this.chatModel) throw new Error("LM Studio not initalized");
         return this.chatModel.unstable_countTokens(message);
     }
@@ -151,7 +153,7 @@ export default class LMStudioService extends BaseLLMService {
         return this.chatModel;
     }
 
-    private async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>> {
+    async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>> {
         if (!this.chatModel) {
             throw new Error("LLaMA model is not initialized.");
         }
@@ -162,8 +164,8 @@ export default class LMStudioService extends BaseLLMService {
         }
 
         // Handle context window truncation if needed
-        if (params.contextWindowLength) {
-            const contextLength = parseInt(process.env.CONTEXT_SIZE || "") || params.contextWindowLength || 4096;
+        if (params.opts?.contextWindowLength) {
+            const contextLength = parseInt(process.env.CONTEXT_SIZE || "") || params.opts.contextWindowLength || 4096;
             let tokenCount = 0;
             for (let i = messageChain.length - 1; i >= 0; i--) {
                 const messageTokens = await this.chatModel.unstable_countTokens(messageChain[i].content);
@@ -176,7 +178,10 @@ export default class LMStudioService extends BaseLLMService {
             }
         }
 
-        const prediction = await this.chatModel.respond(messageChain, params.opts || {});
+        const prediction = await this.chatModel.respond(messageChain, {
+            maxPredictedTokens: params.opts?.maxPredictedTokens,
+            temperature: params.opts?.temperature
+        });
         const resultBody = prediction.content;
 
         if (params.parseJSON) {

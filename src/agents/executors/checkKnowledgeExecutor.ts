@@ -8,6 +8,7 @@ import { QueriesResponse, ResearchResponse } from '../../schemas/research';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import Logger from '../../helpers/logger';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that searches and analyzes existing knowledge in the vector database.
@@ -21,8 +22,6 @@ import Logger from '../../helpers/logger';
  * - Identifies information gaps for further research
  * - Provides structured research reports with sources and relevance scores
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.CHECK_KNOWLEDGE, 'Check my existing knowledgebase (useful to do upfront)')
 export class KnowledgeCheckExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;

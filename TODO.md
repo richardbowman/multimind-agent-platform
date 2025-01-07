@@ -4,6 +4,17 @@
 Error processing page https://www.unite.ai/best-large-language-models-llms/ Error: Trying to keep the first 22333 tokens when context the overflows. However, the model is loaded with context length of only 16384 tokens, which is not enough. Try to load the model with a larger context length, or provide a shorter input
 
 
+
+
+## 2024-12-17
+- [ ] move to Electron app
+- [ ] move to puppeteer-core and use local Chrome
+
+- [ ] right now, if the server restarts, the client can't restart/resync
+- [ ] Remove already processed links from link selection 
+- [ ] Move "Received get_logs request with type:" logs to the API type log
+- [ ] instead of scraper scrolling all the way to bottom, what if it scrolled page by page
+
 Errors
 
 * In the process that uses schema “Array of selected URLs most relevant to the research goal”, seeing “You are a research assistant. Our overall goal is **undefined**:” in logs
@@ -15,6 +26,17 @@ Errors
   * [	https://huggingface.co/blog/latest-llm-releases](https://huggingface.co/blog/latest-llm-releases)
   * [	https://developer.ibm.com/languages/python/tutorials/llms-introduction/](https://developer.ibm.com/languages/python/tutorials/llms-introduction/)
 
+
+Error processing page https://www.theverge.com/2024/10/24/24278999/openai-plans-orion-ai-model-release-december
+Error: Cannot save artifact cc441bec-1817-43fe-9c77-a4915ac91cc2: content is undefined
+Stack: Error: Cannot save artifact cc441bec-1817-43fe-9c77-a4915ac91cc2: content is undefined
+    at ArtifactManager.saveArtifact (/home/rickbowman/Projects/multi-agent/src/tools/artifactManager.ts:79:13)
+    at async ScrapeHelper.scrapePage (/home/rickbowman/Projects/multi-agent/src/helpers/scrapeHelper.ts:111:13)
+    at async WebSearchExecutor.processPage (/home/rickbowman/Projects/multi-agent/src/agents/research/WebResearchExecutor.ts:54:43)
+
+Error: ENOENT: no such file or directory, open '/home/rickbowman/Projects/multi-agent/.output/artifacts/artifact.json'
+Stack: Error: ENOENT: no such file or directory, open '/home/rickbowman/Projects/multi-agent/.output/artifacts/artifact.json'
+    at async open (node:internal/fs/promises:639:25)
 
 - [ ] we should add timing to model logs (and add usage tokens to LM Studio logging)
 - [ ] context window is being exceeded for web summarization - we’ll have to chunk these

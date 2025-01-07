@@ -1,5 +1,5 @@
 import { ChatPost } from "src/chat/chatClient";
-import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from "src/chat/inMemoryChatClient";
+import { LocalChatStorage, InMemoryPost, LocalTestClient } from "src/chat/localChatClient";
 import { PROJECTS_CHANNEL_ID } from "src/helpers/config";
 import { formatMarkdownForTerminal } from "src/helpers/formatters";
 import Logger from "src/helpers/logger";
@@ -18,7 +18,7 @@ const COMMANDS = [
     { command: '/channel', description: 'Send message to channel root' }
 ];
 
-export async function setupUserAgent(UserClient: InMemoryTestClient, storage: InMemoryChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager, taskManager: TaskManager): Promise<InMemoryTestClient> {
+export async function setupUserAgent(UserClient: LocalTestClient, storage: LocalChatStorage, chatBox: blessed.Widgets.Log, inputBox: blessed.Widgets.TextboxElement, artifactManager: ArtifactManager, taskManager: TaskManager): Promise<LocalTestClient> {
     // Show splash screen with animation
     splashBox.show();
     screen.render();

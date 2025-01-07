@@ -8,6 +8,7 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import { EditingResponse } from '../../schemas/editing';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from 'src/tools/taskManager';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that reviews and improves content quality.

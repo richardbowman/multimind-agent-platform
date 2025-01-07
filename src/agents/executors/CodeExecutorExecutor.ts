@@ -7,7 +7,7 @@ import { codeExecutionSchema } from '../../schemas/CodeExecutionSchema';
 import { getQuickJS } from 'quickjs-emscripten';
 
 /**
- * Executor that safely runs JavaScript code in an isolated sandbox environment.
+ * Executor that safely runs JavaScript code in an isolated sandbox environment. 
  * Key capabilities:
  * - Executes JavaScript code with strict memory and time limits
  * - Uses isolated-vm for secure sandboxed execution
@@ -19,8 +19,6 @@ import { getQuickJS } from 'quickjs-emscripten';
  * - Enforces 5 second execution timeout
  * - Limits memory usage to 128MB per execution
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.CODE_EXECUTION, 'Safely execute JavaScript code in a sandboxed environment')
 export class CodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
@@ -69,7 +67,7 @@ export class CodeExecutorExecutor implements StepExecutor {
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = await getGeneratedSchema(SchemaType.CodeExecution);
+        const schema = await getGeneratedSchema(SchemaType.CodeExecutionResponse);
 
         const prompt = `You are a JavaScript programming expert.
 Generate safe JavaScript code to solve the given problem.
@@ -92,14 +90,7 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             model: "qwen2.5-coder-14b-instruct"
         });
 
-        // Remove code block markers if present
-        if (result.code.startsWith('```javascript\n')) {
-            result.code = result.code.replace(/^```javascript\n/, '').replace(/\n```$/, '');
-        } else if (result.code.startsWith('```js\n')) {
-            result.code = result.code.replace(/^```js\n/, '').replace(/\n```$/, '');
-        }
-
-        let executionResult;
+        let executionResult: CodeExecution;
         try {
             executionResult = await this.executeCodeInSandbox(result.code);
         } catch (error) {
@@ -112,29 +103,27 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
                 model: "qwen2.5-coder-14b-instruct"
             });
 
-            // Remove code block markers if present
-            if (retryResult.code.startsWith('```javascript\n')) {
-                retryResult.code = retryResult.code.replace(/^```javascript\n/, '').replace(/\n```$/, '');
-            } else if (retryResult.code.startsWith('```js\n')) {
-                retryResult.code = retryResult.code.replace(/^```js\n/, '').replace(/\n```$/, '');
-            }
-
             try {
                 executionResult = await this.executeCodeInSandbox(retryResult.code);
                 result = retryResult;
             } catch (retryError) {
-                executionResult = `Error: ${error.message}\nRetry Error: ${retryError.message}`;
+                executionResult = {
+                    returnValue: `Error: ${retryError.message}\nRetry Error: ${retryError.message}`
+                };
             }
         }
 
-        result.result = executionResult;
+        const responseData = {
+            ...result,
+            executionResult
+        };
 
         return {
             type: "code-execution",
             finished: true,
             response: {
                 message: `**Code:**\n\`\`\`javascript\n${result.code}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${JSON.stringify(executionResult.returnValue, null, 2)}\n\`\`\`${executionResult.consoleOutput ? `\n\n**Console Output:**\n\`\`\`\n${executionResult.consoleOutput}\n\`\`\`\n` : ''}`,
-                data: result
+                data: responseData
             }
         };
     }

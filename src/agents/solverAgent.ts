@@ -7,7 +7,7 @@ import { SOLVER_CHANNEL_ID } from 'src/helpers/config';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
-import { MultiStepPlanner } from './planners/DefaultPlanner';
+import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';

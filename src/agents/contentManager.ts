@@ -6,12 +6,12 @@ import { Project } from "src/tools/taskManager";
 import { CONTENT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID } from 'src/helpers/config';
 import { Task } from "src/tools/taskManager";
 import { Artifact } from 'src/tools/artifact';
-import { WritingExecutor } from './executors/WritingExecutor';
+import { AssignWritersExecutor } from './executors/WritingExecutor';
 import { EditingExecutor } from './executors/EditingExecutor';
 import { OutlineExecutor } from './executors/OutlineExecutor';
 import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
-import { MultiStepPlanner } from './planners/DefaultPlanner';
+import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 
@@ -35,7 +35,7 @@ export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> 
         // Register our specialized executors
         this.registerStepExecutor(new KnowledgeCheckExecutor(params.llmService, params.vectorDBService));
         this.registerStepExecutor(new OutlineExecutor(params.llmService));
-        this.registerStepExecutor(new WritingExecutor(params.llmService, params.taskManager));
+        this.registerStepExecutor(new AssignWritersExecutor(params.llmService, params.taskManager));
         this.registerStepExecutor(new EditingExecutor(params.llmService, this.artifactManager, params.taskManager));
         // this.registerStepExecutor(new ValidationExecutor(params.llmService));
 
@@ -57,10 +57,9 @@ IMPORTANT: Always follow this pattern:
                 if (task.complete) {
                     const project = this.projects.getProject(task.projectId);
 
-                    this.planSteps({ 
-                        message: "Writers completed tasks.", 
-                        projects: [project]
-                    } as HandlerParams);
+                    this.planSteps(task.projectId, [{ 
+                        message: "Writers completed tasks."
+                    }]);
 
                     const post = await this.chatClient.getPost(project.metadata.originalPostId);
 

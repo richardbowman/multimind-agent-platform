@@ -52,7 +52,7 @@ export class InMemoryPost implements ChatPost {
     }
 }
 
-export class InMemoryChatStorage {
+export class LocalChatStorage {
     channelNames: Record<string, string> = {};
     posts: ChatPost[] = [];
     callbacks: Function[] = [];
@@ -135,13 +135,13 @@ export class InMemoryChatStorage {
     }
 }
 
-export class InMemoryTestClient implements ChatClient {
+export class LocalTestClient implements ChatClient {
     private webSocketUrl: string;
     private userId: string;
     private callback: (data: ChatPost) => void = () => {};
-    storage: InMemoryChatStorage;
+    storage: LocalChatStorage;
 
-    constructor(userId: string, webSocketUrl: string, storage: InMemoryChatStorage) {
+    constructor(userId: string, webSocketUrl: string, storage: LocalChatStorage) {
         this.userId = userId;
         this.webSocketUrl = webSocketUrl;
         this.storage = storage;
@@ -157,24 +157,6 @@ export class InMemoryTestClient implements ChatClient {
 
     public fetchPreviousMessages(channelId: string, limit: number = 5): Promise<ChatPost[]> {
         return Promise.resolve(this.getPosts().filter(p => p.channel_id === channelId).slice(-limit));
-    }
-
-    public async findProjectChain(channelId: string, postRootId: string): Promise<ProjectChainResponse> {
-        Logger.verbose(`searching ${this.getPosts().length} posts for ${postRootId}`);
-        
-        const rootPost = this.getPosts().find(p => p.id == postRootId);
-
-        const projectPost = this.getPosts().find(p => (p.getRootId() === postRootId || p.id == postRootId) && p.getActivityType() && p.props["project-id"]);
-        if (!rootPost || !projectPost) {
-            Logger.info(`Either root or project post found for ${postRootId}`);
-            return null;
-        }
-
-        return {
-            activityType: projectPost.getActivityType(),
-            posts: [rootPost, ...this.getPosts().filter(p => p.getRootId() === postRootId)],
-            projectId: projectPost.props["project-id"]
-        };
     }
 
     getPost(id: string): Promise<ChatPost> {

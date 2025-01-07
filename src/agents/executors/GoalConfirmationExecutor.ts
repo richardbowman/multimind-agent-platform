@@ -6,6 +6,7 @@ import { GoalConfirmationResponse } from "../../schemas/goalConfirmation";
 import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ILLMService } from "../../llm/ILLMService";
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that validates and confirms user goals before proceeding.
@@ -19,8 +20,6 @@ import { ILLMService } from "../../llm/ILLMService";
  * - Tracks goal confirmation status
  * - Manages goal revision workflow
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.GOAL_CONFIRMATION, 'Confirm the goals of the user.')
 export class GoalConfirmationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;

@@ -2,7 +2,7 @@ import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ReviewProgressResponse } from '../../schemas/reviewProgress';
-import { updateBusinessPlan } from './businessPlanHelper';
+import { updateBusinessPlan } from '../../helpers/businessPlanHelper';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../onboardingConsultant';

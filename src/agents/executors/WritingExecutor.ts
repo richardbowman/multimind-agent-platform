@@ -9,6 +9,7 @@ import Logger from 'src/helpers/logger';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { WritingResponse } from '../../schemas/writing';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that manages content writing task assignments and coordination.

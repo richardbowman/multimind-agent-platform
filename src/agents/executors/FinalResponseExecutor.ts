@@ -5,6 +5,7 @@ import { FinalResponse } from '../../schemas/finalResponse';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/modelHelpers';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that synthesizes all previous results into a final response.
@@ -20,8 +21,6 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
  * - Maintains consistent formatting and style
  * - Includes relevant citations and references
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.FINAL_RESPONSE, 'Provide final response to the user (include at the end of your plan)')
 export class FinalResponseExecutor implements StepExecutor {
     constructor(private modelHelpers: ModelHelpers) {

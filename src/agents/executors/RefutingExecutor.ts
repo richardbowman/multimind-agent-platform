@@ -6,6 +6,7 @@ import { ILLMService } from '../../llm/ILLMService';
 import { RefutingResponse } from '../../schemas/refuting';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that critically analyzes arguments and identifies potential flaws.
@@ -19,8 +20,6 @@ import { SchemaType } from '../../schemas/SchemaTypes';
  * - Delivers structured critique with final verdict
  * - Maintains objective analytical approach
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.REFUTING, 'Challenge assumptions and identify potential flaws in the current reasoning')
 export class RefutingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;

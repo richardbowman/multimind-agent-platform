@@ -5,6 +5,7 @@ import { OnboardingProject } from '../onboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that generates user-friendly responses to messages.
@@ -19,8 +20,6 @@ import { ILLMService } from 'src/llm/ILLMService';
  * - Supports multi-turn dialogue
  * - Ensures responses align with project goals
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.REPLY, 'Generate user-friendly responses to messages')
 export class ReplyExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;

@@ -7,10 +7,10 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { Project, Task, TaskManager } from 'src/tools/taskManager';
 import { RESEARCHER_USER_ID, RESEARCH_MANAGER_USER_ID } from '../../helpers/config';
-import { ResearchTask } from '../researchAssistant';
 import { randomUUID } from 'crypto';
 import { ResearchDecomposition } from '../../schemas/research-manager';
 import { ModelResponse } from 'src/schemas/ModelResponse';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that breaks down research requests into manageable tasks.
@@ -26,8 +26,6 @@ import { ModelResponse } from 'src/schemas/ModelResponse';
  * - Maintains research context across tasks
  * - Handles both broad and focused research requests
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.RESEARCH_DECOMPOSITION, 'Break down research request into specific tasks')
 export class ResearchDecompositionExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;

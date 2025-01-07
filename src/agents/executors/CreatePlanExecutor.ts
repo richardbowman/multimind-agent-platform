@@ -10,6 +10,8 @@ import { OperationalGuideResponse, QAItem } from '../../schemas/OperationalGuide
 import { StepExecutor, StepResult } from '../stepBasedAgent';
 import { updateBusinessPlan } from '../../helpers/businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
+import { ExecutorType } from './ExecutorType';
+import { AnswerMetadata } from './AnswerQuestionsExecutor';
 
 /**
  * Executor that creates and revises operational business guides based on user requirements.
@@ -24,7 +26,6 @@ import { SchemaType } from '../../schemas/SchemaTypes';
  * - Manages artifact storage and retrieval
  * - Tracks task completion and dependencies
  */
-import { ExecutorType } from './ExecutorType';
 
 @StepExecutorDecorator(ExecutorType.CREATE_PLAN, `Create (or revise) a guide for our agents of the user's desired business goals.`)
 export class CreatePlanExecutor implements StepExecutor {
@@ -59,7 +60,6 @@ export class CreatePlanExecutor implements StepExecutor {
         );
 
         const schema = await getGeneratedSchema(SchemaType.OperationalGuideResponse);
-
         const response = await this.modelHelpers.generate<OperationalGuideResponse>({
             message: formattedMessage,
             instructions: new StructuredOutputPrompt(schema,
@@ -106,7 +106,7 @@ export class CreatePlanExecutor implements StepExecutor {
     private getAnswersForType(project: OnboardingProject, questionType: string): QuestionAnswer[] {
         if (!project.metadata.answers) return [];
         
-        return project.metadata.answers.filter(answer => {
+        return project.metadata.answers.filter((answer : AnswerMetadata) => {
             const task = project.tasks[answer.questionId];
             return task?.type === questionType;
         });

@@ -1,7 +1,7 @@
 import { HandlerParams } from '../agents';
 import { PlanStepsResponse } from '../../schemas/PlanStepsResponse';
 import { ChatPost } from '../../chat/chatClient';
-import { Planner } from './Planner';
+import { Planner } from './planner';
 import { Task } from '../../tools/taskManager';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";

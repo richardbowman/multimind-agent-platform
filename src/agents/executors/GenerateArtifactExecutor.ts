@@ -7,6 +7,7 @@ import { randomUUID } from 'crypto';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * Executor that generates and manages Markdown document artifacts.
@@ -22,8 +23,6 @@ import Logger from '../../helpers/logger';
  * - Generates unique IDs for new artifacts
  * - Preserves existing IDs during revisions
  */
-import { ExecutorType } from './ExecutorType';
-
 @StepExecutorDecorator(ExecutorType.GENERATE_ARTIFACT, 'Create/revise a Markdown document')
 export class GenerateArtifactExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;

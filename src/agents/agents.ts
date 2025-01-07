@@ -15,6 +15,7 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
 import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 export interface ActionMetadata {
     activityType: string;
@@ -81,10 +82,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
     protected isWorking: boolean = false;
     protected isMemoryEnabled: boolean = false;
 
-    // Index signature for handler methods
-    [key: string]: any;
-
-    protected abstract projectCompleted(project: Project): void;
+    protected abstract projectCompleted(project: Project<Task>): void;
     protected abstract processTask(task: Task): Promise<void>;
     protected abstract handlerThread(params: HandlerParams): Promise<void>;
     protected abstract handleChannel(params: HandlerParams): Promise<void>;

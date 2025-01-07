@@ -16,13 +16,13 @@ export interface ResearchProject extends Project<Task> {
     postId: string;
 }
 
-class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
+export class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
     private searchHelper = new SearchHelper(new DuckDuckGoProvider(this.artifactManager));
     private scrapeHelper = new ScrapeHelper(this.artifactManager);
 
     constructor(params: AgentConstructorParams) {
         super(params);
-        this.modelHelpers = new ModelHelpers(params.llmService, params.userId);
+
         this.modelHelpers.setPurpose("You are a research assistant who thoroughly summarizes web results.");
         this.modelHelpers.setFinalInstructions("PROPER PROCESS: do a 'check-knowledge' first, then a 'validation' step to see if you can meet the goals. If not, then add 'web_search' and 'validation' as needed until you get the answer. Make sure your final step is a `final_response`");
 
@@ -49,10 +49,4 @@ class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
         // TODO BRING BACK WHEN SAFER check for old tasks on boot and keep working on them
         this.processTaskQueue();
     }
-
-
-
-
 }
-
-export default ResearchAssistant;

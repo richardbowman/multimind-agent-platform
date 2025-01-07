@@ -100,7 +100,10 @@ export class AnthropicService extends BaseLLMService {
                 const toolResponse = responses.find(r => r.type === 'tool_use');
                 
                 if (toolResponse) {
-                    content = toolResponse.input;
+                    content = {
+                        message: textResponse,
+                        ...toolResponse.input as object
+                    };
                 } else if (params.parseJSON && textResponse) {
                     try {
                         const jsonMatch = textResponse.text.match(/```(?:json)?\s*([\s\S]*?)\s*```/) || [null, textResponse.text];

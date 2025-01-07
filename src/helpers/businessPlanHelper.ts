@@ -1,8 +1,8 @@
-import { Artifact } from "../../tools/artifact";
-import { OnboardingProject } from "../onboardingConsultant";
+import { Artifact } from "../tools/artifact";
+import { OnboardingProject } from "../agents/onboardingConsultant";
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ArtifactManager } from "../../tools/artifactManager";
-import { ModelHelpers } from "../../llm/modelHelpers";
+import { ArtifactManager } from "../tools/artifactManager";
+import { ModelHelpers } from "../llm/modelHelpers";
 import crypto from 'crypto';
 
 export async function updateBusinessPlan(

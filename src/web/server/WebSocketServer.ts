@@ -3,7 +3,7 @@ import { createServer } from 'http';
 import express from 'express';
 import { ClientChannel, ClientThread, ClientMessage } from '../client/src/services/WebSocketService';
 import { LogReader } from './LogReader';
-import { InMemoryChatStorage, InMemoryPost, InMemoryTestClient } from '../../chat/inMemoryChatClient';
+import { LocalChatStorage, InMemoryPost, LocalTestClient } from '../../chat/localChatClient';
 import { TaskManager } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ArtifactManager } from 'src/tools/artifactManager';
@@ -14,14 +14,14 @@ import { HOST, PORT, PROTOCOL } from 'src/helpers/config';
 export class WebSocketServer {
     private io: Server;
     private httpServer: ReturnType<typeof createServer>;
-    private storage: InMemoryChatStorage;
+    private storage: LocalChatStorage;
     private threads: Record<string, ClientThread[]> = {};
     private projects: TaskManager;
     private artifactManager: ArtifactManager;
-    private userClient: InMemoryTestClient;
+    private userClient: LocalTestClient;
     private logReader: LogReader;
 
-    constructor(storage: InMemoryChatStorage, projects: TaskManager, artifactManager: ArtifactManager, userClient: InMemoryTestClient, port: number = 4001) {
+    constructor(storage: LocalChatStorage, projects: TaskManager, artifactManager: ArtifactManager, userClient: LocalTestClient, port: number = 4001) {
         this.logReader = new LogReader();
         this.storage = storage;
         this.projects = projects;

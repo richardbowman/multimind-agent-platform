@@ -14,11 +14,6 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
         throw new Error('Method not implemented.');
     }
 
-    constructor(params: AgentConstructorParams) {
-        super(params.chatClient, params.llmService, params.userId, params.taskManager, params.vectorDBService);
-        super.setupChatMonitor(CONTENT_CREATION_CHANNEL_ID, "@writer");
-    }
-
     async processTask(task: ContentTask) {
         try {
             const searchResults = await this.chromaDBService.query([task.description], undefined, 10);

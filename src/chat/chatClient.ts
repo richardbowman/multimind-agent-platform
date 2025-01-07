@@ -1,8 +1,7 @@
 export interface ChatClient {
     getThreadChain(post: ChatPost): Promise<ChatPost[]>;
-    getPost(confirmationPostId: string | undefined): ChatPost | PromiseLike<ChatPost>;
+    getPost(confirmationPostId: string): Promise<ChatPost>;
     fetchPreviousMessages(channelId: string, limit?: number): Promise<ChatPost[]>;
-    findProjectChain(channelId: string, postRootId: string): Promise<ProjectChainResponse>;
     postInChannel(channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost>;
     receiveMessages(callback: (data: ChatPost) => void): void;
     closeCallback(): void;

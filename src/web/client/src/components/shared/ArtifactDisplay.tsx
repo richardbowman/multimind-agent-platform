@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Artifact } from '../../../../../tools/artifact';
+import remarkGfm from 'remark-gfm'
 
 interface ArtifactDisplayProps {
     artifact: Artifact;
@@ -43,7 +44,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                 {artifact.type === 'binary' || artifact.metadata?.format === 'binary' ? (
                     <pre>{artifact.content as string}</pre>
                 ) : (
-                    <ReactMarkdown>{artifact.content as string}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{artifact.content as string}</ReactMarkdown>
                 )}
             </div>
         </div>

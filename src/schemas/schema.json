@@ -34,11 +34,15 @@
         },
         "message": {
           "type": "string"
+        },
+        "shouldContinue": {
+          "type": "boolean"
         }
       },
       "required": [
         "answers",
-        "message"
+        "message",
+        "shouldContinue"
       ],
       "type": "object"
     },
@@ -72,6 +76,22 @@
       },
       "required": [
         "description"
+      ],
+      "type": "object"
+    },
+    "CodeExecutionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "code": {
+          "type": "string"
+        },
+        "explanation": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "code",
+        "explanation"
       ],
       "type": "object"
     },
@@ -886,17 +906,37 @@
           "description": "Whether the research request is clear enough to proceed",
           "type": "boolean"
         },
-        "questions": {
-          "description": "Questions needed to clarify any ambiguous aspects of the research goals",
+        "proposedDetails": {
+          "description": "Proposed details and assumptions to clarify the research scope",
           "items": {
-            "type": "string"
+            "additionalProperties": false,
+            "properties": {
+              "confidence": {
+                "description": "Confidence level in this assumption (0-1)",
+                "type": "number"
+              },
+              "detail": {
+                "description": "The specific detail or assumption being proposed",
+                "type": "string"
+              },
+              "reasoning": {
+                "description": "Explanation of why this detail matters",
+                "type": "string"
+              }
+            },
+            "required": [
+              "detail",
+              "confidence",
+              "reasoning"
+            ],
+            "type": "object"
           },
           "type": "array"
         }
       },
       "required": [
         "proceedWithResearch",
-        "questions",
+        "proposedDetails",
         "goal"
       ],
       "type": "object"
@@ -949,7 +989,8 @@
         "SearchQueryResponse",
         "LinkSelectionResponse",
         "QuickQueriesResponse",
-        "ResearchUnderstandingResponse"
+        "ResearchUnderstandingResponse",
+        "CodeExecutionResponse"
       ],
       "type": "string"
     },

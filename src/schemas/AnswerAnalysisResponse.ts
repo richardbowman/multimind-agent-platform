@@ -9,4 +9,5 @@ export interface AnswerAnalysis {
 
 export interface AnswerAnalysisResponse extends ModelMessageResponse {
     answers: AnswerAnalysis[];
+    shouldContinue: boolean;
 }

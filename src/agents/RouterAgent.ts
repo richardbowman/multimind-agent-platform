@@ -1,9 +1,10 @@
-import { Agent, HandlerParams, HandleActivity, ResponseType, AgentConstructorParams } from './agents';
+import { Agent, HandlerParams, HandleActivity, ResponseType } from './agents';
 import { ExecutorType } from './executors/ExecutorType';
 import { Project, Task } from '../tools/taskManager';
 import { ModelMessageResponse } from '../schemas/ModelResponse';
 import { StructuredOutputPrompt } from '../llm/ILLMService';
 import Logger from '../helpers/logger';
+import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 interface RegisteredAgent {
     handle: string;

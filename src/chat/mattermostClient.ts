@@ -30,48 +30,6 @@ export default class MattermostClient implements ChatClient {
         return posts;
     }
 
-    public async findProjectChain(channelId: string, postRootId: string): Promise<ProjectChainResponse> {
-        const team = await this.client.getTeamByName("RickTest");
-        const post = await this.client.getPost(postRootId);
-
-        // Regular expression pattern to match UUIDs
-        const uuidPattern = /[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}/i;
-
-        // Use the `match` method to find the UUID in the message
-        const match = post.message.match(uuidPattern);
-
-        if (match) {
-            const uuid = match[0];
-            Logger.info("Extracted UUID:", uuid);
-            // Extract activity type from message
-            Logger.info('Message Props: ', post.props);
-            const activityType = post.props['activity-type'];
-            const response = await this.client.searchPosts(team.id, "PROJECT ID", false);
-            const projectPost = response.order.map(id => response.posts[id]).find(p => p.message.includes(uuid));
-
-            if (projectPost) {
-                Logger.info("Found project in channel:", projectPost.id);
-
-                (response);
-                const thread = await this.client.getPostThread(projectPost.id);
-
-                (thread);
-                Logger.info(`Found ${thread.order.length} threads for post: ${projectPost.id}`);
-                (thread.order.map((id) => thread.posts[id].message));
-
-                return {
-                    activityType,
-                    posts: thread.order.map((id) => thread.posts[id]),
-                    projectId: uuid
-                };
-            } else {
-                throw new Error("No project found in channel.");
-            }
-        } else {
-            throw new Error("No UUID found in the message: " + post.message);
-        }
-    }
-
     public async postInChannel(channelId: string, message: string, props?: Record<string, any>): Promise<Post> {
         return await this.client.createPost({
             channel_id: channelId,

@@ -63,10 +63,9 @@ export class WebSearchExecutor implements StepExecutor {
                 a.metadata?.url === url
             );
             if (existingSummary) {
-                return existingSummary.content as string;
+                return existingSummary.content.toString();
             }
-            Logger.info(`No existing summary found for URL: ${url}`);
-            return "";
+            Logger.info(`No existing summary found for URL, re-processing...: ${url}`);
         }
         this.visitedUrls.add(url);
 
@@ -167,7 +166,7 @@ export class WebSearchExecutor implements StepExecutor {
         // Filter out already scraped URLs
         const scrapedUrls = await this.getScrapedUrls();
         const newLinks = links.filter(link => {
-            const normalizedUrl = this.scrapeHelper.normalizeUrl('', link.href);
+            const normalizedUrl = link.href;
             return !scrapedUrls.has(normalizedUrl) && !this.visitedUrls.has(normalizedUrl);
         });
 

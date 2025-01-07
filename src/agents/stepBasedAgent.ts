@@ -6,12 +6,12 @@ import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Project, Task } from '../tools/taskManager';
-import { Planner } from './planners/Planner';
-import { MultiStepPlanner } from './planners/DefaultPlanner';
+import { Planner } from './planners/planner';
+import { MultiStepPlanner } from './planners/multiStepPlanner';
 import Logger from '../helpers/logger';
 import { ModelMessageResponse, ModelResponse } from '../schemas/ModelResponse';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
-import { InMemoryPost } from 'src/chat/inMemoryChatClient';
+import { InMemoryPost } from 'src/chat/localChatClient';
 
 export interface StepResult {
     type?: string;

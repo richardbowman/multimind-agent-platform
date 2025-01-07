@@ -4,11 +4,11 @@ import { HandlerParams } from "./agents";
 import { Project, Task } from "src/tools/taskManager";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { StepBasedAgent } from './stepBasedAgent';
-import { MultiStepPlanner } from './planners/DefaultPlanner';
+import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ResearchDecompositionExecutor } from './executors/ResearchDecompositionExecutor';
 import { ResearchAggregationExecutor } from './executors/ResearchAggregationExecutor';
-import { UnderstandGoalsExecutor } from "./executors/UnderstandGoalsExecutor";
+import { OnboardingGoalsExecutor } from "./executors/UnderstandGoalsExecutor";
 import { ResearchGoalsExecutor } from "./executors/ResearchGoalsExecutor";
 
 export interface ResearchProject extends Project<Task> {
@@ -45,13 +45,12 @@ Step 3. 'aggregate-research' to compile findings`);
         try {
             if (task.type === "decompose-research") {
                 if (task.complete) {
-                    const project = this.projects.getProject(task.projectId);
-                    this.planSteps({
-                        message: "Researchers completed tasks.",
-                        projects: [project]
-                    } as HandlerParams);
+                    this.planSteps(task.projectId, [{
+                        message: "Researchers completed tasks."
+                    }]);
 
-                    const post = await this.chatClient.getPost(project.metadata.originalPostId);
+                    const project = await this.projects.getProject(task.projectId);
+                    const post = await this.chatClient.getPost(project?.metadata?.originalPostId);
                     await this.executeNextStep(project.id, post);
                 }
             } else {

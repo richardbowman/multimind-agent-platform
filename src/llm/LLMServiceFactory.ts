@@ -29,7 +29,7 @@ export class LLMServiceFactory {
                     break;
                 case LLMProvider.BEDROCK:
                     embeddingService = new BedrockService(
-                        config.modelId || LLM_WEAK_MODEL,
+                        "",
                         config.embeddingModelId
                     );
                     break;

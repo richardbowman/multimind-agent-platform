@@ -1,5 +1,6 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm'
 import { Artifact } from '../../../../tools/artifact';
 
 interface ArtifactViewerProps {
@@ -32,7 +33,7 @@ ${artifact.content?.toString()||"(no content available)"}`;
             <div className="artifact-viewer" onClick={e => e.stopPropagation()}>
                 <button className="close-button" onClick={onClose}>×</button>
                 <div className="artifact-content">
-                    <ReactMarkdown>{content}</ReactMarkdown>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
                 </div>
             </div>
         </div>
