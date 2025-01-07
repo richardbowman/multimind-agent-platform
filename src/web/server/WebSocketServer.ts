@@ -55,13 +55,13 @@ export class WebSocketServer {
         this.setupSocketHandlers();
         
         this.httpServer.listen(port, () => {
-            Logger.log(`WebSocket server running on port ${port}`);
+            Logger.info(`WebSocket server running on port ${port}`);
         });
     }
 
     private setupSocketHandlers() {
         this.io.on('connection', (socket) => {
-            Logger.log('Client connected');
+            Logger.info('Client connected');
 
             // Handle channel requests
             socket.on('get_channels', () => {
