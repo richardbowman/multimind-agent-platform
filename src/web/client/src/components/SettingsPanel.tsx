@@ -14,17 +14,17 @@ export const SettingsPanel: React.FC = () => {
         apiKey: ''
     });
 
-    const webSocketService = useWebSocket();
+    const { getSettings, updateSettings } = useWebSocket();
 
     useEffect(() => {
         // Load initial settings
-        webSocketService.getSettings((settings: Settings) => {
+        getSettings((settings: Settings) => {
             setSettings(settings);
         });
     }, []);
 
     const handleSave = () => {
-        webSocketService.updateSettings(settings);
+        updateSettings(settings);
     };
 
     return (

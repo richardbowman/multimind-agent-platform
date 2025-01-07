@@ -216,7 +216,9 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       setCurrentChannelId,
       currentThreadId,
       setCurrentThreadId,
-      isLoading
+      isLoading,
+      getSettings: webSocketService.getSettings.bind(webSocketService),
+      updateSettings: webSocketService.updateSettings.bind(webSocketService)
     }}>
       {children}
     </WebSocketContext.Provider>
