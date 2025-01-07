@@ -122,7 +122,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ? (window as any).electron.onChannels((newChannels: any) => {
           setChannels(newChannels);
         })
-      : webSocketService.onChannels((newChannels) => {
+      : ipcService.onChannels((newChannels) => {
           setChannels(newChannels);
         });
 
@@ -130,7 +130,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ? (window as any).electron.onTasks((newTasks: any) => {
           setTasks(newTasks);
         })
-      : webSocketService.onTasks((newTasks) => {
+      : ipcService.onTasks((newTasks) => {
           setTasks(newTasks);
         });
 
@@ -138,7 +138,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       ? (window as any).electron.onArtifacts((newArtifacts: any) => {
           setArtifacts(newArtifacts);
         })
-      : webSocketService.onArtifacts((newArtifacts) => {
+      : ipcService.onArtifacts((newArtifacts) => {
           setArtifacts(newArtifacts);
         });
 
@@ -169,7 +169,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
         artifactCleanup();
         handlesCleanup();
         logsCleanup();
-        webSocketService.disconnect();
+        ipcService.disconnect();
       }
     };
   }, []);
@@ -178,7 +178,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     if (currentChannelId) {
       setIsLoading(true);
-      webSocketService.fetchMessages(currentChannelId, currentThreadId || '');
+      ipcService.fetchMessages(currentChannelId, currentThreadId || '');
       // Also fetch related data
       fetchTasks(currentChannelId, currentThreadId);
       fetchArtifacts(currentChannelId, currentThreadId);
@@ -204,7 +204,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isElectron) {
       (window as any).electron.getChannels();
     } else {
-      webSocketService.fetchChannels();
+      ipcService.fetchChannels();
     }
   };
 
@@ -212,7 +212,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isElectron) {
       (window as any).electron.getHandles();
     } else {
-      webSocketService.fetchHandles();
+      ipcService.fetchHandles();
     }
   };
 
@@ -220,7 +220,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isElectron) {
       (window as any).electron.getTasks(channelId, threadId);
     } else {
-      webSocketService.fetchTasks(channelId, threadId);
+      ipcService.fetchTasks(channelId, threadId);
     }
   };
 
@@ -228,7 +228,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isElectron) {
       (window as any).electron.getArtifacts(channelId, threadId);
     } else {
-      webSocketService.fetchArtifacts(channelId, threadId);
+      ipcService.fetchArtifacts(channelId, threadId);
     }
   };
 
@@ -236,7 +236,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isElectron) {
       (window as any).electron.getAllArtifacts();
     } else {
-      webSocketService.fetchAllArtifacts();
+      ipcService.fetchAllArtifacts();
     }
   };
 
@@ -244,7 +244,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isElectron) {
       (window as any).electron.deleteArtifact(artifactId);
     } else {
-      webSocketService.deleteArtifact(artifactId);
+      ipcService.deleteArtifact(artifactId);
     }
   };
 
@@ -252,7 +252,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     if (isElectron) {
       (window as any).electron.getLogs(logType);
     } else {
-      webSocketService.fetchLogs(logType);
+      ipcService.fetchLogs(logType);
     }
   };
 
@@ -279,10 +279,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       isLoading,
       getSettings: isElectron 
         ? (window as any).electron.getSettings
-        : webSocketService.getSettings.bind(webSocketService),
+        : ipcService.getSettings.bind(ipcService),
       updateSettings: isElectron
         ? (window as any).electron.updateSettings
-        : webSocketService.updateSettings.bind(webSocketService)
+        : ipcService.updateSettings.bind(ipcService)
     }}>
       {children}
     </WebSocketContext.Provider>
