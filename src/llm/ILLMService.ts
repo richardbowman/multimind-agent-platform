@@ -8,6 +8,7 @@ export interface ILLMService {
     sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     getEmbeddingModel(): IEmbeddingFunction;
     countTokens(content: string): Promise<number>;
+    getLogger(): LLMCallLogger;
 
     /** @deprecated */
     generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: any): Promise<T>;

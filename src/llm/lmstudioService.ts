@@ -152,6 +152,10 @@ export default class LMStudioService extends BaseLLMService {
         return this.chatModel;
     }
 
+    getLogger(): LLMCallLogger {
+        return this.logger;
+    }
+
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>> {
         if (!this.chatModel) {
             throw new Error("LLaMA model is not initialized.");

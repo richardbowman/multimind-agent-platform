@@ -303,6 +303,10 @@ export class BedrockService extends BaseLLMService {
         });
     }
 
+    getLogger(): LLMCallLogger {
+        return this.logger;
+    }
+
     async getTokenCount(text: string): Promise<number> {
         const estimatedTokens = Math.ceil(text.length / 4); // Rough estimate of 4 chars per token
 
