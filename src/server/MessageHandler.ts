@@ -96,7 +96,20 @@ export class MessageHandler {
     }
 
     async handleGetTasks({ channelId, threadId }: { channelId: string, threadId?: string }) {
-        return await this.services.taskManager.getTasks(channelId, threadId);
+        // Get all projects and filter tasks that match the channel/thread context
+        const projects = this.services.taskManager.getProjects();
+        const tasks: Task[] = [];
+        
+        for (const project of projects) {
+            const projectTasks = this.services.taskManager.getAllTasks(project.id);
+            tasks.push(...projectTasks.filter(task => {
+                const matchesChannel = task.props?.channelId === channelId;
+                const matchesThread = !threadId || task.props?.threadId === threadId;
+                return matchesChannel && matchesThread;
+            }));
+        }
+        
+        return tasks;
     }
 
     async handleGetArtifacts({ channelId, threadId }: { channelId: string, threadId?: string }) {

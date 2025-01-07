@@ -75,4 +75,5 @@ export interface TaskManager extends EventEmitter {
     getAllTasks(projectId: string): Task[];
     markTaskInProgress(task: Task | string): Promise<Task>;
     getTaskById(taskId: string): Task | null;
+    getTasks(channelId: string, threadId?: string): Promise<Task[]>;
 }
