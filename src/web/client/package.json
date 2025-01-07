@@ -2,7 +2,7 @@
   "name": "multi-agent-web-client",
   "version": "0.1.0",
   "private": true,
-  "homepage": ".",
+  "homepage": "./",
   "dependencies": {
     "@types/node": "^16.18.0",
     "@types/react": "^18.2.0",
