@@ -283,18 +283,6 @@ class WebSocketService {
     this.socket.emit('get_logs', logType);
   }
 
-  getSettings(callback: (settings: any) => void) {
-    if (this.socket) {
-      this.socket.emit('getSettings', callback);
-    }
-  }
-
-  updateSettings(settings: any) {
-    if (this.socket) {
-      this.socket.emit('updateSettings', settings);
-    }
-  }
-
   onLogs(handler: (logs: { type: string, data: any }) => void) {
     this.logHandlers.push(handler);
     return () => {
