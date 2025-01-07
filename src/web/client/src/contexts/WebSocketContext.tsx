@@ -21,6 +21,8 @@ interface WebSocketContextType {
   };
   sendMessage: (message: Partial<ClientMessage>) => void;
   fetchChannels: () => void;
+  getSettings: (callback: (settings: any) => void) => void;
+  updateSettings: (settings: any) => void;
   fetchTasks: (channelId: string, threadId: string | null) => void;
   fetchArtifacts: (channelId: string, threadId: string | null) => void;
   fetchAllArtifacts: () => void;
