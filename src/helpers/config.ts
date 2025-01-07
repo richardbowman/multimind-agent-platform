@@ -79,6 +79,6 @@ export const ANTHROPIC_MAX_TOKENS_PER_MINUTE = parseInt(process.env.ANTHROPIC_MA
 export const ANTHROPIC_DEFAULT_DELAY_MS = parseInt(process.env.ANTHROPIC_DEFAULT_DELAY_MS || '1000');
 export const ANTHROPIC_WINDOW_SIZE_MS = parseInt(process.env.ANTHROPIC_WINDOW_SIZE_MS || '60000');
 
-export const HOST = parseInt(process.env.HOST || 'localhost');
-export const PORT = parseInt(process.env.PORT || '3000');
-export const PROTOCOL = parseInt(process.env.PROTOCOL || 'https');
+export const HOST = process.env.HOST || 'localhost';
+export const PORT = parseInt(process.env.PORT || '4001');
+export const PROTOCOL = process.env.PROTOCOL || 'https';

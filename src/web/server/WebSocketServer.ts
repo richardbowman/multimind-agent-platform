@@ -63,8 +63,8 @@ export class WebSocketServer {
 
         this.setupSocketHandlers();
         
-        this.httpServer.listen(port, () => {
-            Logger.info(`WebSocket server running on port ${port}`);
+        this.httpServer.listen(PORT, () => {
+            Logger.info(`WebSocket server running on port ${PORT}`);
         });
     }
 
