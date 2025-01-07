@@ -103,16 +103,8 @@ export default class WebSocketService implements IIPCService {
   private cleanupSocketListeners() {
     if (!this.socket) return;
     
-    this.socket.removeAllListeners('message');
-    this.socket.removeAllListeners('channels');
-    this.socket.removeAllListeners('threads');
-    this.socket.removeAllListeners('handles');
-    this.socket.removeAllListeners('tasks');
-    this.socket.removeAllListeners('artifacts');
-    this.socket.removeAllListeners('logs');
-    this.socket.removeAllListeners('system_log');
-    this.socket.removeAllListeners('disconnect');
-    this.socket.removeAllListeners('error');
+    // Remove all listeners without specifying event names
+    this.socket.removeAllListeners();
   }
 
   private setupSocketListeners() {
