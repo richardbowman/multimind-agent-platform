@@ -7,12 +7,13 @@ import { TaskPanel } from './components/TaskPanel';
 import { ArtifactPanel } from './components/ArtifactPanel';
 import { GlobalArtifactViewer } from './components/GlobalArtifactViewer';
 import { LogViewer } from './components/LogViewer';
+import { SettingsPanel } from './components/SettingsPanel';
 import { WebSocketProvider } from './contexts/WebSocketContext';
 import './App.css';
 
 const AppContent: React.FC = () => {
     const { currentChannelId, currentThreadId, setCurrentThreadId } = useWebSocket();
-    const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs'>('chat');
+    const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('llm');
 
     return (
@@ -35,6 +36,12 @@ const AppContent: React.FC = () => {
                     onClick={() => setCurrentTab('logs')}
                 >
                     Logs
+                </button>
+                <button 
+                    className={`tab-button ${currentTab === 'settings' ? 'active' : ''}`}
+                    onClick={() => setCurrentTab('settings')}
+                >
+                    Settings
                 </button>
             </div>
             <div className={currentTab === 'chat' ? 'chat-layout' : 'artifacts-layout'}>
@@ -63,6 +70,8 @@ const AppContent: React.FC = () => {
                     </>
                 ) : currentTab === 'artifacts' ? (
                     <GlobalArtifactViewer />
+                ) : currentTab === 'settings' ? (
+                    <SettingsPanel />
                 ) : (
                     <div className="logs-container">
                         <div className="logs-subtabs">
