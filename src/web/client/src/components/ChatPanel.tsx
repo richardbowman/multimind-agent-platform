@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
 import { useWebSocket } from '../contexts/WebSocketContext';
-import webSocketService, { ClientMessage } from '../services/WebSocketService';
+import { ClientMessage } from '../../../shared/IPCInterface';
 import remarkGfm from 'remark-gfm'
 
 interface ChatPanelProps {}
@@ -32,22 +32,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
     }, [messages]);
 
     // Handle live message thread selection
+    // Handle live message thread selection
     useEffect(() => {
-        const handleNewMessage = (messages: ClientMessage[], isLive: boolean) => {
-            if (!isLive) return; // Only process live messages
-            
-            const message = messages[0]; // We receive an array but handle one message
-            if (message?.thread_id && !currentThreadId) {
-                // Only switch to thread view if we're not already in a thread
-                const threadRoot = messages.find(m => m.id === message.thread_id);
-                if (threadRoot) {
-                    setCurrentThreadId(threadRoot.id);
-                }
+        if (messages.length === 0) return;
+        
+        const lastMessage = messages[messages.length - 1];
+        if (lastMessage?.thread_id && !currentThreadId) {
+            // Only switch to thread view if we're not already in a thread
+            const threadRoot = messages.find(m => m.id === lastMessage.thread_id);
+            if (threadRoot) {
+                setCurrentThreadId(threadRoot.id);
             }
-        };
-
-        const cleanup = webSocketService.onMessage(handleNewMessage);
-        return cleanup;
+        }
     }, [messages, currentThreadId, setCurrentThreadId]);
 
     const [lastMessage, setLastMessage] = useState<string | null>(null);
