@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { IIPCService, ClientMessage, ClientChannel } from '../../../shared/IPCInterface';
-import { WebSocketService } from '../services/WebSocketService';
+import { webSocketService } from '../services/WebSocketService';
 import { ElectronIPCService } from '../services/ElectronIPCService';
 import { Artifact } from '../../../../tools/artifact';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
