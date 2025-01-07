@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "ESNext",
+    "target": "ES2018",
     "module": "CommonJS",
     "moduleResolution": "node",
     "strict": true,
@@ -9,6 +9,9 @@
     "outDir": "dist",
     "resolveJsonModule": true,
     "baseUrl": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "skipLibCheck": true
   },
   "include": [
     "src/**/*"
