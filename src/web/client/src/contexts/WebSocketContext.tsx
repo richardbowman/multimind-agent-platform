@@ -38,6 +38,8 @@ const WebSocketContext = createContext<WebSocketContextType>({
   sendMessage: () => { },
   fetchChannels: () => { },
   fetchHandles: () => { },
+  updateSettings: () => { },
+  getSettings: () => { },
   tasks: [],
   artifacts: [],
   fetchTasks: (channelId: string, threadId: string | null) => { },
