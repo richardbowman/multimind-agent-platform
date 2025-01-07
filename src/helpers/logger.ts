@@ -1,8 +1,7 @@
 // logger.ts
 import { appendFileSync, mkdirSync } from 'fs';
-import { dirname } from 'path';
+import * as path from 'path';
 import { getDataPath } from './paths';
-import path from 'path';
 
 class Logger {
     private static logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.log`);

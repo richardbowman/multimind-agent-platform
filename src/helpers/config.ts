@@ -1,7 +1,7 @@
 // config.ts
 const dotenv = require('dotenv');
 import Logger from './logger';
-const path = require('path');
+import * as path from 'path';
 import { app } from 'electron';
 
 // Determine the base directory for config files
