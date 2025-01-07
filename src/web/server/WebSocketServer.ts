@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
-import express from 'express';
+import * as express from 'express';
 import { ClientChannel, ClientThread, ClientMessage } from '../client/src/services/WebSocketService';
 import { LogReader } from './LogReader';
 import { LocalChatStorage, InMemoryPost, LocalTestClient } from '../../chat/localChatClient';
