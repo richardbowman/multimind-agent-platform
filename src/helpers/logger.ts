@@ -1,10 +1,8 @@
 // logger.ts
 import { appendFileSync, mkdirSync } from 'fs';
 import { dirname } from 'path';
-import webSocketService from '../web/client/src/services/WebSocketService';
 
 class Logger {
-    static logBox: Blessed.Log;
     private static logFilePath = `./.output/output-${new Date().toISOString().split('T')[0]}.log`;
 
     private static ensureLogDirectoryExists(): void {
@@ -26,8 +24,8 @@ class Logger {
         appendFileSync(Logger.logFilePath, formattedMessage);
         
         // Send to WebSocket if connected
-        if (webSocketService.socket) {
-            webSocketService.socket.emit('system_log', logEntry);
+        if (global.socket) {
+            global.socket.emit('system_log', logEntry);
         }
         
         if (this.logBox && level !== "verbose") this.logBox.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
