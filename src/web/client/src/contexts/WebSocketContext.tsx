@@ -159,6 +159,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     if (currentChannelId) {
       setIsLoading(true);
+      setMessages([]); // Clear messages before loading new ones
       ipcService.getMessages(currentChannelId, currentThreadId || '');
       // Also fetch related data
       fetchTasks(currentChannelId, currentThreadId);

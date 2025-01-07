@@ -78,7 +78,7 @@ export default class WebSocketService implements IIPCService {
   : process.env.REACT_APP_WS_URL || 'ws://localhost:4001') {
     // Clean up any existing socket connection
     if (this.socket) {
-      this.socket.removeAllListeners();
+      this.cleanupSocketListeners();
       this.socket.disconnect();
     }
 
@@ -88,84 +88,104 @@ export default class WebSocketService implements IIPCService {
       reconnectionAttempts: 5
     });
 
-    // Set up connect handler only once
+    // Set up connect handler
     this.socket.once('connect', () => {
       console.log('Connected to WebSocket server');
-
-      this.socket!.removeAllListeners();
-  
+      
+      this.setupSocketListeners();
+      
       // Fetch initial data upon connection
       this.fetchChannels();
       this.fetchHandles();
+    });
+  }
+
+  private cleanupSocketListeners() {
+    if (!this.socket) return;
+    
+    this.socket.removeAllListeners('message');
+    this.socket.removeAllListeners('channels');
+    this.socket.removeAllListeners('threads');
+    this.socket.removeAllListeners('handles');
+    this.socket.removeAllListeners('tasks');
+    this.socket.removeAllListeners('artifacts');
+    this.socket.removeAllListeners('logs');
+    this.socket.removeAllListeners('system_log');
+    this.socket.removeAllListeners('disconnect');
+    this.socket.removeAllListeners('error');
+  }
+
+  private setupSocketListeners() {
+    if (!this.socket) return;
+
+    // Set up system log listener
+    this.socket.on('system_log', (logEntry: any) => {
+      this.socket!.emit('logs', {
+        type: 'system',
+        data: [logEntry]
+      });
+    });
+
+    this.socket.on('message', (message: ClientMessage) => {
+      // This is a live message
+      console.log('receiving message', message);
       
-      // Set up system log listener
-      this.socket!.on('system_log', (logEntry: any) => {
-        this.socket!.emit('logs', {
-          type: 'system',
-          data: [logEntry]
+      if (message.thread_id) {
+        // This is a reply - update the parent message's reply count
+        this.messageHandlers.forEach(handler => {
+          handler([message], true);
+          // Create an updated version of the parent message with incremented reply_count
+          const parentMessage = this.socket!.emit('get_message', message.thread_id);
         });
-      });
+      } else {
+        this.messageHandlers.forEach(handler => handler([message], true));
+      }
+    });
 
-      this.socket!.on('message', (message: ClientMessage) => {
-        // This is a live message
-        console.log('receiving message', message);
-        
-        if (message.thread_id) {
-          // This is a reply - update the parent message's reply count
-          this.messageHandlers.forEach(handler => {
-            handler([message], true);
-            // Create an updated version of the parent message with incremented reply_count
-            const parentMessage = this.socket!.emit('get_message', message.thread_id);
-          });
-        } else {
-          this.messageHandlers.forEach(handler => handler([message], true));
-        }
-      });
-  
-      this.socket!.on('channels', (channels: ClientChannel[]) => {
-        this.channelHandlers.forEach(handler => handler(channels));
-      });
-  
-      this.socket!.on('threads', (threads: ClientThread[]) => {
-        this.threadHandlers.forEach(handler => handler(threads));
-      });
+    this.socket.on('channels', (channels: ClientChannel[]) => {
+      this.channelHandlers.forEach(handler => handler(channels));
+    });
 
-      this.socket!.on('handles', (handles: Array<{id: string, handle: string}>) => {
-        console.log('WebSocketService: Received handles in connection:', handles);
-        this.handleHandlers.forEach(handler => handler(handles));
-      });
-  
-      this.socket!.on('tasks', (tasks: any[]) => {
-        console.log('Received tasks:', tasks);
-        this.taskHandlers.forEach(handler => handler(tasks));
-      });
-  
-      this.socket!.on('artifacts', (artifacts: any[]) => {
-        console.log('Received artifacts:', artifacts);
-        this.artifactHandlers.forEach(handler => handler(artifacts));
-      });
-  
-      this.socket!.on('logs', (newLogs: { type: string, data: any }) => {
-        if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
-          console.warn('WebSocketService: Received unknown log type:', newLogs?.type);
-          return;
-        }
-        console.log('WebSocketService: Received logs:', newLogs);
-        this.logHandlers.forEach(handler => handler(newLogs));
-      });
-  
-      this.socket!.on('disconnect', () => {
-        console.log('Disconnected from WebSocket server');
-      });
-  
-      this.socket!.on('error', (error: Error) => {
-        console.error('WebSocket error:', error);
-      });
+    this.socket.on('threads', (threads: ClientThread[]) => {
+      this.threadHandlers.forEach(handler => handler(threads));
+    });
+
+    this.socket.on('handles', (handles: Array<{id: string, handle: string}>) => {
+      console.log('WebSocketService: Received handles in connection:', handles);
+      this.handleHandlers.forEach(handler => handler(handles));
+    });
+
+    this.socket.on('tasks', (tasks: any[]) => {
+      console.log('Received tasks:', tasks);
+      this.taskHandlers.forEach(handler => handler(tasks));
+    });
+
+    this.socket.on('artifacts', (artifacts: any[]) => {
+      console.log('Received artifacts:', artifacts);
+      this.artifactHandlers.forEach(handler => handler(artifacts));
+    });
+
+    this.socket.on('logs', (newLogs: { type: string, data: any }) => {
+      if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
+        console.warn('WebSocketService: Received unknown log type:', newLogs?.type);
+        return;
+      }
+      console.log('WebSocketService: Received logs:', newLogs);
+      this.logHandlers.forEach(handler => handler(newLogs));
+    });
+
+    this.socket.on('disconnect', () => {
+      console.log('Disconnected from WebSocket server');
+    });
+
+    this.socket.on('error', (error: Error) => {
+      console.error('WebSocket error:', error);
     });
   }
 
   disconnect() {
     if (this.socket) {
+      this.cleanupSocketListeners();
       this.socket.disconnect();
       this.socket = null;
     }
