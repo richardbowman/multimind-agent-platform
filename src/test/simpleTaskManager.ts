@@ -4,11 +4,13 @@ import * as Events from 'events';
 import { Project, RecurrencePattern, Task, TaskManager } from '../tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ContentProject } from 'src/agents/contentManager';
+import { AsyncQueue } from '../helpers/asyncQueue';
 
 class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     private projects: { [projectId: string]: Project<Task> } = {};
     private filePath: string;
     private savePending: boolean = false;
+    private fileQueue: AsyncQueue = new AsyncQueue();
 
     constructor(filePath: string) {
         super();
@@ -71,20 +73,23 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         try {
             if (this.savePending) return;
             this.savePending = true;
-            await (async () => {
+            await this.fileQueue.enqueue(async () => {
                 await fs.writeFile(this.filePath, JSON.stringify(this.projects, null, 2));
                 this.savePending = false;
-            })();
+            });
         } catch (error) {
             Logger.error('Failed to save tasks:', error);
+            this.savePending = false;
         }
     }
 
     async load(): Promise<void> {
         try {
-            const data = await fs.readFile(this.filePath, 'utf-8');
-            this.projects = JSON.parse(data);
-            Logger.info(`Loaded ${Object.keys(this.projects).length} projects from disk`);
+            await this.fileQueue.enqueue(async () => {
+                const data = await fs.readFile(this.filePath, 'utf-8');
+                this.projects = JSON.parse(data);
+                Logger.info(`Loaded ${Object.keys(this.projects).length} projects from disk`);
+            });
         } catch (error) {
             Logger.error('Failed to load tasks:', error);
         }
