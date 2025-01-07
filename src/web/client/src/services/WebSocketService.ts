@@ -347,4 +347,14 @@ export default class WebSocketService implements IIPCService {
       this.socket.emit('updateSettings', settings);
     }
   }
+
+  async getLogs(logType: 'llm' | 'system' | 'api'): Promise<any> {
+    if (!this.socket) return [];
+    return new Promise((resolve) => {
+      this.socket!.once('logs', (logs: any) => {
+        resolve(logs);
+      });
+      this.socket!.emit('get_logs', logType);
+    });
+  }
 }
