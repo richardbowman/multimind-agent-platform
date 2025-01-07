@@ -154,7 +154,7 @@ export class MessageHandler {
             case 'llm':
                 return await this.services.llmLogger.getAllLogs();
             case 'system':
-                return this.services.logReader.readLogs();
+                return this.services.logReader.getLogs();
             case 'api':
                 return []; // TODO: Implement API logs
             default:
