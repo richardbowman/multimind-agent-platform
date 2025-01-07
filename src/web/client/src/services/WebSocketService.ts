@@ -289,6 +289,18 @@ class WebSocketService {
       this.logHandlers = this.logHandlers.filter(h => h !== handler);
     };
   }
+
+  getSettings(callback: (settings: any) => void) {
+    if (this.socket) {
+      this.socket.emit('getSettings', callback);
+    }
+  }
+
+  updateSettings(settings: any) {
+    if (this.socket) {
+      this.socket.emit('updateSettings', settings);
+    }
+  }
 }
 
 export const webSocketService = new WebSocketService();

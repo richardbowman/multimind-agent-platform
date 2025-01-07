@@ -17,6 +17,15 @@ export class WebSocketServer {
     private storage: LocalChatStorage;
     private threads: Record<string, ClientThread[]> = {};
     private projects: TaskManager;
+    private settings: {
+        provider: string;
+        model: string;
+        apiKey: string;
+    } = {
+        provider: process.env.LLM_PROVIDER || 'openai',
+        model: process.env.CHAT_MODEL || 'gpt-4',
+        apiKey: process.env.OPENAI_API_KEY || ''
+    };
     private artifactManager: ArtifactManager;
     private userClient: LocalTestClient;
     private logReader: LogReader;
@@ -338,6 +347,32 @@ export class WebSocketServer {
                 Logger.log('Sending handles to client:', handles);
                 Logger.log('Raw userIdToHandleName:', this.storage.userIdToHandleName);
                 socket.emit('handles', handles);
+            });
+
+            // Handle settings requests
+            socket.on('getSettings', (callback) => {
+                callback({
+                    provider: this.settings.provider,
+                    model: this.settings.model,
+                    apiKey: this.settings.apiKey
+                });
+            });
+
+            socket.on('updateSettings', (newSettings) => {
+                this.settings = {
+                    ...this.settings,
+                    ...newSettings
+                };
+                // Update environment variables
+                process.env.LLM_PROVIDER = newSettings.provider;
+                process.env.CHAT_MODEL = newSettings.model;
+                if (newSettings.provider === 'openai') {
+                    process.env.OPENAI_API_KEY = newSettings.apiKey;
+                } else if (newSettings.provider === 'anthropic') {
+                    process.env.ANTHROPIC_API_KEY = newSettings.apiKey;
+                }
+                Logger.info('Settings updated');
+                socket.emit('settingsUpdated', this.settings);
             });
 
             socket.on('disconnect', () => {
