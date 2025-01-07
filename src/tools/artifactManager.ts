@@ -1,5 +1,5 @@
-import fs from 'fs/promises';
-import path from 'path';
+import * as fs from 'fs/promises';
+import * as path from 'path';
 import { fileURLToPath } from 'url';
 import Logger from '../helpers/logger';
 import { IVectorDatabase } from '../llm/IVectorDatabase';
@@ -12,8 +12,8 @@ export class ArtifactManager {
   private vectorDb: IVectorDatabase;
   private fileQueue: AsyncQueue;
 
-  constructor(vectorDb: IVectorDatabase, storageDir = path.join(path.dirname(fileURLToPath(import.meta.url)), '../../.output/artifacts')) {
-    this.storageDir = storageDir;
+  constructor(vectorDb: IVectorDatabase, storageDir?: string) {
+    this.storageDir = storageDir || path.join(__dirname, '../../.output/artifacts');
     this.artifactMetadataFile = path.join(this.storageDir, 'artifact.json');
     this.vectorDb = vectorDb;
     this.fileQueue = new AsyncQueue();
