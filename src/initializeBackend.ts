@@ -88,4 +88,17 @@ export async function initializeBackend() {
         await artifactManager.indexArtifacts();
         process.exit(0);
     }
+
+    return {
+        chatClient: userClient,
+        taskManager: tasks,
+        artifactManager,
+        settings: {
+            provider: LLM_PROVIDER,
+            model: CHAT_MODEL,
+            apiKey: process.env.OPENAI_API_KEY || ''
+        },
+        llmLogger: llmService.getLogger(),
+        logReader: Logger
+    };
 }
