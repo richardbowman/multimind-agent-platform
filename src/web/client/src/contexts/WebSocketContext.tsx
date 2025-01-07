@@ -142,8 +142,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
           setArtifacts(newArtifacts);
         });
 
-    const logsCleanup = isElectron
-      ? (window as any).electron.onLogs((newLogs: any) => {
+    const logsCleanup = ipcService.onLogs((newLogs: any) => {
       console.log('WebSocketContext: Received logs:', newLogs);
       if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
         console.warn('WebSocketContext: Received invalid log type:', newLogs?.type);
