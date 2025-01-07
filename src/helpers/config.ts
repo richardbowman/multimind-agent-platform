@@ -1,7 +1,7 @@
 // config.ts
-import dotenv from 'dotenv';
+const dotenv = require('dotenv');
 import Logger from './logger';
-import path from 'path';
+const path = require('path');
 import { app } from 'electron';
 
 // Determine the base directory for config files
@@ -9,18 +9,15 @@ let baseDir = '.';
 try {
     // Check if we're running in Electron
     if (process.versions['electron']) {
-        const electron = require('electron');
-        const app = electron.app || electron.remote?.app;
-        
-        if (app) {
+       if (app) {
             const isDev = !app.isPackaged;
             // When packaged, configs are in resources/app.asar
-            baseDir = isDev ? '.' : path.join(process.resourcesPath, 'app.asar');
-            Logger.info(`Running in Electron (${isDev ? 'dev' : 'prod'}), using base dir: ${baseDir}`);
+            baseDir = isDev ? '.' : path.join(app.getAppPath(), "dist");
+            console.log(`Running in Electron (${isDev ? 'dev' : 'prod'}), using base dir: ${baseDir}`);
         }
     }
 } catch (error) {
-    Logger.info('Not running in Electron, using current directory for config');
+    console.log('Not running in Electron, using current directory for config', error);
 }
 
 // Load environment variables from config files
