@@ -8,6 +8,7 @@ import Logger from './helpers/logger';
 
 let mainWindow: BrowserWindow;
 import { BackendServices } from './types/BackendServices';
+import { MessageHandler } from './server/MessageHandler';
 
 let backendServices: BackendServices;
 
@@ -48,74 +49,61 @@ app.whenReady().then(async () => {
 });
 
 function setupIpcHandlers() {
+    const handler = new MessageHandler(backendServices);
+
     // Messages
     ipcMain.handle('send-message', async (_, message) => {
-        const result = await backendServices.chatClient.postInChannel(
-            message.channel_id,
-            message.message,
-            message.props
-        );
+        const result = await handler.handleSendMessage(message);
         mainWindow.webContents.send('message', [result], true);
         return result;
     });
 
-    ipcMain.handle('get-messages', async (_, { channelId, threadId }) => {
-        const messages = await backendServices.chatClient.fetchPreviousMessages(channelId);
-        return messages;
+    ipcMain.handle('get-messages', async (_, params) => {
+        return handler.handleGetMessages(params);
     });
 
     // Channels
     ipcMain.handle('get-channels', async () => {
-        return backendServices.chatClient.getChannels();
+        return handler.handleGetChannels();
     });
 
     // Tasks
-    ipcMain.handle('get-tasks', async (_, { channelId, threadId }) => {
-        return backendServices.taskManager.getTasks(channelId, threadId);
+    ipcMain.handle('get-tasks', async (_, params) => {
+        return handler.handleGetTasks(params);
     });
 
     // Artifacts
-    ipcMain.handle('get-artifacts', async (_, { channelId, threadId }) => {
-        return backendServices.artifactManager.getArtifacts(channelId, threadId);
+    ipcMain.handle('get-artifacts', async (_, params) => {
+        return handler.handleGetArtifacts(params);
     });
 
     ipcMain.handle('get-all-artifacts', async () => {
-        return backendServices.artifactManager.listArtifacts();
+        return handler.handleGetAllArtifacts();
     });
 
     ipcMain.handle('delete-artifact', async (_, artifactId) => {
-        await backendServices.artifactManager.deleteArtifact(artifactId);
-        const artifacts = await backendServices.artifactManager.listArtifacts();
+        const artifacts = await handler.handleDeleteArtifact(artifactId);
         mainWindow.webContents.send('artifacts', artifacts);
+        return artifacts;
     });
 
     // Settings
     ipcMain.handle('get-settings', async () => {
-        return backendServices.settings;
+        return handler.handleGetSettings();
     });
 
     ipcMain.handle('update-settings', async (_, settings) => {
-        backendServices.settings = { ...backendServices.settings, ...settings };
-        return backendServices.settings;
+        return handler.handleUpdateSettings(settings);
     });
 
     // Logs
     ipcMain.handle('get-logs', async (_, logType) => {
-        switch (logType) {
-            case 'llm':
-                return backendServices.llmLogger.getAllLogs();
-            case 'system':
-                return backendServices.logReader.readLogs();
-            case 'api':
-                return []; // TODO: Implement API logs
-            default:
-                return [];
-        }
+        return handler.handleGetLogs(logType);
     });
 
     // Handles
     ipcMain.handle('get-handles', async () => {
-        return backendServices.chatClient.getHandles();
+        return handler.handleGetHandles();
     });
 }
 
