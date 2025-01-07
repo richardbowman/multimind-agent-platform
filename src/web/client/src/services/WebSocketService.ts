@@ -1,7 +1,7 @@
 import io from 'socket.io-client';
-import { IIPCService, ClientMessage, ClientChannel, ClientThread } from '../../../shared/IPCInterface';
+import { IIPCService, ClientMessage, ClientChannel, ClientThread } from '../../../../shared/IPCInterface';
 
-class WebSocketService implements IIPCService {
+export default class WebSocketService implements IIPCService {
   socket: SocketIOClient.Socket | null = null;
   private messageHandlers: ((messages: ClientMessage[], isLive: boolean) => void)[] = [];
   private channelHandlers: ((channels: ClientChannel[]) => void)[] = [];
@@ -109,7 +109,7 @@ class WebSocketService implements IIPCService {
     }
   }
 
-  sendMessage(message: Partial<ClientMessage>) {
+  async sendMessage(message: Partial<ClientMessage>) {
     if (this.socket) {
       this.socket.emit('send_message', message);
     }
@@ -215,7 +215,7 @@ class WebSocketService implements IIPCService {
     }
   }
 
-  deleteArtifact(artifactId: string) {
+  async deleteArtifact(artifactId: string) {
     if (this.socket) {
       this.socket.emit('delete_artifact', artifactId);
     }
@@ -260,197 +260,15 @@ class WebSocketService implements IIPCService {
     };
   }
 
-  getSettings(callback: (settings: any) => void) {
+  async getSettings() {
     if (this.socket) {
-      this.socket.emit('getSettings', callback);
+      this.socket.emit('getSettings');
     }
   }
 
-  updateSettings(settings: any) {
+  async updateSettings(settings: any) {
     if (this.socket) {
       this.socket.emit('updateSettings', settings);
     }
   }
 }
-
-export const webSocketService = new WebSocketService();
-export default webSocketService;
-import { io, Socket } from 'socket.io-client';
-import { IIPCService, ClientMessage, ClientChannel, ClientThread } from '../../../../shared/IPCInterface';
-
-export class WebSocketService implements IIPCService {
-  private socket: Socket | null = null;
-
-  connect(url: string = process.env.REACT_APP_WS_URL || 'ws://localhost:4001') {
-    if (this.socket) {
-      this.socket.removeAllListeners();
-      this.socket.disconnect();
-    }
-
-    this.socket = io(url, {
-      transports: ['websocket'],
-      reconnection: true,
-      reconnectionAttempts: 5
-    });
-
-    this.socket.on('connect', () => {
-      console.log('Connected to WebSocket server');
-    });
-
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
-    });
-
-    this.socket.on('error', (error: Error) => {
-      console.error('WebSocket error:', error);
-    });
-  }
-
-  disconnect() {
-    if (this.socket) {
-      this.socket.disconnect();
-      this.socket = null;
-    }
-  }
-
-  sendMessage(message: Partial<ClientMessage>) {
-    if (this.socket) {
-      this.socket.emit('send_message', message);
-    }
-  }
-
-  fetchMessages(channelId: string, threadId: string | null = null, limit: number = 50) {
-    if (this.socket) {
-      this.socket.emit('get_messages', { 
-        channel_id: channelId, 
-        thread_id: threadId || '', 
-        limit 
-      });
-    }
-  }
-
-  fetchChannels() {
-    if (this.socket) {
-      this.socket.emit('get_channels');
-    }
-  }
-
-  fetchTasks(channelId: string, threadId: string | null) {
-    if (this.socket) {
-      this.socket.emit('get_tasks', { channel_id: channelId, thread_id: threadId });
-    }
-  }
-
-  fetchArtifacts(channelId: string, threadId: string | null) {
-    if (this.socket) {
-      this.socket.emit('get_artifacts', { channel_id: channelId, thread_id: threadId });
-    }
-  }
-
-  fetchAllArtifacts() {
-    if (this.socket) {
-      this.socket.emit('get_all_artifacts');
-    }
-  }
-
-  deleteArtifact(artifactId: string) {
-    if (this.socket) {
-      this.socket.emit('delete_artifact', artifactId);
-    }
-  }
-
-  fetchLogs(logType: 'llm' | 'system' | 'api') {
-    if (this.socket) {
-      this.socket.emit('get_logs', logType);
-    }
-  }
-
-  fetchHandles() {
-    if (this.socket) {
-      this.socket.emit('get_handles');
-    }
-  }
-
-  getSettings(callback: (settings: any) => void) {
-    if (this.socket) {
-      this.socket.emit('getSettings', callback);
-    }
-  }
-
-  updateSettings(settings: any) {
-    if (this.socket) {
-      this.socket.emit('updateSettings', settings);
-    }
-  }
-
-  // Event handlers
-  onMessage(callback: (messages: ClientMessage[], isLive: boolean) => void) {
-    if (this.socket) {
-      this.socket.on('message', (messages: ClientMessage[], isLive: boolean) => callback(messages, isLive));
-      this.socket.on('messages', (messages: ClientMessage[]) => callback(messages, false));
-    }
-    return () => {
-      if (this.socket) {
-        this.socket.off('message');
-        this.socket.off('messages');
-      }
-    };
-  }
-
-  onChannels(callback: (channels: ClientChannel[]) => void) {
-    if (this.socket) {
-      this.socket.on('channels', callback);
-    }
-    return () => {
-      if (this.socket) {
-        this.socket.off('channels');
-      }
-    };
-  }
-
-  onTasks(callback: (tasks: any[]) => void) {
-    if (this.socket) {
-      this.socket.on('tasks', callback);
-    }
-    return () => {
-      if (this.socket) {
-        this.socket.off('tasks');
-      }
-    };
-  }
-
-  onArtifacts(callback: (artifacts: any[]) => void) {
-    if (this.socket) {
-      this.socket.on('artifacts', callback);
-    }
-    return () => {
-      if (this.socket) {
-        this.socket.off('artifacts');
-      }
-    };
-  }
-
-  onLogs(callback: (logs: any) => void) {
-    if (this.socket) {
-      this.socket.on('logs', callback);
-    }
-    return () => {
-      if (this.socket) {
-        this.socket.off('logs');
-      }
-    };
-  }
-
-  onHandles(callback: (handles: Array<{id: string, handle: string}>) => void) {
-    if (this.socket) {
-      this.socket.on('handles', callback);
-    }
-    return () => {
-      if (this.socket) {
-        this.socket.off('handles');
-      }
-    };
-  }
-}
-
-export const webSocketService = new WebSocketService();
