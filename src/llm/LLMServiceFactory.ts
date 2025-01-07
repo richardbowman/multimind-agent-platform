@@ -2,12 +2,14 @@ import { ILLMService } from "./ILLMService";
 import LMStudioService from "./lmstudioService";
 import { BedrockService } from "./BedrockService";
 import { AnthropicService } from "./AnthropicService";
+import { LlamaCppService } from "./LlamaCppService";
 import { LLM_HEAVY_MODEL, LLM_WEAK_MODEL } from "src/helpers/config";
 
 export enum LLMProvider {
     LMSTUDIO = "lmstudio",
     BEDROCK = "bedrock",
-    ANTHROPIC = "anthropic"
+    ANTHROPIC = "anthropic",
+    LLAMA_CPP = "llama-cpp"
 }
 
 export interface LLMServiceConfig {
@@ -57,6 +59,8 @@ export class LLMServiceFactory {
                     config.modelId, // Will use default from config if undefined
                     embeddingService
                 );
+            case LLMProvider.LLAMA_CPP:
+                return new LlamaCppService();
             default:
                 throw new Error(`Unsupported chat provider: ${config.chatProvider}`);
         }
