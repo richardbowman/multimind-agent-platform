@@ -1,6 +1,6 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
-import * as express from 'express';
+import express from 'express';
 import { ClientChannel, ClientThread, ClientMessage } from '../client/src/services/WebSocketService';
 import { LogReader } from './LogReader';
 import { LocalChatStorage, InMemoryPost, LocalTestClient } from '../../chat/localChatClient';
@@ -9,7 +9,7 @@ import Logger from 'src/helpers/logger';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ChatPost, isValidChatPost } from 'src/chat/chatClient';
 import { LLMCallLogger } from 'src/llm/LLMLogger';
-import { HOST, PORT, PROTOCOL } from '../../../helpers/config';
+import { HOST, PORT, PROTOCOL } from '../../helpers/config';
 
 export class WebSocketServer {
     private io: Server;
