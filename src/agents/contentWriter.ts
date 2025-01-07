@@ -33,7 +33,11 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
                         createdAt: new Date(),
                         updatedAt: new Date(),
                         status: 'active',
-                        owner: params.userPost.user_id
+                        owner: params.userPost.user_id,
+                        sourceMessage: {
+                            channelId: params.userPost.channel_id,
+                            messageId: params.userPost.id
+                        }
                     }
                 };
                 await this.projects.createProject(newProject);
@@ -88,8 +92,29 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
         }
     }
 
-    protected projectCompleted(project: ContentProject): void {
-        
+    protected async projectCompleted(project: ContentProject): Promise<void> {
+        // Check if this was a project created from a message
+        const sourceMessage = project.metadata?.sourceMessage;
+        if (!sourceMessage) {
+            return;
+        }
+
+        // Get all completed tasks for this project
+        const tasks = await this.projects.getTasks(project.id);
+        const completedTasks = tasks.filter(task => task.complete);
+
+        // Compile content from all tasks
+        const content = completedTasks
+            .map(task => (task as ContentTask).content)
+            .filter(Boolean)
+            .join('\n\n');
+
+        // Reply to the original message
+        await this.chat.createPost({
+            channel_id: sourceMessage.channelId,
+            message: `Content generation completed!\n\n${content}`,
+            root_id: sourceMessage.messageId
+        });
     }
 
 
