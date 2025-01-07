@@ -1,36 +1,17 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import express from 'express';
-import { ClientChannel, ClientThread, ClientMessage } from '../client/src/services/WebSocketService';
-import { LogReader } from './LogReader';
-import { LocalChatStorage, InMemoryPost, LocalTestClient } from '../../chat/localChatClient';
-import { TaskManager } from 'src/tools/taskManager';
-import Logger from 'src/helpers/logger';
-import { ArtifactManager } from 'src/tools/artifactManager';
-import { ChatPost, isValidChatPost } from 'src/chat/chatClient';
-import { LLMCallLogger } from 'src/llm/LLMLogger';
+import Logger from '../../helpers/logger';
 import { HOST, PORT, PROTOCOL } from '../../helpers/config';
+import { MessageHandler } from '../../server/MessageHandler';
+import { BackendServices } from '../../types/BackendServices';
 
 export class WebSocketServer {
     private io: Server;
     private httpServer: ReturnType<typeof createServer>;
-    private storage: LocalChatStorage;
-    private threads: Record<string, ClientThread[]> = {};
-    private projects: TaskManager;
-    private settings: {
-        provider: string;
-        model: string;
-        apiKey: string;
-    } = {
-        provider: process.env.LLM_PROVIDER || 'openai',
-        model: process.env.CHAT_MODEL || 'gpt-4',
-        apiKey: process.env.OPENAI_API_KEY || ''
-    };
-    private artifactManager: ArtifactManager;
-    private userClient: LocalTestClient;
-    private logReader: LogReader;
+    private handler: MessageHandler;
 
-    constructor(storage: LocalChatStorage, projects: TaskManager, artifactManager: ArtifactManager, userClient: LocalTestClient, port: number = PORT) {
+    constructor(services: BackendServices, port: number = PORT) {
         this.logReader = new LogReader();
         this.storage = storage;
         this.projects = projects;
