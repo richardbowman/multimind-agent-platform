@@ -1,5 +1,4 @@
 import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, VECTOR_DATABASE_TYPE, EMBEDDING_PROVIDER, PROJECTS_CHANNEL_ID } from "./helpers/config";
-import { parseArgs } from 'node:util';
 import { LLMServiceFactory, LLMProvider } from "./llm/LLMServiceFactory";
 import { LocalChatStorage, LocalTestClient } from "./chat/localChatClient";
 import SimpleTaskManager from "./test/simpleTaskManager";
@@ -7,11 +6,9 @@ import { ArtifactManager } from "./tools/artifactManager";
 import { createVectorDatabase } from "./llm/vectorDatabaseFactory";
 import Logger from "./helpers/logger";
 import { AgentLoader } from "./utils/AgentLoader";
-import { WebSocketServer } from './web/server/WebSocketServer';
-
 import { BackendServices } from "./types/BackendServices";
 
-export async function initializeBackend(): Promise<BackendServices> {
+export async function initializeBackend(options: { reindex?: boolean } = {}): Promise<BackendServices> {
     const llmService = LLMServiceFactory.createService({
         chatProvider: LLM_PROVIDER as LLMProvider,
         embeddingProvider: EMBEDDING_PROVIDER as LLMProvider
@@ -42,7 +39,6 @@ export async function initializeBackend(): Promise<BackendServices> {
     async function shutdown() {
         console.log('Shutting down gracefully...');
         try {
-            await wsServer.close();
             await tasks.save();
             await chatStorage.save();
             process.exit(0);
@@ -75,17 +71,9 @@ export async function initializeBackend(): Promise<BackendServices> {
 
     const USER_ID = "test";
     const userClient = new LocalTestClient(USER_ID, "test", chatStorage);
-    const wsServer = new WebSocketServer(chatStorage, tasks, artifactManager, userClient);
 
-    // Parse command line arguments
-    const { values } = parseArgs({
-        options: {
-            reindex: { type: 'boolean' }
-        }
-    });
-
-    // Handle reindex flag
-    if (values.reindex) {
+    // Handle reindex option
+    if (options.reindex) {
         Logger.info("Reindexing artifacts...");
         await artifactManager.indexArtifacts();
         process.exit(0);
