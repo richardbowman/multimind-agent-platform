@@ -113,7 +113,12 @@ export class MessageHandler {
     }
 
     async handleGetArtifacts({ channelId, threadId }: { channelId: string, threadId?: string }) {
-        return await this.services.artifactManager.getArtifacts(channelId, threadId);
+        const artifacts = await this.services.artifactManager.listArtifacts();
+        return artifacts.filter(artifact => {
+            const matchesChannel = artifact.metadata?.channelId === channelId;
+            const matchesThread = !threadId || artifact.metadata?.threadId === threadId;
+            return matchesChannel && matchesThread;
+        }).map(artifact => this.processArtifactContent(artifact));
     }
 
     async handleGetAllArtifacts() {
