@@ -7,7 +7,9 @@ import { initializeBackend } from './initializeBackend';
 import Logger from './helpers/logger';
 
 let mainWindow: BrowserWindow;
-let backendServices: any;
+import { BackendServices } from './types/BackendServices';
+
+let backendServices: BackendServices;
 
 async function createWindow() {
     mainWindow = new BrowserWindow({

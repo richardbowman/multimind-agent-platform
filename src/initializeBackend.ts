@@ -9,7 +9,9 @@ import Logger from "./helpers/logger";
 import { AgentLoader } from "./utils/AgentLoader";
 import { WebSocketServer } from './web/server/WebSocketServer';
 
-export async function initializeBackend() {
+import { BackendServices } from "./types/BackendServices";
+
+export async function initializeBackend(): Promise<BackendServices> {
     const llmService = LLMServiceFactory.createService({
         chatProvider: LLM_PROVIDER as LLMProvider,
         embeddingProvider: EMBEDDING_PROVIDER as LLMProvider
