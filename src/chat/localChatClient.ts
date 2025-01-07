@@ -151,6 +151,12 @@ export class LocalTestClient implements ChatClient {
         this.storage.mapUserIdToHandleName(this.userId, handleName);
     }
 
+    public getChannels(): Promise<[string, string][]> {
+        return Promise.resolve(
+            Object.entries(this.storage.channelNames)
+        );
+    }
+
     public getPosts() {
         return this.storage.posts;
     }
