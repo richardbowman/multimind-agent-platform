@@ -1,7 +1,14 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import webSocketService, { ClientMessage, ClientChannel, ClientThread } from '../services/WebSocketService';
+import { IIPCService, ClientMessage, ClientChannel } from '../../../shared/IPCInterface';
+import { WebSocketService } from '../services/WebSocketService';
+import { ElectronIPCService } from '../services/ElectronIPCService';
 import { Artifact } from '../../../../tools/artifact';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
+
+// Create service instance based on environment
+const ipcService: IIPCService = (window as any).electron 
+    ? new ElectronIPCService()
+    : new WebSocketService();
 
 interface WebSocketContextType {
   messages: ClientMessage[];

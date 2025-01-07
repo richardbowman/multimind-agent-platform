@@ -1,37 +1,7 @@
 import io from 'socket.io-client';
+import { IIPCService, ClientMessage, ClientChannel, ClientThread } from '../../../shared/IPCInterface';
 
-export interface ClientChannel {
-  id: string;
-  name: string;
-  description?: string;
-}
-
-export interface ClientThread {
-  rootMessage: ClientMessage;
-  replies: ClientMessage[];
-  last_message_at: number;
-  channel_id: string;
-}
-
-export interface ClientMessage {
-  id: string;
-  channel_id: string;
-  thread_id?: string;
-  message: string;
-  user_id: string;
-  create_at: number;
-  directed_at?: string;
-  props?: Record<string, any>;
-  inProgress?: boolean;
-  reply_count: number;
-  
-  getRootId(): string | null;
-  isReply(): boolean;
-  hasUUID(): boolean;
-  getActivityType(): string | null;
-}
-
-class WebSocketService {
+class WebSocketService implements IIPCService {
   socket: SocketIOClient.Socket | null = null;
   private messageHandlers: ((messages: ClientMessage[], isLive: boolean) => void)[] = [];
   private channelHandlers: ((channels: ClientChannel[]) => void)[] = [];
