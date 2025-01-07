@@ -1,11 +1,11 @@
 import cron from 'node-cron';
 import fs from 'fs/promises';
-import EventEmitter from 'events';
+import * as Events from 'events';
 import { Project, RecurrencePattern, Task, TaskManager } from '../tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ContentProject } from 'src/agents/contentManager';
 
-class SimpleTaskManager extends EventEmitter implements TaskManager {
+class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     private projects: { [projectId: string]: Project<Task> } = {};
     private filePath: string;
     private savePending: boolean = false;

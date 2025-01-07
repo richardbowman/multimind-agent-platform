@@ -1,7 +1,6 @@
 import Blessed from 'blessed';
 import ChromaDBService from '../llm/chromaService'; // Adjust the import path accordingly
 import Logger from 'src/helpers/logger';
-import clipboard from 'clipboardy';
 import { formatMarkdownForTerminal } from 'src/helpers/formatters';
 import LMStudioService from 'src/llm/lmstudioService';
 import { EMBEDDING_MODEL } from 'src/helpers/config';

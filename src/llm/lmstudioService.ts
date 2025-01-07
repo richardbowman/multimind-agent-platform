@@ -4,7 +4,6 @@ import { EmbeddingSpecificModel, LLMSpecificModel, LMStudioClient } from "@lmstu
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
-import { ChatPost } from "src/chat/chatClient";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 

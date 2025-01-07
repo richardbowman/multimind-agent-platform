@@ -2,15 +2,12 @@ import { ChromaClient, Collection } from "chromadb";
 import { EventEmitter } from "events";
 import crypto from 'crypto';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
-import dotenv from 'dotenv';
 import { CHROMADB_URL } from "../helpers/config";
 import Logger from "src/helpers/logger";
 import { ConversationContext } from "../chat/chatClient";
 import { saveToFile } from "src/tools/storeToFile";
 import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
 import { ILLMService } from "./ILLMService";
-
-dotenv.config();
 
 class ChromaDBService extends EventEmitter implements IVectorDatabase {
     private chromaDB: ChromaClient;

@@ -1,8 +1,8 @@
 import { EventEmitter } from "events";
 import { LocalIndex } from "vectra";
-import crypto from 'crypto';
+import * as crypto from 'crypto';
 import { AsyncQueue } from "../helpers/asyncQueue";
-import path from 'path';
+import * as path from 'path';
 import { RecursiveCharacterTextSplitter } from "langchain/text_splitter";
 import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
 import Logger from "../helpers/logger";

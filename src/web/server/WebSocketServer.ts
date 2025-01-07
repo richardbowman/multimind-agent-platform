@@ -350,8 +350,8 @@ export class WebSocketServer {
             });
 
             // Handle settings requests
-            socket.on('getSettings', (callback) => {
-                callback({
+            socket.on('getSettings', () => {
+                socket.emit('settings', {
                     provider: this.settings.provider,
                     model: this.settings.model,
                     apiKey: this.settings.apiKey

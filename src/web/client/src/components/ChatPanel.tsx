@@ -3,7 +3,7 @@ import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
 import { useWebSocket } from '../contexts/WebSocketContext';
-import { ClientMessage } from '../../../shared/IPCInterface';
+import { ClientMessage } from '../../../../shared/IPCInterface';
 import remarkGfm from 'remark-gfm'
 
 interface ChatPanelProps {}

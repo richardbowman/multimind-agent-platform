@@ -7,7 +7,7 @@ class Logger {
     private static logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.log`);
 
     private static ensureLogDirectoryExists(): void {
-        const dir = dirname(Logger.logFilePath);
+        const dir = path.dirname(Logger.logFilePath);
         mkdirSync(dir, { recursive: true });
     }
 

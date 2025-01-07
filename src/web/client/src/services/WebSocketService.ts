@@ -16,6 +16,7 @@ export default class WebSocketService implements IIPCService {
     if (!this.socket) return [];
     return new Promise((resolve) => {
       this.socket!.once('messages', (messages: ClientMessage[]) => {
+        this.messageHandlers.forEach(handler => handler(messages, false));
         resolve(messages);
       });
       this.socket!.emit('get_messages', { channel_id: channelId, thread_id: threadId });
@@ -60,21 +61,6 @@ export default class WebSocketService implements IIPCService {
       });
       this.socket!.emit('get_all_artifacts');
     });
-  }
-
-  async getSettings(): Promise<any> {
-    if (!this.socket) return {};
-    return new Promise((resolve) => {
-      this.socket!.once('settingsUpdated', (settings: any) => {
-        resolve(settings);
-      });
-      this.socket!.emit('getSettings');
-    });
-  }
-
-  async updateSettings(settings: any): Promise<void> {
-    if (!this.socket) return;
-    this.socket.emit('updateSettings', settings);
   }
 
   async getHandles(): Promise<Array<{id: string, handle: string}>> {
@@ -336,16 +322,19 @@ export default class WebSocketService implements IIPCService {
     };
   }
 
-  async getSettings() {
-    if (this.socket) {
-      this.socket.emit('getSettings');
-    }
+  async getSettings(): Promise<any> {
+    if (!this.socket) return {};
+    return new Promise((resolve) => {
+      this.socket!.once('settingsUpdated', (settings: any) => {
+        resolve(settings);
+      });
+      this.socket!.emit('getSettings');
+    });
   }
 
-  async updateSettings(settings: any) {
-    if (this.socket) {
-      this.socket.emit('updateSettings', settings);
-    }
+  async updateSettings(settings: any): Promise<void> {
+    if (!this.socket) return;
+    this.socket.emit('updateSettings', settings);
   }
 
   async getLogs(logType: 'llm' | 'system' | 'api'): Promise<any> {

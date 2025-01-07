@@ -5,6 +5,10 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { codeExecutionSchema } from '../../schemas/CodeExecutionSchema';
 import { getQuickJS } from 'quickjs-emscripten';
+import { CodeExecutionResponse } from 'src/schemas/CodeExecutionResponse';
+import { ExecutorType } from './ExecutorType';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
 
 /**
  * Executor that safely runs JavaScript code in an isolated sandbox environment. 

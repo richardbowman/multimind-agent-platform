@@ -86,6 +86,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    ipcService.connect();
+
     const handlesCleanup = ipcService.onHandles((newHandles: any) => {
       console.log('WebSocketContext: Received handles:', newHandles);
       setHandles(newHandles);
@@ -118,27 +120,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     });
 
-    const channelCleanup = isElectron 
-      ? (window as any).electron.onChannels((newChannels: any) => {
-          setChannels(newChannels);
-        })
-      : ipcService.onChannels((newChannels) => {
+    const channelCleanup = ipcService.onChannels((newChannels) => {
           setChannels(newChannels);
         });
 
-    const taskCleanup = isElectron
-      ? (window as any).electron.onTasks((newTasks: any) => {
-          setTasks(newTasks);
-        })
-      : ipcService.onTasks((newTasks) => {
+    const taskCleanup = ipcService.onTasks((newTasks) => {
           setTasks(newTasks);
         });
 
-    const artifactCleanup = isElectron
-      ? (window as any).electron.onArtifacts((newArtifacts: any) => {
-          setArtifacts(newArtifacts);
-        })
-      : ipcService.onArtifacts((newArtifacts) => {
+    const artifactCleanup = ipcService.onArtifacts((newArtifacts) => {
           setArtifacts(newArtifacts);
         });
 
@@ -154,23 +144,14 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }));
     });
 
-    return () => {
-      if (isElectron) {
-        messageCleanup();
-        channelCleanup();
-        taskCleanup();
-        artifactCleanup();
-        handlesCleanup();
-        logsCleanup();
-      } else {
-        messageCleanup();
-        channelCleanup();
-        taskCleanup();
-        artifactCleanup();
-        handlesCleanup();
-        logsCleanup();
-        ipcService.disconnect();
-      }
+    return () => {    
+      messageCleanup();
+      channelCleanup();
+      taskCleanup();
+      artifactCleanup();
+      handlesCleanup();
+      logsCleanup();
+      ipcService.disconnect();
     };
   }, []);
 
@@ -178,7 +159,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   useEffect(() => {
     if (currentChannelId) {
       setIsLoading(true);
-      ipcService.fetchMessages(currentChannelId, currentThreadId || '');
+      ipcService.getMessages(currentChannelId, currentThreadId || '');
       // Also fetch related data
       fetchTasks(currentChannelId, currentThreadId);
       fetchArtifacts(currentChannelId, currentThreadId);
@@ -193,67 +174,35 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const isElectron = !!(window as any).electron;
 
   const sendMessage = (message: Partial<ClientMessage>) => {
-    if (isElectron) {
-      (window as any).electron.sendMessage(message);
-    } else {
-      webSocketService.sendMessage(message);
-    }
+    ipcService.sendMessage(message);
   };
 
   const fetchChannels = () => {
-    if (isElectron) {
-      (window as any).electron.getChannels();
-    } else {
-      ipcService.fetchChannels();
-    }
+    ipcService.getChannels();
   };
 
   const fetchHandles = () => {
-    if (isElectron) {
-      (window as any).electron.getHandles();
-    } else {
-      ipcService.fetchHandles();
-    }
+    ipcService.getHandles();
   };
 
   const fetchTasks = (channelId: string, threadId: string | null) => {
-    if (isElectron) {
-      (window as any).electron.getTasks(channelId, threadId);
-    } else {
-      ipcService.fetchTasks(channelId, threadId);
-    }
+    ipcService.getTasks(channelId, threadId);
   };
 
   const fetchArtifacts = (channelId: string, threadId: string | null) => {
-    if (isElectron) {
-      (window as any).electron.getArtifacts(channelId, threadId);
-    } else {
-      ipcService.fetchArtifacts(channelId, threadId);
-    }
+    ipcService.getArtifacts(channelId, threadId);
   };
 
   const fetchAllArtifacts = () => {
-    if (isElectron) {
-      (window as any).electron.getAllArtifacts();
-    } else {
-      ipcService.fetchAllArtifacts();
-    }
+    ipcService.getAllArtifacts();
   };
 
   const deleteArtifact = (artifactId: string) => {
-    if (isElectron) {
-      (window as any).electron.deleteArtifact(artifactId);
-    } else {
-      ipcService.deleteArtifact(artifactId);
-    }
+    ipcService.deleteArtifact(artifactId);
   };
 
   const fetchLogs = (logType: 'llm' | 'system' | 'api') => {
-    if (isElectron) {
-      (window as any).electron.getLogs(logType);
-    } else {
-      ipcService.fetchLogs(logType);
-    }
+    ipcService.getLogs(logType);
   };
 
   return (

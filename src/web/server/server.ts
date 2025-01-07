@@ -1,7 +1,7 @@
 import express from 'express';
 import { createServer } from 'http';
 import { WebSocketServer, WebSocket } from 'ws';
-import path from 'path';
+import * as path from 'path';
 import { WebSocketMessage } from '../shared/types';
 
 const app = express();

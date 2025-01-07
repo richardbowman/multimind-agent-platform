@@ -1,8 +1,6 @@
 import Logger from "src/helpers/logger";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "./chatClient";
-import fs from "fs/promises";
-import { getDataPath } from "../helpers/paths";
-import path from "path";
+import * as fs from "fs/promises";
 
 export class InMemoryPost implements ChatPost {
     static fromLoad(postData: any) : InMemoryPost {
@@ -185,9 +183,6 @@ export class LocalTestClient implements ChatClient {
     public receiveMessages(callback: (data: ChatPost) => void): void {
         this.callback = callback;
         this.storage.callbacks.push(this.callback)
-
-        // Simulate WebSocket connection
-        Logger.verbose(`Simulating WebSocket connection to: ${this.getWebSocketUrl()}`);
     }
 
     public closeCallback(): void {

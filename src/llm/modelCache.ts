@@ -1,6 +1,6 @@
-import crypto from 'crypto';
-import fs from 'fs';
-import path from 'path';
+import * as crypto from 'crypto';
+import * as fs from 'fs';
+import * as path from 'path';
 
 interface CacheEntry {
     response: any;

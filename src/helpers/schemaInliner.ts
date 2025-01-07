@@ -1,5 +1,4 @@
 import { readFileSync } from 'fs';
-import path from 'path';
 
 export class SchemaInliner {
     private definitions: Record<string, any>;
