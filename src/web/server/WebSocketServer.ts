@@ -9,7 +9,7 @@ import Logger from 'src/helpers/logger';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ChatPost, isValidChatPost } from 'src/chat/chatClient';
 import { LLMCallLogger } from 'src/llm/LLMLogger';
-import { HOST, PORT, PROTOCOL } from 'src/helpers/config';
+import { HOST, PORT, PROTOCOL } from '../../../helpers/config';
 
 export class WebSocketServer {
     private io: Server;
@@ -30,7 +30,7 @@ export class WebSocketServer {
     private userClient: LocalTestClient;
     private logReader: LogReader;
 
-    constructor(storage: LocalChatStorage, projects: TaskManager, artifactManager: ArtifactManager, userClient: LocalTestClient, port: number = 4001) {
+    constructor(storage: LocalChatStorage, projects: TaskManager, artifactManager: ArtifactManager, userClient: LocalTestClient, port: number = PORT) {
         this.logReader = new LogReader();
         this.storage = storage;
         this.projects = projects;
