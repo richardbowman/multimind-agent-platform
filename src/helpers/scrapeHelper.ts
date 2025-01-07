@@ -6,12 +6,11 @@ import crypto from 'crypto';
 
 // Load the stealth plugin and use defaults (all tricks to hide playwright usage)
 // Note: playwright-extra is compatible with most puppeteer-extra plugins
-import { createStealth } from 'puppeteer-extra-plugin-stealth';
+import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import Logger from './logger';
 
-// Create and add the stealth plugin
-const stealth = createStealth();
-chromium.use(stealth);
+// Add stealth plugin
+chromium.use(StealthPlugin());
 
 class ScrapeHelper {
     private browser: Browser | null = null;
