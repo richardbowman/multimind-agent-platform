@@ -11,6 +11,82 @@ export default class WebSocketService implements IIPCService {
   private handleHandlers: ((handles: {id: string, handle: string}[]) => void)[] = [];
   private logHandlers: ((logs: { type: string, data: any }) => void)[] = [];
 
+  // Add missing interface methods
+  async getMessages(channelId: string, threadId: string | null): Promise<ClientMessage[]> {
+    if (!this.socket) return [];
+    return new Promise((resolve) => {
+      this.socket!.once('messages', (messages: ClientMessage[]) => {
+        resolve(messages);
+      });
+      this.socket!.emit('get_messages', { channel_id: channelId, thread_id: threadId });
+    });
+  }
+
+  async getChannels(): Promise<ClientChannel[]> {
+    if (!this.socket) return [];
+    return new Promise((resolve) => {
+      this.socket!.once('channels', (channels: ClientChannel[]) => {
+        resolve(channels);
+      });
+      this.socket!.emit('get_channels');
+    });
+  }
+
+  async getTasks(channelId: string, threadId: string | null): Promise<any[]> {
+    if (!this.socket) return [];
+    return new Promise((resolve) => {
+      this.socket!.once('tasks', (tasks: any[]) => {
+        resolve(tasks);
+      });
+      this.socket!.emit('get_tasks', { channel_id: channelId, thread_id: threadId });
+    });
+  }
+
+  async getArtifacts(channelId: string, threadId: string | null): Promise<any[]> {
+    if (!this.socket) return [];
+    return new Promise((resolve) => {
+      this.socket!.once('artifacts', (artifacts: any[]) => {
+        resolve(artifacts);
+      });
+      this.socket!.emit('get_artifacts', { channel_id: channelId, thread_id: threadId });
+    });
+  }
+
+  async getAllArtifacts(): Promise<any[]> {
+    if (!this.socket) return [];
+    return new Promise((resolve) => {
+      this.socket!.once('artifacts', (artifacts: any[]) => {
+        resolve(artifacts);
+      });
+      this.socket!.emit('get_all_artifacts');
+    });
+  }
+
+  async getSettings(): Promise<any> {
+    if (!this.socket) return {};
+    return new Promise((resolve) => {
+      this.socket!.once('settingsUpdated', (settings: any) => {
+        resolve(settings);
+      });
+      this.socket!.emit('getSettings');
+    });
+  }
+
+  async updateSettings(settings: any): Promise<void> {
+    if (!this.socket) return;
+    this.socket.emit('updateSettings', settings);
+  }
+
+  async getHandles(): Promise<Array<{id: string, handle: string}>> {
+    if (!this.socket) return [];
+    return new Promise((resolve) => {
+      this.socket!.once('handles', (handles: Array<{id: string, handle: string}>) => {
+        resolve(handles);
+      });
+      this.socket!.emit('get_handles');
+    });
+  }
+
   connect(url: string = typeof window !== 'undefined' && (window as any).electron
   ? 'ws://localhost:4001'
   : process.env.REACT_APP_WS_URL || 'ws://localhost:4001') {
