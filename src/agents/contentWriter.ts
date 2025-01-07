@@ -22,10 +22,23 @@ export class ContentWriter extends Agent<ContentProject, ContentTask> {
         }
 
         try {
-            const project = await this.projects.getProject(projectId);
+            let project = await this.projects.getProject(projectId);
             if (!project) {
-                Logger.warn(`Project ${projectId} not found`);
-                return;
+                // Create new project if it doesn't exist
+                const newProject: ContentProject = {
+                    id: projectId,
+                    goal: "Content Creation",
+                    description: "Automatically created content project",
+                    metadata: {
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        status: 'active',
+                        owner: params.userPost.user_id
+                    }
+                };
+                await this.projects.createProject(newProject);
+                project = newProject;
+                Logger.info(`Created new project ${projectId}`);
             }
 
             // Create a new content task from the message
