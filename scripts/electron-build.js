@@ -8,6 +8,10 @@ try {
     console.log('Cleaning dist directory...');
     execSync('rm -rf dist', { stdio: 'inherit' });
 
+    // Build the client app
+    console.log('Building client app...');
+    execSync('cd src/web/client && npm run build', { stdio: 'inherit' });
+
     // Run TypeScript compilation with electron config
     console.log('Compiling TypeScript...');
     execSync('tsc -p tsconfig.electron.json --noCheck', { stdio: 'inherit' });
