@@ -39,6 +39,53 @@ export class MessageHandler {
         })).slice(-(limit || messages.length));
     }
 
+    async handleGetThreads({ channelId }: { channelId: string }) {
+        const posts = await this.services.chatClient.fetchPreviousMessages(channelId);
+        const threadMap = new Map<string, any>();
+        
+        posts.forEach(post => {
+            const rootId = post.getRootId();
+            if (rootId) {
+                // This is a reply - add to existing thread
+                if (threadMap.has(rootId)) {
+                    threadMap.get(rootId).replies.push({
+                        id: post.id,
+                        channel_id: post.channel_id,
+                        message: post.message,
+                        user_id: post.user_id,
+                        create_at: post.create_at,
+                        directed_at: post.directed_at,
+                        props: post.props
+                    });
+                    // Update last_message_at if this reply is newer
+                    if (post.create_at > threadMap.get(rootId).last_message_at) {
+                        threadMap.get(rootId).last_message_at = post.create_at;
+                    }
+                }
+            } else {
+                // This is a root message - create new thread
+                threadMap.set(post.id, {
+                    rootMessage: {
+                        id: post.id,
+                        channel_id: post.channel_id,
+                        message: post.message,
+                        user_id: post.user_id,
+                        create_at: post.create_at,
+                        directed_at: post.directed_at,
+                        props: post.props
+                    },
+                    replies: [],
+                    last_message_at: post.create_at,
+                    channel_id: post.channel_id
+                });
+            }
+        });
+
+        // Convert map to array and sort by last_message_at
+        return Array.from(threadMap.values())
+            .sort((a, b) => b.last_message_at - a.last_message_at);
+    }
+
     async handleGetChannels() {
         const channels = await this.services.chatClient.getChannels();
         return channels.map(([id, name]) => ({
