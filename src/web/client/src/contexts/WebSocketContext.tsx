@@ -86,17 +86,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check if we're running in Electron
-    const isElectron = !!(window as any).electron;
+    const handlesCleanup = ipcService.onHandles((newHandles: any) => {
+      console.log('WebSocketContext: Received handles:', newHandles);
+      setHandles(newHandles);
+    });
 
-    if (isElectron) {
-      // Set up Electron IPC handlers
-      const handlesCleanup = (window as any).electron.onHandles((newHandles: any) => {
-        console.log('WebSocketContext: Received handles:', newHandles);
-        setHandles(newHandles);
-      });
-
-      const messageCleanup = (window as any).electron.onMessage((messages: any[], isLive: boolean) => {
+    const messageCleanup = ipcService.onMessage((messages: ClientMessage[], isLive: boolean) => {
       setMessages(prev => {
         if (!isLive) {
           // For historical messages, replace the entire list
