@@ -1,12 +1,13 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { IIPCService, ClientMessage, ClientChannel } from '../../../../shared/IPCInterface';
+import { IIPCService, ClientMessage, ClientChannel } from '../shared/IPCInterface';
 import WebSocketService from '../services/WebSocketService';
 import { ElectronIPCService } from '../services/ElectronIPCService';
 import { Artifact } from '../../../../tools/artifact';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
+import { BaseRPCService } from '../shared/BaseRPCService';
 
 // Create service instance based on environment
-const ipcService: IIPCService = (window as any).electron 
+const ipcService: BaseRPCService = (window as any).electron 
     ? new ElectronIPCService()
     : new WebSocketService();
 
@@ -120,15 +121,15 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
     });
 
-    const channelCleanup = ipcService.onChannels((newChannels) => {
+    const channelCleanup = ipcService.onChannels((newChannels : ClientChannel[]) => {
           setChannels(newChannels);
         });
 
-    const taskCleanup = ipcService.onTasks((newTasks) => {
+    const taskCleanup = ipcService.onTasks((newTasks : any) => {
           setTasks(newTasks);
         });
 
-    const artifactCleanup = ipcService.onArtifacts((newArtifacts) => {
+    const artifactCleanup = ipcService.onArtifacts((newArtifacts : any) => {
           setArtifacts(newArtifacts);
         });
 

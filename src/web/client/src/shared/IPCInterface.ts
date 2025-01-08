@@ -1,6 +1,3 @@
-import { ChatPost } from "../chat/chatClient";
-import { LLMLogEntry } from "../llm/LLMLogger";
-
 export interface ClientMessage {
     id: string;
     channel_id: string;

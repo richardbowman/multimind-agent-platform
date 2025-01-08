@@ -1,5 +1,4 @@
 import { ClientMessage, ClientChannel, ClientThread } from './IPCInterface';
-import type { LLMLogEntry } from '../llm/LLMLogger';
 
 export interface ServerMethods {
     sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage>;

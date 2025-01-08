@@ -9,7 +9,7 @@ export abstract class BaseRPCService {
     protected threadHandlers: ((threads: ClientThread[]) => void)[] = [];
     protected taskHandlers: ((tasks: any[]) => void)[] = [];
     protected artifactHandlers: ((artifacts: any[]) => void)[] = [];
-    protected handleHandlers: ((handles: Array<{id: string; handle: string}>) => void)[] = [];
+    protected handleHandlers: ((handles: Array<{ id: string; handle: string }>) => void)[] = [];
     protected logHandlers: ((logs: { type: string; data: any }) => void)[] = [];
 
     protected clientMethods: ClientMethods = {
@@ -82,11 +82,57 @@ export abstract class BaseRPCService {
         };
     }
 
-    onHandles(handler: (handles: Array<{id: string; handle: string}>) => void) {
+    onHandles(handler: (handles: Array<{ id: string; handle: string }>) => void) {
         this.handleHandlers.push(handler);
         return () => {
             this.handleHandlers = this.handleHandlers.filter(h => h !== handler);
         };
+    }
+
+
+    // Implement IIPCService methods using birpc
+    async sendMessage(message: Partial<ClientMessage>) {
+        return this.rpc.sendMessage(message);
+    }
+
+    async getMessages(channelId: string, threadId: string | null, limit: number = 50) {
+        return this.rpc.getMessages({ channelId, threadId, limit });
+    }
+
+    async getChannels() {
+        return this.rpc.getChannels();
+    }
+
+    async getTasks(channelId: string, threadId: string | null) {
+        return this.rpc.getTasks({ channelId, threadId });
+    }
+
+    async getArtifacts(channelId: string, threadId: string | null) {
+        return this.rpc.getArtifacts({ channelId, threadId });
+    }
+
+    async getAllArtifacts() {
+        return this.rpc.getAllArtifacts();
+    }
+
+    async deleteArtifact(artifactId: string) {
+        return this.rpc.deleteArtifact(artifactId);
+    }
+
+    async getSettings() {
+        return this.rpc.getSettings();
+    }
+
+    async updateSettings(settings: any) {
+        return this.rpc.updateSettings(settings);
+    }
+
+    async getLogs(logType: 'llm' | 'system' | 'api') {
+        return this.rpc.getLogs(logType);
+    }
+
+    async getHandles() {
+        return this.rpc.getHandles();
     }
 
     // Abstract methods that must be implemented by WebSocket and IPC services
