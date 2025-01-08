@@ -1,0 +1,61 @@
+name: Build Electron App
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+
+    strategy:
+      matrix:
+        os: [macos-latest, ubuntu-latest, windows-latest]
+
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          
+      - name: Install Dependencies
+        run: |
+          npm ci
+          cd src/web/client && npm ci
+          
+      - name: Build Web
+        run: npm run build:web
+        
+      - name: Build TypeScript
+        run: npm run build
+        
+      - name: Build Electron App
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if [ "${{ matrix.os }}" = "macos-latest" ]; then
+            npm run electron:package -- --mac
+          elif [ "${{ matrix.os }}" = "windows-latest" ]; then
+            npm run electron:package -- --win
+          else
+            npm run electron:package -- --linux
+          fi
+        shell: bash
+
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.os }}-build
+          path: |
+            dist/*.deb
+            dist/*.AppImage
+            dist/*.dmg
+            dist/*.exe
+            dist/*.zip
+          if-no-files-found: ignore
