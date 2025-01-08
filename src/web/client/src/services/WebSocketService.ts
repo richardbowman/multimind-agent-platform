@@ -2,6 +2,7 @@ import io from 'socket.io-client';
 import { createBirpc } from 'birpc';
 import { BaseRPCService } from '../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../shared/RPCInterface';
+import { createSafeRPCHandlers } from '../shared/rpcUtils';
 
 export default class WebSocketService extends BaseRPCService {
   private socket: SocketIOClient.Socket | null = null;
@@ -42,13 +43,23 @@ export default class WebSocketService extends BaseRPCService {
       console.log('Connected to WebSocket server');
       
       // Set up the real RPC instance once connected
+      const safeHandlers = createSafeRPCHandlers();
       this.rpc = createBirpc<ServerMethods, ClientMethods>(
         {},
         {
-          post: (data) => this.socket!.emit('birpc', data),
-          on: (handler) => this.socket!.on('birpc', handler),
-          serialize: JSON.stringify,
-          deserialize: JSON.parse,
+          post: (data) => {
+            const serialized = safeHandlers.serialize(data);
+            return this.socket!.emit('birpc', serialized);
+          },
+          on: (handler) => {
+            const safeHandler = safeHandlers.on((data) => {
+              const deserialized = safeHandlers.deserialize(data);
+              return handler(deserialized);
+            });
+            return this.socket!.on('birpc', safeHandler);
+          },
+          serialize: safeHandlers.serialize,
+          deserialize: safeHandlers.deserialize,
         }
       );
 
