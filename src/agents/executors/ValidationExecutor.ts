@@ -50,10 +50,11 @@ If the solution is wrong, list the specific aspects that must be addressed.`;
             instructions: new StructuredOutputPrompt(schema, systemPrompt)
         });
 
-        const result = {
+        const result : StepResult = {
             type: 'validation',
             finished: true,
             isComplete: response.isComplete,
+            needsUserInput: true,
             missingAspects: response.missingAspects || [],
             response: {
                 message: response.message
