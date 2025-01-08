@@ -4,6 +4,9 @@ import { ArtifactManager } from "../tools/artifactManager";
 import { LLMCallLogger } from "../llm/LLMLogger";
 import Logger from "../helpers/logger";
 import { LLMProvider } from "../llm/LLMServiceFactory";
+import { ChatClient } from "src/chat/chatClient";
+import { TaskManager } from "src/tools/taskManager";
+import { LogReader } from "src/server/LogReader";
 
 export interface BackendSettings {
     provider: LLMProvider;
@@ -12,10 +15,10 @@ export interface BackendSettings {
 }
 
 export interface BackendServices {
-    chatClient: LocalTestClient;
-    taskManager: SimpleTaskManager;
+    chatClient: ChatClient;
+    taskManager: TaskManager;
     artifactManager: ArtifactManager;
     settings: BackendSettings;
     llmLogger: LLMCallLogger;
-    logReader: typeof Logger;
+    logReader: LogReader;
 }

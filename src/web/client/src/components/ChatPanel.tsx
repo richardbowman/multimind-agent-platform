@@ -33,18 +33,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
 
     // Handle live message thread selection
     // Handle live message thread selection
-    useEffect(() => {
-        if (messages.length === 0) return;
+    // useEffect(() => {
+    //     if (messages.length === 0) return;
         
-        const lastMessage = messages[messages.length - 1];
-        if (lastMessage?.thread_id && !currentThreadId) {
-            // Only switch to thread view if we're not already in a thread
-            const threadRoot = messages.find(m => m.id === lastMessage.thread_id);
-            if (threadRoot) {
-                setCurrentThreadId(threadRoot.id);
-            }
-        }
-    }, [messages, currentThreadId, setCurrentThreadId]);
+    //     const lastMessage = messages[messages.length - 1];
+    //     if (lastMessage?.thread_id && !currentThreadId) {
+    //         // Only switch to thread view if we're not already in a thread
+    //         const threadRoot = messages.find(m => m.id === lastMessage.thread_id);
+    //         if (threadRoot) {
+    //             setCurrentThreadId(threadRoot.id);
+    //         }
+    //     }
+    // }, [messages, currentThreadId, setCurrentThreadId]);
 
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 

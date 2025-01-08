@@ -3,9 +3,11 @@ import { ClientMessage } from "../shared/IPCInterface";
 import Logger from "../helpers/logger";
 import { BackendSettings } from "../types/BackendServices";
 import { ChatPost } from "../chat/chatClient";
+import { LLMCallLogger } from "src/llm/LLMLogger";
+import { Task } from "src/tools/taskManager";
 
 export class MessageHandler {
-    constructor(private services: BackendServices) {}
+    constructor(private services: BackendServices) { }
 
     async handleSendMessage(message: Partial<ClientMessage>) {
         if (message.thread_id) {
@@ -25,24 +27,34 @@ export class MessageHandler {
     }
 
     async handleGetMessages({ channelId, threadId, limit }: { channelId: string, threadId?: string, limit?: number }) {
-        const messages = await this.services.chatClient.fetchPreviousMessages(channelId);
-        return messages.map(post => ({
-            id: post.id,
-            channel_id: post.channel_id,
-            message: post.message,
-            user_id: post.user_id,
-            create_at: post.create_at,
-            directed_at: post.directed_at,
-            props: post.props,
-            thread_id: post.getRootId(),
-            reply_count: messages.filter(p => p.getRootId() === post.id).length
-        })).slice(-(limit || messages.length));
+        const messages = await this.services.chatClient.fetchPreviousMessages(channelId, 1000);
+
+        let channelMessages = messages
+            .filter(post => post.channel_id === channelId)
+            .map(post => {
+                // Count replies for this message
+                const replyCount = messages.filter(p => p.getRootId() === post.id).length;
+
+                return {
+                    id: post.id,
+                    channel_id: post.channel_id,
+                    message: post.message,
+                    user_id: post.user_id,
+                    create_at: post.create_at,
+                    directed_at: post.directed_at,
+                    props: post.props,
+                    thread_id: post.getRootId(),
+                    reply_count: replyCount
+                };
+            })
+            .slice(-(limit||100));
+        return channelMessages;
     }
 
     async handleGetThreads({ channelId }: { channelId: string }) {
         const posts = await this.services.chatClient.fetchPreviousMessages(channelId);
         const threadMap = new Map<string, any>();
-        
+
         posts.forEach(post => {
             const rootId = post.getRootId();
             if (rootId) {
@@ -99,7 +111,7 @@ export class MessageHandler {
         // Get all projects and filter tasks that match the channel/thread context
         const projects = this.services.taskManager.getProjects();
         const tasks: Task[] = [];
-        
+
         for (const project of projects) {
             const projectTasks = this.services.taskManager.getAllTasks(project.id);
             tasks.push(...projectTasks.filter(task => {
@@ -108,7 +120,7 @@ export class MessageHandler {
                 return matchesChannel && matchesThread;
             }));
         }
-        
+
         return tasks;
     }
 
@@ -122,12 +134,13 @@ export class MessageHandler {
     }
 
     async handleGetAllArtifacts() {
-        return await this.services.artifactManager.listArtifacts();
+        return (await this.services.artifactManager.listArtifacts())
+            .map(artifact => this.processArtifactContent(artifact));
     }
 
     async handleDeleteArtifact(artifactId: string) {
         await this.services.artifactManager.deleteArtifact(artifactId);
-        return await this.services.artifactManager.listArtifacts();
+        return this.handleGetAllArtifacts();
     }
 
     async handleGetSettings() {
@@ -152,9 +165,9 @@ export class MessageHandler {
     async handleGetLogs(logType: string) {
         switch (logType) {
             case 'llm':
-                return await this.services.llmLogger.getAllLogs();
+                return await LLMCallLogger.getAllLogs();
             case 'system':
-                return this.services.logReader.getLogs();
+                return this.services.logReader.readLogs();
             case 'api':
                 return []; // TODO: Implement API logs
             default:
@@ -163,15 +176,20 @@ export class MessageHandler {
     }
 
     async handleGetHandles() {
-        return await this.services.chatClient.getHandles();
+        const handleSet = await this.services.chatClient.getHandles();
+        const handles = Object.entries(handleSet).map(([id, name]) => ({
+            id,
+            handle: name
+        }));
+        return handles;
     }
 
     processArtifactContent(artifact: any) {
         const content = Buffer.isBuffer(artifact.content)
-            ? artifact.metadata?.binary 
+            ? artifact.metadata?.binary
                 ? artifact.content.toString('base64')
                 : artifact.content.toString('utf8')
-            : artifact.content;
+            : artifact.content.toString();
         return { ...artifact, content };
     }
 }

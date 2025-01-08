@@ -1,6 +1,7 @@
 import { ChatPost } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { IEmbeddingFunction } from "chromadb";
+import { LLMCallLogger } from "./LLMLogger";
 
 export interface ILLMService {
     initializeEmbeddingModel(modelPath: string): Promise<void>;

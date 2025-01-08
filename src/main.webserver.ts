@@ -1,6 +1,6 @@
 import 'reflect-metadata';
 import { initializeBackend } from './initializeBackend';
-import { WebSocketServer } from './web/server/WebSocketServer';
+import { WebSocketServer } from './server/WebSocketServer';
 import { PORT } from './helpers/config';
 
 // Run the main function

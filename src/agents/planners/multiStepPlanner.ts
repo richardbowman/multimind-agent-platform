@@ -113,7 +113,7 @@ ${this.modelHelpers.getFinalInstructions()}`;
             tasks.map(task => [task.id, task])
         );
 
-        if (response.steps && response.steps.length > 0) {
+        if (Array.isArray(response.steps) && response.steps.length > 0) {
             // Track which tasks are mentioned in the response
             const mentionedTaskIds = new Set<string>();
 

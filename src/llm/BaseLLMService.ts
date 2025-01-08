@@ -1,13 +1,24 @@
 import { ChatPost } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { ILLMService, LLMRequestParams, StructuredOutputPrompt } from "./ILLMService";
+import { LLMCallLogger } from "./LLMLogger";
 
 export abstract class BaseLLMService implements ILLMService {
+    protected logger: LLMCallLogger;
+
     abstract initializeEmbeddingModel(modelPath: string): Promise<void>;
     abstract initializeChatModel(modelPath: string): Promise<void>;
     abstract getEmbeddingModel(): any;
     abstract sendLLMRequest<T extends ModelResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     abstract countTokens(content: string): Promise<number>;
+
+    constructor(name: string) {
+        this.logger = new LLMCallLogger(name);
+    }
+
+    getLogger(): LLMCallLogger {
+        return this.logger;
+    }
 
     async generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<T> {
         const messages = [

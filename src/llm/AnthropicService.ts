@@ -13,18 +13,16 @@ import Anthropic from '@anthropic-ai/sdk';
 export class AnthropicService extends BaseLLMService {
     private client: Anthropic;
     private model: string;
-    private logger: LLMCallLogger;
     private queue: AsyncQueue = new AsyncQueue();
     private embeddingService?: ILLMService;
 
     constructor(apiKey: string = ANTHROPIC_API_KEY, model: string = ANTHROPIC_MODEL, embeddingService?: ILLMService) {
-        super();
+        super("anthropic");
         this.client = new Anthropic({
             apiKey: apiKey
         });
         this.model = model;
         this.embeddingService = embeddingService;
-        this.logger = new LLMCallLogger('anthropic');
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {

@@ -1,11 +1,10 @@
 node_modules
 chrome
-.env*
+.env*local
 .output
 src/playground.ts
 TODO
 .aider*
-.env
 src/**/*.js
 data
 dist

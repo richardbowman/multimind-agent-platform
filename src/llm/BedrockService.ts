@@ -26,7 +26,6 @@ import { LLMCallLogger } from "./LLMLogger";
 import { BaseLLMService } from "./BaseLLMService";
 
 export class BedrockService extends BaseLLMService {
-    private logger: LLMCallLogger;
     private runtimeClient: BedrockRuntimeClient;
     private modelId: string;
     private embeddingModelId: string;
@@ -112,12 +111,11 @@ export class BedrockService extends BaseLLMService {
     }
 
     constructor(modelId: string, embeddingModelId: string = "amazon.titan-embed-text-v2:0", embeddingService?: ILLMService) {
-        super();
+        super("bedrock");
         this.runtimeClient = new BedrockRuntimeClient({ region: process.env.AWS_REGION });
         this.modelId = modelId;
         this.embeddingModelId = embeddingModelId;
         this.embeddingService = embeddingService;
-        this.logger = new LLMCallLogger('bedrock');
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {

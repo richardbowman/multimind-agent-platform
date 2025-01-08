@@ -48,14 +48,12 @@ export default class LMStudioService extends BaseLLMService {
     private lmStudioClient: LMStudioClient;
     private embeddingModel?: IEmbeddingFunction;
     private chatModel?: LLMSpecificModel;
-    private logger: LLMCallLogger;
 
     constructor() {
-        super();
+        super("lmstudio");
         this.lmStudioClient = new LMStudioClient({
             baseUrl: process.env.LMSTUDIO_BASEURL!
         });
-        this.logger = new LLMCallLogger('lmstudio');
     }
 
     countTokens(message: string): Promise<number> {
@@ -150,10 +148,6 @@ export default class LMStudioService extends BaseLLMService {
     getChatModel() : LLMSpecificModel {
         if (!this.chatModel) throw new Error("LMStudioService not initalized");
         return this.chatModel;
-    }
-
-    getLogger(): LLMCallLogger {
-        return this.logger;
     }
 
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>> {

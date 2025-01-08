@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Channel } from '../../../shared/types';
+import { Channel } from '../../../../types/types';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface ChannelListProps {}

@@ -29,7 +29,7 @@ class Logger {
             global.socket.emit('system_log', logEntry);
         }
         
-        console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`)
+        if (level !== "verbose") console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`)
         // if (this.logBox && level !== "verbose") this.logBox.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
     }
 

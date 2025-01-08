@@ -7,6 +7,7 @@ import { createVectorDatabase } from "./llm/vectorDatabaseFactory";
 import Logger from "./helpers/logger";
 import { AgentLoader } from "./utils/AgentLoader";
 import { BackendServices } from "./types/BackendServices";
+import { LogReader } from "./server/LogReader";
 
 export async function initializeBackend(options: { reindex?: boolean } = {}): Promise<BackendServices> {
     const llmService = LLMServiceFactory.createService({
@@ -89,6 +90,6 @@ export async function initializeBackend(options: { reindex?: boolean } = {}): Pr
             apiKey: process.env.OPENAI_API_KEY || ''
         },
         llmLogger: llmService.getLogger(),
-        logReader: Logger
+        logReader: new LogReader()
     };
 }

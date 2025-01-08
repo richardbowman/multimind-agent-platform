@@ -28,11 +28,9 @@ export class LlamaCppService extends BaseLLMService {
     private model?: LLamaModel;
     private context?: LLamaContext;
     private embedder?: LlamaEmbedder;
-    private logger: LLMCallLogger;
 
     constructor() {
-        super();
-        this.logger = new LLMCallLogger('llama-cpp');
+        super('llama-cpp');
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
@@ -71,10 +69,6 @@ export class LlamaCppService extends BaseLLMService {
     getEmbeddingModel(): IEmbeddingFunction {
         if (!this.embedder) throw new Error("Llama.cpp embedding model not initialized");
         return this.embedder;
-    }
-
-    getLogger(): LLMCallLogger {
-        return this.logger;
     }
 
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(

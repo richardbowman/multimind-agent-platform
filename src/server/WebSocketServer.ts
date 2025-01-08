@@ -1,10 +1,10 @@
 import { Server } from 'socket.io';
 import { createServer } from 'http';
 import express from 'express';
-import Logger from '../../helpers/logger';
-import { HOST, PORT, PROTOCOL } from '../../helpers/config';
-import { MessageHandler } from '../../server/MessageHandler';
-import { BackendServices } from '../../types/BackendServices';
+import Logger from '../helpers/logger';
+import { HOST, PORT, PROTOCOL } from '../helpers/config';
+import { MessageHandler } from './MessageHandler';
+import { BackendServices } from '../types/BackendServices';
 
 export class WebSocketServer {
     private io: Server;
