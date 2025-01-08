@@ -1,12 +1,13 @@
 import { LLMLogEntry, LogParam } from '../../../../llm/LLMLogger';
 import { ClientMessage, ClientChannel, ClientThread } from './IPCInterface';
+import { ClientTask } from './types';
 
 export interface ServerMethods {
     sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage>;
     getMessages(params: { channelId: string; threadId: string | null; limit?: number }): Promise<ClientMessage[]>;
     getChannels(): Promise<ClientChannel[]>;
     getThreads(params: { channelId: string }): Promise<ClientThread[]>;
-    getTasks(params: { channelId: string; threadId: string | null }): Promise<any[]>;
+    getTasks(params: { channelId: string; threadId: string | null }): Promise<ClientTask[]>;
     getArtifacts(params: { channelId: string; threadId: string | null }): Promise<any[]>;
     getAllArtifacts(): Promise<any[]>;
     deleteArtifact(artifactId: string): Promise<any[]>;
