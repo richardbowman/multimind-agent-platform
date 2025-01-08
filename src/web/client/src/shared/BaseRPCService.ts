@@ -100,7 +100,8 @@ export abstract class BaseRPCService {
     }
 
     async getChannels() {
-        return this.rpc.getChannels();
+        const channels = await this.rpc.getChannels();
+        this.channelHandlers.forEach(handler => handler(channels));
     }
 
     async getTasks(channelId: string, threadId: string | null) {
