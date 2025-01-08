@@ -1,6 +1,6 @@
-import { LLamaModel, LLamaContext, LLamaEmbedder } from "node-llama-cpp";
 import { IEmbeddingFunction } from "chromadb";
 import { BaseLLMService } from "./BaseLLMService";
+import type { LLamaModel, LLamaContext, LLamaEmbedder } from "node-llama-cpp";
 import { ILLMService, LLMRequestParams, ModelRole } from "./ILLMService";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
@@ -35,6 +35,7 @@ export class LlamaCppService extends BaseLLMService {
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
         try {
+            const { LLamaModel, LLamaEmbedder } = await import('node-llama-cpp');
             const model = new LLamaModel({
                 modelPath: modelPath,
                 embedding: true
@@ -49,6 +50,7 @@ export class LlamaCppService extends BaseLLMService {
 
     async initializeChatModel(modelPath: string): Promise<void> {
         try {
+            const { LLamaModel, LLamaContext } = await import('node-llama-cpp');
             this.model = new LLamaModel({
                 modelPath: modelPath,
                 embedding: false
