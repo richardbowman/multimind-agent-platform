@@ -45,6 +45,17 @@ export class WebSocketServer {
             }));
         });
 
+        // Set up log update notifications
+        services.llmLogger.onLogUpdate((logEntry) => {
+            this.io.emit('birpc', JSON.stringify({
+                type: 'onLogUpdate',
+                data: {
+                    type: 'llm',
+                    entry: logEntry
+                }
+            }));
+        });
+
         this.setupSocketHandlers();
         
         this.httpServer.listen(PORT, () => {

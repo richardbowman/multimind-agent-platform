@@ -18,12 +18,26 @@ export class ElectronIPCServer {
         ipcMain.handle('send-message', async (_, message) => {
             try {
                 const result = await this.handler.handleSendMessage(message);
-                this.mainWindow.webContents.send('message', safeHandlers.serialize([result]), true);
+                this.mainWindow.webContents.send('birpc', safeHandlers.serialize({
+                    type: 'onMessage',
+                    data: [result]
+                }));
                 return result;
             } catch (error) {
                 Logger.error('Error handling send-message:', error);
                 throw error;
             }
+        });
+
+        // Set up log update notifications
+        this.services.llmLogger.onLogUpdate((logEntry) => {
+            this.mainWindow.webContents.send('birpc', safeHandlers.serialize({
+                type: 'onLogUpdate',
+                data: {
+                    type: 'llm',
+                    entry: logEntry
+                }
+            }));
         });
 
         ipcMain.handle('get-messages', async (_, params) => {
