@@ -90,14 +90,19 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     // Only connect if we're not in an unmounting cycle
     const mountTimeout = setTimeout(() => {
       console.debug('WebSocketContext stable mount - connecting');
-      ipcService.connect();
       
-      Promise.all([
-        fetchChannels(),
-        fetchHandles()
-      ]).catch(error => {
-        console.error('Error fetching initial data:', error);
+      // Listen for connected event before fetching data
+      ipcService.once('connected', () => {
+        console.debug('WebSocketContext: received connected event');
+        Promise.all([
+          fetchChannels(),
+          fetchHandles()
+        ]).catch(error => {
+          console.error('Error fetching initial data:', error);
+        });
       });
+
+      ipcService.connect();
     }, 100);
 
     return () => {
