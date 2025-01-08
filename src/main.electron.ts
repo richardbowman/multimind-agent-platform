@@ -1,14 +1,14 @@
 import './register-paths';
 
 import 'reflect-metadata';
-import { app, BrowserWindow, ipcMain } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { initializeBackend } from './initializeBackend';
 import Logger from './helpers/logger';
 
 let mainWindow: BrowserWindow;
 import { BackendServices } from './types/BackendServices';
-import { MessageHandler } from './server/MessageHandler';
+import { ElectronIPCServer } from './server/ElectronIPCServer';
 
 let backendServices: BackendServices;
 
@@ -48,67 +48,17 @@ app.whenReady().then(async () => {
     }
 });
 
+let ipcServer: ElectronIPCServer;
+
 function setupIpcHandlers() {
-    const handler = new MessageHandler(backendServices);
-
-    // Messages
-    ipcMain.handle('send-message', async (_, message) => {
-        const result = await handler.handleSendMessage(message);
-        mainWindow.webContents.send('message', [result], true);
-        return result;
-    });
-
-    ipcMain.handle('get-messages', async (_, params) => {
-        return handler.handleGetMessages(params);
-    });
-
-    // Channels
-    ipcMain.handle('get-channels', async () => {
-        return handler.handleGetChannels();
-    });
-
-    // Tasks
-    ipcMain.handle('get-tasks', async (_, params) => {
-        return handler.handleGetTasks(params);
-    });
-
-    // Artifacts
-    ipcMain.handle('get-artifacts', async (_, params) => {
-        return handler.handleGetArtifacts(params);
-    });
-
-    ipcMain.handle('get-all-artifacts', async () => {
-        return handler.handleGetAllArtifacts();
-    });
-
-    ipcMain.handle('delete-artifact', async (_, artifactId) => {
-        const artifacts = await handler.handleDeleteArtifact(artifactId);
-        mainWindow.webContents.send('artifacts', artifacts);
-        return artifacts;
-    });
-
-    // Settings
-    ipcMain.handle('get-settings', async () => {
-        return handler.handleGetSettings();
-    });
-
-    ipcMain.handle('update-settings', async (_, settings) => {
-        return handler.handleUpdateSettings(settings);
-    });
-
-    // Logs
-    ipcMain.handle('get-logs', async (_, logType) => {
-        return handler.handleGetLogs(logType);
-    });
-
-    // Handles
-    ipcMain.handle('get-handles', async () => {
-        return handler.handleGetHandles();
-    });
+    ipcServer = new ElectronIPCServer(backendServices, mainWindow);
 }
 
 app.on('window-all-closed', () => {
     if (process.platform !== 'darwin') {
+        if (ipcServer) {
+            ipcServer.cleanup();
+        }
         app.quit();
     }
 });
