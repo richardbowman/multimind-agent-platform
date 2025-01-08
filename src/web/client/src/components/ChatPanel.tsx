@@ -140,7 +140,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
                             </div>
                         </div>
                     )))}
-                {tasks.filter(task => task.inProgress && (task.threadId === currentThreadId)).length > 0 && (
+                {tasks.filter(task => task.inProgress && !task.complete && (task.threadId === currentThreadId)).length > 0 && (
                     <div className="in-progress-tasks-container">
                         <h4>In Progress Tasks</h4>
                         <div className="in-progress-tasks-list">
