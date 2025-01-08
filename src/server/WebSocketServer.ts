@@ -2,6 +2,7 @@ import { Server } from 'socket.io';
 import { createServer } from 'http';
 import express from 'express';
 import { createBirpc } from 'birpc';
+import { createSafeServerRPCHandlers } from './rpcUtils';
 import Logger from '../helpers/logger';
 import { HOST, PORT, PROTOCOL } from '../helpers/config';
 import { MessageHandler } from './MessageHandler';
@@ -168,10 +169,9 @@ export class WebSocketServer {
                     }
                 },
                 {
+                    ...createSafeServerRPCHandlers(),
                     post: (data) => socket.emit('birpc', data),
-                    on: (handler) => socket.on('birpc', handler),
-                    serialize: JSON.stringify,
-                    deserialize: JSON.parse,
+                    on: (handler) => socket.on('birpc', handler)
                 }
             );
 

@@ -1,6 +1,7 @@
 import { ipcMain, BrowserWindow } from 'electron';
 import { BackendServices } from '../types/BackendServices';
 import { MessageHandler } from './MessageHandler';
+import { createSafeServerRPCHandlers } from './rpcUtils';
 
 export class ElectronIPCServer {
     private handler: MessageHandler;
@@ -11,11 +12,18 @@ export class ElectronIPCServer {
     }
 
     private setupIpcHandlers() {
+        const safeHandlers = createSafeServerRPCHandlers();
+
         // Messages
         ipcMain.handle('send-message', async (_, message) => {
-            const result = await this.handler.handleSendMessage(message);
-            this.mainWindow.webContents.send('message', [result], true);
-            return result;
+            try {
+                const result = await this.handler.handleSendMessage(message);
+                this.mainWindow.webContents.send('message', safeHandlers.serialize([result]), true);
+                return result;
+            } catch (error) {
+                Logger.error('Error handling send-message:', error);
+                throw error;
+            }
         });
 
         ipcMain.handle('get-messages', async (_, params) => {
