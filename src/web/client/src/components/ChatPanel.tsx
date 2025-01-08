@@ -8,7 +8,7 @@ import remarkGfm from 'remark-gfm'
 interface ChatPanelProps {}
 
 export const ChatPanel: React.FC<ChatPanelProps> = () => {
-    const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading } = useWebSocket();
+    const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useWebSocket();
     const [userId] = useState('test');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 

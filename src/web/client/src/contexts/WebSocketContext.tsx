@@ -5,6 +5,7 @@ import { ElectronIPCService } from '../services/ElectronIPCService';
 import { Artifact } from '../../../../tools/artifact';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
 import { BaseRPCService } from '../shared/BaseRPCService';
+import { Task } from '../shared/types';
 
 // Create service instance based on environment
 const ipcService: BaseRPCService = (window as any).electron 
@@ -73,7 +74,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [handles, setHandles] = useState<Array<{id: string, handle: string}>>([]);
   const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
-  const [tasks, setTasks] = useState<{id: string, inProgress?: boolean, description: string}[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [artifacts, setArtifacts] = useState<any[]>([]);
   const [logs, setLogs] = useState<{
     llm: Record<string, LLMLogEntry[]>;
