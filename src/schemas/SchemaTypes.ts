@@ -15,6 +15,7 @@ export enum SchemaType {
     ContentSuggestion = 'ContentSuggestion',
     SectionImprovement = 'SectionImprovement',
     FinalResponse = 'FinalResponse',
+    IntakeQuestionsResponse = "IntakeQuestionsResponse",
     GoalConfirmationResponse = 'GoalConfirmationResponse',
     RefutingResponse = 'RefutingResponse',
     ResearchResponse = "ResearchResponse",

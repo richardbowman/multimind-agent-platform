@@ -2,6 +2,12 @@ import * as fs from 'fs';
 import * as path from 'path';
 import Logger from '../helpers/logger';
 import { AsyncQueue } from '../helpers/asyncQueue';
+import EventEmitter from 'events';
+
+export interface LogParam {
+    type: string;
+    entry: any;
+}
 
 export interface LLMLogEntry {
     timestamp: string;
@@ -14,13 +20,15 @@ export interface LLMLogEntry {
     };
 }
 
-export class LLMCallLogger {
+export class LLMCallLogger extends EventEmitter {
     private logDir: string;
     private sessionId: string;
     private logFile: string;
     private static fileQueue = new AsyncQueue();
 
     constructor(serviceName: string) {
+        super();
+        
         this.sessionId = new Date().toISOString().replace(/[:.]/g, '-');
         this.logDir = path.join(process.cwd(), '.output', 'llm');
         this.logFile = path.join(this.logDir, `${serviceName}-${this.sessionId}.jsonl`);
@@ -56,6 +64,8 @@ export class LLMCallLogger {
                     'utf8'
                 );
             });
+
+            this.emit("log", logEntry);
         } catch (err) {
             Logger.error('Failed to write LLM log:', err);
         }

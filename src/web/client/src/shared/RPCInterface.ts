@@ -1,3 +1,4 @@
+import { LLMLogEntry, LogParam } from '../../../../llm/LLMLogger';
 import { ClientMessage, ClientChannel, ClientThread } from './IPCInterface';
 
 export interface ServerMethods {
@@ -16,12 +17,6 @@ export interface ServerMethods {
 }
 
 export interface ClientMethods {
-    onMessage(message: ClientMessage): void;
-    onChannels(channels: ClientChannel[]): void;
-    onThreads(threads: ClientThread[]): void;
-    onTasks(tasks: any[]): void;
-    onArtifacts(artifacts: any[]): void;
-    onLogs(logs: { type: string; data: any }): void;
-    onHandles(handles: Array<{id: string; handle: string}>): void;
-    onSettingsUpdated(settings: any): void;
+    onMessage(messages: ClientMessage[]): void;
+    onLogUpdate(update: LogParam): void;
 }

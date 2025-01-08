@@ -976,6 +976,7 @@
         "ContentSuggestion",
         "SectionImprovement",
         "FinalResponse",
+        "IntakeQuestionsResponse",
         "GoalConfirmationResponse",
         "RefutingResponse",
         "ResearchResponse",

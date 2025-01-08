@@ -1,11 +1,9 @@
-import Logger from '../../../../helpers/logger';
-
 export const createSafeRPCHandlers = () => ({
     post: (data: any) => {
         try {
             return data;
         } catch (error) {
-            Logger.error('Error in RPC post:', error);
+            console.error('Error in RPC post:', error);
             throw error;
         }
     },
@@ -14,7 +12,7 @@ export const createSafeRPCHandlers = () => ({
             try {
                 return handler(data);
             } catch (error) {
-                Logger.error('Error in RPC handler:', error);
+                console.error('Error in RPC handler:', error);
                 throw error;
             }
         };
@@ -23,7 +21,7 @@ export const createSafeRPCHandlers = () => ({
         try {
             return JSON.stringify(data);
         } catch (error) {
-            Logger.error('Error serializing RPC data:', error);
+            console.error('Error serializing RPC data:', error);
             throw error;
         }
     },
@@ -31,7 +29,7 @@ export const createSafeRPCHandlers = () => ({
         try {
             return JSON.parse(message);
         } catch (error) {
-            Logger.error('Error deserializing RPC message:', error);
+            console.error('Error deserializing RPC message:', error);
             throw error;
         }
     }

@@ -33,7 +33,6 @@ export class OnboardingConsultant extends StepBasedAgent<OnboardingProject, Task
 
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Onboarding Consultant`);
-        await super.setupChatMonitor(ONBOARDING_CHANNEL_ID, "@onboarding");
 
         // Check if welcome message exists in channel
         const channelMessages = await this.chatClient.fetchPreviousMessages(ONBOARDING_CHANNEL_ID, 50);

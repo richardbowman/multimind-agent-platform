@@ -3,6 +3,8 @@ import { createBirpc } from 'birpc';
 import { BaseRPCService } from '../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../shared/rpcUtils';
+import { ClientMessage } from '../shared/IPCInterface';
+import { LogParam } from '../../../../llm/LLMLogger';
 
 export default class WebSocketService extends BaseRPCService {
   private socket: SocketIOClient.Socket | null = null;
@@ -41,7 +43,10 @@ export default class WebSocketService extends BaseRPCService {
 
   private setupPlaceholderRPC() {
     this.rpc = createBirpc<ServerMethods, ClientMethods>(
-      {},
+      {
+        onLogUpdate: () => () => {},
+        onMessage: () => () => {} 
+      },
       {
         post: (data) => {
           const stack = new Error().stack;
@@ -83,10 +88,10 @@ export default class WebSocketService extends BaseRPCService {
       const safeHandlers = createSafeRPCHandlers();
       this.rpc = createBirpc<ServerMethods, ClientMethods>(
         {
-          onMessage: (messages) => {
+          onMessage: (messages: ClientMessage[]) => {
             this.emit('onMessage', messages);
           },
-          onLogUpdate: (update) => {
+          onLogUpdate: (update: LogParam) => {
             this.emit('onLogUpdate', update);
           }
         },

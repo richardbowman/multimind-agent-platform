@@ -53,7 +53,6 @@ Prioritize steps in this order:
 6. Validation and quality checks
 7. Final summary and next steps`);
         
-        this.setupChatMonitor(PROJECTS_CHANNEL_ID, params.messagingHandle);
         
         // Register executors
         this.registerStepExecutor(new BrainstormExecutor(params.llmService));

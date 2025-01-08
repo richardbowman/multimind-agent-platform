@@ -86,7 +86,11 @@ export class LocalChatStorage {
 
     // New method to map user IDs to handle names
     public mapUserIdToHandleName(userId: string, handleName: string) {
-        this.userIdToHandleName[userId] = handleName;
+        // if (!this.userIdToHandleName[userId]) {
+            this.userIdToHandleName[userId] = handleName;
+        // } else {
+        //     throw new Error(`Duplicate handle registration ${handleName}`);
+        // }
     }
 
     // Optional: Method to get the handle name for a given user ID

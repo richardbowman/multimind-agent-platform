@@ -22,7 +22,7 @@ try {
 
 // Load environment variables from config files
 dotenv.config({ path: path.join(baseDir, 'env.defaults') });
-dotenv.config({ path: path.join(baseDir, '.env'), override: true });
+dotenv.config({ path: path.join(baseDir, '.env') });
 dotenv.config({ path: path.join(baseDir, '.env.local'), override: true });
 
 Logger.info(`Loading config from ${baseDir}`);

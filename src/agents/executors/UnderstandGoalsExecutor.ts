@@ -1,6 +1,5 @@
 import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { SchemaInliner } from '../../helpers/schemaInliner';
-import * as schemaJson from "../../schemas/schema.json";
 import crypto from 'crypto';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { TaskManager } from '../../tools/taskManager';
@@ -9,6 +8,8 @@ import { ModelHelpers } from '../../llm/modelHelpers';
 import Logger from 'src/helpers/logger';
 import { IntakeQuestionsResponse } from '../../schemas/IntakeQuestionsResponse';
 import { ExecutorType } from './ExecutorType';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
 
 /**
  * Executor that generates targeted questions to understand user requirements.
@@ -73,8 +74,7 @@ export class OnboardingGoalsExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const schemaInliner = new SchemaInliner(schemaJson);
-        const schema = schemaInliner.inlineReferences(schemaJson.definitions.IntakeQuestionsResponse);
+        const schema = await getGeneratedSchema(SchemaType.IntakeQuestionsResponse);
         
         const project = this.taskManager.getProject(params.projectId);
         

@@ -60,9 +60,6 @@ export class SolverAgent extends StepBasedAgent<any, any> {
     }
 
     public async initialize(): Promise<void> {
-        Logger.info(`Initialized Solver Assistant`);
-        await super.setupChatMonitor(SOLVER_CHANNEL_ID, "@solver");
-
         // asynchronously check for old tasks and keep working on them
         this.processTaskQueue();
     }

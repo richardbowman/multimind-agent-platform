@@ -44,7 +44,6 @@ export class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Research Assistant ${RESEARCHER_TOKEN}`);
         await this.scrapeHelper.initialize();
-        await super.setupChatMonitor(WEB_RESEARCH_CHANNEL_ID, "@researchteam");
 
         // TODO BRING BACK WHEN SAFER check for old tasks on boot and keep working on them
         this.processTaskQueue();

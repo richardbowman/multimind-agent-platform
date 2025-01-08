@@ -6,7 +6,7 @@ export const createSafeServerRPCHandlers = () => ({
             return data;
         } catch (error) {
             Logger.error('Error in server RPC post:', error);
-            throw error;
+            // throw error;
         }
     },
     on: (handler: (data: any) => void) => {
@@ -15,7 +15,7 @@ export const createSafeServerRPCHandlers = () => ({
                 return handler(data);
             } catch (error) {
                 Logger.error('Error in server RPC handler:', error);
-                throw error;
+                // throw error;
             }
         };
     },
@@ -24,7 +24,7 @@ export const createSafeServerRPCHandlers = () => ({
             return JSON.stringify(data);
         } catch (error) {
             Logger.error('Error in server RPC serialization:', error);
-            throw error;
+            // throw error;
         }
     },
     deserialize: (message: string) => {
@@ -32,7 +32,7 @@ export const createSafeServerRPCHandlers = () => ({
             return JSON.parse(message);
         } catch (error) {
             Logger.error('Error in server RPC deserialization:', error);
-            throw error;
+            // throw error;
         }
     }
 });

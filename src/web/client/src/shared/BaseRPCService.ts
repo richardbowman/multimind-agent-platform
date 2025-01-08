@@ -1,10 +1,12 @@
 import { createBirpc } from 'birpc';
 import type { ServerMethods, ClientMethods } from './RPCInterface';
 import type { ClientMessage, ClientChannel, ClientThread } from './IPCInterface';
+import EventEmitter from 'events';
 
-export abstract class BaseRPCService {
+export abstract class BaseRPCService extends EventEmitter {
     protected rpc!: ReturnType<typeof createBirpc<ServerMethods, ClientMethods>>;
-
+    protected eventEmitter: EventEmitter = new EventEmitter();
+    
     // Direct RPC method implementations
     // Direct pass-through to RPC methods
     sendMessage = (message: Partial<ClientMessage>) => this.rpc.sendMessage(message);

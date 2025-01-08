@@ -37,15 +37,10 @@ export class ElectronIPCService extends BaseRPCService {
                 deserialize: safeHandlers.deserialize,
             }
         );
-
-        // Emit connected event after RPC setup
-        setTimeout(() => {
-            this.emit('connected');
-        }, 0);
     }
 
     connect(): void {
-        // No-op for Electron
+        this.emit('connected');
     }
 
     disconnect(): void {

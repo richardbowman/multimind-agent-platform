@@ -63,7 +63,6 @@ Step 3. 'aggregate-research' to compile findings`);
     }
 
     public async initialize(): Promise<void> {
-        await super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@research");
         this.processTaskQueue();
     }
 

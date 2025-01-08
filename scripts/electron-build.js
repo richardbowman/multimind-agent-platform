@@ -21,8 +21,8 @@ try {
     require('./copy-client-files.js');
     
     // Copy env.defaults
-    console.log('Copying env.defaults...');
-    execSync('cp env.defaults dist/', { stdio: 'inherit' });
+    console.log('Copying env...');
+    execSync('cp .env dist/', { stdio: 'inherit' });
 
     // Run electron-builder
     console.log('Building Electron app...');

@@ -1,6 +1,6 @@
 import { SchemaInliner } from './schemaInliner';
 import { SchemaType } from '../schemas/SchemaTypes';
-import schemas from '../schemas/schemasImport.js';
+import schemas from '../schemas/schemasImport';
 
 /**
  * Gets an inlined schema from a JSON schema file

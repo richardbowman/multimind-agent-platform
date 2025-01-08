@@ -119,7 +119,6 @@ IMPORTANT: Always follow this pattern:
     }
 
     public async initialize(): Promise<void> {
-        await super.setupChatMonitor(PROJECTS_CHANNEL_ID, "@content");
         this.processTaskQueue();
     }
 }   

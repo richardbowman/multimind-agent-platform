@@ -2,10 +2,14 @@ import 'reflect-metadata';
 import { initializeBackend } from './initializeBackend';
 import { WebSocketServer } from './server/WebSocketServer';
 import { PORT } from './helpers/config';
+import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
 
 // Run the main function
 async function main() {
     try {
+        // Set up global error handling
+        setupUnhandledRejectionHandler();
+
         const services = await initializeBackend();
         const wsServer = new WebSocketServer(services, PORT);
 

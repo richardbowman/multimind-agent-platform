@@ -218,7 +218,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
     public setupChatMonitor(monitorChannelId: string, handle?: string) {
         if (handle) this.chatClient.registerHandle(handle);
 
-        console.log(`${monitorChannelId}: ${handle}`)
+        Logger.verbose(`REGISTRATION ${monitorChannelId}: ${handle}`)
 
         // Initialize the WebSocket client for real-time message listening
         this.chatClient.receiveMessages(async (post: ChatPost) => {
