@@ -1,6 +1,7 @@
 import Logger from "src/helpers/logger";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "./chatClient";
 import * as fs from "fs/promises";
+import { AsyncQueue } from "src/helpers/asyncQueue";
 
 export class InMemoryPost implements ChatPost {
     static fromLoad(postData: any) : InMemoryPost {
@@ -60,9 +61,11 @@ export class LocalChatStorage {
 
     private storagePath: string;
     saveQueued: any;
+    private queue: AsyncQueue;
 
     constructor(storagePath: string) {
         this.storagePath = storagePath;
+        this.queue = new AsyncQueue();
     }
 
     public async addPost(post: ChatPost) : Promise<void> {
@@ -99,43 +102,45 @@ export class LocalChatStorage {
     }
 
     public async save(): Promise<void> {
-        try {
-            if (this.saveQueued) return;
-            this.saveQueued = true;
-            const updateTasks = () => {
+        return this.queue.enqueue(async () => {
+            try {
+                if (this.saveQueued) return;
+                this.saveQueued = true;
                 const data = {
                     channelNames: this.channelNames,
                     posts: this.posts,
                     userIdToHandleName: this.userIdToHandleName
                 };
-    
-                return fs.writeFile(this.storagePath, JSON.stringify(data, null, 2), 'utf8');
-            };
-            await updateTasks();
-        } catch (error) {
-            Logger.error('Failed to save tasks:', error);
-        } finally {
-            this.saveQueued = false;
-        }
+                await fs.writeFile(this.storagePath, JSON.stringify(data, null, 2), 'utf8');
+            } catch (error) {
+                Logger.error('Failed to save tasks:', error);
+                throw error;
+            } finally {
+                this.saveQueued = false;
+            }
+        });
     }
 
     public async load(): Promise<void> {
-        try {
-            const data = await fs.readFile(this.storagePath, 'utf8');
-            const parsedData = JSON.parse(data);
-            if (parsedData.channelNames) this.channelNames = parsedData.channelNames;
-            if (parsedData.posts) this.posts = parsedData.posts.map(p => InMemoryPost.fromLoad(p));
-            if (parsedData.userIdToHandleName) this.userIdToHandleName = parsedData.userIdToHandleName;
-            Logger.info(`Loaded ${this.posts.length} chat posts from disk`);
-        } catch (error: unknown) {
-            // If the file doesn't exist or is invalid, initialize with default values
-            if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
-                Logger.info('No saved data found. Starting with a fresh storage.');
-                return;
-            }
+        return this.queue.enqueue(async () => {
+            try {
+                const data = await fs.readFile(this.storagePath, 'utf8');
+                const parsedData = JSON.parse(data);
+                if (parsedData.channelNames) this.channelNames = parsedData.channelNames;
+                if (parsedData.posts) this.posts = parsedData.posts.map(p => InMemoryPost.fromLoad(p));
+                if (parsedData.userIdToHandleName) this.userIdToHandleName = parsedData.userIdToHandleName;
+                Logger.info(`Loaded ${this.posts.length} chat posts from disk`);
+            } catch (error: unknown) {
+                // If the file doesn't exist or is invalid, initialize with default values
+                if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
+                    Logger.info('No saved data found. Starting with a fresh storage.');
+                    return;
+                }
 
-            Logger.error('Error loading chat storage:', error);
-        }
+                Logger.error('Error loading chat storage:', error);
+                throw error;
+            }
+        });
     }
 }
 
