@@ -9,29 +9,24 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     const { logs, fetchLogs } = useWebSocket();
 
     useEffect(() => {
-        console.log('LogViewer: Setting up log fetching for type:', logType);
-        let isSubscribed = true;
+        console.log('LogViewer: Setting up log subscription for type:', logType);
+        
+        // Initial fetch
+        fetchLogs(logType);
 
-        const fetchLogsIfVisible = () => {
-            if (isSubscribed && document.visibilityState === 'visible') {
-                console.log('LogViewer: Polling logs for type:', logType);
+        // Subscribe to log updates via RPC
+        const unsubscribe = ipcService.rpc.onLogUpdate((update) => {
+            if (update.type === logType) {
+                console.log(`LogViewer: Received ${logType} log update`);
                 fetchLogs(logType);
             }
-        };
+        });
 
-        // Initial fetch
-        fetchLogsIfVisible();
-
-        // Set up polling interval
-        const interval = setInterval(fetchLogsIfVisible, 5000);
-
-        // Clean up function
         return () => {
-            console.log('LogViewer: Cleaning up log fetching for type:', logType);
-            isSubscribed = false;
-            clearInterval(interval);
+            console.log('LogViewer: Cleaning up log subscription for type:', logType);
+            unsubscribe();
         };
-    }, [logType]); // Remove fetchLogs from dependencies
+    }, [logType, fetchLogs]);
 
     const renderLogs = () => {
         switch (logType) {
