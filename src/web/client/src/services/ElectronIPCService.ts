@@ -17,10 +17,10 @@ export class ElectronIPCService extends BaseRPCService {
         const safeHandlers = createSafeRPCHandlers();
         this.rpc = createBirpc<ServerMethods, ClientMethods>(
             {
-                onMessage: (messages) => {
+                onMessage: (messages: ClientMessage[]) => {
                     this.emit('onMessage', messages);
                 },
-                onLogUpdate: (update) => {
+                onLogUpdate: (update: { type: string; entry: any }) => {
                     this.emit('onLogUpdate', update);
                 }
             },
