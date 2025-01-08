@@ -6,8 +6,10 @@ import * as path from 'path';
 import { initializeBackend } from './initializeBackend';
 import Logger from './helpers/logger';
 import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
+import { SplashWindow } from './windows/SplashWindow';
 
 let mainWindow: BrowserWindow;
+let splashWindow: SplashWindow;
 import { BackendServices } from './types/BackendServices';
 import { ElectronIPCServer } from './server/ElectronIPCServer';
 
@@ -38,17 +40,35 @@ setupUnhandledRejectionHandler();
 
 app.whenReady().then(async () => {
     try {
+        // Show splash screen
+        splashWindow = new SplashWindow();
+        await splashWindow.show();
+
         // Initialize backend services
-        backendServices = await initializeBackend();
+        splashWindow.setMessage('Initializing backend services...');
+        backendServices = await initializeBackend({
+            onProgress: (message) => splashWindow.setMessage(message)
+        });
         
+        // Create main window
+        splashWindow.setMessage('Loading main interface...');
         await createWindow();
 
         // Set up IPC handlers
         setupIpcHandlers();
 
+        // Close splash screen
+        splashWindow.close();
+
     } catch (error) {
         Logger.error('Error in main:', error);
-        process.exit(1);
+        if (splashWindow) {
+            splashWindow.setMessage(`Error: ${error.message}`);
+            // Keep splash window open for error display
+            setTimeout(() => app.quit(), 5000);
+        } else {
+            process.exit(1);
+        }
     }
 });
 

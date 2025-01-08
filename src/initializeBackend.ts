@@ -9,14 +9,27 @@ import { AgentLoader } from "./utils/AgentLoader";
 import { BackendServices } from "./types/BackendServices";
 import { LogReader } from "./server/LogReader";
 
-export async function initializeBackend(options: { reindex?: boolean } = {}): Promise<BackendServices> {
+export async function initializeBackend(options: { 
+    reindex?: boolean,
+    onProgress?: (message: string) => void 
+} = {}): Promise<BackendServices> {
+    const { onProgress } = options;
+    
+    // Validate required configurations
+    if (!process.env.OPENAI_API_KEY) {
+        throw new Error('OpenAI API key is not configured');
+    }
+
+    onProgress?.('Initializing LLM service...');
     const llmService = LLMServiceFactory.createService({
         chatProvider: LLM_PROVIDER as LLMProvider,
         embeddingProvider: EMBEDDING_PROVIDER as LLMProvider
     });
 
     // Initialize the embedding and LLaMA models
+    onProgress?.('Initializing embedding model...');
     await llmService.initializeEmbeddingModel(EMBEDDING_MODEL);
+    onProgress?.('Initializing chat model...');
     await llmService.initializeChatModel(CHAT_MODEL);
 
     const vectorDB = createVectorDatabase(VECTOR_DATABASE_TYPE, llmService);
