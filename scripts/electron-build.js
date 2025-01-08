@@ -11,7 +11,7 @@ try {
 
     // Build the client app
     console.log('Building client app...');
-    execSync('cd src/web/client && npm run build', { stdio: 'inherit' });
+    execSync('npm run build:web', { stdio: 'inherit' });
 
     // Run TypeScript compilation with electron config
     console.log('Compiling TypeScript...');
