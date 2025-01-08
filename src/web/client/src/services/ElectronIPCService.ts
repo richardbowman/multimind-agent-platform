@@ -1,10 +1,52 @@
-import { IIPCService, ClientMessage } from '../shared/IPCInterface';
+import { createBirpc } from 'birpc';
+import { BaseRPCService } from '../shared/BaseRPCService';
+import type { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 
-export class ElectronIPCService implements IIPCService {
+export class ElectronIPCService extends BaseRPCService {
     constructor() {
+        super();
         if (!(window as any).electron) {
             throw new Error('Electron IPC not available');
         }
+        this.setupRPC();
+    }
+
+    private setupRPC() {
+        // Initialize birpc
+        this.rpc = createBirpc<ServerMethods, ClientMethods>(
+            this.clientMethods,
+            {
+                post: (data) => (window as any).electron.send('birpc', data),
+                on: (handler) => (window as any).electron.receive('birpc', handler),
+                serialize: JSON.stringify,
+                deserialize: JSON.parse,
+            }
+        );
+
+        // Set up event listeners for notifications
+        (window as any).electron.receive('message', (messages: any[], isLive: boolean) => {
+            this.messageHandlers.forEach(handler => handler(messages, isLive));
+        });
+
+        (window as any).electron.receive('channels', (channels: any[]) => {
+            this.channelHandlers.forEach(handler => handler(channels));
+        });
+
+        (window as any).electron.receive('tasks', (tasks: any[]) => {
+            this.taskHandlers.forEach(handler => handler(tasks));
+        });
+
+        (window as any).electron.receive('artifacts', (artifacts: any[]) => {
+            this.artifactHandlers.forEach(handler => handler(artifacts));
+        });
+
+        (window as any).electron.receive('logs', (logs: any) => {
+            this.logHandlers.forEach(handler => handler(logs));
+        });
+
+        (window as any).electron.receive('handles', (handles: any[]) => {
+            this.handleHandlers.forEach(handler => handler(handles));
+        });
     }
 
     connect(): void {
@@ -13,75 +55,5 @@ export class ElectronIPCService implements IIPCService {
 
     disconnect(): void {
         // No-op for Electron
-    }
-
-    // Handlers
-    async sendMessage(message: Partial<ClientMessage>): Promise<void> {
-        return (window as any).electron.sendMessage(message);
-    }
-
-    async getMessages(channelId: string, threadId: string | null): Promise<ClientMessage[]> {
-        return (window as any).electron.getMessages(channelId, threadId);
-    }
-
-    async getChannels() {
-        return (window as any).electron.getChannels();
-    }
-
-    async getTasks(channelId: string, threadId: string | null) {
-        return (window as any).electron.getTasks(channelId, threadId);
-    }
-
-    async getArtifacts(channelId: string, threadId: string | null) {
-        return (window as any).electron.getArtifacts(channelId, threadId);
-    }
-
-    async getAllArtifacts() {
-        return (window as any).electron.getAllArtifacts();
-    }
-
-    async deleteArtifact(artifactId: string) {
-        return (window as any).electron.deleteArtifact(artifactId);
-    }
-
-    async getSettings() {
-        return (window as any).electron.getSettings();
-    }
-
-    async updateSettings(settings: any) {
-        return (window as any).electron.updateSettings(settings);
-    }
-
-    async getLogs(logType: 'llm' | 'system' | 'api') {
-        return (window as any).electron.getLogs(logType);
-    }
-
-    async getHandles() {
-        return (window as any).electron.getHandles();
-    }
-
-    // Events
-    onMessage(callback: (messages: ClientMessage[], isLive: boolean) => void) {
-        return (window as any).electron.onMessage(callback);
-    }
-
-    onChannels(callback: (channels: any[]) => void) {
-        return (window as any).electron.onChannels(callback);
-    }
-
-    onTasks(callback: (tasks: any[]) => void) {
-        return (window as any).electron.onTasks(callback);
-    }
-
-    onArtifacts(callback: (artifacts: any[]) => void) {
-        return (window as any).electron.onArtifacts(callback);
-    }
-
-    onLogs(callback: (logs: any) => void) {
-        return (window as any).electron.onLogs(callback);
-    }
-
-    onHandles(callback: (handles: any[]) => void) {
-        return (window as any).electron.onHandles(callback);
     }
 }
