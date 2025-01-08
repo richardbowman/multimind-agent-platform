@@ -1,9 +1,9 @@
 .filter-bar {
     position: sticky;
     top: 0;
-    background: white;
+    background: #2a2a2a;
     padding: 10px;
-    border-bottom: 1px solid #eee;
+    border-bottom: 1px solid #444;
     display: flex;
     justify-content: space-between;
     align-items: center;
@@ -13,24 +13,33 @@
 .log-filter {
     flex: 1;
     padding: 8px;
-    border: 1px solid #ddd;
+    border: 1px solid #444;
     border-radius: 4px;
     font-size: 14px;
+    background-color: #333;
+    color: #fff;
+}
+
+.log-filter:focus {
+    outline: none;
+    border-color: #4a9eff;
 }
 
 .loading-indicator {
     margin-left: 10px;
-    color: #666;
+    color: #999;
     font-size: 0.9em;
     white-space: nowrap;
 }
 
 mark {
-    background-color: #ffeb3b;
+    background-color: #4a9eff33;
+    color: #4a9eff;
     padding: 0 2px;
     border-radius: 2px;
 }
 
 .log-content {
     padding: 10px;
+    background-color: #1a1a1a;
 }
