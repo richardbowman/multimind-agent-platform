@@ -1,12 +1,13 @@
 const { execSync } = require('child_process');
 const path = require('path');
+const fs = require('fs-extra');
 
 console.log('🚀 Starting Electron build process...');
 
 try {
     // Clean dist directory
     console.log('Cleaning dist directory...');
-    execSync('rm -rf dist', { stdio: 'inherit' });
+    fs.removeSync('dist');
 
     // Build the client app
     console.log('Building client app...');
@@ -20,9 +21,9 @@ try {
     console.log('Copying client files and config...');
     require('./copy-client-files.js');
     
-    // Copy env.defaults
+    // Copy env file
     console.log('Copying env...');
-    execSync('cp .env dist/', { stdio: 'inherit' });
+    fs.copyFileSync('.env', path.join('dist', '.env'));
 
     // Run electron-builder
     console.log('Building Electron app...');
