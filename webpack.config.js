@@ -13,7 +13,13 @@ module.exports = {
       {
         test: /\.(ts|tsx)$/,
         exclude: /node_modules/,
-        use: 'ts-loader',
+        use: {
+          loader: 'ts-loader',
+          options: {
+            configFile: 'tsconfig.json',
+            transpileOnly: true
+          }
+        },
       },
       {
         test: /\.css$/,

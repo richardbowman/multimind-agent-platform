@@ -2,6 +2,11 @@
 import { appendFileSync, mkdirSync } from 'fs';
 import * as path from 'path';
 import { getDataPath } from './paths';
+import { Socket } from 'socket.io';
+
+declare global {
+    var socket: Socket | undefined;
+}
 
 class Logger {
     private static logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.log`);

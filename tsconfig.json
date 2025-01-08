@@ -21,7 +21,8 @@
       "sourceMap": true,
       "lib": ["DOM", "DOM.Iterable", "ESNext"],
       "isolatedModules": true,
-      "noEmit": true
+      "noEmit": false,
+      "allowSyntheticDefaultImports": true
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist", ".output"]
