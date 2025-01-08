@@ -88,84 +88,35 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     ipcService.connect();
-
-    const handlesCleanup = ipcService.onHandles((newHandles: any) => {
-      console.log('WebSocketContext: Received handles:', newHandles);
-      setHandles(newHandles);
-    });
-
-    const messageCleanup = ipcService.onMessage((messages: ClientMessage[], isLive: boolean) => {
-      setMessages(prev => {
-        if (!isLive) {
-          // For historical messages, replace the entire list
-          return messages;
-        }
-        
-        // For live messages, append only new ones
-        const newMessages = messages.filter(message => 
-          !prev.some(m => m.id === message.id)
-        );
-        
-        // Update messages array, handling both new messages and reply count updates
-        return prev.map(existingMsg => {
-          // If this is a parent message that just got a new reply
-          if (newMessages.some(newMsg => newMsg.props?.['root-id'] === existingMsg.id)) {
-            return {
-              ...existingMsg,
-              reply_count: (existingMsg.reply_count || 0) + 1
-            };
-          }
-          return existingMsg;
-        }).concat(newMessages)
-        .sort((a, b) => a.create_at - b.create_at);
-      });
-    });
-
-    const channelCleanup = ipcService.onChannels((newChannels : ClientChannel[]) => {
-          setChannels(newChannels);
-        });
-
-    const taskCleanup = ipcService.onTasks((newTasks : any) => {
-          setTasks(newTasks);
-        });
-
-    const artifactCleanup = ipcService.onArtifacts((newArtifacts : any) => {
-          setArtifacts(newArtifacts);
-        });
-
-    const logsCleanup = ipcService.onLogs((newLogs: any) => {
-      console.log('WebSocketContext: Received logs:', newLogs);
-      if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
-        console.warn('WebSocketContext: Received invalid log type:', newLogs?.type);
-        return;
-      }
-      setLogs(prev => ({
-        ...prev,
-        [newLogs.type]: newLogs.data || []
-      }));
-    });
-
-    return () => {    
-      messageCleanup();
-      channelCleanup();
-      taskCleanup();
-      artifactCleanup();
-      handlesCleanup();
-      logsCleanup();
+      
+    // Initial data fetch
+    fetchChannels();
+    fetchHandles();
+      
+    return () => {
       ipcService.disconnect();
     };
   }, []);
 
   // Fetch messages whenever channel or thread changes
   useEffect(() => {
-    if (currentChannelId) {
-      setIsLoading(true);
-      setMessages([]); // Clear messages before loading new ones
-      ipcService.getMessages(currentChannelId, currentThreadId || '');
-      // Also fetch related data
-      fetchTasks(currentChannelId, currentThreadId);
-      fetchArtifacts(currentChannelId, currentThreadId);
-    }
+    const loadChannelData = async () => {
+      if (currentChannelId) {
+        setIsLoading(true);
+        setMessages([]); // Clear messages before loading new ones
+        
+        const [newMessages] = await Promise.all([
+          ipcService.getMessages(currentChannelId, currentThreadId || ''),
+          fetchTasks(currentChannelId, currentThreadId),
+          fetchArtifacts(currentChannelId, currentThreadId)
+        ]);
+        
+        setMessages(newMessages);
+        setIsLoading(false);
+      }
+    };
+    
+    loadChannelData();
   }, [currentChannelId, currentThreadId]);
 
   // Update loading state when messages are received
@@ -175,36 +126,56 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const isElectron = !!(window as any).electron;
 
-  const sendMessage = (message: Partial<ClientMessage>) => {
-    ipcService.sendMessage(message);
+  const sendMessage = async (message: Partial<ClientMessage>) => {
+    const result = await ipcService.sendMessage(message);
+    if (result) {
+      setMessages(prev => {
+        const newMessages = [result].filter(message => 
+          !prev.some(m => m.id === message.id)
+        );
+        return [...prev, ...newMessages].sort((a, b) => a.create_at - b.create_at);
+      });
+    }
   };
 
-  const fetchChannels = () => {
-    ipcService.getChannels();
+  const fetchChannels = async () => {
+    const newChannels = await ipcService.getChannels();
+    setChannels(newChannels);
   };
 
-  const fetchHandles = () => {
-    ipcService.getHandles();
+  const fetchHandles = async () => {
+    const newHandles = await ipcService.getHandles();
+    setHandles(newHandles);
   };
 
-  const fetchTasks = (channelId: string, threadId: string | null) => {
-    ipcService.getTasks(channelId, threadId);
+  const fetchTasks = async (channelId: string, threadId: string | null) => {
+    const newTasks = await ipcService.getTasks(channelId, threadId);
+    setTasks(newTasks);
   };
 
-  const fetchArtifacts = (channelId: string, threadId: string | null) => {
-    ipcService.getArtifacts(channelId, threadId);
+  const fetchArtifacts = async (channelId: string, threadId: string | null) => {
+    const newArtifacts = await ipcService.getArtifacts(channelId, threadId);
+    setArtifacts(newArtifacts);
   };
 
-  const fetchAllArtifacts = () => {
-    ipcService.getAllArtifacts();
+  const fetchAllArtifacts = async () => {
+    const newArtifacts = await ipcService.getAllArtifacts();
+    setArtifacts(newArtifacts);
   };
 
-  const deleteArtifact = (artifactId: string) => {
-    ipcService.deleteArtifact(artifactId);
+  const deleteArtifact = async (artifactId: string) => {
+    const remainingArtifacts = await ipcService.deleteArtifact(artifactId);
+    setArtifacts(remainingArtifacts);
   };
 
-  const fetchLogs = (logType: 'llm' | 'system' | 'api') => {
-    ipcService.getLogs(logType);
+  const fetchLogs = async (logType: 'llm' | 'system' | 'api') => {
+    const newLogs = await ipcService.getLogs(logType);
+    if (newLogs?.type && ['llm', 'system', 'api'].includes(newLogs.type)) {
+      setLogs(prev => ({
+        ...prev,
+        [newLogs.type]: newLogs.data || []
+      }));
+    }
   };
 
   return (
