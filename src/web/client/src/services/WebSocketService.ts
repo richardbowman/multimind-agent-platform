@@ -82,7 +82,14 @@ export default class WebSocketService extends BaseRPCService {
       // Set up the real RPC instance once connected
       const safeHandlers = createSafeRPCHandlers();
       this.rpc = createBirpc<ServerMethods, ClientMethods>(
-        {},
+        {
+          onMessage: (messages) => {
+            this.emit('onMessage', messages);
+          },
+          onLogUpdate: (update) => {
+            this.emit('onLogUpdate', update);
+          }
+        },
         {
           post: (data) => {
             return this.socket!.emit('birpc', data);

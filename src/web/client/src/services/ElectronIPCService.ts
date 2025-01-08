@@ -16,7 +16,14 @@ export class ElectronIPCService extends BaseRPCService {
         // Initialize birpc
         const safeHandlers = createSafeRPCHandlers();
         this.rpc = createBirpc<ServerMethods, ClientMethods>(
-            {},
+            {
+                onMessage: (messages) => {
+                    this.emit('onMessage', messages);
+                },
+                onLogUpdate: (update) => {
+                    this.emit('onLogUpdate', update);
+                }
+            },
             {
                 post: (data) => {
                     const serialized = safeHandlers.serialize(data);
