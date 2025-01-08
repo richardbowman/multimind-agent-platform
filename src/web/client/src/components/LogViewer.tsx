@@ -1,6 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import DOMPurify from 'dompurify';
+import './LogViewer.css';
 
 interface LogViewerProps {
     logType: 'llm' | 'system' | 'api';
