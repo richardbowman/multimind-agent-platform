@@ -6,6 +6,7 @@ import { createSafeRPCHandlers } from '../shared/rpcUtils';
 
 export default class WebSocketService extends BaseRPCService {
   private socket: SocketIOClient.Socket | null = null;
+  private isConnecting: boolean = false;
 
   constructor() {
     super();
@@ -29,9 +30,11 @@ export default class WebSocketService extends BaseRPCService {
     ? 'ws://localhost:4001'
     : process.env.REACT_APP_WS_URL || 'ws://localhost:4001') {
     
-    if (this.socket) {
-      this.socket.disconnect();
+    if (this.socket || this.isConnecting) {
+      return; // Already connected or connecting
     }
+    
+    this.isConnecting = true;
 
     this.socket = io(url, {
       transports: ['websocket'],
@@ -40,6 +43,7 @@ export default class WebSocketService extends BaseRPCService {
     });
 
     this.socket.once('connect', () => {
+      this.isConnecting = false;
       console.log('Client: Successfully connected to WebSocket server');
       
       // Set up the real RPC instance once connected
@@ -72,6 +76,7 @@ export default class WebSocketService extends BaseRPCService {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
+      this.isConnecting = false;
       // Reset to placeholder RPC
       this.setupPlaceholderRPC();
     }
