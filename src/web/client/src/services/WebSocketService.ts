@@ -70,6 +70,9 @@ export default class WebSocketService extends BaseRPCService {
         this.getHandles()
       ]).catch(error => {
         console.error('Error fetching initial data:', error);
+      }).then(() => {
+        // Emit a connected event to trigger any necessary UI updates
+        this.emit('connected');
       });
     });
   }
