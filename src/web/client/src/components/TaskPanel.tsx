@@ -1,4 +1,5 @@
 import React, { useEffect } from 'react';
+import './TaskPanel.css';
 import { TaskStatus } from '../../../../schemas/reviewProgress';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
