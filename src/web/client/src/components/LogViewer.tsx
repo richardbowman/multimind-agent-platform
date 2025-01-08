@@ -114,7 +114,6 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     return (
         <div className="log-viewer">
             <div className="filter-bar">
-                {isLoading && <span className="loading-indicator">Loading...</span>}
                 <input
                     type="text"
                     placeholder="Filter logs..."
@@ -122,6 +121,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
                     onChange={(e) => setFilterText(e.target.value)}
                     className="log-filter"
                 />
+                {isLoading && <span className="loading-indicator">Loading...</span>}
             </div>
             <div className="log-content">
                 {renderLogs()}
