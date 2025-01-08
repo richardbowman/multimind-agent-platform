@@ -5,11 +5,12 @@ import { BackendSettings } from "../types/BackendServices";
 import { ChatPost } from "../chat/chatClient";
 import { LLMCallLogger } from "src/llm/LLMLogger";
 import { Task } from "src/tools/taskManager";
+import { ServerMethods } from "../web/client/src/shared/RPCInterface";
 
-export class MessageHandler {
+export class MessageHandler implements ServerMethods {
     constructor(private services: BackendServices) { }
 
-    async handleSendMessage(message: Partial<ClientMessage>) {
+    async sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage> {
         if (message.thread_id) {
             return await this.services.chatClient.postReply(
                 message.thread_id,
@@ -26,7 +27,7 @@ export class MessageHandler {
         }
     }
 
-    async handleGetMessages({ channelId, threadId, limit }: { channelId: string, threadId?: string, limit?: number }) {
+    async getMessages({ channelId, threadId, limit }: { channelId: string; threadId: string | null; limit?: number }): Promise<ClientMessage[]> {
         const messages = await this.services.chatClient.fetchPreviousMessages(channelId, 1000);
 
         let channelMessages = messages
@@ -51,7 +52,7 @@ export class MessageHandler {
         return channelMessages;
     }
 
-    async handleGetThreads({ channelId }: { channelId: string }) {
+    async getThreads({ channelId }: { channelId: string }): Promise<ClientThread[]> {
         const posts = await this.services.chatClient.fetchPreviousMessages(channelId);
         const threadMap = new Map<string, any>();
 
@@ -98,7 +99,7 @@ export class MessageHandler {
             .sort((a, b) => b.last_message_at - a.last_message_at);
     }
 
-    async handleGetChannels() {
+    async getChannels(): Promise<ClientChannel[]> {
         const channels = await this.services.chatClient.getChannels();
         return channels.map(([id, name]) => ({
             id,
@@ -107,7 +108,7 @@ export class MessageHandler {
         }));
     }
 
-    async handleGetTasks({ channelId, threadId }: { channelId: string, threadId?: string }) {
+    async getTasks({ channelId, threadId }: { channelId: string; threadId: string | null }): Promise<any[]> {
         // Get all projects and filter tasks that match the channel/thread context
         const projects = this.services.taskManager.getProjects();
         const tasks: Task[] = [];
@@ -124,7 +125,7 @@ export class MessageHandler {
         return tasks;
     }
 
-    async handleGetArtifacts({ channelId, threadId }: { channelId: string, threadId?: string }) {
+    async getArtifacts({ channelId, threadId }: { channelId: string; threadId: string | null }): Promise<any[]> {
         const artifacts = await this.services.artifactManager.listArtifacts();
         return artifacts.filter(artifact => {
             const matchesChannel = artifact.metadata?.channelId === channelId;
@@ -133,21 +134,21 @@ export class MessageHandler {
         }).map(artifact => this.processArtifactContent(artifact));
     }
 
-    async handleGetAllArtifacts() {
+    async getAllArtifacts(): Promise<any[]> {
         return (await this.services.artifactManager.listArtifacts())
             .map(artifact => this.processArtifactContent(artifact));
     }
 
-    async handleDeleteArtifact(artifactId: string) {
+    async deleteArtifact(artifactId: string): Promise<any[]> {
         await this.services.artifactManager.deleteArtifact(artifactId);
         return this.handleGetAllArtifacts();
     }
 
-    async handleGetSettings() {
+    async getSettings(): Promise<any> {
         return this.services.settings;
     }
 
-    async handleUpdateSettings(settings: Partial<BackendSettings>) {
+    async updateSettings(settings: any): Promise<any> {
         this.services.settings = { ...this.services.settings, ...settings };
         // Update environment variables
         if (settings.provider) process.env.LLM_PROVIDER = settings.provider;
@@ -162,7 +163,7 @@ export class MessageHandler {
         return this.services.settings;
     }
 
-    async handleGetLogs(logType: string) {
+    async getLogs(logType: 'llm' | 'system' | 'api'): Promise<any> {
         switch (logType) {
             case 'llm':
                 return await LLMCallLogger.getAllLogs();
@@ -175,7 +176,7 @@ export class MessageHandler {
         }
     }
 
-    async handleGetHandles() {
+    async getHandles(): Promise<Array<{id: string; handle: string}>> {
         const handleSet = await this.services.chatClient.getHandles();
         const handles = Object.entries(handleSet).map(([id, name]) => ({
             id,
