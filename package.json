@@ -13,7 +13,7 @@
     "build:web": "cd src/web/client && npm run build",
     "build:all": "npm run build && npm run build:web",
     "electron:dev": "concurrently \"BROWSER=none npm run start:client\" \"npm run watch:ts\" \"npm run electron:start:dev\"",
-    "electron:start:dev": "wait-on http://localhost:3000 && nodemon --watch dist --exec \"electron . --dev-mode\"",
+    "electron:start:dev": "wait-on http://localhost:3000 && nodemon --watch dist --delay 2.5 --exec \"electron . --dev-mode\"",
     "watch:ts": "tsc -p tsconfig.electron.json --watch --noCheck",
     "electron:build": "node scripts/electron-build.js",
     "electron:package": "electron-builder build",
