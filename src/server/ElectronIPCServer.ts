@@ -20,7 +20,7 @@ export class ElectronIPCServer {
         const safeHandlers = createSafeServerRPCHandlers();
 
         this.rpc = createBirpc<ClientMethods, ServerMethods>(
-            this.handler,
+            this.handler.createWrapper(),
             {
                 ...safeHandlers,
                 post: (data) => this.mainWindow.webContents.send('birpc', data),

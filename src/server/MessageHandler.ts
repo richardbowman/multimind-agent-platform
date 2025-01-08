@@ -3,8 +3,28 @@ import { LLMCallLogger } from "src/llm/LLMLogger";
 import { Task } from "src/tools/taskManager";
 import { ServerMethods } from "../web/client/src/shared/RPCInterface";
 import { ClientChannel, ClientMessage } from "src/web/client/src/shared/IPCInterface";
+import Logger from "../helpers/logger";
 
 export class MessageHandler implements ServerMethods {
+    createWrapper(): ServerMethods {
+        const handler = this;
+        return new Proxy({} as ServerMethods, {
+            get(target, prop) {
+                if (typeof handler[prop as keyof ServerMethods] === 'function') {
+                    return async (...args: any[]) => {
+                        try {
+                            const result = await (handler[prop as keyof ServerMethods] as Function).apply(handler, args);
+                            return result;
+                        } catch (error) {
+                            Logger.error(`Error in wrapped handler method ${String(prop)}:`, error);
+                            throw error;
+                        }
+                    };
+                }
+                return undefined;
+            }
+        });
+    }
     constructor(private services: BackendServices) { }
 
     async sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage> {

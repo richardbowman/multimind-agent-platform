@@ -43,7 +43,7 @@ export class WebSocketServer {
 
             // Create birpc instance for this connection
             const rpc = createBirpc<ClientMethods, ServerMethods>(
-                this.handler,
+                this.handler.createWrapper(),
                 {
                     ...createSafeServerRPCHandlers(),
                     post: (data) => socket.emit('birpc', data),
