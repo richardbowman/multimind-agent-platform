@@ -31,21 +31,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
         }
     }, [messages]);
 
-    // Handle live message thread selection
-    // Handle live message thread selection
-    // useEffect(() => {
-    //     if (messages.length === 0) return;
-        
-    //     const lastMessage = messages[messages.length - 1];
-    //     if (lastMessage?.thread_id && !currentThreadId) {
-    //         // Only switch to thread view if we're not already in a thread
-    //         const threadRoot = messages.find(m => m.id === lastMessage.thread_id);
-    //         if (threadRoot) {
-    //             setCurrentThreadId(threadRoot.id);
-    //         }
-    //     }
-    // }, [messages, currentThreadId, setCurrentThreadId]);
-
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
     const handleSendMessage = async (content: string) => {
@@ -155,12 +140,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
                             </div>
                         </div>
                     )))}
-                {tasks.filter(task => task.inProgress && (!currentThreadId || task.threadId === currentThreadId)).length > 0 && (
+                {tasks.filter(task => task.inProgress && (task.threadId === currentThreadId)).length > 0 && (
                     <div className="in-progress-tasks-container">
                         <h4>In Progress Tasks</h4>
                         <div className="in-progress-tasks-list">
                             {tasks
-                                .filter(task => task.inProgress && (!currentThreadId || task.threadId === currentThreadId))
+                                .filter(task => task.inProgress && (task.threadId === currentThreadId))
                                 .map(task => (
                                     <div key={task.id} className="in-progress-task">
                                         <Spinner />

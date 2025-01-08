@@ -1,4 +1,4 @@
-export interface Task {
+export interface ClientTask {
     id: string;
     description: string;
     inProgress?: boolean;
