@@ -76,7 +76,10 @@ export default class WebSocketService extends BaseRPCService {
 
   disconnect() {
     if (this.socket) {
-      this.socket.disconnect();
+      // Only disconnect if we're actually connected
+      if (this.socket.connected) {
+        this.socket.disconnect();
+      }
       this.socket = null;
       this.isConnecting = false;
       // Reset to placeholder RPC

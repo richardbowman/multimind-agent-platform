@@ -87,9 +87,14 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    console.debug('WebSocketContext mounting');
-    ipcService.connect();
+    // Only connect if we're not in an unmounting cycle
+    const mountTimeout = setTimeout(() => {
+      console.debug('WebSocketContext stable mount - connecting');
+      ipcService.connect();
+    }, 100);
+
     return () => {
+      clearTimeout(mountTimeout);
       console.debug('WebSocketContext unmounting');
       ipcService.disconnect();
     };
