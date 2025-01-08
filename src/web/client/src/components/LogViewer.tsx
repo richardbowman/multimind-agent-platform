@@ -14,17 +14,9 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
         // Initial fetch
         fetchLogs(logType);
 
-        // Subscribe to log updates via RPC
-        const unsubscribe = ipcService.rpc.onLogUpdate((update) => {
-            if (update.type === logType) {
-                console.log(`LogViewer: Received ${logType} log update`);
-                fetchLogs(logType);
-            }
-        });
-
+        // No need for subscription as the WebSocket context will handle updates
         return () => {
             console.log('LogViewer: Cleaning up log subscription for type:', logType);
-            unsubscribe();
         };
     }, [logType, fetchLogs]);
 
