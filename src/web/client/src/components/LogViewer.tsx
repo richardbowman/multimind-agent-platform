@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useWebSocket } from '../contexts/WebSocketContext';
 
 interface LogViewerProps {
@@ -7,6 +7,7 @@ interface LogViewerProps {
 
 export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     const { logs, fetchLogs } = useWebSocket();
+    const [filterText, setFilterText] = useState('');
 
     useEffect(() => {
         console.log('LogViewer: Setting up log subscription for type:', logType);
@@ -20,10 +21,23 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
         };
     }, [logType, fetchLogs]);
 
+    const filterLog = (content: string) => {
+        if (!filterText) return true;
+        return content.toLowerCase().includes(filterText.toLowerCase());
+    };
+
     const renderLogs = () => {
         switch (logType) {
             case 'llm':
                 return Object.entries(logs.llm).map(([service, entries]) => 
+                    entries.filter(log => 
+                        filterLog(JSON.stringify({
+                            method: log.method,
+                            input: log.input,
+                            output: log.output,
+                            error: log.error
+                        }))
+                    ).map(log => 
                     entries.map((log, index) => (
                         <div key={`${service}-${index}`} className="log-entry info">
                             <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
@@ -46,7 +60,9 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
                 ).flat();
             
             case 'system':
-                return logs.system.map((log, index) => (
+                return logs.system.filter(log => 
+                    filterLog(log.message)
+                ).map((log, index) => (
                     <div key={index} className={`log-entry ${log.level.toLowerCase()}`}>
                         <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                         <span className="log-level">{log.level}</span>
@@ -55,7 +71,9 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
                 ));
             
             case 'api':
-                return logs.api.map((log, index) => (
+                return logs.api.filter(log =>
+                    filterLog(JSON.stringify(log))
+                ).map((log, index) => (
                     <div key={index} className="log-entry info">
                         <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                         <span className="log-level">API</span>
@@ -67,6 +85,15 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
 
     return (
         <div className="log-viewer">
+            <div className="filter-bar">
+                <input
+                    type="text"
+                    placeholder="Filter logs..."
+                    value={filterText}
+                    onChange={(e) => setFilterText(e.target.value)}
+                    className="log-filter"
+                />
+            </div>
             <div className="log-content">
                 {renderLogs()}
             </div>
