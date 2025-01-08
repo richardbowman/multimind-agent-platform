@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import { useWebSocket } from '../contexts/WebSocketContext';
 import DOMPurify from 'dompurify';
 
@@ -9,18 +9,38 @@ interface LogViewerProps {
 export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     const { logs, fetchLogs } = useWebSocket();
     const [filterText, setFilterText] = useState('');
+    const [isLoading, setIsLoading] = useState(false);
+    const [lastFetch, setLastFetch] = useState(0);
+
+    const refreshLogs = useCallback(async () => {
+        // Prevent multiple simultaneous fetches
+        if (isLoading) return;
+        
+        // Only fetch if more than 5 seconds have passed since last fetch
+        const now = Date.now();
+        if (now - lastFetch < 5000) return;
+        
+        setIsLoading(true);
+        try {
+            await fetchLogs(logType);
+            setLastFetch(now);
+        } finally {
+            setIsLoading(false);
+        }
+    }, [logType, fetchLogs, isLoading, lastFetch]);
 
     useEffect(() => {
         console.log('LogViewer: Setting up log subscription for type:', logType);
-        
-        // Initial fetch
-        fetchLogs(logType);
+        refreshLogs();
 
-        // No need for subscription as the WebSocket context will handle updates
+        // Set up periodic refresh every 5 seconds
+        const intervalId = setInterval(refreshLogs, 5000);
+
         return () => {
             console.log('LogViewer: Cleaning up log subscription for type:', logType);
+            clearInterval(intervalId);
         };
-    }, [logType, fetchLogs]);
+    }, [logType, refreshLogs]);
 
     const filterLog = (content: string) => {
         if (!filterText) return true;
@@ -94,6 +114,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     return (
         <div className="log-viewer">
             <div className="filter-bar">
+                {isLoading && <span className="loading-indicator">Loading...</span>}
                 <input
                     type="text"
                     placeholder="Filter logs..."
