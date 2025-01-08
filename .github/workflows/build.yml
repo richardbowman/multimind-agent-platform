@@ -51,8 +51,10 @@ jobs:
       - name: Build TypeScript
         run: npm run build
         
-      - name: Copy Environment File
-        run: cp .env.example .env
+      - name: Copy Environment Files
+        run: |
+          cp .env.example .env
+          cp .env dist/.env
         
       - name: Build Electron App
         env:
