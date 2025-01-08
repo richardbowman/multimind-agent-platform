@@ -146,6 +146,7 @@ export class MessageHandler implements ServerMethods {
                 id: task.id,
                 description: task.description,
                 inProgress: task.inProgress || false,
+                complete: task.complete || false,
                 threadId: task.metadata?.threadId || null
             }));
         });

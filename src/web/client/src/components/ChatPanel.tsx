@@ -145,7 +145,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
                         <h4>In Progress Tasks</h4>
                         <div className="in-progress-tasks-list">
                             {tasks
-                                .filter(task => task.inProgress && (task.threadId === currentThreadId))
+                                .filter(task => task.inProgress && !task.complete && (task.threadId === currentThreadId))
                                 .map(task => (
                                     <div key={task.id} className="in-progress-task">
                                         <Spinner />
