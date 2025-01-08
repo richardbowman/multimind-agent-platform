@@ -137,16 +137,20 @@ export class MessageHandler implements ServerMethods {
         // Extract project IDs from posts
         const projectIds = [...new Set(posts.map(p => p.props["project-id"]).filter(id => id != undefined))];
         
-        // Get tasks from storage that match these project IDs
+        // Get tasks from storage that match these project IDs and convert to ClientTask format
         const tasks = projectIds.flatMap(projectId => {
             const project = this.services.taskManager.getProject(projectId);
-            return project ? Object.values(project.tasks) : [];
+            if (!project) return [];
+            
+            return Object.values(project.tasks).map(task => ({
+                id: task.id,
+                description: task.description,
+                inProgress: task.inProgress || false,
+                threadId: task.metadata?.threadId || null
+            }));
         });
 
-        // Ensure we're sending an array even if no tasks found
-        const tasksToSend = tasks || [];
-
-        return tasksToSend;
+        return tasks;
     }
 
     async getArtifacts({ channelId, threadId }: { channelId: string; threadId: string | null }): Promise<any[]> {
