@@ -1,18 +1,15 @@
 import io from 'socket.io-client';
 import { createBirpc } from 'birpc';
-import { EventEmitter } from 'events';
 import { BaseRPCService } from '../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../shared/rpcUtils';
 
-export default class WebSocketService extends BaseRPCService implements EventEmitter {
-  private eventEmitter: EventEmitter;
+export default class WebSocketService extends BaseRPCService {
   private socket: SocketIOClient.Socket | null = null;
   private isConnecting: boolean = false;
 
   constructor() {
     super();
-    this.eventEmitter = new EventEmitter();
     // Initialize with a placeholder RPC instance
     this.setupPlaceholderRPC();
   }
