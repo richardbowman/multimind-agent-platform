@@ -30,7 +30,13 @@ jobs:
           cd src/web/client && npm ci
           
       - name: Build Web
-        run: npm run build:web
+        env:
+          CI: ""
+        run: |
+          cd src/web/client
+          npm install --save-dev @babel/plugin-proposal-private-property-in-object
+          cd ../../..
+          npm run build:web
         
       - name: Build TypeScript
         run: npm run build
