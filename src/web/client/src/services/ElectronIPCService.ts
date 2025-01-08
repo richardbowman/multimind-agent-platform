@@ -2,6 +2,7 @@ import { createBirpc } from 'birpc';
 import { BaseRPCService } from '../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../shared/rpcUtils';
+import { ClientMessage } from '../shared/IPCInterface';
 
 export class ElectronIPCService extends BaseRPCService {
     constructor() {
@@ -26,15 +27,10 @@ export class ElectronIPCService extends BaseRPCService {
             },
             {
                 post: (data) => {
-                    const serialized = safeHandlers.serialize(data);
-                    return (window as any).electron.send('birpc', serialized);
+                    return (window as any).electron.send('birpc', data);
                 },
                 on: (handler) => {
-                    const safeHandler = safeHandlers.on((data) => {
-                        const deserialized = safeHandlers.deserialize(data);
-                        return handler(deserialized);
-                    });
-                    return (window as any).electron.receive('birpc', safeHandler);
+                    return (window as any).electron.receive('birpc', handler);
                 },
                 serialize: safeHandlers.serialize,
                 deserialize: safeHandlers.deserialize,
