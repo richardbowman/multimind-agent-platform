@@ -42,7 +42,10 @@ export class ArtifactManager {
       return JSON.parse(data);
     } catch (error) {
       if (error.code === 'ENOENT') {
-        return {}; // Return an empty object if the metadata file does not exist
+        // Create initial empty metadata file
+        const emptyMetadata = {};
+        await this.saveArtifactMetadata(emptyMetadata);
+        return emptyMetadata;
       }
       Logger.error('Error loading artifact metadata:', error);
       throw error;
