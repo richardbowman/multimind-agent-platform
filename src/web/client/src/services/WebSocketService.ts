@@ -1,17 +1,45 @@
 import io from 'socket.io-client';
 import { createBirpc } from 'birpc';
+import { EventEmitter } from 'events';
 import { BaseRPCService } from '../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../shared/rpcUtils';
 
-export default class WebSocketService extends BaseRPCService {
+export default class WebSocketService extends BaseRPCService implements EventEmitter {
+  private eventEmitter: EventEmitter;
   private socket: SocketIOClient.Socket | null = null;
   private isConnecting: boolean = false;
 
   constructor() {
     super();
+    this.eventEmitter = new EventEmitter();
     // Initialize with a placeholder RPC instance
     this.setupPlaceholderRPC();
+  }
+
+  // Implement EventEmitter methods
+  emit(event: string | symbol, ...args: any[]): boolean {
+    return this.eventEmitter.emit(event, ...args);
+  }
+
+  on(event: string | symbol, listener: (...args: any[]) => void): this {
+    this.eventEmitter.on(event, listener);
+    return this;
+  }
+
+  once(event: string | symbol, listener: (...args: any[]) => void): this {
+    this.eventEmitter.once(event, listener);
+    return this;
+  }
+
+  removeListener(event: string | symbol, listener: (...args: any[]) => void): this {
+    this.eventEmitter.removeListener(event, listener);
+    return this;
+  }
+
+  removeAllListeners(event?: string | symbol): this {
+    this.eventEmitter.removeAllListeners(event);
+    return this;
   }
 
   private setupPlaceholderRPC() {
