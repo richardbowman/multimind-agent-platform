@@ -106,9 +106,14 @@ class ScrapeHelper {
                 }
             });
 
+            // Validate content before saving
+            if (!markdownContent) {
+                throw new Error(`Failed to extract content from ${url}`);
+            }
+
             // Save the full webpage content as an artifact
             const artifactId = crypto.randomUUID();
-            await this.artifactManager.saveArtifact({
+            const artifact = {
                 id: artifactId,
                 type: 'webpage',
                 content: markdownContent,
@@ -118,7 +123,9 @@ class ScrapeHelper {
                     scrapedAt: new Date().toISOString(),
                     ...metadata
                 }
-            });
+            };
+
+            await this.artifactManager.saveArtifact(artifact);
 
             return { content: markdownContent, links, title, screenshot, artifactId };
         } catch (error) {

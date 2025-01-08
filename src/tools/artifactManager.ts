@@ -77,10 +77,17 @@ export class ArtifactManager {
       Logger.error('Error creating directory:', error);
     }
 
-    // Validate content is not undefined
+    // Validate content is not undefined or empty
     if (!artifact.content) {
-      throw new Error(`Cannot save artifact ${artifact.id}: content is undefined`);
+      throw new Error(`Cannot save artifact ${artifact.id}: content is undefined or empty`);
     }
+
+    // Ensure content is always a string or Buffer
+    const content = typeof artifact.content === 'string' ? 
+      artifact.content : 
+      Buffer.isBuffer(artifact.content) ? 
+        artifact.content : 
+        JSON.stringify(artifact.content);
 
     const filePath = path.join(artifactDir, `${artifact.type}_v${version}.md`);
     await this.fileQueue.enqueue(() =>
