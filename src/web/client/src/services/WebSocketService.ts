@@ -1,15 +1,11 @@
 import io from 'socket.io-client';
-import { IIPCService, ClientMessage, ClientChannel, ClientThread } from '../../../../shared/IPCInterface';
+import { createBirpc } from 'birpc';
+import { BaseRPCService } from '../../../../shared/BaseRPCService';
+import type { ServerMethods } from '../../../../shared/RPCInterface';
+import type { ClientMessage } from '../../../../shared/IPCInterface';
 
-export default class WebSocketService implements IIPCService {
-  socket: SocketIOClient.Socket | null = null;
-  private messageHandlers: ((messages: ClientMessage[], isLive: boolean) => void)[] = [];
-  private channelHandlers: ((channels: ClientChannel[]) => void)[] = [];
-  private threadHandlers: ((threads: ClientThread[]) => void)[] = [];
-  private taskHandlers: ((tasks: any[]) => void)[] = [];
-  private artifactHandlers: ((artifacts: any[]) => void)[] = [];
-  private handleHandlers: ((handles: {id: string, handle: string}[]) => void)[] = [];
-  private logHandlers: ((logs: { type: string, data: any }) => void)[] = [];
+export default class WebSocketService extends BaseRPCService {
+  private socket: SocketIOClient.Socket | null = null;
 
   // Add missing interface methods
   async getMessages(channelId: string, threadId: string | null): Promise<ClientMessage[]> {
@@ -74,11 +70,10 @@ export default class WebSocketService implements IIPCService {
   }
 
   connect(url: string = typeof window !== 'undefined' && (window as any).electron
-  ? 'ws://localhost:4001'
-  : process.env.REACT_APP_WS_URL || 'ws://localhost:4001') {
-    // Clean up any existing socket connection
+    ? 'ws://localhost:4001'
+    : process.env.REACT_APP_WS_URL || 'ws://localhost:4001') {
+    
     if (this.socket) {
-      this.cleanupSocketListeners();
       this.socket.disconnect();
     }
 
@@ -88,274 +83,73 @@ export default class WebSocketService implements IIPCService {
       reconnectionAttempts: 5
     });
 
-    // Set up connect handler
     this.socket.once('connect', () => {
       console.log('Connected to WebSocket server');
       
-      this.setupSocketListeners();
-      
-      // Fetch initial data upon connection
-      this.fetchChannels();
-      this.fetchHandles();
-    });
-  }
-
-  private cleanupSocketListeners() {
-    if (!this.socket) return;
-    
-    // Remove all listeners without specifying event names
-    this.socket.removeAllListeners();
-  }
-
-  private setupSocketListeners() {
-    if (!this.socket) return;
-
-    // Set up system log listener
-    this.socket.on('system_log', (logEntry: any) => {
-      this.socket!.emit('logs', {
-        type: 'system',
-        data: [logEntry]
+      // Initialize birpc
+      this.rpc = createBirpc<ServerMethods>(this.clientMethods, {
+        post: (data) => this.socket!.emit('birpc', data),
+        on: (handler) => this.socket!.on('birpc', handler),
+        serialize: JSON.stringify,
+        deserialize: JSON.parse,
       });
-    });
 
-    this.socket.on('message', (message: ClientMessage) => {
-      // This is a live message
-      console.log('receiving message', message);
-      
-      if (message.thread_id) {
-        // This is a reply - update the parent message's reply count
-        this.messageHandlers.forEach(handler => {
-          handler([message], true);
-          // Create an updated version of the parent message with incremented reply_count
-          const parentMessage = this.socket!.emit('get_message', message.thread_id);
-        });
-      } else {
-        this.messageHandlers.forEach(handler => handler([message], true));
-      }
-    });
-
-    this.socket.on('channels', (channels: ClientChannel[]) => {
-      this.channelHandlers.forEach(handler => handler(channels));
-    });
-
-    this.socket.on('threads', (threads: ClientThread[]) => {
-      this.threadHandlers.forEach(handler => handler(threads));
-    });
-
-    this.socket.on('handles', (handles: Array<{id: string, handle: string}>) => {
-      console.log('WebSocketService: Received handles in connection:', handles);
-      this.handleHandlers.forEach(handler => handler(handles));
-    });
-
-    this.socket.on('tasks', (tasks: any[]) => {
-      console.log('Received tasks:', tasks);
-      this.taskHandlers.forEach(handler => handler(tasks));
-    });
-
-    this.socket.on('artifacts', (artifacts: any[]) => {
-      console.log('Received artifacts:', artifacts);
-      this.artifactHandlers.forEach(handler => handler(artifacts));
-    });
-
-    this.socket.on('logs', (newLogs: { type: string, data: any }) => {
-      if (!newLogs?.type || !['llm', 'system', 'api'].includes(newLogs.type)) {
-        console.warn('WebSocketService: Received unknown log type:', newLogs?.type);
-        return;
-      }
-      console.log('WebSocketService: Received logs:', newLogs);
-      this.logHandlers.forEach(handler => handler(newLogs));
-    });
-
-    this.socket.on('disconnect', () => {
-      console.log('Disconnected from WebSocket server');
-    });
-
-    this.socket.on('error', (error: Error) => {
-      console.error('WebSocket error:', error);
+      // Fetch initial data
+      this.rpc.getChannels();
+      this.rpc.getHandles();
     });
   }
+
 
   disconnect() {
     if (this.socket) {
-      this.cleanupSocketListeners();
       this.socket.disconnect();
       this.socket = null;
     }
   }
 
+  // Implement IIPCService methods using birpc
   async sendMessage(message: Partial<ClientMessage>) {
-    if (this.socket) {
-      this.socket.emit('send_message', message);
-    }
+    return this.rpc.sendMessage(message);
   }
 
-  fetchChannels() {
-    if (this.socket) {
-      console.log('Fetching channels...');
-      this.socket.emit('get_channels');
-    } else {
-      console.warn('Socket not connected while trying to fetch channels');
-    }
+  async getMessages(channelId: string, threadId: string | null, limit: number = 50) {
+    return this.rpc.getMessages({ channelId, threadId, limit });
   }
 
-  fetchThreads(channelId: string) {
-    if (this.socket) {
-      this.socket.emit('get_threads', { channel_id: channelId });
-    }
+  async getChannels() {
+    return this.rpc.getChannels();
   }
 
-
-  fetchMessages(channelId: string, threadId: string | null = null, limit: number = 50) {
-    if (this.socket) {
-      console.log('Fetching messages:', { channel_id: channelId, thread_id: threadId || '', limit });
-      // Remove any existing messages handler to prevent duplicates
-      this.socket.off('messages');
-      // Add new handler
-      this.socket.on('messages', (messages: ClientMessage[]) => {
-        console.log('Received historical messages in service:', messages);
-        // Don't trigger message handlers for historical messages
-        this.messageHandlers.forEach(handler => handler(messages, false));
-      });
-      this.socket.emit('get_messages', { 
-        channel_id: channelId, 
-        thread_id: threadId || '', 
-        limit 
-      });
-    }
+  async getTasks(channelId: string, threadId: string | null) {
+    return this.rpc.getTasks({ channelId, threadId });
   }
 
-  on(event: string, handler: Function) {
-    if (this.socket) {
-      this.socket.on(event, handler);
-    }
+  async getArtifacts(channelId: string, threadId: string | null) {
+    return this.rpc.getArtifacts({ channelId, threadId });
   }
 
-  off(event: string, handler: Function) {
-    if (this.socket) {
-      this.socket.off(event, handler);
-    }
-  }
-
-  onMessage(handler: (messages: ClientMessage[], isLive: boolean) => void) {
-    this.messageHandlers.push(handler);
-    return () => {
-      this.messageHandlers = this.messageHandlers.filter(h => h !== handler);
-    };
-  }
-
-  onChannels(handler: (channels: ClientChannel[]) => void) {
-    this.channelHandlers.push(handler);
-    return () => {
-      this.channelHandlers = this.channelHandlers.filter(h => h !== handler);
-    };
-  }
-
-  onThreads(handler: (threads: ClientThread[]) => void) {
-    this.threadHandlers.push(handler);
-    return () => {
-      this.threadHandlers = this.threadHandlers.filter(h => h !== handler);
-    };
-  }
-
-  onTasks(handler: (tasks: any[]) => void) {
-    this.taskHandlers.push(handler);
-    return () => {
-      this.taskHandlers = this.taskHandlers.filter(h => h !== handler);
-    };
-  }
-
-  onArtifacts(handler: (artifacts: any[]) => void) {
-    this.artifactHandlers.push(handler);
-    return () => {
-      this.artifactHandlers = this.artifactHandlers.filter(h => h !== handler);
-    };
-  }
-
-  fetchTasks(channelId: string, threadId: string | null) {
-    if (this.socket) {
-      this.socket.emit('get_tasks', { channel_id: channelId, thread_id: threadId });
-    }
-  }
-
-  fetchArtifacts(channelId: string, threadId: string | null) {
-    if (this.socket) {
-      this.socket.emit('get_artifacts', { channel_id: channelId, thread_id: threadId });
-    }
-  }
-
-  fetchAllArtifacts() {
-    if (this.socket) {
-      this.socket.emit('get_all_artifacts');
-    }
+  async getAllArtifacts() {
+    return this.rpc.getAllArtifacts();
   }
 
   async deleteArtifact(artifactId: string) {
-    if (this.socket) {
-      this.socket.emit('delete_artifact', artifactId);
-    }
+    return this.rpc.deleteArtifact(artifactId);
   }
 
-  fetchHandles() {
-    if (this.socket) {
-      this.socket.emit('get_handles');
-    }
+  async getSettings() {
+    return this.rpc.getSettings();
   }
 
-  onHandles(handler: (handles: Array<{id: string, handle: string}>) => void) {
-    this.handleHandlers.push(handler);
-    if (this.socket) {
-      this.socket.on('handles', handler);
-    }
-    return () => {
-      this.handleHandlers = this.handleHandlers.filter(h => h !== handler);
-      if (this.socket) {
-        this.socket.off('handles', handler);
-      }
-    };
+  async updateSettings(settings: any) {
+    return this.rpc.updateSettings(settings);
   }
 
-  fetchLogs(logType: 'llm' | 'system' | 'api') {
-    if (!this.socket) {
-      console.warn('Socket not connected while trying to fetch logs');
-      return;
-    }
-    if (!['llm', 'system', 'api'].includes(logType)) {
-      console.error('Invalid log type:', logType);
-      return;
-    }
-    console.log('WebSocketService: Fetching logs for type:', logType);
-    this.socket.emit('get_logs', logType);
+  async getLogs(logType: 'llm' | 'system' | 'api') {
+    return this.rpc.getLogs(logType);
   }
 
-  onLogs(handler: (logs: { type: string, data: any }) => void) {
-    this.logHandlers.push(handler);
-    return () => {
-      this.logHandlers = this.logHandlers.filter(h => h !== handler);
-    };
-  }
-
-  async getSettings(): Promise<any> {
-    if (!this.socket) return {};
-    return new Promise((resolve) => {
-      this.socket!.once('settingsUpdated', (settings: any) => {
-        resolve(settings);
-      });
-      this.socket!.emit('getSettings');
-    });
-  }
-
-  async updateSettings(settings: any): Promise<void> {
-    if (!this.socket) return;
-    this.socket.emit('updateSettings', settings);
-  }
-
-  async getLogs(logType: 'llm' | 'system' | 'api'): Promise<any> {
-    if (!this.socket) return [];
-    return new Promise((resolve) => {
-      this.socket!.once('logs', (logs: any) => {
-        resolve(logs);
-      });
-      this.socket!.emit('get_logs', logType);
-    });
+  async getHandles() {
+    return this.rpc.getHandles();
   }
 }
