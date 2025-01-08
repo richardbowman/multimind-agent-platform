@@ -35,11 +35,14 @@ export class LlamaCppService extends BaseLLMService {
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
         try {
-            const { LLamaModel, LLamaEmbedder } = await import('node-llama-cpp');
-            const model = new LLamaModel({
-                modelPath: modelPath,
-                embedding: true
+            const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
+            const {getLlama} = nlc;
+
+            const llama = await getLlama();
+            const model = await llama.loadModel({
+                modelPath: modelPath
             });
+            const context = await model.createEmbeddingContext();
             this.embedder = new LlamaEmbedder(model);
             Logger.info("Llama.cpp embedding model initialized");
         } catch (error) {
@@ -50,12 +53,15 @@ export class LlamaCppService extends BaseLLMService {
 
     async initializeChatModel(modelPath: string): Promise<void> {
         try {
-            const { LLamaModel, LLamaContext } = await import('node-llama-cpp');
-            this.model = new LLamaModel({
-                modelPath: modelPath,
-                embedding: false
+            const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
+            const {getLlama} = nlc;
+
+            const llama = await getLlama();
+            const model = await llama.loadModel({
+                modelPath: modelPath
             });
-            this.context = new LLamaContext({ model: this.model });
+            const context = await model.createContext();
+            this.context = context;
             Logger.info("Llama.cpp chat model initialized");
         } catch (error) {
             Logger.error("Failed to initialize Llama.cpp chat model:", error);

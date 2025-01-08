@@ -2,7 +2,7 @@ import { ILLMService } from "./ILLMService";
 import LMStudioService from "./lmstudioService";
 import { BedrockService } from "./BedrockService";
 import { AnthropicService } from "./AnthropicService";
-// import { LlamaCppService } from "./LlamaCppService";
+import { LlamaCppService } from "./LlamaCppService";
 import { LLM_HEAVY_MODEL, LLM_WEAK_MODEL } from "src/helpers/config";
 
 export enum LLMProvider {
