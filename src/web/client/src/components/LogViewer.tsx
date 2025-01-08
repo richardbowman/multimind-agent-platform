@@ -29,7 +29,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     const renderLogs = () => {
         switch (logType) {
             case 'llm':
-                return Object.entries(logs.llm).map(([service, entries]) => 
+                return Object.entries(logs.llm).flatMap(([service, entries]) => 
                     entries.filter(log => 
                         filterLog(JSON.stringify({
                             method: log.method,
@@ -37,8 +37,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
                             output: log.output,
                             error: log.error
                         }))
-                    ).map(log => 
-                    entries.map((log, index) => (
+                    ).map((log, index) => (
                         <div key={`${service}-${index}`} className="log-entry info">
                             <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                             <span className="log-level">{service.toUpperCase()}</span>
@@ -57,7 +56,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
                             </span>
                         </div>
                     ))
-                ).flat();
+                );
             
             case 'system':
                 return logs.system.filter(log => 
