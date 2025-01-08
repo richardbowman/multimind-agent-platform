@@ -1,5 +1,5 @@
 {
-  "name": "multi-agent",
+  "name": "multimind-agent-platform",
   "version": "1.0.0",
   "main": "dist/main.electron.js",
   "scripts": {
