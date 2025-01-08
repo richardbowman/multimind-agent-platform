@@ -14,7 +14,7 @@ export class ElectronIPCService extends BaseRPCService {
     private setupRPC() {
         // Initialize birpc
         this.rpc = createBirpc<ServerMethods, ClientMethods>(
-            this.clientMethods,
+            {},
             {
                 post: (data) => (window as any).electron.send('birpc', data),
                 on: (handler) => (window as any).electron.receive('birpc', handler),
@@ -23,30 +23,6 @@ export class ElectronIPCService extends BaseRPCService {
             }
         );
 
-        // Set up event listeners for notifications
-        (window as any).electron.receive('message', (messages: any[], isLive: boolean) => {
-            this.messageHandlers.forEach(handler => handler(messages, isLive));
-        });
-
-        (window as any).electron.receive('channels', (channels: any[]) => {
-            this.channelHandlers.forEach(handler => handler(channels));
-        });
-
-        (window as any).electron.receive('tasks', (tasks: any[]) => {
-            this.taskHandlers.forEach(handler => handler(tasks));
-        });
-
-        (window as any).electron.receive('artifacts', (artifacts: any[]) => {
-            this.artifactHandlers.forEach(handler => handler(artifacts));
-        });
-
-        (window as any).electron.receive('logs', (logs: any) => {
-            this.logHandlers.forEach(handler => handler(logs));
-        });
-
-        (window as any).electron.receive('handles', (handles: any[]) => {
-            this.handleHandlers.forEach(handler => handler(handles));
-        });
     }
 
     connect(): void {
