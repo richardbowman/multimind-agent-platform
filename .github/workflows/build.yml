@@ -51,6 +51,9 @@ jobs:
       - name: Build TypeScript
         run: npm run build
         
+      - name: Copy Environment File
+        run: cp .env.example .env
+        
       - name: Build Electron App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
