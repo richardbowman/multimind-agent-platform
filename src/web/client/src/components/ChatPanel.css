@@ -1,14 +1,16 @@
 .in-progress-tasks-container {
     margin: 1rem;
     padding: 1rem;
-    background-color: rgba(0, 0, 0, 0.05);
+    background-color: #2a2a2a;
     border-radius: 8px;
-    border: 1px solid rgba(0, 0, 0, 0.1);
+    border: 1px solid #444;
 }
 
 .in-progress-tasks-container h4 {
     margin: 0 0 0.5rem 0;
-    color: #666;
+    color: #999;
+    text-transform: uppercase;
+    font-size: 0.9rem;
 }
 
 .in-progress-tasks-list {
@@ -22,12 +24,12 @@
     align-items: center;
     gap: 0.5rem;
     padding: 0.5rem;
-    background-color: white;
+    background-color: #333;
     border-radius: 4px;
-    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    border: 1px solid #444;
 }
 
 .task-description {
-    color: #333;
+    color: #e1e1e1;
     font-size: 0.9rem;
 }
