@@ -95,7 +95,7 @@ export abstract class BaseLLMService implements ILLMService {
     protected convertToToolFormat(schema: any, prompt: string): any {
         return {
             name: "generate_structured_output",
-            description: `Generate structured data according to the following instructions: ${prompt}`,
+            description: `Generate structured response.`,
             parameters: schema
         };
     }
