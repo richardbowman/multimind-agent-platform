@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useWebSocket } from '../contexts/WebSocketContext';
+import DOMPurify from 'dompurify';
 
 interface LogViewerProps {
     logType: 'llm' | 'system' | 'api';
@@ -26,6 +27,14 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
         return content.toLowerCase().includes(filterText.toLowerCase());
     };
 
+    const highlightText = (text: string) => {
+        if (!filterText) return text;
+        
+        const sanitizedText = DOMPurify.sanitize(text);
+        const regex = new RegExp(`(${filterText})`, 'gi');
+        return sanitizedText.replace(regex, '<mark>$1</mark>');
+    };
+
     const renderLogs = () => {
         switch (logType) {
             case 'llm':
@@ -42,9 +51,9 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
                             <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                             <span className="log-level">{service.toUpperCase()}</span>
                             <span className="log-message">
-                                Method: {log.method}<br/>
-                                Input: {JSON.stringify(log.input, null, 2)}<br/>
-                                Output: {JSON.stringify(log.output, null, 2)}
+                                Method: <span dangerouslySetInnerHTML={{ __html: highlightText(log.method) }} /><br/>
+                                Input: <span dangerouslySetInnerHTML={{ __html: highlightText(JSON.stringify(log.input, null, 2)) }} /><br/>
+                                Output: <span dangerouslySetInnerHTML={{ __html: highlightText(JSON.stringify(log.output, null, 2)) }} />
                                 {log.error && (
                                     <div className="error-details">
                                         <div>Error: {typeof log.error === 'string' ? log.error : log.error.message || 'Unknown error'}</div>
@@ -65,7 +74,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
                     <div key={index} className={`log-entry ${log.level.toLowerCase()}`}>
                         <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                         <span className="log-level">{log.level}</span>
-                        <span className="log-message">{log.message}</span>
+                        <span className="log-message" dangerouslySetInnerHTML={{ __html: highlightText(log.message) }} />
                     </div>
                 ));
             
@@ -76,7 +85,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
                     <div key={index} className="log-entry info">
                         <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                         <span className="log-level">API</span>
-                        <span className="log-message">{JSON.stringify(log, null, 2)}</span>
+                        <span className="log-message" dangerouslySetInnerHTML={{ __html: highlightText(JSON.stringify(log, null, 2)) }} />
                     </div>
                 ));
         }
