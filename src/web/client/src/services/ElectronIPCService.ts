@@ -1,4 +1,4 @@
-import { IIPCService, ClientMessage } from '../../../../shared/IPCInterface';
+import { IIPCService, ClientMessage } from '../shared/IPCInterface';
 
 export class ElectronIPCService implements IIPCService {
     constructor() {
