@@ -48,15 +48,10 @@ export default class WebSocketService extends BaseRPCService {
         {},
         {
           post: (data) => {
-            const serialized = safeHandlers.serialize(data);
-            return this.socket!.emit('birpc', serialized);
+            return this.socket!.emit('birpc', data);
           },
           on: (handler) => {
-            const safeHandler = safeHandlers.on((data) => {
-              const deserialized = safeHandlers.deserialize(data);
-              return handler(deserialized);
-            });
-            return this.socket!.on('birpc', safeHandler);
+            return this.socket!.on('birpc', handler);
           },
           serialize: safeHandlers.serialize,
           deserialize: safeHandlers.deserialize,
