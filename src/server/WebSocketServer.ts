@@ -60,51 +60,111 @@ export class WebSocketServer {
                 {
                     // Implement all ServerMethods
                     sendMessage: async (message) => {
-                        const result = await this.handler.handleSendMessage(message);
-                        return result;
+                        try {
+                            const result = await this.handler.handleSendMessage(message);
+                            return result;
+                        } catch (error) {
+                            Logger.error('Error in sendMessage:', error);
+                            throw error;
+                        }
                     },
                     getMessages: async ({ channelId, threadId, limit }) => {
-                        return this.handler.handleGetMessages({ 
-                            channelId, 
-                            threadId, 
-                            limit 
-                        });
+                        try {
+                            return await this.handler.handleGetMessages({ 
+                                channelId, 
+                                threadId, 
+                                limit 
+                            });
+                        } catch (error) {
+                            Logger.error('Error in getMessages:', error);
+                            throw error;
+                        }
                     },
                     getChannels: async () => {
-                        return this.handler.handleGetChannels();
+                        try {
+                            return await this.handler.handleGetChannels();
+                        } catch (error) {
+                            Logger.error('Error in getChannels:', error);
+                            throw error;
+                        }
                     },
                     getThreads: async ({ channelId }) => {
-                        return this.handler.handleGetThreads({ channelId });
+                        try {
+                            return await this.handler.handleGetThreads({ channelId });
+                        } catch (error) {
+                            Logger.error('Error in getThreads:', error);
+                            throw error;
+                        }
                     },
                     getTasks: async ({ channelId, threadId }) => {
-                        return this.handler.handleGetTasks({ 
-                            channelId, 
-                            threadId 
-                        });
+                        try {
+                            return await this.handler.handleGetTasks({ 
+                                channelId, 
+                                threadId 
+                            });
+                        } catch (error) {
+                            Logger.error('Error in getTasks:', error);
+                            throw error;
+                        }
                     },
                     getArtifacts: async ({ channelId, threadId }) => {
-                        return this.handler.handleGetArtifacts({ 
-                            channelId, 
-                            threadId 
-                        });
+                        try {
+                            return await this.handler.handleGetArtifacts({ 
+                                channelId, 
+                                threadId 
+                            });
+                        } catch (error) {
+                            Logger.error('Error in getArtifacts:', error);
+                            throw error;
+                        }
                     },
                     getAllArtifacts: async () => {
-                        return this.handler.handleGetAllArtifacts();
+                        try {
+                            return await this.handler.handleGetAllArtifacts();
+                        } catch (error) {
+                            Logger.error('Error in getAllArtifacts:', error);
+                            throw error;
+                        }
                     },
                     deleteArtifact: async (artifactId) => {
-                        return this.handler.handleDeleteArtifact(artifactId);
+                        try {
+                            return await this.handler.handleDeleteArtifact(artifactId);
+                        } catch (error) {
+                            Logger.error('Error in deleteArtifact:', error);
+                            throw error;
+                        }
                     },
                     getLogs: async (logType) => {
-                        return this.handler.handleGetLogs(logType);
+                        try {
+                            return await this.handler.handleGetLogs(logType);
+                        } catch (error) {
+                            Logger.error('Error in getLogs:', error);
+                            throw error;
+                        }
                     },
                     getHandles: async () => {
-                        return this.handler.handleGetHandles();
+                        try {
+                            return await this.handler.handleGetHandles();
+                        } catch (error) {
+                            Logger.error('Error in getHandles:', error);
+                            throw error;
+                        }
                     },
                     getSettings: async () => {
-                        return this.handler.handleGetSettings();
+                        try {
+                            return await this.handler.handleGetSettings();
+                        } catch (error) {
+                            Logger.error('Error in getSettings:', error);
+                            throw error;
+                        }
                     },
                     updateSettings: async (settings) => {
-                        return this.handler.handleUpdateSettings(settings);
+                        try {
+                            return await this.handler.handleUpdateSettings(settings);
+                        } catch (error) {
+                            Logger.error('Error in updateSettings:', error);
+                            throw error;
+                        }
                     }
                 },
                 {
