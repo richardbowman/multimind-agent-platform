@@ -1,11 +1,8 @@
 import { BackendServices } from "../types/BackendServices";
-import { ClientMessage } from "../shared/IPCInterface";
-import Logger from "../helpers/logger";
-import { BackendSettings } from "../types/BackendServices";
-import { ChatPost } from "../chat/chatClient";
 import { LLMCallLogger } from "src/llm/LLMLogger";
 import { Task } from "src/tools/taskManager";
 import { ServerMethods } from "../web/client/src/shared/RPCInterface";
+import { ClientChannel, ClientMessage } from "src/web/client/src/shared/IPCInterface";
 
 export class MessageHandler implements ServerMethods {
     constructor(private services: BackendServices) { }
