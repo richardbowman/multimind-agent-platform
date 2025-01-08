@@ -11,13 +11,19 @@ export class SplashWindow {
             frame: false,
             transparent: true,
             webPreferences: {
-                nodeIntegration: true
+                contextIsolation: true,
+                nodeIntegration: false,
+                preload: path.join(__dirname, '../preload.js')
             }
         });
     }
 
     async show() {
-        await this.window.loadFile(path.join(__dirname, '../splash.html'));
+        if (process.env.NODE_ENV === 'development') {
+            await this.window.loadFile(path.join(__dirname, '../web/client/public/splash.html'));
+        } else {
+            await this.window.loadFile(path.join(__dirname, 'web/client/build/splash.html'));
+        }
     }
 
     setMessage(message: string) {
