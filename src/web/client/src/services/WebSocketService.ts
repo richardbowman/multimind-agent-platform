@@ -43,7 +43,13 @@ export default class WebSocketService extends BaseRPCService {
     this.rpc = createBirpc<ServerMethods, ClientMethods>(
       {},
       {
-        post: () => console.warn('Socket not connected'),
+        post: (data) => {
+          const stack = new Error().stack;
+          console.warn('Attempted RPC call before socket connected:', {
+            data,
+            stack: stack?.split('\n').slice(1).join('\n')  // Remove first line which is Error constructor
+          });
+        },
         on: () => () => {},
         serialize: JSON.stringify,
         deserialize: JSON.parse,
