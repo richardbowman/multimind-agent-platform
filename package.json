@@ -21,7 +21,7 @@
   "keywords": [],
   "author": "",
   "license": "ISC",
-  "description": "",
+  "description": "Multi-agent platform for AI assistants",
   "dependencies": {
     "@anthropic-ai/sdk": "^0.33.1",
     "@aws-sdk/client-bedrock": "^3.712.0",
