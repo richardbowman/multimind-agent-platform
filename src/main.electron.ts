@@ -5,6 +5,7 @@ import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 import { initializeBackend } from './initializeBackend';
 import Logger from './helpers/logger';
+import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
 
 let mainWindow: BrowserWindow;
 import { BackendServices } from './types/BackendServices';
@@ -31,6 +32,9 @@ async function createWindow() {
         await mainWindow.loadFile(path.join(__dirname, 'web/client/build/index.html'));
     }
 }
+
+// Set up global error handling
+setupUnhandledRejectionHandler();
 
 app.whenReady().then(async () => {
     try {

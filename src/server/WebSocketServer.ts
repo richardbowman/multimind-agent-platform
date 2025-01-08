@@ -4,6 +4,7 @@ import express from 'express';
 import { createBirpc } from 'birpc';
 import { createSafeServerRPCHandlers } from './rpcUtils';
 import Logger from '../helpers/logger';
+import { trackPromise } from '../helpers/errorHandler';
 import { HOST, PORT, PROTOCOL } from '../helpers/config';
 import { MessageHandler } from './MessageHandler';
 import { BackendServices } from '../types/BackendServices';
@@ -61,7 +62,7 @@ export class WebSocketServer {
                     // Implement all ServerMethods
                     sendMessage: async (message) => {
                         try {
-                            const result = await this.handler.handleSendMessage(message);
+                            const result = await trackPromise(this.handler.handleSendMessage(message));
                             return result;
                         } catch (error) {
                             Logger.error('Error in sendMessage:', error);
