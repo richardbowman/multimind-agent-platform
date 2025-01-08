@@ -1,7 +1,7 @@
 {
     "compilerOptions": {
       "target": "ESNext",
-      "module": "commonjs",
+      "module": "ESNext",
       "moduleResolution": "node",
       "strict": true,
       "esModuleInterop": true,
@@ -9,12 +9,19 @@
       "forceConsistentCasingInFileNames": true,
       "resolveJsonModule": true,
       "baseUrl": ".",
+      "paths": {
+        "@/*": ["src/*"],
+        "@web/*": ["src/web/*"]
+      },
       "outDir": "./dist",
       "rootDir": "./src",
       "jsx": "react-jsx",
       "allowJs": true,
       "declaration": true,
-      "sourceMap": true
+      "sourceMap": true,
+      "lib": ["DOM", "DOM.Iterable", "ESNext"],
+      "isolatedModules": true,
+      "noEmit": true
     },
     "include": ["src/**/*"],
     "exclude": ["node_modules", "dist", ".output"]
