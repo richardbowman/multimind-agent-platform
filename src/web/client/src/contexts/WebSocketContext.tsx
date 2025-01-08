@@ -184,12 +184,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   const fetchLogs = async (logType: 'llm' | 'system' | 'api') => {
     const newLogs = await ipcService.getLogs(logType);
-    if (newLogs?.type && ['llm', 'system', 'api'].includes(newLogs.type)) {
-      setLogs(prev => ({
-        ...prev,
-        [newLogs.type]: newLogs.data || []
-      }));
-    }
+    setLogs(prev => ({
+      ...prev,
+      [logType]: newLogs
+    }));
   };
 
   return (
