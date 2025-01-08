@@ -2,21 +2,19 @@ import io from 'socket.io-client';
 import { createBirpc } from 'birpc';
 import { BaseRPCService } from '../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../shared/RPCInterface';
-import type { ClientMessage, IPCHandlers } from '../shared/IPCInterface';
 
 export default class WebSocketService extends BaseRPCService {
   private socket: SocketIOClient.Socket | null = null;
 
   constructor() {
     super();
-    // Initialize birpc immediately
-    this.setupRPC();
+    // Initialize with a placeholder RPC instance
+    this.setupPlaceholderRPC();
   }
 
-  private setupRPC() {
-    // Create a dummy RPC instance that will be replaced when socket connects
+  private setupPlaceholderRPC() {
     this.rpc = createBirpc<ServerMethods, ClientMethods>(
-      this.clientMethods,
+      {},
       {
         post: () => console.warn('Socket not connected'),
         on: () => () => {},
@@ -43,26 +41,29 @@ export default class WebSocketService extends BaseRPCService {
     this.socket.once('connect', () => {
       console.log('Connected to WebSocket server');
       
-      // Replace the dummy RPC with real socket-connected one
-      this.rpc = createBirpc<ServerMethods, ClientMethods>(this.clientMethods, {
-        post: (data) => this.socket!.emit('birpc', data),
-        on: (handler) => this.socket!.on('birpc', handler),
-        serialize: JSON.stringify,
-        deserialize: JSON.parse,
-      });
+      // Set up the real RPC instance once connected
+      this.rpc = createBirpc<ServerMethods, ClientMethods>(
+        {},
+        {
+          post: (data) => this.socket!.emit('birpc', data),
+          on: (handler) => this.socket!.on('birpc', handler),
+          serialize: JSON.stringify,
+          deserialize: JSON.parse,
+        }
+      );
 
       // Fetch initial data
-      this.rpc.getChannels();
-      this.rpc.getHandles();
+      this.getChannels();
+      this.getHandles();
     });
   }
-
 
   disconnect() {
     if (this.socket) {
       this.socket.disconnect();
       this.socket = null;
+      // Reset to placeholder RPC
+      this.setupPlaceholderRPC();
     }
   }
-
 }
