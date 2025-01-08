@@ -88,11 +88,6 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
 
   useEffect(() => {
     ipcService.connect();
-      
-    // Initial data fetch
-    fetchChannels();
-    fetchHandles();
-      
     return () => {
       ipcService.disconnect();
     };

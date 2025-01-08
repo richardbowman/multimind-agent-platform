@@ -58,9 +58,13 @@ export default class WebSocketService extends BaseRPCService {
         }
       );
 
-      // Fetch initial data
-      this.getChannels();
-      this.getHandles();
+      // Initial data fetch - do this only once on connect
+      Promise.all([
+        this.getChannels(),
+        this.getHandles()
+      ]).catch(error => {
+        console.error('Error fetching initial data:', error);
+      });
     });
   }
 
