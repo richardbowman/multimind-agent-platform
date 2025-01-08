@@ -91,6 +91,13 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     const mountTimeout = setTimeout(() => {
       console.debug('WebSocketContext stable mount - connecting');
       ipcService.connect();
+      
+      Promise.all([
+        fetchChannels(),
+        fetchHandles()
+      ]).catch(error => {
+        console.error('Error fetching initial data:', error);
+      });
     }, 100);
 
     return () => {
