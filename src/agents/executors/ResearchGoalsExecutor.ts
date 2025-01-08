@@ -19,8 +19,8 @@ export class ResearchGoalsExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.ResearchUnderstandingResponse);
 
-        const previousContext = params.previousResult?.length||0 > 0 ? 
-        `\nPrevious findings:\n${params.previousResult?.[0].message || params.previousResult?.[0].reasoning}` : '';
+        const previousContext = params.previousResult && params.previousResult.length > 0 ? 
+        `\nPrevious findings:\n${params.previousResult[0].message || params.previousResult[0].reasoning}` : '';
 
         const systemPrompt = `
 As a research coordinator, try to build an effective research project that helps the users meet their goals.
