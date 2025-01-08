@@ -126,20 +126,27 @@ export class MessageHandler implements ServerMethods {
     }
 
     async getTasks({ channelId, threadId }: { channelId: string; threadId: string | null }): Promise<any[]> {
-        // Get all projects and filter tasks that match the channel/thread context
-        const projects = this.services.taskManager.getProjects();
-        const tasks: Task[] = [];
+        // Get all posts for this channel/thread
+        const posts = (await this.services.chatClient.fetchPreviousMessages(channelId, 500)).filter(post => {
+            if (threadId) {
+                return post.getRootId() === threadId || post.id === threadId;
+            }
+            return true;
+        });
 
-        for (const project of projects) {
-            const projectTasks = this.services.taskManager.getAllTasks(project.id);
-            tasks.push(...projectTasks.filter(task => {
-                const matchesChannel = task.props?.channelId === channelId;
-                const matchesThread = !threadId || task.props?.threadId === threadId;
-                return matchesChannel && matchesThread;
-            }));
-        }
+        // Extract project IDs from posts
+        const projectIds = [...new Set(posts.map(p => p.props["project-id"]).filter(id => id != undefined))];
+        
+        // Get tasks from storage that match these project IDs
+        const tasks = projectIds.flatMap(projectId => {
+            const project = this.services.taskManager.getProject(projectId);
+            return project ? Object.values(project.tasks) : [];
+        });
 
-        return tasks;
+        // Ensure we're sending an array even if no tasks found
+        const tasksToSend = tasks || [];
+
+        return tasksToSend;
     }
 
     async getArtifacts({ channelId, threadId }: { channelId: string; threadId: string | null }): Promise<any[]> {
