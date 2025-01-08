@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
+import './ChatPanel.css';
 import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
@@ -154,15 +155,22 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
                             </div>
                         </div>
                     )))}
-                {tasks
-                    .filter(task => task.inProgress && (!currentThreadId || task.threadId === currentThreadId))
-                    .map(task => (
-                        <div key={task.id} className="in-progress-task">
-                            <Spinner />
-                            <span className="task-description">{task.description}</span>
+                {tasks.some(task => task.inProgress) && (
+                    <div className="in-progress-tasks-container">
+                        <h4>In Progress Tasks</h4>
+                        <div className="in-progress-tasks-list">
+                            {tasks
+                                .filter(task => task.inProgress && (!currentThreadId || task.threadId === currentThreadId))
+                                .map(task => (
+                                    <div key={task.id} className="in-progress-task">
+                                        <Spinner />
+                                        <span className="task-description">{task.description}</span>
+                                    </div>
+                                ))
+                            }
                         </div>
-                    ))
-                }
+                    </div>
+                )}
                 <div ref={messagesEndRef} />
             </div>
             <CommandInput onSendMessage={handleSendMessage} />

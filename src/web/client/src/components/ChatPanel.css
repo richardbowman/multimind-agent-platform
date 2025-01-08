@@ -1,0 +1,33 @@
+.in-progress-tasks-container {
+    margin: 1rem;
+    padding: 1rem;
+    background-color: rgba(0, 0, 0, 0.05);
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.in-progress-tasks-container h4 {
+    margin: 0 0 0.5rem 0;
+    color: #666;
+}
+
+.in-progress-tasks-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.in-progress-task {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.5rem;
+    background-color: white;
+    border-radius: 4px;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.task-description {
+    color: #333;
+    font-size: 0.9rem;
+}
