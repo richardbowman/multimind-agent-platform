@@ -53,7 +53,6 @@ jobs:
         
       - name: Copy Environment Files
         run: |
-          cp .env.example .env
           cp .env dist/.env
         
       - name: Build Electron App
