@@ -103,9 +103,9 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       });
 
       // Set up message and log update handlers
-      ipcService.on('onMessage', (messages) => {
+      ipcService.on('onMessage', (messages: ClientMessage[]) => {
         setMessages(prev => {
-          const newMessages = messages.filter(message => 
+          const newMessages = messages.filter((message: ClientMessage) => 
             !prev.some(m => m.id === message.id)
           );
           return [...prev, ...newMessages].sort((a, b) => a.create_at - b.create_at);
