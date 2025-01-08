@@ -30,30 +30,31 @@ export class WebSocketServer {
 
         // Set up message receiving for the user client
         services.chatClient.receiveMessages((post: ChatPost) => {
-            this.io.emit('birpc', JSON.stringify({
-                type: 'onMessage',
-                data: [{
-                    id: post.id,
-                    channel_id: post.channel_id,
-                    message: post.message,
-                    user_id: post.user_id,
-                    create_at: post.create_at,
-                    directed_at: post.directed_at,
-                    props: post.props,
-                    thread_id: post.getRootId()
-                }]
-            }));
+            const rpcMessage = {
+                id: post.id,
+                channel_id: post.channel_id,
+                message: post.message,
+                user_id: post.user_id,
+                create_at: post.create_at,
+                directed_at: post.directed_at,
+                props: post.props,
+                thread_id: post.getRootId()
+            };
+            this.io.emit('birpc', {
+                method: 'onMessage',
+                params: [[rpcMessage]]
+            });
         });
 
         // Set up log update notifications
         services.llmLogger.onLogUpdate((logEntry) => {
-            this.io.emit('birpc', JSON.stringify({
-                type: 'onLogUpdate',
-                data: {
+            this.io.emit('birpc', {
+                method: 'onLogUpdate',
+                params: [{
                     type: 'llm',
                     entry: logEntry
-                }
-            }));
+                }]
+            });
         });
 
         this.setupSocketHandlers();
