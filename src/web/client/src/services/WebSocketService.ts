@@ -40,7 +40,7 @@ export default class WebSocketService extends BaseRPCService {
     });
 
     this.socket.once('connect', () => {
-      console.log('Connected to WebSocket server');
+      console.log('Client: Successfully connected to WebSocket server');
       
       // Set up the real RPC instance once connected
       const safeHandlers = createSafeRPCHandlers();

@@ -54,7 +54,7 @@ export class WebSocketServer {
 
     private setupSocketHandlers() {
         this.io.on('connection', (socket) => {
-            Logger.info('Client connected');
+            Logger.info('WebSocket: New client connection established');
 
             // Create birpc instance for this connection
             const rpc = createBirpc<ServerMethods, ClientMethods>(
