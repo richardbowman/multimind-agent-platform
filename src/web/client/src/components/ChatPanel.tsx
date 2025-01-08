@@ -154,6 +154,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
                             </div>
                         </div>
                     )))}
+                {tasks
+                    .filter(task => task.inProgress && (!currentThreadId || task.threadId === currentThreadId))
+                    .map(task => (
+                        <div key={task.id} className="in-progress-task">
+                            <Spinner />
+                            <span className="task-description">{task.description}</span>
+                        </div>
+                    ))
+                }
                 <div ref={messagesEndRef} />
             </div>
             <CommandInput onSendMessage={handleSendMessage} />
