@@ -38,6 +38,10 @@ export class ElectronIPCService extends BaseRPCService {
             }
         );
 
+        // Emit connected event after RPC setup
+        setTimeout(() => {
+            this.emit('connected');
+        }, 0);
     }
 
     connect(): void {
