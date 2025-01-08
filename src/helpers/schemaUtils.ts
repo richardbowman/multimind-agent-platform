@@ -1,5 +1,6 @@
 import { SchemaInliner } from './schemaInliner';
 import { SchemaType } from '../schemas/SchemaTypes';
+import schemas from '../schemas/schemasImport.js';
 
 /**
  * Gets an inlined schema from a JSON schema file
@@ -19,6 +20,5 @@ export function getInlinedSchema(schemaJson: any, type?: string): any {
  * @returns The inlined schema for the specified type
  */
 export async function getGeneratedSchema(type: SchemaType): Promise<any> {
-    const schemaJson = (await import('../schemas/schemasImport.js')).default;
-    return getInlinedSchema(schemaJson, type);
+    return getInlinedSchema(schemas, type);
 }
