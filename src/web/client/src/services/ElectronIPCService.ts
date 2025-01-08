@@ -27,10 +27,11 @@ export class ElectronIPCService extends BaseRPCService {
             },
             {
                 post: (data) => {
-                    return (window as any).electron.send('birpc', data);
+                    (window as any).electron.send('birpc', data);
                 },
                 on: (handler) => {
-                    return (window as any).electron.receive('birpc', handler);
+                    const cleanup = (window as any).electron.receive('birpc', handler);
+                    return () => cleanup();
                 },
                 serialize: safeHandlers.serialize,
                 deserialize: safeHandlers.deserialize,
