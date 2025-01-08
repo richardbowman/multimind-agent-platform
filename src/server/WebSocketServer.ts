@@ -7,8 +7,7 @@ import Logger from '../helpers/logger';
 import { HOST, PORT, PROTOCOL } from '../helpers/config';
 import { MessageHandler } from './MessageHandler';
 import { BackendServices } from '../types/BackendServices';
-import type { ServerMethods, ClientMethods } from '../shared/RPCInterface';
-import type { ChatPost } from '../chat/chatClient';
+import { ClientMethods, ServerMethods } from 'src/web/client/src/shared/RPCInterface';
 
 export class WebSocketServer {
     private io: Server;
@@ -66,7 +65,7 @@ export class WebSocketServer {
                             return result;
                         } catch (error) {
                             Logger.error('Error in sendMessage:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     getMessages: async ({ channelId, threadId, limit }) => {
@@ -78,7 +77,7 @@ export class WebSocketServer {
                             });
                         } catch (error) {
                             Logger.error('Error in getMessages:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     getChannels: async () => {
@@ -86,7 +85,7 @@ export class WebSocketServer {
                             return await this.handler.handleGetChannels();
                         } catch (error) {
                             Logger.error('Error in getChannels:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     getThreads: async ({ channelId }) => {
@@ -94,7 +93,7 @@ export class WebSocketServer {
                             return await this.handler.handleGetThreads({ channelId });
                         } catch (error) {
                             Logger.error('Error in getThreads:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     getTasks: async ({ channelId, threadId }) => {
@@ -105,7 +104,7 @@ export class WebSocketServer {
                             });
                         } catch (error) {
                             Logger.error('Error in getTasks:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     getArtifacts: async ({ channelId, threadId }) => {
@@ -116,7 +115,7 @@ export class WebSocketServer {
                             });
                         } catch (error) {
                             Logger.error('Error in getArtifacts:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     getAllArtifacts: async () => {
@@ -124,7 +123,7 @@ export class WebSocketServer {
                             return await this.handler.handleGetAllArtifacts();
                         } catch (error) {
                             Logger.error('Error in getAllArtifacts:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     deleteArtifact: async (artifactId) => {
@@ -132,7 +131,7 @@ export class WebSocketServer {
                             return await this.handler.handleDeleteArtifact(artifactId);
                         } catch (error) {
                             Logger.error('Error in deleteArtifact:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     getLogs: async (logType) => {
@@ -140,7 +139,7 @@ export class WebSocketServer {
                             return await this.handler.handleGetLogs(logType);
                         } catch (error) {
                             Logger.error('Error in getLogs:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     getHandles: async () => {
@@ -148,7 +147,7 @@ export class WebSocketServer {
                             return await this.handler.handleGetHandles();
                         } catch (error) {
                             Logger.error('Error in getHandles:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     getSettings: async () => {
@@ -156,7 +155,7 @@ export class WebSocketServer {
                             return await this.handler.handleGetSettings();
                         } catch (error) {
                             Logger.error('Error in getSettings:', error);
-                            throw error;
+                            // throw error;
                         }
                     },
                     updateSettings: async (settings) => {
@@ -164,7 +163,7 @@ export class WebSocketServer {
                             return await this.handler.handleUpdateSettings(settings);
                         } catch (error) {
                             Logger.error('Error in updateSettings:', error);
-                            throw error;
+                            // throw error;
                         }
                     }
                 },
