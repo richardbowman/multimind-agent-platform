@@ -12,8 +12,9 @@
     "build": "tsc --noCheck",
     "build:web": "cd src/web/client && npm run build",
     "build:all": "npm run build && npm run build:web",
-    "electron:dev": "concurrently \"npm run start:client\" \"npm run electron:start\"",
-    "electron:start": "wait-on http://localhost:3000 && electron . --dev-mode",
+    "electron:dev": "concurrently \"npm run start:client\" \"npm run watch:ts\" \"npm run electron:start:dev\"",
+    "electron:start:dev": "wait-on http://localhost:3000 && nodemon --watch dist --exec \"electron . --dev-mode\"",
+    "watch:ts": "tsc --watch --noCheck",
     "electron:build": "node scripts/electron-build.js",
     "electron:package": "electron-builder build",
     "electron:package:all": "electron-builder build --mac --win --linux"
