@@ -87,8 +87,10 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
+    console.debug('WebSocketContext mounting');
     ipcService.connect();
     return () => {
+      console.debug('WebSocketContext unmounting');
       ipcService.disconnect();
     };
   }, []);

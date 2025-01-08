@@ -31,9 +31,11 @@ export default class WebSocketService extends BaseRPCService {
     : process.env.REACT_APP_WS_URL || 'ws://localhost:4001') {
     
     if (this.socket || this.isConnecting) {
+      console.debug('WebSocket: Already connected or connecting, skipping connection attempt');
       return; // Already connected or connecting
     }
     
+    console.debug('WebSocket: Starting new connection');
     this.isConnecting = true;
 
     this.socket = io(url, {
