@@ -1,106 +1,162 @@
 import { ipcMain, BrowserWindow } from 'electron';
+import { createBirpc } from 'birpc';
 import { BackendServices } from '../types/BackendServices';
 import { MessageHandler } from './MessageHandler';
 import { createSafeServerRPCHandlers } from './rpcUtils';
+import { ClientMethods, ServerMethods } from '../web/client/src/shared/RPCInterface';
+import { trackPromise } from '../helpers/errorHandler';
+import Logger from '../helpers/logger';
 
 export class ElectronIPCServer {
     private handler: MessageHandler;
+    private rpc: ReturnType<typeof createBirpc<ClientMethods, ServerMethods>>;
 
     constructor(private services: BackendServices, private mainWindow: BrowserWindow) {
         this.handler = new MessageHandler(services);
-        this.setupIpcHandlers();
+        this.setupRPC();
     }
 
-    private setupIpcHandlers() {
+    private setupRPC() {
         const safeHandlers = createSafeServerRPCHandlers();
 
-        // Messages
-        ipcMain.handle('send-message', async (_, message) => {
-            try {
-                const result = await this.handler.handleSendMessage(message);
-                this.mainWindow.webContents.send('birpc', safeHandlers.serialize({
-                    type: 'onMessage',
-                    data: [result]
-                }));
-                return result;
-            } catch (error) {
-                Logger.error('Error handling send-message:', error);
-                throw error;
+        this.rpc = createBirpc<ClientMethods, ServerMethods>(
+            {
+                // Implement all ServerMethods
+                sendMessage: async (message) => {
+                    try {
+                        return await trackPromise(this.handler.handleSendMessage(message));
+                    } catch (error) {
+                        Logger.error('Error in sendMessage:', error);
+                        throw error;
+                    }
+                },
+                getMessages: async ({ channelId, threadId, limit }) => {
+                    try {
+                        return await this.handler.handleGetMessages({
+                            channelId,
+                            threadId,
+                            limit
+                        });
+                    } catch (error) {
+                        Logger.error('Error in getMessages:', error);
+                        throw error;
+                    }
+                },
+                getChannels: async () => {
+                    try {
+                        return await this.handler.handleGetChannels();
+                    } catch (error) {
+                        Logger.error('Error in getChannels:', error);
+                        throw error;
+                    }
+                },
+                getTasks: async ({ channelId, threadId }) => {
+                    try {
+                        return await this.handler.handleGetTasks({
+                            channelId,
+                            threadId
+                        });
+                    } catch (error) {
+                        Logger.error('Error in getTasks:', error);
+                        throw error;
+                    }
+                },
+                getArtifacts: async ({ channelId, threadId }) => {
+                    try {
+                        return await this.handler.handleGetArtifacts({
+                            channelId,
+                            threadId
+                        });
+                    } catch (error) {
+                        Logger.error('Error in getArtifacts:', error);
+                        throw error;
+                    }
+                },
+                getAllArtifacts: async () => {
+                    try {
+                        return await this.handler.handleGetAllArtifacts();
+                    } catch (error) {
+                        Logger.error('Error in getAllArtifacts:', error);
+                        throw error;
+                    }
+                },
+                deleteArtifact: async (artifactId) => {
+                    try {
+                        return await this.handler.handleDeleteArtifact(artifactId);
+                    } catch (error) {
+                        Logger.error('Error in deleteArtifact:', error);
+                        throw error;
+                    }
+                },
+                getLogs: async (logType) => {
+                    try {
+                        return await this.handler.handleGetLogs(logType);
+                    } catch (error) {
+                        Logger.error('Error in getLogs:', error);
+                        throw error;
+                    }
+                },
+                getHandles: async () => {
+                    try {
+                        return await this.handler.handleGetHandles();
+                    } catch (error) {
+                        Logger.error('Error in getHandles:', error);
+                        throw error;
+                    }
+                },
+                getSettings: async () => {
+                    try {
+                        return await this.handler.handleGetSettings();
+                    } catch (error) {
+                        Logger.error('Error in getSettings:', error);
+                        throw error;
+                    }
+                },
+                updateSettings: async (settings) => {
+                    try {
+                        return await this.handler.handleUpdateSettings(settings);
+                    } catch (error) {
+                        Logger.error('Error in updateSettings:', error);
+                        throw error;
+                    }
+                }
+            },
+            {
+                ...safeHandlers,
+                post: (data) => this.mainWindow.webContents.send('birpc', data),
+                on: (handler) => {
+                    ipcMain.on('birpc', (_, data) => handler(data));
+                    return () => ipcMain.removeListener('birpc', handler);
+                }
             }
+        );
+
+        // Set up message receiving for the user client
+        this.services.chatClient.receiveMessages((post) => {
+            const rpcMessage = {
+                id: post.id,
+                channel_id: post.channel_id,
+                message: post.message,
+                user_id: post.user_id,
+                create_at: post.create_at,
+                directed_at: post.directed_at,
+                props: post.props,
+                thread_id: post.getRootId()
+            };
+            this.rpc.onMessage([rpcMessage]);
         });
 
         // Set up log update notifications
-        this.services.llmLogger.onLogUpdate((logEntry) => {
-            this.mainWindow.webContents.send('birpc', safeHandlers.serialize({
-                type: 'onLogUpdate',
-                data: {
-                    type: 'llm',
-                    entry: logEntry
-                }
-            }));
-        });
-
-        ipcMain.handle('get-messages', async (_, params) => {
-            return this.handler.handleGetMessages(params);
-        });
-
-        // Channels
-        ipcMain.handle('get-channels', async () => {
-            return this.handler.handleGetChannels();
-        });
-
-        // Tasks
-        ipcMain.handle('get-tasks', async (_, params) => {
-            return this.handler.handleGetTasks(params);
-        });
-
-        // Artifacts
-        ipcMain.handle('get-artifacts', async (_, params) => {
-            return this.handler.handleGetArtifacts(params);
-        });
-
-        ipcMain.handle('get-all-artifacts', async () => {
-            return this.handler.handleGetAllArtifacts();
-        });
-
-        ipcMain.handle('delete-artifact', async (_, artifactId) => {
-            const artifacts = await this.handler.handleDeleteArtifact(artifactId);
-            this.mainWindow.webContents.send('artifacts', artifacts);
-            return artifacts;
-        });
-
-        // Settings
-        ipcMain.handle('get-settings', async () => {
-            return this.handler.handleGetSettings();
-        });
-
-        ipcMain.handle('update-settings', async (_, settings) => {
-            return this.handler.handleUpdateSettings(settings);
-        });
-
-        // Logs
-        ipcMain.handle('get-logs', async (_, logType) => {
-            return this.handler.handleGetLogs(logType);
-        });
-
-        // Handles
-        ipcMain.handle('get-handles', async () => {
-            return this.handler.handleGetHandles();
+        this.services.llmLogger.on("log", (logEntry) => {
+            this.rpc.onLogUpdate({
+                type: 'llm',
+                entry: logEntry
+            });
         });
     }
 
     cleanup() {
         // Remove all IPC handlers
-        ipcMain.removeHandler('send-message');
-        ipcMain.removeHandler('get-messages');
-        ipcMain.removeHandler('get-channels');
-        ipcMain.removeHandler('get-tasks');
-        ipcMain.removeHandler('get-artifacts');
-        ipcMain.removeHandler('get-all-artifacts');
-        ipcMain.removeHandler('delete-artifact');
-        ipcMain.removeHandler('get-settings');
-        ipcMain.removeHandler('update-settings');
-        ipcMain.removeHandler('get-logs');
-        ipcMain.removeHandler('get-handles');
+        ipcMain.removeAllListeners('birpc');
     }
 }
