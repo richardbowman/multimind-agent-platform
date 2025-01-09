@@ -9,6 +9,7 @@ export abstract class BaseRPCService extends EventEmitter {
     
     // Direct RPC method implementations
     // Direct pass-through to RPC methods
+    getBackendStatus = () => this.rpc.getBackendStatus();
     sendMessage = (message: Partial<ClientMessage>) => this.rpc.sendMessage(message);
     getMessages = (channelId: string, threadId: string | null, limit: number = 50) => 
         this.rpc.getMessages({ channelId, threadId, limit });

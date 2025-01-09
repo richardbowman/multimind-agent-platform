@@ -33,7 +33,11 @@ export class MessageHandler implements ServerMethods {
 
         // Listen for configuration errors
         this.services.settings.on("configurationError", (error) => {
-            rpc.onConfigurationError({ message: error.message });
+            rpc.onBackendStatus({ 
+                configured: false, 
+                ready: false,
+                message: error.message 
+            });
         });
     }
     createWrapper(): ServerMethods {

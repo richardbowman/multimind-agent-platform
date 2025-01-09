@@ -20,5 +20,5 @@ export interface ServerMethods {
 export interface ClientMethods {
     onMessage(messages: ClientMessage[]): void;
     onLogUpdate(update: LogParam): void;
-    onConfigurationError(error: { message: string }): void;
+    onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }): void;
 }
