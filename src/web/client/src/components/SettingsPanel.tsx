@@ -48,17 +48,17 @@ export const SettingsPanel: React.FC = () => {
     };
 
     const handleSave = async () => {
-        // Validate required fields based on provider
+        // Get all required fields from metadata
+        const missingFields = CONFIG_METADATA
+            .filter(metadata => metadata.required)
+            .filter(metadata => {
+                const value = getNestedValue(settings, metadata.key);
+                return !value && value !== 0 && value !== false;
+            })
+            .map(metadata => metadata.label);
+
+        // Add provider-specific required fields
         const provider = settings.providers?.chat;
-        let missingFields: string[] = [];
-
-        // Common required fields
-        if (!settings.port) missingFields.push('Port');
-        if (!settings.wsUrl) missingFields.push('WebSocket URL');
-        if (!settings.chatModel) missingFields.push('Chat Model');
-        if (!settings.embeddingModel) missingFields.push('Embedding Model');
-
-        // Provider-specific validation
         if (provider === 'anthropic' && (!settings.anthropic?.api?.key)) {
             missingFields.push('Anthropic API Key');
         }

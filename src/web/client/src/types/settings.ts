@@ -7,6 +7,7 @@ export interface ConfigMetadata {
     options?: string[];
     defaultValue?: any;
     sensitive?: boolean; // For API keys etc
+    required?: boolean;  // Whether this field is required
 }
 
 export interface Settings extends Record<string, any> {
@@ -21,13 +22,15 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         type: 'select',
         category: 'LLM Settings',
         options: ['lmstudio', 'anthropic', 'bedrock'],
-        defaultValue: 'lmstudio'
+        defaultValue: 'lmstudio',
+        required: true
     },
     {
         key: 'chatModel',
         label: 'Chat Model',
         type: 'string',
-        category: 'LLM Settings'
+        category: 'LLM Settings',
+        required: true
     },
     {
         key: 'llmWeakModel',
