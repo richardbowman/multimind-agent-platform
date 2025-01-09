@@ -23,7 +23,46 @@ export async function initializeConfig() {
     await settingsManager.load();
     Logger.info(`Loading config from ${settingsManager.getBaseDir()}`);
 
-    const settings = settingsManager.getSettings();
+    let settings = settingsManager.getSettings();
+
+    // Override settings with environment variables
+    for (const [key, value] of Object.entries(process.env)) {
+        const lowerKey = key.toLowerCase();
+        
+        // Handle nested settings with underscores (e.g. BEDROCK_MAX_TOKENS_PER_MINUTE)
+        const parts = lowerKey.split('_');
+        let current = settings;
+        
+        for (let i = 0; i < parts.length - 1; i++) {
+            const part = parts[i];
+            if (!(part in current)) {
+                current[part] = {};
+            }
+            if (typeof current[part] !== 'object') {
+                current[part] = {};
+            }
+            current = current[part];
+        }
+        
+        const lastPart = parts[parts.length - 1];
+        // Convert value to number if it looks like one
+        const numValue = Number(value);
+        if (!isNaN(numValue) && value !== '') {
+            current[lastPart] = numValue;
+        } else if (value?.toLowerCase() === 'true') {
+            current[lastPart] = true;
+        } else if (value?.toLowerCase() === 'false') {
+            current[lastPart] = false;
+        } else if (value) {
+            current[lastPart] = value;
+        }
+    }
+
+    // Update settings in the manager
+    await settingsManager.updateSettings(settings);
+
+    // Get final settings
+    settings = settingsManager.getSettings();
 
     // Inject settings into process.env for backwards compatibility
     Object.entries(settings).forEach(([key, value]) => {
