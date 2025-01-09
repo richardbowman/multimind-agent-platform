@@ -28,15 +28,6 @@ dotenv.config({ path: path.join(baseDir, '.env.local'), override: true });
 Logger.info(`Loading config from ${baseDir}`);
 Logger.info(JSON.stringify(process.env, undefined, " "));
 
-export const WEB_RESEARCH_CHANNEL_ID = process.env.WEB_RESEARCH_CHANNEL_ID!;
-export const RESEARCHER_TOKEN = process.env.RESEARCHER_TOKEN!;
-export const RESEARCHER_USER_ID = process.env.RESEARCHER_USER_ID!;
-
-export const PROJECTS_CHANNEL_ID = process.env.PROJECTS_CHANNEL_ID!;
-
-export const CONTENT_CREATION_CHANNEL_ID = process.env.CONTENT_CREATION_CHANNEL_ID!;
-export const CONTENT_MANAGER_USER_ID = process.env.CONTENT_MANAGER_USER_ID!;
-export const CONTENT_WRITER_USER_ID = process.env.CONTENT_WRITER_USER_ID!;
 
 // Channel and User IDs
 export const WEB_RESEARCH_CHANNEL_ID = process.env.WEB_RESEARCH_CHANNEL_ID!;
@@ -58,35 +49,35 @@ export const RESEARCH_MANAGER_USER_ID = process.env.RESEARCH_MANAGER_USER_ID!;
 export const RESEARCH_MANAGER_TOKEN_ID = process.env.RESEARCH_MANAGER_TOKEN_ID!;
 
 // Server settings
-export const HOST = process.env.HOST || 'localhost';
-export const PORT = parseInt(process.env.PORT || '4001');
-export const PROTOCOL = process.env.PROTOCOL || 'https';
+export let HOST = process.env.HOST || 'localhost';
+export let PORT = parseInt(process.env.PORT || '4001');
+export let PROTOCOL = process.env.PROTOCOL || 'https';
 
 // LLM Provider settings
-export const LLM_PROVIDER = process.env.LLM_PROVIDER || 'lmstudio';
-export const CHAT_MODEL = process.env.CHAT_MODEL || '';
-export const LLM_WEAK_MODEL = process.env.LLM_WEAK_MODEL || '';
-export const LLM_HEAVY_MODEL = process.env.LLM_HEAVY_MODEL || '';
+export let LLM_PROVIDER = process.env.LLM_PROVIDER || 'lmstudio';
+export let CHAT_MODEL = process.env.CHAT_MODEL || '';
+export let LLM_WEAK_MODEL = process.env.LLM_WEAK_MODEL || '';
+export let LLM_HEAVY_MODEL = process.env.LLM_HEAVY_MODEL || '';
 export const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL!;
 export const EMBEDDING_PROVIDER = process.env.EMBEDDING_PROVIDER || process.env.LLM_PROVIDER;
 export const LM_STUDIO_BASE_URL = process.env.LM_STUDIO_BASE_URL!;
 
 // API Keys
-export const LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY || '';
-export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
+export let LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY || '';
+export let ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
 export const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-opus-20240229';
 
 // Rate Limiting
-export const ANTHROPIC_MAX_TOKENS_PER_MINUTE = parseInt(process.env.ANTHROPIC_MAX_TOKENS_PER_MINUTE || '50000');
-export const ANTHROPIC_DEFAULT_DELAY_MS = parseInt(process.env.ANTHROPIC_DEFAULT_DELAY_MS || '1000');
+export let ANTHROPIC_MAX_TOKENS_PER_MINUTE = parseInt(process.env.ANTHROPIC_MAX_TOKENS_PER_MINUTE || '50000');
+export let ANTHROPIC_DEFAULT_DELAY_MS = parseInt(process.env.ANTHROPIC_DEFAULT_DELAY_MS || '1000');
 export const ANTHROPIC_WINDOW_SIZE_MS = parseInt(process.env.ANTHROPIC_WINDOW_SIZE_MS || '60000');
-export const BEDROCK_MAX_TOKENS_PER_MINUTE = parseInt(process.env.BEDROCK_MAX_TOKENS_PER_MINUTE || '50000');
+export let BEDROCK_MAX_TOKENS_PER_MINUTE = parseInt(process.env.BEDROCK_MAX_TOKENS_PER_MINUTE || '50000');
 export const BEDROCK_DEFAULT_DELAY_MS = parseInt(process.env.BEDROCK_DEFAULT_DELAY_MS || '1000');
 export const BEDROCK_WINDOW_SIZE_MS = parseInt(process.env.BEDROCK_WINDOW_SIZE_MS || '60000');
 
 // Vector DB Settings
-export const VECTOR_DATABASE_TYPE = process.env.VECTOR_DATABASE_TYPE || 'vectra';
-export const CHROMADB_URL = process.env.CHROMADB_URL || '';
+export let VECTOR_DATABASE_TYPE = process.env.VECTOR_DATABASE_TYPE || 'vectra';
+export let CHROMADB_URL = process.env.CHROMADB_URL || '';
 export const CHROMA_COLLECTION = process.env.CHROMA_COLLECTION!;
 
 // Search Settings
@@ -110,3 +101,21 @@ export const getUISettings = () => ({
     vectorDatabaseType: VECTOR_DATABASE_TYPE,
     chromadbUrl: CHROMADB_URL
 });
+
+export const setSettings = (settings: any) {
+    // Update environment variables based on settings
+    if (settings.llmProvider) LLM_PROVIDER = settings.llmProvider;
+    if (settings.chatModel) CHAT_MODEL = settings.chatModel;
+    if (settings.llmWeakModel) LLM_WEAK_MODEL = settings.llmWeakModel;
+    if (settings.llmHeavyModel) LLM_HEAVY_MODEL = settings.llmHeavyModel;
+    if (settings.lmstudioApiKey) LMSTUDIO_API_KEY = settings.lmstudioApiKey;
+    if (settings.anthropicApiKey) ANTHROPIC_API_KEY = settings.anthropicApiKey;
+    if (settings.anthropicMaxTokensPerMinute) ANTHROPIC_MAX_TOKENS_PER_MINUTE = settings.anthropicMaxTokensPerMinute.toString();
+    if (settings.anthropicDefaultDelayMs) ANTHROPIC_DEFAULT_DELAY_MS = settings.anthropicDefaultDelayMs.toString();
+    if (settings.bedrockMaxTokensPerMinute) BEDROCK_MAX_TOKENS_PER_MINUTE = settings.bedrockMaxTokensPerMinute.toString();
+    if (settings.vectorDatabaseType) VECTOR_DATABASE_TYPE = settings.vectorDatabaseType;
+    if (settings.chromadbUrl) CHROMADB_URL = settings.chromadbUrl;
+    if (settings.host) HOST = settings.host;
+    if (settings.port) PORT = settings.port.toString();
+    if (settings.protocol) PROTOCOL = settings.protocol;
+}
