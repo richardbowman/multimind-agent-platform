@@ -35,6 +35,8 @@ export class StartupHandler implements Partial<ServerMethods> {
     }
 
     async updateSettings(settings: any): Promise<any> {
+        console.log('update settings called');
+        
         // Update environment variables based on settings
         if (settings.llmProvider) process.env.LLM_PROVIDER = settings.llmProvider;
         if (settings.chatModel) process.env.CHAT_MODEL = settings.chatModel;
@@ -50,11 +52,6 @@ export class StartupHandler implements Partial<ServerMethods> {
         if (settings.host) process.env.HOST = settings.host;
         if (settings.port) process.env.PORT = settings.port.toString();
         if (settings.protocol) process.env.PROTOCOL = settings.protocol;
-
-        // Update the services settings
-        if (this.services) {
-            this.services.settings = { ...this.services.settings, ...settings };
-        }
 
         // Signal that settings have changed and backend needs reinitialization
         return { 
