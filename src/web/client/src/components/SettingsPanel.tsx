@@ -1,23 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { useWebSocket } from '../contexts/WebSocketContext';
-
-interface Settings {
-    provider: string;
-    model: string;
-    apiKey: string;
-}
+import { Settings, CONFIG_METADATA, ConfigMetadata } from '../types/settings';
+import './SettingsPanel.css';
 
 export const SettingsPanel: React.FC = () => {
-    const [settings, setSettings] = useState<Settings>({
-        provider: 'openai',
-        model: 'gpt-4',
-        apiKey: ''
-    });
-
+    const [settings, setSettings] = useState<Settings>({});
     const { getSettings, updateSettings } = useWebSocket();
 
     useEffect(() => {
-        // Load initial settings
         const loadSettings = async () => {
             try {
                 const currentSettings = await getSettings();
@@ -31,48 +21,81 @@ export const SettingsPanel: React.FC = () => {
         loadSettings();
     }, [getSettings]);
 
+    const handleChange = (key: string, value: string | number) => {
+        const metadata = CONFIG_METADATA.find(m => m.key === key);
+        const processedValue = metadata?.type === 'number' ? Number(value) : value;
+        setSettings(prev => ({ ...prev, [key]: processedValue }));
+    };
+
     const handleSave = () => {
         updateSettings(settings);
     };
+
+    const renderInput = (metadata: ConfigMetadata) => {
+        const value = settings[metadata.key] ?? metadata.defaultValue ?? '';
+
+        switch (metadata.type) {
+            case 'select':
+                return (
+                    <select
+                        value={value}
+                        onChange={(e) => handleChange(metadata.key, e.target.value)}
+                    >
+                        {metadata.options?.map(option => (
+                            <option key={option} value={option}>
+                                {option}
+                            </option>
+                        ))}
+                    </select>
+                );
+            case 'number':
+                return (
+                    <input
+                        type="number"
+                        value={value}
+                        onChange={(e) => handleChange(metadata.key, e.target.value)}
+                        placeholder={`Enter ${metadata.label.toLowerCase()}`}
+                    />
+                );
+            default:
+                return (
+                    <input
+                        type={metadata.sensitive ? 'password' : 'text'}
+                        value={value}
+                        onChange={(e) => handleChange(metadata.key, e.target.value)}
+                        placeholder={`Enter ${metadata.label.toLowerCase()}`}
+                    />
+                );
+        }
+    };
+
+    // Group settings by category
+    const categories = CONFIG_METADATA.reduce((acc, metadata) => {
+        if (!acc[metadata.category]) {
+            acc[metadata.category] = [];
+        }
+        acc[metadata.category].push(metadata);
+        return acc;
+    }, {} as Record<string, ConfigMetadata[]>);
 
     return (
         <div className="settings-panel">
             <h2>Settings</h2>
             <div className="settings-form">
-                <div className="form-group">
-                    <label>Provider:</label>
-                    <select 
-                        value={settings.provider}
-                        onChange={(e) => setSettings({...settings, provider: e.target.value})}
-                    >
-                        <option value="openai">OpenAI</option>
-                        <option value="anthropic">Anthropic</option>
-                        <option value="azure">Azure OpenAI</option>
-                    </select>
-                </div>
-
-                <div className="form-group">
-                    <label>Model:</label>
-                    <select
-                        value={settings.model}
-                        onChange={(e) => setSettings({...settings, model: e.target.value})}
-                    >
-                        <option value="gpt-4">GPT-4</option>
-                        <option value="gpt-3.5-turbo">GPT-3.5 Turbo</option>
-                        <option value="claude-2">Claude 2</option>
-                    </select>
-                </div>
-
-                <div className="form-group">
-                    <label>API Key:</label>
-                    <input
-                        type="password"
-                        value={settings.apiKey}
-                        onChange={(e) => setSettings({...settings, apiKey: e.target.value})}
-                        placeholder="Enter your API key"
-                    />
-                </div>
-
+                {Object.entries(categories).map(([category, metadataList]) => (
+                    <section key={category} className="settings-section">
+                        <h3>{category}</h3>
+                        {metadataList.map(metadata => (
+                            <div key={metadata.key} className="form-group">
+                                <label>{metadata.label}:</label>
+                                {renderInput(metadata)}
+                                {metadata.description && (
+                                    <small className="description">{metadata.description}</small>
+                                )}
+                            </div>
+                        ))}
+                    </section>
+                ))}
                 <button className="save-button" onClick={handleSave}>
                     Save Settings
                 </button>
