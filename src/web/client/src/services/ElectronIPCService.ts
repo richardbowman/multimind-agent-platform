@@ -5,8 +5,12 @@ import { createSafeRPCHandlers } from '../shared/rpcUtils';
 import { ClientMessage } from '../shared/IPCInterface';
 
 export class ElectronIPCService extends BaseRPCService {
+    status: { configured: boolean; ready: boolean; message?: string; };
+    connected: boolean;
+
     constructor() {
         super();
+        this.connected = false;
         if (!(window as any).electron) {
             throw new Error('Electron IPC not available');
         }
@@ -25,10 +29,9 @@ export class ElectronIPCService extends BaseRPCService {
                     this.emit('onLogUpdate', update);
                 },
                 onBackendStatus: (status: { configured: boolean; ready: boolean; message?: string }) => {
-                    if (status.configured) {
-                        this.emit('connected');
-                    } else {
-                        this.emit('needsConfig', { needsConfig: true });
+                    this.status = status;
+                    if (this.connected) {
+                        this.fireStatus();
                     }
                 }
             },
@@ -45,9 +48,19 @@ export class ElectronIPCService extends BaseRPCService {
             }
         );
     }
+    fireStatus() {
+        if (this.status.configured) {
+            this.emit('connected');
+        } else {
+            this.emit('needsConfig', { needsConfig: true });
+        }
+    }
 
     connect(): void {
-        
+        this.connected = true;
+        if (this.status) {
+            this.fireStatus();
+        }
     }
 
     disconnect(): void {
