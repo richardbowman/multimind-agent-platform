@@ -88,12 +88,10 @@ export default class LMStudioService extends BaseLLMService {
                 Logger.info("LLaMA model loaded.");
             }
         } catch (error) {
-            // Extract available models from error message if possible
-            const errorMsg = error.toString();
-            const availableModels = errorMsg.match(/·\s([^\n]+)/g)?.map(m => m.replace('· ', '').trim()) || [];
-            
+            const loaded = await this.lmStudioClient.llm.listLoaded();
+            const availableModels = loaded.map(model => model.identifier);
             const configError = new ConfigurationError(
-                `LLM model not found. Available models:\n${availableModels.map(m => `- ${m}`).join('\n')}`
+                `LLM model "${modelPath}" not found. Available models:\n${availableModels.map(m => `- ${m}`).join('\n')}`
             );
             Logger.error("Failed to initialize LLaMA model:", configError);
             throw configError;
