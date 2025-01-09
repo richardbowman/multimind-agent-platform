@@ -17,7 +17,7 @@ module.exports = {
         use: {
           loader: 'ts-loader',
           options: {
-            configFile: 'tsconfig.json',
+            configFile: 'src/web/client/tsconfig.json',
             transpileOnly: true
           }
         },
