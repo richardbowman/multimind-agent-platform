@@ -6,7 +6,7 @@ import { AsyncQueue } from '../helpers/asyncQueue';
 import { EventEmitter } from 'events';
 import { app } from 'electron';
 
-export interface Settings extends Record<string, any> {
+export interface Settings {
     // Server settings
     host: string;
     port: number;
@@ -14,7 +14,10 @@ export interface Settings extends Record<string, any> {
     wsUrl: string;
 
     // LLM Provider settings
-    llmProvider: string;
+    providers: {
+        chat: string;
+    },
+
     chatModel: string;
     llmWeakModel: string;
     llmHeavyModel: string;
@@ -24,9 +27,12 @@ export interface Settings extends Record<string, any> {
     contextSize: number;
 
     // API Keys
-    lmstudioApiKey: string;
-    anthropicApiKey: string;
-    anthropicModel: string;
+    anthropic: {
+        api: {
+            key: string;
+        },
+        model: string;
+    }
 
     // Rate Limiting
     anthropicMaxTokensPerMinute: number;
@@ -83,6 +89,7 @@ export class SettingsManager extends EventEmitter {
         this.fileQueue = new AsyncQueue();
         this.baseDir = this.determineBaseDir();
         this.settingsFile = path.join(getDataPath(), 'settings.json');
+        console.log(`Settings will be written to ${this.settingsFile}`)
     }
 
     private determineBaseDir(): string {
