@@ -11,6 +11,7 @@ import { BackendServices } from '../types/BackendServices';
 import { ClientMethods, ServerMethods } from 'src/web/client/src/shared/RPCInterface';
 import { LLMLogEntry } from 'src/llm/LLMLogger';
 import { ClientChannel, ClientMessage } from 'src/web/client/src/shared/IPCInterface';
+import { getUISettings } from '../helpers/config';
 
 export class WebSocketServer {
     private io: Server;
@@ -41,9 +42,15 @@ export class WebSocketServer {
         this.io.on('connection', (socket) => {
             Logger.info('WebSocket: New client connection established');
 
+            // Add settings handlers
+            const handlers = {
+                ...this.handler.createWrapper(),
+                getSettings: () => getUISettings()
+            };
+
             // Create birpc instance for this connection
             const rpc = createBirpc<ClientMethods, ServerMethods>(
-                this.handler.createWrapper(),
+                handlers,
                 {
                     ...createSafeServerRPCHandlers(),
                     post: (data) => socket.emit('birpc', data),

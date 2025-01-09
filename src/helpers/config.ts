@@ -79,6 +79,44 @@ export const ANTHROPIC_MAX_TOKENS_PER_MINUTE = parseInt(process.env.ANTHROPIC_MA
 export const ANTHROPIC_DEFAULT_DELAY_MS = parseInt(process.env.ANTHROPIC_DEFAULT_DELAY_MS || '1000');
 export const ANTHROPIC_WINDOW_SIZE_MS = parseInt(process.env.ANTHROPIC_WINDOW_SIZE_MS || '60000');
 
+// Server settings
 export const HOST = process.env.HOST || 'localhost';
 export const PORT = parseInt(process.env.PORT || '4001');
 export const PROTOCOL = process.env.PROTOCOL || 'https';
+
+// LLM Provider settings
+export const LLM_PROVIDER = process.env.LLM_PROVIDER || 'lmstudio';
+export const CHAT_MODEL = process.env.CHAT_MODEL || '';
+export const LLM_WEAK_MODEL = process.env.LLM_WEAK_MODEL || '';
+export const LLM_HEAVY_MODEL = process.env.LLM_HEAVY_MODEL || '';
+
+// API Keys
+export const LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY || '';
+export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
+
+// Rate Limiting
+export const ANTHROPIC_MAX_TOKENS_PER_MINUTE = parseInt(process.env.ANTHROPIC_MAX_TOKENS_PER_MINUTE || '50000');
+export const ANTHROPIC_DEFAULT_DELAY_MS = parseInt(process.env.ANTHROPIC_DEFAULT_DELAY_MS || '1000');
+export const BEDROCK_MAX_TOKENS_PER_MINUTE = parseInt(process.env.BEDROCK_MAX_TOKENS_PER_MINUTE || '50000');
+
+// Vector DB Settings
+export const VECTOR_DATABASE_TYPE = process.env.VECTOR_DATABASE_TYPE || 'vectra';
+export const CHROMADB_URL = process.env.CHROMADB_URL || '';
+
+// Export settings object for UI consumption
+export const getUISettings = () => ({
+    host: HOST,
+    port: PORT,
+    protocol: PROTOCOL,
+    llmProvider: LLM_PROVIDER,
+    chatModel: CHAT_MODEL,
+    llmWeakModel: LLM_WEAK_MODEL,
+    llmHeavyModel: LLM_HEAVY_MODEL,
+    lmstudioApiKey: LMSTUDIO_API_KEY,
+    anthropicApiKey: ANTHROPIC_API_KEY,
+    anthropicMaxTokensPerMinute: ANTHROPIC_MAX_TOKENS_PER_MINUTE,
+    anthropicDefaultDelayMs: ANTHROPIC_DEFAULT_DELAY_MS,
+    bedrockMaxTokensPerMinute: BEDROCK_MAX_TOKENS_PER_MINUTE,
+    vectorDatabaseType: VECTOR_DATABASE_TYPE,
+    chromadbUrl: CHROMADB_URL
+});
