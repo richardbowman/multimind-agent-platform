@@ -4,7 +4,7 @@ import * as path from 'path';
 export class MainWindow {
     private window: BrowserWindow;
 
-    constructor(hasConfigError: boolean = false) {
+    constructor() {
         this.window = new BrowserWindow({
             width: 1200,
             height: 800,
@@ -14,13 +14,6 @@ export class MainWindow {
                 nodeIntegration: false
             }
         });
-
-        if (hasConfigError) {
-            // Configuration error will be handled through RPC after connection is established
-            this.window.webContents.on('did-finish-load', () => {
-                this.window.webContents.emit('configuration-error-ready');
-            });
-        }
     }
 
     async show() {

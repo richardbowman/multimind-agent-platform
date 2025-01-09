@@ -47,9 +47,9 @@ app.whenReady().then(async () => {
         if (error instanceof ConfigurationError) {
             // For configuration errors, show the main window with settings tab
             splashWindow.setMessage('Configuration needed...');
-            mainWindow = new MainWindow(true);
+            mainWindow = new MainWindow();
             await mainWindow.show();
-            setupIpcHandlers();
+            setupIpcHandlers(true);
             splashWindow.close();
         } else {
             // For other errors, show error and quit
@@ -65,8 +65,8 @@ app.whenReady().then(async () => {
 
 let ipcServer: ElectronIPCServer;
 
-function setupIpcHandlers() {
-    ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow());
+function setupIpcHandlers(hasConfigError: boolean = false) {
+    ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow(), hasConfigError);
 }
 
 app.on('window-all-closed', () => {
