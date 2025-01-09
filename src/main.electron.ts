@@ -33,7 +33,7 @@ app.whenReady().then(async () => {
         
         // Create main window
         splashWindow.setMessage('Loading main interface...');
-        mainWindow = new MainWindow(error instanceof ConfigurationError);
+        mainWindow = new MainWindow();
         await mainWindow.show();
 
         // Set up IPC handlers
@@ -43,7 +43,6 @@ app.whenReady().then(async () => {
         splashWindow.close();
 
     } catch (error) {
-        Logger.error('Error in main:', error);
         Logger.error('Error in main:', error);
         if (error instanceof ConfigurationError) {
             // For configuration errors, show the main window with settings tab
