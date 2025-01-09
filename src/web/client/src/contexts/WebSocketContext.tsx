@@ -19,6 +19,7 @@ interface WebSocketContextType {
   artifacts: Artifact[];
   handles: Array<{id: string, handle: string}>;
   isLoading: boolean;
+  needsConfig: boolean;
   currentChannelId: string | null;
   setCurrentChannelId: (channelId: string | null) => void;
   currentThreadId: string | null;
@@ -86,6 +87,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     api: []
   });
   const [isLoading, setIsLoading] = useState(true);
+  const [needsConfig, setNeedsConfig] = useState(false);
 
   useEffect(() => {
     // Only connect if we're not in an unmounting cycle
@@ -95,12 +97,17 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       // Listen for connected event before fetching data
       ipcService.once('connected', () => {
         console.debug('WebSocketContext: received connected event');
+        setNeedsConfig(false);
         Promise.all([
           fetchChannels(),
           fetchHandles()
         ]).catch(error => {
           console.error('Error fetching initial data:', error);
         });
+      });
+
+      ipcService.on('needsConfig', ({ needsConfig }) => {
+        setNeedsConfig(needsConfig);
       });
 
       // Set up message and log update handlers
@@ -237,6 +244,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       currentThreadId,
       setCurrentThreadId,
       isLoading,
+      needsConfig,
       getSettings: () => ipcService.getSettings(),
       updateSettings: (settings: any) => ipcService.updateSettings(settings)
     }}>
