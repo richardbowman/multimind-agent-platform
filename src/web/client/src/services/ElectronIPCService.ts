@@ -28,7 +28,7 @@ export class ElectronIPCService extends BaseRPCService {
                     if (status.configured) {
                         this.emit('connected');
                     } else {
-                        this.emit('needsConfig');
+                        this.emit('needsConfig', { needsConfig: true });
                     }
                 }
             },

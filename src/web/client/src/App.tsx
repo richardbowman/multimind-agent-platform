@@ -12,8 +12,14 @@ import { WebSocketProvider } from './contexts/WebSocketContext';
 import './App.css';
 
 const AppContent: React.FC = () => {
-    const { currentChannelId, currentThreadId, setCurrentThreadId } = useWebSocket();
+    const { currentChannelId, currentThreadId, setCurrentThreadId, needsConfig } = useWebSocket();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
+
+    React.useEffect(() => {
+        if (needsConfig) {
+            setCurrentTab('settings');
+        }
+    }, [needsConfig]);
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('llm');
 
     return (
@@ -22,18 +28,21 @@ const AppContent: React.FC = () => {
                 <button 
                     className={`tab-button ${currentTab === 'chat' ? 'active' : ''}`}
                     onClick={() => setCurrentTab('chat')}
+                    disabled={needsConfig}
                 >
                     Chat
                 </button>
                 <button 
                     className={`tab-button ${currentTab === 'artifacts' ? 'active' : ''}`}
                     onClick={() => setCurrentTab('artifacts')}
+                    disabled={needsConfig}
                 >
                     Artifacts
                 </button>
                 <button 
                     className={`tab-button ${currentTab === 'logs' ? 'active' : ''}`}
                     onClick={() => setCurrentTab('logs')}
+                    disabled={needsConfig}
                 >
                     Logs
                 </button>
