@@ -2,31 +2,19 @@
 const dotenv = require('dotenv');
 import Logger from './logger';
 import * as path from 'path';
-import { app } from 'electron';
+import { SettingsManager } from '../tools/settingsManager';
 
-// Determine the base directory for config files
-let baseDir = '.';
-try {
-    // Check if we're running in Electron
-    if (process.versions['electron']) {
-       if (app) {
-            const isDev = !app.isPackaged;
-            // When packaged, configs are in resources/app.asar
-            baseDir = isDev ? '.' : path.join(app.getAppPath(), "dist");
-            console.log(`Running in Electron (${isDev ? 'dev' : 'prod'}), using base dir: ${baseDir}`);
-        }
-    }
-} catch (error) {
-    console.log('Not running in Electron, using current directory for config', error);
-}
+const settingsManager = new SettingsManager();
 
 // Load environment variables from config files
-dotenv.config({ path: path.join(baseDir, 'env.defaults') });
-dotenv.config({ path: path.join(baseDir, '.env') });
-dotenv.config({ path: path.join(baseDir, '.env.local'), override: true });
+dotenv.config({ path: path.join(settingsManager.getBaseDir(), 'env.defaults') });
+dotenv.config({ path: path.join(settingsManager.getBaseDir(), '.env') });
+dotenv.config({ path: path.join(settingsManager.getBaseDir(), '.env.local'), override: true });
 
-Logger.info(`Loading config from ${baseDir}`);
-Logger.info(JSON.stringify(process.env, undefined, " "));
+// Initialize settings
+settingsManager.load().catch(err => Logger.error('Error loading settings:', err));
+
+Logger.info(`Loading config from ${settingsManager.getBaseDir()}`);
 
 
 // Channel and User IDs
@@ -84,38 +72,12 @@ export const CHROMA_COLLECTION = process.env.CHROMA_COLLECTION!;
 export const MAX_SEARCHES = parseInt(process.env.MAX_SEARCHES!, 10);
 export const SEARXNG_URL = process.env.SEARXNG_URL!;
 
-// Export settings object for UI consumption
-export const getUISettings = () => ({
-    host: HOST,
-    port: PORT,
-    protocol: PROTOCOL,
-    llmProvider: LLM_PROVIDER,
-    chatModel: CHAT_MODEL,
-    llmWeakModel: LLM_WEAK_MODEL,
-    llmHeavyModel: LLM_HEAVY_MODEL,
-    lmstudioApiKey: LMSTUDIO_API_KEY,
-    anthropicApiKey: ANTHROPIC_API_KEY,
-    anthropicMaxTokensPerMinute: ANTHROPIC_MAX_TOKENS_PER_MINUTE,
-    anthropicDefaultDelayMs: ANTHROPIC_DEFAULT_DELAY_MS,
-    bedrockMaxTokensPerMinute: BEDROCK_MAX_TOKENS_PER_MINUTE,
-    vectorDatabaseType: VECTOR_DATABASE_TYPE,
-    chromadbUrl: CHROMADB_URL
-});
+export const settingsManager = settingsManager;
 
-export const setSettings = (settings: any) {
-    // Update environment variables based on settings
-    if (settings.llmProvider) LLM_PROVIDER = settings.llmProvider;
-    if (settings.chatModel) CHAT_MODEL = settings.chatModel;
-    if (settings.llmWeakModel) LLM_WEAK_MODEL = settings.llmWeakModel;
-    if (settings.llmHeavyModel) LLM_HEAVY_MODEL = settings.llmHeavyModel;
-    if (settings.lmstudioApiKey) LMSTUDIO_API_KEY = settings.lmstudioApiKey;
-    if (settings.anthropicApiKey) ANTHROPIC_API_KEY = settings.anthropicApiKey;
-    if (settings.anthropicMaxTokensPerMinute) ANTHROPIC_MAX_TOKENS_PER_MINUTE = settings.anthropicMaxTokensPerMinute.toString();
-    if (settings.anthropicDefaultDelayMs) ANTHROPIC_DEFAULT_DELAY_MS = settings.anthropicDefaultDelayMs.toString();
-    if (settings.bedrockMaxTokensPerMinute) BEDROCK_MAX_TOKENS_PER_MINUTE = settings.bedrockMaxTokensPerMinute.toString();
-    if (settings.vectorDatabaseType) VECTOR_DATABASE_TYPE = settings.vectorDatabaseType;
-    if (settings.chromadbUrl) CHROMADB_URL = settings.chromadbUrl;
-    if (settings.host) HOST = settings.host;
-    if (settings.port) PORT = settings.port.toString();
-    if (settings.protocol) PROTOCOL = settings.protocol;
-}
+// Export settings object for UI consumption
+export const getUISettings = () => settingsManager.getSettings();
+
+// Update settings
+export const setSettings = async (settings: Partial<Settings>) => {
+    await settingsManager.updateSettings(settings);
+};
