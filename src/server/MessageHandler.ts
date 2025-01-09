@@ -32,13 +32,13 @@ export class MessageHandler implements ServerMethods {
         });
 
         // Listen for configuration errors
-        this.services.settings.on("configurationError", (error) => {
-            rpc.onBackendStatus({ 
-                configured: false, 
-                ready: false,
-                message: error.message 
-            });
-        });
+        // this.services.settings.on("configurationError", (error) => {
+        //     rpc.onBackendStatus({ 
+        //         configured: false, 
+        //         ready: false,
+        //         message: error.message 
+        //     });
+        // });
     }
     createWrapper(): ServerMethods {
         const handler = this;
@@ -62,9 +62,6 @@ export class MessageHandler implements ServerMethods {
     constructor(private services: BackendServices) {
         if (!services) {
             throw new Error('Backend services must be provided');
-        }
-        if (!services.chatClient) {
-            throw new Error('Chat client service is required');
         }
     }
 
