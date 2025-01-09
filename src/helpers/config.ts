@@ -38,46 +38,24 @@ export const CONTENT_CREATION_CHANNEL_ID = process.env.CONTENT_CREATION_CHANNEL_
 export const CONTENT_MANAGER_USER_ID = process.env.CONTENT_MANAGER_USER_ID!;
 export const CONTENT_WRITER_USER_ID = process.env.CONTENT_WRITER_USER_ID!;
 
-export const CHROMADB_URL = process.env.CHROMADB_URL;
-export const CHROMA_COLLECTION = process.env.CHROMA_COLLECTION!;
-export const LM_STUDIO_BASE_URL = process.env.LM_STUDIO_BASE_URL!;
-export const CHAT_MODEL = process.env.CHAT_MODEL!;
-export const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL!;
-export const MAX_SEARCHES = parseInt(process.env.MAX_SEARCHES!, 10);
-export const SEARXNG_URL = process.env.SEARXNG_URL!;
-export const RESEARCH_MANAGER_USER_ID = process.env.RESEARCH_MANAGER_USER_ID!;
-export const RESEARCH_MANAGER_TOKEN_ID = process.env.RESEARCH_MANAGER_TOKEN_ID!;
-
+// Channel and User IDs
+export const WEB_RESEARCH_CHANNEL_ID = process.env.WEB_RESEARCH_CHANNEL_ID!;
+export const RESEARCHER_TOKEN = process.env.RESEARCHER_TOKEN!;
+export const RESEARCHER_USER_ID = process.env.RESEARCHER_USER_ID!;
+export const PROJECTS_CHANNEL_ID = process.env.PROJECTS_CHANNEL_ID!;
+export const CONTENT_CREATION_CHANNEL_ID = process.env.CONTENT_CREATION_CHANNEL_ID!;
+export const CONTENT_MANAGER_USER_ID = process.env.CONTENT_MANAGER_USER_ID!;
+export const CONTENT_WRITER_USER_ID = process.env.CONTENT_WRITER_USER_ID!;
 export const ONBOARDING_CONSULTANT_USER_ID = process.env.ONBOARDING_CONSULTANT_USER_ID!;
 export const ONBOARDING_CHANNEL_ID = process.env.ONBOARDING_CHANNEL_ID!;
-
 export const PROJECT_MANAGER_USER_ID = process.env.PROJECT_MANAGER_USER_ID!;
-
 export const FACT_CHECKER_USER_ID = process.env.FACT_CHECKER_USER_ID!;
 export const FACT_CHECK_CHANNEL_ID = process.env.FACT_CHECK_CHANNEL_ID!;
-
 export const SOLVER_AGENT_USER_ID = process.env.SOLVER_AGENT_USER_ID!;
 export const SOLVER_AGENT_TOKEN = process.env.SOLVER_AGENT_TOKEN!;
 export const SOLVER_CHANNEL_ID = process.env.SOLVER_CHANNEL_ID!;
-
-export const LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY;
-export const LLM_PROVIDER = process.env.LLM_PROVIDER || 'lmstudio';
-export const EMBEDDING_PROVIDER = process.env.EMBEDDING_PROVIDER || process.env.LLM_PROVIDER;
-export const LLM_WEAK_MODEL = process.env.LLM_WEAK_MODEL;
-export const LLM_HEAVY_MODEL = process.env.LLM_HEAVY_MODEL;
-export const VECTOR_DATABASE_TYPE = process.env.VECTOR_DATABASE_TYPE || 'vectra';
-
-// Bedrock rate limiting settings
-export const BEDROCK_MAX_TOKENS_PER_MINUTE = parseInt(process.env.BEDROCK_MAX_TOKENS_PER_MINUTE || '50000');
-export const BEDROCK_DEFAULT_DELAY_MS = parseInt(process.env.BEDROCK_DEFAULT_DELAY_MS || '1000');
-export const BEDROCK_WINDOW_SIZE_MS = parseInt(process.env.BEDROCK_WINDOW_SIZE_MS || '60000');
-
-// Anthropic settings
-export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY!;
-export const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-opus-20240229';
-export const ANTHROPIC_MAX_TOKENS_PER_MINUTE = parseInt(process.env.ANTHROPIC_MAX_TOKENS_PER_MINUTE || '50000');
-export const ANTHROPIC_DEFAULT_DELAY_MS = parseInt(process.env.ANTHROPIC_DEFAULT_DELAY_MS || '1000');
-export const ANTHROPIC_WINDOW_SIZE_MS = parseInt(process.env.ANTHROPIC_WINDOW_SIZE_MS || '60000');
+export const RESEARCH_MANAGER_USER_ID = process.env.RESEARCH_MANAGER_USER_ID!;
+export const RESEARCH_MANAGER_TOKEN_ID = process.env.RESEARCH_MANAGER_TOKEN_ID!;
 
 // Server settings
 export const HOST = process.env.HOST || 'localhost';
@@ -89,19 +67,31 @@ export const LLM_PROVIDER = process.env.LLM_PROVIDER || 'lmstudio';
 export const CHAT_MODEL = process.env.CHAT_MODEL || '';
 export const LLM_WEAK_MODEL = process.env.LLM_WEAK_MODEL || '';
 export const LLM_HEAVY_MODEL = process.env.LLM_HEAVY_MODEL || '';
+export const EMBEDDING_MODEL = process.env.EMBEDDING_MODEL!;
+export const EMBEDDING_PROVIDER = process.env.EMBEDDING_PROVIDER || process.env.LLM_PROVIDER;
+export const LM_STUDIO_BASE_URL = process.env.LM_STUDIO_BASE_URL!;
 
 // API Keys
 export const LMSTUDIO_API_KEY = process.env.LMSTUDIO_API_KEY || '';
 export const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY || '';
+export const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-3-opus-20240229';
 
 // Rate Limiting
 export const ANTHROPIC_MAX_TOKENS_PER_MINUTE = parseInt(process.env.ANTHROPIC_MAX_TOKENS_PER_MINUTE || '50000');
 export const ANTHROPIC_DEFAULT_DELAY_MS = parseInt(process.env.ANTHROPIC_DEFAULT_DELAY_MS || '1000');
+export const ANTHROPIC_WINDOW_SIZE_MS = parseInt(process.env.ANTHROPIC_WINDOW_SIZE_MS || '60000');
 export const BEDROCK_MAX_TOKENS_PER_MINUTE = parseInt(process.env.BEDROCK_MAX_TOKENS_PER_MINUTE || '50000');
+export const BEDROCK_DEFAULT_DELAY_MS = parseInt(process.env.BEDROCK_DEFAULT_DELAY_MS || '1000');
+export const BEDROCK_WINDOW_SIZE_MS = parseInt(process.env.BEDROCK_WINDOW_SIZE_MS || '60000');
 
 // Vector DB Settings
 export const VECTOR_DATABASE_TYPE = process.env.VECTOR_DATABASE_TYPE || 'vectra';
 export const CHROMADB_URL = process.env.CHROMADB_URL || '';
+export const CHROMA_COLLECTION = process.env.CHROMA_COLLECTION!;
+
+// Search Settings
+export const MAX_SEARCHES = parseInt(process.env.MAX_SEARCHES!, 10);
+export const SEARXNG_URL = process.env.SEARXNG_URL!;
 
 // Export settings object for UI consumption
 export const getUISettings = () => ({
