@@ -94,6 +94,10 @@ export const SettingsPanel: React.FC = () => {
         }
     };
 
+    const getNestedValue = (obj: any, path: string): any => {
+        return path.split('.').reduce((current, part) => current?.[part], obj);
+    };
+
     const renderInput = (metadata: ConfigMetadata) => {
         const value = settings[metadata.key] ?? metadata.defaultValue ?? '';
 
@@ -129,10 +133,6 @@ export const SettingsPanel: React.FC = () => {
                         placeholder={`Enter ${metadata.label.toLowerCase()}`}
                     />
                 );
-
-                function getNestedValue(obj: any, path: string): any {
-                    return path.split('.').reduce((current, part) => current?.[part], obj);
-                }
         }
     };
 
