@@ -243,7 +243,32 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       isLoading,
       needsConfig,
       getSettings: () => ipcService.getSettings(),
-      updateSettings: (settings: any) => ipcService.updateSettings(settings)
+      updateSettings: async (settings: any) => {
+        try {
+          // Update settings on server
+          const updatedSettings = await ipcService.updateSettings(settings);
+          
+          // If connection-related settings changed, reconnect
+          if (settings.host !== undefined || 
+              settings.port !== undefined || 
+              settings.protocol !== undefined) {
+            // Disconnect and reconnect with new settings
+            ipcService.disconnect();
+            await ipcService.connect();
+            
+            // Refresh data after reconnect
+            await Promise.all([
+              fetchChannels(),
+              fetchHandles()
+            ]);
+          }
+          
+          return updatedSettings;
+        } catch (error) {
+          console.error('Failed to update settings:', error);
+          throw error; // Re-throw to let UI handle error display
+        }
+      }
     }}>
       {children}
     </WebSocketContext.Provider>

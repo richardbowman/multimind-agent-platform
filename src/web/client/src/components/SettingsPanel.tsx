@@ -27,7 +27,7 @@ export const SettingsPanel: React.FC = () => {
         setSettings(prev => ({ ...prev, [key]: processedValue }));
     };
 
-    const handleSave = () => {
+    const handleSave = async () => {
         // Validate required fields based on provider
         const provider = settings.llmProvider;
         let missingFields: string[] = [];
@@ -50,10 +50,14 @@ export const SettingsPanel: React.FC = () => {
             return;
         }
 
-        updateSettings(settings).catch(error => {
+        try {
+            const updatedSettings = await updateSettings(settings);
+            setSettings(updatedSettings); // Update local state with confirmed settings
+            alert('Settings saved successfully');
+        } catch (error) {
             console.error('Failed to save settings:', error);
-            alert('Failed to save settings. Check the console for details.');
-        });
+            alert(`Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+        }
     };
 
     const renderInput = (metadata: ConfigMetadata) => {
