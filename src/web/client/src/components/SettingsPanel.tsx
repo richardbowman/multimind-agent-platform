@@ -46,17 +46,17 @@ export const SettingsPanel: React.FC = () => {
         }
 
         if (missingFields.length > 0) {
-            alert(`Please fill in the following required fields:\n${missingFields.join('\n')}`);
+            // alert(`Please fill in the following required fields:\n${missingFields.join('\n')}`);
             return;
         }
 
         try {
             const updatedSettings = await updateSettings(settings);
             setSettings(updatedSettings); // Update local state with confirmed settings
-            alert('Settings saved successfully');
+            // alert('Settings saved successfully');
         } catch (error) {
             console.error('Failed to save settings:', error);
-            alert(`Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            // alert(`Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
         }
     };
 

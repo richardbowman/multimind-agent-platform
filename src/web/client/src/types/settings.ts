@@ -44,13 +44,6 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
 
     // API Keys
     {
-        key: 'lmstudioApiKey',
-        label: 'LM Studio API Key',
-        type: 'string',
-        category: 'API Keys',
-        sensitive: true
-    },
-    {
         key: 'anthropicApiKey',
         label: 'Anthropic API Key',
         type: 'string',
@@ -95,29 +88,5 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         label: 'ChromaDB URL',
         type: 'string',
         category: 'Vector DB'
-    },
-
-    // Server Settings
-    {
-        key: 'host',
-        label: 'Host',
-        type: 'string',
-        category: 'Server',
-        defaultValue: 'localhost'
-    },
-    {
-        key: 'port',
-        label: 'Port',
-        type: 'number',
-        category: 'Server',
-        defaultValue: 4001
-    },
-    {
-        key: 'protocol',
-        label: 'Protocol',
-        type: 'select',
-        category: 'Server',
-        options: ['http', 'https'],
-        defaultValue: 'https'
     }
 ];
