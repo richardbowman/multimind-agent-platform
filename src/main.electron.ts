@@ -8,32 +8,13 @@ import Logger from './helpers/logger';
 import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
 import { SplashWindow } from './windows/SplashWindow';
 
-let mainWindow: BrowserWindow;
+import { MainWindow } from './windows/MainWindow';
+let mainWindow: MainWindow;
 let splashWindow: SplashWindow;
 import { BackendServices } from './types/BackendServices';
 import { ElectronIPCServer } from './server/ElectronIPCServer';
 
 let backendServices: BackendServices;
-
-async function createWindow() {
-    mainWindow = new BrowserWindow({
-        width: 1200,
-        height: 800,
-        webPreferences: {
-            preload: path.join(__dirname, 'preload.js'),
-            contextIsolation: true,
-            nodeIntegration: false
-        }
-    });
-
-    // Load the React app
-    if (process.env.NODE_ENV === 'development') {
-        await mainWindow.loadURL('http://localhost:3000');
-        mainWindow.webContents.openDevTools();
-    } else {
-        await mainWindow.loadFile(path.join(__dirname, 'web/index.html'));
-    }
-}
 
 // Set up global error handling
 setupUnhandledRejectionHandler();
@@ -52,7 +33,8 @@ app.whenReady().then(async () => {
         
         // Create main window
         splashWindow.setMessage('Loading main interface...');
-        await createWindow();
+        mainWindow = new MainWindow();
+        await mainWindow.show();
 
         // Set up IPC handlers
         setupIpcHandlers();
@@ -75,7 +57,7 @@ app.whenReady().then(async () => {
 let ipcServer: ElectronIPCServer;
 
 function setupIpcHandlers() {
-    ipcServer = new ElectronIPCServer(backendServices, mainWindow);
+    ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow());
 }
 
 app.on('window-all-closed', () => {
@@ -89,6 +71,7 @@ app.on('window-all-closed', () => {
 
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-        createWindow();
+        mainWindow = new MainWindow();
+        mainWindow.show();
     }
 });
