@@ -30,14 +30,14 @@ app.whenReady().then(async () => {
         backendServices = await initializeBackend({
             onProgress: (message) => splashWindow.setMessage(message)
         });
-        
+
         // Create main window
         splashWindow.setMessage('Loading main interface...');
         mainWindow = new MainWindow();
-        await mainWindow.show();
 
         // Set up IPC handlers
         setupIpcHandlers();
+        await mainWindow.show();
 
         // Close splash screen
         splashWindow.close();
@@ -48,9 +48,9 @@ app.whenReady().then(async () => {
             // For configuration errors, show the main window with settings tab
             splashWindow.setMessage('Configuration needed...');
             mainWindow = new MainWindow();
-            await mainWindow.show();
-            setupIpcHandlers(true);
             splashWindow.close();
+            setupIpcHandlers(true);
+            await mainWindow.show();
         } else {
             // For other errors, show error and quit
             if (splashWindow) {
@@ -66,17 +66,22 @@ app.whenReady().then(async () => {
 let ipcServer: ElectronIPCServer;
 
 function setupIpcHandlers(hasConfigError: boolean = false) {
-    ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow());
-    
+    ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow(), hasConfigError);
+
     mainWindow.getWindow().webContents.on('did-finish-load', () => {
+        console.log('did finish load');
         if (ipcServer.getRPC()) {
-            ipcServer.getRPC().onBackendStatus({
+            const status = {
                 configured: !hasConfigError,
                 ready: !hasConfigError,
                 message: hasConfigError ? "Initial configuration required" : undefined
-            });
+            };
+            console.log('firing backend status', JSON.stringify(status, 2, false));
+            ipcServer.getRPC().onBackendStatus(status);
         }
     });
+
+    console.log('setup ipc complete');
 }
 
 app.on('window-all-closed', () => {

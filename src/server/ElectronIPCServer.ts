@@ -6,18 +6,21 @@ import { createSafeServerRPCHandlers } from './rpcUtils';
 import { ClientMethods, ServerMethods } from '../web/client/src/shared/RPCInterface';
 import { trackPromise } from '../helpers/errorHandler';
 import Logger from '../helpers/logger';
+import { getUISettings } from '../helpers/config';
+import { StartupHandler } from './StartupHandler';
 
 export class ElectronIPCServer {
-    private handler: MessageHandler;
+    private handler: StartupHandler|MessageHandler;
     private rpc: ReturnType<typeof createBirpc<ClientMethods, ServerMethods>>|undefined;
 
     constructor(private services: BackendServices, private mainWindow: BrowserWindow, hasConfigError: boolean) {
         if (hasConfigError) {
-            this.setupLimitedRpc();
-        } else {
+            this.handler = new StartupHandler();
             this.setupRPC();
+        } else {
             this.handler = new MessageHandler(services);
-            this.handler.setupClientEvents(rpc);
+            this.setupRPC();
+            this.handler.setupClientEvents(this.getRPC());
         }
     }
 
@@ -38,44 +41,6 @@ export class ElectronIPCServer {
 
         this.rpc = rpc;
     }
-
-    private setupLimitedRpc() {
-        const safeHandlers = createSafeServerRPCHandlers();
-
-        const rpc = createBirpc<ClientMethods, ServerMethods>(
-            {
-                // Only expose settings-related methods
-                getSettings: async () => {
-                    return this.services.settings.getSettings();
-                },
-                updateSettings: async (settings: any) => {
-                    return this.services.settings.updateSettings(settings);
-                },
-                // Stub out all other methods
-                sendMessage: async () => { throw new Error('Configuration required') },
-                getMessages: async () => { throw new Error('Configuration required') },
-                getChannels: async () => { throw new Error('Configuration required') },
-                getThreads: async () => { throw new Error('Configuration required') },
-                getTasks: async () => { throw new Error('Configuration required') },
-                getArtifacts: async () => { throw new Error('Configuration required') },
-                getAllArtifacts: async () => { throw new Error('Configuration required') },
-                deleteArtifact: async () => { throw new Error('Configuration required') },
-                getHandles: async () => { throw new Error('Configuration required') },
-                getLogs: async () => { throw new Error('Configuration required') }
-            },
-            {
-                ...safeHandlers,
-                post: (data) => this.mainWindow.webContents.send('birpc', data),
-                on: (handler) => {
-                    ipcMain.on('birpc', (_, data) => handler(data));
-                    return () => ipcMain.removeListener('birpc', handler);
-                }
-            }
-        );
-
-        this.rpc = rpc;
-    }
-
 
     cleanup() {
         // Remove all IPC handlers

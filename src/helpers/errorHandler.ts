@@ -2,11 +2,7 @@ import Logger from './logger';
 
 export function setupUnhandledRejectionHandler() {
     process.on('unhandledRejection', (reason, promise) => {
-        Logger.error('Unhandled Promise Rejection:', {
-            reason,
-            stack: reason instanceof Error ? reason.stack : 'No stack trace available',
-            promise: promise.toString()
-        });
+        Logger.error(`Unhandled Promise Rejection: ${reason}`, reason instanceof Error ? reason.stack : undefined);
 
         // Get the promise chain stack trace if available
         const promiseStack = (promise as any)._trace || 'No promise chain trace available';

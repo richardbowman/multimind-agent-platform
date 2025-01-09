@@ -15,7 +15,6 @@ export interface ServerMethods {
     updateSettings(settings: any): Promise<any>;
     getLogs(logType: 'llm' | 'system' | 'api'): Promise<any>;
     getHandles(): Promise<Array<{id: string; handle: string}>>;
-    getBackendStatus(): Promise<{ configured: boolean; ready: boolean; message?: string }>;
 }
 
 export interface ClientMethods {

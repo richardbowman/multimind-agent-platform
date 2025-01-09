@@ -32,7 +32,7 @@ interface WebSocketContextType {
   sendMessage: (message: Partial<ClientMessage>) => void;
   fetchChannels: () => void;
   getSettings: () => Promise<any>;
-  updateSettings: (settings: any) => void;
+  updateSettings: (settings: any) => Promise<any>;
   fetchTasks: (channelId: string, threadId: string | null) => void;
   fetchArtifacts: (channelId: string, threadId: string | null) => void;
   fetchAllArtifacts: () => void;

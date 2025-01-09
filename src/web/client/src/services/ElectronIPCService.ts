@@ -49,7 +49,9 @@ export class ElectronIPCService extends BaseRPCService {
         );
     }
     fireStatus() {
+        console.log('FIRE STATUS', this.status);
         if (this.status.configured) {
+            this.emit('needsConfig', { needsConfig: false });
             this.emit('connected');
         } else {
             this.emit('needsConfig', { needsConfig: true });

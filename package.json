@@ -3,19 +3,23 @@
   "version": "1.0.0",
   "main": "dist/main.electron.js",
   "scripts": {
+    "schemas": "ts-json-schema-generator --path 'src/schemas/**/*.ts' --type '*' -o src/schemas/schema.json --no-type-check",
+
     "start": "concurrently \"npm run start:server\" \"npm run start:web\"",
     "start:server": "tsx src/main.webserver.ts",
     "start:web": "webpack serve --mode development",
-    "watch": "concurrently \"npm run watch:server\" \"npm run start:web\"",
-    "watch:server": "tsx --watch src/main.ts",
-    "schemas": "ts-json-schema-generator --path 'src/schemas/**/*.ts' --type '*' -o src/schemas/schema.json --no-type-check",
+
     "build:electron": "tsc -p tsconfig.electron.json --noCheck",
-    "watch:web": "webpack --mode development --watch",
     "build:web": "webpack --mode production",
     "build:all": "npm run build:electron && npm run build:web",
-    "electron:dev": "concurrently \"npm run watch:web\" \"npm run watch:ts\" \"npm run electron:start:dev\"",
-    "electron:start:dev": "nodemon --watch dist --delay 0.5 --exec \"electron . --dev-mode\"",
+
+    "watch:web": "webpack --mode development --watch",
+    "watch": "concurrently \"npm run watch:server\" \"npm run start:web\"",
+    "watch:server": "tsx --watch src/main.ts",
     "watch:ts": "tsc --jsx react -p tsconfig.electron.json --noCheck --watch",
+
+    "electron:dev": "concurrently \"npm run watch:web\" \"npm run watch:ts\" \"npm run electron:start:dev\"",
+    "electron:start:dev": "nodemon --watch 'dist' --ignore 'dist/web' --delay 0.5 --exec \"electron . --dev-mode\"",
     "electron:build": "node scripts/electron-build.js",
     "electron:package": "electron-builder build",
     "electron:package:all": "electron-builder build --mac --win --linux"

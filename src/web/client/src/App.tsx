@@ -18,6 +18,8 @@ const AppContent: React.FC = () => {
     React.useEffect(() => {
         if (needsConfig) {
             setCurrentTab('settings');
+        } else {
+            setCurrentTab('chat');
         }
     }, [needsConfig]);
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('llm');

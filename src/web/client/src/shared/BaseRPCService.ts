@@ -20,7 +20,10 @@ export abstract class BaseRPCService extends EventEmitter {
     getAllArtifacts = () => this.rpc.getAllArtifacts();
     deleteArtifact = (artifactId: string) => this.rpc.deleteArtifact(artifactId);
     getSettings = () => this.rpc.getSettings();
-    updateSettings = (settings: any) => this.rpc.updateSettings(settings);
+    updateSettings = async (settings: any) => {
+        const newSettings = await this.rpc.updateSettings(settings);
+        return newSettings;
+    };
     getLogs = (logType: 'llm' | 'system' | 'api') => this.rpc.getLogs(logType);
     getHandles = () => this.rpc.getHandles();
 
