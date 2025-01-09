@@ -1,7 +1,7 @@
 // config.ts
 import Logger from './logger';
 import * as path from 'path';
-import { SettingsManager } from '../tools/settingsManager';
+import { Settings, SettingsManager } from '../tools/settingsManager';
 
 const settingsManager = new SettingsManager();
 
@@ -35,7 +35,7 @@ async function initializeConfig() {
 }
 
 // Initialize configuration
-initializeConfig().catch(err => Logger.error('Error loading settings:', err));
+await initializeConfig().catch(err => Logger.error('Error loading settings:', err));
 
 
 // Channel and User IDs
@@ -92,8 +92,6 @@ export const CHROMA_COLLECTION = process.env.CHROMA_COLLECTION!;
 // Search Settings
 export const MAX_SEARCHES = parseInt(process.env.MAX_SEARCHES!, 10);
 export const SEARXNG_URL = process.env.SEARXNG_URL!;
-
-export const settingsManager = settingsManager;
 
 // Export settings object for UI consumption
 export const getUISettings = () => settingsManager.getSettings();
