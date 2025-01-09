@@ -38,15 +38,12 @@ export class WebSocketServer {
         });
     }
 
-    private setupSocketHandlers(services: BackendServices) {
+    private setupSocketHandlers() {
         this.io.on('connection', (socket) => {
             Logger.info('WebSocket: New client connection established');
 
             // Add settings handlers
-            const handlers = {
-                ...this.handler.createWrapper(),
-                getSettings: () => getUISettings()
-            };
+            const handlers = this.handler.createWrapper();
 
             // Create birpc instance for this connection
             const rpc = createBirpc<ClientMethods, ServerMethods>(
@@ -58,28 +55,7 @@ export class WebSocketServer {
                 }
             );
 
-            // Set up message receiving for the user client
-            services.chatClient.receiveMessages((post: ChatPost) => {
-                const rpcMessage = {
-                    id: post.id,
-                    channel_id: post.channel_id,
-                    message: post.message,
-                    user_id: post.user_id,
-                    create_at: post.create_at,
-                    directed_at: post.directed_at,
-                    props: post.props,
-                    thread_id: post.getRootId()
-                };
-                rpc.onMessage([rpcMessage]);
-            });
-
-            // Set up log update notifications
-            services.llmLogger.on("log", (logEntry) => {
-                rpc.onLogUpdate({
-                    type: 'llm',
-                    entry: logEntry
-                });
-            });
+            this.handler.setupClientEvents(rpc)
 
             socket.on('disconnect', () => {
                 Logger.info('Client disconnected');

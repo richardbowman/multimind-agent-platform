@@ -1,11 +1,36 @@
 import { BackendServices } from "../types/BackendServices";
-import { LLMCallLogger } from "src/llm/LLMLogger";
-import { Task } from "src/tools/taskManager";
-import { ServerMethods } from "../web/client/src/shared/RPCInterface";
-import { ClientChannel, ClientMessage } from "src/web/client/src/shared/IPCInterface";
+import { ClientMethods, ServerMethods } from "../web/client/src/shared/RPCInterface";
 import Logger from "../helpers/logger";
+import { getUISettings } from "../helpers/config";
+import { ChatPost } from "../chat/chatClient";
+import { ClientChannel, ClientMessage, ClientThread } from "../web/client/src/shared/IPCInterface";
+import { LLMCallLogger } from "../llm/LLMLogger";
 
 export class MessageHandler implements ServerMethods {
+    setupClientEvents(rpc: ClientMethods) {
+        // Set up message receiving for the user client
+        this.services.chatClient.receiveMessages((post: ChatPost) => {
+            const rpcMessage = {
+                id: post.id,
+                channel_id: post.channel_id,
+                message: post.message,
+                user_id: post.user_id,
+                create_at: post.create_at,
+                directed_at: post.directed_at,
+                props: post.props,
+                thread_id: post.getRootId()
+            };
+            rpc.onMessage([rpcMessage]);
+        });
+
+        // Set up log update notifications
+        this.services.llmLogger.on("log", (logEntry) => {
+            rpc.onLogUpdate({
+                type: 'llm',
+                entry: logEntry
+            });
+        });
+    }
     createWrapper(): ServerMethods {
         const handler = this;
         return new Proxy({} as ServerMethods, {
@@ -174,7 +199,7 @@ export class MessageHandler implements ServerMethods {
     }
 
     async getSettings(): Promise<any> {
-        return this.services.settings;
+        return getUISettings();
     }
 
     async updateSettings(settings: any): Promise<any> {

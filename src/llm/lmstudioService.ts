@@ -43,6 +43,7 @@ export interface MessageOpts {
 import { ILLMService, ModelRole, StructuredOutputPrompt } from "./ILLMService";
 
 import { BaseLLMService } from "./BaseLLMService";
+import { ConfigurationError } from "../errors/ConfigurationError";
 
 export default class LMStudioService extends BaseLLMService {
     private lmStudioClient: LMStudioClient;

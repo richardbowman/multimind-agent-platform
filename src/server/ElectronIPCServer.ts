@@ -19,7 +19,7 @@ export class ElectronIPCServer {
     private setupRPC() {
         const safeHandlers = createSafeServerRPCHandlers();
 
-        this.rpc = createBirpc<ClientMethods, ServerMethods>(
+        const rpc = createBirpc<ClientMethods, ServerMethods>(
             this.handler.createWrapper(),
             {
                 ...safeHandlers,
@@ -31,28 +31,9 @@ export class ElectronIPCServer {
             }
         );
 
-        // Set up message receiving for the user client
-        this.services.chatClient.receiveMessages((post) => {
-            const rpcMessage = {
-                id: post.id,
-                channel_id: post.channel_id,
-                message: post.message,
-                user_id: post.user_id,
-                create_at: post.create_at,
-                directed_at: post.directed_at,
-                props: post.props,
-                thread_id: post.getRootId()
-            };
-            if (this.rpc) this.rpc.onMessage([rpcMessage]);
-        });
-
-        // Set up log update notifications
-        this.services.llmLogger.on("log", (logEntry) => {
-            if (this.rpc) this.rpc.onLogUpdate({
-                type: 'llm',
-                entry: logEntry
-            });
-        });
+        this.rpc = rpc;
+        
+        this.handler.setupClientEvents(rpc);
     }
 
     cleanup() {

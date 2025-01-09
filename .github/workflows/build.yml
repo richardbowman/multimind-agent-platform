@@ -43,13 +43,10 @@ jobs:
         env:
           CI: ""
         run: |
-          cd src/web/client
-          npm install --save-dev @babel/plugin-proposal-private-property-in-object
-          cd ../../..
           npm run build:web
         
       - name: Build TypeScript
-        run: npm run build
+        run: npm run build:electron
         
       - name: Copy Environment Files
         run: |

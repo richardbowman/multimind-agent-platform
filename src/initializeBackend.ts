@@ -16,9 +16,9 @@ export async function initializeBackend(options: {
     const { onProgress } = options;
     
     // Validate required configurations
-    if (!process.env.OPENAI_API_KEY) {
-        throw new Error('OpenAI API key is not configured');
-    }
+    // if (!process.env.OPENAI_API_KEY) {
+    //     throw new Error('OpenAI API key is not configured');
+    // }
 
     onProgress?.('Initializing LLM service...');
     const llmService = LLMServiceFactory.createService({
