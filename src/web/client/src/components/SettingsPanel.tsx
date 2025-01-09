@@ -5,6 +5,8 @@ import './SettingsPanel.css';
 
 export const SettingsPanel: React.FC = () => {
     const [settings, setSettings] = useState<Settings>({});
+    const [validationMessage, setValidationMessage] = useState<string>('');
+    const [successMessage, setSuccessMessage] = useState<string>('');
     const { getSettings, updateSettings } = useWebSocket();
 
     useEffect(() => {
