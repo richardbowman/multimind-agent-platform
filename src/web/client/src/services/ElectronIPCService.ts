@@ -25,7 +25,11 @@ export class ElectronIPCService extends BaseRPCService {
                     this.emit('onLogUpdate', update);
                 },
                 onBackendStatus: (status: { configured: boolean; ready: boolean; message?: string }) => {
-                    this.emit('onBackendStatus', status);
+                    if (status.configured) {
+                        this.emit('connected');
+                    } else {
+                        this.emit('needsConfig');
+                    }
                 }
             },
             {
@@ -43,7 +47,7 @@ export class ElectronIPCService extends BaseRPCService {
     }
 
     connect(): void {
-        this.emit('connected');
+        
     }
 
     disconnect(): void {
