@@ -16,6 +16,7 @@
       "outDir": "./dist",
       "rootDir": "./src",
       "jsx": "react-jsx",
+      "jsxImportSource": "react",
       "allowJs": true,
       "declaration": true,
       "sourceMap": true,
