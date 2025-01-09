@@ -18,10 +18,18 @@ export const SettingsPanel: React.FC = () => {
 
     useEffect(() => {
         // Load initial settings
-        getSettings((settings: Settings) => {
-            setSettings(settings);
-        });
-    }, []);
+        const loadSettings = async () => {
+            try {
+                const currentSettings = await getSettings();
+                if (currentSettings) {
+                    setSettings(currentSettings);
+                }
+            } catch (error) {
+                console.error('Failed to load settings:', error);
+            }
+        };
+        loadSettings();
+    }, [getSettings]);
 
     const handleSave = () => {
         updateSettings(settings);

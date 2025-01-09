@@ -30,7 +30,7 @@ interface WebSocketContextType {
   };
   sendMessage: (message: Partial<ClientMessage>) => void;
   fetchChannels: () => void;
-  getSettings: (callback: (settings: any) => void) => void;
+  getSettings: () => Promise<any>;
   updateSettings: (settings: any) => void;
   fetchTasks: (channelId: string, threadId: string | null) => void;
   fetchArtifacts: (channelId: string, threadId: string | null) => void;
@@ -48,7 +48,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
   fetchChannels: () => { },
   fetchHandles: () => { },
   updateSettings: () => { },
-  getSettings: () => { },
+  getSettings: async () => ({}),
   tasks: [],
   artifacts: [],
   fetchTasks: (channelId: string, threadId: string | null) => { },
@@ -237,9 +237,12 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       currentThreadId,
       setCurrentThreadId,
       isLoading,
-      getSettings: isElectron 
-        ? (window as any).electron.getSettings
-        : ipcService.getSettings.bind(ipcService),
+      getSettings: async () => {
+        if (isElectron) {
+          return (window as any).electron.getSettings();
+        }
+        return ipcService.getSettings();
+      },
       updateSettings: isElectron
         ? (window as any).electron.updateSettings
         : ipcService.updateSettings.bind(ipcService)
