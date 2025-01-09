@@ -237,15 +237,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       currentThreadId,
       setCurrentThreadId,
       isLoading,
-      getSettings: async () => {
-        if (isElectron) {
-          return (window as any).electron.getSettings();
-        }
-        return ipcService.getSettings();
-      },
-      updateSettings: isElectron
-        ? (window as any).electron.updateSettings
-        : ipcService.updateSettings.bind(ipcService)
+      getSettings: () => ipcService.getSettings(),
+      updateSettings: (settings: any) => ipcService.updateSettings(settings)
     }}>
       {children}
     </WebSocketContext.Provider>
