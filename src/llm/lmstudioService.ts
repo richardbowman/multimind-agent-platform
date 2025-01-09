@@ -102,8 +102,13 @@ export default class LMStudioService extends BaseLLMService {
 
 
 
-    async sendStructuredRequest(message: string, instructions: StructuredOutputPrompt, history?: any[],  
-        contextWindowLength?: number, maxTokens?: number): Promise<any> {
+    async sendStructuredRequest(
+        message: string, 
+        instructions: StructuredOutputPrompt, 
+        history?: any[],  
+        contextWindowLength?: number, 
+        maxTokens?: number
+    ): Promise<any> {
         if (!this.chatModel) {
             throw new Error("LLaMA model is not initialized.");
         }
@@ -131,16 +136,33 @@ export default class LMStudioService extends BaseLLMService {
         }
         
         // Set the maxTokens parameter for the LLaMA model
-        const prediction = this.chatModel.respond(messageChain, opts);
-        const finalResult = await prediction;
-        const input = { message, instructions: instructions.getPrompt(), history, contextWindowLength, maxTokens };
+        const input = { 
+            message, 
+            instructions: instructions.getPrompt(), 
+            history, 
+            contextWindowLength, 
+            maxTokens 
+        };
+
         try {
-            const resultBody = finalResult.content;
+            const prediction = await this.chatModel.respond(messageChain, opts);
+            const resultBody = prediction.content;
             const output = JSON5.parse(resultBody);
-            await this.logger.logCall('generateStructured', input, output);
-            return output;
+
+            const result = {
+                response: output,
+                metadata: {
+                    _usage: {
+                        inputTokens: await this.countTokens(messageChain.map(m => m.content).join('')),
+                        outputTokens: await this.countTokens(resultBody)
+                    }
+                }
+            };
+
+            await this.logger.logCall('sendStructuredRequest', input, result.response);
+            return result;
         } catch (error) {
-            await this.logger.logCall('generateStructured', input, null, error);
+            await this.logger.logCall('sendStructuredRequest', input, null, error);
             throw error;
         }
     }
@@ -181,16 +203,37 @@ export default class LMStudioService extends BaseLLMService {
             }
         }
 
-        const prediction = await this.chatModel.respond(messageChain, {
-            maxPredictedTokens: params.opts?.maxPredictedTokens,
-            temperature: params.opts?.temperature
-        });
-        const resultBody = prediction.content;
+        try {
+            const prediction = await this.chatModel.respond(messageChain, {
+                maxPredictedTokens: params.opts?.maxPredictedTokens,
+                temperature: params.opts?.temperature
+            });
+            const resultBody = prediction.content;
 
-        if (params.parseJSON) {
-            return JSON5.parse(resultBody);
+            const result = {
+                response: params.parseJSON ? JSON5.parse(resultBody) : resultBody,
+                metadata: {
+                    _usage: {
+                        inputTokens: await this.countTokens(messageChain.map(m => m.content).join('')),
+                        outputTokens: await this.countTokens(resultBody)
+                    }
+                }
+            };
+
+            await this.logger.logCall('sendLLMRequest', {
+                messages: params.messages,
+                systemPrompt: params.systemPrompt,
+                opts: params.opts
+            }, result.response);
+
+            return result;
+        } catch (error) {
+            await this.logger.logCall('sendLLMRequest', {
+                messages: params.messages,
+                systemPrompt: params.systemPrompt,
+                opts: params.opts
+            }, null, error);
+            throw error;
         }
-        
-        return resultBody;
     }
 }
