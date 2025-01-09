@@ -1,10 +1,10 @@
-import { BrowserWindow } from 'electron';
+import { BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 
 export class MainWindow {
     private window: BrowserWindow;
 
-    constructor() {
+    constructor(hasConfigError: boolean = false) {
         this.window = new BrowserWindow({
             width: 1200,
             height: 800,
@@ -14,6 +14,13 @@ export class MainWindow {
                 nodeIntegration: false
             }
         });
+
+        if (hasConfigError) {
+            // Send message to renderer to show settings tab and disable others
+            this.window.webContents.on('did-finish-load', () => {
+                this.window.webContents.send('configuration-error');
+            });
+        }
     }
 
     async show() {

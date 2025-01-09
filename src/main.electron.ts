@@ -7,7 +7,7 @@ import { initializeBackend } from './initializeBackend';
 import Logger from './helpers/logger';
 import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
 import { SplashWindow } from './windows/SplashWindow';
-
+import { ConfigurationError } from './errors/ConfigurationError';
 import { MainWindow } from './windows/MainWindow';
 let mainWindow: MainWindow;
 let splashWindow: SplashWindow;
@@ -33,7 +33,7 @@ app.whenReady().then(async () => {
         
         // Create main window
         splashWindow.setMessage('Loading main interface...');
-        mainWindow = new MainWindow();
+        mainWindow = new MainWindow(error instanceof ConfigurationError);
         await mainWindow.show();
 
         // Set up IPC handlers
@@ -44,12 +44,22 @@ app.whenReady().then(async () => {
 
     } catch (error) {
         Logger.error('Error in main:', error);
-        if (splashWindow) {
-            splashWindow.setMessage(`Error: ${error.message}`);
-            // Keep splash window open for error display
-            setTimeout(() => app.quit(), 5000);
+        Logger.error('Error in main:', error);
+        if (error instanceof ConfigurationError) {
+            // For configuration errors, show the main window with settings tab
+            splashWindow.setMessage('Configuration needed...');
+            mainWindow = new MainWindow(true);
+            await mainWindow.show();
+            setupIpcHandlers();
+            splashWindow.close();
         } else {
-            process.exit(1);
+            // For other errors, show error and quit
+            if (splashWindow) {
+                splashWindow.setMessage(`Error: ${error.message}`);
+                setTimeout(() => app.quit(), 5000);
+            } else {
+                process.exit(1);
+            }
         }
     }
 });
