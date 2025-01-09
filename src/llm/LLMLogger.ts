@@ -3,6 +3,7 @@ import * as path from 'path';
 import Logger from '../helpers/logger';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import EventEmitter from 'events';
+import { getDataPath } from '../helpers/paths';
 
 export interface LogParam {
     type: string;
@@ -30,14 +31,8 @@ export class LLMCallLogger extends EventEmitter {
         super();
         
         this.sessionId = new Date().toISOString().replace(/[:.]/g, '-');
-        this.logDir = path.join(process.cwd(), '.output', 'llm');
+        this.logDir = path.join(getDataPath(), 'llm');
         this.logFile = path.join(this.logDir, `${serviceName}-${this.sessionId}.jsonl`);
-        
-        // Ensure .output and llm directories exist
-        const outputDir = path.join(process.cwd(), '.output');
-        if (!fs.existsSync(outputDir)) {
-            fs.mkdirSync(outputDir, { recursive: true });
-        }
         if (!fs.existsSync(this.logDir)) {
             fs.mkdirSync(this.logDir, { recursive: true });
         }
@@ -90,7 +85,7 @@ export class LLMCallLogger extends EventEmitter {
 
     static async getAllLogs(): Promise<Record<string, LLMLogEntry[]>> {
         try {
-            const logDir = path.join(process.cwd(), '.output', 'llm');
+            const logDir = path.join(getDataPath(), 'llm');
             if (!fs.existsSync(logDir)) {
                 return {};
             }
