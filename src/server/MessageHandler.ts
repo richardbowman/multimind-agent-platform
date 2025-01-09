@@ -55,7 +55,14 @@ export class MessageHandler implements ServerMethods {
             }
         });
     }
-    constructor(private services: BackendServices) { }
+    constructor(private services: BackendServices) {
+        if (!services) {
+            throw new Error('Backend services must be provided');
+        }
+        if (!services.chatClient) {
+            throw new Error('Chat client service is required');
+        }
+    }
 
     async sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage> {
         if (message.thread_id) {
@@ -147,6 +154,9 @@ export class MessageHandler implements ServerMethods {
     }
 
     async getChannels(): Promise<ClientChannel[]> {
+        if (!this.services?.chatClient) {
+            throw new Error('Chat client is not initialized');
+        }
         const channels = await this.services.chatClient.getChannels();
         return channels.map(([id, name]) => ({
             id,
