@@ -64,17 +64,20 @@ export const SettingsPanel: React.FC = () => {
         }
 
         if (missingFields.length > 0) {
-            // alert(`Please fill in the following required fields:\n${missingFields.join('\n')}`);
+            setValidationMessage(`Please fill in the following required fields: ${missingFields.join(', ')}`);
+            setSuccessMessage('');
             return;
         }
 
         try {
             const updatedSettings = await updateSettings(settings);
-            setSettings(updatedSettings); // Update local state with confirmed settings
-            // alert('Settings saved successfully');
+            setSettings(updatedSettings);
+            setSuccessMessage('Settings saved successfully');
+            setValidationMessage('');
         } catch (error) {
             console.error('Failed to save settings:', error);
-            // alert(`Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            setValidationMessage(`Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+            setSuccessMessage('');
         }
     };
 
@@ -150,6 +153,16 @@ export const SettingsPanel: React.FC = () => {
                 <button className="save-button" onClick={handleSave}>
                     Save Settings
                 </button>
+                {validationMessage && (
+                    <div className="validation-message">
+                        {validationMessage}
+                    </div>
+                )}
+                {successMessage && (
+                    <div className="success-message">
+                        {successMessage}
+                    </div>
+                )}
             </div>
         </div>
     );
