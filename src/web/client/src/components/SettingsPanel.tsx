@@ -49,19 +49,17 @@ export const SettingsPanel: React.FC = () => {
 
     const handleSave = async () => {
         // Validate required fields based on provider
-        const provider = settings.llmProvider;
+        const provider = settings.providers?.chat;
         let missingFields: string[] = [];
 
         // Common required fields
-        if (!settings.host) missingFields.push('Host');
         if (!settings.port) missingFields.push('Port');
-        if (!settings.protocol) missingFields.push('Protocol');
-        if (!settings.vectorDatabaseType) missingFields.push('Vector Database Type');
+        if (!settings.wsUrl) missingFields.push('WebSocket URL');
+        if (!settings.chatModel) missingFields.push('Chat Model');
+        if (!settings.embeddingModel) missingFields.push('Embedding Model');
 
         // Provider-specific validation
-        if (provider === 'lmstudio' && !settings.lmstudioApiKey) {
-            missingFields.push('LM Studio API Key');
-        } else if (provider === 'anthropic' && !settings.anthropicApiKey) {
+        if (provider === 'anthropic' && (!settings.anthropic?.api?.key)) {
             missingFields.push('Anthropic API Key');
         }
 
