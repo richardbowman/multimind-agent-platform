@@ -2,14 +2,12 @@ import { LocalChatStorage, LocalTestClient } from 'src/chat/localChatClient';
 import { Agent } from '../agents/agents';
 import { AgentConstructorParams } from '../agents/interfaces/AgentConstructorParams';
 import Logger from '../helpers/logger';
-import * as fs from 'fs';
-import * as path from 'path';
-import { ONBOARDING_CHANNEL_ID } from 'src/helpers/config';
 import { ChatClient } from 'src/chat/chatClient';
 import { TaskManager } from 'src/tools/taskManager';
 import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ILLMService } from 'src/llm/ILLMService';
+import { SettingsManager } from '../tools/settingsManager';
 
 interface AgentDefinition {
     className: string;
@@ -28,6 +26,7 @@ export interface AgentLoaderParams {
     taskManager: TaskManager;
     chatStorage: LocalChatStorage;
     defaultChannelId: string;
+    settingsManager: SettingsManager;
 }
 
 export class AgentLoader {
@@ -35,13 +34,12 @@ export class AgentLoader {
         const agentsMap = new Map<string, Agent<any, any>>();
         
         try {
-            // Load agent definitions from JSON config
-            const configPath = path.join(process.cwd(), 'src', 'config', 'agents.json');
-            const agentDefinitions = JSON.parse(fs.readFileSync(configPath, 'utf-8')) as Record<string, AgentDefinition>;
-
+            const settings = params.settingsManager.getSettings();
+            const agentDefinitions = settings.agents;
+            
             let channelIds : string[] = [];
-            if (agentDefinitions.defaultChannels) {
-                Object.entries(agentDefinitions.defaultChannels).forEach(([name, id]) => {
+            if (settings.defaultChannels) {
+                Object.entries(settings.defaultChannels).forEach(([name, id]) => {
                     params.chatStorage.registerChannel(id, `#${name}`);
                     channelIds.push(id);
                     Logger.info(`Registered channel: ${name} (${id})`);
