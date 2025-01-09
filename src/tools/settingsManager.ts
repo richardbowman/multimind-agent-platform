@@ -6,21 +6,70 @@ import { AsyncQueue } from '../helpers/asyncQueue';
 import { EventEmitter } from 'events';
 import { app } from 'electron';
 
-export interface Settings {
+export interface Settings extends Record<string, any> {
+    // Server settings
     host: string;
     port: number;
     protocol: string;
+    wsUrl: string;
+
+    // LLM Provider settings
     llmProvider: string;
     chatModel: string;
     llmWeakModel: string;
     llmHeavyModel: string;
+    embeddingModel: string;
+    embeddingProvider: string;
+    lmStudioBaseUrl: string;
+    contextSize: number;
+
+    // API Keys
     lmstudioApiKey: string;
     anthropicApiKey: string;
+    anthropicModel: string;
+
+    // Rate Limiting
     anthropicMaxTokensPerMinute: number;
     anthropicDefaultDelayMs: number;
+    anthropicWindowSizeMs: number;
     bedrockMaxTokensPerMinute: number;
+    bedrockDefaultDelayMs: number;
+    bedrockWindowSizeMs: number;
+
+    // Vector DB Settings
     vectorDatabaseType: string;
     chromadbUrl: string;
+    chromaCollection: string;
+
+    // Search Settings
+    searchProvider: string;
+    maxSearches: number;
+    searxngUrl: string;
+    maxFollows: number;
+    maxResearchRequests: number;
+
+    // Channel configuration
+    defaultChannels: Record<string, string>;
+    
+    // Agent configuration
+    agents: {
+        [key: string]: {
+            className: string;
+            sourcePath: string;
+            userId: string;
+            handle?: string;
+            description?: string;
+            enabled: boolean;
+            config?: Record<string, any>;
+        };
+    };
+
+    // Bedrock specific settings
+    bedrock: {
+        maxTokensPerMinute: number;
+        defaultDelayMs: number;
+        windowSizeMs: number;
+    };
 }
 
 export class SettingsManager extends EventEmitter {
