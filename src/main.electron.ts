@@ -65,8 +65,29 @@ app.whenReady().then(async () => {
 
 let ipcServer: ElectronIPCServer;
 
-function setupIpcHandlers(hasConfigError: boolean = false) {
+async function setupIpcHandlers(hasConfigError: boolean = false) {
     ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow(), hasConfigError);
+
+    // Listen for settings changes that require reinitialization
+    const rpc = ipcServer.getRPC();
+    if (rpc) {
+        const originalUpdateSettings = rpc.updateSettings;
+        rpc.updateSettings = async (settings: any) => {
+            const result = await originalUpdateSettings(settings);
+            if (result.needsRestart) {
+                // Reinitialize backend services
+                backendServices = await initializeBackend({
+                    onProgress: (message) => rpc.onBackendStatus({ 
+                        configured: true,
+                        ready: false,
+                        message 
+                    })
+                });
+                await ipcServer.reinitialize(backendServices);
+            }
+            return result;
+        };
+    }
 
     mainWindow.getWindow().webContents.on('did-finish-load', () => {
         console.log('did finish load');

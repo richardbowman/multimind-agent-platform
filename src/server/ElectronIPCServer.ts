@@ -44,7 +44,28 @@ export class ElectronIPCServer {
 
     cleanup() {
         // Remove all IPC handlers
-        if (this.rpc) this.rpc.$close();
+        if (this.rpc) {
+            this.rpc.$close();
+            this.rpc = undefined;
+        }
+        if (this.handler instanceof MessageHandler) {
+            this.handler.cleanup?.();
+        }
+    }
+
+    async reinitialize(services: BackendServices) {
+        this.cleanup();
+        this.services = services;
+        this.handler = new MessageHandler(services);
+        this.setupRPC();
+        this.handler.setupClientEvents(this.getRPC());
+        
+        if (this.rpc) {
+            this.rpc.onBackendStatus({
+                configured: true,
+                ready: true
+            });
+        }
     }
 
     getRPC() {

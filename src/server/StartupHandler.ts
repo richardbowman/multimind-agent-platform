@@ -52,8 +52,14 @@ export class StartupHandler implements Partial<ServerMethods> {
         if (settings.protocol) process.env.PROTOCOL = settings.protocol;
 
         // Update the services settings
-        this.services.settings = { ...this.services.settings, ...settings };
+        if (this.services) {
+            this.services.settings = { ...this.services.settings, ...settings };
+        }
 
-        return getUISettings();
+        // Signal that settings have changed and backend needs reinitialization
+        return { 
+            ...getUISettings(),
+            needsRestart: true
+        };
     }
 }
