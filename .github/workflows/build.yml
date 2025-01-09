@@ -37,7 +37,6 @@ jobs:
       - name: Install Dependencies
         run: |
           npx yarn
-          cd src/web/client && npm ci
           
       - name: Build Web
         env:
