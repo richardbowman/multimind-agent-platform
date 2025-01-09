@@ -1,5 +1,6 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 module.exports = {
   entry: './src/web/client/src/index.tsx',
@@ -37,6 +38,14 @@ module.exports = {
   plugins: [
     new HtmlWebpackPlugin({
       template: './src/web/client/public/index.html'
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: './src/web/client/public/splash.html',
+          to: 'splash.html'
+        }
+      ]
     })
   ],
   devServer: {
