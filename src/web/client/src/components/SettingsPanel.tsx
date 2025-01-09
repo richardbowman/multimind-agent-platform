@@ -47,6 +47,8 @@ export const SettingsPanel: React.FC = () => {
         });
     };
 
+    const [saveSuccess, setSaveSuccess] = useState(false);
+
     const handleSave = async () => {
         // Get all required fields from metadata
         const missingFields = CONFIG_METADATA
@@ -66,6 +68,7 @@ export const SettingsPanel: React.FC = () => {
         if (missingFields.length > 0) {
             setValidationMessage(`Please fill in the following required fields: ${missingFields.join(', ')}`);
             setSuccessMessage('');
+            setSaveSuccess(false);
             return;
         }
 
@@ -74,10 +77,17 @@ export const SettingsPanel: React.FC = () => {
             setSettings(updatedSettings);
             setSuccessMessage('Settings saved successfully');
             setValidationMessage('');
+            setSaveSuccess(true);
+            
+            // Reset success state after animation
+            setTimeout(() => {
+                setSaveSuccess(false);
+            }, 2000);
         } catch (error) {
             console.error('Failed to save settings:', error);
             setValidationMessage(`Failed to save settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
             setSuccessMessage('');
+            setSaveSuccess(false);
         }
     };
 
@@ -150,7 +160,10 @@ export const SettingsPanel: React.FC = () => {
                         ))}
                     </section>
                 ))}
-                <button className="save-button" onClick={handleSave}>
+                <button 
+                    className={`save-button ${saveSuccess ? 'success' : ''}`} 
+                    onClick={handleSave}
+                >
                     Save Settings
                 </button>
                 {validationMessage && (
