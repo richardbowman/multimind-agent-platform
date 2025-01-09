@@ -34,7 +34,6 @@ export class SettingsManager extends EventEmitter {
         this.fileQueue = new AsyncQueue();
         this.baseDir = this.determineBaseDir();
         this.settingsFile = path.join(getDataPath(), 'settings.json');
-        this.settings = this.getDefaultSettings();
     }
 
     private determineBaseDir(): string {
