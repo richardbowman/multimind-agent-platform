@@ -24,7 +24,25 @@ export const SettingsPanel: React.FC = () => {
     const handleChange = (key: string, value: string | number) => {
         const metadata = CONFIG_METADATA.find(m => m.key === key);
         const processedValue = metadata?.type === 'number' ? Number(value) : value;
-        setSettings(prev => ({ ...prev, [key]: processedValue }));
+        
+        // Handle nested keys (e.g. "bedrock.maxTokensPerMinute")
+        const parts = key.split('.');
+        setSettings(prev => {
+            const newSettings = { ...prev };
+            let current = newSettings;
+            
+            // Navigate to the correct nesting level
+            for (let i = 0; i < parts.length - 1; i++) {
+                if (!(parts[i] in current)) {
+                    current[parts[i]] = {};
+                }
+                current = current[parts[i]];
+            }
+            
+            // Set the value at the final nesting level
+            current[parts[parts.length - 1]] = processedValue;
+            return newSettings;
+        });
     };
 
     const handleSave = async () => {
@@ -90,11 +108,15 @@ export const SettingsPanel: React.FC = () => {
                 return (
                     <input
                         type={metadata.sensitive ? 'password' : 'text'}
-                        value={value}
+                        value={getNestedValue(settings, metadata.key) ?? value}
                         onChange={(e) => handleChange(metadata.key, e.target.value)}
                         placeholder={`Enter ${metadata.label.toLowerCase()}`}
                     />
                 );
+
+                function getNestedValue(obj: any, path: string): any {
+                    return path.split('.').reduce((current, part) => current?.[part], obj);
+                }
         }
     };
 

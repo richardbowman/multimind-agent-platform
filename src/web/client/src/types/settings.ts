@@ -1,5 +1,5 @@
 export interface ConfigMetadata {
-    key: string;
+    key: string;           // Can include dots for nested properties e.g. "bedrock.maxTokensPerMinute"
     label: string;
     type: 'string' | 'number' | 'boolean' | 'select';
     category: string;
