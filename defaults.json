@@ -1,0 +1,63 @@
+{
+  "port": 4001,
+  "wsUrl": "ws://localhost:4001",
+  "llmProvider": "lmstudio",
+  "searchProvider": "google",
+  "searxngUrl": "http://localhost:8080/",
+  "chromadbUrl": "http://localhost:8001",
+  "chromaCollection": "webpage_scrapes",
+  "maxSearches": 3,
+  "maxFollows": 3,
+  "maxResearchRequests": 3,
+  "embeddingModel": "text-embedding-nomic-embed-text-v1.5",
+  "chatModel": "qwen2.5-coder-14b-instruct",
+  "contextSize": 16384,
+  "agents": {
+    "solver": {
+      "userId": "b8f7d3e1-9c24-4b9a-8e5f-2d6a91f0e3d2",
+      "token": "a4c9e2f6-7b38-4d15-9x3a-1c8b5n2m4v7p",
+      "channelId": "f1e2d3c4-b5a6-4789-8901-2345f6789012"
+    },
+    "webResearch": {
+      "channelId": "ku9ap3s76tbx5nmw17at4nxitc",
+      "researcher": {
+        "token": "zkzfgktkm3g1jce9z1h77de6dc",
+        "userId": "rg7fwbna43byucb174hm7nnuwr"
+      },
+      "manager": {
+        "token": "yo793h87jp8gpykm5eiu74ekgw",
+        "userId": "xi8rrsssmidwjnfwf4qx9qr33o"
+      }
+    },
+    "projects": {
+      "channelId": "kpmrcgw67jnfbr55cbnwxy64rc"
+    },
+    "contentCreation": {
+      "channelId": "752db071-eeef-40b5-acb8-ef79c3259ccc",
+      "manager": {
+        "userId": "9d039c4e-f99d-4fb7-a160-452ac261569c"
+      },
+      "writer": {
+        "userId": "66025743-45bc-4625-a27f-52aa09dde128"
+      }
+    },
+    "projectManager": {
+      "userId": "2e330aba-4888-42b8-8685-ecdc7f4b1b43"
+    },
+    "onboarding": {
+      "channelId": "6eda3cc4-2762-4cbc-917c-820458dc1ef6",
+      "consultant": {
+        "userId": "c7776380-6cda-44b9-8113-890706cd1ec1"
+      }
+    },
+    "factChecker": {
+      "channelId": "8ca10337-00e8-4a09-a973-16a3e50dc8b6",
+      "userId": "9de97213-a3f4-4aaa-b935-df8e92548e86"
+    }
+  },
+  "bedrock": {
+    "maxTokensPerMinute": 20000,
+    "defaultDelayMs": 1000,
+    "windowSizeMs": 60000
+  }
+}

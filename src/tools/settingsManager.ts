@@ -51,40 +51,38 @@ export class SettingsManager extends EventEmitter {
         return '.';
     }
 
-    private getDefaultSettings(): Settings {
-        return {
-            host: 'localhost',
-            port: 4001,
-            protocol: 'https',
-            llmProvider: 'lmstudio',
-            chatModel: '',
-            llmWeakModel: '',
-            llmHeavyModel: '',
-            lmstudioApiKey: '',
-            anthropicApiKey: '',
-            anthropicMaxTokensPerMinute: 50000,
-            anthropicDefaultDelayMs: 1000,
-            bedrockMaxTokensPerMinute: 50000,
-            vectorDatabaseType: 'vectra',
-            chromadbUrl: ''
-        };
+    private async loadDefaults(): Promise<any> {
+        try {
+            const defaultsPath = path.join(this.baseDir, 'defaults.json');
+            const data = await this.fileQueue.enqueue(() =>
+                fs.readFile(defaultsPath, 'utf-8')
+            );
+            return JSON.parse(data);
+        } catch (error) {
+            Logger.error('Error loading defaults:', error);
+            return {};
+        }
     }
 
     async load(): Promise<void> {
+        const defaults = await this.loadDefaults();
+        
         try {
             const data = await this.fileQueue.enqueue(() =>
                 fs.readFile(this.settingsFile, 'utf-8')
             );
-            this.settings = { ...this.getDefaultSettings(), ...JSON.parse(data) };
-            this.emit('settingsLoaded', this.settings);
+            this.settings = { ...defaults, ...JSON.parse(data) };
         } catch (error) {
             if (error.code === 'ENOENT') {
+                this.settings = defaults;
                 await this.save();
             } else {
                 Logger.error('Error loading settings:', error);
                 throw error;
             }
         }
+        
+        this.emit('settingsLoaded', this.settings);
     }
 
     async save(): Promise<void> {

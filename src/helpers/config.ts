@@ -1,20 +1,16 @@
 // config.ts
-const dotenv = require('dotenv');
 import Logger from './logger';
 import * as path from 'path';
 import { SettingsManager } from '../tools/settingsManager';
 
 const settingsManager = new SettingsManager();
 
-// Load environment variables from config files
-dotenv.config({ path: path.join(settingsManager.getBaseDir(), 'env.defaults') });
-dotenv.config({ path: path.join(settingsManager.getBaseDir(), '.env') });
-dotenv.config({ path: path.join(settingsManager.getBaseDir(), '.env.local'), override: true });
-
 // Initialize settings
 settingsManager.load().catch(err => Logger.error('Error loading settings:', err));
 
 Logger.info(`Loading config from ${settingsManager.getBaseDir()}`);
+
+const settings = settingsManager.getSettings();
 
 
 // Channel and User IDs
