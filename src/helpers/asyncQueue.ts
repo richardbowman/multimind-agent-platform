@@ -10,7 +10,7 @@ export class AsyncQueue {
         
         if (this.locked) {
             this.waitingOperations.push({ stack });
-            Logger.info(`AsyncQueue: ${this.waitingOperations.length} operations waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
+            Logger.verbose(`AsyncQueue: ${this.waitingOperations.length} operations waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
         }
 
         while (this.locked) {
@@ -34,7 +34,7 @@ export class AsyncQueue {
             this.queue = Promise.resolve();
             this.locked = false;
             if (this.waitingOperations.length > 0) {
-                Logger.info(`AsyncQueue: ${this.waitingOperations.length} operations still waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
+                Logger.verbose(`AsyncQueue: ${this.waitingOperations.length} operations still waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
             }
         }
     }

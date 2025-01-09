@@ -1,6 +1,6 @@
 import { ChatPost } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { ILLMService, LLMRequestParams, StructuredOutputPrompt } from "./ILLMService";
+import { ILLMService, LLMRequestParams, LLMTool, StructuredOutputPrompt } from "./ILLMService";
 import { LLMCallLogger } from "./LLMLogger";
 
 export abstract class BaseLLMService implements ILLMService {
@@ -92,7 +92,7 @@ export abstract class BaseLLMService implements ILLMService {
         }));
     }
 
-    protected convertToToolFormat(schema: any, prompt: string): any {
+    protected convertToToolFormat(schema: any, prompt: string): LLMTool {
         return {
             name: "generate_structured_output",
             description: `Generate structured response.`,

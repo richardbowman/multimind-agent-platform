@@ -23,7 +23,7 @@ try {
     
     // Copy env file
     console.log('Copying env...');
-    fs.copyFileSync('.env', path.join('dist', '.env'));
+    fs.copyFileSync('defaults.json', path.join('dist', 'defaults.json'));
 
     // Run electron-builder
     console.log('Building Electron app...');

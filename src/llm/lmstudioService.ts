@@ -19,7 +19,7 @@ class MyEmbedder implements IEmbeddingFunction {
 
     constructor(embeddingModel: EmbeddingSpecificModel) {
         this.embeddingModel = embeddingModel;
-    }   
+    }
 
     async generate(texts: string[]): Promise<number[][]> {
         const embeddings: number[][] = [];
@@ -81,7 +81,7 @@ export default class LMStudioService extends BaseLLMService {
     async initializeChatModel(modelPath: string): Promise<void> {
         const loaded = await this.lmStudioClient.llm.listLoaded();
         const availableModels = loaded.map(model => model.identifier);
-        
+
         if (!availableModels.includes(modelPath)) {
             const configError = new ConfigurationError(
                 `LLM model "${modelPath}" not found. Available models:\n${availableModels.map(m => `- ${m}`).join('\n')}`
@@ -103,10 +103,10 @@ export default class LMStudioService extends BaseLLMService {
 
 
     async sendStructuredRequest(
-        message: string, 
-        instructions: StructuredOutputPrompt, 
-        history?: any[],  
-        contextWindowLength?: number, 
+        message: string,
+        instructions: StructuredOutputPrompt,
+        history?: any[],
+        contextWindowLength?: number,
         maxTokens?: number
     ): Promise<any> {
         if (!this.chatModel) {
@@ -116,13 +116,13 @@ export default class LMStudioService extends BaseLLMService {
         // Add the current message to the history
         const userMessage = { role: "user", content: message };
         let messageChain = [
-            ...history||[], userMessage
+            ...history || [], userMessage
         ];
 
-        const opts : LLMPredictionOpts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens  };
+        const opts: LLMPredictionOpts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens };
 
         // If contextWindowLength is provided, truncate the history
-        const contextLength = parseInt(process.env.CONTEXT_SIZE||"") || contextWindowLength || 4096;
+        const contextLength = parseInt(process.env.CONTEXT_SIZE || "") || contextWindowLength || 4096;
         let tokenCount = 0;
         for (let i = messageChain.length - 1; i >= 0; i--) {
             const messageTokens = await this.chatModel.unstable_countTokens(messageChain[i].content);
@@ -134,14 +134,14 @@ export default class LMStudioService extends BaseLLMService {
                 break;
             }
         }
-        
+
         // Set the maxTokens parameter for the LLaMA model
-        const input = { 
-            message, 
-            instructions: instructions.getPrompt(), 
-            history, 
-            contextWindowLength, 
-            maxTokens 
+        const input = {
+            message,
+            instructions: instructions.getPrompt(),
+            history,
+            contextWindowLength,
+            maxTokens
         };
 
         try {
@@ -168,12 +168,12 @@ export default class LMStudioService extends BaseLLMService {
     }
 
 
-    getEmbeddingModel() : IEmbeddingFunction {
+    getEmbeddingModel(): IEmbeddingFunction {
         if (!this.embeddingModel) throw new Error("LMStudioService not initalized");
         return this.embeddingModel;
     }
 
-    getChatModel() : LLMSpecificModel {
+    getChatModel(): LLMSpecificModel {
         if (!this.chatModel) throw new Error("LMStudioService not initalized");
         return this.chatModel;
     }
@@ -204,10 +204,30 @@ export default class LMStudioService extends BaseLLMService {
         }
 
         try {
+            const toolOpts: Partial<LLMPredictionOpts> = {};
+            if (params.opts?.tools?.length == 1) {
+                toolOpts.structured = {
+                    type: "json",
+                    jsonSchema: params.opts.tools[0].parameters
+                }
+            } else {
+                toolOpts.tools = {
+                    tools: {
+                        type: "toolArray",
+                        tools: params.opts?.tools?.map(t => ({
+                            type: "function",
+                            function: t
+                        }))
+                    }
+                };
+            }
+
             const prediction = await this.chatModel.respond(messageChain, {
                 maxPredictedTokens: params.opts?.maxPredictedTokens,
-                temperature: params.opts?.temperature
+                temperature: params.opts?.temperature,
+                ...toolOpts
             });
+
             const resultBody = prediction.content;
 
             const result = {
