@@ -44,7 +44,24 @@ export class ElectronIPCServer {
 
         const rpc = createBirpc<ClientMethods, ServerMethods>(
             {
-
+                // Only expose settings-related methods
+                getSettings: async () => {
+                    return this.services.settings.getSettings();
+                },
+                updateSettings: async (settings: any) => {
+                    return this.services.settings.updateSettings(settings);
+                },
+                // Stub out all other methods
+                sendMessage: async () => { throw new Error('Configuration required') },
+                getMessages: async () => { throw new Error('Configuration required') },
+                getChannels: async () => { throw new Error('Configuration required') },
+                getThreads: async () => { throw new Error('Configuration required') },
+                getTasks: async () => { throw new Error('Configuration required') },
+                getArtifacts: async () => { throw new Error('Configuration required') },
+                getAllArtifacts: async () => { throw new Error('Configuration required') },
+                deleteArtifact: async () => { throw new Error('Configuration required') },
+                getHandles: async () => { throw new Error('Configuration required') },
+                getLogs: async () => { throw new Error('Configuration required') }
             },
             {
                 ...safeHandlers,
