@@ -2,11 +2,20 @@
 import Logger from './logger';
 import * as path from 'path';
 import { Settings, SettingsManager } from '../tools/settingsManager';
+import * as dotenv from 'dotenv';
+
+// Load environment variables from .env file
+dotenv.config();
 
 const settingsManager = new SettingsManager();
 
 // Initialize settings
 async function initializeConfig() {
+  // Load .env first so environment variables take precedence
+  const envResult = dotenv.config();
+  if (envResult.error) {
+    Logger.warn('No .env file found, using defaults only');
+  }
   await settingsManager.load();
   Logger.info(`Loading config from ${settingsManager.getBaseDir()}`);
   
