@@ -31,7 +31,7 @@ async function createWindow() {
         await mainWindow.loadURL('http://localhost:3000');
         mainWindow.webContents.openDevTools();
     } else {
-        await mainWindow.loadFile(path.join(__dirname, 'web/client/build/index.html'));
+        await mainWindow.loadFile(path.join(__dirname, 'web/index.html'));
     }
 }
 
