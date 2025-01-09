@@ -298,12 +298,19 @@ export class ModelHelpers {
 
         // Augment instructions with context and generate a response
         const history = (params as HandlerParams).threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
-        const response = await this.model.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:params.message||""}, history);
-        (response as RequestArtifacts).artifactIds = params.artifacts?.map(a => a.id);
-        
-        // Cache the response
-        this.modelCache.set(instructions, cacheContext, response);
-        
-        return response;
+        const response = await this.model.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:params.message||params.content||""}, history);
+
+        if (typeof response === "string") {
+            // Cache the response
+            this.modelCache.set(instructions, cacheContext, response);
+            return response;
+        } else {
+            (response as RequestArtifacts).artifactIds = params.artifacts?.map(a => a.id);
+            
+            // Cache the response
+            this.modelCache.set(instructions, cacheContext, response);
+            
+            return response;
+        }
     }
 }

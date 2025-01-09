@@ -34,7 +34,7 @@ export abstract class BaseLLMService implements ILLMService {
             systemPrompt: instructions
         });
 
-        return result.response;
+        return typeof result === "string" ? {message: result as string} as T : result.response;
     }
 
     async sendMessageToLLM(message: string, history: any[], seedAssistant?: string, contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string> {

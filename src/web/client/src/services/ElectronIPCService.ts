@@ -45,6 +45,7 @@ export class ElectronIPCService extends BaseRPCService {
                 },
                 serialize: safeHandlers.serialize,
                 deserialize: safeHandlers.deserialize,
+                timeout: 180000
             }
         );
     }

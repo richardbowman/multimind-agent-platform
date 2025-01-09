@@ -27,15 +27,15 @@ export async function initializeConfig() {
 
     // Override settings with environment variables
     Logger.info('Starting environment variable processing');
-    Logger.debug('Current process.env keys:', Object.keys(process.env));
+    Logger.verbose('Current process.env keys:', Object.keys(process.env));
     
     for (const [key, value] of Object.entries(process.env)) {
         const lowerKey = key.toLowerCase();
-        Logger.debug(`Processing env var: ${key} = ${value}`);
+        Logger.verbose(`Processing env var: ${key} = ${value}`);
         
         // Handle nested settings with underscores (e.g. BEDROCK_MAX_TOKENS_PER_MINUTE)
         const parts = lowerKey.split('_');
-        Logger.debug(`Split into parts:`, parts);
+        Logger.verbose(`Split into parts:`, parts);
         let current = settings;
         
         for (let i = 0; i < parts.length - 1; i++) {
@@ -47,11 +47,11 @@ export async function initializeConfig() {
                 current[part] = {};
             }
             current = current[part];
-            Logger.debug(`Current settings path: ${parts.slice(0, i + 1).join('.')}`);
+            Logger.verbose(`Current settings path: ${parts.slice(0, i + 1).join('.')}`);
         }
         
         const lastPart = parts[parts.length - 1];
-        Logger.debug(`Setting value at ${parts.join('.')} = ${value}`);
+        Logger.verbose(`Setting value at ${parts.join('.')} = ${value}`);
         // Convert value to number if it looks like one
         const numValue = Number(value);
         if (!isNaN(numValue) && value !== '') {

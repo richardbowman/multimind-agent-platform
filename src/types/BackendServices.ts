@@ -9,17 +9,10 @@ import { TaskManager } from "src/tools/taskManager";
 import { LogReader } from "src/server/LogReader";
 import { SettingsManager } from "../tools/settingsManager";
 
-export interface BackendSettings {
-    provider: LLMProvider;
-    model: string;
-    apiKey: string;
-}
-
 export interface BackendServices {
     chatClient: ChatClient;
     taskManager: TaskManager;
     artifactManager: ArtifactManager;
-    settings: BackendSettings;
     settingsManager: SettingsManager;
     llmLogger: LLMCallLogger;
     logReader: LogReader;

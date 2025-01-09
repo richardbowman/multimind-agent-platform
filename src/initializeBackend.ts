@@ -1,5 +1,4 @@
-import { CHAT_MODEL, CHROMA_COLLECTION, EMBEDDING_MODEL, LLM_PROVIDER, VECTOR_DATABASE_TYPE, EMBEDDING_PROVIDER, PROJECTS_CHANNEL_ID } from "./helpers/config";
-import { LLMServiceFactory, LLMProvider } from "./llm/LLMServiceFactory";
+import { LLMServiceFactory } from "./llm/LLMServiceFactory";
 import { LocalChatStorage, LocalTestClient } from "./chat/localChatClient";
 import SimpleTaskManager from "./test/simpleTaskManager";
 import { ArtifactManager } from "./tools/artifactManager";
@@ -8,31 +7,26 @@ import Logger from "./helpers/logger";
 import { AgentLoader } from "./utils/AgentLoader";
 import { BackendServices } from "./types/BackendServices";
 import { LogReader } from "./server/LogReader";
+import { SettingsManager } from "./tools/settingsManager";
 
-export async function initializeBackend(options: { 
+export async function initializeBackend(settingsManager: SettingsManager, options: { 
     reindex?: boolean,
     onProgress?: (message: string) => void 
 } = {}): Promise<BackendServices> {
     const { onProgress } = options;
-    
-    // Validate required configurations
-    // if (!process.env.OPENAI_API_KEY) {
-    //     throw new Error('OpenAI API key is not configured');
-    // }
+
+    const _s = settingsManager.getSettings();
 
     onProgress?.('Initializing LLM service...');
-    const llmService = LLMServiceFactory.createService({
-        chatProvider: LLM_PROVIDER as LLMProvider,
-        embeddingProvider: EMBEDDING_PROVIDER as LLMProvider
-    });
+    const llmService = LLMServiceFactory.createService(_s);
 
     // Initialize the embedding and LLaMA models
     onProgress?.('Initializing embedding model...');
-    await llmService.initializeEmbeddingModel(EMBEDDING_MODEL);
+    await llmService.initializeEmbeddingModel(_s.embeddingModel);
     onProgress?.('Initializing chat model...');
-    await llmService.initializeChatModel(CHAT_MODEL);
+    await llmService.initializeChatModel(_s.chatModel);
 
-    const vectorDB = createVectorDatabase(VECTOR_DATABASE_TYPE, llmService);
+    const vectorDB = createVectorDatabase(_s.vectorDatabaseType, llmService);
     const artifactManager = new ArtifactManager(vectorDB);
 
     vectorDB.on("needsReindex", async () => {
@@ -40,7 +34,7 @@ export async function initializeBackend(options: {
         await artifactManager.indexArtifacts();
     });
 
-    await vectorDB.initializeCollection(CHROMA_COLLECTION);
+    await vectorDB.initializeCollection(_s.chromaCollection);
 
     const chatStorage = new LocalChatStorage(".output/chats.json");
     const tasks = new SimpleTaskManager(".output/tasks.json");
@@ -72,7 +66,8 @@ export async function initializeBackend(options: {
         taskManager: tasks,
         artifactManager,
         chatStorage,
-        defaultChannelId: PROJECTS_CHANNEL_ID
+        defaultChannelId: _s.defaultChannels["onboarding"],
+        settingsManager: settingsManager
     });
 
     // Initialize all agents
@@ -97,11 +92,7 @@ export async function initializeBackend(options: {
         chatClient: userClient,
         taskManager: tasks,
         artifactManager,
-        settings: {
-            provider: LLM_PROVIDER,
-            model: CHAT_MODEL,
-            apiKey: process.env.OPENAI_API_KEY || ''
-        },
+        settingsManager,
         llmLogger: llmService.getLogger(),
         logReader: new LogReader()
     };

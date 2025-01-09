@@ -46,7 +46,7 @@ export class AgentLoader {
                 });
             }
             
-            for (const [agentName, definition] of Object.entries(agentDefinitions.agents)) {
+            for (const [agentName, definition] of Object.entries(agentDefinitions)) {
                 if (!definition.enabled) {
                     Logger.info(`Skipping disabled agent: ${agentName}`);
                     continue;

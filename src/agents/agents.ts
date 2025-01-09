@@ -121,6 +121,8 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
         }
     }
 
+    public abstract initialize?(): Promise<void>;
+
     protected async taskNotification(task: Task): Promise<void> {
         await this.processTaskQueue();
     }

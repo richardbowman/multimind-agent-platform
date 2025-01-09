@@ -1,36 +1,76 @@
 import { BackendServices } from "../types/BackendServices";
 import { ClientMethods, ServerMethods } from "../web/client/src/shared/RPCInterface";
 import Logger from "../helpers/logger";
-import { getUISettings } from "../helpers/config";
 import { ChatPost } from "../chat/chatClient";
 import { ClientChannel, ClientMessage, ClientThread } from "../web/client/src/shared/IPCInterface";
 import { LLMCallLogger } from "../llm/LLMLogger";
-import { StartupHandler } from "./StartupHandler";
+import { reinitializeBackend } from "../main.electron";
 
-export class MessageHandler extends StartupHandler  implements ServerMethods {
+export class MessageHandler implements ServerMethods {
+    createWrapper(): ServerMethods {
+        const handler = this;
+        return new Proxy({} as ServerMethods, {
+            get(target, prop) {
+                if (typeof handler[prop as keyof ServerMethods] === 'function') {
+                    return async (...args: any[]) => {
+                        try {
+                            const result = await (handler[prop as keyof ServerMethods] as Function).apply(handler, args);
+                            return result;
+                        } catch (error) {
+                            Logger.error(`Error in wrapped handler method ${String(prop)}:`, error);
+                            throw error;
+                        }
+                    };
+                }
+                return undefined;
+            }
+        });
+    }
+
+    async getSettings(): Promise<any> {
+        return this.services.settingsManager.getSettings();
+    }
+
+    async updateSettings(settings: any): Promise<any> {
+        console.log('update settings called', JSON.stringify(settings, 2, false));
+        
+        this.services.settingsManager.updateSettings(settings);
+
+        // Reinitialize backend services
+        try {
+            await reinitializeBackend();
+        } catch (err) {
+            console.log(err);
+        }
+
+        return this.services.settingsManager.getSettings();
+    }
+
     setupClientEvents(rpc: ClientMethods) {
         // Set up message receiving for the user client
-        this.services.chatClient.receiveMessages((post: ChatPost) => {
-            const rpcMessage = {
-                id: post.id,
-                channel_id: post.channel_id,
-                message: post.message,
-                user_id: post.user_id,
-                create_at: post.create_at,
-                directed_at: post.directed_at,
-                props: post.props,
-                thread_id: post.getRootId()
-            };
-            rpc.onMessage([rpcMessage]);
-        });
-
-        // Set up log update notifications
-        this.services.llmLogger.on("log", (logEntry) => {
-            rpc.onLogUpdate({
-                type: 'llm',
-                entry: logEntry
+        if (this.services) {
+            this.services.chatClient.receiveMessages((post: ChatPost) => {
+                const rpcMessage = {
+                    id: post.id,
+                    channel_id: post.channel_id,
+                    message: post.message,
+                    user_id: post.user_id,
+                    create_at: post.create_at,
+                    directed_at: post.directed_at,
+                    props: post.props,
+                    thread_id: post.getRootId()
+                };
+                rpc.onMessage([rpcMessage]);
             });
-        });
+
+            // Set up log update notifications
+            this.services.llmLogger.on("log", (logEntry) => {
+                rpc.onLogUpdate({
+                    type: 'llm',
+                    entry: logEntry
+                });
+            });
+        }
 
         // Listen for configuration errors
         // this.services.settings.on("configurationError", (error) => {
@@ -43,10 +83,10 @@ export class MessageHandler extends StartupHandler  implements ServerMethods {
     }
     
     constructor(private services: BackendServices) {
-        super();
-        if (!services) {
-            throw new Error('Backend services must be provided');
-        }
+    }
+
+    public setServices(services) {
+        this.services = services;
     }
 
     async sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage> {
@@ -139,6 +179,7 @@ export class MessageHandler extends StartupHandler  implements ServerMethods {
     }
 
     async getChannels(): Promise<ClientChannel[]> {
+        console.log('loading channels');
         if (!this.services?.chatClient) {
             throw new Error('Chat client is not initialized');
         }

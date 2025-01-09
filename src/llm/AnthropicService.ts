@@ -6,7 +6,6 @@ import Logger from "src/helpers/logger";
 import { LLMCallLogger } from "./LLMLogger";
 import { AsyncQueue } from "../helpers/asyncQueue";
 import { BaseLLMService } from "./BaseLLMService";
-import { ANTHROPIC_API_KEY, ANTHROPIC_MODEL, ANTHROPIC_MAX_TOKENS_PER_MINUTE, ANTHROPIC_DEFAULT_DELAY_MS, ANTHROPIC_WINDOW_SIZE_MS } from "../helpers/config";
 import JSON5 from 'json5';
 import Anthropic from '@anthropic-ai/sdk';
 
@@ -16,7 +15,7 @@ export class AnthropicService extends BaseLLMService {
     private queue: AsyncQueue = new AsyncQueue();
     private embeddingService?: ILLMService;
 
-    constructor(apiKey: string = ANTHROPIC_API_KEY, model: string = ANTHROPIC_MODEL, embeddingService?: ILLMService) {
+    constructor(apiKey: string, model: string, embeddingService?: ILLMService) {
         super("anthropic");
         this.client = new Anthropic({
             apiKey: apiKey

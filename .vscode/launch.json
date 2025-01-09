@@ -20,6 +20,21 @@
                 "<node_internals>/**",
                 "${workspaceFolder}/node_modules/**"
             ]
+        },
+        {
+            "name": "Debug Electron Main Process",
+            "type": "node",
+            "request": "launch",
+            "cwd": "${workspaceFolder}",
+            "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron",
+            "windows": {
+                "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
+            },
+            "args": [
+                ".",
+                "--dev-mode"
+            ],
+            "outputCapture": "std"
         }
     ]
 }

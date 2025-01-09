@@ -3,7 +3,7 @@ import LMStudioService from "./lmstudioService";
 import { BedrockService } from "./BedrockService";
 import { AnthropicService } from "./AnthropicService";
 import { LlamaCppService } from "./LlamaCppService";
-import { LLM_HEAVY_MODEL, LLM_WEAK_MODEL } from "src/helpers/config";
+import { Settings } from "../tools/settingsManager";
 
 export enum LLMProvider {
     LMSTUDIO = "lmstudio",
@@ -12,42 +12,35 @@ export enum LLMProvider {
     LLAMA_CPP = "llama-cpp"
 }
 
-export interface LLMServiceConfig {
-    chatProvider: LLMProvider;
-    embeddingProvider?: LLMProvider;
-    modelId?: string;
-    embeddingModelId?: string;
-    apiKey?: string;
-}
 
 export class LLMServiceFactory {
-    static createService(config: LLMServiceConfig): ILLMService {
+    static createService(settings: Settings): ILLMService {
         // Create embedding service if specified
         let embeddingService: ILLMService | undefined;
-        if (config.embeddingProvider && config.embeddingProvider !== config.chatProvider) {
-            switch (config.embeddingProvider) {
+        if (settings.embeddingProvider && settings.embeddingProvider !== settings.providers.chat) {
+            switch (settings.embeddingProvider) {
                 case LLMProvider.LMSTUDIO:
                     embeddingService = new LMStudioService();
                     break;
                 case LLMProvider.BEDROCK:
                     embeddingService = new BedrockService(
-                        "",
-                        config.embeddingModelId
+                        settings.chatModel,
+                        settings.embeddingModel
                     );
                     break;
                 default:
-                    throw new Error(`Unsupported embedding provider: ${config.embeddingProvider}`);
+                    throw new Error(`Unsupported embedding provider: ${settings.embeddingProvider}`);
             }
         }
 
         // Create main chat service
-        switch (config.chatProvider) {
+        switch (settings.providers.chat) {
             case LLMProvider.LMSTUDIO:
                 return new LMStudioService();
             case LLMProvider.BEDROCK:
                 return new BedrockService(
-                    config.modelId || LLM_WEAK_MODEL,
-                    config.embeddingModelId,
+                    settings.modelId || settings.llmWeakModel,
+                    settings.embeddingModelId,
                     embeddingService
                 );
             case LLMProvider.ANTHROPIC:
@@ -55,14 +48,14 @@ export class LLMServiceFactory {
                     throw new Error("Anthropic requires an embedding service to be configured");
                 }
                 return new AnthropicService(
-                    config.apiKey, // Will use default from config if undefined
-                    config.modelId, // Will use default from config if undefined
+                    settings.anthropic.api.key, // Will use default from config if undefined
+                    settings.modelId, // Will use default from config if undefined
                     embeddingService
                 );
             case LLMProvider.LLAMA_CPP:
                 return new LlamaCppService();
             default:
-                throw new Error(`Unsupported chat provider: ${config.chatProvider}`);
+                throw new Error(`Unsupported chat provider: ${settings.chatProvider}`);
         }
     }
 }

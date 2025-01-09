@@ -94,7 +94,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     console.debug('WebSocketContext stable mount - connecting');
     
     // Listen for connected event before fetching data
-    ipcService.once('connected', () => {
+    ipcService.on('connected', () => {
       console.debug('WebSocketContext: received connected event');
       setNeedsConfig(false);
       Promise.all([
