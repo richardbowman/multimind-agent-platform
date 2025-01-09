@@ -151,9 +151,10 @@ export class SettingsManager extends EventEmitter {
         return { ...this.settings };
     }
 
-    async updateSettings(newSettings: Partial<Settings>): Promise<void> {
+    async updateSettings(newSettings: Partial<Settings>): Promise<Settings> {
         this.settings = { ...this.settings, ...newSettings };
         await this.save();
+        return this.getSettings();
     }
 
     getBaseDir(): string {

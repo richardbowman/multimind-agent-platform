@@ -73,7 +73,10 @@ export const SettingsPanel: React.FC = () => {
         }
 
         try {
-            const updatedSettings = await updateSettings(settings);
+            console.log('Saving settings:', settings);
+            await updateSettings(settings);
+            const updatedSettings = await getSettings();
+            console.log('Updated settings:', updatedSettings);
             setSettings(updatedSettings);
             setSuccessMessage('Settings saved successfully');
             setValidationMessage('');
