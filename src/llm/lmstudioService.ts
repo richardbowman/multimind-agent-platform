@@ -78,23 +78,23 @@ export default class LMStudioService extends BaseLLMService {
     }
 
     async initializeChatModel(modelPath: string): Promise<void> {
-        try {
-            const loaded = await this.lmStudioClient.llm.listLoaded();
-            if (loaded.find((model) => model.identifier === modelPath) !== undefined) {
-                this.chatModel = await this.lmStudioClient.llm.get(modelPath);
-                Logger.info("Connected to existing LLaMA model.");
-            } else {
-                this.chatModel = await this.lmStudioClient.llm.load(modelPath, {verbose: false});
-                Logger.info("LLaMA model loaded.");
-            }
-        } catch (error) {
-            const loaded = await this.lmStudioClient.llm.listLoaded();
-            const availableModels = loaded.map(model => model.identifier);
+        const loaded = await this.lmStudioClient.llm.listLoaded();
+        const availableModels = loaded.map(model => model.identifier);
+        
+        if (!availableModels.includes(modelPath)) {
             const configError = new ConfigurationError(
                 `LLM model "${modelPath}" not found. Available models:\n${availableModels.map(m => `- ${m}`).join('\n')}`
             );
             Logger.error("Failed to initialize LLaMA model:", configError);
             throw configError;
+        }
+
+        try {
+            this.chatModel = await this.lmStudioClient.llm.get(modelPath);
+            Logger.info("Connected to existing LLaMA model.");
+        } catch (error) {
+            Logger.error("Failed to connect to LLaMA model:", error);
+            throw error;
         }
     }
 
