@@ -10,6 +10,10 @@ export class SplashWindow {
             height: 300,
             frame: false,
             transparent: true,
+            resizable: false,
+            skipTaskbar: true,
+            autoHideMenuBar: true,
+            hasShadow: false,
             webPreferences: {
                 contextIsolation: true,
                 nodeIntegration: false,
