@@ -88,8 +88,15 @@ export default class LMStudioService extends BaseLLMService {
                 Logger.info("LLaMA model loaded.");
             }
         } catch (error) {
-            Logger.error("Failed to initialize LLaMA model:", error);
-            throw error;
+            // Extract available models from error message if possible
+            const errorMsg = error.toString();
+            const availableModels = errorMsg.match(/·\s([^\n]+)/g)?.map(m => m.replace('· ', '').trim()) || [];
+            
+            const configError = new ConfigurationError(
+                `LLM model not found. Available models:\n${availableModels.map(m => `- ${m}`).join('\n')}`
+            );
+            Logger.error("Failed to initialize LLaMA model:", configError);
+            throw configError;
         }
     }
 
