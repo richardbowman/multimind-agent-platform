@@ -28,7 +28,32 @@ export const SettingsPanel: React.FC = () => {
     };
 
     const handleSave = () => {
-        updateSettings(settings);
+        // Validate required fields based on provider
+        const provider = settings.llmProvider;
+        let missingFields: string[] = [];
+
+        // Common required fields
+        if (!settings.host) missingFields.push('Host');
+        if (!settings.port) missingFields.push('Port');
+        if (!settings.protocol) missingFields.push('Protocol');
+        if (!settings.vectorDatabaseType) missingFields.push('Vector Database Type');
+
+        // Provider-specific validation
+        if (provider === 'lmstudio' && !settings.lmstudioApiKey) {
+            missingFields.push('LM Studio API Key');
+        } else if (provider === 'anthropic' && !settings.anthropicApiKey) {
+            missingFields.push('Anthropic API Key');
+        }
+
+        if (missingFields.length > 0) {
+            alert(`Please fill in the following required fields:\n${missingFields.join('\n')}`);
+            return;
+        }
+
+        updateSettings(settings).catch(error => {
+            console.error('Failed to save settings:', error);
+            alert('Failed to save settings. Check the console for details.');
+        });
     };
 
     const renderInput = (metadata: ConfigMetadata) => {

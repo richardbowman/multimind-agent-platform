@@ -219,18 +219,26 @@ export class MessageHandler implements ServerMethods {
     }
 
     async updateSettings(settings: any): Promise<any> {
+        // Update environment variables based on settings
+        if (settings.llmProvider) process.env.LLM_PROVIDER = settings.llmProvider;
+        if (settings.chatModel) process.env.CHAT_MODEL = settings.chatModel;
+        if (settings.llmWeakModel) process.env.LLM_WEAK_MODEL = settings.llmWeakModel;
+        if (settings.llmHeavyModel) process.env.LLM_HEAVY_MODEL = settings.llmHeavyModel;
+        if (settings.lmstudioApiKey) process.env.LMSTUDIO_API_KEY = settings.lmstudioApiKey;
+        if (settings.anthropicApiKey) process.env.ANTHROPIC_API_KEY = settings.anthropicApiKey;
+        if (settings.anthropicMaxTokensPerMinute) process.env.ANTHROPIC_MAX_TOKENS_PER_MINUTE = settings.anthropicMaxTokensPerMinute.toString();
+        if (settings.anthropicDefaultDelayMs) process.env.ANTHROPIC_DEFAULT_DELAY_MS = settings.anthropicDefaultDelayMs.toString();
+        if (settings.bedrockMaxTokensPerMinute) process.env.BEDROCK_MAX_TOKENS_PER_MINUTE = settings.bedrockMaxTokensPerMinute.toString();
+        if (settings.vectorDatabaseType) process.env.VECTOR_DATABASE_TYPE = settings.vectorDatabaseType;
+        if (settings.chromadbUrl) process.env.CHROMADB_URL = settings.chromadbUrl;
+        if (settings.host) process.env.HOST = settings.host;
+        if (settings.port) process.env.PORT = settings.port.toString();
+        if (settings.protocol) process.env.PROTOCOL = settings.protocol;
+
+        // Update the services settings
         this.services.settings = { ...this.services.settings, ...settings };
-        // Update environment variables
-        if (settings.provider) process.env.LLM_PROVIDER = settings.provider;
-        if (settings.model) process.env.CHAT_MODEL = settings.model;
-        if (settings.apiKey) {
-            if (settings.provider === 'openai') {
-                process.env.OPENAI_API_KEY = settings.apiKey;
-            } else if (settings.provider === 'anthropic') {
-                process.env.ANTHROPIC_API_KEY = settings.apiKey;
-            }
-        }
-        return this.services.settings;
+
+        return getUISettings();
     }
 
     async getLogs(logType: 'llm' | 'system' | 'api'): Promise<any> {
