@@ -23,6 +23,9 @@ export class ElectronIPCService extends BaseRPCService {
                 },
                 onLogUpdate: (update: { type: string; entry: any }) => {
                     this.emit('onLogUpdate', update);
+                },
+                onBackendStatus: (status: { configured: boolean; ready: boolean; message?: string }) => {
+                    this.emit('onBackendStatus', status);
                 }
             },
             {
