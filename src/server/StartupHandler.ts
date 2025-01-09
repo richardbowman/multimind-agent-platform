@@ -34,6 +34,12 @@ export class StartupHandler implements Partial<ServerMethods> {
         return getUISettings();
     }
 
+    protected onServicesReinitialized?: (services: BackendServices) => Promise<void>;
+
+    setServicesReinitializedHandler(handler: (services: BackendServices) => Promise<void>) {
+        this.onServicesReinitialized = handler;
+    }
+
     async updateSettings(settings: any): Promise<any> {
         console.log('update settings called');
         
@@ -53,10 +59,23 @@ export class StartupHandler implements Partial<ServerMethods> {
         if (settings.port) process.env.PORT = settings.port.toString();
         if (settings.protocol) process.env.PROTOCOL = settings.protocol;
 
-        // Signal that settings have changed and backend needs reinitialization
-        return { 
-            ...getUISettings(),
-            needsRestart: true
-        };
+        // Reinitialize backend services
+        const newServices = await initializeBackend({
+            onProgress: (message) => {
+                if (this.rpc) {
+                    this.rpc.onBackendStatus({
+                        configured: true,
+                        ready: false,
+                        message
+                    });
+                }
+            }
+        });
+
+        if (this.onServicesReinitialized) {
+            await this.onServicesReinitialized(newServices);
+        }
+
+        return getUISettings();
     }
 }

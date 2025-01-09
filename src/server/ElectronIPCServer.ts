@@ -16,6 +16,9 @@ export class ElectronIPCServer {
     constructor(private services: BackendServices, private mainWindow: BrowserWindow, hasConfigError: boolean) {
         if (hasConfigError) {
             this.handler = new StartupHandler();
+            this.handler.setServicesReinitializedHandler(async (services) => {
+                await this.reinitialize(services);
+            });
             this.setupRPC();
         } else {
             this.handler = new MessageHandler(services);
