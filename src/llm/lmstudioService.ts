@@ -210,15 +210,13 @@ export default class LMStudioService extends BaseLLMService {
                     type: "json",
                     jsonSchema: params.opts.tools[0].parameters
                 }
-            } else {
+            } else if (params.opts?.tools && params.opts?.tools?.length > 1) {
                 toolOpts.tools = {
-                    tools: {
-                        type: "toolArray",
-                        tools: params.opts?.tools?.map(t => ({
-                            type: "function",
-                            function: t
-                        }))
-                    }
+                    type: "toolArray",
+                    tools: params.opts?.tools?.map(t => ({
+                        type: "function",
+                        function: t
+                    }))
                 };
             }
 
@@ -231,7 +229,7 @@ export default class LMStudioService extends BaseLLMService {
             const resultBody = prediction.content;
 
             const result = {
-                response: params.parseJSON ? JSON5.parse(resultBody) : resultBody,
+                response: params.parseJSON ? JSON5.parse(resultBody) : { message : resultBody },
                 metadata: {
                     _usage: {
                         inputTokens: await this.countTokens(messageChain.map(m => m.content).join('')),

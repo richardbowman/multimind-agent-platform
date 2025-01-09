@@ -1,17 +1,20 @@
 # TODO List
 
 
-Error processing page https://www.unite.ai/best-large-language-models-llms/ Error: Trying to keep the first 22333 tokens when context the overflows. However, the model is loaded with context length of only 16384 tokens, which is not enough. Try to load the model with a larger context length, or provide a shorter input
 
-
+## 2024-01-09
+ - [ ] at one point, i think i was trimming, but getitng token limit errors.
+ - [ ] enhance how steps can get configs speciifc to different agents, like i'd like to limit the solver's knowledge check to certain "instructions" document types
+ - [ ] custom channels
+ - [ ] channel templates
 
 
 ## 2024-12-17
-- [ ] move to Electron app
+- [x] move to Electron app
 - [ ] move to puppeteer-core and use local Chrome
 
 - [ ] right now, if the server restarts, the client can't restart/resync
-- [ ] Remove already processed links from link selection 
+- [x] Remove already processed links from link selection 
 - [ ] Move "Received get_logs request with type:" logs to the API type log
 - [ ] instead of scraper scrolling all the way to bottom, what if it scrolled page by page
 

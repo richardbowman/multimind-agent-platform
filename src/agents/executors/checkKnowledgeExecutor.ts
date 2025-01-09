@@ -54,7 +54,7 @@ Generate 2-3 different search queries that will help find relevant information.`
         });
 
         // Execute searches using our vector DB
-        const searchResults = [];
+        let searchResults = [];
         const seenContent = new Set();
         
         for (const query of queryResult.queries) {
@@ -75,6 +75,9 @@ Generate 2-3 different search queries that will help find relevant information.`
                 Logger.error(`Error querying ChromaDB: ${error}`);
             }
         }
+
+        // only include relevant items
+        searchResults = searchResults.filter(s => s.score > 0.5);
 
         const analysisPrompt = `You are analyzing research results for: "${goal}"
 
