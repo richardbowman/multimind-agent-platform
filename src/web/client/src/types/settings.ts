@@ -44,7 +44,7 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
 
     // API Keys
     {
-        key: 'anthropicApiKey',
+        key: 'anthropic.api.key',
         label: 'Anthropic API Key',
         type: 'string',
         category: 'API Keys',
