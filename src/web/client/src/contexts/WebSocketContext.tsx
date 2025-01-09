@@ -67,6 +67,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
   currentThreadId: null,
   setCurrentThreadId: () => { },
   isLoading: true,
+  needsConfig: true
 });
 
 export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -90,56 +91,52 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   const [needsConfig, setNeedsConfig] = useState(false);
 
   useEffect(() => {
-    // Only connect if we're not in an unmounting cycle
-    const mountTimeout = setTimeout(() => {
-      console.debug('WebSocketContext stable mount - connecting');
-      
-      // Listen for connected event before fetching data
-      ipcService.once('connected', () => {
-        console.debug('WebSocketContext: received connected event');
-        setNeedsConfig(false);
-        Promise.all([
-          fetchChannels(),
-          fetchHandles()
-        ]).catch(error => {
-          console.error('Error fetching initial data:', error);
-        });
+    console.debug('WebSocketContext stable mount - connecting');
+    
+    // Listen for connected event before fetching data
+    ipcService.once('connected', () => {
+      console.debug('WebSocketContext: received connected event');
+      setNeedsConfig(false);
+      Promise.all([
+        fetchChannels(),
+        fetchHandles()
+      ]).catch(error => {
+        console.error('Error fetching initial data:', error);
       });
+    });
 
-      ipcService.on('needsConfig', ({ needsConfig }) => {
-        setNeedsConfig(needsConfig);
+    ipcService.on('needsConfig', ({ needsConfig }) => {
+      setNeedsConfig(needsConfig);
+    });
+
+    // Set up message and log update handlers
+    ipcService.on('onMessage', (messages: ClientMessage[]) => {
+      setMessages(prev => {
+        const newMessages = messages.filter((message: ClientMessage) => 
+          !prev.some(m => m.id === message.id)
+        );
+        return [...prev, ...newMessages].sort((a, b) => a.create_at - b.create_at);
       });
+    });
 
-      // Set up message and log update handlers
-      ipcService.on('onMessage', (messages: ClientMessage[]) => {
-        setMessages(prev => {
-          const newMessages = messages.filter((message: ClientMessage) => 
-            !prev.some(m => m.id === message.id)
-          );
-          return [...prev, ...newMessages].sort((a, b) => a.create_at - b.create_at);
-        });
-      });
+    ipcService.on('onLogUpdate', (update) => {
+      if (update.type === 'llm') {
+        setLogs(prev => ({
+          ...prev,
+          llm: {
+            ...prev.llm,
+            [update.entry.service]: [
+              ...(prev.llm[update.entry.service] || []),
+              update.entry
+            ]
+          }
+        }));
+      }
+    });
 
-      ipcService.on('onLogUpdate', (update) => {
-        if (update.type === 'llm') {
-          setLogs(prev => ({
-            ...prev,
-            llm: {
-              ...prev.llm,
-              [update.entry.service]: [
-                ...(prev.llm[update.entry.service] || []),
-                update.entry
-              ]
-            }
-          }));
-        }
-      });
-
-      ipcService.connect();
-    }, 100);
+    ipcService.connect();
 
     return () => {
-      clearTimeout(mountTimeout);
       console.debug('WebSocketContext unmounting');
       ipcService.disconnect();
     };
