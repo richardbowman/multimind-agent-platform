@@ -1,4 +1,4 @@
-import { BrowserWindow } from 'electron';
+import { app, BrowserWindow } from 'electron';
 import * as path from 'path';
 
 export class SplashWindow {
@@ -19,11 +19,7 @@ export class SplashWindow {
     }
 
     async show() {
-        if (process.env.NODE_ENV === 'development') {
-            await this.window.loadFile(path.join(__dirname, '../web/client/public/splash.html'));
-        } else {
-            await this.window.loadFile(path.join(__dirname, 'web/client/build/splash.html'));
-        }
+        await this.window.loadFile(path.join(__dirname, '../web/splash.html'));
     }
 
     setMessage(message: string) {
