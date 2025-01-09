@@ -16,9 +16,9 @@ export class MainWindow {
         });
 
         if (hasConfigError) {
-            // Send message to renderer to show settings tab and disable others
+            // Configuration error will be handled through RPC after connection is established
             this.window.webContents.on('did-finish-load', () => {
-                this.window.webContents.send('configuration-error');
+                this.window.webContents.emit('configuration-error-ready');
             });
         }
     }

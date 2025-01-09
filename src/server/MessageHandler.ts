@@ -30,6 +30,11 @@ export class MessageHandler implements ServerMethods {
                 entry: logEntry
             });
         });
+
+        // Listen for configuration errors
+        this.services.settings.on("configurationError", (error) => {
+            rpc.onConfigurationError({ message: error.message });
+        });
     }
     createWrapper(): ServerMethods {
         const handler = this;
