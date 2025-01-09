@@ -11,9 +11,14 @@ export class ElectronIPCServer {
     private handler: MessageHandler;
     private rpc: ReturnType<typeof createBirpc<ClientMethods, ServerMethods>>|undefined;
 
-    constructor(private services: BackendServices, private mainWindow: BrowserWindow) {
-        this.handler = new MessageHandler(services);
-        this.setupRPC();
+    constructor(private services: BackendServices, private mainWindow: BrowserWindow, hasConfigError: boolean) {
+        if (hasConfigError) {
+            this.setupLimitedRpc();
+        } else {
+            this.setupRPC();
+            this.handler = new MessageHandler(services);
+            this.handler.setupClientEvents(rpc);
+        }
     }
 
     private setupRPC() {
@@ -32,9 +37,28 @@ export class ElectronIPCServer {
         );
 
         this.rpc = rpc;
-        
-        this.handler.setupClientEvents(rpc);
     }
+
+    private setupLimitedRpc() {
+        const safeHandlers = createSafeServerRPCHandlers();
+
+        const rpc = createBirpc<ClientMethods, ServerMethods>(
+            {
+
+            },
+            {
+                ...safeHandlers,
+                post: (data) => this.mainWindow.webContents.send('birpc', data),
+                on: (handler) => {
+                    ipcMain.on('birpc', (_, data) => handler(data));
+                    return () => ipcMain.removeListener('birpc', handler);
+                }
+            }
+        );
+
+        this.rpc = rpc;
+    }
+
 
     cleanup() {
         // Remove all IPC handlers
