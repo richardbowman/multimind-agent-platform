@@ -88,7 +88,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
     api: []
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [needsConfig, setNeedsConfig] = useState(false);
+  const [needsConfig, setNeedsConfig] = useState(true);
 
   useEffect(() => {
     console.debug('WebSocketContext stable mount - connecting');
