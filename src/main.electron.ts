@@ -66,7 +66,15 @@ app.whenReady().then(async () => {
 let ipcServer: ElectronIPCServer;
 
 function setupIpcHandlers(hasConfigError: boolean = false) {
-    ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow(), hasConfigError);
+    ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow());
+    
+    if (hasConfigError) {
+        mainWindow.getWindow().webContents.on('did-finish-load', () => {
+            if (ipcServer.getRPC()) {
+                ipcServer.getRPC().onConfigurationError({ message: "Initial configuration required" });
+            }
+        });
+    }
 }
 
 app.on('window-all-closed', () => {

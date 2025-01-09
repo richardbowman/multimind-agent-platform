@@ -11,17 +11,9 @@ export class ElectronIPCServer {
     private handler: MessageHandler;
     private rpc: ReturnType<typeof createBirpc<ClientMethods, ServerMethods>>|undefined;
 
-    constructor(private services: BackendServices, private mainWindow: BrowserWindow, hasConfigError: boolean = false) {
+    constructor(private services: BackendServices, private mainWindow: BrowserWindow) {
         this.handler = new MessageHandler(services);
         this.setupRPC();
-        
-        if (hasConfigError) {
-            this.mainWindow.webContents.on('did-finish-load', () => {
-                if (this.rpc) {
-                    this.rpc.onConfigurationError({ message: "Initial configuration required" });
-                }
-            });
-        }
     }
 
     private setupRPC() {
@@ -47,5 +39,9 @@ export class ElectronIPCServer {
     cleanup() {
         // Remove all IPC handlers
         if (this.rpc) this.rpc.$close();
+    }
+
+    getRPC() {
+        return this.rpc;
     }
 }
