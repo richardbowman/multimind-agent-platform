@@ -53,6 +53,20 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         category: 'API Keys',
         sensitive: true
     },
+    {
+        key: 'openai.api.key',
+        label: 'OpenAI API Key',
+        type: 'string',
+        category: 'API Keys',
+        sensitive: true
+    },
+    {
+        key: 'openrouter.api.key',
+        label: 'OpenRouter API Key',
+        type: 'string',
+        category: 'API Keys',
+        sensitive: true
+    },
 
     // Rate Limiting
     {
