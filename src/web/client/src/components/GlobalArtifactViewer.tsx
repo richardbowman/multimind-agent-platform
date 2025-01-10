@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../contexts/DataContext';
 
 export const GlobalArtifactViewer: React.FC = () => {
     const { artifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
