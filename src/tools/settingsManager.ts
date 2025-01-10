@@ -18,15 +18,31 @@ export interface Settings {
         chat: string;
     },
     models: {
-        lmstudio: string;
-        anthropic: string;
-        bedrock: string;
-        openai: string;
-        openrouter: string;
-        llama_cpp: string;
+        conversation: {
+            lmstudio: string;
+            anthropic: string;
+            bedrock: string;
+            openai: string;
+            openrouter: string;
+            llama_cpp: string;
+        },
+        reasoning: {
+            lmstudio: string;
+            anthropic: string;
+            bedrock: string;
+            openai: string;
+            openrouter: string;
+            llama_cpp: string;
+        },
+        document: {
+            lmstudio: string;
+            anthropic: string;
+            bedrock: string;
+            openai: string;
+            openrouter: string;
+            llama_cpp: string;
+        }
     },
-    llmWeakModel: string;
-    llmHeavyModel: string;
     embeddingModel: string;
     embeddingProvider: string;
     lmStudioBaseUrl: string;

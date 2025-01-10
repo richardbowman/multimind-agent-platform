@@ -25,59 +25,136 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         defaultValue: 'lmstudio',
         required: true
     },
+    // Conversation Models
     {
-        key: 'models.lmstudio',
-        label: 'LM Studio Model',
+        key: 'models.conversation.lmstudio',
+        label: 'Conversation - LM Studio Model',
         type: 'string',
         category: 'LLM Settings',
-        description: 'Model path or identifier for LM Studio'
+        description: 'Model path or identifier for LM Studio (conversation)'
     },
     {
-        key: 'models.anthropic',
-        label: 'Anthropic Model',
+        key: 'models.conversation.anthropic',
+        label: 'Conversation - Anthropic Model',
         type: 'string',
         category: 'LLM Settings',
-        description: 'Model identifier for Anthropic (e.g. claude-2.1)'
+        description: 'Model identifier for Anthropic (e.g. claude-2.1) (conversation)'
     },
     {
-        key: 'models.bedrock',
-        label: 'Bedrock Model',
+        key: 'models.conversation.bedrock',
+        label: 'Conversation - Bedrock Model',
         type: 'string',
         category: 'LLM Settings',
-        description: 'Model identifier for AWS Bedrock'
+        description: 'Model identifier for AWS Bedrock (conversation)'
     },
     {
-        key: 'models.openai',
-        label: 'OpenAI Model',
+        key: 'models.conversation.openai',
+        label: 'Conversation - OpenAI Model',
         type: 'string',
         category: 'LLM Settings',
-        description: 'Model identifier for OpenAI (e.g. gpt-4)'
+        description: 'Model identifier for OpenAI (e.g. gpt-4) (conversation)'
     },
     {
-        key: 'models.openrouter',
-        label: 'OpenRouter Model',
+        key: 'models.conversation.openrouter',
+        label: 'Conversation - OpenRouter Model',
         type: 'string',
         category: 'LLM Settings',
-        description: 'Model identifier for OpenRouter'
+        description: 'Model identifier for OpenRouter (conversation)'
     },
     {
-        key: 'models.llama_cpp',
-        label: 'Llama.cpp Model',
+        key: 'models.conversation.llama_cpp',
+        label: 'Conversation - Llama.cpp Model',
         type: 'string',
         category: 'LLM Settings',
-        description: 'Model path for Llama.cpp'
+        description: 'Model path for Llama.cpp (conversation)'
+    },
+
+    // Reasoning Models
+    {
+        key: 'models.reasoning.lmstudio',
+        label: 'Reasoning - LM Studio Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model path or identifier for LM Studio (reasoning)'
     },
     {
-        key: 'llmWeakModel',
-        label: 'Weak Model',
+        key: 'models.reasoning.anthropic',
+        label: 'Reasoning - Anthropic Model',
         type: 'string',
-        category: 'LLM Settings'
+        category: 'LLM Settings',
+        description: 'Model identifier for Anthropic (e.g. claude-2.1) (reasoning)'
     },
     {
-        key: 'llmHeavyModel',
-        label: 'Heavy Model',
+        key: 'models.reasoning.bedrock',
+        label: 'Reasoning - Bedrock Model',
         type: 'string',
-        category: 'LLM Settings'
+        category: 'LLM Settings',
+        description: 'Model identifier for AWS Bedrock (reasoning)'
+    },
+    {
+        key: 'models.reasoning.openai',
+        label: 'Reasoning - OpenAI Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model identifier for OpenAI (e.g. gpt-4) (reasoning)'
+    },
+    {
+        key: 'models.reasoning.openrouter',
+        label: 'Reasoning - OpenRouter Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model identifier for OpenRouter (reasoning)'
+    },
+    {
+        key: 'models.reasoning.llama_cpp',
+        label: 'Reasoning - Llama.cpp Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model path for Llama.cpp (reasoning)'
+    },
+
+    // Document Processing Models
+    {
+        key: 'models.document.lmstudio',
+        label: 'Document - LM Studio Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model path or identifier for LM Studio (document processing)'
+    },
+    {
+        key: 'models.document.anthropic',
+        label: 'Document - Anthropic Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model identifier for Anthropic (e.g. claude-2.1) (document processing)'
+    },
+    {
+        key: 'models.document.bedrock',
+        label: 'Document - Bedrock Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model identifier for AWS Bedrock (document processing)'
+    },
+    {
+        key: 'models.document.openai',
+        label: 'Document - OpenAI Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model identifier for OpenAI (e.g. gpt-4) (document processing)'
+    },
+    {
+        key: 'models.document.openrouter',
+        label: 'Document - OpenRouter Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model identifier for OpenRouter (document processing)'
+    },
+    {
+        key: 'models.document.llama_cpp',
+        label: 'Document - Llama.cpp Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model path for Llama.cpp (document processing)'
     },
 
     // API Keys
