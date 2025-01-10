@@ -10,7 +10,8 @@ export enum LLMProvider {
     BEDROCK = "bedrock",
     ANTHROPIC = "anthropic",
     LLAMA_CPP = "llama-cpp",
-    OPENAI = "openai"
+    OPENAI = "openai",
+    OPENROUTER = "openrouter"
 }
 
 
@@ -64,6 +65,15 @@ export class LLMServiceFactory {
                     settings.modelId || "gpt-3.5-turbo",
                     settings.embeddingModelId || "text-embedding-ada-002"
                 );
+            case LLMProvider.OPENROUTER:
+                if (!settings.openrouter?.api?.key) {
+                    throw new Error("OpenRouter API key is required");
+                }
+                return new OpenAIService(
+                    settings.openrouter.api.key,
+                    settings.modelId || "gpt-3.5-turbo",
+                    settings.embeddingModelId || "text-embedding-ada-002"
+                ).setBaseUrl("https://openrouter.ai/api/v1");
             default:
                 throw new Error(`Unsupported chat provider: ${settings.chatProvider}`);
         }

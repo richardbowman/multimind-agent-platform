@@ -12,14 +12,27 @@ export class OpenAIService extends BaseLLMService {
     private embeddingModel?: string;
     private embeddingService?: IEmbeddingFunction;
 
+    private baseUrl: string = "https://api.openai.com/v1";
+
     constructor(apiKey: string, model: string, embeddingModel?: string) {
         super("openai");
         const configuration = new Configuration({
             apiKey: apiKey,
+            basePath: this.baseUrl
         });
         this.client = new OpenAIApi(configuration);
         this.model = model;
         this.embeddingModel = embeddingModel;
+    }
+
+    setBaseUrl(url: string): this {
+        this.baseUrl = url;
+        const configuration = new Configuration({
+            apiKey: this.client.configuration.apiKey,
+            basePath: this.baseUrl
+        });
+        this.client = new OpenAIApi(configuration);
+        return this;
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {

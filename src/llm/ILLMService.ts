@@ -70,6 +70,7 @@ export class StructuredOutputPrompt {
 }
 export enum ModelRole {
     USER = "user",
-    ASSISTANT = "assistant"
+    ASSISTANT = "assistant",
+    SYSTEM = "system"
 }
 
