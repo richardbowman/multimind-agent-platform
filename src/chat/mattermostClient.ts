@@ -120,6 +120,43 @@ export default class MattermostClient implements ChatClient {
         });
     }
 
+    public async createChannel(name: string, props?: {
+        description?: string;
+        isPrivate?: boolean;
+        members?: string[];
+    }): Promise<string> {
+        const channel = await this.client.createChannel({
+            name,
+            display_name: name,
+            type: props?.isPrivate ? 'private' : 'public',
+            description: props?.description
+        });
+
+        if (props?.members) {
+            await Promise.all(props.members.map(memberId => 
+                this.client.addUserToChannel(memberId, channel.id)
+            ));
+        }
+
+        return channel.id;
+    }
+
+    public async deleteChannel(channelId: string): Promise<void> {
+        const channel = await this.client.getChannel(channelId);
+        if (!channel) {
+            throw new Error(`Channel ${channelId} not found`);
+        }
+
+        // Delete all posts in the channel
+        const posts = await this.client.getPosts(channelId, 0, 100);
+        await Promise.all(posts.order.map(postId => 
+            this.client.deletePost(postId)
+        ));
+
+        // Delete the channel
+        await this.client.deleteChannel(channelId);
+    }
+
     public closeCallback(): void {
         if (this.ws) {
             this.ws.close();

@@ -94,19 +94,50 @@ describe('Channel Management', () => {
     });
 
     describe('MattermostClient', () => {
-        // These tests would require a mock Mattermost server
-        // For now we'll just test the interface compliance
-        
-        it('should implement createChannel method', () => {
-            const mattermostClient = new MattermostClient('test-token', 'test-user');
-            expect(mattermostClient.createChannel).toBeDefined();
-            expect(typeof mattermostClient.createChannel).toBe('function');
+        let mattermostClient: MattermostClient;
+        const testToken = 'test-token';
+        const testUserId = 'test-user';
+
+        beforeEach(() => {
+            mattermostClient = new MattermostClient(testToken, testUserId);
         });
 
-        it('should implement deleteChannel method', () => {
-            const mattermostClient = new MattermostClient('test-token', 'test-user');
-            expect(mattermostClient.deleteChannel).toBeDefined();
-            expect(typeof mattermostClient.deleteChannel).toBe('function');
+        it('should create a new public channel', async () => {
+            const channelName = 'public-channel';
+            const channelId = await mattermostClient.createChannel(channelName);
+            
+            expect(channelId).toBeDefined();
+            expect(typeof channelId).toBe('string');
+        });
+
+        it('should create a private channel with members', async () => {
+            const channelName = 'private-channel';
+            const members = ['user1', 'user2'];
+            
+            const channelId = await mattermostClient.createChannel(channelName, {
+                isPrivate: true,
+                members
+            });
+
+            expect(channelId).toBeDefined();
+        });
+
+        it('should delete a channel and its posts', async () => {
+            const channelId = await mattermostClient.createChannel('test-channel');
+            
+            // Add some posts to the channel
+            await mattermostClient.postInChannel(channelId, 'Message 1');
+            await mattermostClient.postInChannel(channelId, 'Message 2');
+            
+            // Delete the channel
+            await mattermostClient.deleteChannel(channelId);
+        });
+
+        it('should throw when deleting non-existent channel', async () => {
+            const nonExistentChannel = uuidv4();
+            await expect(mattermostClient.deleteChannel(nonExistentChannel))
+                .rejects
+                .toThrow(`Channel ${nonExistentChannel} not found`);
         });
     });
 });
