@@ -11,11 +11,11 @@ try {
 
     // Build the client app
     console.log('Building client app...');
-    execSync('npm run build:web', { stdio: 'inherit' });
+    execSync('yarn build:web', { stdio: 'inherit' });
 
     // Run TypeScript compilation with electron config
     console.log('Compiling TypeScript...');
-    execSync('tsc -p tsconfig.electron.json --noCheck', { stdio: 'inherit' });
+    execSync('yarn build:electron', { stdio: 'inherit' });
 
     // Copy client files and config
     console.log('Copying client files and config...');

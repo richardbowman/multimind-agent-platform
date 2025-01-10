@@ -23,6 +23,7 @@ jobs:
         with:
           node-version: '22'
           cache: 'yarn'
+          corepack: true
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -34,18 +35,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install setuptools wheel
           
+      - name: Enable Corepack and Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@stable --activate
+          
       - name: Install Dependencies
         run: |
-          npx yarn
+          yarn install --immutable
           
       - name: Build Web
         env:
           CI: ""
         run: |
-          npm run build:web
+          yarn build:web
         
       - name: Build TypeScript
-        run: npm run build:electron
+        run: yarn build:electron
         
       - name: Copy Environment Files
         run: |
@@ -56,11 +62,11 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            npm run electron:package -- --mac
+            yarn electron:package --mac
           elif [ "${{ matrix.os }}" = "windows-latest" ]; then
-            npm run electron:package -- --win
+            yarn electron:package --win
           else
-            npm run electron:package -- --linux
+            yarn electron:package --linux
           fi
         shell: bash
 
