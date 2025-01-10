@@ -203,6 +203,32 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         defaultValue: 50000
     },
 
+    // Search Settings
+    {
+        key: 'searchProvider',
+        label: 'Search Provider',
+        type: 'select',
+        category: 'Search Settings',
+        options: ['duckduckgo', 'searxng', 'google'],
+        defaultValue: 'duckduckgo'
+    },
+    {
+        key: 'duckduckgo.headless',
+        label: 'DuckDuckGo Headless Mode',
+        type: 'boolean',
+        category: 'Search Settings',
+        defaultValue: true,
+        description: 'Run DuckDuckGo searches in headless browser mode'
+    },
+    {
+        key: 'duckduckgo.timeout',
+        label: 'DuckDuckGo Timeout (ms)',
+        type: 'number',
+        category: 'Search Settings',
+        defaultValue: 30000,
+        description: 'Timeout for DuckDuckGo search operations'
+    },
+
     // Vector DB Settings
     {
         key: 'vectorDatabaseType',
