@@ -39,7 +39,7 @@ interface DataContextType {
   fetchHandles: () => void;
   fetchLogs: (logType: 'llm' | 'system' | 'api') => void;
   deleteArtifact: (artifactId: string) => void;
-  createChannel: (params: { name: string; description?: string; isPrivate?: boolean }) => Promise<string>;
+  createChannel: (params: { name: string; description?: string; isPrivate?: boolean; members?: string[] }) => Promise<string>;
 }
 
 const DataContext = createContext<DataContextType>({
