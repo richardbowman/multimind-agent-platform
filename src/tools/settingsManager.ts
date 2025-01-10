@@ -32,6 +32,18 @@ export interface Settings {
             key: string;
         },
         model: string;
+    },
+    openai: {
+        api: {
+            key: string;
+        },
+        model: string;
+    },
+    openrouter: {
+        api: {
+            key: string;
+        },
+        model: string;
     }
 
     // Rate Limiting
