@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
 import './TaskPanel.css';
 import { TaskStatus } from '../../../../schemas/reviewProgress';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../contexts/DataContext';
 
 interface TaskPanelProps {
     channelId: string | null;
