@@ -4,7 +4,6 @@ import { WebSearchExecutor } from './research/WebResearchExecutor';
 import SearchHelper, { DuckDuckGoProvider } from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
 import Logger from '../helpers/logger';
-import { RESEARCHER_TOKEN, WEB_RESEARCH_CHANNEL_ID } from '../helpers/config';
 import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
@@ -42,7 +41,7 @@ export class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
     }
     
     public async initialize(): Promise<void> {
-        Logger.info(`Initialized Research Assistant ${RESEARCHER_TOKEN}`);
+        Logger.info(`Initializing scraper for research assistant`);
         await this.scrapeHelper.initialize();
 
         // TODO BRING BACK WHEN SAFER check for old tasks on boot and keep working on them
