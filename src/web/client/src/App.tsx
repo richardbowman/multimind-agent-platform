@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useWebSocket } from './contexts/WebSocketContext';
+import { useWebSocket, DataProvider } from './contexts/DataContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
@@ -8,7 +8,6 @@ import { ArtifactPanel } from './components/ArtifactPanel';
 import { GlobalArtifactViewer } from './components/GlobalArtifactViewer';
 import { LogViewer } from './components/LogViewer';
 import { SettingsPanel } from './components/SettingsPanel';
-import { WebSocketProvider } from './contexts/WebSocketContext';
 import './App.css';
 
 const AppContent: React.FC = () => {
@@ -115,9 +114,9 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <WebSocketProvider>
+        <DataProvider>
             <AppContent />
-        </WebSocketProvider>
+        </DataProvider>
     );
 };
 
