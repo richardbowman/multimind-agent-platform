@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Channel } from '../../../../types/types';
 import { useWebSocket } from '../contexts/DataContext';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, IconButton } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, IconButton, FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
 interface ChannelListProps {}
@@ -12,6 +12,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     const [channelName, setChannelName] = useState('');
     const [description, setDescription] = useState('');
     const [isPrivate, setIsPrivate] = useState(false);
+    const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
 
     const webSocket = useWebSocket();
 
@@ -20,7 +21,8 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
             await webSocket.createChannel({
                 name: channelName,
                 description,
-                isPrivate
+                isPrivate,
+                members: selectedAgents
             });
             setOpen(false);
             setChannelName('');
@@ -79,6 +81,22 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                             Private Channel
                         </label>
                     </div>
+                    <FormControl fullWidth sx={{ mt: 2 }}>
+                        <InputLabel>Add Agents</InputLabel>
+                        <Select
+                            multiple
+                            value={selectedAgents}
+                            onChange={(e) => setSelectedAgents(e.target.value as string[])}
+                            renderValue={(selected) => (selected as string[]).join(', ')}
+                        >
+                            {webSocket.handles.map((handle) => (
+                                <MenuItem key={handle.id} value={handle.id}>
+                                    <Checkbox checked={selectedAgents.indexOf(handle.id) > -1} />
+                                    <ListItemText primary={handle.handle} />
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpen(false)}>Cancel</Button>
