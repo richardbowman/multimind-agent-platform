@@ -1,7 +1,28 @@
 import React, { useState } from 'react';
 import { Channel } from '../../../../types/types';
 import { useWebSocket } from '../contexts/DataContext';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, IconButton, FormControl, InputLabel, Select, MenuItem, Checkbox, ListItemText } from '@mui/material';
+import { 
+    Button, 
+    Dialog, 
+    DialogActions, 
+    DialogContent, 
+    DialogTitle, 
+    TextField, 
+    IconButton, 
+    FormControl, 
+    InputLabel, 
+    Select, 
+    MenuItem, 
+    Checkbox, 
+    ListItemText, 
+    List, 
+    ListItem, 
+    ListItemButton, 
+    Typography, 
+    Box,
+    FormControlLabel,
+    Stack
+} from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 
 interface ChannelListProps {}
@@ -35,9 +56,11 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     };
 
     return (
-        <div className="channel-list">
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <h2>Channels ({channels.length})</h2>
+        <Box sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
+            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
+                <Typography variant="h6" sx={{ color: '#fff' }}>
+                    Channels ({channels.length})
+                </Typography>
                 <IconButton 
                     color="primary"
                     onClick={() => setOpen(true)}
@@ -51,8 +74,48 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 >
                     <AddIcon />
                 </IconButton>
-            </div>
-            {channels.length === 0 && <div>Loading channels...</div>}
+            </Stack>
+
+            {channels.length === 0 && (
+                <Typography variant="body1" sx={{ color: '#666', textAlign: 'center' }}>
+                    Loading channels...
+                </Typography>
+            )}
+
+            <List>
+                {channels.map(channel => (
+                    <ListItem 
+                        key={channel.id}
+                        disablePadding
+                    >
+                        <ListItemButton
+                            selected={currentChannelId === channel.id}
+                            onClick={() => setCurrentChannelId(channel.id)}
+                            sx={{
+                                mb: 1,
+                                borderRadius: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: currentChannelId === channel.id ? 'primary.main' : 'background.paper',
+                                '&:hover': {
+                                    bgcolor: currentChannelId === channel.id ? 'primary.dark' : 'action.hover'
+                                }
+                            }}
+                        >
+                            <Typography 
+                                variant="body1" 
+                                sx={{ 
+                                    color: currentChannelId === channel.id ? '#fff' : 'text.primary',
+                                    fontWeight: currentChannelId === channel.id ? 500 : 400
+                                }}
+                            >
+                                # {channel.name}
+                            </Typography>
+                        </ListItemButton>
+                    </ListItem>
+                ))}
+            </List>
+
             <Dialog open={open} onClose={() => setOpen(false)}>
                 <DialogTitle>Create New Channel</DialogTitle>
                 <DialogContent>
@@ -63,6 +126,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                         fullWidth
                         value={channelName}
                         onChange={(e) => setChannelName(e.target.value)}
+                        sx={{ mb: 2 }}
                     />
                     <TextField
                         margin="dense"
@@ -70,18 +134,19 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                         fullWidth
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
+                        sx={{ mb: 2 }}
                     />
-                    <div style={{ marginTop: '1rem' }}>
-                        <label>
-                            <input
-                                type="checkbox"
+                    <FormControlLabel
+                        control={
+                            <Checkbox
                                 checked={isPrivate}
                                 onChange={(e) => setIsPrivate(e.target.checked)}
                             />
-                            Private Channel
-                        </label>
-                    </div>
-                    <FormControl fullWidth sx={{ mt: 2 }}>
+                        }
+                        label="Private Channel"
+                        sx={{ mb: 2 }}
+                    />
+                    <FormControl fullWidth>
                         <InputLabel>Add Agents</InputLabel>
                         <Select
                             multiple
@@ -105,17 +170,6 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                     </Button>
                 </DialogActions>
             </Dialog>
-            <ul>
-                {channels.map(channel => (
-                    <li
-                        key={channel.id}
-                        className={`channel-item ${currentChannelId === channel.id ? 'active' : ''}`}
-                        onClick={() => setCurrentChannelId(channel.id)}
-                    >
-                        # {channel.name}
-                    </li>
-                ))}
-            </ul>
-        </div>
+        </Box>
     );
 };
