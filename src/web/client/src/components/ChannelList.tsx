@@ -13,9 +13,11 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     const [description, setDescription] = useState('');
     const [isPrivate, setIsPrivate] = useState(false);
 
+    const webSocket = useWebSocket();
+
     const handleCreateChannel = async () => {
         try {
-            await useWebSocket().createChannel({
+            await webSocket.createChannel({
                 name: channelName,
                 description,
                 isPrivate
@@ -24,7 +26,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
             setChannelName('');
             setDescription('');
             setIsPrivate(false);
-            useWebSocket().fetchChannels(); // Refresh channel list
+            webSocket.fetchChannels(); // Refresh channel list
         } catch (error) {
             console.error('Failed to create channel:', error);
         }
