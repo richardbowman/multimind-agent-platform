@@ -22,6 +22,39 @@ export interface ISearchProvider {
     search(query: string, category: string): Promise<SearchResult[]>;
 }
 
+export class BraveSearchProvider implements ISearchProvider {
+    private settings: Settings;
+
+    constructor(settings: Settings) {
+        this.settings = settings;
+    }
+
+    async search(query: string, category: string): Promise<SearchResult[]> {
+        try {
+            const response = await axios.get(this.settings.brave.endpoint, {
+                params: {
+                    q: query,
+                    count: 10
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'X-Subscription-Token': this.settings.brave.apiKey
+                }
+            });
+
+            const results = response.data.web?.results || [];
+            return results.map((result: any) => ({
+                title: result.title,
+                url: result.url,
+                description: result.description
+            }));
+        } catch (error) {
+            Logger.error(`Error searching Brave for "${query}":`, error);
+            return [];
+        }
+    }
+}
+
 export class SearxNGProvider implements ISearchProvider {
     async search(query: string, category: string): Promise<SearchResult[]> {
         const encodedQuery = encodeURIComponent(query).replace(/'/g, '%27');
@@ -191,6 +224,9 @@ class SearchHelper {
                 break;
             case 'searxng':
                 provider = new SearxNGProvider();
+                break;
+            case 'brave':
+                provider = new BraveSearchProvider(settings);
                 break;
             default:
                 throw new Error(`Unsupported search provider: ${settings.searchProvider}`);

@@ -209,7 +209,7 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         label: 'Search Provider',
         type: 'select',
         category: 'Search Settings',
-        options: ['duckduckgo', 'searxng', 'google'],
+        options: ['duckduckgo', 'searxng', 'google', 'brave'],
         defaultValue: 'duckduckgo'
     },
     {
@@ -227,6 +227,22 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         category: 'Search Settings',
         defaultValue: 30000,
         description: 'Timeout for DuckDuckGo search operations'
+    },
+    {
+        key: 'brave.apiKey',
+        label: 'Brave Search API Key',
+        type: 'string',
+        category: 'Search Settings',
+        sensitive: true,
+        description: 'API key for Brave Search'
+    },
+    {
+        key: 'brave.endpoint',
+        label: 'Brave Search Endpoint',
+        type: 'string',
+        category: 'Search Settings',
+        defaultValue: 'https://api.search.brave.com/res/v1/web/search',
+        description: 'API endpoint for Brave Search'
     },
 
     // Vector DB Settings

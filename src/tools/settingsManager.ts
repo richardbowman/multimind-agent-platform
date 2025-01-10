@@ -98,7 +98,7 @@ export interface Settings {
     chromaCollection: string;
 
     // Search Settings
-    searchProvider: 'duckduckgo' | 'searxng' | 'google';
+    searchProvider: 'duckduckgo' | 'searxng' | 'google' | 'brave';
     maxSearches: number;
     searxngUrl: string;
     maxFollows: number;
@@ -106,6 +106,10 @@ export interface Settings {
     duckduckgo: {
         headless: boolean;
         timeout: number;
+    };
+    brave: {
+        apiKey: string;
+        endpoint: string;
     };
 
     // Channel configuration
