@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Channel } from '../../../../types/types';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../contexts/DataContext';
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
 
 interface ChannelListProps {}
