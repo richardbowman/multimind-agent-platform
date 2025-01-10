@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
 import { ArtifactViewer } from './ArtifactViewer';
+import { Box, Grid, Paper, Typography } from '@mui/material';
 
 interface ArtifactPanelProps {
     channelId: string | null;
