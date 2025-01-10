@@ -17,9 +17,11 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
         try {
             await useWebSocket().sendMessage({
                 type: 'create_channel',
-                channelName,
-                description,
-                isPrivate
+                params: {
+                    name: channelName,
+                    description,
+                    isPrivate
+                }
             });
             setOpen(false);
             setChannelName('');
