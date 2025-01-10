@@ -31,6 +31,7 @@ export interface Settings {
     // LLM Provider settings
     providers: {
         chat: string;
+        embeddings: string;
     },
     models: {
         conversation: {

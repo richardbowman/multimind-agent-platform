@@ -4,10 +4,8 @@ import { IEmbeddingFunction } from "chromadb";
 import { LLMCallLogger } from "./LLMLogger";
 
 export interface ILLMService {
-    initializeEmbeddingModel(modelPath: string): Promise<void>;
     initializeChatModel(modelPath: string): Promise<void>;
     sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
-    getEmbeddingModel(): IEmbeddingFunction;
     countTokens(content: string): Promise<number>;
     getLogger(): LLMCallLogger;
 
@@ -44,12 +42,18 @@ export interface LLMPredictionOpts {
     contextWindowLength?: number;
 }
 
+export interface IEmbeddingService {
+    initializeEmbeddingModel(modelPath: string): Promise<void>;
+    getEmbeddingModel(): IEmbeddingFunction;
+}
+
 export interface LLMRequestParams {
     messages: { role: string; content: string }[];
     systemPrompt?: string;
     opts?: LLMPredictionOpts;
     parseJSON?: boolean;
     modelType?: ModelType;
+    embeddingFunction?: IEmbeddingFunction;
 }
 
 export class StructuredOutputPrompt {
