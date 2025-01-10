@@ -134,7 +134,7 @@ export class LocalChatStorage {
                 const parsedData = JSON.parse(data);
                 if (parsedData.channelNames) this.channelNames = parsedData.channelNames;
                 if (parsedData.channelData) this.channelData = parsedData.channelData;
-                if (parsedData.posts) this.posts = parsedData.posts.map(p => InMemoryPost.fromLoad(p));
+                if (parsedData.posts) this.posts = parsedData.posts.map((p: any) => InMemoryPost.fromLoad(p));
                 if (parsedData.userIdToHandleName) this.userIdToHandleName = parsedData.userIdToHandleName;
                 Logger.info(`Loaded ${this.posts.length} chat posts from disk`);
             } catch (error: unknown) {
