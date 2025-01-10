@@ -53,7 +53,7 @@ export class OpenAIService extends BaseLLMService {
     }
 
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(
-        params: LLMRequestParams
+        params: LLMRequestParams & { modelType?: ModelType }
     ): Promise<GenerateOutputParams<T>> {
         try {
             const messages = params.messages.map(m => ({
@@ -98,8 +98,12 @@ export class OpenAIService extends BaseLLMService {
                 }
             }
 
+            const model = params.modelType ? 
+                settings.models[params.modelType].openai || this.model :
+                this.model;
+
             const response = await this.client.chat.completions.create({
-                model: this.model,
+                model: model,
                 messages,
                 tools,
                 tool_choice: toolChoice,

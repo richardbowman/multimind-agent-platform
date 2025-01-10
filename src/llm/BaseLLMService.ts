@@ -9,7 +9,7 @@ export abstract class BaseLLMService implements ILLMService {
     abstract initializeEmbeddingModel(modelPath: string): Promise<void>;
     abstract initializeChatModel(modelPath: string): Promise<void>;
     abstract getEmbeddingModel(): any;
-    abstract sendLLMRequest<T extends ModelResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
+    abstract sendLLMRequest<T extends ModelResponse>(params: LLMRequestParams & { modelType?: ModelType }): Promise<GenerateOutputParams<T>>;
     abstract countTokens(content: string): Promise<number>;
 
     constructor(name: string) {

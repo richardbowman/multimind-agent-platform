@@ -49,6 +49,7 @@ export interface LLMRequestParams {
     systemPrompt?: string;
     opts?: LLMPredictionOpts;
     parseJSON?: boolean;
+    modelType?: ModelType;
 }
 
 export class StructuredOutputPrompt {
