@@ -57,9 +57,19 @@ export class DuckDuckGoProvider implements ISearchProvider {
         this.artifactManager = artifactManager;
     }
 
+    private settings: Settings;
+
+    constructor(artifactManager: ArtifactManager, settings: Settings) {
+        this.artifactManager = artifactManager;
+        this.settings = settings;
+    }
+
     private async initBrowser() {
         if (!this.browser) {
-            this.browser = await chromium.launch({ headless: true });
+            this.browser = await chromium.launch({ 
+                headless: this.settings.duckduckgo.headless,
+                timeout: this.settings.duckduckgo.timeout
+            });
         }
     }
 
@@ -160,13 +170,36 @@ export class DuckDuckGoProvider implements ISearchProvider {
 
 class SearchHelper {
     private provider: ISearchProvider;
+    private settings: Settings;
 
-    constructor(provider: ISearchProvider) {
+    constructor(provider: ISearchProvider, settings: Settings) {
         this.provider = provider;
+        this.settings = settings;
     }
 
     async search(query: string, category: string): Promise<SearchResult[]> {
-        return this.provider.search(query, category);
+        try {
+            Logger.info(`Using search provider: ${this.settings.searchProvider}`);
+            return this.provider.search(query, category);
+        } catch (error) {
+            Logger.error(`Search failed with provider ${this.settings.searchProvider}:`, error);
+            throw error;
+        }
+    }
+
+    static create(settings: Settings, artifactManager: ArtifactManager): SearchHelper {
+        let provider: ISearchProvider;
+        switch (settings.searchProvider) {
+            case 'duckduckgo':
+                provider = new DuckDuckGoProvider(artifactManager);
+                break;
+            case 'searxng':
+                provider = new SearxNGProvider();
+                break;
+            default:
+                throw new Error(`Unsupported search provider: ${settings.searchProvider}`);
+        }
+        return new SearchHelper(provider, settings);
     }
 }
 

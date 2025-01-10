@@ -16,7 +16,12 @@ export interface ResearchProject extends Project<Task> {
 }
 
 export class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
-    private searchHelper = new SearchHelper(new DuckDuckGoProvider(this.artifactManager));
+    private searchHelper: SearchHelper;
+
+    constructor(params: AgentConstructorParams) {
+        super(params);
+
+        this.searchHelper = SearchHelper.create(params.settings, this.artifactManager);
     private scrapeHelper = new ScrapeHelper(this.artifactManager);
 
     constructor(params: AgentConstructorParams) {

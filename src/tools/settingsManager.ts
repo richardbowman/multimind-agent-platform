@@ -98,11 +98,15 @@ export interface Settings {
     chromaCollection: string;
 
     // Search Settings
-    searchProvider: string;
+    searchProvider: 'duckduckgo' | 'searxng' | 'google';
     maxSearches: number;
     searxngUrl: string;
     maxFollows: number;
     maxResearchRequests: number;
+    duckduckgo: {
+        headless: boolean;
+        timeout: number;
+    };
 
     // Channel configuration
     defaultChannels: Record<string, string>;

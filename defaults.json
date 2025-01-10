@@ -5,7 +5,11 @@
     "chat": "lmstudio",
     "embeddings": "lmstudio"
   },
-  "searchProvider": "google",
+  "searchProvider": "duckduckgo",
+  "duckduckgo": {
+    "headless": true,
+    "timeout": 30000
+  },
   "searxngUrl": "http://localhost:8080/",
   "chromadbUrl": "http://localhost:8001",
   "chromaCollection": "webpage_scrapes",
