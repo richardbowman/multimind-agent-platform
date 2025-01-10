@@ -24,11 +24,7 @@ export interface ChatClient {
      *   - members: Array of user IDs to add to channel
      * @returns Promise resolving to the new channel ID
      */
-    createChannel(name: string, props?: {
-        description?: string;
-        isPrivate?: boolean;
-        members?: string[];
-    }): Promise<string>;
+    createChannel(params: CreateChannelParams): Promise<string>;
 
     /**
      * Delete an existing chat channel

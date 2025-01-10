@@ -23,7 +23,7 @@ export interface ServerMethods {
      * @param isPrivate - Whether the channel should be private
      * @returns Promise resolving to the new channel ID
      */
-    createChannel(params: { name: string; description?: string; isPrivate?: boolean }): Promise<string>;
+    createChannel(params: CreateChannelParams): Promise<string>;
     
     /**
      * Delete an existing channel

@@ -261,7 +261,7 @@ export class MessageHandler implements ServerMethods {
         return handles;
     }
 
-    async createChannel(params: { name: string; description?: string; isPrivate?: boolean }): Promise<string> {
+    async createChannel(params: CreateChannelParams): Promise<string> {
         if (!this.services?.chatClient) {
             throw new Error('Chat client is not initialized');
         }

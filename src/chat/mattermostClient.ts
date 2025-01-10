@@ -120,20 +120,16 @@ export default class MattermostClient implements ChatClient {
         });
     }
 
-    public async createChannel(name: string, props?: {
-        description?: string;
-        isPrivate?: boolean;
-        members?: string[];
-    }): Promise<string> {
+    public async createChannel(params: CreateChannelParams): Promise<string> {
         const channel = await this.client.createChannel({
-            name,
-            display_name: name,
-            type: props?.isPrivate ? 'private' : 'public',
-            description: props?.description
+            name: params.name,
+            display_name: params.name,
+            type: params.isPrivate ? 'private' : 'public',
+            description: params.description
         });
 
-        if (props?.members) {
-            await Promise.all(props.members.map(memberId => 
+        if (params.members) {
+            await Promise.all(params.members.map(memberId => 
                 this.client.addUserToChannel(memberId, channel.id)
             ));
         }

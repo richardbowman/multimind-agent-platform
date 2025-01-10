@@ -177,17 +177,13 @@ export class LocalTestClient implements ChatClient {
         return Promise.resolve(this.storage.userIdToHandleName);
     }
 
-    public async createChannel(name: string, props?: {
-        description?: string;
-        isPrivate?: boolean;
-        members?: string[];
-    }): Promise<string> {
+    public async createChannel(params: CreateChannelParams): Promise<string> {
         const channelId = Math.random().toString(36).substring(2, 15);
-        this.storage.registerChannel(channelId, name);
+        this.storage.registerChannel(channelId, params.name);
         this.storage.channelData[channelId] = {
-            description: props?.description,
-            isPrivate: props?.isPrivate,
-            members: props?.members
+            description: params.description,
+            isPrivate: params.isPrivate,
+            members: params.members
         };
         await this.storage.save();
         return channelId;
