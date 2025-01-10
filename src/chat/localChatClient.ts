@@ -1,7 +1,7 @@
-import Logger from "src/helpers/logger";
-import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "./chatClient";
+import Logger from "../helpers/logger";
+import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "../chat/chatClient";
 import * as fs from "fs/promises";
-import { AsyncQueue } from "src/helpers/asyncQueue";
+import { AsyncQueue } from "../helpers/asyncQueue";
 
 export class InMemoryPost implements ChatPost {
     static fromLoad(postData: any) : InMemoryPost {
