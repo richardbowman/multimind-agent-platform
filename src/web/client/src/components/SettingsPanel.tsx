@@ -105,7 +105,7 @@ export const SettingsPanel: React.FC = () => {
     };
 
     const renderInput = (metadata: ConfigMetadata) => {
-        const value = settings[metadata.key] ?? metadata.defaultValue ?? '';
+        const value = getNestedValue(settings, metadata.key) ?? metadata.defaultValue ?? '';
 
         switch (metadata.type) {
             case 'select':
