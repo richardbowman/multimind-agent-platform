@@ -19,16 +19,17 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
     const _s = settingsManager.getSettings();
 
-    onProgress?.('Initializing LLM service...');
-    const llmService = LLMServiceFactory.createService(_s);
+    onProgress?.('Initializing LLM services...');
+    const chatService = LLMServiceFactory.createService(_s);
+    const embeddingService = LLMServiceFactory.createEmbeddingService(_s);
 
-    // Initialize the embedding and LLaMA models
+    // Initialize the models
     onProgress?.('Initializing embedding model...');
-    await llmService.initializeEmbeddingModel(_s.embeddingModel);
+    await embeddingService.initializeEmbeddingModel(_s.embeddingModel);
     onProgress?.('Initializing chat model...');
-    await llmService.initializeChatModel(_s.chatModel);
+    await chatService.initializeChatModel(_s.models.conversation[_s.providers.chat]);
 
-    const vectorDB = createVectorDatabase(_s.vectorDatabaseType, llmService);
+    const vectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService);
     const artifactManager = new ArtifactManager(vectorDB);
 
     vectorDB.on("needsReindex", async () => {
@@ -65,7 +66,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
     // Load all agents dynamically
     const agents = await AgentLoader.loadAgents({
-        llmService,
+        chatService,
         vectorDBService: vectorDB,
         taskManager: tasks,
         artifactManager,
@@ -115,7 +116,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         taskManager: tasks,
         artifactManager,
         settingsManager,
-        llmLogger: llmService.getLogger(),
+        llmLogger: chatService.getLogger(),
         logReader: new LogReader()
     };
 }
