@@ -33,7 +33,7 @@ export class LLMServiceFactory {
                     break;
                 case LLMProvider.BEDROCK:
                     embeddingService = new BedrockService(
-                        settings.models.bedrock,
+                        settings.models.conversation.bedrock,
                         settings.embeddingModel
                     );
                     break;
@@ -48,7 +48,7 @@ export class LLMServiceFactory {
                 return new LMStudioService();
             case LLMProvider.BEDROCK:
                 return new BedrockService(
-                    settings.models[modelType].bedrock,
+                    settings.models.conversation.bedrock,
                     settings.embeddingModel,
                     embeddingService
                 );
@@ -58,7 +58,7 @@ export class LLMServiceFactory {
                 }
                 return new AnthropicService(
                     settings.anthropic.api.key, // Will use default from config if undefined
-                    settings.models[modelType].anthropic, // Will use default from config if undefined
+                    settings.models.conversation.anthropic, // Will use default from config if undefined
                     embeddingService
                 );
             case LLMProvider.LLAMA_CPP:
@@ -69,7 +69,7 @@ export class LLMServiceFactory {
                 }
                 return new OpenAIService(
                     settings.openai.api.key,
-                    settings.models[modelType].openai || "gpt-3.5-turbo",
+                    settings.models.conversation.openai || "gpt-3.5-turbo",
                     settings.embeddingModel || "text-embedding-ada-002"
                 );
             case LLMProvider.OPENROUTER:
@@ -78,7 +78,7 @@ export class LLMServiceFactory {
                 }
                 return new OpenAIService(
                     settings.openrouter.api.key,
-                    settings.models[modelType].openrouter || "gpt-3.5-turbo",
+                    settings.models.conversation.openrouter || "gpt-3.5-turbo",
                     settings.embeddingModel || "text-embedding-ada-002",
                     "https://openrouter.ai/api/v1"
                 );

@@ -10,6 +10,17 @@ import { AsyncQueue } from '../helpers/asyncQueue';
 import { EventEmitter } from 'events';
 import { app } from 'electron';
 
+interface AgentDefinition {
+    className: string;
+    sourcePath: string;
+    userId: string;
+    handle?: string;
+    description?: string;
+    enabled: boolean;
+    config?: Record<string, any>;
+    autoRespondChannelIds?: String[];
+}
+
 export interface Settings {
     // Server settings
     host: string;
@@ -97,16 +108,7 @@ export interface Settings {
     
     // Agent configuration
     agents: {
-        [key: string]: {
-            autoRespondChannelIds?: String[];
-            className: string;
-            sourcePath: string;
-            userId: string;
-            handle?: string;
-            description?: string;
-            enabled: boolean;
-            config?: Record<string, any>;
-        };
+        [key: string]: AgentDefinition 
     };
 
     // Bedrock specific settings
@@ -118,7 +120,7 @@ export interface Settings {
 }
 
 export class SettingsManager extends EventEmitter {
-    private settings: Settings;
+    private settings?: Settings;
     private settingsFile: string;
     private fileQueue: AsyncQueue;
     private baseDir: string;
@@ -183,10 +185,14 @@ export class SettingsManager extends EventEmitter {
             const data = await this.fileQueue.enqueue(() =>
                 fs.readFile(this.settingsFile, 'utf-8')
             );
-            const userSettings = JSON.parse(data);
+            let userSettings = {};
+            try {
+                userSettings = JSON.parse(data);
+            } catch (err) {
+            }
             this.settings = this.deepMerge(defaults, userSettings);
-        } catch (error) {
-            if (error.code === 'ENOENT') {
+        } catch (error: any) {
+            if (error?.code === 'ENOENT') {
                 this.settings = defaults;
                 await this.save();
             } else {
@@ -206,10 +212,17 @@ export class SettingsManager extends EventEmitter {
     }
 
     getSettings(): Settings {
-        return { ...this.settings };
+        if (this.settings) {
+            return { ...this.settings };
+        } else {
+            throw new Error("Settings not loaded");
+        }
     }
 
     async updateSettings(newSettings: Partial<Settings>): Promise<Settings> {
+        if (!this.settings) {
+            throw new Error("Settings not loaded");
+        }
         this.settings = { ...this.settings, ...newSettings };
         await this.save();
         return this.getSettings();
