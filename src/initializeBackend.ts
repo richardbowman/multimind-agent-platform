@@ -8,6 +8,8 @@ import { AgentLoader } from "./utils/AgentLoader";
 import { BackendServices } from "./types/BackendServices";
 import { LogReader } from "./server/LogReader";
 import { SettingsManager } from "./tools/settingsManager";
+import { getDataPath } from "./helpers/paths";
+import path from "path";
 
 export async function initializeBackend(settingsManager: SettingsManager, options: { 
     reindex?: boolean,
@@ -36,8 +38,10 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
     await vectorDB.initializeCollection(_s.chromaCollection);
 
-    const chatStorage = new LocalChatStorage(".output/chats.json");
-    const tasks = new SimpleTaskManager(".output/tasks.json");
+    const dataDir = getDataPath();
+
+    const chatStorage = new LocalChatStorage(path.join(dataDir, "chats.json"));
+    const tasks = new SimpleTaskManager(path.join(dataDir, "tasks.json"));
 
     // Load previously saved tasks
     await tasks.load();
@@ -70,6 +74,22 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         settingsManager: settingsManager
     });
 
+    // if (settings.defaultChannels) {
+    //     Object.entries(settings.defaultChannels).forEach(([name, id]) => {
+    //         params.chatStorage.createChannel(id, `#${name}`);
+    //         channelIds.push(id);
+    //         Logger.info(`Registered channel: ${name} (${id})`);
+    //     });
+    // }
+    if (!Object.values(chatStorage.channelNames).includes("#welcome")) {
+        await chatStorage.createChannel({
+            name: "#welcome",
+            description: "This is where we'll get started",
+            members: [_s.agents["OnboardingConsultant"].userId],
+            defaultResponderId: _s.agents["OnboardingConsultant"].userId
+        });
+    }
+
     // Initialize all agents
     for (const [name, agent] of agents.entries()) {
         if (agent.initialize) {
@@ -77,6 +97,8 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             Logger.info(`Initialized agent: ${name}`);
         }
     }
+
+    chatStorage.announceChannels();
 
     const USER_ID = "test";
     const userClient = new LocalTestClient(USER_ID, "test", chatStorage);
