@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Channel } from '../../../../types/types';
 import { useWebSocket } from '../contexts/DataContext';
-import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField } from '@mui/material';
+import { Button, Dialog, DialogActions, DialogContent, DialogTitle, TextField, IconButton } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 
 interface ChannelListProps {}
 
@@ -33,13 +34,19 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
         <div className="channel-list">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                 <h2>Channels ({channels.length})</h2>
-                <Button 
-                    variant="contained" 
+                <IconButton 
                     color="primary"
                     onClick={() => setOpen(true)}
+                    sx={{ 
+                        backgroundColor: 'primary.main',
+                        color: 'white',
+                        '&:hover': {
+                            backgroundColor: 'primary.dark'
+                        }
+                    }}
                 >
-                    Add Channel
-                </Button>
+                    <AddIcon />
+                </IconButton>
             </div>
             {channels.length === 0 && <div>Loading channels...</div>}
             <Dialog open={open} onClose={() => setOpen(false)}>
