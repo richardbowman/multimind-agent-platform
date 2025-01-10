@@ -3,7 +3,6 @@ import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
 import { ArtifactViewer } from './ArtifactViewer';
 import { Box, Paper, Typography } from '@mui/material';
-import Grid from '@mui/material/Grid2';
 
 interface ArtifactPanelProps {
     channelId: string | null;
@@ -31,52 +30,44 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     }, [channelId, threadId]);
 
     return (
-        <Grid container spacing={1} sx={{ height: 'calc(100vh - 48px)' }}>
-            <Grid size={3} sx={{ p: 1, borderRight: '1px solid #444', overflowY: 'auto', height: '100%' }}>
-                <Typography variant="h2" sx={{ mb: 1, color: '#999', textTransform: 'uppercase' }}>
-                    Artifacts
-                </Typography>
-                <Grid container sx={{ gap: 1, p: 0.5 }}>
-                    {(artifacts || []).map((artifact : Artifact) => (
-                        <Paper 
-                            key={artifact.id} 
-                            sx={{ 
-                                bgcolor: '#2a2a2a', 
-                                border: '1px solid #444', 
-                                borderRadius: 8, 
-                                p: 1, 
-                                cursor: 'pointer',
-                                ...(selectedArtifact?.id === artifact.id ? { borderColor: '#4a9eff', bgcolor: '#333' } : {})
-                            }}
-                            onClick={() => setSelectedArtifact(artifact)}
-                        >
-                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                                <Typography sx={{ bgcolor: '#333', color: '#4a9eff', p: 0.2, borderRadius: 4, fontSize: 0.8 }}>
-                                    {artifact.type}
-                                </Typography>
-                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                    <Typography sx={{ color: '#666', fontSize: 0.8 }}>#{artifact.id}</Typography>
-                                </Box>
-                            </Box>
-                            <Typography sx={{ fontWeight: 500, mb: 0.5, color: '#fff' }}>
-                                {artifact.metadata?.title || 'Untitled'}
+        <Box sx={{ p: 1, height: '100%', overflowY: 'auto' }}>
+            <Typography variant="h2" sx={{ mb: 1, color: '#999', textTransform: 'uppercase' }}>
+                Artifacts
+            </Typography>
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                {(artifacts || []).map((artifact : Artifact) => (
+                    <Paper 
+                        key={artifact.id} 
+                        sx={{ 
+                            bgcolor: '#2a2a2a', 
+                            border: '1px solid #444', 
+                            borderRadius: 8, 
+                            p: 1, 
+                            cursor: 'pointer',
+                            ...(selectedArtifact?.id === artifact.id ? { borderColor: '#4a9eff', bgcolor: '#333' } : {})
+                        }}
+                        onClick={() => setSelectedArtifact(artifact)}
+                    >
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                            <Typography sx={{ bgcolor: '#333', color: '#4a9eff', p: 0.2, borderRadius: 4, fontSize: 0.8 }}>
+                                {artifact.type}
                             </Typography>
-                        </Paper>
-                    ))}
-                </Grid>
-            </Grid>
-            <Grid size={9} sx={{ p: 1, height: '100%' }}>
-                {selectedArtifact ? (
-                    <ArtifactViewer 
-                        artifact={selectedArtifact} 
-                        onClose={() => setSelectedArtifact(null)}
-                    />
-                ) : (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666', fontStyle: 'italic' }}>
-                        Select an artifact to view its details
-                    </Box>
-                )}
-            </Grid>
-        </Grid>
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                <Typography sx={{ color: '#666', fontSize: 0.8 }}>#{artifact.id}</Typography>
+                            </Box>
+                        </Box>
+                        <Typography sx={{ fontWeight: 500, mb: 0.5, color: '#fff' }}>
+                            {artifact.metadata?.title || 'Untitled'}
+                        </Typography>
+                    </Paper>
+                ))}
+            </Box>
+            {selectedArtifact && (
+                <ArtifactViewer 
+                    artifact={selectedArtifact} 
+                    onClose={() => setSelectedArtifact(null)}
+                />
+            )}
+        </Box>
     );
 };
