@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
 import { ArtifactViewer } from './ArtifactViewer';
-import { Box, Grid, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography } from '@mui/material';
+import { Grid } from '@mui/material/Grid2';
 
 interface ArtifactPanelProps {
     channelId: string | null;
@@ -30,8 +31,8 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     }, [channelId, threadId]);
 
     return (
-        <Grid container sx={{ height: 'calc(100vh - 48px)', gap: 1 }}>
-            <Grid item xs={3} sx={{ p: 1, borderRight: '1px solid #444', overflowY: 'auto' }}>
+        <Grid container spacing={1} sx={{ height: 'calc(100vh - 48px)' }}>
+            <Grid item xs={3} sx={{ p: 1, borderRight: '1px solid #444', overflowY: 'auto', height: '100%' }}>
                 <Typography variant="h2" sx={{ mb: 1, color: '#999', textTransform: 'uppercase' }}>
                     Artifacts
                 </Typography>
@@ -64,7 +65,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                     ))}
                 </Grid>
             </Grid>
-            <Grid item xs={9} sx={{ p: 1 }}>
+            <Grid item xs={9} sx={{ p: 1, height: '100%' }}>
                 {selectedArtifact ? (
                     <ArtifactViewer 
                         artifact={selectedArtifact} 

@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
-import { Grid, Paper, Typography, Select, Button, Box } from '@mui/material';
+import { Paper, Typography, Select, Button, Box } from '@mui/material';
+import { Grid } from '@mui/material/Grid2';
 
 export const GlobalArtifactViewer: React.FC = () => {
     const { artifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
@@ -29,8 +30,8 @@ export const GlobalArtifactViewer: React.FC = () => {
         : ['All Types'];
 
     return (
-        <Grid container sx={{ height: 'calc(100vh - 48px)', gap: 1 }}>
-            <Grid item xs={3} sx={{ p: 1, borderRight: '1px solid #444', overflowY: 'auto' }}>
+        <Grid container spacing={1} sx={{ height: 'calc(100vh - 48px)' }}>
+            <Grid item xs={3} sx={{ p: 1, borderRight: '1px solid #444', overflowY: 'auto', height: '100%' }}>
                 <Box sx={{ mb: 1 }}>
                     <Select 
                         value={selectedType} 
@@ -91,7 +92,7 @@ export const GlobalArtifactViewer: React.FC = () => {
                     ))}
                 </Grid>
             </Grid>
-            <Grid item xs={9} sx={{ p: 1 }}>
+            <Grid item xs={9} sx={{ p: 1, height: '100%' }}>
                 {selectedArtifact ? (
                     <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
                 ) : (
