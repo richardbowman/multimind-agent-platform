@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../contexts/DataContext';
 import { ArtifactViewer } from './ArtifactViewer';
 
 interface ArtifactPanelProps {
