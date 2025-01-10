@@ -55,6 +55,11 @@ export class InMemoryPost implements ChatPost {
 
 export class LocalChatStorage {
     channelNames: Record<string, string> = {};
+    channelData: Record<string, {
+        description?: string;
+        isPrivate?: boolean;
+        members?: string[];
+    }> = {};
     posts: ChatPost[] = [];
     callbacks: Function[] = [];
     userIdToHandleName: Record<string, string> = {}; // New mapping for user IDs to handle names
@@ -108,6 +113,7 @@ export class LocalChatStorage {
                 this.saveQueued = true;
                 const data = {
                     channelNames: this.channelNames,
+                    channelData: this.channelData,
                     posts: this.posts,
                     userIdToHandleName: this.userIdToHandleName
                 };
@@ -127,6 +133,7 @@ export class LocalChatStorage {
                 const data = await fs.readFile(this.storagePath, 'utf8');
                 const parsedData = JSON.parse(data);
                 if (parsedData.channelNames) this.channelNames = parsedData.channelNames;
+                if (parsedData.channelData) this.channelData = parsedData.channelData;
                 if (parsedData.posts) this.posts = parsedData.posts.map(p => InMemoryPost.fromLoad(p));
                 if (parsedData.userIdToHandleName) this.userIdToHandleName = parsedData.userIdToHandleName;
                 Logger.info(`Loaded ${this.posts.length} chat posts from disk`);
@@ -168,6 +175,37 @@ export class LocalTestClient implements ChatClient {
 
     public getHandles(): Promise<Record<string, string>> {
         return Promise.resolve(this.storage.userIdToHandleName);
+    }
+
+    public async createChannel(name: string, props?: {
+        description?: string;
+        isPrivate?: boolean;
+        members?: string[];
+    }): Promise<string> {
+        const channelId = Math.random().toString(36).substring(2, 15);
+        this.storage.registerChannel(channelId, name);
+        this.storage.channelData[channelId] = {
+            description: props?.description,
+            isPrivate: props?.isPrivate,
+            members: props?.members
+        };
+        await this.storage.save();
+        return channelId;
+    }
+
+    public async deleteChannel(channelId: string): Promise<void> {
+        if (!this.storage.channelNames[channelId]) {
+            throw new Error(`Channel ${channelId} not found`);
+        }
+        
+        // Remove all posts in the channel
+        this.storage.posts = this.storage.posts.filter(p => p.channel_id !== channelId);
+        
+        // Remove channel metadata
+        delete this.storage.channelNames[channelId];
+        delete this.storage.channelData[channelId];
+        
+        await this.storage.save();
     }
 
     public getPosts() {
