@@ -1,6 +1,6 @@
 import { LocalChatStorage, LocalTestClient } from "../localChatClient";
 import { ChatClient } from "../chatClient";
-import { MattermostClient } from "../mattermostClient";
+import MattermostClient from "../mattermostClient";
 import * as fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 
