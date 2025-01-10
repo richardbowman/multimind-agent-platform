@@ -222,12 +222,27 @@ export class MessageHandler implements ServerMethods {
     }
 
     async getArtifacts({ channelId, threadId }: { channelId: string; threadId: string | null }): Promise<any[]> {
-        const artifacts = await this.services.artifactManager.listArtifacts();
-        return artifacts.filter(artifact => {
-            const matchesChannel = artifact.metadata?.channelId === channelId;
-            const matchesThread = !threadId || artifact.metadata?.threadId === threadId;
-            return matchesChannel && matchesThread;
-        }).map(artifact => this.processArtifactContent(artifact));
+        // Get all messages for this channel/thread
+        const messages = await this.services.chatClient.fetchPreviousMessages(channelId);
+        const filteredMessages = messages.filter(message => {
+            if (threadId) {
+                return message.getRootId() === threadId || message.id === threadId;
+            }
+            return true;
+        });
+
+        // Collect all artifact IDs from message metadata
+        const artifactIds = filteredMessages
+            .flatMap(message => message.props['artifact-ids'] || [])
+            .filter((id): id is string => !!id); // Filter out undefined/null
+
+        // Get the actual artifacts
+        const allArtifacts = await this.services.artifactManager.listArtifacts();
+        const artifacts = allArtifacts.filter(artifact => 
+            artifactIds.includes(artifact.id)
+        );
+
+        return artifacts.map(artifact => this.processArtifactContent(artifact));
     }
 
     async getAllArtifacts(): Promise<any[]> {
