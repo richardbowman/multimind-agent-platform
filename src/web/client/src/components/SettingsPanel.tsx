@@ -27,7 +27,7 @@ export const SettingsPanel: React.FC = () => {
         const metadata = CONFIG_METADATA.find(m => m.key === key);
         const processedValue = metadata?.type === 'number' ? Number(value) : value;
         
-        // Handle nested keys (e.g. "bedrock.maxTokensPerMinute")
+        // Handle nested keys (e.g. "providers.chat")
         const parts = key.split('.');
         setSettings(prev => {
             const newSettings = { ...prev };
@@ -35,7 +35,7 @@ export const SettingsPanel: React.FC = () => {
             
             // Navigate to the correct nesting level
             for (let i = 0; i < parts.length - 1; i++) {
-                if (!(parts[i] in current)) {
+                if (!current[parts[i]]) {
                     current[parts[i]] = {};
                 }
                 current = current[parts[i]];
