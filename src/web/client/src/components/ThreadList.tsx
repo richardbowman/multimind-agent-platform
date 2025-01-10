@@ -1,13 +1,21 @@
 import React, { useEffect, useRef } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
+import { 
+    Box, 
+    Typography, 
+    List, 
+    ListItem, 
+    ListItemButton, 
+    ListItemText, 
+    Chip 
+} from '@mui/material';
+import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 
 interface ThreadListProps {
     channelId: string | null;
 }
 
-export const ThreadList: React.FC<ThreadListProps> = ({
-    channelId
-}) => {
+export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
     const { messages, currentThreadId, setCurrentThreadId } = useWebSocket();
     const activeThreadRef = useRef<HTMLLIElement>(null);
 
@@ -18,7 +26,11 @@ export const ThreadList: React.FC<ThreadListProps> = ({
     }, [currentThreadId]);
 
     if (!channelId) {
-        return <div className="thread-list">Select a channel to view threads</div>;
+        return (
+            <Box sx={{ p: 2, color: '#666', fontStyle: 'italic' }}>
+                Select a channel to view threads
+            </Box>
+        );
     }
 
     // Get root messages that have replies
@@ -38,42 +50,91 @@ export const ThreadList: React.FC<ThreadListProps> = ({
         .sort((a, b) => b.last_message_at - a.last_message_at);
 
     return (
-        <div className="thread-list">
-            <h2>Threads</h2>
-            <ul>
-                <li
+        <Box sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
+            <Typography variant="h6" sx={{ mb: 2, color: '#fff' }}>
+                Threads
+            </Typography>
+            <List>
+                <ListItem 
                     ref={currentThreadId === null ? activeThreadRef : null}
                     key="root"
-                    className={`thread-item ${currentThreadId === null ? 'active' : ''}`}
-                    onClick={() => setCurrentThreadId(null)}
+                    disablePadding
                 >
-                    <div className="thread-content">
-                        <div className="thread-title">Main Channel</div>
-                        <div className="thread-meta">Channel Root</div>
-                    </div>
-                </li>
+                    <ListItemButton
+                        selected={currentThreadId === null}
+                        onClick={() => setCurrentThreadId(null)}
+                        sx={{
+                            mb: 1,
+                            borderRadius: 1,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            bgcolor: currentThreadId === null ? 'primary.main' : 'background.paper',
+                            '&:hover': {
+                                bgcolor: currentThreadId === null ? 'primary.dark' : 'action.hover'
+                            }
+                        }}
+                    >
+                        <ListItemText
+                            primary="Main Channel"
+                            secondary="Channel Root"
+                            primaryTypographyProps={{ 
+                                color: currentThreadId === null ? '#fff' : 'text.primary',
+                                fontWeight: currentThreadId === null ? 500 : 400
+                            }}
+                            secondaryTypographyProps={{ 
+                                color: currentThreadId === null ? '#ddd' : 'text.secondary'
+                            }}
+                        />
+                    </ListItemButton>
+                </ListItem>
                 {threadsInChannel.map(thread => (
-                    <li
+                    <ListItem 
                         ref={currentThreadId === thread.rootMessage.id ? activeThreadRef : null}
                         key={thread.rootMessage.id}
-                        className={`thread-item ${currentThreadId === thread.rootMessage.id ? 'active' : ''}`}
-                        onClick={() => setCurrentThreadId(thread.rootMessage.id)}
+                        disablePadding
                     >
-                        <div className="thread-content">
-                            <div className="thread-title">
-                                {thread.rootMessage.message.substring(0, 50)}
-                                {thread.rootMessage.message.length > 50 ? '...' : ''}
-                            </div>
-                            <div className="thread-meta">
-                                <span className="reply-count">{thread.replies.length} replies</span>
-                                <span className="activity-time">
-                                    {new Date(thread.last_message_at).toLocaleString()}
-                                </span>
-                            </div>
-                        </div>
-                    </li>
+                        <ListItemButton
+                            selected={currentThreadId === thread.rootMessage.id}
+                            onClick={() => setCurrentThreadId(thread.rootMessage.id)}
+                            sx={{
+                                mb: 1,
+                                borderRadius: 1,
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                bgcolor: currentThreadId === thread.rootMessage.id ? 'primary.main' : 'background.paper',
+                                '&:hover': {
+                                    bgcolor: currentThreadId === thread.rootMessage.id ? 'primary.dark' : 'action.hover'
+                                }
+                            }}
+                        >
+                            <ListItemText
+                                primary={thread.rootMessage.message.substring(0, 50) + 
+                                    (thread.rootMessage.message.length > 50 ? '...' : '')}
+                                secondary={
+                                    <Box component="span" sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
+                                        <Chip
+                                            icon={<ChatBubbleOutlineIcon fontSize="small" />}
+                                            label={`${thread.replies.length} replies`}
+                                            size="small"
+                                            sx={{ 
+                                                bgcolor: 'background.default',
+                                                color: 'text.secondary'
+                                            }}
+                                        />
+                                        <Typography variant="caption" color="text.secondary">
+                                            {new Date(thread.last_message_at).toLocaleString()}
+                                        </Typography>
+                                    </Box>
+                                }
+                                primaryTypographyProps={{ 
+                                    color: currentThreadId === thread.rootMessage.id ? '#fff' : 'text.primary',
+                                    fontWeight: currentThreadId === thread.rootMessage.id ? 500 : 400
+                                }}
+                            />
+                        </ListItemButton>
+                    </ListItem>
                 ))}
-            </ul>
-        </div>
+            </List>
+        </Box>
     );
 };
