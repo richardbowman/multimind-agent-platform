@@ -2,6 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
+import { Grid, Paper, Typography, Select, Button, Box } from '@mui/material';
 
 export const GlobalArtifactViewer: React.FC = () => {
     const { artifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
@@ -28,32 +29,50 @@ export const GlobalArtifactViewer: React.FC = () => {
         : ['All Types'];
 
     return (
-        <div className="global-artifact-viewer">
-            <div className="artifact-list-panel">
-                <div className="type-filter">
-                    <select 
+        <Grid container sx={{ height: 'calc(100vh - 48px)', gap: 1 }}>
+            <Grid item xs={3} sx={{ p: 1, borderRight: '1px solid #444', overflowY: 'auto' }}>
+                <Box sx={{ mb: 1 }}>
+                    <Select 
                         value={selectedType} 
                         onChange={(e) => setSelectedType(e.target.value)}
-                        className="type-select"
+                        sx={{ bgcolor: '#333', color: '#fff', border: '1px solid #444', p: 0.5, borderRadius: 4, width: 200 }}
                     >
                         {types.map(type => (
-                            <option key={type} value={type}>{type}</option>
+                            <Typography key={type} value={type}>{type}</Typography>
                         ))}
-                    </select>
-                </div>
-                <div className="artifacts-grid">
+                    </Select>
+                </Box>
+                <Grid container sx={{ gap: 1, p: 0.5 }}>
                     {filteredArtifacts.map(artifact => (
-                        <div 
+                        <Paper 
                             key={artifact.id} 
-                            className={`artifact-card ${selectedArtifact?.id === artifact.id ? 'selected' : ''}`}
+                            sx={{ 
+                                bgcolor: '#2a2a2a', 
+                                border: '1px solid #444', 
+                                borderRadius: 8, 
+                                p: 1, 
+                                cursor: 'pointer',
+                                ...(selectedArtifact?.id === artifact.id ? { borderColor: '#4a9eff', bgcolor: '#333' } : {})
+                            }}
                             onClick={() => setSelectedArtifact(artifact)}
                         >
-                            <div className="artifact-card-header">
-                                <span className="artifact-type-badge">{artifact.type}</span>
-                                <div className="artifact-card-actions">
-                                    <span className="artifact-id">#{artifact.id}</span>
-                                    <button 
-                                        className="delete-artifact-btn"
+                            <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
+                                <Typography sx={{ bgcolor: '#333', color: '#4a9eff', p: 0.2, borderRadius: 4, fontSize: 0.8 }}>
+                                    {artifact.type}
+                                </Typography>
+                                <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                                    <Typography sx={{ color: '#666', fontSize: 0.8 }}>#{artifact.id}</Typography>
+                                    <Button 
+                                        sx={{ 
+                                            bgcolor: 'none', 
+                                            border: 'none', 
+                                            color: '#ff4a4a', 
+                                            fontSize: 1.2, 
+                                            cursor: 'pointer', 
+                                            p: 0.2, 
+                                            borderRadius: 4, 
+                                            lineHeight: 1 
+                                        }}
                                         onClick={(e) => {
                                             e.stopPropagation();
                                             if (window.confirm('Are you sure you want to delete this artifact?')) {
@@ -62,25 +81,25 @@ export const GlobalArtifactViewer: React.FC = () => {
                                         }}
                                     >
                                         ×
-                                    </button>
-                                </div>
-                            </div>
-                            <div className="artifact-card-title">
+                                    </Button>
+                                </Box>
+                            </Box>
+                            <Typography sx={{ fontWeight: 500, mb: 0.5, color: '#fff' }}>
                                 {artifact.metadata?.title || artifact.id}
-                            </div>
-                        </div>
+                            </Typography>
+                        </Paper>
                     ))}
-                </div>
-            </div>
-            <div className="artifact-detail-panel">
+                </Grid>
+            </Grid>
+            <Grid item xs={9} sx={{ p: 1 }}>
                 {selectedArtifact ? (
                     <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
                 ) : (
-                    <div className="no-selection">
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666', fontStyle: 'italic' }}>
                         Select an artifact to view its details
-                    </div>
+                    </Box>
                 )}
-            </div>
-        </div>
+            </Grid>
+        </Grid>
     );
 };
