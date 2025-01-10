@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { AppBar, Tabs, Tab, Toolbar } from '@mui/material';
 import { useWebSocket, DataProvider } from './contexts/DataContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
@@ -24,36 +25,42 @@ const AppContent: React.FC = () => {
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('llm');
 
     return (
-        <div className="app">
-            <div className="tab-bar">
-                <button 
-                    className={`tab-button ${currentTab === 'chat' ? 'active' : ''}`}
-                    onClick={() => setCurrentTab('chat')}
-                    disabled={needsConfig}
-                >
-                    Chat
-                </button>
-                <button 
-                    className={`tab-button ${currentTab === 'artifacts' ? 'active' : ''}`}
-                    onClick={() => setCurrentTab('artifacts')}
-                    disabled={needsConfig}
-                >
-                    Artifacts
-                </button>
-                <button 
-                    className={`tab-button ${currentTab === 'logs' ? 'active' : ''}`}
-                    onClick={() => setCurrentTab('logs')}
-                    disabled={needsConfig}
-                >
-                    Logs
-                </button>
-                <button 
-                    className={`tab-button ${currentTab === 'settings' ? 'active' : ''}`}
-                    onClick={() => setCurrentTab('settings')}
-                >
-                    Settings
-                </button>
-            </div>
+        <Box sx={{ 
+            height: 'calc(100vh - 48px)',
+            backgroundColor: '#1a1a1a',
+            color: '#ffffff',
+            marginTop: '48px'
+        }}>
+            <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+                <Toolbar>
+                    <Tabs 
+                        value={currentTab}
+                        onChange={(_, newValue) => setCurrentTab(newValue)}
+                        textColor="inherit"
+                        indicatorColor="secondary"
+                    >
+                        <Tab 
+                            label="Chat" 
+                            value="chat" 
+                            disabled={needsConfig}
+                        />
+                        <Tab 
+                            label="Artifacts" 
+                            value="artifacts" 
+                            disabled={needsConfig}
+                        />
+                        <Tab 
+                            label="Logs" 
+                            value="logs" 
+                            disabled={needsConfig}
+                        />
+                        <Tab 
+                            label="Settings" 
+                            value="settings"
+                        />
+                    </Tabs>
+                </Toolbar>
+            </AppBar>
             <div className={currentTab === 'chat' ? 'chat-layout' : 'artifacts-layout'}>
                 {currentTab === 'chat' ? (
                     <>
@@ -108,7 +115,7 @@ const AppContent: React.FC = () => {
                     </div>
                 )}
             </div>
-        </div>
+        </Box>
     );
 };
 
