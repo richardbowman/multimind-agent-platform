@@ -17,8 +17,14 @@ export interface Settings {
     providers: {
         chat: string;
     },
-
-    chatModel: string;
+    models: {
+        lmstudio: string;
+        anthropic: string;
+        bedrock: string;
+        openai: string;
+        openrouter: string;
+        llama_cpp: string;
+    },
     llmWeakModel: string;
     llmHeavyModel: string;
     embeddingModel: string;

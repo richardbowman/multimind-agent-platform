@@ -62,7 +62,7 @@ export class LLMServiceFactory {
                 }
                 return new OpenAIService(
                     settings.openai.api.key,
-                    settings.modelId || "gpt-3.5-turbo",
+                    settings.models.openai || "gpt-3.5-turbo",
                     settings.embeddingModelId || "text-embedding-ada-002"
                 );
             case LLMProvider.OPENROUTER:
@@ -71,7 +71,7 @@ export class LLMServiceFactory {
                 }
                 return new OpenAIService(
                     settings.openrouter.api.key,
-                    settings.modelId || "gpt-3.5-turbo",
+                    settings.models.openrouter || "gpt-3.5-turbo",
                     settings.embeddingModelId || "text-embedding-ada-002"
                 ).setBaseUrl("https://openrouter.ai/api/v1");
             default:

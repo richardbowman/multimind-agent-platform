@@ -26,11 +26,46 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         required: true
     },
     {
-        key: 'chatModel',
-        label: 'Chat Model',
+        key: 'models.lmstudio',
+        label: 'LM Studio Model',
         type: 'string',
         category: 'LLM Settings',
-        required: true
+        description: 'Model path or identifier for LM Studio'
+    },
+    {
+        key: 'models.anthropic',
+        label: 'Anthropic Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model identifier for Anthropic (e.g. claude-2.1)'
+    },
+    {
+        key: 'models.bedrock',
+        label: 'Bedrock Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model identifier for AWS Bedrock'
+    },
+    {
+        key: 'models.openai',
+        label: 'OpenAI Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model identifier for OpenAI (e.g. gpt-4)'
+    },
+    {
+        key: 'models.openrouter',
+        label: 'OpenRouter Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model identifier for OpenRouter'
+    },
+    {
+        key: 'models.llama_cpp',
+        label: 'Llama.cpp Model',
+        type: 'string',
+        category: 'LLM Settings',
+        description: 'Model path for Llama.cpp'
     },
     {
         key: 'llmWeakModel',
