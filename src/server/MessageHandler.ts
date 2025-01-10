@@ -5,6 +5,7 @@ import { ChatPost } from "../chat/chatClient";
 import { ClientChannel, ClientMessage, ClientThread } from "../web/client/src/shared/IPCInterface";
 import { LLMCallLogger } from "../llm/LLMLogger";
 import { reinitializeBackend } from "../main.electron";
+import { CreateChannelParams } from "src/shared/channelTypes";
 
 export class MessageHandler implements ServerMethods {
     createWrapper(): ServerMethods {
@@ -265,10 +266,7 @@ export class MessageHandler implements ServerMethods {
         if (!this.services?.chatClient) {
             throw new Error('Chat client is not initialized');
         }
-        return await this.services.chatClient.createChannel(params.name, {
-            description: params.description,
-            isPrivate: params.isPrivate
-        });
+        return await this.services.chatClient.createChannel(params);
     }
 
     async deleteChannel(channelId: string): Promise<void> {
