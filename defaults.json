@@ -30,7 +30,10 @@
       "userId": "router-agent",
       "handle": "@router",
       "description": "Routes requests to appropriate specialized agents",
-      "enabled": true
+      "enabled": true,
+      "autoResponseChannelIds": [
+
+      ]
     },
     "SimpleAgent": {
       "className": "SimpleAgent",
@@ -90,7 +93,10 @@
       "userId": "c7776380-6cda-44b9-8113-890706cd1ec1",
       "handle": "@onboarding",
       "description": "Handles user onboarding processes",
-      "enabled": true
+      "enabled": true,
+      "autoResponseChannelIds": [
+        "6eda3cc4-2762-4cbc-917c-820458dc1ef6"
+      ]
     },
     "SolverAgent": {
       "className": "SolverAgent",
