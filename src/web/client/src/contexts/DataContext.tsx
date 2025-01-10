@@ -12,7 +12,7 @@ const ipcService: BaseRPCService = (window as any).electron
     ? new ElectronIPCService()
     : new WebSocketService();
 
-interface WebSocketContextType {
+interface DataContextType {
   messages: ClientMessage[];
   channels: ClientChannel[];
   tasks: ClientTask[];
@@ -41,14 +41,14 @@ interface WebSocketContextType {
   deleteArtifact: (artifactId: string) => void;
 }
 
-const WebSocketContext = createContext<WebSocketContextType>({
+const DataContext = createContext<DataContextType>({
   messages: [],
   channels: [],
   handles: [],
   sendMessage: () => { },
   fetchChannels: () => { },
   fetchHandles: () => { },
-  updateSettings: () => { },
+  updateSettings: async (settings: any) => ({}),
   getSettings: async () => ({}),
   tasks: [],
   artifacts: [],
@@ -70,7 +70,7 @@ const WebSocketContext = createContext<WebSocketContextType>({
   needsConfig: true
 });
 
-export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ClientChannel[]>([]);
   const [handles, setHandles] = useState<Array<{id: string, handle: string}>>([]);
@@ -221,7 +221,7 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
   };
 
   return (
-    <WebSocketContext.Provider value={{ 
+    <DataContext.Provider value={{ 
       messages, 
       channels, 
       tasks,
@@ -271,8 +271,8 @@ export const WebSocketProvider: React.FC<{ children: React.ReactNode }> = ({ chi
       }
     }}>
       {children}
-    </WebSocketContext.Provider>
+    </DataContext.Provider>
   );
 };
 
-export const useWebSocket = () => useContext(WebSocketContext);
+export const useWebSocket = () => useContext(DataContext);
