@@ -261,6 +261,23 @@ export class MessageHandler implements ServerMethods {
         return handles;
     }
 
+    async createChannel(name: string, description?: string, isPrivate?: boolean): Promise<string> {
+        if (!this.services?.chatClient) {
+            throw new Error('Chat client is not initialized');
+        }
+        return await this.services.chatClient.createChannel(name, {
+            description,
+            isPrivate
+        });
+    }
+
+    async deleteChannel(channelId: string): Promise<void> {
+        if (!this.services?.chatClient) {
+            throw new Error('Chat client is not initialized');
+        }
+        await this.services.chatClient.deleteChannel(channelId);
+    }
+
     processArtifactContent(artifact: any) {
         const content = Buffer.isBuffer(artifact.content)
             ? artifact.metadata?.binary
