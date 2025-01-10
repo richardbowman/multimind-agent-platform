@@ -1,6 +1,7 @@
 import { LocalChatStorage, LocalTestClient } from "../localChatClient";
 import { ChatClient } from "../chatClient";
 import MattermostClient from "../mattermostClient";
+// @ts-ignore
 import * as fs from 'fs/promises';
 import { v4 as uuidv4 } from 'uuid';
 
