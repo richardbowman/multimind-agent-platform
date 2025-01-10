@@ -1,7 +1,7 @@
 import React, { useEffect } from 'react';
-import './TaskPanel.css';
 import { TaskStatus } from '../../../../schemas/reviewProgress';
 import { useWebSocket } from '../contexts/DataContext';
+import { Box, Typography, List, ListItem, ListItemText, Chip } from '@mui/material';
 
 interface TaskPanelProps {
     channelId: string | null;
@@ -27,19 +27,42 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
         };
     }, [channelId, threadId]);
 
+    const getStatusColor = (task: any) => {
+        if (task.complete) return 'success';
+        if (task.inProgress) return 'primary';
+        return 'default';
+    };
+
     return (
-        <div className="task-panel">
-            <h2>Tasks</h2>
-            <ul>
+        <Box sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
+            <Typography variant="h6" sx={{ mb: 2, color: '#fff' }}>
+                Tasks
+            </Typography>
+            <List>
                 {(tasks || []).map(task => (
-                    <li key={task.id} className={`task-item ${task.complete ? 'status-complete' : (task.inProgress ? 'status-in-progress' : 'status-not-started')}`}>
-                        <span className="task-status">
-                            {task.complete ? 'Complete' : (task.inProgress ? 'In Progress' : 'Not Started')}
-                        </span>
-                        <span className="task-description">{task.description}</span>
-                    </li>
+                    <ListItem 
+                        key={task.id}
+                        sx={{
+                            mb: 1,
+                            bgcolor: 'background.paper',
+                            borderRadius: 1,
+                            border: '1px solid',
+                            borderColor: 'divider'
+                        }}
+                    >
+                        <Chip
+                            label={task.complete ? 'Complete' : (task.inProgress ? 'In Progress' : 'Not Started')}
+                            color={getStatusColor(task)}
+                            size="small"
+                            sx={{ mr: 2 }}
+                        />
+                        <ListItemText
+                            primary={task.description}
+                            primaryTypographyProps={{ color: '#fff' }}
+                        />
+                    </ListItem>
                 ))}
-            </ul>
-        </div>
+            </List>
+        </Box>
     );
 };
