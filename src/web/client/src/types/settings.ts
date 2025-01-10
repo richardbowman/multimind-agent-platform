@@ -17,11 +17,11 @@ export interface Settings extends Record<string, any> {
 export const CONFIG_METADATA: ConfigMetadata[] = [
     // LLM Settings
     {
-        key: 'llmProvider',
+        key: 'providers.chat',
         label: 'LLM Provider',
         type: 'select',
         category: 'LLM Settings',
-        options: ['lmstudio', 'anthropic', 'bedrock'],
+        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama-cpp'],
         defaultValue: 'lmstudio',
         required: true
     },

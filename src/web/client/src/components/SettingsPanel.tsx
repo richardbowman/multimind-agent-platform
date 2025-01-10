@@ -61,8 +61,14 @@ export const SettingsPanel: React.FC = () => {
 
         // Add provider-specific required fields
         const provider = settings.providers?.chat;
-        if (provider === 'anthropic' && (!settings.anthropic?.api?.key)) {
+        if (provider === 'anthropic' && !settings.anthropic?.api?.key) {
             missingFields.push('Anthropic API Key');
+        }
+        if (provider === 'openai' && !settings.openai?.api?.key) {
+            missingFields.push('OpenAI API Key');
+        }
+        if (provider === 'openrouter' && !settings.openrouter?.api?.key) {
+            missingFields.push('OpenRouter API Key');
         }
 
         if (missingFields.length > 0) {
