@@ -9,7 +9,8 @@ export enum LLMProvider {
     LMSTUDIO = "lmstudio",
     BEDROCK = "bedrock",
     ANTHROPIC = "anthropic",
-    LLAMA_CPP = "llama-cpp"
+    LLAMA_CPP = "llama-cpp",
+    OPENAI = "openai"
 }
 
 
@@ -54,6 +55,15 @@ export class LLMServiceFactory {
                 );
             case LLMProvider.LLAMA_CPP:
                 return new LlamaCppService();
+            case LLMProvider.OPENAI:
+                if (!settings.openai?.api?.key) {
+                    throw new Error("OpenAI API key is required");
+                }
+                return new OpenAIService(
+                    settings.openai.api.key,
+                    settings.modelId || "gpt-3.5-turbo",
+                    settings.embeddingModelId || "text-embedding-ada-002"
+                );
             default:
                 throw new Error(`Unsupported chat provider: ${settings.chatProvider}`);
         }
