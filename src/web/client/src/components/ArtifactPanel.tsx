@@ -2,7 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
 import { ArtifactViewer } from './ArtifactViewer';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemText, ListItemIcon, Drawer, IconButton } from '@mui/material';
+import FolderIcon from '@mui/icons-material/Folder';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 interface ArtifactPanelProps {
     channelId: string | null;
@@ -12,6 +14,7 @@ interface ArtifactPanelProps {
 export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
     const { artifacts, fetchArtifacts } = useWebSocket();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
+    const [drawerOpen, setDrawerOpen] = useState(false);
 
     useEffect(() => {
         let isSubscribed = true;
@@ -29,45 +32,69 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
         };
     }, [channelId, threadId]);
 
+    const handleArtifactClick = (artifact: Artifact) => {
+        setSelectedArtifact(artifact);
+        setDrawerOpen(true);
+    };
+
     return (
         <Box sx={{ p: 1, height: '100%', overflowY: 'auto' }}>
             <Typography variant="h2" sx={{ mb: 1, color: '#999', textTransform: 'uppercase' }}>
                 Artifacts
             </Typography>
-            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                {(artifacts || []).map((artifact : Artifact) => (
-                    <Paper 
-                        key={artifact.id} 
-                        sx={{ 
-                            bgcolor: '#2a2a2a', 
-                            border: '1px solid #444', 
-                            borderRadius: 8, 
-                            p: 1, 
-                            cursor: 'pointer',
-                            ...(selectedArtifact?.id === artifact.id ? { borderColor: '#4a9eff', bgcolor: '#333' } : {})
+            <List>
+                {(artifacts || []).map((artifact: Artifact) => (
+                    <ListItem 
+                        key={artifact.id}
+                        button
+                        onClick={() => handleArtifactClick(artifact)}
+                        sx={{
+                            borderBottom: '1px solid #444',
+                            '&:hover': {
+                                backgroundColor: '#333'
+                            }
                         }}
-                        onClick={() => setSelectedArtifact(artifact)}
                     >
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 0.5 }}>
-                            <Typography sx={{ bgcolor: '#333', color: '#4a9eff', p: 0.2, borderRadius: 4, fontSize: 0.8 }}>
-                                {artifact.type}
-                            </Typography>
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                                <Typography sx={{ color: '#666', fontSize: 0.8 }}>#{artifact.id}</Typography>
-                            </Box>
-                        </Box>
-                        <Typography sx={{ fontWeight: 500, mb: 0.5, color: '#fff' }}>
-                            {artifact.metadata?.title || 'Untitled'}
-                        </Typography>
-                    </Paper>
+                        <ListItemIcon sx={{ minWidth: 36 }}>
+                            <FolderIcon fontSize="small" />
+                        </ListItemIcon>
+                        <ListItemText
+                            primary={artifact.metadata?.title || 'Untitled'}
+                            secondary={`Type: ${artifact.type} | ID: ${artifact.id}`}
+                            primaryTypographyProps={{ color: '#fff' }}
+                            secondaryTypographyProps={{ color: '#666' }}
+                        />
+                        <ChevronRightIcon sx={{ color: '#666' }} />
+                    </ListItem>
                 ))}
-            </Box>
-            {selectedArtifact && (
-                <ArtifactViewer 
-                    artifact={selectedArtifact} 
-                    onClose={() => setSelectedArtifact(null)}
-                />
-            )}
+            </List>
+            
+            <Drawer
+                anchor="right"
+                open={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
+                PaperProps={{
+                    sx: {
+                        width: '40%',
+                        bgcolor: '#2a2a2a',
+                        borderLeft: '1px solid #444'
+                    }
+                }}
+            >
+                {selectedArtifact && (
+                    <Box sx={{ p: 2 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: '#999' }}>
+                                <ChevronRightIcon />
+                            </IconButton>
+                        </Box>
+                        <ArtifactViewer 
+                            artifact={selectedArtifact} 
+                            onClose={() => setDrawerOpen(false)}
+                        />
+                    </Box>
+                )}
+            </Drawer>
         </Box>
     );
 };
