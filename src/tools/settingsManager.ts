@@ -94,6 +94,7 @@ export interface Settings {
     // Agent configuration
     agents: {
         [key: string]: {
+            autoRespondChannelIds?: String[];
             className: string;
             sourcePath: string;
             userId: string;
