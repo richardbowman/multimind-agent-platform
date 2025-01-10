@@ -14,6 +14,28 @@ export interface ChatClient {
     registerHandle(handleName: string): void;
     getChannels(): Promise<[string, string][]>;
     getHandles(): Promise<Record<string, string>>;
+    
+    /**
+     * Create a new chat channel
+     * @param name - Name of the channel to create
+     * @param props - Optional properties including:
+     *   - description: Channel description
+     *   - isPrivate: Whether channel should be private
+     *   - members: Array of user IDs to add to channel
+     * @returns Promise resolving to the new channel ID
+     */
+    createChannel(name: string, props?: {
+        description?: string;
+        isPrivate?: boolean;
+        members?: string[];
+    }): Promise<string>;
+
+    /**
+     * Delete an existing chat channel
+     * @param channelId - ID of channel to delete
+     * @returns Promise resolving when deletion is complete
+     */
+    deleteChannel(channelId: string): Promise<void>;
 }
 
 export interface ProjectChainResponse {
