@@ -1,5 +1,9 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+
+const isObject = (obj: any): boolean => {
+    return obj && typeof obj === 'object' && !Array.isArray(obj);
+};
 import { getDataPath } from '../helpers/paths';
 import Logger from '../helpers/logger';
 import { AsyncQueue } from '../helpers/asyncQueue';
@@ -141,6 +145,24 @@ export class SettingsManager extends EventEmitter {
         return '.';
     }
 
+    private deepMerge(target: any, source: any): any {
+        const output = { ...target };
+        if (isObject(target) && isObject(source)) {
+            Object.keys(source).forEach(key => {
+                if (isObject(source[key])) {
+                    if (!(key in target)) {
+                        Object.assign(output, { [key]: source[key] });
+                    } else {
+                        output[key] = this.deepMerge(target[key], source[key]);
+                    }
+                } else {
+                    Object.assign(output, { [key]: source[key] });
+                }
+            });
+        }
+        return output;
+    }
+
     private async loadDefaults(): Promise<any> {
         try {
             const defaultsPath = path.join(this.baseDir, 'defaults.json');
@@ -161,7 +183,8 @@ export class SettingsManager extends EventEmitter {
             const data = await this.fileQueue.enqueue(() =>
                 fs.readFile(this.settingsFile, 'utf-8')
             );
-            this.settings = { ...defaults, ...JSON.parse(data) };
+            const userSettings = JSON.parse(data);
+            this.settings = this.deepMerge(defaults, userSettings);
         } catch (error) {
             if (error.code === 'ENOENT') {
                 this.settings = defaults;
