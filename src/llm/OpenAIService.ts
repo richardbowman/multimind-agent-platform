@@ -1,46 +1,35 @@
-import { Configuration, OpenAIApi } from "openai";
+import { ClientOptions, OpenAI } from "openai";
 import { IEmbeddingFunction } from "chromadb";
-import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
+import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 import { BaseLLMService } from "./BaseLLMService";
-import { LLMRequestParams, GenerateOutputParams } from "./ILLMService";
+import { LLMRequestParams } from "./ILLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
 
 export class OpenAIService extends BaseLLMService {
-    private client: OpenAIApi;
+    private client: OpenAI;
     private model: string;
     private embeddingModel?: string;
     private embeddingService?: IEmbeddingFunction;
 
-    private baseUrl: string = "https://api.openai.com/v1";
 
-    constructor(apiKey: string, model: string, embeddingModel?: string) {
+    constructor(apiKey: string, model: string, embeddingModel?: string, baseUrl?: string) {
         super("openai");
-        const configuration = new Configuration({
+        const configuration: ClientOptions = ({
             apiKey: apiKey,
-            basePath: this.baseUrl
+            baseURL: baseUrl
         });
-        this.client = new OpenAIApi(configuration);
+        this.client = new OpenAI(configuration);
         this.model = model;
         this.embeddingModel = embeddingModel;
     }
 
-    setBaseUrl(url: string): this {
-        this.baseUrl = url;
-        const configuration = new Configuration({
-            apiKey: this.client.configuration.apiKey,
-            basePath: this.baseUrl
-        });
-        this.client = new OpenAIApi(configuration);
-        return this;
-    }
-
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
-        this.embeddingModel = modelPath;
+        // this.embeddingModel = modelPath;
     }
 
     async initializeChatModel(modelPath: string): Promise<void> {
-        this.model = modelPath;
+        // this.model = modelPath;
     }
 
     getEmbeddingModel(): IEmbeddingFunction {
@@ -49,11 +38,11 @@ export class OpenAIService extends BaseLLMService {
         }
         return {
             generate: async (texts: string[]): Promise<number[][]> => {
-                const response = await this.client.createEmbedding({
+                const response = await this.client.embeddings.create({
                     model: this.embeddingModel!,
                     input: texts,
                 });
-                return response.data.data.map(d => d.embedding);
+                return response.data.map(d => d.embedding);
             }
         };
     }
@@ -79,22 +68,54 @@ export class OpenAIService extends BaseLLMService {
                 });
             }
 
-            const response = await this.client.createChatCompletion({
+            let responseFormat, tools, toolChoice;
+            if (params.opts?.tools) {
+                responseFormat = {
+                    type: "json_schema",
+                    json_schema: {
+                        name: params.opts?.tools[0].name,
+                        schema: {
+                            ...params.opts?.tools[0].parameters,
+                            additionalProperties: false
+                        },
+                        strict: true
+                    }
+                }
+                console.log(JSON.stringify(responseFormat, undefined, " "));
+
+                tools = params.opts.tools.map(tool => ({
+                    type: "function",
+                    function: {
+                        name: tool.name,
+                        description: tool.description,
+                        parameters: tool.parameters
+                    }
+                }));
+
+                toolChoice = {
+                    "type": "function",
+                    "function": { "name": "generate_structured_output" }
+                }
+            }
+
+            const response = await this.client.chat.completions.create({
                 model: this.model,
                 messages,
+                tools,
+                tool_choice: toolChoice,
                 temperature: params.opts?.temperature,
                 max_tokens: params.opts?.maxPredictedTokens,
                 top_p: params.opts?.topP,
             });
 
             const result = {
-                response: params.parseJSON ? 
-                    JSON.parse(response.data.choices[0].message?.content || '{}') : 
-                    { message: response.data.choices[0].message?.content || '' },
+                response: params.parseJSON ?
+                    JSON.parse(response.choices[0].message.tool_calls[0].function.arguments || '{}') :
+                    { message: response.choices[0].message?.content || '' },
                 metadata: {
                     _usage: {
-                        inputTokens: response.data.usage?.prompt_tokens || 0,
-                        outputTokens: response.data.usage?.completion_tokens || 0
+                        inputTokens: response.usage?.prompt_tokens || 0,
+                        outputTokens: response.usage?.completion_tokens || 0
                     }
                 }
             };

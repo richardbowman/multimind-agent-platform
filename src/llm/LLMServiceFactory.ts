@@ -4,6 +4,7 @@ import { BedrockService } from "./BedrockService";
 import { AnthropicService } from "./AnthropicService";
 import { LlamaCppService } from "./LlamaCppService";
 import { Settings } from "../tools/settingsManager";
+import { OpenAIService } from "./OpenAIService";
 
 export enum LLMProvider {
     LMSTUDIO = "lmstudio",
@@ -26,7 +27,7 @@ export class LLMServiceFactory {
                     break;
                 case LLMProvider.BEDROCK:
                     embeddingService = new BedrockService(
-                        settings.chatModel,
+                        settings.models.bedrock,
                         settings.embeddingModel
                     );
                     break;
@@ -41,8 +42,8 @@ export class LLMServiceFactory {
                 return new LMStudioService();
             case LLMProvider.BEDROCK:
                 return new BedrockService(
-                    settings.modelId || settings.llmWeakModel,
-                    settings.embeddingModelId,
+                    settings.models.bedrock || settings.llmWeakModel,
+                    settings.embeddingModel,
                     embeddingService
                 );
             case LLMProvider.ANTHROPIC:
@@ -51,7 +52,7 @@ export class LLMServiceFactory {
                 }
                 return new AnthropicService(
                     settings.anthropic.api.key, // Will use default from config if undefined
-                    settings.modelId, // Will use default from config if undefined
+                    settings.models.anthropic, // Will use default from config if undefined
                     embeddingService
                 );
             case LLMProvider.LLAMA_CPP:
@@ -63,7 +64,7 @@ export class LLMServiceFactory {
                 return new OpenAIService(
                     settings.openai.api.key,
                     settings.models.openai || "gpt-3.5-turbo",
-                    settings.embeddingModelId || "text-embedding-ada-002"
+                    settings.embeddingModel || "text-embedding-ada-002"
                 );
             case LLMProvider.OPENROUTER:
                 if (!settings.openrouter?.api?.key) {
@@ -72,10 +73,11 @@ export class LLMServiceFactory {
                 return new OpenAIService(
                     settings.openrouter.api.key,
                     settings.models.openrouter || "gpt-3.5-turbo",
-                    settings.embeddingModelId || "text-embedding-ada-002"
-                ).setBaseUrl("https://openrouter.ai/api/v1");
+                    settings.embeddingModel || "text-embedding-ada-002",
+                    "https://openrouter.ai/api/v1"
+                );
             default:
-                throw new Error(`Unsupported chat provider: ${settings.chatProvider}`);
+                throw new Error(`Unsupported chat provider: ${settings.providers.chat}`);
         }
     }
 }
