@@ -1,12 +1,13 @@
 import axios from 'axios';
-import { SEARXNG_URL } from './config';
 import Logger from "src/helpers/logger";
-import { Browser, chromium } from 'playwright-extra';
+import { chromium, PlaywrightBrowserLauncher } from 'playwright-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import { ArtifactManager } from '../tools/artifactManager';
 import crypto from 'crypto';
 import { load } from 'cheerio';
 import { convertPageToMarkdown } from './scrapeHelper';
+import { Settings } from 'src/tools/settingsManager';
+import { Browser } from 'puppeteer';
 
 // Add stealth plugin to avoid detection
 chromium.use(stealth())
@@ -50,13 +51,8 @@ export class SearxNGProvider implements ISearchProvider {
 }
 
 export class DuckDuckGoProvider implements ISearchProvider {
-    private browser: Browser | null = null;
+    private browser?: Browser;
     private artifactManager: ArtifactManager;
-
-    constructor(artifactManager: ArtifactManager) {
-        this.artifactManager = artifactManager;
-    }
-
     private settings: Settings;
 
     constructor(artifactManager: ArtifactManager, settings: Settings) {
@@ -66,7 +62,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
 
     private async initBrowser() {
         if (!this.browser) {
-            this.browser = await chromium.launch({ 
+            this.browser = await chromium.launch({
                 headless: this.settings.duckduckgo.headless,
                 timeout: this.settings.duckduckgo.timeout
             });
@@ -85,7 +81,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
             const page = await context.newPage();
             const encodedQuery = encodeURIComponent(query);
             await page.goto(`https://duckduckgo.com/?q=${encodedQuery}`);
-            
+
             await page.waitForLoadState('networkidle');
 
             // Save the page content as an artifact
@@ -122,7 +118,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
             }
             const searchResults = await mainResults.$$('[data-testid="result"]');
             Logger.info(`Found ${searchResults.length} results on page`);
-            
+
             for (const result of searchResults) {
                 try {
                     const titleElement = await result.$('[data-testid="result-title-a"]');
@@ -163,7 +159,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
     async cleanup() {
         if (this.browser) {
             await this.browser.close();
-            this.browser = null;
+            this.browser = undefined;
         }
     }
 }
