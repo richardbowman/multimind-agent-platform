@@ -16,6 +16,7 @@ export interface ChatMessage {
 export interface Channel {
     id: string;
     name: string;
+    goalTemplate?: string;
 }
 
 export interface Thread {
