@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import './ChatPanel.css';
+import { Box, Typography, List, ListItem, ListItemText, Paper } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
@@ -92,71 +92,127 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
     };
 
     return (
-        <div className="chat-panel">
-            <div className="messages">
+        <Box sx={{ 
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            overflow: 'hidden'
+        }}>
+            <Box sx={{ 
+                flex: 1,
+                overflowY: 'auto',
+                p: 2,
+                bgcolor: 'background.paper'
+            }}>
                 {isLoading ? (
-                    <div className="loading-message">Loading messages...</div>
+                    <Typography variant="body1" sx={{ 
+                        textAlign: 'center',
+                        color: 'text.secondary',
+                        fontStyle: 'italic',
+                        p: 2
+                    }}>
+                        Loading messages...
+                    </Typography>
                 ) : messages.length === 0 ? (
-                    <div className="no-messages">No messages yet</div>
+                    <Typography variant="body1" sx={{ 
+                        textAlign: 'center',
+                        color: 'text.secondary',
+                        fontStyle: 'italic',
+                        p: 2
+                    }}>
+                        No messages yet
+                    </Typography>
                 ) : (
                 (messages||[])
                     .filter(message => message.channel_id === currentChannelId)
                     .filter(message => {
                         if (currentThreadId) {
-                            // In a thread, show the root message and all replies
                             return message.id === currentThreadId || 
                                    message.props?.['root-id'] === currentThreadId;
                         } else {
-                            // In channel view, show only root messages
                             return !message.props?.['root-id'];
                         }
                     })
                     .map((message) => (
-                        <div key={message.id} className="message">
-                            <div className="message-header">
-                                <span className="username">
-                                    {(() => {
-                                        const handle = handles.find(h => h.id === message.user_id)?.handle;
-                                        return handle || 'Unknown User';
-                                    })()}
-                                </span>
-                                <span className="timestamp">
+                        <Paper key={message.id} sx={{ 
+                            mb: 2,
+                            p: 2,
+                            bgcolor: 'background.default'
+                        }}>
+                            <Box sx={{ 
+                                display: 'flex',
+                                justifyContent: 'space-between',
+                                mb: 1
+                            }}>
+                                <Typography variant="subtitle2" sx={{ color: 'primary.main' }}>
+                                    {handles.find(h => h.id === message.user_id)?.handle || 'Unknown User'}
+                                </Typography>
+                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                                     {new Date(message.create_at).toLocaleString()}
-                                </span>
-                            </div>
-                            <div className="message-content">
+                                </Typography>
+                            </Box>
+                            <Box>
                                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.message}</ReactMarkdown>
                                 {message.inProgress && <Spinner />}
                                 {!currentThreadId && messages.some(m => m.props?.['root-id'] === message.id) && (
-                                    <div 
-                                        className="thread-indicator"
+                                    <Box
                                         onClick={() => setCurrentThreadId(message.id)}
+                                        sx={{
+                                            mt: 1,
+                                            p: 1,
+                                            bgcolor: 'action.hover',
+                                            borderRadius: 1,
+                                            cursor: 'pointer',
+                                            '&:hover': {
+                                                bgcolor: 'action.selected'
+                                            }
+                                        }}
                                     >
-                                        View thread ({message.reply_count} responses)
-                                    </div>
+                                        <Typography variant="caption" sx={{ color: 'primary.main' }}>
+                                            View thread ({message.reply_count} responses)
+                                        </Typography>
+                                    </Box>
                                 )}
-                            </div>
-                        </div>
+                            </Box>
+                        </Paper>
                     )))}
                 {tasks.filter(task => task.inProgress && !task.complete && (task.threadId === currentThreadId)).length > 0 && (
-                    <div className="in-progress-tasks-container">
-                        <h4>In Progress Tasks</h4>
-                        <div className="in-progress-tasks-list">
+                    <Paper sx={{ 
+                        mt: 2,
+                        p: 2,
+                        bgcolor: 'background.default'
+                    }}>
+                        <Typography variant="subtitle2" sx={{ 
+                            mb: 1,
+                            color: 'text.secondary',
+                            textTransform: 'uppercase'
+                        }}>
+                            In Progress Tasks
+                        </Typography>
+                        <List>
                             {tasks
                                 .filter(task => task.inProgress && !task.complete && (task.threadId === currentThreadId))
                                 .map(task => (
-                                    <div key={task.id} className="in-progress-task">
+                                    <ListItem key={task.id} sx={{ 
+                                        p: 1,
+                                        bgcolor: 'background.paper',
+                                        borderRadius: 1,
+                                        mb: 1
+                                    }}>
                                         <Spinner />
-                                        <span className="task-description">{task.description}</span>
-                                    </div>
+                                        <ListItemText 
+                                            primary={task.description}
+                                            sx={{ ml: 1 }}
+                                        />
+                                    </ListItem>
                                 ))
                             }
-                        </div>
-                    </div>
+                        </List>
+                    </Paper>
                 )}
                 <div ref={messagesEndRef} />
-            </div>
+            </Box>
             <CommandInput onSendMessage={handleSendMessage} />
-        </div>
+        </Box>
     );
 };
