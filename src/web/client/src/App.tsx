@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { AppBar, Tabs, Tab, Toolbar, Box } from '@mui/material';
+import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import { useWebSocket, DataProvider } from './contexts/DataContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
@@ -14,6 +15,8 @@ import './App.css';
 const AppContent: React.FC = () => {
     const { currentChannelId, currentThreadId, setCurrentThreadId, needsConfig } = useWebSocket();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
+    const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
+    const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
 
     React.useEffect(() => {
         if (needsConfig) {
@@ -33,6 +36,14 @@ const AppContent: React.FC = () => {
         }}>
             <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
                 <Toolbar>
+                    <IconButton
+                        color="inherit"
+                        edge="start"
+                        onClick={() => setLeftDrawerOpen(!leftDrawerOpen)}
+                        sx={{ mr: 2 }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
                     <Tabs 
                         value={currentTab}
                         onChange={(_, newValue) => setCurrentTab(newValue)}
@@ -64,26 +75,55 @@ const AppContent: React.FC = () => {
             <div className={currentTab === 'chat' ? 'chat-layout' : 'artifacts-layout'}>
                 {currentTab === 'chat' ? (
                     <>
-                    <div className="sidebar">
-                    <ChannelList />
-                    <ThreadList
-                        channelId={currentChannelId}
-                    />
-                </div>
-                <div className="main-content">
-                    <ChatPanel
-                    />
-                </div>
-                <div className="right-sidebar">
-                    <TaskPanel
-                        channelId={currentChannelId}
-                        threadId={currentThreadId}
-                    />
-                    <ArtifactPanel
-                        channelId={currentChannelId}
-                        threadId={currentThreadId}
-                    />
-                    </div>
+                    <Drawer
+                        variant="persistent"
+                        anchor="left"
+                        open={leftDrawerOpen}
+                        sx={{
+                            width: 250,
+                            flexShrink: 0,
+                            '& .MuiDrawer-paper': {
+                                width: 250,
+                                boxSizing: 'border-box',
+                                backgroundColor: '#2a2a2a',
+                                borderRight: '1px solid #444'
+                            },
+                        }}
+                    >
+                        <Toolbar /> {/* For spacing under app bar */}
+                        <ChannelList />
+                        <ThreadList channelId={currentChannelId} />
+                    </Drawer>
+
+                    <Box component="main" sx={{ flexGrow: 1 }}>
+                        <ChatPanel />
+                    </Box>
+
+                    <Drawer
+                        variant="persistent"
+                        anchor="right"
+                        open={rightDrawerOpen}
+                        sx={{
+                            width: 300,
+                            flexShrink: 0,
+                            '& .MuiDrawer-paper': {
+                                width: 300,
+                                boxSizing: 'border-box',
+                                backgroundColor: '#2a2a2a',
+                                borderLeft: '1px solid #444'
+                            },
+                        }}
+                    >
+                        <Toolbar /> {/* For spacing under app bar */}
+                        <TaskPanel 
+                            channelId={currentChannelId}
+                            threadId={currentThreadId}
+                        />
+                        <ArtifactPanel
+                            channelId={currentChannelId}
+                            threadId={currentThreadId}
+                        />
+                    </Drawer>
                     </>
                 ) : currentTab === 'artifacts' ? (
                     <GlobalArtifactViewer />
