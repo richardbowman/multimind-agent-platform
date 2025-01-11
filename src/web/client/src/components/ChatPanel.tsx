@@ -177,37 +177,53 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
                         </Paper>
                     )))}
                 {tasks.filter(task => task.inProgress && !task.complete && (task.threadId === currentThreadId)).length > 0 && (
-                    <Paper sx={{ 
-                        mt: 2,
-                        p: 2,
-                        bgcolor: 'background.default'
-                    }}>
-                        <Typography variant="subtitle2" sx={{ 
-                            mb: 1,
-                            color: 'text.secondary',
-                            textTransform: 'uppercase'
-                        }}>
+                    <Paper 
+                        elevation={0}
+                        sx={{ 
+                            mt: 2,
+                            p: 2,
+                            bgcolor: 'background.paper',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 2
+                        }}
+                    >
+                        <Typography 
+                            variant="overline" 
+                            sx={{ 
+                                mb: 1,
+                                color: 'text.secondary',
+                                display: 'block'
+                            }}
+                        >
                             In Progress Tasks
                         </Typography>
-                        <List>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
                             {tasks
                                 .filter(task => task.inProgress && !task.complete && (task.threadId === currentThreadId))
                                 .map(task => (
-                                    <ListItem key={task.id} sx={{ 
-                                        p: 1,
-                                        bgcolor: 'background.paper',
-                                        borderRadius: 1,
-                                        mb: 1
-                                    }}>
+                                    <Paper 
+                                        key={task.id}
+                                        elevation={0}
+                                        sx={{
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            gap: 1,
+                                            p: 1,
+                                            bgcolor: 'background.default',
+                                            borderRadius: 1,
+                                            border: '1px solid',
+                                            borderColor: 'divider'
+                                        }}
+                                    >
                                         <Spinner />
-                                        <ListItemText 
-                                            primary={task.description}
-                                            sx={{ ml: 1 }}
-                                        />
-                                    </ListItem>
+                                        <Typography variant="body2" sx={{ color: 'text.primary' }}>
+                                            {task.description}
+                                        </Typography>
+                                    </Paper>
                                 ))
                             }
-                        </List>
+                        </Box>
                     </Paper>
                 )}
                 <div ref={messagesEndRef} />
