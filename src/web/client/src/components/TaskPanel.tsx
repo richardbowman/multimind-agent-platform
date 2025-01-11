@@ -82,7 +82,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                         <ListItemText
                             primary={task.description}
                             primaryTypographyProps={{ 
-                                color: '#fff',
+                                color: task.inProgress ? '#000' : '#fff',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis'
