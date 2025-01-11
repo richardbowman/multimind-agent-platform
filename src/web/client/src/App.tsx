@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton } from '@mui/material';
+import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useWebSocket, DataProvider } from './contexts/DataContext';
 import { ChatPanel } from './components/ChatPanel';
@@ -103,12 +103,33 @@ const AppContent: React.FC = () => {
                         <ThreadList channelId={currentChannelId} />
                     </Drawer>
 
-                    <Box component="main" sx={{ flexGrow: 1 }}>
+                    const drawerWidth = 250;
+
+                    const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
+                      open?: boolean;
+                    }>(({ theme, open }) => ({
+                      flexGrow: 1,
+                      padding: theme.spacing(3),
+                      transition: theme.transitions.create('margin', {
+                        easing: theme.transitions.easing.sharp,
+                        duration: theme.transitions.duration.leavingScreen,
+                      }),
+                      marginLeft: `-${drawerWidth}px`,
+                      ...(open && {
+                        transition: theme.transitions.create('margin', {
+                          easing: theme.transitions.easing.easeOut,
+                          duration: theme.transitions.duration.enteringScreen,
+                        }),
+                        marginLeft: 0,
+                      }),
+                    }));
+
+                    <Main open={leftDrawerOpen}>
                         <ChatPanel 
                             leftDrawerOpen={leftDrawerOpen}
                             rightDrawerOpen={rightDrawerOpen}
                         />
-                    </Box>
+                    </Main>
 
                     <Drawer
                         variant="persistent"
