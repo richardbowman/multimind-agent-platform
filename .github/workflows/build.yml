@@ -17,13 +17,17 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+
+      - name: Enable Corepack and Yarn
+        run: |
+          corepack enable
+          corepack prepare yarn@stable --activate      
       
       - name: Setup Node.js and Python
         uses: actions/setup-node@v4
         with:
           node-version: '22'
           cache: 'yarn'
-          corepack: true
 
       - name: Set up Python
         uses: actions/setup-python@v4
@@ -34,11 +38,6 @@ jobs:
         run: |
           python -m pip install --upgrade pip
           pip install setuptools wheel
-          
-      - name: Enable Corepack and Yarn
-        run: |
-          corepack enable
-          corepack prepare yarn@stable --activate
           
       - name: Install Dependencies
         run: |
