@@ -53,25 +53,25 @@ app.whenReady().then(async () => {
         backendServices = {
             settingsManager 
         };
-        setupIpcHandlers();
 
         Logger.error('Error in main:', error);
         if (error instanceof ConfigurationError) {
             // For configuration errors, show the main window with settings tab
             splashWindow.setMessage('Configuration needed...');
-            mainWindow = new MainWindow();
-            splashWindow.close();
-            setupIpcHandlers(true);
-            await mainWindow.show();
         } else {
             // For other errors, show error and quit
             if (splashWindow) {
                 splashWindow.setMessage(`Error: ${error.message}`);
-                setTimeout(() => app.quit(), 5000);
             } else {
                 process.exit(1);
             }
         }
+
+        mainWindow = new MainWindow();
+
+        splashWindow.close();
+        setupIpcHandlers(true);
+        await mainWindow.show();
     }
 });
 

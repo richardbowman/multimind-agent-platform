@@ -26,7 +26,7 @@ export class LLMServiceFactory {
     static createEmbeddingService(settings: Settings): IEmbeddingService {
         switch (settings.providers.embeddings) {
             case LLMProvider.LMSTUDIO:
-                return new LMStudioService();
+                return new LMStudioService(settings.lmStudioBaseUrl);
             case LLMProvider.BEDROCK:
                 return new BedrockService(
                     settings.models.conversation.bedrock,
@@ -50,7 +50,7 @@ export class LLMServiceFactory {
         // Create main chat service
         switch (settings.providers.chat) {
             case LLMProvider.LMSTUDIO:
-                return new LMStudioService();
+                return new LMStudioService(settings.lmStudioBaseUrl);
             case LLMProvider.BEDROCK:
                 return new BedrockService(
                     settings.models.conversation.bedrock,

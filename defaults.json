@@ -23,6 +23,7 @@
   "embeddingModel": "text-embedding-nomic-embed-text-v1.5",
   "chatModel": "qwen2.5-coder-14b-instruct",
   "contextSize": 16384,
+  "lmStudioBaseUrl": "ws://localhost:1234",
   "models": {
     "conversation": {
       "lmstudio": "qwen2.5-coder-14b-instruct",

@@ -49,7 +49,7 @@ export class MessageHandler implements ServerMethods {
 
     setupClientEvents(rpc: ClientMethods) {
         // Set up message receiving for the user client
-        if (this.services) {
+        if (this.services?.chatClient) {
             this.services.chatClient.receiveMessages((post: ChatPost) => {
                 const rpcMessage = {
                     id: post.id,
@@ -63,7 +63,9 @@ export class MessageHandler implements ServerMethods {
                 };
                 rpc.onMessage([rpcMessage]);
             });
+        }
 
+        if (this.services?.llmLogger) {
             // Set up log update notifications
             this.services.llmLogger.on("log", (logEntry) => {
                 rpc.onLogUpdate({

@@ -7,7 +7,7 @@ import JSON5 from "json5";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 
-import { LLMPredictionOpts, LLMRequestParams } from "./ILLMService";
+import { IEmbeddingService, LLMPredictionOpts, LLMRequestParams } from "./ILLMService";
 
 interface LMStudioRequestParams extends LLMRequestParams {
     messages: ModelMessageHistory[];
@@ -45,15 +45,15 @@ import { ILLMService, ModelRole, StructuredOutputPrompt } from "./ILLMService";
 import { BaseLLMService } from "./BaseLLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
 
-export default class LMStudioService extends BaseLLMService {
+export default class LMStudioService extends BaseLLMService implements IEmbeddingService {
     private lmStudioClient: LMStudioClient;
     private embeddingModel?: IEmbeddingFunction;
     private chatModel?: LLMSpecificModel;
 
-    constructor() {
+    constructor(baseUrl?: string) {
         super("lmstudio");
         this.lmStudioClient = new LMStudioClient({
-            baseUrl: process.env.LMSTUDIO_BASEURL!
+            baseUrl: baseUrl
         });
     }
 
