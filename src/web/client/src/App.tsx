@@ -44,6 +44,14 @@ const AppContent: React.FC = () => {
                     >
                         <MenuIcon />
                     </IconButton>
+                    <IconButton
+                        color="inherit"
+                        edge="end"
+                        onClick={() => setRightDrawerOpen(!rightDrawerOpen)}
+                        sx={{ mr: 2 }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
                     <Tabs 
                         value={currentTab}
                         onChange={(_, newValue) => setCurrentTab(newValue)}
