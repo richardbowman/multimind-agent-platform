@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { AppBar, Tabs, Tab, Toolbar } from '@mui/material';
+import { AppBar, Tabs, Tab, Toolbar, Box } from '@mui/material';
 import { useWebSocket, DataProvider } from './contexts/DataContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
@@ -26,10 +26,10 @@ const AppContent: React.FC = () => {
 
     return (
         <Box sx={{ 
-            height: 'calc(100vh - 48px)',
+            height: 'calc(100vh - 60px)',
             backgroundColor: '#1a1a1a',
             color: '#ffffff',
-            marginTop: '48px'
+            marginTop: '60px'
         }}>
             <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
                 <Toolbar>
