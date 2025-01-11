@@ -2,6 +2,7 @@ node_modules
 chrome
 .env*local
 .output
+.yarn
 src/playground.ts
 TODO
 .aider*
