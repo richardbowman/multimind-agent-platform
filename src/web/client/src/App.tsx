@@ -14,22 +14,31 @@ import './App.css';
 
 const drawerWidth = 250;
 
-const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'open' })<{
-    open?: boolean;
-}>(({ theme, open }) => ({
+const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'leftOpen' && prop !== 'rightOpen' })<{
+    leftOpen?: boolean;
+    rightOpen?: boolean;
+}>(({ theme, leftOpen, rightOpen }) => ({
     flexGrow: 1,
     padding: theme.spacing(3),
-    transition: theme.transitions.create('margin', {
+    transition: theme.transitions.create(['margin'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
     }),
-    marginLeft: `-${drawerWidth}px`,
-    ...(open && {
-        transition: theme.transitions.create('margin', {
+    marginLeft: leftOpen ? 0 : `-${drawerWidth}px`,
+    marginRight: rightOpen ? 0 : `-${drawerWidth}px`,
+    ...(leftOpen && {
+        transition: theme.transitions.create(['margin'], {
             easing: theme.transitions.easing.easeOut,
             duration: theme.transitions.duration.enteringScreen,
         }),
         marginLeft: 0,
+    }),
+    ...(rightOpen && {
+        transition: theme.transitions.create(['margin'], {
+            easing: theme.transitions.easing.easeOut,
+            duration: theme.transitions.duration.enteringScreen,
+        }),
+        marginRight: 0,
     }),
 }));
 
@@ -125,7 +134,7 @@ const AppContent: React.FC = () => {
                         </Drawer>
 
 
-                        <Main open={leftDrawerOpen}>
+                        <Main leftOpen={leftDrawerOpen} rightOpen={rightDrawerOpen}>
                             <ChatPanel
                                 leftDrawerOpen={leftDrawerOpen}
                                 rightDrawerOpen={rightDrawerOpen}
