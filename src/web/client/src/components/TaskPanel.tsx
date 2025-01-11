@@ -1,7 +1,20 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { TaskStatus } from '../../../../schemas/reviewProgress';
 import { useWebSocket } from '../contexts/DataContext';
-import { Box, Typography, List, ListItem, ListItemText, Chip } from '@mui/material';
+import { 
+    Box, 
+    Typography, 
+    List, 
+    ListItem, 
+    ListItemText, 
+    Chip,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    Stack
+} from '@mui/material';
 
 interface TaskPanelProps {
     channelId: string | null;
@@ -10,6 +23,8 @@ interface TaskPanelProps {
 
 export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => {
     const { tasks, fetchTasks } = useWebSocket();
+    const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [dialogOpen, setDialogOpen] = useState(false);
 
     useEffect(() => {
         let isSubscribed = true;
@@ -47,7 +62,15 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                             bgcolor: 'background.paper',
                             borderRadius: 1,
                             border: '1px solid',
-                            borderColor: 'divider'
+                            borderColor: 'divider',
+                            cursor: 'pointer',
+                            '&:hover': {
+                                bgcolor: 'action.hover'
+                            }
+                        }}
+                        onClick={() => {
+                            setSelectedTask(task);
+                            setDialogOpen(true);
                         }}
                     >
                         <Chip
@@ -58,11 +81,61 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                         />
                         <ListItemText
                             primary={task.description}
-                            primaryTypographyProps={{ color: '#fff' }}
+                            primaryTypographyProps={{ 
+                                color: '#fff',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }}
                         />
                     </ListItem>
                 ))}
             </List>
+
+            <Dialog 
+                open={dialogOpen} 
+                onClose={() => setDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Task Details</DialogTitle>
+                <DialogContent>
+                    {selectedTask && (
+                        <Stack spacing={2} sx={{ mt: 1 }}>
+                            <Typography variant="body1">
+                                <strong>Description:</strong> {selectedTask.description}
+                            </Typography>
+                            <Typography variant="body1">
+                                <strong>Status:</strong> {selectedTask.complete ? 'Complete' : (selectedTask.inProgress ? 'In Progress' : 'Not Started')}
+                            </Typography>
+                            <Typography variant="body1">
+                                <strong>Created At:</strong> {new Date(selectedTask.createdAt).toLocaleString()}
+                            </Typography>
+                            <Typography variant="body1">
+                                <strong>Last Updated:</strong> {new Date(selectedTask.updatedAt).toLocaleString()}
+                            </Typography>
+                            {selectedTask.assignee && (
+                                <Typography variant="body1">
+                                    <strong>Assignee:</strong> {selectedTask.assignee}
+                                </Typography>
+                            )}
+                            {selectedTask.dependsOn && (
+                                <Typography variant="body1">
+                                    <strong>Depends On:</strong> {selectedTask.dependsOn}
+                                </Typography>
+                            )}
+                            {selectedTask.metadata && Object.entries(selectedTask.metadata).map(([key, value]) => (
+                                <Typography key={key} variant="body1">
+                                    <strong>{key}:</strong> {String(value)}
+                                </Typography>
+                            ))}
+                        </Stack>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDialogOpen(false)}>Close</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
