@@ -104,7 +104,10 @@ const AppContent: React.FC = () => {
                     </Drawer>
 
                     <Box component="main" sx={{ flexGrow: 1 }}>
-                        <ChatPanel />
+                        <ChatPanel 
+                            leftDrawerOpen={leftDrawerOpen}
+                            rightDrawerOpen={rightDrawerOpen}
+                        />
                     </Box>
 
                     <Drawer

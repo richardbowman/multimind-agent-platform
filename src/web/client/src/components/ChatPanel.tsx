@@ -6,7 +6,10 @@ import { Spinner } from './Spinner';
 import { useWebSocket } from '../contexts/DataContext';
 import remarkGfm from 'remark-gfm'
 
-interface ChatPanelProps {}
+interface ChatPanelProps {
+    leftDrawerOpen: boolean;
+    rightDrawerOpen: boolean;
+}
 
 export const ChatPanel: React.FC<ChatPanelProps> = () => {
     const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useWebSocket();
@@ -95,14 +98,23 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
         <Box sx={{ 
             display: 'flex',
             flexDirection: 'column',
-            height: '100%',
-            overflow: 'hidden'
+            height: '100vh',
+            width: '100%',
+            overflow: 'hidden',
+            ml: 0,
+            mr: 0,
+            transition: 'margin 0.3s ease',
+            '@media (min-width: 600px)': {
+                ml: (theme) => leftDrawerOpen ? '250px' : 0,
+                mr: (theme) => rightDrawerOpen ? '300px' : 0,
+            }
         }}>
             <Box sx={{ 
                 flex: 1,
                 overflowY: 'auto',
                 p: 2,
-                bgcolor: 'background.paper'
+                bgcolor: 'background.paper',
+                width: '100%'
             }}>
                 {isLoading ? (
                     <Typography variant="body1" sx={{ 
