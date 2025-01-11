@@ -21,7 +21,6 @@ jobs:
       - name: Enable Corepack and Yarn
         run: |
           corepack enable
-          corepack prepare yarn@stable --activate      
       
       - name: Setup Node.js and Python
         uses: actions/setup-node@v4
