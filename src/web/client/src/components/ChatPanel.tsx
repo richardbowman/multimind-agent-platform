@@ -3,7 +3,7 @@ import './ChatPanel.css';
 import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../contexts/DataContext';
 import remarkGfm from 'remark-gfm'
 
 interface ChatPanelProps {}
@@ -117,8 +117,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
                                 <span className="username">
                                     {(() => {
                                         const handle = handles.find(h => h.id === message.user_id)?.handle;
-                                        console.log('ChatPanel: Looking up handle for user_id:', message.user_id, 'Found:', handle);
-                                        console.log('ChatPanel: Available handles:', handles);
                                         return handle || 'Unknown User';
                                     })()}
                                 </span>
