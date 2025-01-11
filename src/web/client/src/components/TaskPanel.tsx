@@ -7,7 +7,7 @@ import {
     List, 
     ListItem, 
     ListItemText, 
-    Chip,
+    Checkbox,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -42,11 +42,6 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
         };
     }, [channelId, threadId]);
 
-    const getStatusColor = (task: any) => {
-        if (task.complete) return 'success';
-        if (task.inProgress) return 'primary';
-        return 'default';
-    };
 
     return (
         <Box sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
@@ -59,13 +54,13 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                         key={task.id}
                         sx={{
                             mb: 1,
-                            bgcolor: 'background.paper',
+                            bgcolor: task.inProgress ? 'primary.light' : 'background.paper',
                             borderRadius: 1,
                             border: '1px solid',
-                            borderColor: 'divider',
+                            borderColor: task.inProgress ? 'primary.main' : 'divider',
                             cursor: 'pointer',
                             '&:hover': {
-                                bgcolor: 'action.hover'
+                                bgcolor: task.inProgress ? 'primary.dark' : 'action.hover'
                             }
                         }}
                         onClick={() => {
@@ -73,11 +68,16 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                             setDialogOpen(true);
                         }}
                     >
-                        <Chip
-                            label={task.complete ? 'Complete' : (task.inProgress ? 'In Progress' : 'Not Started')}
-                            color={getStatusColor(task)}
-                            size="small"
-                            sx={{ mr: 2 }}
+                        <Checkbox
+                            checked={task.complete}
+                            disabled={!task.complete && !task.inProgress}
+                            sx={{ 
+                                mr: 1,
+                                color: task.inProgress ? 'primary.main' : 'action.disabled',
+                                '&.Mui-checked': {
+                                    color: 'primary.main',
+                                },
+                            }}
                         />
                         <ListItemText
                             primary={task.description}
