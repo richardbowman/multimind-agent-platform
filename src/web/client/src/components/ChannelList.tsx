@@ -21,8 +21,13 @@ import {
     Typography, 
     Box,
     FormControlLabel,
-    Stack
+    Stack,
+    Grid,
+    Card,
+    CardContent,
+    CardActionArea
 } from '@mui/material';
+import { GoalTemplates } from '../../../schemas/goalTemplateSchema';
 import AddIcon from '@mui/icons-material/Add';
 
 interface ChannelListProps {}
@@ -34,6 +39,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     const [description, setDescription] = useState('');
     const [isPrivate, setIsPrivate] = useState(false);
     const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
+    const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
 
     const webSocket = useWebSocket();
 
@@ -43,7 +49,8 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 name: channelName,
                 description,
                 isPrivate,
-                members: selectedAgents
+                members: selectedAgents,
+                goalTemplate: selectedTemplate
             });
             setOpen(false);
             setChannelName('');
@@ -146,6 +153,38 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                         label="Private Channel"
                         sx={{ mb: 2 }}
                     />
+                    <Typography variant="h6" sx={{ mb: 2 }}>Select Goal Template</Typography>
+                    <Grid container spacing={2} sx={{ mb: 3 }}>
+                        {GoalTemplates.map(template => (
+                            <Grid item xs={6} key={template.id}>
+                                <Card 
+                                    variant={selectedTemplate === template.id ? 'elevation' : 'outlined'}
+                                    sx={{
+                                        borderColor: selectedTemplate === template.id ? 'primary.main' : 'divider',
+                                        height: '100%'
+                                    }}
+                                >
+                                    <CardActionArea 
+                                        onClick={() => setSelectedTemplate(template.id)}
+                                        sx={{ height: '100%' }}
+                                    >
+                                        <CardContent>
+                                            <Typography variant="h6" gutterBottom>
+                                                {template.name}
+                                            </Typography>
+                                            <Typography variant="body2" color="text.secondary">
+                                                {template.description}
+                                            </Typography>
+                                            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
+                                                Supporting Agents: {template.supportingAgents.join(', ')}
+                                            </Typography>
+                                        </CardContent>
+                                    </CardActionArea>
+                                </Card>
+                            </Grid>
+                        ))}
+                    </Grid>
+
                     <FormControl fullWidth>
                         <InputLabel>Add Agents</InputLabel>
                         <Select
