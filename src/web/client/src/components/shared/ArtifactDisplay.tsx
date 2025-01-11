@@ -8,9 +8,9 @@ interface ArtifactDisplayProps {
     showMetadata?: boolean;
 }
 
-export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({ 
+export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     artifact,
-    showMetadata = true 
+    showMetadata = true
 }) => {
     return (
         <div className="artifact-detail-content">
@@ -21,26 +21,26 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     <span className="artifact-id">#{artifact.id}</span>
                 </div>
             </div>
-            {showMetadata && (
-                <div className="artifact-metadata-card">
-                    <table className="metadata-table">
-                        <tbody>
-                            {artifact.metadata && Object.entries(artifact.metadata)
-                                .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
-                                .map(([key, value]) => (
-                                    <tr key={key} className="metadata-row">
-                                        <td className="metadata-label">{key}</td>
-                                        <td className="metadata-value">
-                                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
-                                        </td>
-                                    </tr>
-                                ))
-                            }
-                        </tbody>
-                    </table>
-                </div>
-            )}
             <div className="artifact-content">
+                {showMetadata && (
+                    <div className="artifact-metadata-card">
+                        <table className="metadata-table">
+                            <tbody>
+                                {artifact.metadata && Object.entries(artifact.metadata)
+                                    .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
+                                    .map(([key, value]) => (
+                                        <tr key={key} className="metadata-row">
+                                            <td className="metadata-label">{key}</td>
+                                            <td className="metadata-value">
+                                                {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
+                                            </td>
+                                        </tr>
+                                    ))
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                )}
                 {artifact.type === 'binary' || artifact.metadata?.format === 'binary' ? (
                     <pre>{artifact.content as string}</pre>
                 ) : (

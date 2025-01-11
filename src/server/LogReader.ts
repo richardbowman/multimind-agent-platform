@@ -1,5 +1,6 @@
 import { readFileSync, existsSync } from 'fs';
 import { join } from 'path';
+import { getDataPath } from 'src/helpers/paths';
 
 export interface LogEntry {
     timestamp: string;
@@ -13,7 +14,7 @@ export class LogReader {
     constructor() {
         // Match the path used in Logger
         const today = new Date().toISOString().split('T')[0];
-        this.logFilePath = join(process.cwd(), '.output', `output-${today}.log`);
+        this.logFilePath = join(getDataPath(), `output-${today}.log`);
     }
 
     readLogs(): LogEntry[] {

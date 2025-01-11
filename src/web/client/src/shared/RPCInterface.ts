@@ -1,3 +1,4 @@
+import { CreateChannelParams } from 'src/shared/channelTypes';
 import { LLMLogEntry, LogParam } from '../../../../llm/LLMLogger';
 import { ClientMessage, ClientChannel, ClientThread } from './IPCInterface';
 import { ClientTask } from './types';

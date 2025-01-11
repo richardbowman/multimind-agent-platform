@@ -220,7 +220,7 @@ class SearchHelper {
         let provider: ISearchProvider;
         switch (settings.searchProvider) {
             case 'duckduckgo':
-                provider = new DuckDuckGoProvider(artifactManager);
+                provider = new DuckDuckGoProvider(artifactManager, settings);
                 break;
             case 'searxng':
                 provider = new SearxNGProvider();

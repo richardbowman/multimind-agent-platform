@@ -11,8 +11,8 @@ export class SimpleAgent extends Agent<ContentProject, ContentTask> {
     protected processTask(task: Task): Promise<void> {
         throw new Error('Method not implemented.');
     }
-    public initialize?(): Promise<void> {
-    }
+    
+    public async initialize?() {}
     
     protected async handlerThread(params: HandlerParams): Promise<void> {
         try {

@@ -6,6 +6,7 @@ import { Artifact } from '../../../../tools/artifact';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
 import { BaseRPCService } from '../shared/BaseRPCService';
 import { ClientTask } from '../shared/types';
+import { CreateChannelParams } from '../../../../shared/channelTypes';
 
 // Create service instance based on environment
 const ipcService: BaseRPCService = (window as any).electron 
@@ -68,7 +69,8 @@ const DataContext = createContext<DataContextType>({
   currentThreadId: null,
   setCurrentThreadId: () => { },
   isLoading: true,
-  needsConfig: true
+  needsConfig: true,
+  createChannel: async (params: CreateChannelParams) => ""
 });
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -220,7 +222,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       [logType]: newLogs
     }));
   };
-
+  
   return (
     <DataContext.Provider value={{ 
       messages, 
@@ -269,7 +271,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
           console.error('Failed to update settings:', error);
           throw error; // Re-throw to let UI handle error display
         }
-      }
+      },
+      createChannel: (params: CreateChannelParams) => ipcService.createChannel(params)
     }}>
       {children}
     </DataContext.Provider>

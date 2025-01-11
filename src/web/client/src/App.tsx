@@ -12,20 +12,20 @@ import { LogViewer } from './components/LogViewer';
 import { SettingsPanel } from './components/SettingsPanel';
 import './App.css';
 
-const drawerWidth = 250;
+const leftDrawerWidth = 250;
+const rightDrawerWidth = 300;
 
 const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'leftOpen' && prop !== 'rightOpen' })<{
     leftOpen?: boolean;
     rightOpen?: boolean;
 }>(({ theme, leftOpen, rightOpen }) => ({
     flexGrow: 1,
-    padding: theme.spacing(3),
     transition: theme.transitions.create(['margin'], {
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
     }),
-    marginLeft: leftOpen ? 0 : `-${drawerWidth}px`,
-    marginRight: rightOpen ? 0 : `-${drawerWidth}px`,
+    marginLeft: leftOpen ? 0 : `-${leftDrawerWidth}px`,
+    marginRight: rightOpen ? 0 : `-${rightDrawerWidth}px`,
     ...(leftOpen && {
         transition: theme.transitions.create(['margin'], {
             easing: theme.transitions.easing.easeOut,
@@ -118,7 +118,7 @@ const AppContent: React.FC = () => {
                             anchor="left"
                             open={leftDrawerOpen}
                             sx={{
-                                width: 250,
+                                width: leftDrawerWidth,
                                 flexShrink: 0,
                                 '& .MuiDrawer-paper': {
                                     width: 250,
@@ -146,7 +146,7 @@ const AppContent: React.FC = () => {
                             anchor="right"
                             open={rightDrawerOpen}
                             sx={{
-                                width: 300,
+                                width: rightDrawerWidth,
                                 flexShrink: 0,
                                 '& .MuiDrawer-paper': {
                                     width: 300,

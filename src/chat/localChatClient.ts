@@ -2,6 +2,8 @@ import Logger from "../helpers/logger";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "../chat/chatClient";
 import * as fs from "fs/promises";
 import { AsyncQueue } from "../helpers/asyncQueue";
+import { CreateChannelParams } from "src/shared/channelTypes";
+import { EventEmitter } from "stream";
 
 export class InMemoryPost implements ChatPost {
     static fromLoad(postData: any) : InMemoryPost {
@@ -53,12 +55,14 @@ export class InMemoryPost implements ChatPost {
     }
 }
 
-export class LocalChatStorage {
+export class LocalChatStorage extends EventEmitter {
+    
     channelNames: Record<string, string> = {};
     channelData: Record<string, {
         description?: string;
         isPrivate?: boolean;
         members?: string[];
+        defaultResponderId?: string;
     }> = {};
     posts: ChatPost[] = [];
     callbacks: Function[] = [];
@@ -69,8 +73,25 @@ export class LocalChatStorage {
     private queue: AsyncQueue;
 
     constructor(storagePath: string) {
+        super();
         this.storagePath = storagePath;
         this.queue = new AsyncQueue();
+    }
+
+    async createChannel(params: CreateChannelParams): Promise<string> {
+        const channelId = crypto.randomUUID();
+        this.registerChannel(channelId, params.name);
+        this.channelData[channelId] = {
+            description: params.description,
+            isPrivate: params.isPrivate,
+            members: params.members,
+            defaultResponderId: params.defaultResponderId
+        };
+
+        await this.save();
+
+        this.emit("addChannel", channelId, params);
+        return channelId;
     }
 
     public async addPost(post: ChatPost) : Promise<void> {
@@ -136,6 +157,7 @@ export class LocalChatStorage {
                 if (parsedData.channelData) this.channelData = parsedData.channelData;
                 if (parsedData.posts) this.posts = parsedData.posts.map((p: any) => InMemoryPost.fromLoad(p));
                 if (parsedData.userIdToHandleName) this.userIdToHandleName = parsedData.userIdToHandleName;
+
                 Logger.info(`Loaded ${this.posts.length} chat posts from disk`);
             } catch (error: unknown) {
                 // If the file doesn't exist or is invalid, initialize with default values
@@ -147,6 +169,18 @@ export class LocalChatStorage {
                 Logger.error('Error loading chat storage:', error);
                 throw error;
             }
+        });
+    }
+
+    public announceChannels() {
+        Object.keys(this.channelData).forEach(channelId => {
+            const data = this.channelData[channelId];
+            this.emit("addChannel", channelId, {
+                name: this.channelNames[channelId],
+                description: data.description,
+                members: data.members,
+                defaultResponderId: data.defaultResponderId
+            } as CreateChannelParams);
         });
     }
 }
@@ -178,15 +212,16 @@ export class LocalTestClient implements ChatClient {
     }
 
     public async createChannel(params: CreateChannelParams): Promise<string> {
-        const channelId = Math.random().toString(36).substring(2, 15);
-        this.storage.registerChannel(channelId, params.name);
-        this.storage.channelData[channelId] = {
-            description: params.description,
-            isPrivate: params.isPrivate,
-            members: params.members
-        };
-        await this.storage.save();
-        return channelId;
+        return this.storage.createChannel(params);
+    }
+
+    async onAddedToChannel(callback: (channelId: any, params: CreateChannelParams) => void): Promise<void> {
+        this.storage.on("addChannel", (newChannelId: string, params: CreateChannelParams) => {
+            if (params.members?.includes(this.userId)) {
+                callback(newChannelId, params);
+            }
+        });
+        return;
     }
 
     public async deleteChannel(channelId: string): Promise<void> {

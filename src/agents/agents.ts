@@ -116,6 +116,12 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
                     await this.projectCompleted(event.project);
                 }
             })
+
+            
+            if (params.messagingHandle) this.chatClient.registerHandle(params.messagingHandle);
+            this.chatClient.onAddedToChannel((channelId, channelParams) => {
+                this.setupChatMonitor(channelId, params.messagingHandle, channelParams.defaultResponderId === this.userId);
+            })
         } else {
             Logger.warn(`Agent ${this.constructor.name} didn't provide access to task manager`);
         }
@@ -217,9 +223,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
         return await this.chatClient.fetchPreviousMessages(channelId);
     }
 
-    public setupChatMonitor(monitorChannelId: string, handle?: string) {
-        if (handle) this.chatClient.registerHandle(handle);
-
+    public setupChatMonitor(monitorChannelId: string, handle?: string, autoRespond?: boolean) {
         Logger.verbose(`REGISTRATION ${monitorChannelId}: ${handle}`)
 
         // Initialize the WebSocket client for real-time message listening
@@ -233,7 +237,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
 
                 let context: ConversationContext | undefined;
 
-                if (!post.getRootId() && handle && post.message.startsWith(handle)) {
+                if (!post.getRootId() && handle && (post.message.startsWith(handle + " ") || autoRespond)) {
                     // Determine the type of activity using an LLM
                     await this.handleChannel({ userPost: post });
                 } else if (post.getRootId()) {
@@ -242,8 +246,8 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
                     Logger.verbose(`Received thread message: ${post.message} in ${channelId} from ${userId}, with root id ${postRootId}`);
 
                     const posts = await this.chatClient.getThreadChain(post);
-                    // only respond to chats directed at "me"
-                    if (posts[0].message.startsWith(handle||"")) {
+                    // continue responding to chats i initally responded to
+                    if (posts.length > 1 && posts[1].user_id === this.userId) {
                         // Get all available actions for this response type
                         const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
                         const projects = [];

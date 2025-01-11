@@ -6,7 +6,6 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { Project, Task, TaskManager } from 'src/tools/taskManager';
-import { RESEARCHER_USER_ID, RESEARCH_MANAGER_USER_ID } from '../../helpers/config';
 import { randomUUID } from 'crypto';
 import { ResearchDecomposition } from '../../schemas/research-manager';
 import { ModelResponse } from 'src/schemas/ModelResponse';
@@ -81,7 +80,7 @@ ${previousContext}`;
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 status: 'active',
-                owner: RESEARCH_MANAGER_USER_ID,
+                owner: params.agentId,
                 description: goal,
                 priority: 'medium'
             }
@@ -101,7 +100,7 @@ ${previousContext}`;
                 type: "research",
                 projectId,
                 description,
-                creator: RESEARCH_MANAGER_USER_ID
+                creator: params.agentId
             }
 
             pendingTasks.add(id);
@@ -111,7 +110,8 @@ ${previousContext}`;
                 task
             );
 
-            await this.taskManager.assignTaskToAgent(id, RESEARCHER_USER_ID);
+            //TODO: major todo, figure out task delegation
+            await this.taskManager.assignTaskToAgent(id, "rg7fwbna43byucb174hm7nnuwr");
 
         }
 

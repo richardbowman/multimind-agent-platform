@@ -1,7 +1,7 @@
 import { IVectorDatabase } from './IVectorDatabase';
 import ChromaDBService from './chromaService';
 import VectraService from './vectraService';
-import { ILLMService } from './ILLMService';
+import { IEmbeddingService, ILLMService } from './ILLMService';
 
 export enum VectorDatabaseType {
     CHROMA = 'chroma',
@@ -10,14 +10,15 @@ export enum VectorDatabaseType {
 
 export function createVectorDatabase(
     type: string = VectorDatabaseType.VECTRA,
-    lmStudioService: ILLMService
+    embeddingService: IEmbeddingService,
+    llmService: ILLMService
 ): IVectorDatabase {
     switch (type) {
         case VectorDatabaseType.CHROMA:
-            return new ChromaDBService(lmStudioService);
+            return new ChromaDBService(embeddingService, llmService);
         case VectorDatabaseType.VECTRA:
-            return new VectraService(lmStudioService);
+            return new VectraService(embeddingService, llmService);
         default:
-            return new VectraService(lmStudioService);
+            return new VectraService(embeddingService, llmService);
     }
 }

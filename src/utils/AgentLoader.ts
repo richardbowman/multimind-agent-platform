@@ -2,22 +2,13 @@ import { LocalChatStorage, LocalTestClient } from 'src/chat/localChatClient';
 import { Agent } from '../agents/agents';
 import { AgentConstructorParams } from '../agents/interfaces/AgentConstructorParams';
 import Logger from '../helpers/logger';
-import { ChatClient } from 'src/chat/chatClient';
 import { TaskManager } from 'src/tools/taskManager';
 import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ILLMService } from 'src/llm/ILLMService';
 import { SettingsManager } from '../tools/settingsManager';
 
-interface AgentDefinition {
-    className: string;
-    sourcePath: string;
-    userId: string;
-    handle?: string;
-    description?: string;
-    enabled: boolean;
-    config?: Record<string, any>;
-}
+
 
 export interface AgentLoaderParams {
     llmService: ILLMService;
@@ -34,17 +25,8 @@ export class AgentLoader {
         const agentsMap = new Map<string, Agent<any, any>>();
         
         try {
-            const settings = params.settingsManager.getSettings();
-            const agentDefinitions = settings.agents;
-            
-            let channelIds : string[] = [];
-            if (settings.defaultChannels) {
-                Object.entries(settings.defaultChannels).forEach(([name, id]) => {
-                    params.chatStorage.registerChannel(id, `#${name}`);
-                    channelIds.push(id);
-                    Logger.info(`Registered channel: ${name} (${id})`);
-                });
-            }
+            const _s = params.settingsManager.getSettings();
+            const agentDefinitions = _s.agents;
             
             for (const [agentName, definition] of Object.entries(agentDefinitions)) {
                 if (!definition.enabled) {
@@ -67,12 +49,9 @@ export class AgentLoader {
                         userId: definition.userId,
                         messagingHandle: definition.handle,
                         config: definition.config,
-                        chatClient: new LocalTestClient(definition.userId, "", params.chatStorage)
+                        chatClient: new LocalTestClient(definition.userId, "", params.chatStorage),
+                        settings: _s
                     } as AgentConstructorParams);
-                    
-                    for(const channelId of channelIds) {
-                        agent.setupChatMonitor(channelId, definition.handle);
-                    }
 
                     agentsMap.set(agentName, agent);
                     Logger.info(`Loaded agent: ${agentName} with handle ${definition.handle}`);

@@ -5,6 +5,7 @@ import { LLMCallLogger } from "./LLMLogger";
 import { BaseLLMService } from "./BaseLLMService";
 import { LLMRequestParams } from "./ILLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
+import Logger from "src/helpers/logger";
 
 export class OpenAIService extends BaseLLMService {
     private client: OpenAI;
@@ -81,7 +82,7 @@ export class OpenAIService extends BaseLLMService {
                         strict: true
                     }
                 }
-                console.log(JSON.stringify(responseFormat, undefined, " "));
+                Logger.verbose(JSON.stringify(responseFormat, undefined, " "));
 
                 tools = params.opts.tools.map(tool => ({
                     type: "function",

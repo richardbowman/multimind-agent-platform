@@ -1,5 +1,5 @@
 import React, { useState, KeyboardEvent, useEffect, useRef } from 'react';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../contexts/DataContext';
 
 interface CommandInputProps {
     onSendMessage: (message: string) => void;

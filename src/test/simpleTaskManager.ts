@@ -246,7 +246,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         // Return the first task or null if none found
         return availableTasks[0] || null;
     }
-
+    
     getAllTasks(projectId: string): Task[] {
         const project = this.projects[projectId];
         if (!project) {

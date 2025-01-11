@@ -25,6 +25,7 @@ export interface StepResult {
 }
 
 export interface ExecuteParams {
+    agentId: string;
     message?: string;
     stepGoal?: string;
     overallGoal?: string;
@@ -244,6 +245,7 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
             let stepResult: StepResult;
             if (executor.execute) {
                 stepResult = await executor.execute({
+                    agentId: this.userId,
                     goal: `${userPost?.message} [Step: ${task.description}] [Project: ${project.name}]`,
                     step: task.type,
                     projectId: projectId,

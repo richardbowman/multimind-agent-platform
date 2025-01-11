@@ -1,13 +1,12 @@
 import { StepBasedAgent } from './stepBasedAgent';
 import { Project, Task } from '../tools/taskManager';
 import { WebSearchExecutor } from './research/WebResearchExecutor';
-import SearchHelper, { DuckDuckGoProvider } from '../helpers/searchHelper';
+import SearchHelper from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
 import Logger from '../helpers/logger';
 import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
-import { ModelHelpers } from 'src/llm/modelHelpers';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 
@@ -17,15 +16,13 @@ export interface ResearchProject extends Project<Task> {
 
 export class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
     private searchHelper: SearchHelper;
+    private scrapeHelper: ScrapeHelper;
 
     constructor(params: AgentConstructorParams) {
         super(params);
 
         this.searchHelper = SearchHelper.create(params.settings, this.artifactManager);
-    private scrapeHelper = new ScrapeHelper(this.artifactManager);
-
-    constructor(params: AgentConstructorParams) {
-        super(params);
+        this.scrapeHelper = new ScrapeHelper(this.artifactManager);
 
         this.modelHelpers.setPurpose("You are a research assistant who thoroughly summarizes web results.");
         this.modelHelpers.setFinalInstructions("PROPER PROCESS: do a 'check-knowledge' first, then a 'validation' step to see if you can meet the goals. If not, then add 'web_search' and 'validation' as needed until you get the answer. Make sure your final step is a `final_response`");

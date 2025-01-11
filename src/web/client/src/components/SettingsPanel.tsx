@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWebSocket } from '../contexts/WebSocketContext';
+import { useWebSocket } from '../contexts/DataContext';
 import { Settings, CONFIG_METADATA, ConfigMetadata } from '../types/settings';
 import './SettingsPanel.css';
 

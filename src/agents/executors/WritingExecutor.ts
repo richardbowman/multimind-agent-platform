@@ -1,10 +1,9 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Project, Task, TaskManager } from 'src/tools/taskManager';
-import { CONTENT_MANAGER_USER_ID, CONTENT_WRITER_USER_ID } from 'src/helpers/config';
 import Logger from 'src/helpers/logger';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
@@ -35,18 +34,18 @@ export class AssignWritersExecutor implements StepExecutor {
         this.taskManager = taskManager
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.WritingResponse);
 
         const prompt = `You are planning content writing tasks.
 Break down the content into sections that can be assigned to writers.
 For each section, provide a clear title, description, key points to cover, and relevant research findings.
 
-${previousResult ? `Use these materials to inform the task planning:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
+${params.previousResult ? `Use these materials to inform the task planning:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const result = await this.modelHelpers.generate<WritingResponse>({
-            message: goal,
+            message: params.goal,
             instructions
         });
 
@@ -55,14 +54,14 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
             const newProjectId = this.taskManager.newProjectId();
             const writingProject : Project<Task> = {
                 id: newProjectId,
-                name: `Writing project: ${goal}`,
+                name: `Writing project: ${params.goal}`,
                 tasks: {},
                 metadata: {
                     createdAt: new Date(),
                     updatedAt: new Date(),
                     status: 'active',
-                    owner: CONTENT_MANAGER_USER_ID,
-                    description: goal,
+                    owner: params.agentId,
+                    description: params.goal,
                     priority: 'medium'
                 }
             };
@@ -72,7 +71,7 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
             for (const section of result.sections) {
                 const task = await this.taskManager.addTask(writingProject, {
                     id: crypto.randomUUID(),
-                    creator: CONTENT_MANAGER_USER_ID,
+                    creator: params.agentId,
                     type: 'writing',
                     description: `# ${section.title}\n\n${section.description}\n\n## Key Points:\n${
                         section.keyPoints?.map(p => `- ${p}`).join('\n')||""
@@ -82,7 +81,8 @@ ${previousResult ? `Use these materials to inform the task planning:\n${JSON.str
                     order: result.sections.indexOf(section)
                 });
 
-                await this.taskManager.assignTaskToAgent(task.id, CONTENT_WRITER_USER_ID);
+                //TODO: need to find way to get other user id
+                await this.taskManager.assignTaskToAgent(task.id, "66025743-45bc-4625-a27f-52aa09dde128");
             }
 
             return {

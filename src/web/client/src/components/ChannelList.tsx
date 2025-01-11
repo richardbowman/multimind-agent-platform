@@ -27,7 +27,7 @@ import {
     CardContent,
     CardActionArea
 } from '@mui/material';
-import { GoalTemplates } from '../../../schemas/goalTemplateSchema';
+import { GoalTemplates } from '../../../../schemas/goalTemplateSchema';
 import AddIcon from '@mui/icons-material/Add';
 
 interface ChannelListProps {}

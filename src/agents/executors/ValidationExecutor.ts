@@ -34,7 +34,7 @@ export class ValidationExecutor implements StepExecutor {
         const schema = generatedSchemaDef.ValidationResult;
 
         const systemPrompt = `You are validating whether a proposed solution addresses the original goal. 
-Analyze the previous steps and their results to determine if all aspects have been properly addressed.
+Analyze the previous steps and their results to determine if a reasonable effort has been made.
 
 Original Goal: ${goal}
 

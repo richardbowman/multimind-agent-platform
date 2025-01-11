@@ -29,7 +29,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     onProgress?.('Initializing chat model...');
     await chatService.initializeChatModel(_s.models.conversation[_s.providers.chat]);
 
-    const vectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService);
+    const vectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
     const artifactManager = new ArtifactManager(vectorDB);
 
     vectorDB.on("needsReindex", async () => {
@@ -66,7 +66,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
     // Load all agents dynamically
     const agents = await AgentLoader.loadAgents({
-        chatService,
+        llmService: chatService,
         vectorDBService: vectorDB,
         taskManager: tasks,
         artifactManager,

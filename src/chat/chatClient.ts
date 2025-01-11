@@ -1,4 +1,8 @@
+import { CreateChannelParams } from "src/shared/channelTypes";
+
 export interface ChatClient {
+    onAddedToChannel(callback: (channelId: any, params: CreateChannelParams) => void): Promise<void>;
+
     getThreadChain(post: ChatPost): Promise<ChatPost[]>;
     getPost(confirmationPostId: string): Promise<ChatPost>;
     fetchPreviousMessages(channelId: string, limit?: number): Promise<ChatPost[]>;

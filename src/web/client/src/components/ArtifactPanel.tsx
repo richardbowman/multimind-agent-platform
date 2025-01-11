@@ -2,8 +2,9 @@ import React, { useEffect, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
 import { ArtifactViewer } from './ArtifactViewer';
-import { Box, Typography, List, ListItem, ListItemText, ListItemIcon, Drawer, IconButton } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemText, ListItemIcon, Drawer, IconButton, styled, useTheme, Divider } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 
 interface ArtifactPanelProps {
@@ -11,11 +12,22 @@ interface ArtifactPanelProps {
     threadId: string | null;
 }
 
+const DrawerHeader = styled('div')(({ theme }) => ({
+    display: 'flex',
+    alignItems: 'center',
+    padding: theme.spacing(0, 1),
+    // necessary for content to be below app bar
+    ...theme.mixins.toolbar,
+    justifyContent: 'flex-start',
+  }));
+  
+
 export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
     const { artifacts, fetchArtifacts } = useWebSocket();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
-
+    const theme = useTheme();
+    
     useEffect(() => {
         let isSubscribed = true;
 
@@ -37,23 +49,21 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
         setDrawerOpen(true);
     };
 
+    const handleDrawerClose = () => {
+        setDrawerOpen(false);
+    };
+    
+
     return (
         <Box sx={{ p: 1, height: '100%', overflowY: 'auto' }}>
-            <Typography variant="h2" sx={{ mb: 1, color: '#999', textTransform: 'uppercase' }}>
-                Artifacts
-            </Typography>
+            
+            <Divider />
             <List>
                 {(artifacts || []).map((artifact: Artifact) => (
-                    <ListItem 
+                    <ListItem
                         key={artifact.id}
                         button
                         onClick={() => handleArtifactClick(artifact)}
-                        sx={{
-                            borderBottom: '1px solid #444',
-                            '&:hover': {
-                                backgroundColor: '#333'
-                            }
-                        }}
                     >
                         <ListItemIcon sx={{ minWidth: 36 }}>
                             <FolderIcon fontSize="small" />
@@ -68,7 +78,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                     </ListItem>
                 ))}
             </List>
-            
+
             <Drawer
                 anchor="right"
                 open={drawerOpen}
@@ -81,6 +91,14 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                     }
                 }}
             >
+                <DrawerHeader>
+                <IconButton onClick={handleDrawerClose}>
+                    {theme.direction === 'rtl' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
+                </IconButton>
+                <Typography variant="h6" noWrap sx={{ flexGrow: 1 }} component="div">
+            Artifact
+          </Typography>
+                </DrawerHeader>
                 {selectedArtifact && (
                     <Box sx={{ p: 2 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
@@ -88,8 +106,8 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                                 <ChevronRightIcon />
                             </IconButton>
                         </Box>
-                        <ArtifactViewer 
-                            artifact={selectedArtifact} 
+                        <ArtifactViewer
+                            artifact={selectedArtifact}
                             onClose={() => setDrawerOpen(false)}
                         />
                     </Box>

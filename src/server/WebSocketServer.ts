@@ -4,37 +4,33 @@ import express from 'express';
 import { createBirpc } from 'birpc';
 import { createSafeServerRPCHandlers } from './rpcUtils';
 import Logger from '../helpers/logger';
-import { trackPromise } from '../helpers/errorHandler';
-import { HOST, PORT, PROTOCOL } from '../helpers/config';
 import { MessageHandler } from './MessageHandler';
 import { BackendServices } from '../types/BackendServices';
 import { ClientMethods, ServerMethods } from 'src/web/client/src/shared/RPCInterface';
-import { LLMLogEntry } from 'src/llm/LLMLogger';
-import { ClientChannel, ClientMessage } from 'src/web/client/src/shared/IPCInterface';
-import { getUISettings } from '../helpers/config';
 
 export class WebSocketServer {
     private io: Server;
     private httpServer: ReturnType<typeof createServer>;
     private handler: MessageHandler;
 
-    constructor(services: BackendServices, port: number = PORT) {
+    constructor(services: BackendServices, port?: number) {
         this.handler = new MessageHandler(services);
+        const _s = services.settingsManager.getSettings();
 
         const app = express();
         this.httpServer = createServer(app);
 
         this.io = new Server(this.httpServer, {
             cors: {
-                origin: `${PROTOCOL}://${HOST}:${PORT}`,
+                origin: `${_s.protocol}://${_s.host}:${_s.port}`,
                 methods: ["GET", "POST"]
             }
         });
 
-        this.setupSocketHandlers(services);
+        this.setupSocketHandlers();
 
-        this.httpServer.listen(PORT, () => {
-            Logger.info(`WebSocket server running on port ${PORT}`);
+        this.httpServer.listen(_s.port, () => {
+            Logger.info(`WebSocket server running on port ${_s.port}`);
         });
     }
 

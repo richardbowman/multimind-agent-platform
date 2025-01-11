@@ -1,6 +1,7 @@
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
+import { getDataPath } from 'src/helpers/paths';
 
 interface CacheEntry {
     response: any;
@@ -12,10 +13,12 @@ export class ModelCache {
     private ttlMs: number;
     private cacheFile: string;
 
-    constructor(ttlMinutes: number = 60, cacheDir: string = '.output/cache') {
+    constructor(ttlMinutes: number = 60, cacheDirConfig?: string) {
         this.cache = new Map();
         this.ttlMs = ttlMinutes * 60 * 1000;
         
+        const cacheDir = cacheDirConfig || getDataPath();
+
         // Ensure cache directory exists
         if (!fs.existsSync(cacheDir)) {
             fs.mkdirSync(cacheDir, { recursive: true });

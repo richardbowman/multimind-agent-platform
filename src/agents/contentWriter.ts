@@ -1,12 +1,12 @@
 import { randomUUID } from 'crypto';
 import { Agent, HandlerParams } from './agents';
 import { ModelMessageHistory } from 'src/llm/lmstudioService';
-import { CONTENT_CREATION_CHANNEL_ID } from 'src/helpers/config';
 import Logger from 'src/helpers/logger';
 import { ContentProject, ContentTask } from './contentManager';
-import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 export class ContentWriter extends Agent<ContentProject, ContentTask> {
+    async initialize?(): Promise<void> { }
+    
     protected handlerThread(params: HandlerParams): Promise<void> {
         throw new Error('Method not implemented.');
     }

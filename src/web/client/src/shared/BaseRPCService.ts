@@ -2,6 +2,7 @@ import { createBirpc } from 'birpc';
 import type { ServerMethods, ClientMethods } from './RPCInterface';
 import type { ClientMessage, ClientChannel, ClientThread } from './IPCInterface';
 import EventEmitter from 'events';
+import { CreateChannelParams } from '../../../../shared/channelTypes';
 
 export abstract class BaseRPCService extends EventEmitter {
     protected rpc!: ReturnType<typeof createBirpc<ServerMethods, ClientMethods>>;
@@ -26,6 +27,7 @@ export abstract class BaseRPCService extends EventEmitter {
     };
     getLogs = (logType: 'llm' | 'system' | 'api') => this.rpc.getLogs(logType);
     getHandles = () => this.rpc.getHandles();
+    createChannel = (params: CreateChannelParams) => this.rpc.createChannel(params);
 
     // Abstract methods that must be implemented by WebSocket and IPC services
     abstract connect(): void;

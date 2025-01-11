@@ -7,17 +7,15 @@ import Logger from "src/helpers/logger";
 import { ConversationContext } from "../chat/chatClient";
 import { saveToFile } from "src/tools/storeToFile";
 import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
-import { ILLMService } from "./ILLMService";
+import { IEmbeddingService, ILLMService } from "./ILLMService";
 
 class ChromaDBService extends EventEmitter implements IVectorDatabase {
     private chromaDB: ChromaClient;
     private collection: Collection | null = null;
-    private lmStudioService: ILLMService;
 
-    constructor(lmStudioService: ILLMService) {
+    constructor(private embeddingService: IEmbeddingService, private llmService: ILLMService) {
         super();
         this.chromaDB = new ChromaClient({ path: CHROMADB_URL! });
-        this.lmStudioService = lmStudioService;
     }
 
     async initializeCollection(name: string): Promise<void> {
@@ -27,7 +25,7 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
         if (existingCollection) {
             this.collection = await this.chromaDB.getCollection({
                 name,
-                embeddingFunction: this.lmStudioService.getEmbeddingModel()
+                embeddingFunction: this.embeddingService.getEmbeddingModel()
             });
             
             // Check if collection has any data
@@ -41,7 +39,7 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
         } else {
             this.collection = await this.chromaDB.createCollection({
                 name,
-                embeddingFunction: this.lmStudioService.getEmbeddingModel()
+                embeddingFunction: this.embeddingService.getEmbeddingModel()
             });
             Logger.warn(`ChromaDB Collection created: ${name} - needs initial indexing`);
             this.emit('needsReindex');
@@ -162,7 +160,7 @@ class ChromaDBService extends EventEmitter implements IVectorDatabase {
     }
 
     async getTokenCount(content: string) {
-        return this.lmStudioService.getTokenCount(content);
+        return this.llmService.countTokens(content);
     }
 
     public async listCollections(): Promise<Collection[]> {

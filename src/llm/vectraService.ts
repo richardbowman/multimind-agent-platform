@@ -8,24 +8,24 @@ import { IVectorDatabase, SearchResult } from "./IVectorDatabase";
 import Logger from "../helpers/logger";
 import { saveToFile } from "../tools/storeToFile";
 import { ConversationContext } from "../chat/chatClient";
-import { ILLMService } from "./ILLMService";
+import { IEmbeddingService, ILLMService } from "./ILLMService";
+import { getDataPath } from "src/helpers/paths";
+import { timeStamp } from "console";
 
 const syncQueue = new AsyncQueue();
 
 class VectraService extends EventEmitter implements IVectorDatabase {
     private index: LocalIndex | null = null;
-    private lmStudioService: ILLMService;
     private collectionName: string = '';
 
-    constructor(lmStudioService: ILLMService) {
+    constructor(private embeddingService: IEmbeddingService, private llmService: ILLMService) {
         super();
-        this.lmStudioService = lmStudioService;
     }
 
     async initializeCollection(name: string): Promise<void> {
         await syncQueue.enqueue(async () => {
             this.collectionName = name;
-            const indexPath = path.join(process.cwd(), '.output', 'vectra', name);
+            const indexPath = path.join(getDataPath(), name);
             this.index = new LocalIndex(indexPath);
             
             if (!(await this.index.isIndexCreated())) {
@@ -39,7 +39,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     async addDocuments(collection: { ids: string[], metadatas: any[], documents: string[] }): Promise<void> {
         if (!this.index) throw new Error("Index not initialized");
 
-        const embedder = this.lmStudioService.getEmbeddingModel();
+        const embedder = this.embeddingService.getEmbeddingModel();
         const embeddings = await embedder.generate(collection.documents);
         
         await this.index.beginUpdate();
@@ -74,7 +74,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         return syncQueue.enqueue(async () => {
             if (!this.index) throw new Error("Index not initialized");
 
-            const embedder = this.lmStudioService.getEmbeddingModel();
+            const embedder = this.embeddingService.getEmbeddingModel();
             const queryEmbeddings = await embedder.generate(queryTexts);
             const results = await this.index!.queryItems(queryEmbeddings[0], nResults, where);
 
@@ -150,8 +150,10 @@ class VectraService extends EventEmitter implements IVectorDatabase {
 
     async clearCollection(): Promise<void> {
         await syncQueue.enqueue(async () => {
-            this.index = new LocalIndex();
+            const indexPath = path.join(getDataPath(), this.collectionName);
+            this.index = new LocalIndex(indexPath);
             Logger.info("Cleared Vectra index");
+            await this.index.deleteIndex();
         });
     }
 
@@ -163,7 +165,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     }
 
     async getTokenCount(content: string): Promise<number> {
-        return this.lmStudioService.getTokenCount(content);
+        return this.llmService.countTokens(content);
     }
 }
 

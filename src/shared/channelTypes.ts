@@ -3,4 +3,5 @@ export interface CreateChannelParams {
     description?: string;
     isPrivate?: boolean;
     members?: string[];
+    defaultResponderId?: string;
 }

@@ -1,4 +1,4 @@
-import { ILLMService } from "./ILLMService";
+import { IEmbeddingService, ILLMService } from "./ILLMService";
 import LMStudioService from "./lmstudioService";
 import { BedrockService } from "./BedrockService";
 import { AnthropicService } from "./AnthropicService";
@@ -54,8 +54,7 @@ export class LLMServiceFactory {
             case LLMProvider.BEDROCK:
                 return new BedrockService(
                     settings.models.conversation.bedrock,
-                    settings.embeddingModel,
-                    embeddingService
+                    settings.embeddingModel
                 );
             case LLMProvider.ANTHROPIC:
                 return new AnthropicService(

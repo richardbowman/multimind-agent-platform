@@ -1,9 +1,7 @@
 import { randomUUID } from 'crypto';
 import Logger from '../helpers/logger';
-import { HandlerParams } from './agents';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Project } from "src/tools/taskManager";
-import { CONTENT_MANAGER_USER_ID, PROJECTS_CHANNEL_ID } from 'src/helpers/config';
 import { Task } from "src/tools/taskManager";
 import { Artifact } from 'src/tools/artifact';
 import { AssignWritersExecutor } from './executors/WritingExecutor';
@@ -13,7 +11,6 @@ import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
-import { ValidationExecutor } from './executors/ValidationExecutor';
 
 export interface ContentProject extends Project<ContentTask> {
     goal: string;
@@ -30,7 +27,6 @@ export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> 
         const modelHelpers = new ModelHelpers(params.llmService, params.userId);
         const planner = new MultiStepPlanner(params.llmService, params.taskManager, params.userId, modelHelpers)
         super(params, planner);
-        this.modelHelpers = modelHelpers;
 
         // Register our specialized executors
         this.registerStepExecutor(new KnowledgeCheckExecutor(params.llmService, params.vectorDBService));
@@ -97,7 +93,7 @@ IMPORTANT: Always follow this pattern:
 
         if (project.metadata.parentTaskId) {
             //TODO: hack for now, we don't assign workign steps to agent right now
-            await this.projects.assignTaskToAgent(project.metadata.parentTaskId, CONTENT_MANAGER_USER_ID);
+            await this.projects.assignTaskToAgent(project.metadata.parentTaskId, this.userId);
 
             const parentTask = await this.projects.getTaskById(project.metadata.parentTaskId);
             const parentProject = await this.projects.getProject(parentTask.projectId);
@@ -112,9 +108,9 @@ IMPORTANT: Always follow this pattern:
                 "artifact-ids": [content.id]
             });
         } else {
-            this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, responseMessage, {
-                "artifact-ids": [content.id]
-            });
+            // this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, responseMessage, {
+            //     "artifact-ids": [content.id]
+            // });
         }
     }
 

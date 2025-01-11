@@ -1,6 +1,5 @@
 import { StepBasedAgent } from './stepBasedAgent';
 import 'reflect-metadata';
-import { ONBOARDING_CHANNEL_ID } from '../helpers/config';
 import Logger from '../helpers/logger';
 import { Project, Task } from '../tools/taskManager';
 import { Artifact } from 'src/tools/artifact';
@@ -34,8 +33,16 @@ export class OnboardingConsultant extends StepBasedAgent<OnboardingProject, Task
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Onboarding Consultant`);
 
+        
+        
+        // asynchronously check for old tasks and keep working on them
+        this.processTaskQueue();
+    }
+
+    public async setupChatMonitor(monitorChannelId: string, handle?: string, autoRespond?: boolean): Promise<void> {
+        super.setupChatMonitor(monitorChannelId, handle, autoRespond);
         // Check if welcome message exists in channel
-        const channelMessages = await this.chatClient.fetchPreviousMessages(ONBOARDING_CHANNEL_ID, 50);
+        const channelMessages = await this.chatClient.fetchPreviousMessages(monitorChannelId, 50);
         const existingWelcome = channelMessages.find(c => c.props.messageType === 'welcome');
 
         if (!existingWelcome) {
@@ -52,13 +59,9 @@ Let's start by discussing your main business goals. What would you like to achie
                 props: { messageType: 'welcome' }
             };
 
-            await this.send(welcomeMessage, ONBOARDING_CHANNEL_ID);
+            await this.send(welcomeMessage, monitorChannelId);
         }
-        
-        // asynchronously check for old tasks and keep working on them
-        this.processTaskQueue();
     }
-
 
     constructor(params: AgentConstructorParams) {
         super(params);
@@ -69,7 +72,7 @@ Let's start by discussing your main business goals. What would you like to achie
         this.registerStepExecutor(new OnboardingGoalsExecutor(params.llmService, params.taskManager, params.userId));
         this.registerStepExecutor(new CreatePlanExecutor(params.llmService, params.taskManager, this.artifactManager, params.userId));
         this.registerStepExecutor(new ReviewProgressExecutor(params.llmService, params.taskManager, this.artifactManager));
-        this.registerStepExecutor(new ValidationExecutor(params.llmService));
+        // this.registerStepExecutor(new ValidationExecutor(params.llmService));
 
         this.modelHelpers.setPurpose(`You are an Onboarding Agent focused on helping users achieve their business goals with our AI Agent tools. This service is designed
 to help businesses automate tasks automatically including research and content creation. My goal is to ensure that the rest of the agents in the platform
@@ -77,8 +80,10 @@ are trained and educated on what the user is trying to achieve using our system.
     and brand standards. When all of that is complete, I build and maintain a comprehensive on-boarding guide, and then introduce the user to the other agents.`);
 this.modelHelpers.setFinalInstructions(`To kickoff with a new user, create the following steps in this order:
 1. understand_goals
-2. validation
-3. create_revise_plan
+2. create_revise_plan
 `);
+
+//2. validation
+
         }
 }
