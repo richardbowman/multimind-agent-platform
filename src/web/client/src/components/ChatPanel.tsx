@@ -93,7 +93,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
         <Box sx={{ 
             display: 'flex',
             flexDirection: 'column',
-            height: '100vh',
+            height: 'calc(100vh - 60px)',
             width: '100%',
             overflow: 'hidden',
             ml: 0,
