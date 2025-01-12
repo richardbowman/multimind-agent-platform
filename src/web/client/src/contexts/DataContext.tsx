@@ -43,35 +43,7 @@ interface DataContextType {
   createChannel: (params: CreateChannelParams) => Promise<string>;
 }
 
-const DataContext = createContext<DataContextType>({
-  messages: [],
-  channels: [],
-  handles: [],
-  sendMessage: () => { },
-  fetchChannels: () => { },
-  fetchHandles: () => { },
-  updateSettings: async (settings: any) => ({}),
-  getSettings: async () => ({}),
-  tasks: [],
-  artifacts: [],
-  fetchTasks: (channelId: string, threadId: string | null) => { },
-  fetchArtifacts: (channelId: string, threadId: string | null) => { },
-  fetchAllArtifacts: () => { },
-  deleteArtifact: (artifactId: string) => { },
-  logs: {
-    llm: {},
-    system: [],
-    api: []
-  },
-  fetchLogs: (logType: 'llm' | 'system' | 'api') => { },
-  currentChannelId: null,
-  setCurrentChannelId: () => { },
-  currentThreadId: null,
-  setCurrentThreadId: () => { },
-  isLoading: true,
-  needsConfig: true,
-  createChannel: async (params: CreateChannelParams) => ""
-});
+const DataContext = createContext<DataContextType | null>(null);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<ClientMessage[]>([]);
@@ -281,4 +253,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   );
 };
 
-export const useWebSocket = () => useContext(DataContext);
+export const useWebSocket = () => {
+  const context = useContext(DataContext);
+  if (!context) {
+    throw new Error('useWebSocket must be used within a DataProvider');
+  }
+  return context;
+};
