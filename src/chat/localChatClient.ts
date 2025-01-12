@@ -63,6 +63,7 @@ export class LocalChatStorage extends EventEmitter {
         isPrivate?: boolean;
         members?: string[];
         defaultResponderId?: string;
+        projectId?: string;
     }> = {};
     posts: ChatPost[] = [];
     callbacks: Function[] = [];
@@ -85,7 +86,8 @@ export class LocalChatStorage extends EventEmitter {
             description: params.description,
             isPrivate: params.isPrivate,
             members: params.members,
-            defaultResponderId: params.defaultResponderId
+            defaultResponderId: params.defaultResponderId,
+            projectId: params.projectId
         };
 
         await this.save();
@@ -179,7 +181,8 @@ export class LocalChatStorage extends EventEmitter {
                 name: this.channelNames[channelId],
                 description: data.description,
                 members: data.members,
-                defaultResponderId: data.defaultResponderId
+                defaultResponderId: data.defaultResponderId,
+                projectId: data.projectId
             } as CreateChannelParams);
         });
     }
