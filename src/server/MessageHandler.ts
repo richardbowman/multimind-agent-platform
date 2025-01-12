@@ -319,18 +319,18 @@ export class MessageHandler implements ServerMethods {
         if (params.goalTemplate) {
             const template = GoalTemplates.find(t => t.id === params.goalTemplate);
             if (template) {
-                const projectId = await this.services.taskManager.addProject({
-                    name: params.name,
-                    description: params.description || '',
-                    tasks: template.initialTasks.map((task, i) => ({
-                        id: crypto.randomUUID(),
+                const project = await this.services.taskManager.createProject(
+                    params.name,
+                    template.initialTasks.map((task, i) => ({
                         description: task.description,
-                        type: task.type,
-                        creator: 'system',
-                        dependsOn: task.dependsOn,
-                        order: i+1
-                    }))
-                });
+                        type: task.type
+                    })),
+                    {
+                        description: params.description || '',
+                        tags: template.tags
+                    }
+                );
+                const projectId = project.id;
 
                 // Associate the project with the channel
                 params.projectId = projectId;

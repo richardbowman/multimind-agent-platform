@@ -65,6 +65,37 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         await this.save();
     }
 
+    async createProject(name: string, tasks?: { description: string; type: string }[], metadata?: ProjectMetadata): Promise<Project<Task>> {
+        const projectId = this.newProjectId();
+        const project = {
+            id: projectId,
+            name: name,
+            tasks: {},
+            metadata: {
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'active',
+                ...metadata
+            }
+        };
+
+        await this.addProject(project);
+
+        if (tasks) {
+            for (const task of tasks) {
+                await this.addTask(project, {
+                    id: crypto.randomUUID(),
+                    description: task.description,
+                    type: task.type,
+                    creator: 'system',
+                    projectId: projectId
+                });
+            }
+        }
+
+        return project;
+    }
+
     getProject(projectId: string): Project<Task> {
         return this.projects[projectId];
     }
