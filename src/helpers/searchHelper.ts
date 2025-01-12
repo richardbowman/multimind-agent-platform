@@ -103,7 +103,10 @@ export class DuckDuckGoProvider implements ISearchProvider {
     }
 
     async search(query: string, category: string): Promise<SearchResult[]> {
-        await this.initBrowser();
+        // Only initialize browser when actually searching
+        if (!this.browser) {
+            await this.initBrowser();
+        }
         const results: SearchResult[] = [];
 
         try {
