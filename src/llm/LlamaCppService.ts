@@ -79,6 +79,21 @@ export class LlamaCppService extends BaseLLMService {
         return this.embedder;
     }
 
+    async getAvailableModels(): Promise<string[]> {
+        try {
+            const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
+            const {getLlama} = nlc;
+            
+            const llama = await getLlama();
+            const modelDir = process.env.LLAMA_MODEL_DIR || './models';
+            const modelFiles = await llama.listModels({ modelDir });
+            return modelFiles.map(f => f.name);
+        } catch (error) {
+            await this.logger.logCall('getAvailableModels', {}, null, error);
+            throw error;
+        }
+    }
+
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(
         params: LLMRequestParams
     ): Promise<T> {
