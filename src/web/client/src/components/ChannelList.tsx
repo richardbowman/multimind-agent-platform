@@ -97,7 +97,10 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                     >
                         <ListItemButton
                             selected={currentChannelId === channel.id}
-                            onClick={() => setCurrentChannelId(channel.id)}
+                            onClick={() => {
+                                setCurrentChannelId(channel.id);
+                                webSocket.setCurrentThreadId(null); // Reset thread when switching channels
+                            }}
                             sx={{
                                 mb: 1,
                                 borderRadius: 1,
