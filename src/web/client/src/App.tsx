@@ -48,6 +48,7 @@ const AppContent: React.FC = () => {
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
     const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
+    const [artifactsDrawerOpen, setArtifactsDrawerOpen] = useState(true);
 
     React.useEffect(() => {
         if (needsConfig) {
@@ -72,7 +73,13 @@ const AppContent: React.FC = () => {
                     <IconButton
                         color="inherit"
                         edge="start"
-                        onClick={() => setLeftDrawerOpen(!leftDrawerOpen)}
+                        onClick={() => {
+                            if (currentTab === 'chat') {
+                                setLeftDrawerOpen(!leftDrawerOpen);
+                            } else if (currentTab === 'artifacts') {
+                                setArtifactsDrawerOpen(!artifactsDrawerOpen);
+                            }
+                        }}
                         sx={{ mr: 2 }}
                     >
                         <MenuIcon />
@@ -177,7 +184,10 @@ const AppContent: React.FC = () => {
                         </Drawer>
                     </>
                 ) : currentTab === 'artifacts' ? (
-                    <GlobalArtifactViewer />
+                    <GlobalArtifactViewer 
+                        drawerOpen={artifactsDrawerOpen}
+                        onDrawerToggle={() => setArtifactsDrawerOpen(!artifactsDrawerOpen)}
+                    />
                 ) : currentTab === 'settings' ? (
                     <SettingsPanel />
                 ) : currentTab === 'logs' ? (

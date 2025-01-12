@@ -8,11 +8,15 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
 import MenuIcon from '@mui/icons-material/Menu';
 
-export const GlobalArtifactViewer: React.FC = () => {
+interface GlobalArtifactViewerProps {
+    drawerOpen: boolean;
+    onDrawerToggle: () => void;
+}
+
+export const GlobalArtifactViewer: React.FC<GlobalArtifactViewerProps> = ({ drawerOpen, onDrawerToggle }) => {
     const { artifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
-    const [drawerOpen, setDrawerOpen] = useState(true);
 
     useEffect(() => {
         fetchAllArtifacts();
