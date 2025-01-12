@@ -5,4 +5,5 @@ export interface CreateChannelParams {
     members?: string[];
     defaultResponderId?: string;
     projectId?: string;
+    goalTemplate?: string;
 }
