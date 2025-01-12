@@ -2,11 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
-import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, ListItemButton, IconButton, List, ListItemText, ListItem, ListItemIcon, Drawer, Toolbar, AppBar } from '@mui/material';
+import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, ListItemButton, IconButton, List, ListItemText, ListItem, ListItemIcon, Drawer, Toolbar } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
-import MenuIcon from '@mui/icons-material/Menu';
 
 export const GlobalArtifactViewer: React.FC = () => {
     const { artifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
@@ -32,21 +31,6 @@ export const GlobalArtifactViewer: React.FC = () => {
 
     return (
         <Box sx={{ display: 'flex', height: 'calc(100vh - 48px)' }}>
-            <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
-                <Toolbar>
-                    <IconButton
-                        color="inherit"
-                        edge="start"
-                        onClick={() => setDrawerOpen(!drawerOpen)}
-                        sx={{ mr: 2 }}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography variant="h6" noWrap component="div">
-                        Artifact Viewer
-                    </Typography>
-                </Toolbar>
-            </AppBar>
             <Drawer
                 variant="persistent"
                 anchor="left"
@@ -98,8 +82,14 @@ export const GlobalArtifactViewer: React.FC = () => {
                     </Accordion>
                 ))}
             </Drawer>
-            <Box component="main" sx={{ flexGrow: 1, p: 3, marginLeft: drawerOpen ? '250px' : 0, transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms' }}>
-                <Toolbar /> {/* For spacing under app bar */}
+            <Box component="main" sx={{ 
+                flexGrow: 1, 
+                p: 3, 
+                marginLeft: drawerOpen ? '250px' : 0, 
+                transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
+                height: 'calc(100vh - 64px)', // Account for AppBar height
+                overflow: 'auto'
+            }}>
                 {selectedArtifact ? (
                     <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
                 ) : (
