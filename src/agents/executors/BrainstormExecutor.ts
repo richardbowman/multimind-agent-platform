@@ -55,6 +55,7 @@ ${previousResult ? `Build upon these previous ideas:\n${JSON.stringify(previousR
         return {
             type: "brainstorm",
             finished: true,
+            needsUserInput: true,
             response: {
                 message: `**Brainstorming Results:**\n\n${formattedIdeas}\n\n**Summary:**\n${result.summary}`
             }
