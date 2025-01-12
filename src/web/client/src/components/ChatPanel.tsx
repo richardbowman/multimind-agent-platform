@@ -5,6 +5,23 @@ import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
 import { useWebSocket } from '../contexts/DataContext';
 import remarkGfm from 'remark-gfm'
+import Link from '@mui/material/Link';
+
+// Custom link component that opens links in system browser
+const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        if (href) {
+            window.open(href, '_blank');
+        }
+    };
+
+    return (
+        <Link href={href} onClick={handleClick} sx={{ color: 'primary.main' }}>
+            {children}
+        </Link>
+    );
+};
 
 export const ChatPanel: React.FC<ChatPanelProps> = () => {
     const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useWebSocket();
@@ -154,7 +171,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
                                 </Typography>
                             </Box>
                             <Box>
-                                <ReactMarkdown remarkPlugins={[remarkGfm]}>{message.message}</ReactMarkdown>
+                                <ReactMarkdown 
+                                    remarkPlugins={[remarkGfm]}
+                                    components={{
+                                        a: CustomLink
+                                    }}
+                                >
+                                    {message.message}
+                                </ReactMarkdown>
                                 {message.inProgress && <Spinner />}
                                 {!currentThreadId && messages.some(m => m.props?.['root-id'] === message.id) && (
                                     <Box
