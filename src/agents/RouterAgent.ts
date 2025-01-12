@@ -93,21 +93,18 @@ export class RouterAgent extends Agent {
                 );
 
                 if (confirmationResponse.confirmed) {
-                    // Extract the suggested agent from the original message
-                    const agentMatch = lastAssistantPost.message.match(/I think (.*?) would be best suited/);
-                    if (agentMatch?.[1]) {
-                        const agent = Object.values(this.settings.agents).find(a => a.handle === agentMatch[1]);
-                        if (agent?.handle) {
-                            await this.chatClient.postInChannel(
-                                userPost.channel_id,
-                                `@${agent.handle} ${confirmationResponse.messageToAgent}`,
-                                {
-                                    "routed-from": userPost.user_id,
-                                    "routed-by": this.userId
-                                }
-                            );
-                            return;
-                        }
+                    // Get the agent handle directly from the confirmation response
+                    const agent = Object.values(this.settings.agents).find(a => a.userId === confirmationResponse.selectedAgent);
+                    if (agent?.handle) {
+                        await this.chatClient.postInChannel(
+                            userPost.channel_id,
+                            `@${agent.handle} ${confirmationResponse.messageToAgent}`,
+                            {
+                                "routed-from": userPost.user_id,
+                                "routed-by": this.userId
+                            }
+                        );
+                        return;
                     }
                 }
             }
