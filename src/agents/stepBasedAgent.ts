@@ -46,7 +46,7 @@ export interface StepExecutor {
     onProjectCompleted?(project: Project<Task>): Promise<void>;
 }
 
-export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
+export abstract class StepBasedAgent extends Agent {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
     protected planner: Planner;
 
@@ -62,22 +62,11 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     }
 
     protected async handleChannel(params: HandlerParams): Promise<void> {
-        // Get any outstanding tasks for this channel
-        const channelTasks = await this.services.taskManager.getTasks({
-            channelId: params.userPost.channel_id,
-            threadId: null
-        });
-
-        // Create new project with any existing channel tasks
         const { projectId } = await this.addNewProject({
             projectName: `Answer the user's request: ${params.userPost.message}`,
-            tasks: channelTasks.map(t => ({
-                description: t.description,
-                type: t.type
-            })),
+            tasks: [],
             metadata: {
                 originalPostId: params.userPost.id,
-                channelId: params.userPost.channel_id
             }
         });
 

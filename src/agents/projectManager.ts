@@ -1,5 +1,4 @@
 import { Project } from "src/tools/taskManager";
-import { PROJECTS_CHANNEL_ID } from 'src/helpers/config';
 import { Task } from "src/tools/taskManager";
 import { BrainstormExecutor } from './executors/BrainstormExecutor';
 import { GenerateArtifactExecutor } from './executors/GenerateArtifactExecutor';
@@ -24,7 +23,10 @@ export interface PlanningProject extends Project<Task> {
     description: string;
 }
 
-export class ProjectManager extends StepBasedAgent<PlanningProject, Task> {
+export class ProjectManager extends StepBasedAgent {
+    async initialize() {
+        
+    }
     protected processTask(task: Task): Promise<void> {
         throw new Error('Method not implemented.');
     }
