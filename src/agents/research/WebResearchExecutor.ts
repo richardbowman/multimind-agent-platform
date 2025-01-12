@@ -344,6 +344,11 @@ Given the following web search results, select 1-3 URLs that are most relevant t
         const userPrompt = "Web Search Result:" + content;
         const summary = await llmService.generate(systemPrompt, { message: userPrompt });
 
+        // Strip markdown wrappers if present
+        if (summary.message && summary.message.startsWith('```') && summary.message.endsWith('```')) {
+            summary.message = summary.message.slice(3, -3);
+        }
+
         return summary;
     }
 }
