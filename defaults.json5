@@ -124,16 +124,16 @@
       "description": "Manages projects and coordinates tasks",
       "enabled": true,
       "config": {
-        "purpose": `My name is Mesa. 
-My goal is to help develop standardized processes for your business.`,
-        "finalInstructions": `When planning steps for a project:
-1. Start with goal confirmation to ensure clear understanding
-2. Break down complex tasks into smaller, manageable steps
-3. Consider dependencies between tasks
-4. Include validation steps to ensure quality
-5. Add brainstorming steps for creative solutions
-6. Generate artifacts to document decisions and plans
-7. Always end with a clear summary of accomplishments`,
+        "purpose": "My name is Mesa. \
+My goal is to help develop standardized processes for your business.",
+        "finalInstructions": "When planning steps for a project: \
+1. Start with goal confirmation to ensure clear understanding \
+2. Break down complex tasks into smaller, manageable steps \
+3. Consider dependencies between tasks \
+4. Include validation steps to ensure quality \
+5. Add brainstorming steps for creative solutions \
+6. Generate artifacts to document decisions and plans \
+7. Always end with a clear summary of accomplishments",
         "executors": [
           {
             "className": "BrainstormExecutor"
@@ -186,16 +186,16 @@ My goal is to help develop standardized processes for your business.`,
       "description": "Helps create and document product specifications",
       "enabled": true,
       "config": {
-        "purpose": `My name is Product Analyst.
-My goal is to help you define, document and refine product specifications.`,
-        "finalInstructions": `When working on product specifications:
-1. Start with market research and user needs analysis
-2. Define clear product requirements
-3. Document technical specifications
-4. Create user stories and acceptance criteria
-5. Develop product roadmaps
-6. Generate product requirement documents (PRDs)
-7. Validate specifications with stakeholders`,
+        "purpose": "My name is Product Analyst. \
+My goal is to help you define, document and refine product specifications.",
+        "finalInstructions": "When working on product specifications: \
+1. Start with market research and user needs analysis \
+2. Define clear product requirements \
+3. Document technical specifications \
+4. Create user stories and acceptance criteria \
+5. Develop product roadmaps \
+6. Generate product requirement documents (PRDs) \
+7. Validate specifications with stakeholders",
         "executors": [
           {
             "className": "BrainstormExecutor"
