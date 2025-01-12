@@ -66,13 +66,20 @@ Let's start by discussing your main business goals. What would you like to achie
     constructor(params: AgentConstructorParams) {
         super(params);
         
+        // Create standardized params
+        const executorParams = {
+            llmService: params.llmService,
+            taskManager: params.taskManager,
+            artifactManager: this.artifactManager,
+            userId: params.userId
+        };
+
         // Register our specialized executors
-        // this.registerStepExecutor(new ReplyExecutor(lmStudioService, projects, this.artifactManager));
-        this.registerStepExecutor(new AnswerQuestionsExecutor(params.llmService, params.taskManager));
-        this.registerStepExecutor(new OnboardingGoalsExecutor(params.llmService, params.taskManager, params.userId));
-        this.registerStepExecutor(new CreatePlanExecutor(params.llmService, params.taskManager, this.artifactManager, params.userId));
-        this.registerStepExecutor(new ReviewProgressExecutor(params.llmService, params.taskManager, this.artifactManager));
-        // this.registerStepExecutor(new ValidationExecutor(params.llmService));
+        this.registerStepExecutor(new AnswerQuestionsExecutor(executorParams));
+        this.registerStepExecutor(new OnboardingGoalsExecutor(executorParams));
+        this.registerStepExecutor(new CreatePlanExecutor(executorParams));
+        this.registerStepExecutor(new ReviewProgressExecutor(executorParams));
+        // this.registerStepExecutor(new ValidationExecutor(executorParams));
 
         this.modelHelpers.setPurpose(`You are an Onboarding Agent focused on helping users achieve their business goals with this platform called Multimind. The service is designed
 to help individuals and businesses automate tasks. It provides Web-based research and content creation agents. Your goal is to ensure that the rest of the agents in the platform
