@@ -251,7 +251,7 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         label: 'Embeddings Provider',
         type: 'select',
         category: 'Embeddings',
-        options: ['openai', 'cohere', 'huggingface', 'local'],
+        options: ['openai', 'cohere', 'huggingface', 'local', 'llama_cpp'],
         defaultValue: 'local',
         required: true
     },
@@ -285,6 +285,13 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         type: 'string',
         category: 'Embeddings',
         description: 'Model path for local embeddings'
+    },
+    {
+        key: 'models.embeddings.llama_cpp',
+        label: 'Llama.cpp Embeddings Model',
+        type: 'string',
+        category: 'Embeddings',
+        description: 'Model path for Llama.cpp embeddings'
     },
     // Vector DB Settings
     {
