@@ -28,12 +28,31 @@ export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> 
         const planner = new MultiStepPlanner(params.llmService, params.taskManager, params.userId, modelHelpers)
         super(params, planner);
 
-        // Register our specialized executors
-        this.registerStepExecutor(new KnowledgeCheckExecutor(params.llmService, params.vectorDBService));
-        this.registerStepExecutor(new OutlineExecutor(params.llmService));
-        this.registerStepExecutor(new AssignWritersExecutor(params.llmService, params.taskManager));
-        this.registerStepExecutor(new EditingExecutor(params.llmService, this.artifactManager, params.taskManager));
-        // this.registerStepExecutor(new ValidationExecutor(params.llmService));
+        // Register our specialized executors with standardized params
+        this.registerStepExecutor(new KnowledgeCheckExecutor({
+            llmService: params.llmService,
+            vectorDB: params.vectorDBService,
+            userId: params.userId
+        }));
+        this.registerStepExecutor(new OutlineExecutor({
+            llmService: params.llmService,
+            userId: params.userId
+        }));
+        this.registerStepExecutor(new AssignWritersExecutor({
+            llmService: params.llmService,
+            taskManager: params.taskManager,
+            userId: params.userId
+        }));
+        this.registerStepExecutor(new EditingExecutor({
+            llmService: params.llmService,
+            taskManager: params.taskManager,
+            artifactManager: this.artifactManager,
+            userId: params.userId
+        }));
+        // this.registerStepExecutor(new ValidationExecutor({
+        //     llmService: params.llmService,
+        //     userId: params.userId
+        // }));
 
         this.modelHelpers.setPurpose(`You are planning how to create high-quality content.
 Break down the content creation into steps of research, outlining, writing and editing.
