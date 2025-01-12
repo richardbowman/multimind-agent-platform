@@ -1,4 +1,4 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { StepExecutor, StepResult, ExecutorConstructorParams } from '../stepBasedAgent';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import SearchHelper, { DuckDuckGoProvider } from '../../helpers/searchHelper';
 import ScrapeHelper from '../../helpers/scrapeHelper';
@@ -36,12 +36,17 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
     constructor(
-        private searchHelper: SearchHelper,
-        private scrapeHelper: ScrapeHelper,
-        private llmService: ILLMService,
-        private artifactManager: ArtifactManager,
-        private modelHelpers: ModelHelpers
-    ) { }
+        params: ExecutorConstructorParams & {
+            searchHelper: SearchHelper;
+            scrapeHelper: ScrapeHelper;
+        }
+    ) {
+        this.searchHelper = params.searchHelper;
+        this.scrapeHelper = params.scrapeHelper;
+        this.llmService = params.llmService;
+        this.artifactManager = params.artifactManager!;
+        this.modelHelpers = params.modelHelpers!;
+    }
 
     private visitedUrls: Set<string> = new Set();
 
