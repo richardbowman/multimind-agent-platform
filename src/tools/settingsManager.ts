@@ -155,7 +155,7 @@ export class SettingsManager extends EventEmitter {
         super();
         this.fileQueue = new AsyncQueue();
         this.baseDir = this.determineBaseDir();
-        this.settingsFile = path.join(getDataPath(), 'settings.json');
+        this.settingsFile = path.join(getDataPath(), 'settings.json5');
         console.log(`Settings will be written to ${this.settingsFile}`)
     }
 
@@ -193,7 +193,7 @@ export class SettingsManager extends EventEmitter {
 
     private async loadDefaults(): Promise<any> {
         try {
-            const defaultsPath = path.join(this.baseDir, 'defaults.json');
+            const defaultsPath = path.join(this.baseDir, 'defaults.json5');
             const data = await this.fileQueue.enqueue(() =>
                 fs.readFile(defaultsPath, 'utf-8')
             );
