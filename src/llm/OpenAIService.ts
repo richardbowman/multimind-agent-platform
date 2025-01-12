@@ -53,6 +53,16 @@ export class OpenAIService extends BaseLLMService {
         return Math.ceil(content.length / 4);
     }
 
+    async getAvailableModels(): Promise<string[]> {
+        try {
+            const models = await this.client.models.list();
+            return models.data.map(m => m.id);
+        } catch (error) {
+            await this.logger.logCall('getAvailableModels', {}, null, error);
+            throw error;
+        }
+    }
+
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(
         params: LLMRequestParams & { modelType?: ModelType }
     ): Promise<GenerateOutputParams<T>> {

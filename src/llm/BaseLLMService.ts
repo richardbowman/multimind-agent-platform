@@ -11,6 +11,7 @@ export abstract class BaseLLMService implements ILLMService {
     abstract getEmbeddingModel(): any;
     abstract sendLLMRequest<T extends ModelResponse>(params: LLMRequestParams & { modelType?: ModelType }): Promise<GenerateOutputParams<T>>;
     abstract countTokens(content: string): Promise<number>;
+    abstract getAvailableModels(): Promise<string[]>;
 
     constructor(name: string) {
         this.logger = new LLMCallLogger(name);
