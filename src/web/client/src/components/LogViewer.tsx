@@ -137,6 +137,10 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                         value={filterText}
                         onChange={(e) => setFilterText(e.target.value)}
                         sx={{ width: 300 }}
+                        autoFocus
+                        inputProps={{
+                            autoFocus: true
+                        }}
                     />
                     {isLoading && <Box sx={{ ml: 2, color: '#999' }}>Loading...</Box>}
                 </LogToolbar>
