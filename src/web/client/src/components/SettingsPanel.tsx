@@ -10,8 +10,16 @@ import {
   InputLabel, 
   Button, 
   Alert,
-  CircularProgress
+  CircularProgress,
+  Drawer,
+  List,
+  ListItem,
+  ListItemButton,
+  ListItemText,
+  IconButton,
+  Toolbar
 } from '@mui/material';
+import MenuIcon from '@mui/icons-material/Menu';
 import { useWebSocket } from '../contexts/DataContext';
 import { Settings, CONFIG_METADATA, ConfigMetadata } from '../types/settings';
 
@@ -171,17 +179,74 @@ export const SettingsPanel: React.FC = () => {
         return acc;
     }, {} as Record<string, ConfigMetadata[]>);
 
+    const [drawerOpen, setDrawerOpen] = useState(true);
+
     return (
         <Box sx={{ 
-            maxWidth: 800, 
-            mx: 'auto', 
-            p: 3,
+            display: 'flex',
             height: '100vh',
-            overflowY: 'auto'
+            overflow: 'hidden'
         }}>
-            <Typography variant="h4" gutterBottom>
-                Settings
-            </Typography>
+            <Drawer
+                variant="persistent"
+                anchor="left"
+                open={drawerOpen}
+                sx={{
+                    width: 250,
+                    flexShrink: 0,
+                    '& .MuiDrawer-paper': {
+                        width: 250,
+                        boxSizing: 'border-box',
+                        backgroundColor: '#2a2a2a',
+                        borderRight: '1px solid #444'
+                    },
+                }}
+            >
+                <Toolbar />
+                <List>
+                    {Object.keys(categories).map((category) => (
+                        <ListItem key={category} disablePadding>
+                            <ListItemButton
+                                onClick={() => {
+                                    const element = document.getElementById(category);
+                                    if (element) {
+                                        element.scrollIntoView({ behavior: 'smooth' });
+                                    }
+                                }}
+                            >
+                                <ListItemText primary={category} />
+                            </ListItemButton>
+                        </ListItem>
+                    ))}
+                </List>
+            </Drawer>
+
+            <Box component="main" sx={{ 
+                flexGrow: 1, 
+                p: 3,
+                marginLeft: drawerOpen ? '250px' : 0,
+                transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
+                height: '100vh',
+                overflowY: 'auto'
+            }}>
+                <Box sx={{ 
+                    display: 'flex', 
+                    alignItems: 'center', 
+                    gap: 2,
+                    mb: 3
+                }}>
+                    <IconButton
+                        color="inherit"
+                        edge="start"
+                        onClick={() => setDrawerOpen(!drawerOpen)}
+                        sx={{ mr: 2 }}
+                    >
+                        <MenuIcon />
+                    </IconButton>
+                    <Typography variant="h4">
+                        Settings
+                    </Typography>
+                </Box>
             
             <Box sx={{ 
                 display: 'flex', 
@@ -193,11 +258,13 @@ export const SettingsPanel: React.FC = () => {
                 {Object.entries(categories).map(([category, metadataList]) => (
                     <Paper 
                         key={category}
+                        id={category}
                         sx={{ 
                             p: 3, 
                             bgcolor: 'background.paper',
                             borderRadius: 2,
-                            boxShadow: 1
+                            boxShadow: 1,
+                            mb: 3
                         }}
                     >
                         <Typography variant="h6" gutterBottom sx={{ 
