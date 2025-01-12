@@ -180,7 +180,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
                                     {message.message}
                                 </ReactMarkdown>
                                 {message.inProgress && <Spinner />}
-                                {!currentThreadId && message.reply_count > 0 && (
+                                {!currentThreadId && messages.some(m => m.props?.['root-id'] === message.id) && (
                                     <Box
                                         onClick={() => setCurrentThreadId(message.id)}
                                         sx={{
