@@ -103,10 +103,7 @@ export class OpenAIService extends BaseLLMService {
                     }
                 }));
 
-                toolChoice = {
-                    "type": "function",
-                    "function": { "name": "generate_structured_output" }
-                }
+                toolChoice = "auto" // Let OpenAI decide which tool to use
             }
 
             const model = params.modelType ? 
