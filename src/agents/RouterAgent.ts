@@ -96,7 +96,7 @@ export class RouterAgent extends Agent {
                     // Extract the suggested agent from the original message
                     const agentMatch = lastAssistantPost.message.match(/I think (.*?) would be best suited/);
                     if (agentMatch?.[1]) {
-                        const agent = Object.values(this.settings.agents).find(a => a.userId === agentMatch[1]);
+                        const agent = Object.values(this.settings.agents).find(a => a.handle === agentMatch[1]);
                         if (agent?.handle) {
                             await this.chatClient.postInChannel(
                                 userPost.channel_id,
@@ -113,96 +113,6 @@ export class RouterAgent extends Agent {
             }
         }
 
-        // If not a confirmation, proceed with normal routing logic
-        const channelData = await this.chatClient.getChannelData(userPost.channel_id);
-        const settings = this.settingsManager.getSettings();
-        const agentOptions = (channelData.members || [])
-            .filter(memberId => this.userId !== memberId)
-            .map(memberId => {
-                const agent = Object.values(settings.agents).find(a => a.userId === memberId);
-                return agent ? `- ${agent.handle}: ${agent.description}` : null;
-            })
-            .filter(Boolean)
-            .join('\n');
-
-        const schema = {
-            type: "object",
-            properties: {
-                selectedAgent: { 
-                    type: "string",
-                    enum: channelData.members || []
-                },
-                reasoning: { type: "string" },
-                confidence: { 
-                    type: "number",
-                    minimum: 0,
-                    maximum: 1
-                }
-            },
-            required: ["selectedAgent", "reasoning", "confidence"]
-        };
-
-        const project = channelData?.projectId ? this.projects.getProject(channelData.projectId) : null;
-        const projectTasks = project ? Object.values(project.tasks) : [];
-        
-        const conversationContext = threadPosts
-            .map((post, i) => `[${i+1}] ${post.user_id === this.userId ? 'Assistant' : 'User'}: ${post.message}`)
-            .join('\n');
-        
-        const prompt = `Analyze the ongoing conversation and select the most appropriate agent to handle the user's latest message.
-        Available agents:
-        ${agentOptions}
-
-        ${project ? `Channel Project Details:
-        - Name: ${project.name}
-        - Goal: ${project.metadata?.description || 'No specific goal'}
-        - Status: ${project.metadata?.status || 'active'}
-        - Tasks: ${projectTasks.length > 0 ? 
-            projectTasks.map(t => `\n  * ${t.description} (${t.complete ? 'complete' : 'in progress'})`).join('') 
-            : 'No tasks'}
-        ` : ''}
-
-        Conversation Context:
-        ${conversationContext}
-
-        Latest User Message: "${userPost.message}"
-
-        Respond with:
-        - Which agent would be best suited to handle this request
-        - Your reasoning for selecting this agent (considering the conversation context and any channel project goals/tasks)
-        - Your confidence level (0-1) in this selection`;
-
-        const response = await this.llmService.generateStructured(
-            userPost,
-            new StructuredOutputPrompt(schema, prompt),
-            [],
-            1024,
-            512
-        );
-
-        if (!response.selectedAgent) {
-            await this.reply(userPost, {
-                message: "I apologize, but I'm not sure which agent would be best suited to help you. Could you please provide more details about your request?"
-            });
-            return;
-        }
-
-        // If confidence is high enough (e.g., > 0.7), suggest the agent
-        if (response.confidence > 0.7) {
-            const confirmationMessage: ModelMessageResponse = {
-                message: `I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in? (Please confirm or provide more details)\n\nReasoning: ${response.reasoning}`
-            };
-            await this.reply(userPost, confirmationMessage);
-            
-            // The next message in this thread will be the confirmation
-            // We'll handle that in handlerThread
-        } else {
-            // If confidence is low, ask for clarification
-            const clarificationMessage: ModelMessageResponse = {
-                message: `I'm not entirely sure, but I think ${response.selectedAgent} might be able to help. Could you please provide more details about what you're looking to accomplish?`
-            };
-            await this.reply(userPost, clarificationMessage);
-        }
     }
 
     protected async handleChannel(params: HandlerParams): Promise<void> {
