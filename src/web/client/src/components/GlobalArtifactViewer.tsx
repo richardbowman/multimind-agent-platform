@@ -96,19 +96,6 @@ export const GlobalArtifactViewer: React.FC<GlobalArtifactViewerProps> = ({ draw
                 overflow: 'auto',
                 position: 'relative'
             }}>
-                <Fab
-                    color="primary"
-                    aria-label="menu"
-                    onClick={() => setDrawerOpen(!drawerOpen)}
-                    sx={{
-                        position: 'absolute',
-                        left: 8,
-                        top: 8,
-                        zIndex: 1
-                    }}
-                >
-                    <MenuIcon />
-                </Fab>
                 {selectedArtifact ? (
                     <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
                 ) : (
