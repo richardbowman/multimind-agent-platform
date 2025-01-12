@@ -1,0 +1,225 @@
+{
+  // Server configuration
+  "port": 4001,
+  "wsUrl": "ws://localhost:4001",  // WebSocket URL for real-time communication
+  "providers": {
+    "chat": "lmstudio",
+    "embeddings": "llama_cpp"
+  },
+  "searchProvider": "duckduckgo",
+  "scrapeProvider": "electron",
+  "duckduckgo": {
+    "headless": true,
+    "timeout": 30000
+  },
+  "brave": {
+    "apiKey": "",
+    "endpoint": "https://api.search.brave.com/res/v1/web/search"
+  },
+  "searxngUrl": "http://localhost:8080/",
+  "chromadbUrl": "http://localhost:8001",
+  "chromaCollection": "webpage_scrapes",
+  "maxSearches": 3,
+  "maxFollows": 3,
+  "maxResearchRequests": 3,
+  "embeddingModel": "nomic-embed-text-v1.5.Q4_K_M.gguf",
+  "chatModel": "qwen2.5-coder-14b-instruct",
+  "contextSize": 16384,
+  "lmStudioBaseUrl": "ws://localhost:1234",
+  "models": {
+    "conversation": {
+      "lmstudio": "qwen2.5-coder-14b-instruct",
+      "anthropic": "claude-3-opus-20240229",
+      "bedrock": "anthropic.claude-3-sonnet-20240229-v1:0",
+      "openai": "gpt-4-turbo-preview",
+      "openrouter": "anthropic/claude-3-opus",
+      "llama_cpp": "codellama-13b-instruct.Q4_K_M.gguf"
+    },
+    "reasoning": {
+      "lmstudio": "qwen2.5-coder-14b-instruct",
+      "anthropic": "claude-3-opus-20240229",
+      "bedrock": "anthropic.claude-3-sonnet-20240229-v1:0",
+      "openai": "gpt-4-turbo-preview",
+      "openrouter": "anthropic/claude-3-opus",
+      "llama_cpp": "codellama-13b-instruct.Q4_K_M.gguf"
+    },
+    "document": {
+      "lmstudio": "qwen2.5-coder-14b-instruct",
+      "anthropic": "claude-3-opus-20240229",
+      "bedrock": "anthropic.claude-3-sonnet-20240229-v1:0",
+      "openai": "gpt-4-turbo-preview",
+      "openrouter": "anthropic/claude-3-opus",
+      "llama_cpp": "codellama-13b-instruct.Q4_K_M.gguf"
+    }
+  },
+  "defaultChannels": {
+    "research": "ku9ap3s76tbx5nmw17at4nxitc",
+    "projects": "kpmrcgw67jnfbr55cbnwxy64rc",
+    "content": "752db071-eeef-40b5-acb8-ef79c3259ccc",
+    "onboarding": "6eda3cc4-2762-4cbc-917c-820458dc1ef6",
+    "factChecking": "8ca10337-00e8-4a09-a973-16a3e50dc8b6",
+    "solver": "f1e2d3c4-b5a6-4789-8901-2345f6789012"
+  },
+  "agents": {
+    "RouterAgent": {
+      "className": "RouterAgent",
+      "sourcePath": "../agents/RouterAgent",
+      "userId": "router-agent",
+      "handle": "@router",
+      "description": "Routes requests to appropriate specialized agents",
+      "enabled": true,
+      "autoResponseChannelIds": [
+
+      ]
+    },
+    "SimpleAgent": {
+      "className": "SimpleAgent",
+      "sourcePath": "../agents/simpleAgent",
+      "userId": "simple-agent",
+      "handle": "@ai",
+      "description": "Just a generic AI agent",
+      "enabled": true
+    },
+    "ResearchAssistant": {
+      "className": "ResearchAssistant",
+      "sourcePath": "../agents/researchAssistant",
+      "userId": "rg7fwbna43byucb174hm7nnuwr",
+      "handle": "@researchteam",
+      "description": "Conducts web research and information gathering",
+      "enabled": true,
+      "config": {
+        "maxSearches": 3,
+        "maxDepth": 2
+      }
+    },
+    "ResearchManager": {
+      "className": "ResearchManager",
+      "sourcePath": "../agents/researchManager",
+      "userId": "xi8rrsssmidwjnfwf4qx9qr33o",
+      "handle": "@research",
+      "description": "Manages and coordinates research activities",
+      "enabled": true
+    },
+    "ContentManager": {
+      "className": "ContentManager",
+      "sourcePath": "../agents/contentManager",
+      "userId": "9d039c4e-f99d-4fb7-a160-452ac261569c",
+      "handle": "@content",
+      "description": "Manages content creation and organization",
+      "enabled": true
+    },
+    "ContentWriter": {
+      "className": "ContentWriter",
+      "sourcePath": "../agents/contentWriter",
+      "userId": "66025743-45bc-4625-a27f-52aa09dde128",
+      "handle": "@writer",
+      "description": "Writes and generates content",
+      "enabled": true
+    },
+    "ProjectManager": {
+      "className": "ConfigurableAgent",
+      "sourcePath": "../agents/configurableAgent",
+      "userId": "2e330aba-4888-42b8-8685-ecdc7f4b1b43",
+      "handle": "@pm",
+      "description": "Manages projects and coordinates tasks",
+      "enabled": true,
+      "config": {
+        "purpose": `My name is Mesa. 
+My goal is to help develop standardized processes for your business.`,
+        "finalInstructions": `When planning steps for a project:
+1. Start with goal confirmation to ensure clear understanding
+2. Break down complex tasks into smaller, manageable steps
+3. Consider dependencies between tasks
+4. Include validation steps to ensure quality
+5. Add brainstorming steps for creative solutions
+6. Generate artifacts to document decisions and plans
+7. Always end with a clear summary of accomplishments`,
+        "executors": [
+          {
+            "className": "BrainstormExecutor"
+          },
+          {
+            "className": "GenerateArtifactExecutor",
+            "config": {
+              "defaultFormat": "markdown"
+            }
+          },
+          {
+            "className": "GoalConfirmationExecutor"
+          },
+          {
+            "className": "AnswerQuestionsExecutor"
+          },
+          {
+            "className": "ComplexProjectExecutor"
+          },
+          {
+            "className": "ScheduleTaskExecutor"
+          }
+        ]
+      }
+    },
+    "OnboardingConsultant": {
+      "className": "OnboardingConsultant",
+      "sourcePath": "../agents/onboardingConsultant",
+      "userId": "c7776380-6cda-44b9-8113-890706cd1ec1",
+      "handle": "@onboarding",
+      "description": "Handles user onboarding processes",
+      "enabled": true,
+      "autoResponseChannelIds": [
+        "6eda3cc4-2762-4cbc-917c-820458dc1ef6"
+      ]
+    },
+    "SolverAgent": {
+      "className": "SolverAgent",
+      "sourcePath": "../agents/solverAgent",
+      "userId": "b8f7d3e1-9c24-4b9a-8e5f-2d6a91f0e3d2",
+      "handle": "@solver",
+      "description": "Solves problems and provides solutions",
+      "enabled": true
+    },
+    "ProductManagerAnalyst": {
+      "className": "ConfigurableAgent",
+      "sourcePath": "../agents/configurableAgent",
+      "userId": "c9f8d7e6-5b4a-3c2b-1e0f-9d8c7b6a5e4f",
+      "handle": "@product",
+      "description": "Helps create and document product specifications",
+      "enabled": true,
+      "config": {
+        "purpose": `My name is Product Analyst.
+My goal is to help you define, document and refine product specifications.`,
+        "finalInstructions": `When working on product specifications:
+1. Start with market research and user needs analysis
+2. Define clear product requirements
+3. Document technical specifications
+4. Create user stories and acceptance criteria
+5. Develop product roadmaps
+6. Generate product requirement documents (PRDs)
+7. Validate specifications with stakeholders`,
+        "executors": [
+          {
+            "className": "BrainstormExecutor"
+          },
+          {
+            "className": "GenerateArtifactExecutor",
+            "config": {
+              "defaultFormat": "markdown",
+              "artifactTypes": ["prd", "spec", "roadmap"]
+            }
+          },
+          {
+            "className": "GoalConfirmationExecutor"
+          },
+          {
+            "className": "AnswerQuestionsExecutor"
+          }
+        ]
+      }
+    }
+  },
+  "bedrock": {
+    "maxTokensPerMinute": 20000,
+    "defaultDelayMs": 1000,
+    "windowSizeMs": 60000
+  }
+}
