@@ -2,6 +2,8 @@ import { ChatPost } from "src/chat/chatClient";
 import { ILLMService } from "./ILLMService";
 import { ModelCache } from "./modelCache";
 import { ModelMessageResponse, ModelResponse, RequestArtifacts } from "src/schemas/ModelResponse";
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { GenerateInputParams, GenerateParams, HandlerParams, ProjectHandlerParams, ThreadSummary } from "src/agents/agents";
@@ -159,6 +161,10 @@ export class ModelHelpers {
     }
 
     private async generateStructured<T extends ModelResponse>(structure: StructuredOutputPrompt, params: GenerateParams): Promise<T> {
+        // Initialize JSON schema validator
+        const ajv = new Ajv({ allErrors: true, strict: false });
+        addFormats(ajv);
+        const validate = ajv.compile(structure.getSchema());
         // Check cache first
         const cacheContext = {
             params,
@@ -204,6 +210,15 @@ export class ModelHelpers {
         const { contextWindow, maxTokens } = params;
 
         const response = await this.model.generateStructured<T>(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
+
+        // Validate response against schema
+        const isValid = validate(response);
+        if (!isValid) {
+            const errors = validate.errors?.map(err => 
+                `Schema validation error at ${err.instancePath}: ${err.message}`
+            ).join('\n');
+            throw new Error(`Response does not conform to schema:\n${errors}`);
+        }
 
         if (params.artifacts) {
             response.artifactIds = params.artifacts?.map(a => a.id);
