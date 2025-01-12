@@ -1,4 +1,4 @@
-import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { RequestArtifacts } from '../../schemas/ModelResponse';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -33,7 +33,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
         this.artifactManager = params.artifactManager!;
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = {
             type: 'object',
             properties: {
@@ -48,13 +48,13 @@ export class GenerateArtifactExecutor implements StepExecutor {
         const prompt = `Generate a title, content for a Markdown document and a confirmation message based on the goal.
 Specify the existing artifact ID if you want to revise an existing artifact. Otherwise, leave this field blank.
 
-${previousResult ? `Consider this previous content:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
+${params.previousResult ? `Consider this previous content:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         
         try {
             const result = await this.modelHelpers.generate({
-                message: goal,
+                message: params.message || params.stepGoal,
                 instructions
             });
 
