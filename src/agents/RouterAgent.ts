@@ -58,10 +58,63 @@ export class RouterAgent extends Agent {
     protected async handlerThread(params: HandlerParams): Promise<void> {
         const { userPost, threadPosts = [] } = params;
         
-        // Get channel data including any project goals
+        // Check if this is a confirmation response to a routing suggestion
+        if (threadPosts.length > 0) {
+            const lastAssistantPost = threadPosts
+                .slice()
+                .reverse()
+                .find(p => p.user_id === this.userId);
+            
+            if (lastAssistantPost?.message?.includes("would be best suited to help you")) {
+                // Analyze the user's response to see if they confirmed
+                const confirmationSchema = {
+                    type: "object",
+                    properties: {
+                        confirmed: { type: "boolean" },
+                        messageToAgent: { type: "string" }
+                    },
+                    required: ["confirmed"]
+                };
+
+                const confirmationPrompt = `Analyze the user's response to determine if they confirmed the agent suggestion.
+                Assistant Suggestion: ${lastAssistantPost.message}
+                User Response: ${userPost.message}
+
+                Respond with:
+                - confirmed: true if the user agreed to the suggestion, false otherwise
+                - messageToAgent: A well-formed message to send to the suggested agent including the original request and any additional context from the user's response`;
+
+                const confirmationResponse = await this.llmService.generateStructured(
+                    userPost,
+                    new StructuredOutputPrompt(confirmationSchema, confirmationPrompt),
+                    [],
+                    1024,
+                    512
+                );
+
+                if (confirmationResponse.confirmed) {
+                    // Extract the suggested agent from the original message
+                    const agentMatch = lastAssistantPost.message.match(/I think (.*?) would be best suited/);
+                    if (agentMatch?.[1]) {
+                        const agent = Object.values(this.settings.agents).find(a => a.userId === agentMatch[1]);
+                        if (agent?.handle) {
+                            await this.chatClient.postInChannel(
+                                userPost.channel_id,
+                                `@${agent.handle} ${confirmationResponse.messageToAgent}`,
+                                {
+                                    "routed-from": userPost.user_id,
+                                    "routed-by": this.userId
+                                }
+                            );
+                            return;
+                        }
+                    }
+                }
+            }
+        }
+
+        // If not a confirmation, proceed with normal routing logic
         const channelData = await this.chatClient.getChannelData(userPost.channel_id);
-        
-        // Get agent descriptions from settings for channel members
         const settings = this.settingsManager.getSettings();
         const agentOptions = (channelData.members || [])
             .filter(memberId => this.userId !== memberId)
@@ -89,11 +142,9 @@ export class RouterAgent extends Agent {
             required: ["selectedAgent", "reasoning", "confidence"]
         };
 
-        // Get project details if exists
         const project = channelData?.projectId ? this.projects.getProject(channelData.projectId) : null;
         const projectTasks = project ? Object.values(project.tasks) : [];
         
-        // Build prompt with conversation context
         const conversationContext = threadPosts
             .map((post, i) => `[${i+1}] ${post.user_id === this.userId ? 'Assistant' : 'User'}: ${post.message}`)
             .join('\n');
@@ -139,29 +190,12 @@ export class RouterAgent extends Agent {
         // If confidence is high enough (e.g., > 0.7), suggest the agent
         if (response.confidence > 0.7) {
             const confirmationMessage: ModelMessageResponse = {
-                message: `I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in? (Reply with "yes" to confirm)\n\nReasoning: ${response.reasoning}`
+                message: `I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in? (Please confirm or provide more details)\n\nReasoning: ${response.reasoning}`
             };
-            const confirmationPost = await this.reply(userPost, confirmationMessage);
+            await this.reply(userPost, confirmationMessage);
             
-            // Wait for user's confirmation response
-            const confirmationResponse = await this.waitForConfirmation(confirmationPost.id, userPost.channel_id);
-            
-            if (confirmationResponse?.message?.toLowerCase().trim() === 'yes') {
-                // Get the agent's handle from settings
-                const agent = Object.values(this.settings.agents).find(a => a.userId === response.selectedAgent);
-                if (agent?.handle) {
-                    // Send a channel message @mentioning the agent
-                    const routingMessage = `@${agent.handle} ${userPost.message}\n\nThis request was routed to you because: ${response.reasoning}`;
-                    await this.chatClient.postInChannel(
-                        userPost.channel_id, 
-                        routingMessage,
-                        {
-                            "routed-from": userPost.user_id,
-                            "routed-by": this.userId
-                        }
-                    );
-                }
-            }
+            // The next message in this thread will be the confirmation
+            // We'll handle that in handlerThread
         } else {
             // If confidence is low, ask for clarification
             const clarificationMessage: ModelMessageResponse = {
