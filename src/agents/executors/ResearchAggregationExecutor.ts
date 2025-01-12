@@ -32,10 +32,10 @@ export class ResearchAggregationExecutor implements StepExecutor {
     private artifactManager: ArtifactManager;
     private vectorDB: IVectorDatabase;
 
-    constructor(llmService: ILLMService, artifactManager: ArtifactManager, vectorDB: IVectorDatabase) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
-        this.artifactManager = artifactManager;
-        this.vectorDB = vectorDB;
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.artifactManager = params.artifactManager!;
+        this.vectorDB = params.vectorDB!;
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {

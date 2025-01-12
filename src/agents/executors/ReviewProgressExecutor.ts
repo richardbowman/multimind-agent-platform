@@ -15,12 +15,10 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 export class ReviewProgressExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(
-        llmService: ILLMService,
-        private taskManager: TaskManager,
-        private artifactManager: ArtifactManager
-    ) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.taskManager = params.taskManager!;
+        this.artifactManager = params.artifactManager!;
     }
 
     async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {

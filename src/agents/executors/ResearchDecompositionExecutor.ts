@@ -30,9 +30,9 @@ export class ResearchDecompositionExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
 
-    constructor(llmService: ILLMService, taskManager: TaskManager) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
-        this.taskManager = taskManager;
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.taskManager = params.taskManager!;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
