@@ -122,16 +122,20 @@ export const SettingsPanel: React.FC = () => {
         switch (metadata.type) {
             case 'select':
                 return (
-                    <select
-                        value={value}
-                        onChange={(e) => handleChange(metadata.key, e.target.value)}
-                    >
-                        {metadata.options?.map(option => (
-                            <option key={option} value={option}>
-                                {option}
-                            </option>
-                        ))}
-                    </select>
+                    <FormControl fullWidth variant="outlined">
+                        <InputLabel>{metadata.label}</InputLabel>
+                        <Select
+                            value={value}
+                            onChange={(e) => handleChange(metadata.key, e.target.value)}
+                            label={metadata.label}
+                        >
+                            {metadata.options?.map(option => (
+                                <MenuItem key={option} value={option}>
+                                    {option}
+                                </MenuItem>
+                            ))}
+                        </Select>
+                    </FormControl>
                 );
             case 'number':
                 return (
