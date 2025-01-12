@@ -27,20 +27,18 @@ class ScrapeHelper {
     }
 
     async initialize(): Promise<void> {
-        if (this.settings.scrapingProvider === 'puppeteer') {
-            if (!this.browser) {
-                this.browser = await chromium.launch({ headless: true });
-            }
-        } else if (this.settings.scrapingProvider === 'electron') {
-            if (!this.electronWindow) {
-                this.electronWindow = new BrowserWindow({
-                    width: 1920,
-                    height: 1080,
-                    webPreferences: {
-                        webSecurity: false
-                    }
-                });
-            }
+        // Only initialize browser when actually scraping
+        if (this.settings.scrapingProvider === 'puppeteer' && !this.browser) {
+            this.browser = await chromium.launch({ headless: true });
+        }
+        if (this.settings.scrapingProvider === 'electron' && !this.electronWindow) {
+            this.electronWindow = new BrowserWindow({
+                width: 1920,
+                height: 1080,
+                webPreferences: {
+                    webSecurity: false
+                }
+            });
         }
     }
 
@@ -51,7 +49,10 @@ class ScrapeHelper {
         }
     }
     async scrapePage(url: string, metadata: Record<string, any> = {}): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot: Buffer, artifactId: string }> {
-        await this.initialize();
+        // Only initialize browser when actually scraping
+        if (!this.browser && !this.electronWindow) {
+            await this.initialize();
+        }
 
         let page;
         try {
