@@ -2,8 +2,6 @@ import { StepBasedAgent } from './stepBasedAgent';
 import { ThinkingExecutor } from './executors/ThinkingExecutor';
 import { RefutingExecutor } from './executors/RefutingExecutor';
 import { CodeExecutorExecutor } from './executors/CodeExecutorExecutor';
-import Logger from 'src/helpers/logger';
-import { SOLVER_CHANNEL_ID } from 'src/helpers/config';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
@@ -12,7 +10,7 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
-export class SolverAgent extends StepBasedAgent<any, any> {
+export class SolverAgent extends StepBasedAgent {
     protected processTask(task: any): Promise<void> {
         throw new Error('Method not implemented.');
     }
