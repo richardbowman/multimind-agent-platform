@@ -1,6 +1,7 @@
 {
+  // Server configuration
   "port": 4001,
-  "wsUrl": "ws://localhost:4001",
+  "wsUrl": "ws://localhost:4001",  // WebSocket URL for real-time communication
   "providers": {
     "chat": "lmstudio",
     "embeddings": "llama_cpp"

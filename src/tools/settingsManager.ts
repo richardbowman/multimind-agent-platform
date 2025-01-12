@@ -1,5 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import JSON5 from 'json5';
 
 const isObject = (obj: any): boolean => {
     return obj && typeof obj === 'object' && !Array.isArray(obj);
@@ -196,7 +197,7 @@ export class SettingsManager extends EventEmitter {
             const data = await this.fileQueue.enqueue(() =>
                 fs.readFile(defaultsPath, 'utf-8')
             );
-            return JSON.parse(data);
+            return JSON5.parse(data);
         } catch (error) {
             Logger.error('Error loading defaults:', error);
             return {};
@@ -212,7 +213,7 @@ export class SettingsManager extends EventEmitter {
             );
             let userSettings = {};
             try {
-                userSettings = JSON.parse(data);
+                userSettings = JSON5.parse(data);
             } catch (err) {
             }
             this.settings = this.deepMerge(defaults, userSettings);
@@ -231,7 +232,7 @@ export class SettingsManager extends EventEmitter {
 
     async save(): Promise<void> {
         await this.fileQueue.enqueue(() =>
-            fs.writeFile(this.settingsFile, JSON.stringify(this.settings, null, 2))
+            fs.writeFile(this.settingsFile, JSON5.stringify(this.settings, null, 2))
         );
         this.emit('settingsUpdated', this.settings);
     }
