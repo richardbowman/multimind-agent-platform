@@ -257,11 +257,21 @@ export class LocalTestClient implements ChatClient {
     }
 
     public postInChannel(channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost> {
+        // Get the channel's project ID if it exists
+        const channelData = this.storage.channelData[channelId];
+        const projectId = channelData?.projectId;
+        
+        // Merge any existing props with the project ID
+        const postProps = {
+            ...(props || {}),
+            ...(projectId ? { 'project-id': projectId } : {})
+        };
+
         const post = new InMemoryPost(
             channelId,
             message,
             this.userId,
-            props || {}
+            postProps
         );
         this.pushPost(post);
         return Promise.resolve(post);
