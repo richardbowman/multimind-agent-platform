@@ -1,9 +1,13 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
+import { ExecutorType } from './ExecutorType';
+import { BrainstormResponse } from '../../schemas/BrainstormResponse';
 
-@StepExecutorDecorator('brainstorm', 'Generate creative ideas and possibilities through brainstorming')
+@StepExecutorDecorator(ExecutorType.BRAINSTORM, 'Generate creative ideas and possibilities through brainstorming', false)
 export class BrainstormExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
@@ -11,33 +15,8 @@ export class BrainstormExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(llmService, 'executor');
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const schema = {
-            type: "object",
-            properties: {
-                ideas: {
-                    type: "array",
-                    items: {
-                        type: "object",
-                        properties: {
-                            title: { type: "string" },
-                            description: { type: "string" },
-                            benefits: { type: "string" }
-                        }
-                    },
-                    description: "List of brainstormed ideas"
-                },
-                summary: {
-                    type: "string",
-                    description: "Brief summary connecting the ideas"
-                },
-                isComplete: {
-                    type: "boolean",
-                    description: "Whether the brainstorming phase is complete based on idea diversity and coverage"
-                }
-            },
-            required: ["ideas", "summary", "isComplete"]
-        };
+    async execute(params: ExecuteParams): Promise<StepResult> {
+        const schema = await getGeneratedSchema(SchemaType.BrainstormResponse);
 
         const prompt = `You are a creative brainstorming assistant.
 Generate multiple innovative ideas related to the goal.
@@ -51,15 +30,15 @@ After generating ideas, analyze if:
 
 Based on this analysis, set isComplete to true if brainstorming should conclude, or false if more ideas are needed.
 
-${previousResult ? `Build upon these previous ideas:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
+${params.previousResult ? `Build upon these previous ideas:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.modelHelpers.generate({
-            message: goal,
+        const result = await this.modelHelpers.generate<BrainstormResponse>({
+            message: params.message || params.stepGoal,
             instructions
         });
 
-        const formattedIdeas = result.ideas.map((idea: any) => 
+        const formattedIdeas = result.ideas.map(idea => 
             `### ${idea.title}\n${idea.description}\n\n**Benefits:**\n${idea.benefits}`
         ).join('\n\n');
 
