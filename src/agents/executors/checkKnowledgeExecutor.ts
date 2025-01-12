@@ -27,9 +27,9 @@ export class KnowledgeCheckExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private vectorDB: IVectorDatabase;
 
-    constructor(llmService: ILLMService, vectorDB: IVectorDatabase) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
-        this.vectorDB = vectorDB;
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.vectorDB = params.vectorDB!;
         this.modelHelpers.setPurpose(`You are a research specialist crafting search queries.`);
         this.modelHelpers.setFinalInstructions(`Use only the provided search results to answer. Do not make up any information.`);
     }
