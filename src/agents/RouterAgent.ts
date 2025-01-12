@@ -39,6 +39,12 @@ export class RouterAgent extends Agent<Project<Task>, Task> {
     protected async handleChannel(params: HandlerParams): Promise<void> {
         const { userPost } = params;
 
+        // Get channel data including any project goals
+        const channelData = await this.chatClient.getChannelData(userPost.channel_id);
+        const projectGoal = channelData?.projectId 
+            ? this.projects.getProject(channelData.projectId)?.metadata?.description
+            : null;
+
         const agentOptions = Array.from(this.availableAgents.entries())
             .map(([id, { description }]) => `- ${id}: ${description}`)
             .join('\n');
@@ -64,11 +70,12 @@ export class RouterAgent extends Agent<Project<Task>, Task> {
         Available agents:
         ${agentOptions}
 
+        ${projectGoal ? `Channel Project Goal: ${projectGoal}\n` : ''}
         User request: "${userPost.message}"
 
         Respond with:
         - Which agent would be best suited to handle this request
-        - Your reasoning for selecting this agent
+        - Your reasoning for selecting this agent (considering any channel project goals)
         - Your confidence level (0-1) in this selection`;
 
         const response = await this.llmService.generateStructured(
