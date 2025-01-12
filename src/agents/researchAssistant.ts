@@ -14,7 +14,7 @@ export interface ResearchProject extends Project<Task> {
     postId: string;
 }
 
-export class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
+export class ResearchAssistant extends StepBasedAgent {
     private searchHelper: SearchHelper;
     private scrapeHelper: ScrapeHelper;
 
@@ -22,7 +22,7 @@ export class ResearchAssistant extends StepBasedAgent<ResearchProject, Task> {
         super(params);
 
         this.searchHelper = SearchHelper.create(params.settings, this.artifactManager);
-        this.scrapeHelper = new ScrapeHelper(this.artifactManager);
+        this.scrapeHelper = new ScrapeHelper(this.artifactManager, params.settings);
 
         this.modelHelpers.setPurpose("You are a research assistant who thoroughly summarizes web results.");
         this.modelHelpers.setFinalInstructions("PROPER PROCESS: do a 'check-knowledge' first, then a 'validation' step to see if you can meet the goals. If not, then add 'web_search' and 'validation' as needed until you get the answer. Make sure your final step is a `final_response`");
