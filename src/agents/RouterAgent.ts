@@ -19,13 +19,24 @@ export class RouterAgent extends Agent<Project<Task>, Task> {
         this.availableAgents = new Map();
     }
 
+    async initialize(): Promise<void> {
+    }
+
     public registerAgent(agentId: string, handle: string, description: string) {
         this.availableAgents.set(agentId, { handle, description });
         Logger.info(`Registered agent ${agentId} with handle ${handle}`);
     }
 
-    @HandleActivity(ExecutorType.ROUTE_REQUEST, 'Route user request to appropriate agent', ResponseType.CHANNEL)
-    protected async routeRequest(params: HandlerParams): Promise<void> {
+    // Required abstract method implementations
+    protected async processTask(task: Task): Promise<void> {
+        // Router agent doesn't process tasks
+    }
+
+    protected async handlerThread(params: HandlerParams): Promise<void> {
+        // Router agent doesn't handle threads
+    }
+
+    protected async handleChannel(params: HandlerParams): Promise<void> {
         const { userPost } = params;
 
         const agentOptions = Array.from(this.availableAgents.entries())
@@ -90,19 +101,6 @@ export class RouterAgent extends Agent<Project<Task>, Task> {
             };
             await this.reply(userPost, clarificationMessage);
         }
-    }
-
-    // Required abstract method implementations
-    protected async processTask(task: Task): Promise<void> {
-        // Router agent doesn't process tasks
-    }
-
-    protected async handlerThread(params: HandlerParams): Promise<void> {
-        // Router agent doesn't handle threads
-    }
-
-    protected async handleChannel(params: HandlerParams): Promise<void> {
-        await this.routeRequest(params);
     }
 
     protected projectCompleted(project: Project): void {
