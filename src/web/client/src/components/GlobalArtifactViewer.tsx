@@ -2,10 +2,11 @@ import React, { useEffect, useState } from 'react';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
-import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, ListItemButton, IconButton, List, ListItemText, ListItem, ListItemIcon, Drawer, Toolbar } from '@mui/material';
+import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, ListItemButton, IconButton, List, ListItemText, ListItem, ListItemIcon, Drawer, Toolbar, Fab } from '@mui/material';
 import Grid from '@mui/material/Grid2';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
+import MenuIcon from '@mui/icons-material/Menu';
 
 export const GlobalArtifactViewer: React.FC = () => {
     const { artifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
@@ -88,8 +89,22 @@ export const GlobalArtifactViewer: React.FC = () => {
                 marginLeft: drawerOpen ? '250px' : 0, 
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
                 height: 'calc(100vh - 64px)', // Account for AppBar height
-                overflow: 'auto'
+                overflow: 'auto',
+                position: 'relative'
             }}>
+                <Fab
+                    color="primary"
+                    aria-label="menu"
+                    onClick={() => setDrawerOpen(!drawerOpen)}
+                    sx={{
+                        position: 'absolute',
+                        left: 8,
+                        top: 8,
+                        zIndex: 1
+                    }}
+                >
+                    <MenuIcon />
+                </Fab>
                 {selectedArtifact ? (
                     <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
                 ) : (
