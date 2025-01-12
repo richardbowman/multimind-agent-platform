@@ -41,6 +41,8 @@ export class LLMServiceFactory {
                     settings.models.conversation.openai || "gpt-3.5-turbo",
                     settings.embeddingModel || "text-embedding-ada-002"
                 );
+            case LLMProvider.LLAMA_CPP:
+                return new LlamaCppService();
             default:
                 throw new Error(`Unsupported embedding provider: ${settings.providers.embeddings}`);
         }
