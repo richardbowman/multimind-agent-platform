@@ -11,8 +11,8 @@ import { BrainstormResponse } from '../../schemas/BrainstormResponse';
 export class BrainstormExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(llmService: ILLMService) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
