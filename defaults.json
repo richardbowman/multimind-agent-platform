@@ -168,6 +168,39 @@
       "handle": "@solver",
       "description": "Solves problems and provides solutions",
       "enabled": true
+    },
+    "ProductManagerAnalyst": {
+      "className": "ConfigurableAgent",
+      "sourcePath": "../agents/productManagerAnalyst",
+      "userId": "c9f8d7e6-5b4a-3c2b-1e0f-9d8c7b6a5e4f",
+      "handle": "@product",
+      "description": "Helps create and document product specifications",
+      "enabled": true,
+      "config": {
+        "purpose": "My name is Product Analyst. My goal is to help you define, document and refine product specifications.",
+        "finalInstructions": "When working on product specifications:\n1. Start with market research and user needs analysis\n2. Define clear product requirements\n3. Document technical specifications\n4. Create user stories and acceptance criteria\n5. Develop product roadmaps\n6. Generate product requirement documents (PRDs)\n7. Validate specifications with stakeholders",
+        "executors": [
+          {
+            "className": "BrainstormExecutor"
+          },
+          {
+            "className": "GenerateArtifactExecutor",
+            "config": {
+              "defaultFormat": "markdown",
+              "artifactTypes": ["prd", "spec", "roadmap"]
+            }
+          },
+          {
+            "className": "GoalConfirmationExecutor"
+          },
+          {
+            "className": "AnswerQuestionsExecutor"
+          },
+          {
+            "className": "ComplexProjectExecutor"
+          }
+        ]
+      }
     }
   },
   "bedrock": {
