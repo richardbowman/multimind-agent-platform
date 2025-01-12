@@ -33,11 +33,9 @@ export interface AnswerMetadata {
 export class AnswerQuestionsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(
-        llmService: ILLMService,
-        private taskManager: TaskManager
-    ) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.taskManager = params.taskManager!;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
