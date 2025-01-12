@@ -75,17 +75,6 @@ const AppContent: React.FC = () => {
                     >
                         <MenuIcon />
                     </IconButton>
-                    
-                    <Box sx={{ flexGrow: 1 }} /> {/* Spacer to push right icon to end */}
-                    
-                    <IconButton
-                        color="inherit"
-                        edge="end"
-                        onClick={() => setRightDrawerOpen(!rightDrawerOpen)}
-                        sx={{ ml: 2 }}
-                    >
-                        <TaskIcon />
-                    </IconButton>
                     <Tabs
                         value={currentTab}
                         onChange={(_, newValue) => setCurrentTab(newValue)}
@@ -112,6 +101,15 @@ const AppContent: React.FC = () => {
                             value="settings"
                         />
                     </Tabs>
+                    <Box sx={{ flexGrow: 1 }} /> {/* Spacer to push right icon to end */}
+                    <IconButton
+                        color="inherit"
+                        edge="end"
+                        onClick={() => setRightDrawerOpen(!rightDrawerOpen)}
+                        sx={{ ml: 2 }}
+                    >
+                        <TaskIcon />
+                    </IconButton>
                 </Toolbar>
             </AppBar>
             <div className={currentTab === 'chat' ? 'chat-layout' : 'artifacts-layout'}>
