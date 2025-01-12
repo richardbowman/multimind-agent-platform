@@ -117,7 +117,7 @@
     },
     "ProjectManager": {
       "className": "ConfigurableAgent",
-      "sourcePath": "../agents/projectManager",
+      "sourcePath": "../agents/configurableAgent",
       "userId": "2e330aba-4888-42b8-8685-ecdc7f4b1b43",
       "handle": "@pm",
       "description": "Manages projects and coordinates tasks",
@@ -171,7 +171,7 @@
     },
     "ProductManagerAnalyst": {
       "className": "ConfigurableAgent",
-      "sourcePath": "../agents/productManagerAnalyst",
+      "sourcePath": "../agents/configurableAgent",
       "userId": "c9f8d7e6-5b4a-3c2b-1e0f-9d8c7b6a5e4f",
       "handle": "@product",
       "description": "Helps create and document product specifications",
@@ -195,9 +195,6 @@
           },
           {
             "className": "AnswerQuestionsExecutor"
-          },
-          {
-            "className": "ComplexProjectExecutor"
           }
         ]
       }
