@@ -40,7 +40,9 @@ app.whenReady().then(async () => {
 
         // Create main window
         splashWindow.setMessage('Loading main interface...');
-        mainWindow = new MainWindow();
+        mainWindow = new MainWindow({
+            autoHideMenuBar: true
+        });
 
         // Set up IPC handlers
         setupIpcHandlers();
@@ -67,7 +69,9 @@ app.whenReady().then(async () => {
             }
         }
 
-        mainWindow = new MainWindow();
+        mainWindow = new MainWindow({
+            frame: false
+        });
 
         splashWindow.close();
         setupIpcHandlers(true);
