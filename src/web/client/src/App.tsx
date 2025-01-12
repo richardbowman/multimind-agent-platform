@@ -114,7 +114,12 @@ const AppContent: React.FC = () => {
                     </IconButton>
                 </Toolbar>
             </AppBar>
-            <div className={currentTab === 'chat' ? 'chat-layout' : 'artifacts-layout'}>
+            <Box sx={{ 
+                height: '100%',
+                display: 'flex',
+                flexDirection: 'column',
+                marginTop: '64px' // Account for AppBar height
+            }}>
                 {currentTab === 'chat' ? (
                     <>
                         <Drawer
@@ -175,10 +180,10 @@ const AppContent: React.FC = () => {
                     <GlobalArtifactViewer />
                 ) : currentTab === 'settings' ? (
                     <SettingsPanel />
-                ) : (
+                ) : currentTab === 'logs' ? (
                     <LogViewer logType={currentLogTab} />
-                )}
-            </div>
+                ) : null}
+            </Box>
         </Box>
     );
 };
