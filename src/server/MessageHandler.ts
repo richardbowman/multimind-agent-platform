@@ -54,6 +54,7 @@ export class MessageHandler implements ServerMethods {
                 // Get all messages to calculate reply count
                 const messages = await this.services.chatClient.fetchPreviousMessages(post.channel_id, 1000);
                 
+                // Create the new message
                 const rpcMessage = {
                     id: post.id,
                     channel_id: post.channel_id,
@@ -63,8 +64,33 @@ export class MessageHandler implements ServerMethods {
                     directed_at: post.directed_at,
                     props: post.props,
                     thread_id: post.getRootId(),
-                    reply_count: messages.filter(p => p.getRootId() === post.id).length
+                    reply_count: 0 // New messages start with 0 replies
                 };
+
+                // If this is a reply, get and update the parent message
+                const parentId = post.getRootId();
+                if (parentId) {
+                    const parentMessage = messages.find(p => p.id === parentId);
+                    if (parentMessage) {
+                        const parentReplyCount = messages.filter(p => p.getRootId() === parentId).length;
+                        const parentRpcMessage = {
+                            id: parentMessage.id,
+                            channel_id: parentMessage.channel_id,
+                            message: parentMessage.message,
+                            user_id: parentMessage.user_id,
+                            create_at: parentMessage.create_at,
+                            directed_at: parentMessage.directed_at,
+                            props: parentMessage.props,
+                            thread_id: parentMessage.getRootId(),
+                            reply_count: parentReplyCount
+                        };
+                        // Send both the new message and updated parent
+                        rpc.onMessage([rpcMessage, parentRpcMessage]);
+                        return;
+                    }
+                }
+                
+                // If not a reply, just send the new message
                 rpc.onMessage([rpcMessage]);
             });
         }
