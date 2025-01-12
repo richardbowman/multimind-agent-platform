@@ -46,14 +46,25 @@ export class SolverAgent extends StepBasedAgent {
         // Call super with params and planner
         super(params, planner);
 
+        // Create standardized params
+        const executorParams = {
+            llmService: params.llmService,
+            taskManager: params.taskManager,
+            artifactManager: this.artifactManager,
+            vectorDBService: params.vectorDBService,
+            userId: params.userId,
+            modelHelpers: modelHelpers,
+            vectorDB: params.vectorDBService
+        };
+
         // Register executors after super is called
-        this.registerStepExecutor(new GoalConfirmationExecutor(params.llmService, params.userId));
-        this.registerStepExecutor(new ThinkingExecutor(params.llmService));
-        this.registerStepExecutor(new RefutingExecutor(params.llmService));
-        this.registerStepExecutor(new ValidationExecutor(params.llmService));
-        this.registerStepExecutor(new KnowledgeCheckExecutor(params.llmService, params.vectorDBService));
-        this.registerStepExecutor(new CodeExecutorExecutor(params.llmService));
-        this.registerStepExecutor(new FinalResponseExecutor(modelHelpers));
+        this.registerStepExecutor(new GoalConfirmationExecutor(executorParams));
+        this.registerStepExecutor(new ThinkingExecutor(executorParams));
+        this.registerStepExecutor(new RefutingExecutor(executorParams));
+        this.registerStepExecutor(new ValidationExecutor(executorParams));
+        this.registerStepExecutor(new KnowledgeCheckExecutor(executorParams));
+        this.registerStepExecutor(new CodeExecutorExecutor(executorParams));
+        this.registerStepExecutor(new FinalResponseExecutor(executorParams));
 
     }
 
