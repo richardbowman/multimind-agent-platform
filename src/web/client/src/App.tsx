@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
+import TaskIcon from '@mui/icons-material/Task';
 import { useWebSocket, DataProvider } from './contexts/DataContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
@@ -74,13 +75,16 @@ const AppContent: React.FC = () => {
                     >
                         <MenuIcon />
                     </IconButton>
+                    
+                    <Box sx={{ flexGrow: 1 }} /> {/* Spacer to push right icon to end */}
+                    
                     <IconButton
                         color="inherit"
                         edge="end"
                         onClick={() => setRightDrawerOpen(!rightDrawerOpen)}
-                        sx={{ mr: 2 }}
+                        sx={{ ml: 2 }}
                     >
-                        <MenuIcon />
+                        <TaskIcon />
                     </IconButton>
                     <Tabs
                         value={currentTab}
