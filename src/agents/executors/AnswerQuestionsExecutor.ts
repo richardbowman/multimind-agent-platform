@@ -77,8 +77,8 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 3. extractedAnswer: Analyze the answer quality and completeness.
 
                 Additionally, analyze the overall progress and provide:
-                1. shouldContinue: true if we have enough information to proceed (roughly 75% of questions answered meaningfully), false if we need more answers
-                2. message: A clear explanation of what information is still needed, or confirmation we can proceed
+                1. shouldContinue: true if you have enough information to proceed (roughly 75% of questions answered meaningfully), false if we need more answers
+                2. message: Show the user you're listening by restating what you learned, and explain what you'd still like to know.
                 `)
         });
 
