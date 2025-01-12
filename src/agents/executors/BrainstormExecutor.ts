@@ -30,15 +30,26 @@ export class BrainstormExecutor implements StepExecutor {
                 summary: {
                     type: "string",
                     description: "Brief summary connecting the ideas"
+                },
+                isComplete: {
+                    type: "boolean",
+                    description: "Whether the brainstorming phase is complete based on idea diversity and coverage"
                 }
             },
-            required: ["ideas", "summary"]
+            required: ["ideas", "summary", "isComplete"]
         };
 
         const prompt = `You are a creative brainstorming assistant.
 Generate multiple innovative ideas related to the goal.
 For each idea, provide a clear title, description, and potential benefits.
 Try not to rule out ideas and focus on being creative.
+
+After generating ideas, analyze if:
+1. We have sufficient diversity of ideas across different approaches
+2. We've covered all major aspects of the problem space
+3. New ideas are becoming repetitive or less valuable
+
+Based on this analysis, set isComplete to true if brainstorming should conclude, or false if more ideas are needed.
 
 ${previousResult ? `Build upon these previous ideas:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
 
@@ -54,10 +65,11 @@ ${previousResult ? `Build upon these previous ideas:\n${JSON.stringify(previousR
 
         return {
             type: "brainstorm",
-            finished: true,
-            needsUserInput: true,
+            finished: result.isComplete,
+            needsUserInput: !result.isComplete,
             response: {
-                message: `**Brainstorming Results:**\n\n${formattedIdeas}\n\n**Summary:**\n${result.summary}`
+                message: `**Brainstorming Results:**\n\n${formattedIdeas}\n\n**Summary:**\n${result.summary}`,
+                isComplete: result.isComplete
             }
         };
     }
