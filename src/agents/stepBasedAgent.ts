@@ -62,16 +62,28 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
     }
 
     protected async handleChannel(params: HandlerParams): Promise<void> {
+        // Get any outstanding tasks for this channel
+        const channelTasks = await this.services.taskManager.getTasks({
+            channelId: params.userPost.channel_id,
+            threadId: null
+        });
+
+        // Create new project with any existing channel tasks
         const { projectId } = await this.addNewProject({
             projectName: `Answer the user's request: ${params.userPost.message}`,
-            tasks: [],
+            tasks: channelTasks.map(t => ({
+                description: t.description,
+                type: t.type
+            })),
             metadata: {
-                originalPostId: params.userPost.id
+                originalPostId: params.userPost.id,
+                channelId: params.userPost.channel_id
             }
         });
-        const project = await this.projects.getProject(projectId);
 
-        params.projects = [...params.projects || [], project]
+        const project = await this.projects.getProject(projectId);
+        params.projects = [...params.projects || [], project];
+        
         const posts = [params.userPost];
         const plan = await this.planSteps(projectId, posts);
         await this.executeNextStep(projectId, params.userPost);
