@@ -116,7 +116,7 @@
       "enabled": true
     },
     "ProjectManager": {
-      "className": "ProjectManager",
+      "className": "ConfigurableAgent",
       "sourcePath": "../agents/projectManager",
       "userId": "2e330aba-4888-42b8-8685-ecdc7f4b1b43",
       "handle": "@pm",
