@@ -305,6 +305,16 @@ export class BedrockService extends BaseLLMService {
         return this.logger;
     }
 
+    async getAvailableModels(): Promise<string[]> {
+        try {
+            const models = await this.runtimeClient.listModels();
+            return models.map(m => m.modelId);
+        } catch (error) {
+            await this.logger.logCall('getAvailableModels', {}, null, error);
+            throw error;
+        }
+    }
+
     async getTokenCount(text: string): Promise<number> {
         const estimatedTokens = Math.ceil(text.length / 4); // Rough estimate of 4 chars per token
 
