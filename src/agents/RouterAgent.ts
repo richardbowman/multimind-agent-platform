@@ -12,19 +12,14 @@ interface RegisteredAgent {
 }
 
 export class RouterAgent extends Agent<Project<Task>, Task> {
-    private availableAgents: Map<string, RegisteredAgent>;
+    private settingsManager: SettingsManager;
 
     constructor(params: AgentConstructorParams) {
         super(params);
-        this.availableAgents = new Map();
+        this.settingsManager = params.settingsManager;
     }
 
     async initialize(): Promise<void> {
-    }
-
-    public registerAgent(agentId: string, handle: string, description: string) {
-        this.availableAgents.set(agentId, { handle, description });
-        Logger.info(`Registered agent ${agentId} with handle ${handle}`);
     }
 
     // Required abstract method implementations
@@ -45,8 +40,14 @@ export class RouterAgent extends Agent<Project<Task>, Task> {
             ? this.projects.getProject(channelData.projectId)?.metadata?.description
             : null;
 
-        const agentOptions = Array.from(this.availableAgents.entries())
-            .map(([id, { description }]) => `- ${id}: ${description}`)
+        // Get agent descriptions from settings for channel members
+        const settings = this.settingsManager.getSettings();
+        const agentOptions = (channelData.members || [])
+            .map(memberId => {
+                const agent = settings.agents[memberId];
+                return agent ? `- ${agent.handle || memberId}: ${agent.description}` : null;
+            })
+            .filter(Boolean)
             .join('\n');
 
         const schema = {
@@ -54,7 +55,7 @@ export class RouterAgent extends Agent<Project<Task>, Task> {
             properties: {
                 selectedAgent: { 
                     type: "string",
-                    enum: Array.from(this.availableAgents.keys())
+                    enum: channelData.members || []
                 },
                 reasoning: { type: "string" },
                 confidence: { 
