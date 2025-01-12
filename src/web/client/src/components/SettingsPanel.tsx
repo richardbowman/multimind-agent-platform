@@ -175,7 +175,9 @@ export const SettingsPanel: React.FC = () => {
         <Box sx={{ 
             maxWidth: 800, 
             mx: 'auto', 
-            p: 3 
+            p: 3,
+            height: '100vh',
+            overflowY: 'auto'
         }}>
             <Typography variant="h4" gutterBottom>
                 Settings
@@ -184,7 +186,9 @@ export const SettingsPanel: React.FC = () => {
             <Box sx={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
-                gap: 3 
+                gap: 3,
+                overflowY: 'auto',
+                height: 'calc(100vh - 64px)' // Subtract header height
             }}>
                 {Object.entries(categories).map(([category, metadataList]) => (
                     <Paper 
