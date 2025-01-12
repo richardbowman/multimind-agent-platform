@@ -20,6 +20,19 @@ export interface ChatClient {
     getHandles(): Promise<Record<string, string>>;
     
     /**
+     * Get metadata about a specific channel
+     * @param channelId - ID of the channel to get data for
+     * @returns Promise resolving to channel metadata including projectId if exists
+     */
+    getChannelData(channelId: string): Promise<{
+        projectId?: string;
+        description?: string;
+        isPrivate?: boolean;
+        members?: string[];
+        defaultResponderId?: string;
+    }>;
+    
+    /**
      * Create a new chat channel
      * @param name - Name of the channel to create
      * @param props - Optional properties including:

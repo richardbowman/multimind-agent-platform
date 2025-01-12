@@ -214,6 +214,20 @@ export class LocalTestClient implements ChatClient {
         return Promise.resolve(this.storage.userIdToHandleName);
     }
 
+    public async getChannelData(channelId: string): Promise<{
+        projectId?: string;
+        description?: string;
+        isPrivate?: boolean;
+        members?: string[];
+        defaultResponderId?: string;
+    }> {
+        const channelData = this.storage.channelData[channelId];
+        if (!channelData) {
+            throw new Error(`Channel ${channelId} not found`);
+        }
+        return channelData;
+    }
+
     public async createChannel(params: CreateChannelParams): Promise<string> {
         return this.storage.createChannel(params);
     }
