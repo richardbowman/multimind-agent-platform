@@ -24,8 +24,8 @@ import { ExecutorType } from './ExecutorType';
 export class GoalConfirmationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(private llmService: ILLMService, userId: string) {
-        this.modelHelpers = new ModelHelpers(llmService, userId);
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, params.userId || 'executor');
     }
 
     async executeOld(goal: string, step: string, projectId: string): Promise<any> {

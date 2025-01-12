@@ -12,11 +12,9 @@ import Logger from '../../helpers/logger';
 export class ScheduleTaskExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(
-        private llmService: ILLMService,
-        private taskManager: TaskManager
-    ) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.taskManager = params.taskManager!;
     }
 
     async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {

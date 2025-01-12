@@ -28,9 +28,9 @@ export class GenerateArtifactExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
 
-    constructor(llmService: ILLMService, artifactManager: ArtifactManager) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
-        this.artifactManager = artifactManager;
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.artifactManager = params.artifactManager!;
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
