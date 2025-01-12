@@ -18,12 +18,11 @@ interface AgentDefinition {
     handle?: string;
     description?: string;
     enabled: boolean;
-    config?: Record<string, any>;
+    config?: AgentConfig;
     autoRespondChannelIds?: String[];
 }
 
 export interface AgentConfig {
-    className: string;
     purpose: string;
     finalInstructions: string;
     executors: {
@@ -38,11 +37,6 @@ export interface Settings {
     port: number;
     protocol: string;
     wsUrl: string;
-
-    // Agent configurations
-    agents: {
-        [key: string]: AgentConfig;
-    };
 
     // LLM Provider settings
     providers: {
