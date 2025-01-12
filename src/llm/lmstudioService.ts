@@ -178,6 +178,16 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         return this.chatModel;
     }
 
+    async getAvailableModels(): Promise<string[]> {
+        try {
+            const models = await this.lmStudioClient.llm.listAvailable();
+            return models.map(m => m.identifier);
+        } catch (error) {
+            await this.logger.logCall('getAvailableModels', {}, null, error);
+            throw error;
+        }
+    }
+
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>> {
         if (!this.chatModel) {
             throw new Error("LLaMA model is not initialized.");
