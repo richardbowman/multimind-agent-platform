@@ -346,60 +346,6 @@ export abstract class StepBasedAgent<P, T> extends Agent<P, T> {
         }
     }
 
-    private async determineNextAction(projectId: string, lastStepResult: StepResult): Promise<{
-        needsUserInput: boolean;
-        question?: string;
-        isComplete: boolean;
-        nextStep?: string;
-    }> {
-        const registeredSteps = Array.from(this.stepExecutors.keys());
-
-        const schema = {
-            type: "object",
-            properties: {
-                needsUserInput: {
-                    type: "boolean",
-                    description: "Whether we need to ask the user a question"
-                },
-                question: {
-                    type: "string",
-                    description: "Question to ask the user if needed"
-                },
-                isComplete: {
-                    type: "boolean",
-                    description: "Whether we have enough information to generate final response"
-                },
-                nextStep: {
-                    type: "string",
-                    enum: registeredSteps,
-                    description: `Next step to execute. Must be one of: ${registeredSteps.join(', ')}`
-                }
-            },
-            required: ["needsUserInput", "isComplete"]
-        };
-
-        const systemPrompt = `You are an AI assistant analyzing intermediate results.
-Based on the current state and results, determine if we:
-1. Need to ask the user a question
-2. Have enough information to generate a final response
-3. Should continue with another step
-
-Consider the original goal and what we've learned so far.`;
-
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const project = this.projects.getProject(projectId);
-        const context = JSON.stringify({
-            originalGoal: project.name,
-            currentStep: lastStepResult.type,
-            results: lastStepResult
-        }, null, 2);
-
-        return await this.modelHelpers.generate({
-            message: context,
-            instructions
-        });
-    }
-
     @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
     protected async handleConversation(params: HandlerParams): Promise<void> {
         const { projectId } = await this.addNewProject({

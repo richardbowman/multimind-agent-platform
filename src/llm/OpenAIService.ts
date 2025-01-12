@@ -75,7 +75,7 @@ export class OpenAIService extends BaseLLMService {
             if (params.systemPrompt) {
                 messages.unshift({
                     role: "system",
-                    content: params.systemPrompt
+                    content: params.systemPrompt + "\n\nCall generate_structured_output with your response."
                 });
             }
 
@@ -103,7 +103,12 @@ export class OpenAIService extends BaseLLMService {
                     }
                 }));
 
-                toolChoice = "auto" // Let OpenAI decide which tool to use
+                toolChoice = {
+                    type: "function",
+                    function: {
+                        name: "generate_structured_output"
+                    }
+                }
             }
 
             const model = params.modelType ? 

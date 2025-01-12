@@ -3,7 +3,7 @@
   "wsUrl": "ws://localhost:4001",
   "providers": {
     "chat": "lmstudio",
-    "embeddings": "llama-cpp"
+    "embeddings": "llama_cpp"
   },
   "searchProvider": "duckduckgo",
   "duckduckgo": {
@@ -20,7 +20,7 @@
   "maxSearches": 3,
   "maxFollows": 3,
   "maxResearchRequests": 3,
-  "embeddingModel": "models/nomic-embed-text-v1.5/nomic-embed-text-v1.5.Q4_K_M.gguf",
+  "embeddingModel": "nomic-embed-text-v1.5.Q4_K_M.gguf",
   "chatModel": "qwen2.5-coder-14b-instruct",
   "contextSize": 16384,
   "lmStudioBaseUrl": "ws://localhost:1234",

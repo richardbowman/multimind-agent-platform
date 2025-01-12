@@ -4063,7 +4063,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/prop-types@npm:*, @types/prop-types@npm:^15.7.14":
+"@types/prop-types@npm:^15.7.14":
   version: 15.7.14
   resolution: "@types/prop-types@npm:15.7.14"
   checksum: 10c0/1ec775160bfab90b67a782d735952158c7e702ca4502968aa82565bd8e452c2de8601c8dfe349733073c31179116cf7340710160d3836aa8a1ef76d1532893b1
@@ -4084,12 +4084,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-dom@npm:^18.2.0":
-  version: 18.3.5
-  resolution: "@types/react-dom@npm:18.3.5"
-  peerDependencies:
-    "@types/react": ^18.0.0
-  checksum: 10c0/b163d35a6b32a79f5782574a7aeb12a31a647e248792bf437e6d596e2676961c394c5e3c6e91d1ce44ae90441dbaf93158efb4f051c0d61e2612f1cb04ce4faa
+"@types/react-dom@npm:19.0.0":
+  version: 19.0.0
+  resolution: "@types/react-dom@npm:19.0.0"
+  dependencies:
+    "@types/react": "npm:*"
+  checksum: 10c0/bd480fc4a9c801fc6bbc7d26b37bb815fc382e76b5428511b1bdb2e8048f3dbd2ff9973bafc86b448e0593f9da4c02f7b39d47409e427daeed5a54f045de4596
   languageName: node
   linkType: hard
 
@@ -4102,13 +4102,21 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react@npm:^18.2.0":
-  version: 18.3.18
-  resolution: "@types/react@npm:18.3.18"
+"@types/react@npm:*":
+  version: 19.0.4
+  resolution: "@types/react@npm:19.0.4"
   dependencies:
-    "@types/prop-types": "npm:*"
     csstype: "npm:^3.0.2"
-  checksum: 10c0/8fb2b00672072135d0858dc9db07873ea107cc238b6228aaa2a9afd1ef7a64a7074078250db38afbeb19064be8ea6af5eac32d404efdd5f45e093cc4829d87f8
+  checksum: 10c0/96ecd1a73af57fd7b7facf5b36ec069b131c7608a98a0f1098183023bfb21c60a26a0dc09004fbe0ac70c436ef887bbec5690882cfb77c6e0c679f7e45987722
+  languageName: node
+  linkType: hard
+
+"@types/react@npm:19.0.0":
+  version: 19.0.0
+  resolution: "@types/react@npm:19.0.0"
+  dependencies:
+    csstype: "npm:^3.0.2"
+  checksum: 10c0/d7753ec27c5fa48f3aab97d7d4e9e33ad62bbff761a421bfc56c7b403fab9e3ed266d47793e44311ca2f0034e8ae428cea4aecbe1c542b418cfe72a520eab931
   languageName: node
   linkType: hard
 
@@ -4584,6 +4592,20 @@ __metadata:
   languageName: node
   linkType: hard
 
+"ajv-formats@npm:^3.0.1":
+  version: 3.0.1
+  resolution: "ajv-formats@npm:3.0.1"
+  dependencies:
+    ajv: "npm:^8.0.0"
+  peerDependencies:
+    ajv: ^8.0.0
+  peerDependenciesMeta:
+    ajv:
+      optional: true
+  checksum: 10c0/168d6bca1ea9f163b41c8147bae537e67bd963357a5488a1eaf3abe8baa8eec806d4e45f15b10767e6020679315c7e1e5e6803088dfb84efa2b4e9353b83dd0a
+  languageName: node
+  linkType: hard
+
 "ajv-keywords@npm:^3.4.1, ajv-keywords@npm:^3.5.2":
   version: 3.5.2
   resolution: "ajv-keywords@npm:3.5.2"
@@ -4616,7 +4638,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"ajv@npm:^8.0.0, ajv@npm:^8.9.0":
+"ajv@npm:^8.0.0, ajv@npm:^8.17.1, ajv@npm:^8.9.0":
   version: 8.17.1
   resolution: "ajv@npm:8.17.1"
   dependencies:
@@ -11722,11 +11744,13 @@ __metadata:
     "@types/jest": "npm:^29.5.14"
     "@types/node": "npm:^22.10.2"
     "@types/node-cron": "npm:^3.0.11"
-    "@types/react": "npm:^18.2.0"
-    "@types/react-dom": "npm:^18.2.0"
+    "@types/react": "npm:19.0.0"
+    "@types/react-dom": "npm:19.0.0"
     "@types/turndown": "npm:^5.0.5"
     "@types/ws": "npm:^8.5.13"
     "@xenova/transformers": "npm:^2.17.2"
+    ajv: "npm:^8.17.1"
+    ajv-formats: "npm:^3.0.1"
     axios: "npm:^1.7.7"
     birpc: "npm:^0.2.19"
     blessed: "npm:^0.1.81"
@@ -11764,8 +11788,8 @@ __metadata:
     puppeteer: "npm:^23.8.0"
     puppeteer-extra-plugin-stealth: "npm:^2.11.2"
     quickjs-emscripten: "npm:^0.31.0"
-    react: "npm:^19.0.0"
-    react-dom: "npm:^19.0.0"
+    react: "npm:19.0.0"
+    react-dom: "npm:19.0.0"
     react-markdown: "npm:^9.0.1"
     readline: "npm:^1.3.0"
     reblessed: "npm:^0.2.1"
@@ -13484,7 +13508,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react-dom@npm:^19.0.0":
+"react-dom@npm:19.0.0":
   version: 19.0.0
   resolution: "react-dom@npm:19.0.0"
   dependencies:
@@ -13552,7 +13576,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"react@npm:^19.0.0":
+"react@npm:19.0.0":
   version: 19.0.0
   resolution: "react@npm:19.0.0"
   checksum: 10c0/9cad8f103e8e3a16d15cb18a0d8115d8bd9f9e1ce3420310aea381eb42aa0a4f812cf047bb5441349257a05fba8a291515691e3cb51267279b2d2c3253f38471
