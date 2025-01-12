@@ -23,7 +23,12 @@ const CustomLink = ({ href, children }: { href?: string, children: React.ReactNo
     );
 };
 
-export const ChatPanel: React.FC<ChatPanelProps> = () => {
+interface ChatPanelProps {
+    leftDrawerOpen: boolean;
+    rightDrawerOpen: boolean;
+}
+
+export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen }) => {
     const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useWebSocket();
     const [userId] = useState('test');
     const messagesEndRef = useRef<HTMLDivElement>(null);
