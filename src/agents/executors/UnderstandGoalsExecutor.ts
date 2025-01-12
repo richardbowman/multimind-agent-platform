@@ -83,7 +83,7 @@ export class OnboardingGoalsExecutor implements StepExecutor {
         const response : IntakeQuestionsResponse = await this.modelHelpers.generate({
             message: formattedMessage,
             instructions: new StructuredOutputPrompt(schema,
-                `Based on the user's initial business goals and any previously gathered information, generate focused questions to understand both their business needs and how our AI service fits in. 
+                `Generate focused questions to understand the user's needs for using multimind. 
                 
                 IMPORTANT: 
                 - Review any previous answers carefully to avoid redundant questions
@@ -92,21 +92,19 @@ export class OnboardingGoalsExecutor implements StepExecutor {
                 - If a topic has been partially addressed, ask follow-up questions for deeper understanding
                 Each question should help gather specific information about:
 
-                Business Understanding:
-                - Their business model and target market
-                - Their specific growth objectives and challenges
-                - Their competitive advantages
-                - Their desired business outcomes
-                - Their timeline and budget expectations
+                Goals Understanding:
+                - Their goals for using multimind
+                - Their desired outcomes
+                - Their timeline expectations
 
                 AI Service Integration:
-                - Which business processes they want to automate
+                - Which processes they want to automate
                 - What type of content or tasks they need help with
-                - Their team's current workflow and pain points
-                - Their experience level with AI tools
-                - Their success metrics for AI automation
+                - Current workflow and pain points
+                - Experience level with AI tools
+                - What success would look like
                 
-                Include 4-6 essential questions that will help us understand both their business goals and how we can best support them.
+                Include 3-6 essential questions that will help us understand both their business goals and how we can best support them.
                 Keep questions focused and actionable.`)
         });
 

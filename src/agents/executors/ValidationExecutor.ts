@@ -53,8 +53,7 @@ If the solution is wrong, list the specific aspects that must be addressed.`;
         const result : StepResult = {
             type: 'validation',
             finished: true,
-            isComplete: response.isComplete,
-            needsUserInput: true,
+            needsUserInput: !response.isComplete,
             missingAspects: response.missingAspects || [],
             response: {
                 message: response.message
