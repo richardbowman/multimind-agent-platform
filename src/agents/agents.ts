@@ -551,25 +551,12 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
         }[];
         metadata?: ProjectMetadata
     }): Promise<{ projectId: string, taskIds: string[] }> {
-        const projectId = randomUUID();
-        const project = {
-            id: projectId,
-            name: projectName,
-            tasks: {},
-            metadata: metadata
-        };
-
-        await this.projects.addProject(project);
-
-        let taskIds: string[] = [];
-        if (tasks) {
-            for (let task of tasks) {
-                const { description, type } = task;
-                taskIds.push(await this.addTaskToProject({ projectId, description, type }));
-            }
-        }
-
-        return { projectId, taskIds };
+        const project = await this.projects.createProject(projectName, tasks, metadata);
+        
+        // Get the task IDs from the created project
+        const taskIds = Object.values(project.tasks).map(t => t.id);
+        
+        return { projectId: project.id, taskIds };
     }
 
     // Convenience method to add a task to a project
