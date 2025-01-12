@@ -3,7 +3,7 @@
   "wsUrl": "ws://localhost:4001",
   "providers": {
     "chat": "lmstudio",
-    "embeddings": "llama_cpp"
+    "embeddings": "llama-cpp"
   },
   "searchProvider": "duckduckgo",
   "duckduckgo": {
