@@ -98,7 +98,7 @@ Analyze relevant results (skipping irrelevant results):
             instructions: analysisInstructions
         });
 
-        const responseMessage = `## Quick Research Results
+        const responseMessage = `## Existing Knowlegdebase Results (Quick)
 
 ### Search Queries Used
 ${queryResult.queries.map(q => `- "${q}"`).join('\n')}
@@ -185,7 +185,7 @@ Analyze relevant results (skipping irrelevant results):
         });
 
         // Format response
-        const responseMessage = `## Research Results
+        const responseMessage = `##  Existing Knowlegdebase Results (Detailed)
 
 ### Search Queries Used
 ${queryResult.queries.map(q => `- "${q.query}"\n  *Rationale:* ${q.rationale}`).join('\n')}
