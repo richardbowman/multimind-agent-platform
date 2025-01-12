@@ -6,6 +6,7 @@ import { ClientChannel, ClientMessage, ClientThread } from "../web/client/src/sh
 import { LLMCallLogger } from "../llm/LLMLogger";
 import { reinitializeBackend } from "../main.electron";
 import { CreateChannelParams } from "src/shared/channelTypes";
+import { GoalTemplates } from "src/schemas/goalTemplateSchema";
 
 export class MessageHandler implements ServerMethods {
     createWrapper(): ServerMethods {
@@ -318,16 +319,16 @@ export class MessageHandler implements ServerMethods {
         if (params.goalTemplate) {
             const template = GoalTemplates.find(t => t.id === params.goalTemplate);
             if (template) {
-                const projectId = await this.services.taskManager.createProject({
+                const projectId = await this.services.taskManager.addProject({
                     name: params.name,
                     description: params.description || '',
-                    tasks: template.tasks.map(task => ({
+                    tasks: template.initialTasks.map((task, i) => ({
                         id: crypto.randomUUID(),
                         description: task.description,
                         type: task.type,
                         creator: 'system',
                         dependsOn: task.dependsOn,
-                        order: task.order
+                        order: i+1
                     }))
                 });
 

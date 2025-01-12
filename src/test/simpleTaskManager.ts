@@ -174,7 +174,9 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     return task;
                 }
                 task.complete = true;
+                task.inProgress = false; 
                 taskFound = true;
+                
                 // Emit the 'taskCompleted' event with the completed task, creator, and assignee
                 this.emit('taskCompleted', { task, creator: task.creator, assignee: task.assignee });
 
