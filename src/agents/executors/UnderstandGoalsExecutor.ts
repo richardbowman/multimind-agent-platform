@@ -30,13 +30,10 @@ export class OnboardingGoalsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private userId: string;
 
-    constructor(
-        llmService: ILLMService,
-        private taskManager: TaskManager,
-        userId: string
-    ) {
-        this.userId = userId;
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.taskManager = params.taskManager!;
+        this.userId = params.userId || 'executor';
     }
 
     private formatMessage(goal: string, project: any): string {

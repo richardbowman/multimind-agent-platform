@@ -26,8 +26,8 @@ const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schema
 export class ValidationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(llmService: ILLMService) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResults: any[]): Promise<StepResult> {
