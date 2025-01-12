@@ -10,6 +10,14 @@ import { ExecutorType } from './ExecutorType';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 
+export interface ExecutorConstructorParams {
+    llmService: ILLMService;
+    taskManager?: TaskManager;
+    artifactManager?: ArtifactManager;
+    userId?: string;
+    config?: Record<string, any>;
+}
+
 /**
  * Executor that safely runs JavaScript code in an isolated sandbox environment. 
  * Key capabilities:
@@ -27,8 +35,8 @@ import { SchemaType } from 'src/schemas/SchemaTypes';
 export class CodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
-    constructor(llmService: ILLMService) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
     }
 
     private async executeCodeInSandbox(code: string): Promise<{returnValue: any, consoleOutput?: string}> {
