@@ -121,7 +121,34 @@
       "userId": "2e330aba-4888-42b8-8685-ecdc7f4b1b43",
       "handle": "@pm",
       "description": "Manages projects and coordinates tasks",
-      "enabled": true
+      "enabled": true,
+      "config": {
+        "purpose": "My name is Mesa. My goal is to help develop standardized processes for your business.",
+        "finalInstructions": "When planning steps for a project:\n1. Start with goal confirmation to ensure clear understanding\n2. Break down complex tasks into smaller, manageable steps\n3. Consider dependencies between tasks\n4. Include validation steps to ensure quality\n5. Add brainstorming steps for creative solutions\n6. Generate artifacts to document decisions and plans\n7. Always end with a clear summary of accomplishments",
+        "executors": [
+          {
+            "className": "BrainstormExecutor"
+          },
+          {
+            "className": "GenerateArtifactExecutor",
+            "config": {
+              "defaultFormat": "markdown"
+            }
+          },
+          {
+            "className": "GoalConfirmationExecutor"
+          },
+          {
+            "className": "AnswerQuestionsExecutor"
+          },
+          {
+            "className": "ComplexProjectExecutor"
+          },
+          {
+            "className": "ScheduleTaskExecutor"
+          }
+        ]
+      }
     },
     "OnboardingConsultant": {
       "className": "OnboardingConsultant",
