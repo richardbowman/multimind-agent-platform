@@ -11,6 +11,7 @@ import path from 'path';
 import https from 'https';
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
+import { getDataPath } from "src/helpers/paths";
 
 class LlamaEmbedder implements IEmbeddingFunction {
     private embedder: LLamaEmbedder;
@@ -41,7 +42,7 @@ export class LlamaCppService extends BaseLLMService {
     private async downloadModel(repo: string, modelDir: string): Promise<string> {
         try {
             const modelName = 'nomic-embed-text-v1.5.Q4_K_M.gguf';
-            const modelPath = path.join(modelDir, modelName);
+            const modelPath = path.join(getDataPath(), "models", modelName);
             
             // Check if model already exists
             try {
@@ -110,10 +111,11 @@ export class LlamaCppService extends BaseLLMService {
         }
     }
 
-    async initializeEmbeddingModel(modelPath: string): Promise<void> {
+    async initializeEmbeddingModel(modelName: string): Promise<void> {
         try {
             const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
             const {getLlama} = nlc;
+            const modelPath = path.join(getDataPath(), "models", modelName);
 
             // Check if model exists
             try {
@@ -123,7 +125,6 @@ export class LlamaCppService extends BaseLLMService {
                 const modelDir = path.dirname(modelPath);
                 await fs.mkdir(modelDir, { recursive: true });
                 const downloadedPath = await this.downloadModel('nomic-ai/nomic-embed-text-v1.5', modelDir);
-                modelPath = downloadedPath;
             }
 
             const llama = await getLlama();
