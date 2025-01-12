@@ -115,10 +115,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     // Set up message and log update handlers
     ipcService.on('onMessage', (messages: ClientMessage[]) => {
       setMessages(prev => {
-        const newMessages = messages.filter((message: ClientMessage) => 
-          !prev.some(m => m.id === message.id)
+        // Filter out any existing messages that match the new message IDs
+        const filteredPrev = prev.filter(prevMessage => 
+          !messages.some(newMessage => newMessage.id === prevMessage.id)
         );
-        return [...prev, ...newMessages].sort((a, b) => a.create_at - b.create_at);
+        // Merge and sort the remaining old messages with the new ones
+        return [...filteredPrev, ...messages].sort((a, b) => a.create_at - b.create_at);
       });
     });
 
