@@ -8,10 +8,43 @@ import { Settings } from "src/tools/settingsManager";
 
 export class RouterAgent extends Agent {
     private settings: Settings;
+    private confirmationTimeouts: Map<string, NodeJS.Timeout> = new Map();
 
     constructor(params: AgentConstructorParams) {
         super(params);
         this.settings = params.settings;
+    }
+
+    private async waitForConfirmation(confirmationPostId: string, channelId: string): Promise<ChatPost | null> {
+        return new Promise((resolve) => {
+            const timeout = setTimeout(() => {
+                this.confirmationTimeouts.delete(confirmationPostId);
+                resolve(null);
+            }, 30000); // 30 second timeout
+
+            this.confirmationTimeouts.set(confirmationPostId, timeout);
+
+            const messageHandler = async (post: ChatPost) => {
+                if (post.channel_id === channelId && 
+                    post.getRootId() === confirmationPostId &&
+                    post.user_id !== this.userId) {
+                    
+                    // Clear the timeout
+                    const timeout = this.confirmationTimeouts.get(confirmationPostId);
+                    if (timeout) {
+                        clearTimeout(timeout);
+                        this.confirmationTimeouts.delete(confirmationPostId);
+                    }
+
+                    // Stop listening
+                    this.chatClient.closeCallback();
+                    
+                    resolve(post);
+                }
+            };
+
+            this.chatClient.receiveMessages(messageHandler);
+        });
     }
 
     async initialize(): Promise<void> {
@@ -106,9 +139,29 @@ export class RouterAgent extends Agent {
         // If confidence is high enough (e.g., > 0.7), suggest the agent
         if (response.confidence > 0.7) {
             const confirmationMessage: ModelMessageResponse = {
-                message: `I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in?\n\nReasoning: ${response.reasoning}`
+                message: `I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in? (Reply with "yes" to confirm)\n\nReasoning: ${response.reasoning}`
             };
-            await this.reply(userPost, confirmationMessage);
+            const confirmationPost = await this.reply(userPost, confirmationMessage);
+            
+            // Wait for user's confirmation response
+            const confirmationResponse = await this.waitForConfirmation(confirmationPost.id, userPost.channel_id);
+            
+            if (confirmationResponse?.message?.toLowerCase().trim() === 'yes') {
+                // Get the agent's handle from settings
+                const agent = Object.values(this.settings.agents).find(a => a.userId === response.selectedAgent);
+                if (agent?.handle) {
+                    // Send a channel message @mentioning the agent
+                    const routingMessage = `@${agent.handle} ${userPost.message}\n\nThis request was routed to you because: ${response.reasoning}`;
+                    await this.chatClient.postInChannel(
+                        userPost.channel_id, 
+                        routingMessage,
+                        {
+                            "routed-from": userPost.user_id,
+                            "routed-by": this.userId
+                        }
+                    );
+                }
+            }
         } else {
             // If confidence is low, ask for clarification
             const clarificationMessage: ModelMessageResponse = {
