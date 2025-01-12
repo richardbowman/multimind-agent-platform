@@ -1,22 +1,17 @@
-import { Agent, HandlerParams, HandleActivity, ResponseType } from './agents';
-import { ExecutorType } from './executors/ExecutorType';
+import { Agent, HandlerParams } from './agents';
 import { Project, Task } from '../tools/taskManager';
 import { ModelMessageResponse } from '../schemas/ModelResponse';
 import { StructuredOutputPrompt } from '../llm/ILLMService';
-import Logger from '../helpers/logger';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
+import { Settings } from "src/tools/settingsManager";
 
-interface RegisteredAgent {
-    handle: string;
-    description: string;
-}
 
-export class RouterAgent extends Agent<Project<Task>, Task> {
-    private settingsManager: SettingsManager;
+export class RouterAgent extends Agent {
+    private settings: Settings;
 
     constructor(params: AgentConstructorParams) {
         super(params);
-        this.settingsManager = params.settingsManager;
+        this.settings = params.settings;
     }
 
     async initialize(): Promise<void> {
@@ -41,11 +36,11 @@ export class RouterAgent extends Agent<Project<Task>, Task> {
             : null;
 
         // Get agent descriptions from settings for channel members
-        const settings = this.settingsManager.getSettings();
         const agentOptions = (channelData.members || [])
+            .filter(memberId => this.userId !== memberId)
             .map(memberId => {
-                const agent = settings.agents[memberId];
-                return agent ? `- ${agent.handle || memberId}: ${agent.description}` : null;
+                const agent = Object.values(this.settings.agents).find(a => a.userId === memberId);
+                return agent ? `- ${agent.handle}: ${agent.description}` : null;
             })
             .filter(Boolean)
             .join('\n');
@@ -99,9 +94,7 @@ export class RouterAgent extends Agent<Project<Task>, Task> {
             512
         );
 
-        const selectedAgent = this.availableAgents.get(response.selectedAgent);
-        
-        if (!selectedAgent) {
+        if (!response.selectedAgent) {
             await this.reply(userPost, {
                 message: "I apologize, but I'm not sure which agent would be best suited to help you. Could you please provide more details about your request?"
             });
@@ -111,13 +104,13 @@ export class RouterAgent extends Agent<Project<Task>, Task> {
         // If confidence is high enough (e.g., > 0.7), suggest the agent
         if (response.confidence > 0.7) {
             const confirmationMessage: ModelMessageResponse = {
-                message: `I think ${selectedAgent.handle} would be best suited to help you with this request. Would you like me to bring them in?\n\nReasoning: ${response.reasoning}`
+                message: `I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in?\n\nReasoning: ${response.reasoning}`
             };
             await this.reply(userPost, confirmationMessage);
         } else {
             // If confidence is low, ask for clarification
             const clarificationMessage: ModelMessageResponse = {
-                message: `I'm not entirely sure, but I think ${selectedAgent.handle} might be able to help. Could you please provide more details about what you're looking to accomplish?`
+                message: `I'm not entirely sure, but I think ${response.selectedAgent} might be able to help. Could you please provide more details about what you're looking to accomplish?`
             };
             await this.reply(userPost, clarificationMessage);
         }
