@@ -1,7 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { 
+  Box, 
+  Paper, 
+  Typography, 
+  TextField, 
+  Select, 
+  MenuItem, 
+  FormControl, 
+  InputLabel, 
+  Button, 
+  Alert,
+  CircularProgress
+} from '@mui/material';
 import { useWebSocket } from '../contexts/DataContext';
 import { Settings, CONFIG_METADATA, ConfigMetadata } from '../types/settings';
-import './SettingsPanel.css';
 
 export const SettingsPanel: React.FC = () => {
     const [settings, setSettings] = useState<Settings>({});
@@ -123,20 +135,24 @@ export const SettingsPanel: React.FC = () => {
                 );
             case 'number':
                 return (
-                    <input
+                    <TextField
                         type="number"
                         value={value}
                         onChange={(e) => handleChange(metadata.key, e.target.value)}
-                        placeholder={`Enter ${metadata.label.toLowerCase()}`}
+                        label={metadata.label}
+                        variant="outlined"
+                        fullWidth
                     />
                 );
             default:
                 return (
-                    <input
+                    <TextField
                         type={metadata.sensitive ? 'password' : 'text'}
                         value={getNestedValue(settings, metadata.key) ?? value}
                         onChange={(e) => handleChange(metadata.key, e.target.value)}
-                        placeholder={`Enter ${metadata.label.toLowerCase()}`}
+                        label={metadata.label}
+                        variant="outlined"
+                        fullWidth
                     />
                 );
         }
@@ -152,40 +168,96 @@ export const SettingsPanel: React.FC = () => {
     }, {} as Record<string, ConfigMetadata[]>);
 
     return (
-        <div className="settings-panel">
-            <h2>Settings</h2>
-            <div className="settings-form">
+        <Box sx={{ 
+            maxWidth: 800, 
+            mx: 'auto', 
+            p: 3 
+        }}>
+            <Typography variant="h4" gutterBottom>
+                Settings
+            </Typography>
+            
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: 3 
+            }}>
                 {Object.entries(categories).map(([category, metadataList]) => (
-                    <section key={category} className="settings-section">
-                        <h3>{category}</h3>
-                        {metadataList.map(metadata => (
-                            <div key={metadata.key} className="form-group">
-                                <label>{metadata.label}:</label>
-                                {renderInput(metadata)}
-                                {metadata.description && (
-                                    <small className="description">{metadata.description}</small>
-                                )}
-                            </div>
-                        ))}
-                    </section>
+                    <Paper 
+                        key={category}
+                        sx={{ 
+                            p: 3, 
+                            bgcolor: 'background.paper',
+                            borderRadius: 2,
+                            boxShadow: 1
+                        }}
+                    >
+                        <Typography variant="h6" gutterBottom sx={{ 
+                            mb: 2, 
+                            pb: 1, 
+                            borderBottom: '1px solid',
+                            borderColor: 'divider'
+                        }}>
+                            {category}
+                        </Typography>
+                        
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                            {metadataList.map(metadata => (
+                                <FormControl key={metadata.key} fullWidth>
+                                    {renderInput(metadata)}
+                                    {metadata.description && (
+                                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                                            {metadata.description}
+                                        </Typography>
+                                    )}
+                                </FormControl>
+                            ))}
+                        </Box>
+                    </Paper>
                 ))}
-                <button 
-                    className={`save-button ${saveSuccess ? 'success' : ''}`} 
-                    onClick={handleSave}
-                >
-                    Save Settings
-                </button>
+                
+                <Box sx={{ 
+                    display: 'flex', 
+                    justifyContent: 'flex-end', 
+                    mt: 2 
+                }}>
+                    <Button
+                        variant="contained"
+                        onClick={handleSave}
+                        disabled={saveSuccess}
+                        sx={{
+                            minWidth: 120,
+                            transition: 'all 0.3s',
+                            ...(saveSuccess && {
+                                bgcolor: 'success.main',
+                                '&:hover': {
+                                    bgcolor: 'success.dark'
+                                }
+                            })
+                        }}
+                    >
+                        {saveSuccess ? (
+                            <>
+                                Saved!
+                            </>
+                        ) : (
+                            'Save Settings'
+                        )}
+                    </Button>
+                </Box>
+                
                 {validationMessage && (
-                    <div className="validation-message">
+                    <Alert severity="error" sx={{ mt: 2 }}>
                         {validationMessage}
-                    </div>
+                    </Alert>
                 )}
+                
                 {successMessage && (
-                    <div className="success-message">
+                    <Alert severity="success" sx={{ mt: 2 }}>
                         {successMessage}
-                    </div>
+                    </Alert>
                 )}
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 };
