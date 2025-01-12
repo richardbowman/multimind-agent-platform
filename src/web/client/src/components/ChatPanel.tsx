@@ -116,11 +116,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             display: 'flex',
             flexDirection: 'column',
             height: 'calc(100vh - 64px)',
-            width: '100%',
+            width: `calc(100vw - ${leftDrawerOpen ? 250 : 0}px - ${rightDrawerOpen ? 300 : 0}px)`,
             overflow: 'hidden',
             ml: leftDrawerOpen ? '250px' : 0,
             mr: rightDrawerOpen ? '300px' : 0,
-            transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
+            transition: 'all 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
         }}>
             <Box sx={{ 
                 flex: 1,
