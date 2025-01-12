@@ -36,7 +36,7 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
     constructor(
-        private searchHelper: SearchHelper = new SearchHelper(new DuckDuckGoProvider(this.artifactManager)),
+        private searchHelper: SearchHelper,
         private scrapeHelper: ScrapeHelper,
         private llmService: ILLMService,
         private artifactManager: ArtifactManager,
