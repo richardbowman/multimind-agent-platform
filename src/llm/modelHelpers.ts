@@ -209,25 +209,47 @@ export class ModelHelpers {
 
         const { contextWindow, maxTokens } = params;
 
-        const response = await this.model.generateStructured<T>(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
+        let response: T;
+        let attempts = 0;
+        const maxAttempts = 2;
 
-        // Validate response against schema
-        const isValid = validate(response);
-        if (!isValid) {
-            const errors = validate.errors?.map(err => 
-                `Schema validation error at ${err.instancePath}: ${err.message}`
-            ).join('\n');
-            throw new Error(`Response does not conform to schema:\n${errors}`);
+        while (attempts < maxAttempts) {
+            try {
+                response = await this.model.generateStructured<T>(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
+
+                // Validate response against schema
+                const isValid = validate(response);
+                if (!isValid) {
+                    const errors = validate.errors?.map(err => 
+                        `Schema validation error at ${err.instancePath}: ${err.message}`
+                    ).join('\n');
+                    
+                    if (attempts < maxAttempts - 1) {
+                        // Add error feedback to instructions for retry
+                        augmentedInstructions += `\n\nPrevious attempt failed validation. Please ensure your response includes all required properties:\n${errors}`;
+                        attempts++;
+                        continue;
+                    }
+                    throw new Error(`Response does not conform to schema:\n${errors}`);
+                }
+
+                if (params.artifacts) {
+                    response.artifactIds = params.artifacts?.map(a => a.id);
+                }
+                
+                // Cache the response
+                this.modelCache.set(structure.getPrompt(), cacheContext, response);
+                
+                return response;
+            } catch (error) {
+                if (attempts >= maxAttempts - 1) {
+                    throw error;
+                }
+                attempts++;
+            }
         }
 
-        if (params.artifacts) {
-            response.artifactIds = params.artifacts?.map(a => a.id);
-        }
-        
-        // Cache the response
-        this.modelCache.set(structure.getPrompt(), cacheContext, response);
-        
-        return response;
+        throw new Error('Failed to generate valid response after retries');
     }
 
     public async generate<T extends ModelResponse>(params: GenerateInputParams): Promise<T> {
