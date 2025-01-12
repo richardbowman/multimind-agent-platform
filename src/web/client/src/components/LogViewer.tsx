@@ -24,12 +24,12 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         
         setIsLoading(true);
         try {
-            await fetchLogs(logType);
+            await fetchLogs(currentLogTab);
             setLastFetch(now);
         } finally {
             setIsLoading(false);
         }
-    }, [logType, fetchLogs, isLoading, lastFetch]);
+    }, [currentLogTab, fetchLogs, isLoading, lastFetch]);
 
     useEffect(() => {
         console.log('LogViewer: Setting up log subscription for type:', currentLogTab);
