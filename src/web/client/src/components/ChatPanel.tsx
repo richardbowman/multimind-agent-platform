@@ -110,11 +110,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = () => {
         <Box sx={{ 
             display: 'flex',
             flexDirection: 'column',
-            height: 'calc(100vh - 60px)',
+            height: 'calc(100vh - 64px)',
             width: '100%',
             overflow: 'hidden',
-            ml: 0,
-            mr: 0
+            ml: leftDrawerOpen ? '250px' : 0,
+            mr: rightDrawerOpen ? '300px' : 0,
+            transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
         }}>
             <Box sx={{ 
                 flex: 1,
