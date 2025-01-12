@@ -99,6 +99,7 @@ export interface Settings {
 
     // Search Settings
     searchProvider: 'duckduckgo' | 'searxng' | 'google' | 'brave';
+    scrapingProvider: 'puppeteer' | 'electron';
     maxSearches: number;
     searxngUrl: string;
     maxFollows: number;

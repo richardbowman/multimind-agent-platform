@@ -15,14 +15,29 @@ chromium.use(StealthPlugin());
 class ScrapeHelper {
     private browser: Browser | null = null;
     private artifactManager: ArtifactManager;
+    private settings: Settings;
+    private electronWindow?: Electron.BrowserWindow;
 
-    constructor(artifactManager: ArtifactManager) {
+    constructor(artifactManager: ArtifactManager, settings: Settings) {
         this.artifactManager = artifactManager;
+        this.settings = settings;
     }
 
     async initialize(): Promise<void> {
-        if (!this.browser) {
-            this.browser = await chromium.launch({ headless: true });
+        if (this.settings.scrapingProvider === 'puppeteer') {
+            if (!this.browser) {
+                this.browser = await chromium.launch({ headless: true });
+            }
+        } else if (this.settings.scrapingProvider === 'electron') {
+            if (!this.electronWindow) {
+                this.electronWindow = new Electron.BrowserWindow({
+                    width: 1920,
+                    height: 1080,
+                    webPreferences: {
+                        javaScriptEnabled: true
+                    }
+                });
+            }
         }
     }
 
@@ -33,11 +48,10 @@ class ScrapeHelper {
         }
     }
     async scrapePage(url: string, metadata: Record<string, any> = {}): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot: Buffer, artifactId: string }> {
-        if (!this.browser) {
-            await this.initialize();
-        }
+        await this.initialize();
 
-        let page;
+        if (this.settings.scrapingProvider === 'puppeteer') {
+            let page;
         try {
             const context = await this.browser!.newContext({
                 javaScriptEnabled: true,
@@ -128,11 +142,60 @@ class ScrapeHelper {
             await this.artifactManager.saveArtifact(artifact);
 
             return { content: markdownContent, links, title, screenshot, artifactId };
+        } else if (this.settings.scrapingProvider === 'electron') {
+            if (!this.electronWindow) {
+                throw new Error('Electron window not initialized');
+            }
+
+            await this.electronWindow.loadURL(url);
+            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for page load
+
+            const webContents = this.electronWindow.webContents;
+            const htmlContent = await webContents.executeJavaScript('document.body.innerHTML');
+            const title = await webContents.executeJavaScript('document.title');
+
+            const $ = load(htmlContent);
+            const markdownContent = convertPageToMarkdown($, url);
+
+            // Extract links
+            const links: { href: string, text: string }[] = [];
+            $('a').each((index, element) => {
+                const href = $(element).attr('href');
+                const text = $(element).text();
+                if (href && text && !href.startsWith("#") && !links.find(l => l.href === href)) {
+                    links.push({ href, text });
+                }
+            });
+
+            // Take screenshot
+            const screenshot = await this.electronWindow.captureScreenshot();
+
+            // Save artifact
+            const artifactId = crypto.randomUUID();
+            const artifact = {
+                id: artifactId,
+                type: 'webpage',
+                content: markdownContent,
+                metadata: {
+                    url,
+                    title,
+                    scrapedAt: new Date().toISOString(),
+                    ...metadata
+                }
+            };
+
+            await this.artifactManager.saveArtifact(artifact);
+
+            return { content: markdownContent, links, title, screenshot, artifactId };
+        }
+
         } catch (error) {
             Logger.error(`Error scraping page "${url}":`, error);
             throw error;
         } finally {
-            if (page) await page.close();
+            if (this.settings.scrapingProvider === 'puppeteer' && page) {
+                await page.close();
+            }
         }
     }
 
