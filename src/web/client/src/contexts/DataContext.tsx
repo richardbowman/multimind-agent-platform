@@ -147,7 +147,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const isElectron = !!(window as any).electron;
 
-  const sendMessage = async (message: Partial<ClientMessage>) => {
+  const sendMessage = useCallback(async (message: Partial<ClientMessage>) => {
     const result = await ipcService.sendMessage(message);
     if (result) {
       setMessages(prev => {
@@ -157,97 +157,112 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         return [...prev, ...newMessages].sort((a, b) => a.create_at - b.create_at);
       });
     }
-  };
+  }, []);
 
-  const fetchChannels = async () => {
+  const fetchChannels = useCallback(async () => {
     const newChannels = await ipcService.getChannels();
     setChannels(newChannels);
-  };
+  }, []);
 
-  const fetchHandles = async () => {
+  const fetchHandles = useCallback(async () => {
     const newHandles = await ipcService.getHandles();
     setHandles(newHandles);
-  };
+  }, []);
 
-  const fetchTasks = async (channelId: string, threadId: string | null) => {
+  const fetchTasks = useCallback(async (channelId: string, threadId: string | null) => {
     const newTasks = await ipcService.getTasks(channelId, threadId);
     setTasks(newTasks);
-  };
+  }, []);
 
-  const fetchArtifacts = async (channelId: string, threadId: string | null) => {
+  const fetchArtifacts = useCallback(async (channelId: string, threadId: string | null) => {
     const newArtifacts = await ipcService.getArtifacts(channelId, threadId);
     setArtifacts(newArtifacts);
-  };
+  }, []);
 
-  const fetchAllArtifacts = async () => {
+  const fetchAllArtifacts = useCallback(async () => {
     const newArtifacts = await ipcService.getAllArtifacts();
     setArtifacts(newArtifacts);
-  };
+  }, []);
 
-  const deleteArtifact = async (artifactId: string) => {
+  const deleteArtifact = useCallback(async (artifactId: string) => {
     const remainingArtifacts = await ipcService.deleteArtifact(artifactId);
     setArtifacts(remainingArtifacts);
-  };
+  }, []);
 
-  const fetchLogs = async (logType: 'llm' | 'system' | 'api') => {
+  const fetchLogs = useCallback(async (logType: 'llm' | 'system' | 'api') => {
     const newLogs = await ipcService.getLogs(logType);
     setLogs(prev => ({
       ...prev,
       [logType]: newLogs
     }));
-  };
+  }, []);
   
-  return (
-    <DataContext.Provider value={{ 
-      messages, 
-      channels, 
-      tasks,
-      artifacts, 
-      sendMessage, 
-      fetchChannels, 
-      fetchTasks,
-      fetchArtifacts,
-      fetchAllArtifacts,
-      logs,
-      fetchLogs,
-      handles,
-      fetchHandles,
-      deleteArtifact,
-      currentChannelId,
-      setCurrentChannelId,
-      currentThreadId,
-      setCurrentThreadId,
-      isLoading,
-      needsConfig,
-      getSettings: () => ipcService.getSettings(),
-      updateSettings: async (settings: any) => {
-        try {
-          // Update settings on server
-          const updatedSettings = await ipcService.updateSettings(settings);
-          
-          // If connection-related settings changed, reconnect
-          if (settings.host !== undefined || 
-              settings.port !== undefined || 
-              settings.protocol !== undefined) {
-            // Disconnect and reconnect with new settings
-            ipcService.disconnect();
-            await ipcService.connect();
-            
-            // Refresh data after reconnect
-            await Promise.all([
-              fetchChannels(),
-              fetchHandles()
-            ]);
-          }
-          
-          return updatedSettings;
-        } catch (error) {
-          console.error('Failed to update settings:', error);
-          throw error; // Re-throw to let UI handle error display
+  const value = useMemo(() => ({
+    messages, 
+    channels, 
+    tasks,
+    artifacts, 
+    sendMessage, 
+    fetchChannels, 
+    fetchTasks,
+    fetchArtifacts,
+    fetchAllArtifacts,
+    logs,
+    fetchLogs,
+    handles,
+    fetchHandles,
+    deleteArtifact,
+    currentChannelId,
+    setCurrentChannelId,
+    currentThreadId,
+    setCurrentThreadId,
+    isLoading,
+    needsConfig,
+    getSettings: () => ipcService.getSettings(),
+    updateSettings: async (settings: any) => {
+      try {
+        const updatedSettings = await ipcService.updateSettings(settings);
+        
+        if (settings.host !== undefined || 
+            settings.port !== undefined || 
+            settings.protocol !== undefined) {
+          ipcService.disconnect();
+          await ipcService.connect();
+          await Promise.all([fetchChannels(), fetchHandles()]);
         }
-      },
-      createChannel: (params: CreateChannelParams) => ipcService.createChannel(params)
-    }}>
+        
+        return updatedSettings;
+      } catch (error) {
+        console.error('Failed to update settings:', error);
+        throw error;
+      }
+    },
+    createChannel: (params: CreateChannelParams) => ipcService.createChannel(params)
+  }), [
+    messages, 
+    channels, 
+    tasks,
+    artifacts, 
+    logs,
+    handles,
+    currentChannelId,
+    currentThreadId,
+    isLoading,
+    needsConfig,
+    sendMessage, 
+    fetchChannels, 
+    fetchTasks,
+    fetchArtifacts,
+    fetchAllArtifacts,
+    fetchLogs,
+    fetchHandles,
+    deleteArtifact,
+    setCurrentChannelId,
+    setCurrentThreadId
+  ]);
+
+  return (
+    <DataContext.Provider value={value}>
       {children}
     </DataContext.Provider>
   );
