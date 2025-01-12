@@ -229,24 +229,9 @@ export const SettingsPanel: React.FC = () => {
                 height: '100vh',
                 overflowY: 'auto'
             }}>
-                <Box sx={{ 
-                    display: 'flex', 
-                    alignItems: 'center', 
-                    gap: 2,
-                    mb: 3
-                }}>
-                    <IconButton
-                        color="inherit"
-                        edge="start"
-                        onClick={() => setDrawerOpen(!drawerOpen)}
-                        sx={{ mr: 2 }}
-                    >
-                        <MenuIcon />
-                    </IconButton>
-                    <Typography variant="h4">
-                        Settings
-                    </Typography>
-                </Box>
+                <Typography variant="h4" sx={{ mb: 3 }}>
+                    Settings
+                </Typography>
             
             <Box sx={{ 
                 display: 'flex', 
