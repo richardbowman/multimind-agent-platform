@@ -7,7 +7,8 @@ interface LogViewerProps {
     logType: 'llm' | 'system' | 'api';
 }
 
-export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
+export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType }) => {
+    const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>(initialLogType);
     const { logs, fetchLogs } = useWebSocket();
     const [filterText, setFilterText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -31,7 +32,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     }, [logType, fetchLogs, isLoading, lastFetch]);
 
     useEffect(() => {
-        console.log('LogViewer: Setting up log subscription for type:', logType);
+        console.log('LogViewer: Setting up log subscription for type:', currentLogTab);
         // Reset lastFetch to 0 when logType changes to force immediate refresh
         setLastFetch(0);
         refreshLogs();
@@ -40,10 +41,10 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
         const intervalId = setInterval(refreshLogs, 5000);
 
         return () => {
-            console.log('LogViewer: Cleaning up log subscription for type:', logType);
+            console.log('LogViewer: Cleaning up log subscription for type:', currentLogTab);
             clearInterval(intervalId);
         };
-    }, [logType]); // Remove refreshLogs from dependencies to prevent recreation on lastFetch changes
+    }, [currentLogTab]); // Remove refreshLogs from dependencies to prevent recreation on lastFetch changes
 
     const filterLog = (content: string) => {
         if (!filterText) return true;
@@ -59,7 +60,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     };
 
     const renderLogs = () => {
-        switch (logType) {
+        switch (currentLogTab) {
             case 'llm':
                 return Object.entries(logs.llm).flatMap(([service, entries]) => 
                     entries.filter(log => 
