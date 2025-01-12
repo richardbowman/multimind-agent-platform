@@ -313,6 +313,29 @@ export class MessageHandler implements ServerMethods {
         if (!this.services?.chatClient) {
             throw new Error('Chat client is not initialized');
         }
+
+        // If a goal template is specified, create a project with its tasks
+        if (params.goalTemplate) {
+            const template = GoalTemplates.find(t => t.id === params.goalTemplate);
+            if (template) {
+                const projectId = await this.services.taskManager.createProject({
+                    name: params.name,
+                    description: params.description || '',
+                    tasks: template.tasks.map(task => ({
+                        id: crypto.randomUUID(),
+                        description: task.description,
+                        type: task.type,
+                        creator: 'system',
+                        dependsOn: task.dependsOn,
+                        order: task.order
+                    }))
+                });
+
+                // Associate the project with the channel
+                params.projectId = projectId;
+            }
+        }
+
         return await this.services.chatClient.createChannel(params);
     }
 
