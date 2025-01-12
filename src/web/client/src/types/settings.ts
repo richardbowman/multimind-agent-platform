@@ -245,6 +245,47 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         description: 'API endpoint for Brave Search'
     },
 
+    // Embeddings Providers
+    {
+        key: 'providers.embeddings',
+        label: 'Embeddings Provider',
+        type: 'select',
+        category: 'Embeddings',
+        options: ['openai', 'cohere', 'huggingface', 'local'],
+        defaultValue: 'local',
+        required: true
+    },
+    // Embeddings Models
+    {
+        key: 'models.embeddings.openai',
+        label: 'OpenAI Embeddings Model',
+        type: 'string',
+        category: 'Embeddings',
+        description: 'Model identifier for OpenAI embeddings (e.g. text-embedding-3-small)',
+        defaultValue: 'text-embedding-3-small'
+    },
+    {
+        key: 'models.embeddings.cohere',
+        label: 'Cohere Embeddings Model',
+        type: 'string',
+        category: 'Embeddings',
+        description: 'Model identifier for Cohere embeddings',
+        defaultValue: 'embed-english-v3.0'
+    },
+    {
+        key: 'models.embeddings.huggingface',
+        label: 'HuggingFace Embeddings Model',
+        type: 'string',
+        category: 'Embeddings',
+        description: 'Model identifier for HuggingFace embeddings'
+    },
+    {
+        key: 'models.embeddings.local',
+        label: 'Local Embeddings Model',
+        type: 'string',
+        category: 'Embeddings',
+        description: 'Model path for local embeddings'
+    },
     // Vector DB Settings
     {
         key: 'vectorDatabaseType',
