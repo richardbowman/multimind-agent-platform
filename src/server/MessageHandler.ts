@@ -50,7 +50,10 @@ export class MessageHandler implements ServerMethods {
     setupClientEvents(rpc: ClientMethods) {
         // Set up message receiving for the user client
         if (this.services?.chatClient) {
-            this.services.chatClient.receiveMessages((post: ChatPost) => {
+            this.services.chatClient.receiveMessages(async (post: ChatPost) => {
+                // Get all messages to calculate reply count
+                const messages = await this.services.chatClient.fetchPreviousMessages(post.channel_id, 1000);
+                
                 const rpcMessage = {
                     id: post.id,
                     channel_id: post.channel_id,
@@ -59,7 +62,8 @@ export class MessageHandler implements ServerMethods {
                     create_at: post.create_at,
                     directed_at: post.directed_at,
                     props: post.props,
-                    thread_id: post.getRootId()
+                    thread_id: post.getRootId(),
+                    reply_count: messages.filter(p => p.getRootId() === post.id).length
                 };
                 rpc.onMessage([rpcMessage]);
             });
