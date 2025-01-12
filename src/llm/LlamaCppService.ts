@@ -6,6 +6,9 @@ import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
+import { promises as fs } from 'fs';
+import path from 'path';
+import { execSync } from 'child_process';
 
 class LlamaEmbedder implements IEmbeddingFunction {
     private embedder: LLamaEmbedder;
@@ -33,10 +36,37 @@ export class LlamaCppService extends BaseLLMService {
         super('llama-cpp');
     }
 
+    private async downloadModel(repo: string, modelDir: string): Promise<string> {
+        try {
+            Logger.info(`Downloading model ${repo}...`);
+            execSync(`huggingface-cli download ${repo} --local-dir ${modelDir}`, { stdio: 'inherit' });
+            const files = await fs.readdir(modelDir);
+            const modelFile = files.find(f => f.endsWith('.gguf'));
+            if (!modelFile) {
+                throw new Error(`No .gguf file found in ${modelDir}`);
+            }
+            return path.join(modelDir, modelFile);
+        } catch (error) {
+            Logger.error(`Failed to download model ${repo}:`, error);
+            throw error;
+        }
+    }
+
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
         try {
             const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
             const {getLlama} = nlc;
+
+            // Check if model exists
+            try {
+                await fs.access(modelPath);
+            } catch {
+                // If not, download it
+                const modelDir = path.dirname(modelPath);
+                await fs.mkdir(modelDir, { recursive: true });
+                const downloadedPath = await this.downloadModel('nomic-ai/nomic-embed-text-v1.5', modelDir);
+                modelPath = downloadedPath;
+            }
 
             const llama = await getLlama();
             const model = await llama.loadModel({
