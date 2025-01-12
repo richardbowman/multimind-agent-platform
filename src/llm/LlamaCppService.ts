@@ -59,23 +59,44 @@ export class LlamaCppService extends BaseLLMService {
                 
                 Logger.info(`Downloading from ${url}`);
                 await new Promise((resolve, reject) => {
-                    https.get(url, response => {
-                        if (response.statusCode !== 200) {
-                            reject(new Error(`Failed to download model: ${response.statusCode} ${response.statusMessage}`));
-                            return;
-                        }
-                        
-                        let bytesDownloaded = 0;
-                        response.on('data', (chunk) => {
-                            bytesDownloaded += chunk.length;
-                        });
+                    const request = https.get(url, response => {
+                        // Handle redirects
+                        if (response.statusCode === 302 && response.headers.location) {
+                            const redirectUrl = response.headers.location;
+                            Logger.info(`Redirecting to: ${redirectUrl}`);
+                            https.get(redirectUrl, redirectResponse => {
+                                if (redirectResponse.statusCode !== 200) {
+                                    reject(new Error(`Failed to download model: ${redirectResponse.statusCode} ${redirectResponse.statusMessage}`));
+                                    return;
+                                }
 
-                        pipeline(response, fileStream)
-                            .then(() => {
-                                Logger.info(`Download complete. ${bytesDownloaded} bytes downloaded to ${modelPath}`);
-                                resolve(true);
-                            })
-                            .catch(reject);
+                                let bytesDownloaded = 0;
+                                redirectResponse.on('data', (chunk) => {
+                                    bytesDownloaded += chunk.length;
+                                });
+
+                                pipeline(redirectResponse, fileStream)
+                                    .then(() => {
+                                        Logger.info(`Download complete. ${bytesDownloaded} bytes downloaded to ${modelPath}`);
+                                        resolve(true);
+                                    })
+                                    .catch(reject);
+                            }).on('error', reject);
+                        } else if (response.statusCode === 200) {
+                            let bytesDownloaded = 0;
+                            response.on('data', (chunk) => {
+                                bytesDownloaded += chunk.length;
+                            });
+
+                            pipeline(response, fileStream)
+                                .then(() => {
+                                    Logger.info(`Download complete. ${bytesDownloaded} bytes downloaded to ${modelPath}`);
+                                    resolve(true);
+                                })
+                                .catch(reject);
+                        } else {
+                            reject(new Error(`Failed to download model: ${response.statusCode} ${response.statusMessage}`));
+                        }
                     }).on('error', reject);
                 });
 
