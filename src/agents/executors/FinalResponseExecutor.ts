@@ -23,7 +23,8 @@ import { ExecutorType } from './ExecutorType';
  */
 @StepExecutorDecorator(ExecutorType.FINAL_RESPONSE, 'Provide final response to the user (include at the end of your plan)')
 export class FinalResponseExecutor implements StepExecutor {
-    constructor(private modelHelpers: ModelHelpers) {
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {

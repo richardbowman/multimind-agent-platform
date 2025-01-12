@@ -32,14 +32,11 @@ export class CreatePlanExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private userId: string;
 
-    constructor(
-        llmService: ILLMService,
-        private taskManager: TaskManager,
-        private artifactManager: ArtifactManager,
-        userId: string
-    ) {
-        this.userId = userId;
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
+    constructor(params: ExecutorConstructorParams) {
+        this.userId = params.userId || 'executor';
+        this.modelHelpers = new ModelHelpers(params.llmService, this.userId);
+        this.taskManager = params.taskManager!;
+        this.artifactManager = params.artifactManager!;
     }
 
     async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {

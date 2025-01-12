@@ -30,10 +30,10 @@ export class EditingExecutor implements StepExecutor {
     private artifactManager: ArtifactManager;
     private taskManager: TaskManager
 
-    constructor(llmService: ILLMService, artifactManager: ArtifactManager, taskManager: TaskManager) {
-        this.modelHelpers = new ModelHelpers(llmService, 'executor');
-        this.artifactManager = artifactManager;
-        this.taskManager = taskManager;
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.artifactManager = params.artifactManager!;
+        this.taskManager = params.taskManager!;
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
