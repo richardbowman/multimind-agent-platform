@@ -66,16 +66,28 @@ export class RouterAgent extends Agent<Project<Task>, Task> {
             required: ["selectedAgent", "reasoning", "confidence"]
         };
 
+        // Get project details if exists
+        const project = channelData?.projectId ? this.projects.getProject(channelData.projectId) : null;
+        const projectTasks = project ? Object.values(project.tasks) : [];
+        
         const prompt = `Analyze the user's request and select the most appropriate agent to handle it.
         Available agents:
         ${agentOptions}
 
-        ${projectGoal ? `Channel Project Goal: ${projectGoal}\n` : ''}
+        ${project ? `Channel Project Details:
+        - Name: ${project.name}
+        - Goal: ${project.metadata?.description || 'No specific goal'}
+        - Status: ${project.metadata?.status || 'active'}
+        - Tasks: ${projectTasks.length > 0 ? 
+            projectTasks.map(t => `\n  * ${t.description} (${t.complete ? 'complete' : 'in progress'})`).join('') 
+            : 'No tasks'}
+        ` : ''}
+
         User request: "${userPost.message}"
 
         Respond with:
         - Which agent would be best suited to handle this request
-        - Your reasoning for selecting this agent (considering any channel project goals)
+        - Your reasoning for selecting this agent (considering any channel project goals and tasks)
         - Your confidence level (0-1) in this selection`;
 
         const response = await this.llmService.generateStructured(
