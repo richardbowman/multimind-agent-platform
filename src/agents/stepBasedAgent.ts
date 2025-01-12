@@ -61,6 +61,34 @@ export abstract class StepBasedAgent extends Agent {
         );
     }
 
+    protected async initializeFromConfig(config: AgentConfig): Promise<void> {
+        // Set agent instructions
+        this.modelHelpers.setPurpose(config.purpose);
+        this.modelHelpers.setFinalInstructions(config.finalInstructions);
+
+        // Initialize executors
+        for (const executorConfig of config.executors) {
+            try {
+                // Dynamically import the executor class
+                const module = await import(`./executors/${executorConfig.className}`);
+                const ExecutorClass = module[executorConfig.className];
+                
+                // Create instance with config
+                const executor = new ExecutorClass({
+                    llmService: this.llmService,
+                    taskManager: this.taskManager,
+                    artifactManager: this.artifactManager,
+                    userId: this.userId,
+                    ...executorConfig.config
+                });
+                
+                this.registerStepExecutor(executor);
+            } catch (error) {
+                Logger.error(`Failed to initialize executor ${executorConfig.className}:`, error);
+            }
+        }
+    }
+
     protected async handleChannel(params: HandlerParams): Promise<void> {
         const { projectId } = await this.addNewProject({
             projectName: `Answer the user's request: ${params.userPost.message}`,

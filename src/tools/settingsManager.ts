@@ -21,12 +21,27 @@ interface AgentDefinition {
     autoRespondChannelIds?: String[];
 }
 
+export interface AgentConfig {
+    className: string;
+    purpose: string;
+    finalInstructions: string;
+    executors: {
+        className: string;
+        config?: Record<string, any>;
+    }[];
+}
+
 export interface Settings {
     // Server settings
     host: string;
     port: number;
     protocol: string;
     wsUrl: string;
+
+    // Agent configurations
+    agents: {
+        [key: string]: AgentConfig;
+    };
 
     // LLM Provider settings
     providers: {
