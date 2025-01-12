@@ -14,17 +14,17 @@ import { pipeline } from 'stream/promises';
 import { getDataPath } from "src/helpers/paths";
 
 class LlamaEmbedder implements IEmbeddingFunction {
-    private embedder: LLamaEmbedder;
+    private context: LLamaContext;
 
-    constructor(embedder: LLamaEmbedder) {
-        this.embedder = embedder;
+    constructor(context: LLamaContext) {
+        this.context = context;
     }
 
     async generate(texts: string[]): Promise<number[][]> {
         const embeddings: number[][] = [];
         for (const text of texts) {
-            const embedding = await this.embedder.embed(text);
-            embeddings.push(embedding);
+            const embedding = await this.context.getEmbeddingFor(text);
+            embeddings.push(Array.from(embedding)); // Convert Float32Array to number[]
         }
         return embeddings;
     }
@@ -153,7 +153,7 @@ export class LlamaCppService extends BaseLLMService {
                 modelPath: modelPath
             });
             const context = await model.createEmbeddingContext();
-            this.embedder = new LlamaEmbedder(model);
+            this.embedder = new LlamaEmbedder(context);
             Logger.info("Llama.cpp embedding model initialized");
         } catch (error) {
             Logger.error("Failed to initialize Llama.cpp embedding model:", error);
