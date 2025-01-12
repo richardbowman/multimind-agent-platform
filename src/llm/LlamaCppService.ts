@@ -8,7 +8,9 @@ import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { promises as fs } from 'fs';
 import path from 'path';
-import { execSync } from 'child_process';
+import https from 'https';
+import { createWriteStream } from 'fs';
+import { pipeline } from 'stream/promises';
 
 class LlamaEmbedder implements IEmbeddingFunction {
     private embedder: LLamaEmbedder;
@@ -38,14 +40,38 @@ export class LlamaCppService extends BaseLLMService {
 
     private async downloadModel(repo: string, modelDir: string): Promise<string> {
         try {
-            Logger.info(`Downloading model ${repo}...`);
-            execSync(`huggingface-cli download ${repo} --local-dir ${modelDir}`, { stdio: 'inherit' });
-            const files = await fs.readdir(modelDir);
-            const modelFile = files.find(f => f.endsWith('.gguf'));
-            if (!modelFile) {
-                throw new Error(`No .gguf file found in ${modelDir}`);
+            const modelName = 'nomic-embed-text-v1.5.Q4_K_M.gguf';
+            const modelPath = path.join(modelDir, modelName);
+            
+            // Check if model already exists
+            try {
+                await fs.access(modelPath);
+                Logger.info(`Model already exists at ${modelPath}`);
+                return modelPath;
+            } catch {
+                // If not, download it
+                Logger.info(`Downloading model ${repo}...`);
+                await fs.mkdir(modelDir, { recursive: true });
+
+                const url = `https://huggingface.co/${repo}/resolve/main/${modelName}`;
+                const fileStream = createWriteStream(modelPath);
+                
+                Logger.info(`Downloading from ${url}`);
+                await new Promise((resolve, reject) => {
+                    https.get(url, response => {
+                        if (response.statusCode !== 200) {
+                            reject(new Error(`Failed to download model: ${response.statusCode} ${response.statusMessage}`));
+                            return;
+                        }
+                        pipeline(response, fileStream)
+                            .then(resolve)
+                            .catch(reject);
+                    }).on('error', reject);
+                });
+
+                Logger.info(`Model downloaded to ${modelPath}`);
+                return modelPath;
             }
-            return path.join(modelDir, modelFile);
         } catch (error) {
             Logger.error(`Failed to download model ${repo}:`, error);
             throw error;
