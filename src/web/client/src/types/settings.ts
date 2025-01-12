@@ -213,6 +213,15 @@ export const CONFIG_METADATA: ConfigMetadata[] = [
         defaultValue: 'duckduckgo'
     },
     {
+        key: 'scrapingProvider',
+        label: 'Scraping Provider',
+        type: 'select',
+        category: 'Search Settings',
+        options: ['puppeteer', 'electron'],
+        defaultValue: 'puppeteer',
+        description: 'Browser engine to use for web scraping'
+    },
+    {
         key: 'duckduckgo.headless',
         label: 'DuckDuckGo Headless Mode',
         type: 'boolean',
