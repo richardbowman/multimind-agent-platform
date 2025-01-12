@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
 import DOMPurify from 'dompurify';
-import './LogViewer.css';
+import { AppBar, Toolbar, Tabs, Tab, TextField, Box, styled } from '@mui/material';
 
 interface LogViewerProps {
     logType: 'llm' | 'system' | 'api';
@@ -114,21 +114,35 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
         }
     };
 
+    const LogToolbar = styled(Toolbar)(({ theme }) => ({
+        backgroundColor: theme.palette.background.default,
+        borderBottom: '1px solid #444',
+        padding: theme.spacing(1),
+    }));
+
     return (
-        <div className="log-viewer">
-            <div className="filter-bar">
-                <input
-                    type="text"
-                    placeholder="Filter logs..."
-                    value={filterText}
-                    onChange={(e) => setFilterText(e.target.value)}
-                    className="log-filter"
-                />
-                {isLoading && <span className="loading-indicator">Loading...</span>}
-            </div>
-            <div className="log-content">
+        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+            <AppBar position="relative" sx={{ zIndex: 1 }}>
+                <LogToolbar>
+                    <Tabs value={logType} onChange={(_, newValue) => setCurrentLogTab(newValue)}>
+                        <Tab label="LLM Logs" value="llm" />
+                        <Tab label="System Logs" value="system" />
+                        <Tab label="API Logs" value="api" />
+                    </Tabs>
+                    <Box sx={{ flexGrow: 1 }} />
+                    <TextField
+                        variant="outlined"
+                        placeholder="Filter logs..."
+                        value={filterText}
+                        onChange={(e) => setFilterText(e.target.value)}
+                        sx={{ width: 300 }}
+                    />
+                    {isLoading && <Box sx={{ ml: 2, color: '#999' }}>Loading...</Box>}
+                </LogToolbar>
+            </AppBar>
+            <Box sx={{ flex: 1, overflowY: 'auto', padding: 1 }}>
                 {renderLogs()}
-            </div>
-        </div>
+            </Box>
+        </Box>
     );
 };
