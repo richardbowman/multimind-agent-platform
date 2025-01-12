@@ -63,13 +63,45 @@ export class LlamaCppService extends BaseLLMService {
                             reject(new Error(`Failed to download model: ${response.statusCode} ${response.statusMessage}`));
                             return;
                         }
+                        
+                        let bytesDownloaded = 0;
+                        response.on('data', (chunk) => {
+                            bytesDownloaded += chunk.length;
+                        });
+
                         pipeline(response, fileStream)
-                            .then(resolve)
+                            .then(() => {
+                                Logger.info(`Download complete. ${bytesDownloaded} bytes downloaded to ${modelPath}`);
+                                resolve(true);
+                            })
                             .catch(reject);
                     }).on('error', reject);
                 });
 
-                Logger.info(`Model downloaded to ${modelPath}`);
+                // Verify the downloaded file
+                try {
+                    const stats = await fs.stat(modelPath);
+                    if (stats.size === 0) {
+                        throw new Error('Downloaded file is empty');
+                    }
+                    
+                    // Read first 4 bytes to check GGUF magic
+                    const fd = await fs.open(modelPath, 'r');
+                    const buffer = Buffer.alloc(4);
+                    await fd.read(buffer, 0, 4, 0);
+                    await fd.close();
+                    
+                    const magic = buffer.toString('utf8');
+                    if (magic !== 'GGUF') {
+                        throw new Error(`Invalid GGUF magic. Expected "GGUF" but got "${magic}"`);
+                    }
+                    
+                    Logger.info(`Model verification successful: ${modelPath}`);
+                } catch (verifyError) {
+                    // Clean up invalid file
+                    await fs.unlink(modelPath).catch(() => {});
+                    throw new Error(`Model verification failed: ${verifyError.message}`);
+                }
                 return modelPath;
             }
         } catch (error) {
