@@ -254,7 +254,8 @@ export const SettingsPanel: React.FC = () => {
                 gap: 3,
                 overflowY: 'auto',
                 height: 'calc(100vh - 64px)' // Subtract header height
-            }}>
+            }}
+            >
                 {Object.entries(categories).map(([category, metadataList]) => (
                     <Paper 
                         key={category}
@@ -332,6 +333,7 @@ export const SettingsPanel: React.FC = () => {
                         {successMessage}
                     </Alert>
                 )}
+            </Box>
             </Box>
         </Box>
     );
