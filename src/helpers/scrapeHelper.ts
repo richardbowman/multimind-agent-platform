@@ -8,6 +8,9 @@ import crypto from 'crypto';
 // Note: playwright-extra is compatible with most puppeteer-extra plugins
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import Logger from './logger';
+import { Settings } from 'src/tools/settingsManager';
+
+import { BrowserWindow } from "electron";
 
 // Add stealth plugin
 chromium.use(StealthPlugin());
@@ -30,11 +33,11 @@ class ScrapeHelper {
             }
         } else if (this.settings.scrapingProvider === 'electron') {
             if (!this.electronWindow) {
-                this.electronWindow = new Electron.BrowserWindow({
+                this.electronWindow = new BrowserWindow({
                     width: 1920,
                     height: 1080,
                     webPreferences: {
-                        javaScriptEnabled: true
+                        webSecurity: false
                     }
                 });
             }
@@ -50,144 +53,144 @@ class ScrapeHelper {
     async scrapePage(url: string, metadata: Record<string, any> = {}): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot: Buffer, artifactId: string }> {
         await this.initialize();
 
-        if (this.settings.scrapingProvider === 'puppeteer') {
-            let page;
+        let page;
         try {
-            const context = await this.browser!.newContext({
-                javaScriptEnabled: true,
-                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-                viewport: { width: 1920, height: 1080 },
-                deviceScaleFactor: 1,
-                isMobile: false,
-                hasTouch: false,
-            });
-            page = await context.newPage();
-
-            // Navigate to the URL and wait for network idle
-            try {
-                await page.goto(url, { 
-                    waitUntil: 'networkidle',
-                    timeout: 5000 
+            if (this.settings.scrapingProvider === 'puppeteer') {
+                const context = await this.browser!.newContext({
+                    javaScriptEnabled: true,
+                    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    viewport: { width: 1920, height: 1080 },
+                    deviceScaleFactor: 1,
+                    isMobile: false,
+                    hasTouch: false,
                 });
-            } catch (error) {
-                Logger.warn(`Element 'body' did not load within the specified timeout. Continuing with the current content.`);
+                page = await context.newPage();
+
+                // Navigate to the URL and wait for network idle
+                try {
+                    await page.goto(url, {
+                        waitUntil: 'networkidle',
+                        timeout: 5000
+                    });
+                } catch (error) {
+                    Logger.warn(`Element 'body' did not load within the specified timeout. Continuing with the current content.`);
+                }
+
+                // Wait for additional content to load after scrolling
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Take a full-page screenshot
+                let screenshot: Buffer = Buffer.from('');
+                try {
+                    screenshot = await page.screenshot({ fullPage: true });
+                } catch (error) {
+                    Logger.warn(`Couldn't get a screenshot.`);
+                }
+
+
+                const actualUrl = page.url();
+
+                // Scroll to the bottom of the page with error handling
+                await page.evaluate(() => {
+                    if (document.body) {
+                        window.scrollTo(0, document.body.scrollHeight);
+                    }
+                }).catch(error => {
+                    Logger.warn('Could not scroll page, continuing anyway:', error);
+                });
+
+                // Wait for additional content to load after scrolling
+                await new Promise(resolve => setTimeout(resolve, 1000));
+
+                // Extract HTML content
+                const htmlContent = await page.content();
+
+                // Extract the title of the page
+                const title = await page.title();
+
+                // Load the HTML content into Cheerio
+                const $ = load(htmlContent);
+
+                const markdownContent = convertPageToMarkdown($, actualUrl);
+
+                // Extract links
+                const links: { href: string, text: string }[] = [];
+                $('a').each((index, element) => {
+                    const href = $(element).attr('href');
+                    const text = $(element).text();
+                    if (href && text && !href.startsWith("#") && !links.find(l => l.href === href)) {
+                        links.push({ href, text });
+                    }
+                });
+
+                // Validate content before saving
+                if (!markdownContent) {
+                    throw new Error(`Failed to extract content from ${url}`);
+                }
+
+                // Save the full webpage content as an artifact
+                const artifactId = crypto.randomUUID();
+                const artifact = {
+                    id: artifactId,
+                    type: 'webpage',
+                    content: markdownContent,
+                    metadata: {
+                        url,
+                        title,
+                        scrapedAt: new Date().toISOString(),
+                        ...metadata
+                    }
+                };
+
+                await this.artifactManager.saveArtifact(artifact);
+
+                return { content: markdownContent, links, title, screenshot, artifactId };
+            } else if (this.settings.scrapingProvider === 'electron') {
+                if (!this.electronWindow) {
+                    throw new Error('Electron window not initialized');
+                }
+
+                await this.electronWindow.loadURL(url);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for page load
+
+                const webContents = this.electronWindow.webContents;
+                const htmlContent = await webContents.executeJavaScript('document.body.innerHTML');
+                const title = await webContents.executeJavaScript('document.title');
+
+                const $ = load(htmlContent);
+                const markdownContent = convertPageToMarkdown($, url);
+
+                // Extract links
+                const links: { href: string, text: string }[] = [];
+                $('a').each((index, element) => {
+                    const href = $(element).attr('href');
+                    const text = $(element).text();
+                    if (href && text && !href.startsWith("#") && !links.find(l => l.href === href)) {
+                        links.push({ href, text });
+                    }
+                });
+
+                // Take screenshot
+                // const screenshot = await this.electronWindow.captureScreenshot();
+
+                // Save artifact
+                const artifactId = crypto.randomUUID();
+                const artifact = {
+                    id: artifactId,
+                    type: 'webpage',
+                    content: markdownContent,
+                    metadata: {
+                        url,
+                        title,
+                        scrapedAt: new Date().toISOString(),
+                        ...metadata
+                    }
+                };
+
+                await this.artifactManager.saveArtifact(artifact);
+
+                return { content: markdownContent, links, title, screenshot: null, artifactId };
             }
-
-            // Wait for additional content to load after scrolling
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Take a full-page screenshot
-            let screenshot: Buffer = Buffer.from('');
-            try {
-                screenshot = await page.screenshot({ fullPage: true });
-            } catch (error) {
-                Logger.warn(`Couldn't get a screenshot.`);
-            }
-
-
-            const actualUrl = page.url();
-
-            // Scroll to the bottom of the page with error handling
-            await page.evaluate(() => {
-                if (document.body) {
-                    window.scrollTo(0, document.body.scrollHeight);
-                }
-            }).catch(error => {
-                Logger.warn('Could not scroll page, continuing anyway:', error);
-            });
-
-            // Wait for additional content to load after scrolling
-            await new Promise(resolve => setTimeout(resolve, 1000));
-
-            // Extract HTML content
-            const htmlContent = await page.content();
-
-            // Extract the title of the page
-            const title = await page.title();
-
-            // Load the HTML content into Cheerio
-            const $ = load(htmlContent);
-
-            const markdownContent = convertPageToMarkdown($, actualUrl);
-
-            // Extract links
-            const links: { href: string, text: string }[] = [];
-            $('a').each((index, element) => {
-                const href = $(element).attr('href');
-                const text = $(element).text();
-                if (href && text && !href.startsWith("#") && !links.find(l => l.href === href)) {
-                    links.push({ href, text });
-                }
-            });
-
-            // Validate content before saving
-            if (!markdownContent) {
-                throw new Error(`Failed to extract content from ${url}`);
-            }
-
-            // Save the full webpage content as an artifact
-            const artifactId = crypto.randomUUID();
-            const artifact = {
-                id: artifactId,
-                type: 'webpage',
-                content: markdownContent,
-                metadata: {
-                    url,
-                    title,
-                    scrapedAt: new Date().toISOString(),
-                    ...metadata
-                }
-            };
-
-            await this.artifactManager.saveArtifact(artifact);
-
-            return { content: markdownContent, links, title, screenshot, artifactId };
-        } else if (this.settings.scrapingProvider === 'electron') {
-            if (!this.electronWindow) {
-                throw new Error('Electron window not initialized');
-            }
-
-            await this.electronWindow.loadURL(url);
-            await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for page load
-
-            const webContents = this.electronWindow.webContents;
-            const htmlContent = await webContents.executeJavaScript('document.body.innerHTML');
-            const title = await webContents.executeJavaScript('document.title');
-
-            const $ = load(htmlContent);
-            const markdownContent = convertPageToMarkdown($, url);
-
-            // Extract links
-            const links: { href: string, text: string }[] = [];
-            $('a').each((index, element) => {
-                const href = $(element).attr('href');
-                const text = $(element).text();
-                if (href && text && !href.startsWith("#") && !links.find(l => l.href === href)) {
-                    links.push({ href, text });
-                }
-            });
-
-            // Take screenshot
-            const screenshot = await this.electronWindow.captureScreenshot();
-
-            // Save artifact
-            const artifactId = crypto.randomUUID();
-            const artifact = {
-                id: artifactId,
-                type: 'webpage',
-                content: markdownContent,
-                metadata: {
-                    url,
-                    title,
-                    scrapedAt: new Date().toISOString(),
-                    ...metadata
-                }
-            };
-
-            await this.artifactManager.saveArtifact(artifact);
-
-            return { content: markdownContent, links, title, screenshot, artifactId };
-        }
 
         } catch (error) {
             Logger.error(`Error scraping page "${url}":`, error);
@@ -215,7 +218,7 @@ export default ScrapeHelper;
 export function convertPageToMarkdown($: CheerioAPI, url: string): string {
     // Remove unwanted elements and attributes
     $('script, style, iframe, noscript, svg, img').remove();
-    
+
     // Remove all style-related attributes
     $('*').each((_, el) => {
         const attrs = el.attributes;
@@ -230,7 +233,7 @@ export function convertPageToMarkdown($: CheerioAPI, url: string): string {
     });
 
     // Remove empty elements
-    $('*').each(function() {
+    $('*').each(function () {
         if ($(this).text().trim() === '' && !$(this).find('img').length) {
             $(this).remove();
         }
@@ -259,11 +262,11 @@ export function convertPageToMarkdown($: CheerioAPI, url: string): string {
             }
         });
     });
-    
+
     // Get the modified HTML without scripts, styles, and style attributes
     const cleanedHtml = $('body').html();
 
-    const fullHtmlWithoutIndentation = (cleanedHtml||"")
+    const fullHtmlWithoutIndentation = (cleanedHtml || "")
         .replace(/\t/g, '') // Remove tabs
         .replace(/^[ \t]+/gm, ''); // Remove leading spaces and tabs from each line
 
@@ -278,16 +281,16 @@ export function convertPageToMarkdown($: CheerioAPI, url: string): string {
     // Add custom rules
     turndownService.addRule('removeEmptyParagraphs', {
         filter: ['p', 'div', 'span'],
-        replacement: function(content) {
+        replacement: function (content) {
             return content.trim() ? '\n\n' + content + '\n\n' : '';
         }
     });
 
-    
+
     // Configure link formatting
     turndownService.addRule('links', {
         filter: 'a',
-        replacement: function(content, node: Node, options) {
+        replacement: function (content, node: Node, options) {
             const element = node as HTMLElement;
             const href = element.getAttribute('href');
             const title = element.getAttribute('title');
@@ -298,7 +301,7 @@ export function convertPageToMarkdown($: CheerioAPI, url: string): string {
             const normalizedContent = content
                 .replace(/\s+/g, ' ')  // Replace multiple spaces/newlines with single space
                 .trim();               // Remove leading/trailing whitespace
-            
+
             const titlePart = title ? ` "${title.replace(/\s+/g, ' ').trim()}"` : '';
             return `[${normalizedContent}](${href}${titlePart})`;
         }
