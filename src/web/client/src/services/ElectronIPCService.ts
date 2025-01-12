@@ -22,12 +22,7 @@ export class ElectronIPCService extends BaseRPCService {
         const safeHandlers = createSafeRPCHandlers();
         this.rpc = createBirpc<ServerMethods, ClientMethods>(
             {
-                onMessage: (messages: ClientMessage[]) => {
-                    this.emit('onMessage', messages);
-                },
-                onLogUpdate: (update: { type: string; entry: any }) => {
-                    this.emit('onLogUpdate', update);
-                },
+                ...createClientMethods(this.emit.bind(this)),
                 onBackendStatus: (status: { configured: boolean; ready: boolean; message?: string }) => {
                     this.status = status;
                     if (this.connected) {

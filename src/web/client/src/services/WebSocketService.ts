@@ -43,10 +43,7 @@ export default class WebSocketService extends BaseRPCService {
 
   private setupPlaceholderRPC() {
     this.rpc = createBirpc<ServerMethods, ClientMethods>(
-      {
-        onLogUpdate: () => () => {},
-        onMessage: () => () => {} 
-      },
+      createClientMethods(this.emit.bind(this)),
       {
         post: (data) => {
           const stack = new Error().stack;
