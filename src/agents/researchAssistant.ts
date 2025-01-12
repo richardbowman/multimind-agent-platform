@@ -27,19 +27,23 @@ export class ResearchAssistant extends StepBasedAgent {
         this.modelHelpers.setPurpose("You are a research assistant who thoroughly summarizes web results.");
         this.modelHelpers.setFinalInstructions("PROPER PROCESS: do a 'check-knowledge' first, then a 'validation' step to see if you can meet the goals. If not, then add 'web_search' and 'validation' as needed until you get the answer. Make sure your final step is a `final_response`");
 
+        // Create standardized params
+        const executorParams = {
+            llmService: params.llmService,
+            taskManager: params.taskManager,
+            artifactManager: this.artifactManager,
+            vectorDBService: params.vectorDBService,
+            userId: params.userId,
+            searchHelper: this.searchHelper,
+            scrapeHelper: this.scrapeHelper,
+            modelHelpers: this.modelHelpers
+        };
+
         // Register step executors
-        this.registerStepExecutor(new WebSearchExecutor(
-            this.searchHelper,
-            this.scrapeHelper,
-            params.llmService,
-            this.artifactManager,
-            this.modelHelpers
-        ));
-        this.registerStepExecutor(new ValidationExecutor(params.llmService));
-        this.registerStepExecutor(new KnowledgeCheckExecutor(
-            params.llmService, params.vectorDBService
-        ));
-        this.registerStepExecutor(new FinalResponseExecutor(this.modelHelpers));
+        this.registerStepExecutor(new WebSearchExecutor(executorParams));
+        this.registerStepExecutor(new ValidationExecutor(executorParams));
+        this.registerStepExecutor(new KnowledgeCheckExecutor(executorParams));
+        this.registerStepExecutor(new FinalResponseExecutor(executorParams));
     }
     
     public async initialize(): Promise<void> {

@@ -26,10 +26,20 @@ export class ResearchManager extends StepBasedAgent<ResearchProject, Task> {
         super(params, planner);
         this.modelHelpers = modelHelpers;
 
+        // Create standardized params
+        const executorParams = {
+            llmService: params.llmService,
+            taskManager: params.taskManager,
+            artifactManager: this.artifactManager,
+            vectorDBService: params.vectorDBService,
+            userId: params.userId,
+            modelHelpers: this.modelHelpers
+        };
+
         // Register research-specific executors
-        this.registerStepExecutor(new ResearchGoalsExecutor(params.llmService, params.taskManager));
-        this.registerStepExecutor(new ResearchDecompositionExecutor(params.llmService, params.taskManager));
-        this.registerStepExecutor(new ResearchAggregationExecutor(params.llmService, this.artifactManager, params.vectorDBService));
+        this.registerStepExecutor(new ResearchGoalsExecutor(executorParams));
+        this.registerStepExecutor(new ResearchDecompositionExecutor(executorParams));
+        this.registerStepExecutor(new ResearchAggregationExecutor(executorParams));
 
         this.modelHelpers.setPurpose(`You are planning how to conduct Web-based research effectively.`);
         this.modelHelpers.setFinalInstructions(`
