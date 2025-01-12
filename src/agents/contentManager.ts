@@ -28,31 +28,21 @@ export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> 
         const planner = new MultiStepPlanner(params.llmService, params.taskManager, params.userId, modelHelpers)
         super(params, planner);
 
-        // Register our specialized executors with standardized params
-        this.registerStepExecutor(new KnowledgeCheckExecutor({
+        // Create standardized params once
+        const executorParams = {
             llmService: params.llmService,
             vectorDB: params.vectorDBService,
-            userId: params.userId
-        }));
-        this.registerStepExecutor(new OutlineExecutor({
-            llmService: params.llmService,
-            userId: params.userId
-        }));
-        this.registerStepExecutor(new AssignWritersExecutor({
-            llmService: params.llmService,
-            taskManager: params.taskManager,
-            userId: params.userId
-        }));
-        this.registerStepExecutor(new EditingExecutor({
-            llmService: params.llmService,
             taskManager: params.taskManager,
             artifactManager: this.artifactManager,
             userId: params.userId
-        }));
-        // this.registerStepExecutor(new ValidationExecutor({
-        //     llmService: params.llmService,
-        //     userId: params.userId
-        // }));
+        };
+
+        // Register our specialized executors
+        this.registerStepExecutor(new KnowledgeCheckExecutor(executorParams));
+        this.registerStepExecutor(new OutlineExecutor(executorParams));
+        this.registerStepExecutor(new AssignWritersExecutor(executorParams));
+        this.registerStepExecutor(new EditingExecutor(executorParams));
+        // this.registerStepExecutor(new ValidationExecutor(executorParams));
 
         this.modelHelpers.setPurpose(`You are planning how to create high-quality content.
 Break down the content creation into steps of research, outlining, writing and editing.
