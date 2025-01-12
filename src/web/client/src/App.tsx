@@ -115,7 +115,7 @@ const AppContent: React.FC = () => {
                 </Toolbar>
             </AppBar>
             <Box sx={{ 
-                height: '100%',
+                height: 'calc(100vh - 64px)', // Account for AppBar height
                 display: 'flex',
                 flexDirection: 'column',
                 marginTop: '64px' // Account for AppBar height

@@ -121,7 +121,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType }) => {
     }));
 
     return (
-        <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
+        <Box sx={{ height: 'calc(100vh - 64px)', display: 'flex', flexDirection: 'column' }}>
             <AppBar position="relative" sx={{ zIndex: 1 }}>
                 <LogToolbar>
                     <Tabs value={logType} onChange={(_, newValue) => setCurrentLogTab(newValue)}>
