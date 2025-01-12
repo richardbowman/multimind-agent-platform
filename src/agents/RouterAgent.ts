@@ -71,9 +71,10 @@ export class RouterAgent extends Agent {
                     type: "object",
                     properties: {
                         confirmed: { type: "boolean" },
+                        selectedAgent: { type: "string" },
                         messageToAgent: { type: "string" }
                     },
-                    required: ["confirmed"]
+                    required: ["confirmed", "selectedAgent"]
                 };
 
                 const confirmationPrompt = `Analyze the user's response to determine if they confirmed the agent suggestion.
@@ -82,6 +83,7 @@ export class RouterAgent extends Agent {
 
                 Respond with:
                 - confirmed: true if the user agreed to the suggestion, false otherwise
+                - selectedAgent: The userId of the agent that was suggested
                 - messageToAgent: A well-formed message to send to the suggested agent including the original request and any additional context from the user's response`;
 
                 const confirmationResponse = await this.llmService.generateStructured(
