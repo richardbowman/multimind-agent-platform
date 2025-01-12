@@ -60,10 +60,12 @@ const AppContent: React.FC = () => {
 
     return (
         <Box sx={{
-            height: 'calc(100vh - 60px)',
+            height: '100vh',
             backgroundColor: '#1a1a1a',
             color: '#ffffff',
-            marginTop: '60px'
+            display: 'flex',
+            flexDirection: 'column',
+            overflow: 'hidden'
         }}>
             <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
                 <Toolbar>
