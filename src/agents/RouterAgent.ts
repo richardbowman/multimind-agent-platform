@@ -109,34 +109,55 @@ export class RouterAgent extends Agent {
                     type: "number",
                     minimum: 0,
                     maximum: 1
+                },
+                suggestedQuestion: {
+                    type: "string",
+                    description: "A helpful follow-up question to ask the user if clarification is needed"
                 }
             },
-            required: ["selectedAgent", "reasoning", "confidence"]
+            required: ["selectedAgent", "reasoning", "confidence", "suggestedQuestion"]
         };
 
         // Get project details if exists
         const project = channelData?.projectId ? this.projects.getProject(channelData.projectId) : null;
         const projectTasks = project ? Object.values(project.tasks) : [];
         
-        const prompt = `Analyze the user's request and select the most appropriate agent to handle it. If the request is unclear or the user is just introducing themselves, select the first not started project task.
-        Available agents:
-        ${agentPromptOptions}
+        const prompt = `Analyze the user's request and determine the best way to respond. Follow these guidelines:
 
-        ${project ? `Channel Project Details:
-        - Name: ${project.name}
-        - Goal: ${project.metadata?.description || 'No specific goal'}
-        - Status: ${project.metadata?.status || 'active'}
-        - Tasks: ${projectTasks.length > 0 ? 
-            projectTasks.map(t => `\n  * ${t.description} (${t.complete ? 'complete' : t.inProgress ? 'in progress' : 'not started'})`).join('') 
-            : 'No tasks'}
-        ` : ''}
+1. If the request is clear and directly related to a specific agent's expertise:
+   - Select the most appropriate agent
+   - Explain why they're the best choice
+   - Include relevant project/task context
 
-        User request: "${userPost.message}"
+2. If the request is unclear, vague, or just an introduction:
+   - Politely ask clarifying questions
+   - Explain the channel's current project goals and tasks
+   - Suggest possible directions for the conversation
 
-        Respond with:
-        - Which agent would be best suited to handle this request
-        - Your reasoning for selecting this agent (considering any channel project goals and tasks)
-        - Your confidence level (0-1) in this selection`;
+3. When explaining project context:
+   - Summarize the project goal in simple terms
+   - Highlight key tasks and their status
+   - Mention any blockers or important deadlines
+
+Available agents:
+${agentPromptOptions}
+
+${project ? `Channel Project Details:
+- Name: ${project.name}
+- Goal: ${project.metadata?.description || 'No specific goal'}
+- Status: ${project.metadata?.status || 'active'}
+- Tasks: ${projectTasks.length > 0 ? 
+    projectTasks.map(t => `\n  * ${t.description} (${t.complete ? '✅ complete' : t.inProgress ? '⏳ in progress' : '🆕 not started'})`).join('') 
+    : 'No tasks'}
+` : ''}
+
+User request: "${userPost.message}"
+
+Respond with:
+- selectedAgent: The best agent to handle this (or null if unclear)
+- reasoning: Your detailed reasoning including any questions for clarification
+- confidence: Your confidence level (0-1) in this selection
+- suggestedQuestion: A helpful follow-up question to ask the user (if needed)`;
 
         const response = await this.llmService.generateStructured(
             userPost,
