@@ -95,7 +95,6 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 marginLeft: drawerOpen ? 0 : '-250px', 
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
                 flex: 1,
-                height: '100vh',
                 overflow: 'hidden',
                 position: 'relative'
             }}>
