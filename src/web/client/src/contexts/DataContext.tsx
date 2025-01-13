@@ -159,7 +159,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isElectron = !!(window as any).electron;
 
   const sendMessage = useCallback(async (message: Partial<ClientMessage>) => {
-    const result = await ipcService.sendMessage(message);
+    const result = await ipcService.getRPC().sendMessage(message);
     if (result) {
       setMessages(prev => {
         const newMessages = [result].filter(message => 
@@ -171,37 +171,37 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const fetchChannels = useCallback(async () => {
-    const newChannels = await ipcService.getChannels();
+    const newChannels = await ipcService.getRPC().getChannels();
     setChannels(newChannels);
   }, []);
 
   const fetchHandles = useCallback(async () => {
-    const newHandles = await ipcService.getHandles();
+    const newHandles = await ipcService.getRPC().getHandles();
     setHandles(newHandles);
   }, []);
 
   const fetchTasks = useCallback(async (channelId: string, threadId: string | null) => {
-    const newTasks = await ipcService.getTasks(channelId, threadId);
+    const newTasks = await ipcService.getRPC().getTasks({ channelId, threadId });
     setTasks(newTasks);
   }, []);
 
   const fetchArtifacts = useCallback(async (channelId: string, threadId: string | null) => {
-    const newArtifacts = await ipcService.getArtifacts(channelId, threadId);
+    const newArtifacts = await ipcService.getRPC().getArtifacts({ channelId, threadId });
     setArtifacts(newArtifacts);
   }, []);
 
   const fetchAllArtifacts = useCallback(async () => {
-    const newArtifacts = await ipcService.getAllArtifacts();
+    const newArtifacts = await ipcService.getRPC().getAllArtifacts();
     setArtifacts(newArtifacts);
   }, []);
 
   const deleteArtifact = useCallback(async (artifactId: string) => {
-    const remainingArtifacts = await ipcService.deleteArtifact(artifactId);
+    const remainingArtifacts = await ipcService.getRPC().deleteArtifact(artifactId);
     setArtifacts(remainingArtifacts);
   }, []);
 
   const fetchLogs = useCallback(async (logType: 'llm' | 'system' | 'api') => {
-    const newLogs = await ipcService.getLogs(logType);
+    const newLogs = await ipcService.getRPC().getLogs(logType);
     setLogs(prev => ({
       ...prev,
       [logType]: newLogs
@@ -229,10 +229,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentThreadId,
     isLoading,
     needsConfig,
-    getSettings: () => ipcService.getSettings(),
+    getSettings: () => ipcService.getRPC().getSettings(),
     updateSettings: async (settings: any) => {
       try {
-        const updatedSettings = await ipcService.updateSettings(settings);
+        const updatedSettings = await ipcService.getRPC().updateSettings(settings);
         
         if (settings.host !== undefined || 
             settings.port !== undefined || 
@@ -248,7 +248,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
     },
-    createChannel: (params: CreateChannelParams) => ipcService.createChannel(params)
+    createChannel: (params: CreateChannelParams) => ipcService.getRPC().createChannel(params)
   }), [
     messages, 
     channels, 
