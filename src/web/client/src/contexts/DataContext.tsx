@@ -85,7 +85,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     // Set up message and log update handlers
-    ipcService.on('onMessage', (messages: ClientMessage[]) => {
+    ipcService.on('onMessage', async (messages: ClientMessage[]) => {
+      // Check if any new messages contain artifact references
+      const hasArtifactLinks = messages.some(message => 
+        message.content?.includes('artifact:') || 
+        message.metadata?.artifactIds?.length > 0
+      );
+
       setMessages(prev => {
         // Filter out any existing messages that match the new message IDs
         const filteredPrev = prev.filter(prevMessage => 
@@ -94,6 +100,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Merge and sort the remaining old messages with the new ones
         return [...filteredPrev, ...messages].sort((a, b) => a.create_at - b.create_at);
       });
+
+      // If we found artifact links and have a current channel/thread, refresh artifacts
+      if (hasArtifactLinks && currentChannelId) {
+        await fetchArtifacts(currentChannelId, currentThreadId);
+      }
     });
 
     ipcService.on('onLogUpdate', (update) => {
