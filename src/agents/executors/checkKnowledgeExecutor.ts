@@ -37,15 +37,16 @@ export class KnowledgeCheckExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const mode = params.mode as ('quick' | 'detailed') || 'quick';
         return mode === 'quick' ? 
-            this.executeQuick(params.goal, params.step, params.projectId, params.previousResult) : 
+            this.executeQuick(params.stepGoal||params.message, params.goal, params.step, params.projectId, params.previousResult) : 
             this.executeDetailed(params.goal, params.step, params.projectId, params.previousResult);
     }
 
-    private async executeQuick(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    private async executeQuick(stepInstructions: string, goal: string, stepType: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const querySchema = await getGeneratedSchema(SchemaType.QuickQueriesResponse);
 
-        const queryPrompt = `Given this content goal: "${goal}"
-Generate 2-3 different search queries that will help find relevant information.`;
+        const queryPrompt = `Given the overall goal and the user's request, generate 2-3 different search queries that will help find relevant information.
+        Overall Goal : ${goal}
+        `;
 
         const queryInstructions = new StructuredOutputPrompt(querySchema, queryPrompt);
         const queryResult = await this.modelHelpers.generate<{queries: string[]}>({
@@ -94,7 +95,7 @@ Analyze relevant results (skipping irrelevant results):
         const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
         const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
         const analysis = await this.modelHelpers.generate<ResearchResponse>({
-            message: goal,
+            message: stepInstructions,
             instructions: analysisInstructions
         });
 
@@ -181,7 +182,7 @@ Analyze relevant results (skipping irrelevant results):
 
         const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
         const analysis = await this.modelHelpers.generate<ResearchResponse>({
-            message: goal,
+            message: step,
             instructions: analysisInstructions
         });
 
