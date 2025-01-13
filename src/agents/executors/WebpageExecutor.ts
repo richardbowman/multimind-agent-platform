@@ -1,4 +1,4 @@
-import { StepExecutor, StepResult, ExecutorConstructorParams } from '../stepBasedAgent';
+import { StepExecutor, StepResult, ExecutorConstructorParams, ExecuteParams } from '../stepBasedAgent';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import ScrapeHelper from '../../helpers/scrapeHelper';
 import { ILLMService } from "src/llm/ILLMService";
