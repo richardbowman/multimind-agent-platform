@@ -15,6 +15,7 @@ import { InMemoryPost } from 'src/chat/localChatClient';
 import { AgentConfig, Settings } from 'src/tools/settingsManager';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { IVectorDatabase } from 'src/llm/IVectorDatabase';
+import { Artifact } from 'src/tools/artifact';
 
 export interface StepResult {
     type?: string;
@@ -57,7 +58,7 @@ export interface StepExecutor {
     executeOld?(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult>;
     execute?(params: ExecuteParams): Promise<StepResult>;
     onTaskNotification?(task: Task): Promise<void>;
-    onProjectCompleted?(project: Project<Task>): Promise<void>;
+    onProjectCompleted?(project: Project): Promise<void>;
 }
 
 export interface ExecutorConstructorParams {
@@ -212,7 +213,7 @@ export abstract class StepBasedAgent extends Agent {
         await this.executeStep(projectId, task, userPost);
     }
 
-    protected async projectCompleted(project: Project<Task>): Promise<void> {
+    protected async projectCompleted(project: Project): Promise<void> {
         Logger.info(`Project ${project.id} completed`);
         if (project.metadata.parentTaskId) {
             // Update parent task with combined results
