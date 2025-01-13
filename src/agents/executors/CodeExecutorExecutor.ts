@@ -68,7 +68,7 @@ export class CodeExecutorExecutor implements StepExecutor {
         }
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.CodeExecutionResponse);
 
         const prompt = `You are a JavaScript programming expert.
@@ -83,11 +83,11 @@ const a = 1 + 2;
 console.log(\`The answer is \$\{a\}\`);
 a;  // send 3 back as the answer
 
-${previousResult ? `Consider this previous result:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
+${params.previousResult ? `Consider this previous result:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         let result = await this.modelHelpers.generate<CodeExecutionResponse>({
-            message: goal,
+            message: params.message || params.stepGoal,
             instructions,
             model: "qwen2.5-coder-14b-instruct"
         });
@@ -100,7 +100,7 @@ ${previousResult ? `Consider this previous result:\n${JSON.stringify(previousRes
             const errorPrompt = `${prompt}\n\nThe previous attempt resulted in this error:\n${error.message}\n\nPlease fix the code and try again.`;
             const retryInstructions = new StructuredOutputPrompt(schema, errorPrompt);
             let retryResult = await this.modelHelpers.generate<CodeExecutionResponse>({
-                message: goal,
+                message: params.message || params.stepGoal,
                 instructions: retryInstructions,
                 model: "qwen2.5-coder-14b-instruct"
             });
