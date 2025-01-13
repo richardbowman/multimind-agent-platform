@@ -74,7 +74,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
 
         // Get existing artifacts from previous results
         let existingContent = '';
-        const artifactIds = params.previousResult?.flatMap(r => r.response?.artifactIds || []) || [];
+        const artifactIds = [...new Set(params.previousResult?.flatMap(r => r.artifactIds || []) || [])];
         
         if (artifactIds.length > 0) {
             try {
@@ -94,7 +94,9 @@ export class GenerateArtifactExecutor implements StepExecutor {
             }
         }
 
-        const prompt = `${qaContext}Generate or modify a Markdown document based on the goal.
+        const prompt = `Goal: ${params.goal}
+        
+        ${qaContext}Generate or modify a Markdown document based on the goal.
 You have these options:
 1. Create a new document (leave artifactId blank)
 2. Replace an existing document (specify artifactId and set operation to "replace")
