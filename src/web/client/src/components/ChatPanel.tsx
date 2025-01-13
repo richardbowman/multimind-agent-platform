@@ -118,7 +118,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             height: 'calc(100vh - 64px)',
             width: `calc(100vw - ${leftDrawerOpen ? 250 : 0}px - ${rightDrawerOpen ? 300 : 0}px)`,
             overflow: 'hidden',
-            ml: leftDrawerOpen ? '250px' : '56px', // 56px is the width of the collapsed drawer
+            ml: '250px',
             mr: rightDrawerOpen ? '300px' : 0,
             transition: 'all 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
         }}>
