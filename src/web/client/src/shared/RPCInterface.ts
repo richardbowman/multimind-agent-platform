@@ -12,6 +12,8 @@ export interface ServerMethods {
     getArtifacts(params: { channelId: string; threadId: string | null }): Promise<any[]>;
     getAllArtifacts(): Promise<any[]>;
     deleteArtifact(artifactId: string): Promise<any[]>;
+    addArtifactToChannel(channelId: string, artifactId: string): Promise<void>;
+    removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void>;
     getSettings(): Promise<any>;
     updateSettings(settings: any): Promise<any>;
     getLogs(logType: 'llm' | 'system' | 'api'): Promise<any>;

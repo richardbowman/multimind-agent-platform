@@ -289,6 +289,14 @@ export class MessageHandler implements ServerMethods {
         return this.getAllArtifacts();
     }
 
+    async addArtifactToChannel(channelId: string, artifactId: string): Promise<void> {
+        await this.services.chatClient.addArtifactToChannel(channelId, artifactId);
+    }
+
+    async removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void> {
+        await this.services.chatClient.removeArtifactFromChannel(channelId, artifactId);
+    }
+
     async getLogs(logType: 'llm' | 'system' | 'api'): Promise<any> {
         switch (logType) {
             case 'llm':

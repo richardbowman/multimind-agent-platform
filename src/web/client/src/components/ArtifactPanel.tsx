@@ -1,6 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
+import { IconButton, Tooltip } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import { ArtifactViewer } from './ArtifactViewer';
 import { Box, Typography, List, ListItem, ListItemText, ListItemIcon, Drawer, IconButton, styled, useTheme, Divider } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -24,7 +27,13 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   
 
 export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
-    const { artifacts, fetchArtifacts } = useWebSocket();
+    const { 
+        artifacts, 
+        fetchArtifacts, 
+        currentChannelId,
+        addArtifactToChannel,
+        removeArtifactFromChannel 
+    } = useWebSocket();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const theme = useTheme();
@@ -75,7 +84,35 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                             primaryTypographyProps={{ color: '#fff' }}
                             secondaryTypographyProps={{ color: '#666' }}
                         />
-                        <ChevronRightIcon sx={{ color: '#666' }} />
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            <Tooltip title="Add to channel">
+                                <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (currentChannelId) {
+                                            addArtifactToChannel(currentChannelId, artifact.id);
+                                        }
+                                    }}
+                                >
+                                    <AddIcon fontSize="small" sx={{ color: '#666' }} />
+                                </IconButton>
+                            </Tooltip>
+                            <Tooltip title="Remove from channel">
+                                <IconButton
+                                    size="small"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (currentChannelId) {
+                                            removeArtifactFromChannel(currentChannelId, artifact.id);
+                                        }
+                                    }}
+                                >
+                                    <RemoveIcon fontSize="small" sx={{ color: '#666' }} />
+                                </IconButton>
+                            </Tooltip>
+                            <ChevronRightIcon sx={{ color: '#666' }} />
+                        </Box>
                     </ListItem>
                 ))}
             </List>
