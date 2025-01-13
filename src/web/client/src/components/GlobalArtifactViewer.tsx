@@ -88,12 +88,15 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 ))}
             </Drawer>
             <Box component="main" sx={{ 
-                flexGrow: 1, 
+                flexGrow: 1,
+                display: 'flex',
+                flexDirection: 'column',
                 p: 3, 
                 marginLeft: drawerOpen ? 0 : '-250px', 
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
                 flex: 1,
-                overflow: 'auto',
+                height: '100vh',
+                overflow: 'hidden',
                 position: 'relative'
             }}>
                 {selectedArtifact ? (

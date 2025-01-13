@@ -29,6 +29,14 @@ ${formatMetadata(artifact.metadata)}
 ${artifact.content?.toString()||"(no content available)"}`;
 
     return (
-        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        <Box sx={{ 
+            display: 'flex',
+            flexDirection: 'column',
+            height: '100%',
+            overflow: 'auto',
+            p: 3
+        }}>
+            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+        </Box>
     );
 };
