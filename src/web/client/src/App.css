@@ -587,6 +587,8 @@
     background: #1a1a1a;
     padding: 1rem;
     border-radius: 4px;
+    height: 100%;
+    m: 0;
 }
 
 .artifact-content pre {

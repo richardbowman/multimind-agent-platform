@@ -35,14 +35,15 @@ ${artifact.content?.toString()||"(no content available)"}`;
             height: '100%',
             width: '100%',
             overflow: 'auto',
-            p: 3,
-            flex: 1
+            flex: 1,
+            m: 0
         }}>
             <Box sx={{
                 flex: 1,
                 overflow: 'auto',
                 maxWidth: '800px',
-                mx: 'auto'
+                mx: 'auto',
+                p: 3
             }}>
                 <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
             </Box>
