@@ -85,23 +85,17 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                 onClose={() => setDrawerOpen(false)}
                 PaperProps={{
                     sx: {
-                        width: '40%',
-                        bgcolor: '#2a2a2a',
-                        borderLeft: '1px solid #444'
+                        width: '40%'
                     }
                 }}
             >
-                <DrawerHeader>
-                <IconButton onClick={handleDrawerClose}>
-                    {theme.direction === 'rtl' ? <ChevronLeftIcon /> : <ChevronRightIcon />}
-                </IconButton>
-                <Typography variant="h6" noWrap sx={{ flexGrow: 1 }} component="div">
-            Artifact
-          </Typography>
-                </DrawerHeader>
+                <DrawerHeader/>
                 {selectedArtifact && (
                     <Box sx={{ p: 2 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                            <Typography variant="h6" noWrap sx={{ flexGrow: 1 }} component="div">
+                                Artifact
+                            </Typography>
                             <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: '#999' }}>
                                 <ChevronRightIcon />
                             </IconButton>
