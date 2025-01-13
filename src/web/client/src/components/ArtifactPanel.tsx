@@ -6,6 +6,7 @@ import { Box, Typography, List, ListItem, ListItemText, ListItemIcon, Drawer, Ic
 import FolderIcon from '@mui/icons-material/Folder';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import CloseIcon from '@mui/icons-material/Close';
 
 interface ArtifactPanelProps {
     channelId: string | null;
@@ -123,7 +124,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                                 <ChevronRightIcon />
                             </IconButton>
                             <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: '#999' }}>
-                                <ChevronRightIcon />
+                                <CloseIcon />
                             </IconButton>
                         </Box>
                         <ArtifactViewer
