@@ -50,20 +50,24 @@ export class WebpageExecutor implements StepExecutor {
 
     async execute(params: ExecuteParams): Promise<StepResult> {
         const { step, projectId, message } = params;
-        // Extract URL from step or message
-        const url = this.extractUrl(params);
-        if (!url) {
-            return {
-                type: 'invalid_url',
-                finished: true,
-                response: {
-                    message: `No valid URL found in step: ${step}`
-                }
-            };
-        }
-
+        
         try {
+            // Extract URL from step or message
+            const url = this.extractUrl(params);
+            if (!url) {
+                return {
+                    type: 'invalid_url',
+                    finished: true,
+                    response: {
+                        message: `No valid URL found in step: ${step}`
+                    }
+                };
+            }
+
             const summary = await this.processPage(url, step || message || '', params.goal || params.overallGoal || '', projectId);
+            
+            // Ensure browser cleanup
+            await this.scrapeHelper.cleanup();
             
             // Get artifacts to calculate total token usage
             const artifacts = await this.artifactManager.getArtifacts({

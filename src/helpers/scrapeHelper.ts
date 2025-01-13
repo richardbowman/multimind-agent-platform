@@ -44,9 +44,29 @@ class ScrapeHelper {
     }
 
     async cleanup(): Promise<void> {
-        if (this.browser) {
-            await this.browser.close();
-            this.browser = null;
+        try {
+            if (this.browser) {
+                // Get all open contexts
+                const contexts = this.browser.contexts();
+                for (const context of contexts) {
+                    try {
+                        await context.close();
+                    } catch (error) {
+                        Logger.warn('Error closing browser context:', error);
+                    }
+                }
+                
+                // Close the browser
+                await this.browser.close();
+                this.browser = null;
+            }
+            
+            if (this.electronWindow) {
+                this.electronWindow.close();
+                this.electronWindow = null;
+            }
+        } catch (error) {
+            Logger.error('Error during cleanup:', error);
         }
     }
     async scrapePage(url: string, metadata: Record<string, any> = {}): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot: Buffer, artifactId: string }> {
@@ -163,8 +183,15 @@ class ScrapeHelper {
             throw error;
         } finally {
             if (this.settings.scrapingProvider === 'puppeteer' && page) {
-                await page.close();
+                try {
+                    await page.close();
+                } catch (error) {
+                    Logger.warn('Error closing page:', error);
+                }
             }
+            
+            // Ensure cleanup happens even if there's an error
+            await this.cleanup();
         }
     }
 
