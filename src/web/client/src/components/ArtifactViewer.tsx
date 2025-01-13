@@ -38,9 +38,24 @@ ${artifact.content?.toString()||"(no content available)"}`;
         }}>
             <Box sx={{
                 maxWidth: '800px',
-                mx: 'auto'
+                mx: 'auto',
+                display: 'flex',
+                flexDirection: 'column'
             }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+                <Box sx={{ flex: 0 }}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{`# ${artifact.metadata?.title || artifact.id}
+
+## Metadata
+${formatMetadata(artifact.metadata)}`}</ReactMarkdown>
+                </Box>
+                <Box sx={{ 
+                    flex: 1,
+                    overflow: 'auto',
+                    mt: 2
+                }}>
+                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{`## Content
+${artifact.content?.toString()||"(no content available)"}`}</ReactMarkdown>
+                </Box>
             </Box>
         </Box>
     );
