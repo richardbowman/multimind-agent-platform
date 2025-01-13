@@ -145,7 +145,8 @@ IMPORTANT RULES:
                 metadata: {
                     title: result.title,
                     operation: result.operation || 'create',
-                    previousVersion: result.artifactId ? result.artifactId : undefined
+                    previousVersion: result.artifactId ? result.artifactId : undefined,
+                    projectId: params.projectId
                 }
             };
 

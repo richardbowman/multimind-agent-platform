@@ -58,11 +58,11 @@ export const GoalTemplates: GoalTemplate[] = [
         supportingAgents: ['2e330aba-4888-42b8-8685-ecdc7f4b1b43'], // ProjectManager
         initialTasks: [
             {
-                description: 'Define project requirements',
+                description: 'Understand the product vision and product requirements to generate product requirements',
                 type: 'planning',
             },
             {
-                description: 'Set up development environment',
+                description: 'Understand desired technologies to use, and document a technical plan',
                 type: 'setup',
                 dependsOn: ['define-project-requirements']
             }

@@ -1,4 +1,4 @@
-import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -68,8 +68,8 @@ export class ComplexProjectExecutor implements StepExecutor {
             };
 
             // Assign tasks to appropriate agents
-            const researchManager = params.agents?.find(a => a.type === 'research-manager');
-            const contentManager = params.agents?.find(a => a.type === 'content-manager');
+            const researchManager = params.agents?.find(a => a.handle === '@research');
+            const contentManager = params.agents?.find(a => a.handle === '@content');
             
             if (researchManager) {
                 this.taskManager.assignTaskToAgent(researchTaskId, researchManager.id);
