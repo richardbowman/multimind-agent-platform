@@ -85,6 +85,7 @@ ${params.previousResult ? `Consider this previous content:\n${JSON.stringify(par
             return {
                 type: "generate-artifact",
                 finished: true,
+                needsUserInput: true,
                 response: {
                     message: 'Failed to generate the artifact. Please try again later.'
                 }
