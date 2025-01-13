@@ -30,6 +30,7 @@ export interface ChatClient {
         isPrivate?: boolean;
         members?: string[];
         defaultResponderId?: string;
+        artifactIds?: string[];
     }>;
     
     /**
@@ -49,6 +50,20 @@ export interface ChatClient {
      * @returns Promise resolving when deletion is complete
      */
     deleteChannel(channelId: string): Promise<void>;
+    
+    /**
+     * Add an artifact ID to a channel's linked artifacts
+     * @param channelId - ID of the channel
+     * @param artifactId - ID of the artifact to add
+     */
+    addArtifactToChannel(channelId: string, artifactId: string): Promise<void>;
+    
+    /**
+     * Remove an artifact ID from a channel's linked artifacts
+     * @param channelId - ID of the channel
+     * @param artifactId - ID of the artifact to remove
+     */
+    removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void>;
 }
 
 export interface ProjectChainResponse {

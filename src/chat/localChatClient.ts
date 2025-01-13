@@ -64,6 +64,7 @@ export class LocalChatStorage extends EventEmitter {
         members?: string[];
         defaultResponderId?: string;
         projectId?: string;
+        artifactIds?: string[];
     }> = {};
     posts: ChatPost[] = [];
     callbacks: Function[] = [];
@@ -223,6 +224,7 @@ export class LocalTestClient implements ChatClient {
         isPrivate?: boolean;
         members?: string[];
         defaultResponderId?: string;
+        artifactIds?: string[];
     }> {
         const channelData = this.storage.channelData[channelId];
         if (!channelData) {
@@ -242,6 +244,33 @@ export class LocalTestClient implements ChatClient {
             }
         });
         return;
+    }
+
+    public async addArtifactToChannel(channelId: string, artifactId: string): Promise<void> {
+        if (!this.channelData[channelId]) {
+            throw new Error(`Channel ${channelId} not found`);
+        }
+        
+        if (!this.channelData[channelId].artifactIds) {
+            this.channelData[channelId].artifactIds = [];
+        }
+        
+        if (!this.channelData[channelId].artifactIds?.includes(artifactId)) {
+            this.channelData[channelId].artifactIds?.push(artifactId);
+            await this.storage.save();
+        }
+    }
+
+    public async removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void> {
+        if (!this.channelData[channelId]) {
+            throw new Error(`Channel ${channelId} not found`);
+        }
+        
+        if (this.channelData[channelId].artifactIds) {
+            this.channelData[channelId].artifactIds = 
+                this.channelData[channelId].artifactIds?.filter(id => id !== artifactId);
+            await this.storage.save();
+        }
     }
 
     public async deleteChannel(channelId: string): Promise<void> {
