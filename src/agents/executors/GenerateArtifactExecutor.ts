@@ -40,19 +40,45 @@ export class GenerateArtifactExecutor implements StepExecutor {
         const schema = {
             type: 'object',
             properties: {
-                artifactId: { type: 'string' },
+                artifactId: { 
+                    type: 'string',
+                    description: 'ID of document to modify (leave blank for new document)'
+                },
                 operation: { 
                     type: 'string',
-                    enum: ['replace', 'append']
+                    enum: ['create', 'replace', 'append'],
+                    description: 'Operation to perform: "create" for new documents, "replace" or "append" for existing ones'
                 },
-                title: { type: 'string' },
-                content: { type: 'string' },
-                confirmationMessage: { type: 'string' }
+                title: { 
+                    type: 'string',
+                    description: 'Title for the document'
+                },
+                content: { 
+                    type: 'string',
+                    description: 'Content for the document'
+                },
+                confirmationMessage: { 
+                    type: 'string',
+                    description: 'Message describing what was done'
+                }
             },
-            required: ['title', 'content', 'confirmationMessage'],
-            dependencies: {
-                artifactId: {
-                    required: ['operation']
+            required: ['title', 'content', 'confirmationMessage', 'operation'],
+            if: {
+                properties: {
+                    artifactId: { const: '' }
+                }
+            },
+            then: {
+                properties: {
+                    operation: { const: 'create' }
+                }
+            },
+            else: {
+                properties: {
+                    operation: { 
+                        enum: ['replace', 'append'],
+                        description: 'Must be "replace" or "append" when modifying existing document'
+                    }
                 }
             }
         };
@@ -98,18 +124,22 @@ export class GenerateArtifactExecutor implements StepExecutor {
         
         ${qaContext}Generate or modify a Markdown document based on the goal.
 You have these options:
-1. Create a new document (leave artifactId blank)
-2. Replace an existing document (specify artifactId and set operation to "replace")
-3. Append to an existing document (specify artifactId and set operation to "append")
+1. Create a NEW document (leave artifactId blank and set operation to "create")
+2. Replace an EXISTING document (specify artifactId and set operation to "replace")
+3. Append to an EXISTING document (specify artifactId and set operation to "append")
 
 ${existingContent}
 
 Provide:
-- artifactId: ID of document to modify (or blank for new)
-- operation: "replace" or "append" (only if artifactId provided)
+- artifactId: ID of document to modify (leave blank for new document)
+- operation: Must be "create" for new documents, "replace" or "append" for existing ones
 - title: Document title
 - content: New or additional content
-- confirmationMessage: Message describing what was done`;
+- confirmationMessage: Message describing what was done
+
+IMPORTANT RULES:
+- For NEW documents: artifactId must be blank and operation must be "create"
+- For EXISTING documents: artifactId must be provided and operation must be "replace" or "append"`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         
