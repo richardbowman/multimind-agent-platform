@@ -13,38 +13,6 @@ export class RouterAgent extends Agent {
         super(params);
     }
 
-    private async waitForConfirmation(confirmationPostId: string, channelId: string): Promise<ChatPost | null> {
-        return new Promise((resolve) => {
-            const timeout = setTimeout(() => {
-                this.confirmationTimeouts.delete(confirmationPostId);
-                resolve(null);
-            }, 30000); // 30 second timeout
-
-            this.confirmationTimeouts.set(confirmationPostId, timeout);
-
-            const messageHandler = async (post: ChatPost) => {
-                if (post.channel_id === channelId && 
-                    post.getRootId() === confirmationPostId &&
-                    post.user_id !== this.userId) {
-                    
-                    // Clear the timeout
-                    const timeout = this.confirmationTimeouts.get(confirmationPostId);
-                    if (timeout) {
-                        clearTimeout(timeout);
-                        this.confirmationTimeouts.delete(confirmationPostId);
-                    }
-
-                    // Stop listening
-                    this.chatClient.closeCallback();
-                    
-                    resolve(post);
-                }
-            };
-
-            this.chatClient.receiveMessages(messageHandler);
-        });
-    }
-
     async initialize(): Promise<void> {
     }
 
@@ -63,47 +31,45 @@ export class RouterAgent extends Agent {
                 .reverse()
                 .find(p => p.user_id === this.userId);
             
-            if (lastAssistantPost?.message?.includes("would be best suited to help you")) {
-                // Analyze the user's response to see if they confirmed
-                const confirmationSchema = {
-                    type: "object",
-                    properties: {
-                        confirmed: { type: "boolean" },
-                        selectedAgent: { type: "string" },
-                        messageToAgent: { type: "string" }
-                    },
-                    required: ["confirmed", "selectedAgent"]
-                };
+            // Analyze the user's response to see if they confirmed
+            const confirmationSchema = {
+                type: "object",
+                properties: {
+                    confirmed: { type: "boolean" },
+                    selectedAgent: { type: "string" },
+                    messageToAgent: { type: "string" }
+                },
+                required: ["confirmed", "selectedAgent"]
+            };
 
-                const confirmationPrompt = `Analyze the user's response to determine if they confirmed the agent suggestion.
-                Assistant Suggestion: ${lastAssistantPost.message}
-                User Response: ${userPost.message}
+            const confirmationPrompt = `Analyze the user's response to determine if they confirmed the agent suggestion.
+            Assistant Suggestion: ${lastAssistantPost?.message}
+            User Response: ${userPost.message}
 
-                Respond with:
-                - confirmed: true if the user agreed to the suggestion, false otherwise
-                - selectedAgent: The userId of the agent that was suggested
-                - messageToAgent: A well-formed message to send to the suggested agent including the original request and any additional context from the user's response`;
+            Respond with:
+            - confirmed: true if the user agreed to the suggestion, false otherwise
+            - selectedAgent: The userId of the agent that was suggested
+            - messageToAgent: A well-formed message to send to the suggested agent including the original request and any additional context from the user's response`;
 
-                const confirmationResponse = await this.llmService.generateStructured(
-                    userPost,
-                    new StructuredOutputPrompt(confirmationSchema, confirmationPrompt),
-                    [],
-                    1024,
-                    512
+            const confirmationResponse = await this.llmService.generateStructured(
+                userPost,
+                new StructuredOutputPrompt(confirmationSchema, confirmationPrompt),
+                [],
+                1024,
+                512
+            );
+
+            if (confirmationResponse.confirmed) {
+                // Get the agent handle directly from the confirmation response
+                await this.chatClient.postInChannel(
+                    userPost.channel_id,
+                    `${confirmationResponse.selectedAgent} ${confirmationResponse.messageToAgent}`,
+                    {
+                        "routed-from": userPost.user_id,
+                        "routed-by": this.userId
+                    }
                 );
-
-                if (confirmationResponse.confirmed) {
-                    // Get the agent handle directly from the confirmation response
-                    await this.chatClient.postInChannel(
-                        userPost.channel_id,
-                        `@${confirmationResponse.selectedAgent} ${confirmationResponse.messageToAgent}`,
-                        {
-                            "routed-from": userPost.user_id,
-                            "routed-by": this.userId
-                        }
-                    );
-                    return;
-                }
+                return;
             }
         }
 
@@ -123,8 +89,11 @@ export class RouterAgent extends Agent {
             .filter(memberId => this.userId !== memberId)
             .map(memberId => {
                 const agent = Object.values(this.settings.agents).find(a => a.userId === memberId);
-                return agent ? `- ${agent.handle}: ${agent.description}` : null;
-            })
+                return agent
+            });
+
+        const agentPromptOptions = agentOptions
+            .map(agent => `- ${agent?.handle}: ${agent?.description}`)
             .filter(Boolean)
             .join('\n');
 
@@ -133,7 +102,7 @@ export class RouterAgent extends Agent {
             properties: {
                 selectedAgent: { 
                     type: "string",
-                    enum: channelData.members || []
+                    enum: agentOptions.map(a => a?.handle) || []
                 },
                 reasoning: { type: "string" },
                 confidence: { 
@@ -149,16 +118,16 @@ export class RouterAgent extends Agent {
         const project = channelData?.projectId ? this.projects.getProject(channelData.projectId) : null;
         const projectTasks = project ? Object.values(project.tasks) : [];
         
-        const prompt = `Analyze the user's request and select the most appropriate agent to handle it.
+        const prompt = `Analyze the user's request and select the most appropriate agent to handle it. If the request is unclear or the user is just introducing themselves, select the first not started project task.
         Available agents:
-        ${agentOptions}
+        ${agentPromptOptions}
 
         ${project ? `Channel Project Details:
         - Name: ${project.name}
         - Goal: ${project.metadata?.description || 'No specific goal'}
         - Status: ${project.metadata?.status || 'active'}
         - Tasks: ${projectTasks.length > 0 ? 
-            projectTasks.map(t => `\n  * ${t.description} (${t.complete ? 'complete' : 'in progress'})`).join('') 
+            projectTasks.map(t => `\n  * ${t.description} (${t.complete ? 'complete' : t.inProgress ? 'in progress' : 'not started'})`).join('') 
             : 'No tasks'}
         ` : ''}
 
