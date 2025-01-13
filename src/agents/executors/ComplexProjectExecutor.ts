@@ -17,7 +17,7 @@ export class ComplexProjectExecutor implements StepExecutor {
         this.taskManager = params.taskManager!;
     }
 
-    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         const structuredPrompt = new StructuredOutputPrompt(
             {
                 type: 'object',
@@ -35,7 +35,7 @@ export class ComplexProjectExecutor implements StepExecutor {
 
         try {
             const responseJSON = await this.modelHelpers.generate({
-                message: goal,
+                message: params.message || params.stepGoal,
                 instructions: structuredPrompt
             });
 
@@ -50,7 +50,7 @@ export class ComplexProjectExecutor implements StepExecutor {
                 id: researchTaskId,
                 description: `${researchTask} [${projectGoal}]`,
                 creator: 'system',
-                projectId: projectId,
+                projectId: params.projectId,
                 type: "web-research",
                 complete: false
             };
@@ -61,7 +61,7 @@ export class ComplexProjectExecutor implements StepExecutor {
                 id: contentTaskId,
                 description: `${contentTask} [${projectGoal}]`,
                 creator: 'system',
-                projectId: projectId,
+                projectId: params.projectId,
                 type: "create-full-content",
                 complete: false,
                 dependsOn: researchTaskId
