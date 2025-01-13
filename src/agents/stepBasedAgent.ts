@@ -28,6 +28,10 @@ export interface ExecuteNextStepParams {
     };
 }
 
+export interface ExecuteStepParams extends ExecuteNextStepParams {
+    task: Task
+}
+
 export interface StepResult {
     type?: string;
     projectId?: string;
