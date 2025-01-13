@@ -17,6 +17,17 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { Artifact } from 'src/tools/artifact';
 
+export interface ExecuteNextStepParams {
+    projectId: string;
+    userPost?: ChatPost;
+    context?: {
+        channelId?: string;
+        threadId?: string;
+        artifacts?: Artifact[];
+        projects?: Project[];
+    };
+}
+
 export interface StepResult {
     type?: string;
     projectId?: string;
@@ -130,7 +141,15 @@ export abstract class StepBasedAgent extends Agent {
         
         const posts = [params.userPost];
         const plan = await this.planSteps(projectId, posts);
-        await this.executeNextStep(projectId, params.userPost);
+        await this.executeNextStep({
+            projectId,
+            userPost: params.userPost,
+            context: {
+                channelId: params.userPost?.channel_id,
+                threadId: params.userPost?.thread_id,
+                projects: params.projects
+            }
+        });
     }
 
     protected async handlerThread(params: HandlerParams): Promise<void> {
@@ -148,7 +167,15 @@ export abstract class StepBasedAgent extends Agent {
             });
 
             const plan = await this.planSteps(projectId, [params.rootPost||{message: "(missing root post)"}, ...params.threadPosts||[], params.userPost]);
-            await this.executeNextStep(projectId, params.userPost);
+            await this.executeNextStep({
+                projectId,
+                userPost: params.userPost,
+                context: {
+                    channelId: params.userPost?.channel_id,
+                    threadId: params.userPost?.thread_id,
+                    projects: params.projects
+                }
+            });
             return;
         }
 
@@ -161,7 +188,15 @@ export abstract class StepBasedAgent extends Agent {
         }
 
         // Continue with existing tasks without replanning
-        await this.executeNextStep(projectId, params.userPost);
+        await this.executeNextStep({
+            projectId,
+            userPost: params.userPost,
+            context: {
+                channelId: params.userPost?.channel_id,
+                threadId: params.userPost?.thread_id,
+                projects: params.projects
+            }
+        });
     }
 
     protected registerStepExecutor(executor: StepExecutor): void {
@@ -203,7 +238,8 @@ export abstract class StepBasedAgent extends Agent {
         return steps;
     }
 
-    protected async executeNextStep(projectId: string, userPost?: ChatPost): Promise<void> {
+    protected async executeNextStep(params: ExecuteNextStepParams): Promise<void> {
+        const { projectId, userPost, context } = params;
         const task = this.projects.getNextTask(projectId);
         if (!task) {
             Logger.warn('No tasks found to execute');
@@ -268,7 +304,12 @@ export abstract class StepBasedAgent extends Agent {
                 message: task.description
             }]);
 
-            await this.executeNextStep(projectId);
+            await this.executeNextStep({
+                projectId,
+                context: {
+                    projects: params.projects
+                }
+            });
 
         } catch (error) {
             Logger.error(`Error processing task ${task.id}`, error);
@@ -456,6 +497,14 @@ export abstract class StepBasedAgent extends Agent {
         // Get conversation history for this thread
         const posts = await this.chatClient.getThreadPosts(params.userPost.getRootId() || params.userPost.id);
         const plan = await this.planSteps(project.id, posts);
-        await this.executeNextStep(project.id, params.userPost);
+        await this.executeNextStep({
+            projectId: project.id,
+            userPost: params.userPost,
+            context: {
+                channelId: params.userPost?.channel_id,
+                threadId: params.userPost?.thread_id,
+                projects: params.projects
+            }
+        });
     }
 }
