@@ -24,55 +24,107 @@ export class RouterAgent extends Agent {
     protected async handlerThread(params: HandlerParams): Promise<void> {
         const { userPost, threadPosts = [] } = params;
         
-        // Check if this is a confirmation response to a routing suggestion
-        if (threadPosts.length > 0) {
-            const lastAssistantPost = threadPosts
-                .slice()
-                .reverse()
-                .find(p => p.user_id === this.userId);
-            
-            // Analyze the user's response to see if they confirmed
-            const confirmationSchema = {
-                type: "object",
-                properties: {
-                    confirmed: { type: "boolean" },
-                    selectedAgent: { type: "string" },
-                    messageToAgent: { type: "string" }
+        // Get channel data including any project goals
+        const channelData = await this.chatClient.getChannelData(userPost.channel_id);
+        const project = channelData?.projectId 
+            ? this.projects.getProject(channelData.projectId)
+            : null;
+
+        // Get agent descriptions from settings for channel members
+        const agentOptions = (channelData.members || [])
+            .filter(memberId => this.userId !== memberId)
+            .map(memberId => {
+                const agent = Object.values(this.settings.agents).find(a => a.userId === memberId);
+                return agent
+            });
+
+        const agentPromptOptions = agentOptions
+            .map(agent => `- ${agent?.handle}: ${agent?.description}`)
+            .filter(Boolean)
+            .join('\n');
+
+        const schema = {
+            type: "object",
+            properties: {
+                selectedAgent: { 
+                    type: "string",
+                    enum: agentOptions.map(a => a?.handle) || []
                 },
-                required: ["confirmed", "selectedAgent"]
-            };
+                reasoning: { type: "string" },
+                confidence: { 
+                    type: "number",
+                    minimum: 0,
+                    maximum: 1
+                },
+                response: {
+                    type: "string",
+                    description: "The message to send to the user, which may include questions, explanations, or suggestions"
+                },
+                readyToRoute: {
+                    type: "boolean",
+                    description: "True if we have enough information to route to another agent"
+                }
+            },
+            required: ["response", "reasoning", "confidence", "readyToRoute"]
+        };
 
-            const confirmationPrompt = `Analyze the user's response to determine if they confirmed the agent suggestion.
-            Assistant Suggestion: ${lastAssistantPost?.message}
-            User Response: ${userPost.message}
+        // Get the full conversation context
+        const conversationContext = threadPosts
+            .map(p => `${p.user_id === this.userId ? 'Assistant' : 'User'}: ${p.message}`)
+            .join('\n');
 
-            Respond with:
-            - confirmed: true if the user agreed to the suggestion, false otherwise
-            - selectedAgent: The userId of the agent that was suggested
-            - messageToAgent: A well-formed message to send to the suggested agent including the original request and any additional context from the user's response`;
+        const prompt = `Analyze the ongoing conversation and determine the best way to respond. Follow these guidelines:
 
-            const confirmationResponse = await this.llmService.generateStructured(
-                userPost,
-                new StructuredOutputPrompt(confirmationSchema, confirmationPrompt),
-                [],
-                1024,
-                512
-            );
+1. If the request is clear and we have enough information:
+   - Set readyToRoute: true
+   - Select the most appropriate agent
+   - Explain why they're the best choice
+   - Include relevant project/task context
 
-            if (confirmationResponse.confirmed) {
-                // Get the agent handle directly from the confirmation response
-                await this.chatClient.postInChannel(
-                    userPost.channel_id,
-                    `${confirmationResponse.selectedAgent} ${confirmationResponse.messageToAgent}`,
-                    {
-                        "routed-from": userPost.user_id,
-                        "routed-by": this.userId
-                    }
-                );
-                return;
-            }
+2. If more information is needed:
+   - Set readyToRoute: false
+   - Politely ask clarifying questions
+   - Explain the channel's current project goals and tasks
+   - Suggest possible directions for the conversation
+
+Available agents:
+${agentPromptOptions}
+
+${project ? `Channel Project Details:
+- Name: ${project.name}
+- Goal: ${project.metadata?.description || 'No specific goal'}
+- Status: ${project.metadata?.status || 'active'}
+` : ''}
+
+Conversation context:
+${conversationContext}
+
+Respond with:
+- selectedAgent: The best agent to handle this (optional if unclear)
+- reasoning: Your detailed reasoning including any questions for clarification
+- confidence: Your confidence level (0-1) in this selection
+- response: The message to send to the user
+- readyToRoute: True if we have enough information to route to another agent`;
+
+        const response = await this.llmService.generateStructured(
+            userPost,
+            new StructuredOutputPrompt(schema, prompt),
+            [],
+            1024,
+            512
+        );
+
+        // Always send the response message
+        await this.reply(userPost, {
+            message: response.response
+        });
+
+        // If we're ready to route and have high confidence, suggest the agent
+        if (response.readyToRoute && response.selectedAgent && response.confidence > 0.7) {
+            await this.reply(userPost, {
+                message: `Based on our conversation, I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in?`
+            });
         }
-
     }
 
     protected async handleChannel(params: HandlerParams): Promise<void> {
