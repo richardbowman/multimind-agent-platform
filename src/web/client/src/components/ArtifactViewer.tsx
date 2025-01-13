@@ -40,9 +40,13 @@ ${artifact.content?.toString()||"(no content available)"}`;
                 maxWidth: '800px',
                 mx: 'auto',
                 display: 'flex',
-                flexDirection: 'column'
+                flexDirection: 'column',
+                flex: 1
             }}>
-                <Box sx={{ flex: 0 }}>
+                <Box sx={{ 
+                    flex: 0,
+                    mb: 2
+                }}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{`# ${artifact.metadata?.title || artifact.id}
 
 ## Metadata
@@ -50,8 +54,7 @@ ${formatMetadata(artifact.metadata)}`}</ReactMarkdown>
                 </Box>
                 <Box sx={{ 
                     flex: 1,
-                    overflow: 'auto',
-                    mt: 2
+                    overflow: 'auto'
                 }}>
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{`## Content
 ${artifact.content?.toString()||"(no content available)"}`}</ReactMarkdown>

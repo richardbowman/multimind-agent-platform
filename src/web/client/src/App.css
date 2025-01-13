@@ -587,6 +587,7 @@
     padding: 1rem;
     border-radius: 4px;
     overflow: auto;
+    flex: 1;
 }
 
 .artifact-content pre {
