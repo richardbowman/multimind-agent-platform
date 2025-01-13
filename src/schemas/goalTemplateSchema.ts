@@ -55,7 +55,7 @@ export const GoalTemplates: GoalTemplate[] = [
         id: 'software-project',
         name: 'Software Development Project',
         description: 'Template for managing a software development project',
-        supportingAgents: ['project-manager', 'code-reviewer', 'qa-tester'],
+        supportingAgents: ['2e330aba-4888-42b8-8685-ecdc7f4b1b43'], // ProjectManager
         initialTasks: [
             {
                 description: 'Define project requirements',
@@ -72,7 +72,10 @@ export const GoalTemplates: GoalTemplate[] = [
         id: 'marketing-campaign',
         name: 'Marketing Campaign',
         description: 'Template for running a marketing campaign',
-        supportingAgents: ['content-creator', 'analyst', 'social-media-manager'],
+        supportingAgents: [
+            '66025743-45bc-4625-a27f-52aa09dde128', // ContentWriter
+            '9d039c4e-f99d-4fb7-a160-452ac261569c' // ContentManager
+        ],
         initialTasks: [
             {
                 description: 'Define campaign goals',
