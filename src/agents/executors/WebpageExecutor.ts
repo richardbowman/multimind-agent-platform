@@ -52,7 +52,7 @@ export class WebpageExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const { step, projectId, message } = params;
         // Extract URL from step or message
-        const url = this.extractUrlFromStep(step || message || '');
+        const url = this.extractUrl(params);
         if (!url) {
             return {
                 type: 'invalid_url',
@@ -106,13 +106,33 @@ export class WebpageExecutor implements StepExecutor {
         }
     }
 
-    private extractUrlFromStep(step: string): string | null {
+    private extractUrl(params: ExecuteParams): string | null {
         try {
-            const urlPattern = /https?:\/\/[^\s]+/;
-            const match = step.match(urlPattern);
-            return match ? match[0] : null;
+            // First check message and step directly
+            const sources = [
+                params.message,
+                params.step,
+                ...(params.previousResult || []).map(r => r.message)
+            ];
+
+            for (const source of sources) {
+                if (!source) continue;
+                
+                // If source is already a valid URL
+                if (source.startsWith('http://') || source.startsWith('https://')) {
+                    return source;
+                }
+                
+                // Try to extract URL from text
+                const urlPattern = /https?:\/\/[^\s]+/;
+                const match = source.match(urlPattern);
+                if (match) {
+                    return match[0];
+                }
+            }
+            return null;
         } catch (error) {
-            Logger.error('Error extracting URL from step', error);
+            Logger.error('Error extracting URL', error);
             return null;
         }
     }
