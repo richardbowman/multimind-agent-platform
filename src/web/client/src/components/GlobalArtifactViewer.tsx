@@ -35,7 +35,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     }, [artifacts]);
 
     return (
-        <Box sx={{ display: 'flex', height: 'calc(100vh - 48px)' }}>
+        <Box sx={{ display: 'flex', flex: 1 }}>
             <Drawer
                 variant="persistent"
                 anchor="left"
@@ -90,16 +90,16 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             <Box component="main" sx={{ 
                 flexGrow: 1, 
                 p: 3, 
-                marginLeft: drawerOpen ? '250px' : 0, 
+                marginLeft: drawerOpen ? 0 : '-250px', 
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
-                height: 'calc(100vh - 64px)', // Account for AppBar height
+                flex: 1,
                 overflow: 'auto',
                 position: 'relative'
             }}>
                 {selectedArtifact ? (
                     <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
                 ) : (
-                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%', color: '#666', fontStyle: 'italic' }}>
+                    <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'center', flex:1, color: '#666', fontStyle: 'italic' }}>
                         Select an artifact to view its details
                     </Box>
                 )}
