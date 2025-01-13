@@ -7,7 +7,7 @@
     "embeddings": "llama_cpp"
   },
   "searchProvider": "duckduckgo",
-  "scrapeProvider": "electron",
+  "scrapingProvider": "electron",
   "duckduckgo": {
     "headless": true,
     "timeout": 30000
