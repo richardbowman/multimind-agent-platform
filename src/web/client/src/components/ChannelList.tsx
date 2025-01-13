@@ -168,7 +168,10 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                     }}
                                 >
                                     <CardActionArea 
-                                        onClick={() => setSelectedTemplate(template.id)}
+                                        onClick={() => {
+                                            setSelectedTemplate(template.id);
+                                            setSelectedAgents(template.supportingAgents);
+                                        }}
                                         sx={{ height: '100%' }}
                                     >
                                         <CardContent>
