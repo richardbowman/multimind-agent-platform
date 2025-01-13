@@ -61,7 +61,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
         if (artifactIds.length > 0) {
             try {
                 const artifacts = await Promise.all(
-                    artifactIds.map(id => this.artifactManager.getArtifact(id))
+                    artifactIds.map(id => this.artifactManager.loadArtifact(id))
                 );
                 
                 existingContent = `Existing artifacts:\n${
@@ -102,8 +102,8 @@ Provide:
             // Prepare the artifact
             let finalContent = result.content;
             if (result.artifactId && result.operation === 'append') {
-                const existingArtifact = await this.artifactManager.getArtifact(result.artifactId);
-                finalContent = `${existingArtifact.content}\n\n${result.content}`;
+                const existingArtifact = await this.artifactManager.loadArtifact(result.artifactId);
+                finalContent = `${existingArtifact?.content||""}\n\n${result.content}`;
             }
 
             const artifact: Artifact = {
