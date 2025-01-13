@@ -3,6 +3,7 @@ import { useWebSocket } from '../contexts/DataContext';
 
 interface CommandInputProps {
     onSendMessage: (message: string) => void;
+    currentChannel?: string;
 }
 
 const COMMANDS = [
@@ -19,7 +20,19 @@ export const CommandInput: React.FC<CommandInputProps> = ({ onSendMessage }) => 
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { channels, handles } = useWebSocket();
-    const userHandles = handles.map(h => h.handle);
+    
+    // Get handles filtered by current channel members
+    const userHandles = React.useMemo(() => {
+        if (!currentChannel) return handles.map(h => h.handle);
+        
+        const channel = channels.find(c => c.id === currentChannel);
+        if (!channel) return handles.map(h => h.handle);
+        
+        // Filter handles to only those in the current channel
+        return handles
+            .filter(h => channel.members.includes(h.id))
+            .map(h => h.handle);
+    }, [handles, channels, currentChannel]);
 
     useEffect(() => {
         const handleClickOutside = (event: MouseEvent) => {
