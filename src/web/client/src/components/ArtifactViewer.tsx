@@ -33,10 +33,19 @@ ${artifact.content?.toString()||"(no content available)"}`;
             display: 'flex',
             flexDirection: 'column',
             height: '100%',
+            width: '100%',
             overflow: 'auto',
-            p: 3
+            p: 3,
+            flex: 1
         }}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+            <Box sx={{
+                flex: 1,
+                overflow: 'auto',
+                maxWidth: '800px',
+                mx: 'auto'
+            }}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
+            </Box>
         </Box>
     );
 };
