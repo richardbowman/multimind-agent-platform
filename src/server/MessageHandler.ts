@@ -218,10 +218,11 @@ export class MessageHandler implements ServerMethods {
             throw new Error('Chat client is not initialized');
         }
         const channels = await this.services.chatClient.getChannels();
-        return channels.map(([id, name]) => ({
+        return channels.map(([id, name, members]) => ({
             id,
             name: name.replace('#', ''),
-            description: ''
+            description: '',
+            members: members || []
         }));
     }
 

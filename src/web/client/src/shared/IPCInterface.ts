@@ -20,6 +20,7 @@ export interface ClientChannel {
     id: string;
     name: string;
     description?: string;
+    members: string[];
 }
 
 export interface ClientThread {

@@ -26,7 +26,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
         if (!currentChannel) return handles.map(h => h.handle);
         
         const channel = channels.find(c => c.id === currentChannel);
-        if (!channel) return handles.map(h => h.handle);
+        if (!channel || !channel.members) return handles.map(h => h.handle);
         
         // Filter handles to only those in the current channel
         return handles
