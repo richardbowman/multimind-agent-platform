@@ -51,7 +51,7 @@ export class ComplexProjectExecutor implements StepExecutor {
                 description: `${researchTask} [${projectGoal}]`,
                 creator: 'system',
                 projectId: projectId,
-                type: ResearchActivityType.WebResearch,
+                type: "web-research",
                 complete: false
             };
 
