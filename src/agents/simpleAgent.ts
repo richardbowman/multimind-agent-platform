@@ -4,7 +4,7 @@ import { ContentProject, ContentTask } from './contentManager';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { Project, Task } from 'src/tools/taskManager';
 
-export class SimpleAgent extends Agent<ContentProject, ContentTask> {
+export class SimpleAgent extends Agent {
     protected projectCompleted(project: Project<Task>): void {
         throw new Error('Method not implemented.');
     }

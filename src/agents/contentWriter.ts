@@ -4,7 +4,7 @@ import { ModelMessageHistory } from 'src/llm/lmstudioService';
 import Logger from 'src/helpers/logger';
 import { ContentProject, ContentTask } from './contentManager';
 
-export class ContentWriter extends Agent<ContentProject, ContentTask> {
+export class ContentWriter extends Agent {
     async initialize?(): Promise<void> { }
     
     protected handlerThread(params: HandlerParams): Promise<void> {

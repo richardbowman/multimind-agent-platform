@@ -1,4 +1,4 @@
-import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -11,6 +11,7 @@ import { ResearchUnderstandingResponse } from 'src/schemas/ResearchUnderstanding
 @StepExecutorDecorator('understand-research-goals', 'Ensure research goals are clear and well-defined')
 export class ResearchGoalsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');

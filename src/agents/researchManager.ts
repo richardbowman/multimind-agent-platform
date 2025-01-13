@@ -8,14 +8,14 @@ import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ResearchDecompositionExecutor } from './executors/ResearchDecompositionExecutor';
 import { ResearchAggregationExecutor } from './executors/ResearchAggregationExecutor';
-import { OnboardingGoalsExecutor } from "./executors/UnderstandGoalsExecutor";
+import { UnderstandGoalsExecutor } from "./executors/UnderstandGoalsExecutor";
 import { ResearchGoalsExecutor } from "./executors/ResearchGoalsExecutor";
 
 export interface ResearchProject extends Project<Task> {
     goal: string;
 }
 
-export class ResearchManager extends StepBasedAgent<ResearchProject, Task> {
+export class ResearchManager extends StepBasedAgent {
     protected processTask(task: Task): Promise<void> {
         throw new Error("Method not implemented.");
     }
@@ -24,7 +24,6 @@ export class ResearchManager extends StepBasedAgent<ResearchProject, Task> {
         const modelHelpers = new ModelHelpers(params.llmService, params.userId);
         const planner = new MultiStepPlanner(params.llmService, params.taskManager, params.userId, modelHelpers);
         super(params, planner);
-        this.modelHelpers = modelHelpers;
 
         // Create standardized params
         const executorParams = {
@@ -33,7 +32,8 @@ export class ResearchManager extends StepBasedAgent<ResearchProject, Task> {
             artifactManager: this.artifactManager,
             vectorDBService: params.vectorDBService,
             userId: params.userId,
-            modelHelpers: this.modelHelpers
+            modelHelpers: this.modelHelpers,
+            vectorDB: params.vectorDBService
         };
 
         // Register research-specific executors

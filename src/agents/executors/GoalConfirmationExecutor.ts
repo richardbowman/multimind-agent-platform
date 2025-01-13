@@ -1,4 +1,4 @@
-import { StepExecutor } from "../stepBasedAgent";
+import { ExecutorConstructorParams, StepExecutor } from "../stepBasedAgent";
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from "../../llm/modelHelpers";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';

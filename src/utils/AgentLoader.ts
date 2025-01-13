@@ -37,7 +37,7 @@ export class AgentLoader {
                 try {
                     // Dynamically import the agent class
                     const module = await import(definition.sourcePath);
-                    const AgentClass : Agent<any,any> = module[definition.className];
+                    const AgentClass : Agent = module[definition.className];
 
                     if (!AgentClass) {
                         throw new Error(`Agent class ${definition.className} not found in module`);
@@ -46,6 +46,7 @@ export class AgentLoader {
                     // Create agent instance with merged params
                     const agent = new AgentClass({
                         ...params,
+                        agentName: agentName,
                         userId: definition.userId,
                         messagingHandle: definition.handle,
                         config: definition.config,

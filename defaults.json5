@@ -50,6 +50,11 @@
       "openai": "gpt-4-turbo-preview",
       "openrouter": "anthropic/claude-3-opus",
       "llama_cpp": "codellama-13b-instruct.Q4_K_M.gguf"
+    },
+    "embeddings": {
+      "lmstudio": "text-embedding-nomic-embed-text-v1.5",
+      "openai": "text-embedding-ada-002",
+      "llama_cpp": "nomic-embed-text-v1.5.Q4_K_M.gguf"
     }
   },
   "defaultChannels": {
@@ -212,6 +217,9 @@ My goal is to help you define, document and refine product specifications.",
           },
           {
             "className": "AnswerQuestionsExecutor"
+          },
+          {
+            className: "UnderstandGoalsExecutor"
           }
         ]
       }

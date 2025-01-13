@@ -16,5 +16,6 @@ export enum ExecutorType {
     THINKING = 'thinking',
     UNDERSTAND_GOALS = 'understand_goals',
     VALIDATION = 'validation',
-    WRITING = 'assign-writers'
+    WRITING = 'assign-writers',
+    BRAINSTORM = "brainstorm"
 }

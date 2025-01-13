@@ -52,7 +52,7 @@ jobs:
         
       - name: Copy Environment Files
         run: |
-          cp defaults.json dist/defaults.json
+          cp defaults.json5 dist/defaults.json5
         
       - name: Build Electron App
         env:

@@ -37,7 +37,8 @@ class ScrapeHelper {
                 height: 1080,
                 webPreferences: {
                     webSecurity: false
-                }
+                },
+                show: false
             });
         }
     }
@@ -54,7 +55,7 @@ class ScrapeHelper {
             await this.initialize();
         }
 
-        let page;
+        let page, actualUrl: string, htmlContent: string, title: string, screenshot: Buffer | undefined = undefined;
         try {
             if (this.settings.scrapingProvider === 'puppeteer') {
                 const context = await this.browser!.newContext({
@@ -81,15 +82,11 @@ class ScrapeHelper {
                 await new Promise(resolve => setTimeout(resolve, 1000));
 
                 // Take a full-page screenshot
-                let screenshot: Buffer = Buffer.from('');
                 try {
                     screenshot = await page.screenshot({ fullPage: true });
                 } catch (error) {
                     Logger.warn(`Couldn't get a screenshot.`);
                 }
-
-
-                const actualUrl = page.url();
 
                 // Scroll to the bottom of the page with error handling
                 await page.evaluate(() => {
@@ -103,95 +100,63 @@ class ScrapeHelper {
                 // Wait for additional content to load after scrolling
                 await new Promise(resolve => setTimeout(resolve, 1000));
 
-                // Extract HTML content
-                const htmlContent = await page.content();
-
-                // Extract the title of the page
-                const title = await page.title();
-
-                // Load the HTML content into Cheerio
-                const $ = load(htmlContent);
-
-                const markdownContent = convertPageToMarkdown($, actualUrl);
-
-                // Extract links
-                const links: { href: string, text: string }[] = [];
-                $('a').each((index, element) => {
-                    const href = $(element).attr('href');
-                    const text = $(element).text();
-                    if (href && text && !href.startsWith("#") && !links.find(l => l.href === href)) {
-                        links.push({ href, text });
-                    }
-                });
-
-                // Validate content before saving
-                if (!markdownContent) {
-                    throw new Error(`Failed to extract content from ${url}`);
-                }
-
-                // Save the full webpage content as an artifact
-                const artifactId = crypto.randomUUID();
-                const artifact = {
-                    id: artifactId,
-                    type: 'webpage',
-                    content: markdownContent,
-                    metadata: {
-                        url,
-                        title,
-                        scrapedAt: new Date().toISOString(),
-                        ...metadata
-                    }
-                };
-
-                await this.artifactManager.saveArtifact(artifact);
-
-                return { content: markdownContent, links, title, screenshot, artifactId };
+                actualUrl = page.url();
+                htmlContent = await page.content();
+                title = await page.title();
             } else if (this.settings.scrapingProvider === 'electron') {
                 if (!this.electronWindow) {
                     throw new Error('Electron window not initialized');
                 }
-
                 await this.electronWindow.loadURL(url);
+                this.electronWindow.show();
+
                 await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for page load
 
                 const webContents = this.electronWindow.webContents;
-                const htmlContent = await webContents.executeJavaScript('document.body.innerHTML');
-                const title = await webContents.executeJavaScript('document.title');
-
-                const $ = load(htmlContent);
-                const markdownContent = convertPageToMarkdown($, url);
-
-                // Extract links
-                const links: { href: string, text: string }[] = [];
-                $('a').each((index, element) => {
-                    const href = $(element).attr('href');
-                    const text = $(element).text();
-                    if (href && text && !href.startsWith("#") && !links.find(l => l.href === href)) {
-                        links.push({ href, text });
-                    }
-                });
-
-                // Take screenshot
-                // const screenshot = await this.electronWindow.captureScreenshot();
-
-                // Save artifact
-                const artifactId = crypto.randomUUID();
-                const artifact = {
-                    id: artifactId,
-                    type: 'webpage',
-                    content: markdownContent,
-                    metadata: {
-                        url,
-                        title,
-                        scrapedAt: new Date().toISOString(),
-                        ...metadata
-                    }
-                };
-
-                await this.artifactManager.saveArtifact(artifact);
-
-                return { content: markdownContent, links, title, screenshot: null, artifactId };
+                actualUrl = this.electronWindow.webContents.getURL();
+                htmlContent = await webContents.executeJavaScript('document.body.innerHTML');
+                title = await webContents.executeJavaScript('document.title');
+            } else {
+                throw new Error(`Unsupported scraping provder ${this.settings.scrapingProvider}`)
             }
+
+            // Load the HTML content into Cheerio
+            const $ = load(htmlContent);
+
+            const markdownContent = convertPageToMarkdown($, actualUrl);
+
+            // Extract links
+            const links: { href: string, text: string }[] = [];
+            $('a').each((index, element) => {
+                const href = $(element).attr('href');
+                const text = $(element).text();
+                if (href && text && !href.startsWith("#") && !links.find(l => l.href === href)) {
+                    links.push({ href, text });
+                }
+            });
+
+            // Validate content before saving
+            if (!markdownContent) {
+                throw new Error(`Failed to extract content from ${url}`);
+            }
+
+            // Save the full webpage content as an artifact
+            const artifactId = crypto.randomUUID();
+            const artifact = {
+                id: artifactId,
+                type: 'webpage',
+                content: markdownContent,
+                metadata: {
+                    url,
+                    title,
+                    scrapedAt: new Date().toISOString(),
+                    ...metadata
+                }
+            };
+
+            await this.artifactManager.saveArtifact(artifact);
+
+            return { content: markdownContent, links, title, screenshot, artifactId };
 
         } catch (error) {
             Logger.error(`Error scraping page "${url}":`, error);

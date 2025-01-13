@@ -48,7 +48,6 @@ const AppContent: React.FC = () => {
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
     const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
-    const [artifactsDrawerOpen, setArtifactsDrawerOpen] = useState(true);
 
     React.useEffect(() => {
         if (needsConfig) {
@@ -74,11 +73,7 @@ const AppContent: React.FC = () => {
                         color="inherit"
                         edge="start"
                         onClick={() => {
-                            if (currentTab === 'chat') {
-                                setLeftDrawerOpen(!leftDrawerOpen);
-                            } else if (currentTab === 'artifacts') {
-                                setArtifactsDrawerOpen(!artifactsDrawerOpen);
-                            }
+                            setLeftDrawerOpen(!leftDrawerOpen);
                         }}
                         sx={{ mr: 2 }}
                     >
@@ -185,11 +180,13 @@ const AppContent: React.FC = () => {
                     </>
                 ) : currentTab === 'artifacts' ? (
                     <GlobalArtifactViewer 
-                        drawerOpen={artifactsDrawerOpen}
-                        onDrawerToggle={() => setArtifactsDrawerOpen(!artifactsDrawerOpen)}
+                        drawerOpen={leftDrawerOpen}
+                        onDrawerToggle={() => setLeftDrawerOpen(!leftDrawerOpen)}
                     />
                 ) : currentTab === 'settings' ? (
-                    <SettingsPanel />
+                    <SettingsPanel 
+                        drawerOpen={leftDrawerOpen}
+                        onDrawerToggle={() => setLeftDrawerOpen(!leftDrawerOpen)}/>
                 ) : currentTab === 'logs' ? (
                     <LogViewer logType={currentLogTab} />
                 ) : null}

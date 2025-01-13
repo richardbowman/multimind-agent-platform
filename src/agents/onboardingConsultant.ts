@@ -7,7 +7,7 @@ import { ValidationExecutor } from './executors/ValidationExecutor';
 import { AnswerQuestionsExecutor } from './executors/AnswerQuestionsExecutor';
 import { CreatePlanExecutor } from './executors/CreatePlanExecutor';
 import { ReviewProgressExecutor } from './executors/ReviewProgressExecutor';
-import { OnboardingGoalsExecutor } from './executors/UnderstandGoalsExecutor';
+import { UnderstandGoalsExecutor } from './executors/UnderstandGoalsExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 
@@ -28,7 +28,7 @@ export interface OnboardingProject extends Project<Task> {
     answers?: QuestionAnswer[];
 }
 
-export class OnboardingConsultant extends StepBasedAgent<OnboardingProject, Task> {
+export class OnboardingConsultant extends StepBasedAgent {
 
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Onboarding Consultant`);
@@ -68,7 +68,8 @@ Let's start by discussing your main business goals. What would you like to achie
         
         // Create standardized params
         const executorParams = {
-            llmService: params.llmService,
+            llmService: this.llmService,
+            vectorDB: params.vectorDBService,
             taskManager: params.taskManager,
             artifactManager: this.artifactManager,
             userId: params.userId
@@ -76,7 +77,7 @@ Let's start by discussing your main business goals. What would you like to achie
 
         // Register our specialized executors
         this.registerStepExecutor(new AnswerQuestionsExecutor(executorParams));
-        this.registerStepExecutor(new OnboardingGoalsExecutor(executorParams));
+        this.registerStepExecutor(new UnderstandGoalsExecutor(executorParams));
         this.registerStepExecutor(new CreatePlanExecutor(executorParams));
         this.registerStepExecutor(new ReviewProgressExecutor(executorParams));
         // this.registerStepExecutor(new ValidationExecutor(executorParams));
@@ -84,7 +85,22 @@ Let's start by discussing your main business goals. What would you like to achie
         this.modelHelpers.setPurpose(`You are an Onboarding Agent focused on helping users achieve their business goals with this platform called Multimind. The service is designed
 to help individuals and businesses automate tasks. It provides Web-based research and content creation agents. Your goal is to ensure that the rest of the agents in the platform
 are trained and educated on what the user would like to achieve with the platform. You should build an understanding of their goals and desired approach. 
-When you gather a sufficient profile to understand how our other agents should support the user, you should build a comprehensive on-boarding guide for the individual and agents.`);
+When you gather a sufficient profile to understand how our other agents should support the user, you should build a comprehensive on-boarding guide for the individual and agents.
+
+By the end of the process, you should help elicit:
+
+Goals Understanding:
+- Their goals for using multimind
+- Their desired outcomes
+- Their timeline expectations
+
+AI Service Integration:
+- Which processes they want to automate
+- What type of content or tasks they need help with
+- Current workflow and pain points
+- Experience level with AI tools
+- What success would look like
+`);
 this.modelHelpers.setFinalInstructions(`To kickoff with a new user, create the following steps in this order:
 1. understand_goals
 2. create_revise_plan

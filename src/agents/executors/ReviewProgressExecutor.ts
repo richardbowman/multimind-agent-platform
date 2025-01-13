@@ -1,4 +1,4 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ReviewProgressResponse } from '../../schemas/reviewProgress';
@@ -14,6 +14,8 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 @StepExecutorDecorator('review_progress', 'Review and analyze progress of all tasks and goals')
 export class ReviewProgressExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    artifactManager: ArtifactManager;
+    taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');

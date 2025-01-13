@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import fs from 'fs/promises';
 import * as Events from 'events';
-import { Project, RecurrencePattern, Task, TaskManager } from '../tools/taskManager';
+import { Project, ProjectMetadata, RecurrencePattern, Task, TaskManager } from '../tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ContentProject } from 'src/agents/contentManager';
 import { AsyncQueue } from '../helpers/asyncQueue';
@@ -59,13 +59,14 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             createdAt: new Date(),
             updatedAt: new Date(),
             status: 'active',
+            priority: 'medium',
             ...project.metadata // Spread existing metadata to override defaults
         };
         this.projects[project.id] = project;
         await this.save();
     }
 
-    async createProject(name: string, tasks?: { description: string; type: string }[], metadata?: ProjectMetadata): Promise<Project<Task>> {
+    async createProject(name: string, tasks?: { description: string; type: string }[], metadata?: Partial<ProjectMetadata>): Promise<Project<Task>> {
         const projectId = this.newProjectId();
         const project = {
             id: projectId,
@@ -75,6 +76,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 status: 'active',
+                priority: 'medium',
                 ...metadata
             }
         };

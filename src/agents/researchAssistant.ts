@@ -1,6 +1,6 @@
 import { StepBasedAgent } from './stepBasedAgent';
 import { Project, Task } from '../tools/taskManager';
-import { WebSearchExecutor } from './research/WebResearchExecutor';
+import { WebSearchExecutor } from './executors/WebResearchExecutor';
 import SearchHelper from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
 import Logger from '../helpers/logger';
@@ -36,7 +36,8 @@ export class ResearchAssistant extends StepBasedAgent {
             userId: params.userId,
             searchHelper: this.searchHelper,
             scrapeHelper: this.scrapeHelper,
-            modelHelpers: this.modelHelpers
+            modelHelpers: this.modelHelpers,
+            vectorDB: params.vectorDBService
         };
 
         // Register step executors

@@ -7,12 +7,10 @@ import { Settings } from "src/tools/settingsManager";
 
 
 export class RouterAgent extends Agent {
-    private settings: Settings;
     private confirmationTimeouts: Map<string, NodeJS.Timeout> = new Map();
 
     constructor(params: AgentConstructorParams) {
         super(params);
-        this.settings = params.settings;
     }
 
     private async waitForConfirmation(confirmationPostId: string, channelId: string): Promise<ChatPost | null> {
@@ -96,18 +94,15 @@ export class RouterAgent extends Agent {
 
                 if (confirmationResponse.confirmed) {
                     // Get the agent handle directly from the confirmation response
-                    const agent = Object.values(this.settings.agents).find(a => a.userId === confirmationResponse.selectedAgent);
-                    if (agent?.handle) {
-                        await this.chatClient.postInChannel(
-                            userPost.channel_id,
-                            `@${agent.handle} ${confirmationResponse.messageToAgent}`,
-                            {
-                                "routed-from": userPost.user_id,
-                                "routed-by": this.userId
-                            }
-                        );
-                        return;
-                    }
+                    await this.chatClient.postInChannel(
+                        userPost.channel_id,
+                        `@${confirmationResponse.selectedAgent} ${confirmationResponse.messageToAgent}`,
+                        {
+                            "routed-from": userPost.user_id,
+                            "routed-by": this.userId
+                        }
+                    );
+                    return;
                 }
             }
         }

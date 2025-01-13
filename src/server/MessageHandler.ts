@@ -285,7 +285,7 @@ export class MessageHandler implements ServerMethods {
 
     async deleteArtifact(artifactId: string): Promise<any[]> {
         await this.services.artifactManager.deleteArtifact(artifactId);
-        return this.handleGetAllArtifacts();
+        return this.getAllArtifacts();
     }
 
     async getLogs(logType: 'llm' | 'system' | 'api'): Promise<any> {

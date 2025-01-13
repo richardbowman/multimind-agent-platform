@@ -75,7 +75,7 @@ export class OpenAIService extends BaseLLMService {
             if (params.systemPrompt) {
                 messages.unshift({
                     role: "system",
-                    content: params.systemPrompt + "\n\nCall generate_structured_output with your response."
+                    content: params.systemPrompt + (params.parseJSON ? "\n\nCall generate_structured_output with your response." : "")
                 });
             }
 

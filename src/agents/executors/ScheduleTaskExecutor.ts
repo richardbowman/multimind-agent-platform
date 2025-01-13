@@ -1,4 +1,4 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -11,6 +11,7 @@ import Logger from '../../helpers/logger';
 @StepExecutorDecorator('schedule_task', 'Schedule a recurring task')
 export class ScheduleTaskExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');

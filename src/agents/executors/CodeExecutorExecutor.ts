@@ -1,22 +1,12 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { codeExecutionSchema } from '../../schemas/CodeExecutionSchema';
 import { getQuickJS } from 'quickjs-emscripten';
 import { CodeExecutionResponse } from 'src/schemas/CodeExecutionResponse';
 import { ExecutorType } from './ExecutorType';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
-
-export interface ExecutorConstructorParams {
-    llmService: ILLMService;
-    taskManager?: TaskManager;
-    artifactManager?: ArtifactManager;
-    userId?: string;
-    config?: Record<string, any>;
-}
 
 /**
  * Executor that safely runs JavaScript code in an isolated sandbox environment. 

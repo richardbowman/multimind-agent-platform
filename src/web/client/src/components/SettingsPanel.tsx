@@ -22,8 +22,9 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import { useWebSocket } from '../contexts/DataContext';
 import { Settings, CONFIG_METADATA, ConfigMetadata } from '../types/settings';
+import { DrawerPage } from './GlobalArtifactViewer';
 
-export const SettingsPanel: React.FC = () => {
+export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
     const [settings, setSettings] = useState<Settings>({});
     const [validationMessage, setValidationMessage] = useState<string>('');
     const [successMessage, setSuccessMessage] = useState<string>('');
@@ -179,12 +180,10 @@ export const SettingsPanel: React.FC = () => {
         return acc;
     }, {} as Record<string, ConfigMetadata[]>);
 
-    const [drawerOpen, setDrawerOpen] = useState(true);
-
     return (
         <Box sx={{ 
             display: 'flex',
-            height: '100vh',
+            flex: 1,
             overflow: 'hidden'
         }}>
             <Drawer
@@ -226,7 +225,7 @@ export const SettingsPanel: React.FC = () => {
                 p: 3,
                 marginLeft: drawerOpen ? '250px' : 0,
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
-                height: '100vh',
+                flex: 1,
                 overflowY: 'auto'
             }}>
                 <Typography variant="h4" sx={{ mb: 3 }}>
@@ -236,9 +235,9 @@ export const SettingsPanel: React.FC = () => {
             <Box sx={{ 
                 display: 'flex', 
                 flexDirection: 'column', 
+                flex: 1, 
                 gap: 3,
-                overflowY: 'auto',
-                height: 'calc(100vh - 64px)' // Subtract header height
+                overflowY: 'auto'
             }}
             >
                 {Object.entries(categories).map(([category, metadataList]) => (

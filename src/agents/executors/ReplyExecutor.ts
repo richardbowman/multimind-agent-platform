@@ -1,4 +1,4 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../onboardingConsultant';
@@ -23,6 +23,8 @@ import { ExecutorType } from './ExecutorType';
 @StepExecutorDecorator(ExecutorType.REPLY, 'Generate user-friendly responses to messages')
 export class ReplyExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    taskManager: TaskManager;
+    artifactManager: ArtifactManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');

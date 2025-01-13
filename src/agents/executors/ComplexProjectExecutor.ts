@@ -1,17 +1,16 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ILLMService } from '../../llm/ILLMService';
 import { TaskManager } from '../../tools/taskManager';
 import { Task } from '../../tools/taskManager';
 import { randomUUID } from 'crypto';
-import { CONTENT_MANAGER_USER_ID, RESEARCH_MANAGER_USER_ID } from '../../helpers/config';
 import Logger from '../../helpers/logger';
 
 @StepExecutorDecorator('complex_project', 'Kickoff a combined project involving both research and content development')
 export class ComplexProjectExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    private taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');

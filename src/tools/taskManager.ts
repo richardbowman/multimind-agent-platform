@@ -63,7 +63,7 @@ export interface TaskManager extends EventEmitter {
     replaceProject(project: Project<Task>): unknown;
     completeTask(id: string): Promise<Task>;
     addProject(project: Project<Task>): Promise<void>;
-    createProject(name: string, tasks?: { description: string; type: string }[], metadata?: ProjectMetadata): Promise<Project<Task>>;
+    createProject(name: string, tasks?: { description: string; type: string }[], metadata?: Partial<ProjectMetadata>): Promise<Project<Task>>;
     addTask(project: Project<Task>, params: AddTaskParams): Promise<Task>;
     getProject(projectId: string): Project<Task>;
     newProjectId(): string;

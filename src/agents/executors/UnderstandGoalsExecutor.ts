@@ -1,4 +1,4 @@
-import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import crypto from 'crypto';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
@@ -25,10 +25,11 @@ import { SchemaType } from 'src/schemas/SchemaTypes';
  * - Ensures comprehensive requirement gathering
  * - Supports iterative question refinement
  */
-@StepExecutorDecorator(ExecutorType.UNDERSTAND_GOALS, 'Generate focused questions to understand business needs and AI service fit')
-export class OnboardingGoalsExecutor implements StepExecutor {
+@StepExecutorDecorator(ExecutorType.UNDERSTAND_GOALS, 'Generate focused questions to understand user goals')
+export class UnderstandGoalsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private userId: string;
+    taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
@@ -80,7 +81,7 @@ export class OnboardingGoalsExecutor implements StepExecutor {
         const response : IntakeQuestionsResponse = await this.modelHelpers.generate({
             message: formattedMessage,
             instructions: new StructuredOutputPrompt(schema,
-                `Generate focused questions to understand the user's needs for using multimind. 
+                `Generate focused questions to achieve the goal.
                 
                 IMPORTANT: 
                 - Review any previous answers carefully to avoid redundant questions
@@ -89,18 +90,6 @@ export class OnboardingGoalsExecutor implements StepExecutor {
                 - If a topic has been partially addressed, ask follow-up questions for deeper understanding
                 Each question should help gather specific information about:
 
-                Goals Understanding:
-                - Their goals for using multimind
-                - Their desired outcomes
-                - Their timeline expectations
-
-                AI Service Integration:
-                - Which processes they want to automate
-                - What type of content or tasks they need help with
-                - Current workflow and pain points
-                - Experience level with AI tools
-                - What success would look like
-                
                 Include 3-6 essential questions that will help us understand both their business goals and how we can best support them.
                 Keep questions focused and actionable.`)
         });
@@ -135,7 +124,6 @@ export class OnboardingGoalsExecutor implements StepExecutor {
         }
 
         return {
-            type: 'intake_questions',
             finished: true,
             needsUserInput: true,
             response: {

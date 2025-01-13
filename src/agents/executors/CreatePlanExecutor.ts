@@ -7,7 +7,7 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { OnboardingProject, QuestionAnswer } from '../onboardingConsultant';
 import { CreateArtifact } from '../../schemas/ModelResponse';
 import { OperationalGuideResponse, QAItem } from '../../schemas/OperationalGuideResponse';
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { updateBusinessPlan } from '../../helpers/businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ExecutorType } from './ExecutorType';
@@ -31,6 +31,8 @@ import { AnswerMetadata } from './AnswerQuestionsExecutor';
 export class CreatePlanExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private userId: string;
+    taskManager: TaskManager;
+    artifactManager: ArtifactManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.userId = params.userId || 'executor';

@@ -26,16 +26,7 @@ export class SplashWindow {
 
     async show() {
         await this.window.loadFile(path.join(__dirname, '../web/splash.html'));
-        // Wait for content to be fully rendered before showing window
-        await new Promise<void>((resolve) => {
-            this.window.webContents.on('did-finish-load', () => {
-                // Add small delay to ensure rendering is complete
-                setTimeout(() => {
-                    this.window.show();
-                    resolve();
-                }, 100);
-            });
-        });
+        this.window.show();
     }
 
     setMessage(message: string) {

@@ -1,21 +1,18 @@
-import { randomUUID } from 'crypto';
 import JSON5 from "json5";
 import { ChatClient, ChatPost, ConversationContext, Message, ProjectChainResponse } from "src/chat/chatClient";
 import Logger from "src/helpers/logger";
 import { SystemPromptBuilder } from "src/helpers/systemPrompt";
-import { CreateArtifact, ModelMessageResponse } from "src/schemas/ModelResponse";
+import { ModelMessageResponse } from "src/schemas/ModelResponse";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Project, ProjectMetadata, Task, TaskManager } from "src/tools/taskManager";
-import { ArtifactResponseSchema } from '../schemas/artifactSchema';
-import schemas from '../schemas/schema.json';
-import { ArtifactInputPrompt } from 'src/prompts/artifactInputPrompt';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
 import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
+import { Settings } from "src/tools/settingsManager";
 
 export interface ActionMetadata {
     activityType: string;
@@ -67,7 +64,7 @@ export interface ThreadSummary {
     messageCount: number;
 }
 
-export abstract class Agent<P extends Project<T>, T extends Task> {
+export abstract class Agent {
     private readonly chatClient: ChatClient;
     private readonly threadSummaries: Map<string, ThreadSummary> = new Map();
     private readonly messagingHandle?: string;
@@ -79,6 +76,8 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
     protected readonly projects: TaskManager;
     protected readonly artifactManager: ArtifactManager;
     protected readonly modelHelpers: ModelHelpers;
+    protected readonly settings: Settings;
+
     protected isWorking: boolean = false;
     protected isMemoryEnabled: boolean = false;
 
@@ -94,6 +93,7 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
         this.chromaDBService = params.vectorDBService;
         this.projects = params.taskManager;
         this.messagingHandle = params.messagingHandle;
+        this.settings = params.settings;
         
         this.modelHelpers = new ModelHelpers(this.llmService, this.userId);
         this.promptBuilder = new SystemPromptBuilder();
@@ -289,107 +289,6 @@ export abstract class Agent<P extends Project<T>, T extends Task> {
         return this.modelHelpers.generate(params);
     }
 
-
-    private async getArtifactList(): Promise<string> {
-        const artifacts = await this.artifactManager.listArtifacts();
-        const filteredArtifacts = artifacts.filter(a =>
-            a.metadata?.title?.length > 0 &&
-            !a.id.includes('memory') &&
-            a.type !== 'webpage'
-        )
-        return filteredArtifacts.map(artifact => ` - ${artifact.id}: ${artifact.metadata?.title}`).join('\n');
-    }
-
-    private async getThreadSummary(posts: ChatPost[]): Promise<string> {
-        return this.modelHelpers.getThreadSummary(posts);
-    }
-
-    private async cleanupOldSummaries(maxAge: number = 1000 * 60 * 60) { // default 1 hour
-        const now = Date.now();
-        for (const [threadId, summary] of this.threadSummaries.entries()) {
-            const message = await this.getMessage(summary.lastProcessedMessageId);
-            if (message && now - message.create_at > maxAge) {
-                this.threadSummaries.delete(threadId);
-            }
-        }
-    }
-
-    private async classifyResponse(
-        post: ChatPost, 
-        channelType: ResponseType, 
-        history?: ChatPost[], 
-        params?: HandlerParams
-    ): Promise<{
-        activityType: string;
-        requestedArtifacts: string[];
-        searchQuery: string;
-        searchResults: SearchResult[];
-        reasoning?: string;
-    }> {
-        const artifactList = await this.getArtifactList();
-        const availableActions = history ? this.getAvailableActions(ResponseType.RESPONSE) : this.getAvailableActions(ResponseType.CHANNEL);
-
-        const jsonSchema =
-        {
-            "type": "object",
-            "properties": {
-                "reasoning": { "type": "string" },
-                "activityType": {
-                    "type": "string", "enum": availableActions.map(a => a.activityType)
-                },
-                requestedArtifacts: { type: 'array', items: { type: 'string' }, description: 'List of artifact IDs to retrieve' },
-                searchQuery: { type: 'string', description: 'A query to be used for search' }
-            },
-            "required": ["reasoning", "activityType", "searchQuery"]
-        };
-
-        // Get thread summary if there's history
-        const threadContext = history ? await this.getThreadSummary(history) : undefined;
-
-        // Format project tasks as markdown
-        const projectTasksMarkdown = params?.projects?.map(project => {
-            const tasks = Object.values(project.tasks);
-            return `
-### Project: ${project.name} (${project.id})
-${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.inProgress ? ' (In Progress)' : ''}`).join('\n')}`;
-        }).join('\n') || '';
-
-        let prompt = `Follow these steps:
-            1. Consider the ${channelType === ResponseType.RESPONSE ? `thread response` : `new channel message`} you've received.
-               ${threadContext ? `\nThread Context:\n${threadContext}` : ''}
-               ${projectTasksMarkdown ? `\nCurrent Project Tasks:\n${projectTasksMarkdown}` : ''}
-            2. Generate a specific query that should be used to retrieve relevant information for this request.
-            3. Here are the possible follow-up activity types to consider:
-                    ${availableActions.map(a => ` - ${a.activityType}: ${a.usage}`).join('\n')}
-                    - NONE: None of these types fit the request.
-            4. Here is the list of available artifacts you can request:
-                    ${artifactList}
-            5. If you need any specific artifacts, specify their IDs in the requestedArtifacts array.
-            6. If you want to search for any additional context across our knowledge base, create a search query.
-            7. Respond with the following JSON object:
-            {
-            "reasoning": "Selected X because of ...",
-            "activityType": "X",
-            "requestedArtifacts": ["id1", "id2"],
-            "searchQuery": ""
-            }
-        `;
-
-        const response = await this.llmService.generateStructured(post, new StructuredOutputPrompt(jsonSchema, prompt), [], undefined, 1024);
-
-
-        Logger.info(`Model chose ${response.activityType} because ${response.reasoning}`);
-
-        const searchResults = await this.chromaDBService.query([response.searchQuery], undefined, 10);
-
-        return {
-            activityType: response.activityType,
-            requestedArtifacts: response.requestedArtifacts || [],
-            searchQuery: response.searchQuery,
-            searchResults
-        };
-    }
-
     private async mapRequestedArtifacts(requestedArtifacts: string[]): Promise<Artifact[]> {
         const artifacts: Artifact[] = [];
         for (const artifactId of requestedArtifacts) {
@@ -404,82 +303,6 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
             }
         }
         return artifacts;
-    }
-
-    private async classifyAndRespond(post: ChatPost, responseType: ResponseType, history?: ChatPost[]) {
-        // Get all available actions for this response type
-        const actions = this.getAvailableActions(responseType);
-
-        // If we only have one handler, use it directly without classification
-        if (actions.length === 1) {
-            const handlerMethod = responseType === ResponseType.CHANNEL
-                ? this.getMethodForActivity(actions[0].activityType)
-                : this.getMethodForResponse(actions[0].activityType);
-
-            if (handlerMethod) {
-                await handlerMethod({ userPost: post });
-                return;
-            }
-        }
-
-        // Otherwise, proceed with full classification
-        const { activityType, requestedArtifacts, searchResults } = await this.classifyResponse(post, responseType, history);
-        const artifacts = await this.mapRequestedArtifacts(requestedArtifacts);
-
-        const handlerMethod = this.getMethodForActivity(activityType);
-        if (handlerMethod) {
-            await handlerMethod({ userPost: post, artifacts, searchResults });
-        } else {
-            Logger.error(`Unsupported activity type: ${activityType}`);
-            await this.reply(post, { message: `Sorry, I don't support ${activityType} yet.` });
-        }
-    }
-
-    private getMethodForActivity(activityType: string): ((params: HandlerParams) => Promise<void>) | null {
-        for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(this))) {
-            const handlerMethod = this[key];
-            if (typeof handlerMethod === 'function') {
-                const methodActivityType = Reflect.getMetadata('activityType', this, key);
-                const methodResponse = Reflect.getMetadata('responseType', this, key);
-                if (methodActivityType === activityType && methodResponse === ResponseType.CHANNEL) {
-                    return handlerMethod.bind(this);
-                }
-            }
-        }
-        return null;
-    }
-
-    protected getMethodForResponse(activityType: string): ((params: HandlerParams) => Promise<void>) | null {
-        for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(this))) {
-            const handlerMethod = this[key];
-            if (typeof handlerMethod === 'function') {
-                const methodActivityType = Reflect.getMetadata('activityType', this, key);
-                const methodResponse = Reflect.getMetadata('responseType', this, key);
-                if (methodActivityType === activityType && methodResponse === ResponseType.RESPONSE) {
-                    return handlerMethod.bind(this);
-                }
-            }
-        }
-        return null;
-    }
-
-    protected getAvailableActions(desiredResponseType: ResponseType): ActionMetadata[] {
-        const actions: ActionMetadata[] = []
-        for (const key of Object.getOwnPropertyNames(Object.getPrototypeOf(this))) {
-            const handlerMethod = this[key];
-            if (typeof handlerMethod === 'function') {
-                const activityType = Reflect.getMetadata('activityType', this, key);
-                const responseType = Reflect.getMetadata('responseType', this, key);
-                const usage = Reflect.getMetadata('usage', this, key);
-                if (activityType && usage && responseType === desiredResponseType) {
-                    actions.push({
-                        activityType,
-                        usage
-                    });
-                }
-            }
-        }
-        return actions;
     }
 
     private async fetchLatestMemoryArtifact(channelId: string): Promise<Artifact | null> {
@@ -557,76 +380,6 @@ ${tasks.map(task => `- [${task.complete ? 'x' : ' '}] ${task.description}${task.
         const taskIds = Object.values(project.tasks).map(t => t.id);
         
         return { projectId: project.id, taskIds };
-    }
-
-    // Convenience method to add a task to a project
-    public async addTaskToProject({
-        projectId,
-        description,
-        type,
-        skipForSameType = true
-    }: {
-        projectId: string;
-        description: string;
-        type: string;
-        skipForSameType?: boolean;
-    }): Promise<string> {
-        const project = this.projects.getProject(projectId);
-
-        if (!project) {
-            throw new Error(`Project with ID ${projectId} not found.`);
-        }
-
-        const existingTask = Object.values(project.tasks).find(t => t.type === type);
-        if (!existingTask || !skipForSameType) {
-            const taskId = randomUUID();
-            const task: Task = {
-                id: taskId,
-                description: description,
-                creator: this.userId,
-                projectId: projectId,
-                type: type,
-                complete: false
-            };
-            this.projects.addTask(project, task);
-            return taskId;
-        } else {
-            return existingTask.id;
-        }
-    }
-
-    // Convenience method to save an artifact based on ArtifactResponseSchema
-    public async generateArtifactResponse(
-        instructions: string,
-        params: HandlerParams
-    ): Promise<CreateArtifact & {
-        artifactTitle: string;
-        artifactContent: string;
-    }> {
-        // Generate the response
-        const response: ArtifactResponseSchema = await this.generateStructured(new StructuredOutputPrompt(
-            schemas.definitions.ArtifactResponseSchema,
-            new ArtifactInputPrompt(instructions).toString()
-        ), params);
-
-        // Prepare the artifact
-        const artifact: Artifact = {
-            id: randomUUID(),
-            type: 'business-goals',
-            content: response.artifactContent,
-            metadata: {
-                title: response.artifactTitle
-            }
-        };
-
-        // Save the artifact using ArtifactManager
-        await this.artifactManager.saveArtifact(artifact);
-
-        return {
-            artifactId: artifact.id,
-            ...response,
-            message: `${response.message} [Document titled "${response.artifactTitle}" has been saved. ID: ${artifact.id}]`
-        };
     }
 
     protected async getMessage(messageId: string): Promise<ChatPost | undefined> {

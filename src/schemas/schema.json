@@ -65,6 +65,52 @@
       ],
       "type": "object"
     },
+    "BrainstormIdea": {
+      "additionalProperties": false,
+      "properties": {
+        "benefits": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "title": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "title",
+        "description",
+        "benefits"
+      ],
+      "type": "object"
+    },
+    "BrainstormResponse": {
+      "properties": {
+        "ideas": {
+          "items": {
+            "$ref": "#/definitions/BrainstormIdea"
+          },
+          "type": "array"
+        },
+        "isComplete": {
+          "type": "boolean"
+        },
+        "message": {
+          "type": "string"
+        },
+        "summary": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "ideas",
+        "isComplete",
+        "message",
+        "summary"
+      ],
+      "type": "object"
+    },
     "BusinessGoal": {
       "additionalProperties": false,
       "description": "Represents an analyzed business goal",
@@ -347,6 +393,45 @@
       ],
       "type": "object"
     },
+    "GoalTemplate": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "description": "Description of the goal type and what it's used for",
+          "type": "string"
+        },
+        "id": {
+          "description": "Unique identifier for the goal template",
+          "type": "string"
+        },
+        "initialTasks": {
+          "description": "Initial tasks to create when this goal template is selected",
+          "items": {
+            "$ref": "#/definitions/InitialTask"
+          },
+          "type": "array"
+        },
+        "name": {
+          "description": "Human-readable name of the goal template",
+          "type": "string"
+        },
+        "supportingAgents": {
+          "description": "List of agent IDs or types required to support this goal",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "id",
+        "name",
+        "description",
+        "supportingAgents",
+        "initialTasks"
+      ],
+      "type": "object"
+    },
     "GoalsAnalysis": {
       "additionalProperties": false,
       "description": "Represents the analysis of business goals",
@@ -384,6 +469,35 @@
         "phase",
         "description",
         "expectedOutcome"
+      ],
+      "type": "object"
+    },
+    "InitialTask": {
+      "additionalProperties": false,
+      "properties": {
+        "dependsOn": {
+          "description": "Optional dependencies for task ordering",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "description": {
+          "description": "Task description",
+          "type": "string"
+        },
+        "metadata": {
+          "description": "Optional metadata for the task",
+          "type": "object"
+        },
+        "type": {
+          "description": "Task type identifier",
+          "type": "string"
+        }
+      },
+      "required": [
+        "description",
+        "type"
       ],
       "type": "object"
     },

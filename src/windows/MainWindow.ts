@@ -12,17 +12,20 @@ export class MainWindow {
                 preload: path.join(__dirname, '../preload.js'),
                 contextIsolation: true,
                 nodeIntegration: false
-            }
+            },
+            autoHideMenuBar: true,
+            show: false
         });
     }
 
     async show() {
         if (process.env.NODE_ENV === 'development') {
-            await this.window.loadURL('http://localhost:3000');
+            await this.window.loadFile(path.join(__dirname, '../web/index.html'));
             this.window.webContents.openDevTools();
         } else {
             await this.window.loadFile(path.join(__dirname, '../web/index.html'));
         }
+        this.window.show();
     }
 
     getWindow(): BrowserWindow {

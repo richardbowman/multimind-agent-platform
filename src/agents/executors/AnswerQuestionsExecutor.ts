@@ -1,4 +1,4 @@
-import { ExecuteParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -32,6 +32,7 @@ export interface AnswerMetadata {
 @StepExecutorDecorator(ExecutorType.ANSWER_QUESTIONS, 'Analyze and process user responses to intake questions', false)
 export class AnswerQuestionsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    private taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');

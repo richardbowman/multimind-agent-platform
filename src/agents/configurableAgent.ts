@@ -1,11 +1,5 @@
 import { Project } from "src/tools/taskManager";
 import { Task } from "src/tools/taskManager";
-import { BrainstormExecutor } from './executors/BrainstormExecutor';
-import { GenerateArtifactExecutor } from './executors/GenerateArtifactExecutor';
-import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
-import { AnswerQuestionsExecutor } from './executors/AnswerQuestionsExecutor';
-import { ComplexProjectExecutor } from './executors/ComplexProjectExecutor';
-import { ScheduleTaskExecutor } from './executors/ScheduleTaskExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
 import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 
@@ -24,12 +18,18 @@ export interface PlanningProject extends Project<Task> {
 }
 
 export class ConfigurableAgent extends StepBasedAgent {
+    agentName: string | undefined;
+
+    constructor(params: AgentConstructorParams, planner?: Planner) {
+        super(params, planner);
+        this.agentName = params.agentName;
+    }
+    
     async initialize() {
-        const settings = this.settingsManager.getSettings();
-        const agentConfig = settings.agents[this.constructor.name];
+        const agentConfig = this.settings.agents[this.agentName].config;
         
         if (!agentConfig) {
-            throw new Error(`No configuration found for agent ${this.constructor.name}`);
+            throw new Error(`No configuration found for agent ${this.agentName}`);
         }
 
         await this.initializeFromConfig(agentConfig);
@@ -42,15 +42,4 @@ export class ConfigurableAgent extends StepBasedAgent {
     protected async projectCompleted(project: PlanningProject): Promise<void> {
         await super.projectCompleted(project);
     }
-
-    constructor(params: AgentConstructorParams) {
-        super(params);
-    }
 }
-
-export class ProjectManager extends ConfigurableAgent {
-    constructor(params: AgentConstructorParams) {
-        super(params);
-    }
-
-}   

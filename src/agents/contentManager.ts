@@ -22,13 +22,13 @@ export interface ContentTask extends Task {
     content?: string;
 }
 
-export class ContentManager extends StepBasedAgent<ContentProject, ContentTask> {
+export class ContentManager extends StepBasedAgent {
     constructor(params: AgentConstructorParams) {
         const modelHelpers = new ModelHelpers(params.llmService, params.userId);
         const planner = new MultiStepPlanner(params.llmService, params.taskManager, params.userId, modelHelpers)
         super(params, planner);
 
-        // Create standardized params once
+        // Create standardized params
         const executorParams = {
             llmService: params.llmService,
             vectorDB: params.vectorDBService,

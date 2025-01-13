@@ -35,10 +35,17 @@ import { SchemaType } from '../../schemas/SchemaTypes';
  */
 @StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
+    private searchHelper: SearchHelper;
+    private scrapeHelper: ScrapeHelper;
+    private llmService: ILLMService;
+    private artifactManager: ArtifactManager;
+    private modelHelpers: ModelHelpers;
+
     constructor(
         params: ExecutorConstructorParams & {
             searchHelper: SearchHelper;
             scrapeHelper: ScrapeHelper;
+            modelHelpers: ModelHelpers;
         }
     ) {
         this.searchHelper = params.searchHelper;
@@ -57,7 +64,7 @@ export class WebSearchExecutor implements StepExecutor {
 
     private async processPage(url: string, step: string, goal: string, projectId: string): Promise<string> {
         const scrapedUrls = await this.getScrapedUrls();
-        let summaries : string[] = [];
+        let summaries: string[] = [];
 
         if (this.visitedUrls.has(url) || scrapedUrls.has(url)) {
             Logger.info(`Retrieving existing summary for URL: ${url}`);
@@ -84,7 +91,7 @@ export class WebSearchExecutor implements StepExecutor {
             step,
             `Page Title: ${title}\nURL: ${url}\n\n${content}`,
             this.llmService
-        );        
+        );
         summaries.push(summaryResponse.message);
 
         const selectedLinks = await this.selectRelevantLinks(step, goal, title, links);
@@ -124,7 +131,7 @@ export class WebSearchExecutor implements StepExecutor {
                                 },
                                 tokenCount: followupSummaryResponse._usage?.outputTokens
                             });
-                
+
                         }
                         summaries.push(followupSummaryResponse.message);
 

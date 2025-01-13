@@ -3,15 +3,18 @@ import { getExecutorMetadata } from './decorators/executorDecorator';
 import 'reflect-metadata';
 import { ChatPost, isValidChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { Project, Task } from '../tools/taskManager';
+import { Project, Task, TaskManager } from '../tools/taskManager';
 import { Planner } from './planners/planner';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import Logger from '../helpers/logger';
 import { ModelMessageResponse, ModelResponse } from '../schemas/ModelResponse';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/localChatClient';
+import { AgentConfig } from 'src/tools/settingsManager';
+import { ArtifactManager } from 'src/tools/artifactManager';
+import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 
 export interface StepResult {
     type?: string;
@@ -46,6 +49,15 @@ export interface StepExecutor {
     onProjectCompleted?(project: Project<Task>): Promise<void>;
 }
 
+export interface ExecutorConstructorParams {
+    vectorDB: IVectorDatabase;
+    llmService: ILLMService;
+    taskManager?: TaskManager;
+    artifactManager?: ArtifactManager;
+    userId?: string;
+    config?: Record<string, any>;
+}
+
 export abstract class StepBasedAgent extends Agent {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
     protected planner: Planner;
@@ -76,7 +88,7 @@ export abstract class StepBasedAgent extends Agent {
                 // Create instance with config
                 const executor = new ExecutorClass({
                     llmService: this.llmService,
-                    taskManager: this.taskManager,
+                    taskManager: this.projects,
                     artifactManager: this.artifactManager,
                     userId: this.userId,
                     ...executorConfig.config
@@ -95,6 +107,7 @@ export abstract class StepBasedAgent extends Agent {
             tasks: [],
             metadata: {
                 originalPostId: params.userPost.id,
+                tags: ["agent-internal-steps"]
             }
         });
 
@@ -107,7 +120,7 @@ export abstract class StepBasedAgent extends Agent {
     }
 
     protected async handlerThread(params: HandlerParams): Promise<void> {
-        const { id: projectId } = params.projects?.[0]||{id: undefined};
+        const { id: projectId } = params.projects?.filter(p => p.metadata.tags?.includes("agent-internal-steps"))[0]||{id: undefined};
 
         // If no active project, treat it as a new conversation
         if (!projectId) {
@@ -275,7 +288,7 @@ export abstract class StepBasedAgent extends Agent {
             if (executor.execute) {
                 stepResult = await executor.execute({
                     agentId: this.userId,
-                    goal: `${userPost?.message} [Step: ${task.description}] [Project: ${project.name}]`,
+                    goal: `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message}`,
                     step: task.type,
                     projectId: projectId,
                     previousResult: priorResults,
@@ -285,7 +298,7 @@ export abstract class StepBasedAgent extends Agent {
                 });
             } else {
                 stepResult = await executor.executeOld(
-                    `${userPost?.message} [Step: ${task.description}] [Project: ${project.name}]`,
+                    `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message}`,
                     task.type,
                     projectId,
                     priorResults
@@ -337,7 +350,7 @@ export abstract class StepBasedAgent extends Agent {
                         message: `${message} [Finished ${task.type}, still working...]`
                     }, {
                         "project-id": stepResult.projectId || projectId,
-                        "artifact-ids": [stepResult.response?.data?.artifactId]
+                        "artifact-ids": [...stepResult.response?.artifactIds||[], stepResult.response?.data?.artifactId]
                     });
                 }
             }

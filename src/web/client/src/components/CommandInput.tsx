@@ -81,6 +81,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({ onSendMessage }) => 
                 inputRef.current.style.height = 'auto';
                 inputRef.current.style.height = '40px';
             }
+
+            event.preventDefault();
+            event.stopPropagation();
         } else if (event.key === 'Tab' && showSuggestions) {
             event.preventDefault();
             const suggestion = suggestions[0];

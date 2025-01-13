@@ -21,7 +21,6 @@ export const ArtifactViewer: React.FC<ArtifactViewerProps> = ({ artifact, onClos
     };
 
     const content = `# ${artifact.metadata?.title || artifact.id}
-Type: ${artifact.type}
 
 ## Metadata
 ${formatMetadata(artifact.metadata)}
@@ -30,13 +29,6 @@ ${formatMetadata(artifact.metadata)}
 ${artifact.content?.toString()||"(no content available)"}`;
 
     return (
-        <Box sx={{ overflowY: 'auto', height: '100%' }}>
-            <Typography variant="h4" sx={{ mb: 2, color: '#fff' }}>
-                {artifact.metadata?.title || artifact.id}
-            </Typography>
-            <Box sx={{ color: '#fff' }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
-            </Box>
-        </Box>
+        <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>
     );
 };

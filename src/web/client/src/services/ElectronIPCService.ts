@@ -2,7 +2,7 @@ import { createBirpc } from 'birpc';
 import { BaseRPCService } from '../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../shared/rpcUtils';
-import { ClientMessage } from '../shared/IPCInterface';
+import { createClientMethods } from './ClientMethods';
 
 export class ElectronIPCService extends BaseRPCService {
     status: { configured: boolean; ready: boolean; message?: string; };
@@ -22,13 +22,7 @@ export class ElectronIPCService extends BaseRPCService {
         const safeHandlers = createSafeRPCHandlers();
         this.rpc = createBirpc<ServerMethods, ClientMethods>(
             {
-                ...createClientMethods(this.emit.bind(this)),
-                onBackendStatus: (status: { configured: boolean; ready: boolean; message?: string }) => {
-                    this.status = status;
-                    if (this.connected) {
-                        this.fireStatus();
-                    }
-                }
+                ...createClientMethods(this.emit.bind(this))
             },
             {
                 post: (data) => {
@@ -43,6 +37,12 @@ export class ElectronIPCService extends BaseRPCService {
                 timeout: 180000
             }
         );
+        this.on("onBackendStatus",  (status: { configured: boolean; ready: boolean; message?: string }) => {
+            this.status = status;
+            if (this.connected) {
+                this.fireStatus();
+            }
+        });
     }
     fireStatus() {
         console.log('FIRE STATUS', this.status);

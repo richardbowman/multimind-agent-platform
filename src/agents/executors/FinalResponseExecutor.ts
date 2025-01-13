@@ -1,4 +1,4 @@
-import { StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { FinalResponse } from '../../schemas/finalResponse';
@@ -23,6 +23,7 @@ import { ExecutorType } from './ExecutorType';
  */
 @StepExecutorDecorator(ExecutorType.FINAL_RESPONSE, 'Provide final response to the user (include at the end of your plan)')
 export class FinalResponseExecutor implements StepExecutor {
+    modelHelpers: ModelHelpers;
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
     }

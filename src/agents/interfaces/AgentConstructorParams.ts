@@ -6,6 +6,7 @@ import { IVectorDatabase } from "src/llm/IVectorDatabase";
 import { Settings } from "src/tools/settingsManager";
 
 export interface AgentConstructorParams {
+    agentName?: string;
     chatClient: ChatClient;
     llmService: ILLMService;
     vectorDBService: IVectorDatabase;

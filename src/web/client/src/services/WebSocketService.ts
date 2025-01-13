@@ -3,11 +3,11 @@ import { createBirpc } from 'birpc';
 import { BaseRPCService } from '../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../shared/rpcUtils';
-import { ClientMessage } from '../shared/IPCInterface';
-import { LogParam } from '../../../../llm/LLMLogger';
+import { createClientMethods } from './ClientMethods';
+import { Socket } from 'socket.io';
 
 export default class WebSocketService extends BaseRPCService {
-  private socket: SocketIOClient.Socket | null = null;
+  private socket: Socket | null = null;
   private isConnecting: boolean = false;
 
   constructor() {
@@ -123,3 +123,4 @@ export default class WebSocketService extends BaseRPCService {
     }
   }
 }
+
