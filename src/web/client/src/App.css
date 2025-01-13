@@ -13,12 +13,6 @@
     overflow: hidden;
 }
 
-.artifacts-layout {
-    height: 100%;
-    width: 100%;
-    overflow: hidden;
-}
-
 .logs-container {
     display: flex;
     flex-direction: column;
@@ -482,7 +476,6 @@
 .artifact-content {
     padding: 2rem;
     overflow-y: auto;
-    max-height: calc(80vh - 4rem);
 }
 
 .close-button {
