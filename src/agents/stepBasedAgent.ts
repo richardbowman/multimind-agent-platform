@@ -250,7 +250,16 @@ export abstract class StepBasedAgent extends Agent {
             return;
         }
         this.projects.markTaskInProgress(task);
-        await this.executeStep(projectId, task, userPost);
+        await this.executeStep({
+            projectId,
+            task,
+            userPost,
+            context: {
+                channelId: params.userPost?.channel_id,
+                threadId: params.userPost?.thread_id,
+                projects: params.projects
+            }
+        });
     }
 
     protected async projectCompleted(project: Project): Promise<void> {
@@ -321,7 +330,8 @@ export abstract class StepBasedAgent extends Agent {
         }
     }
 
-    protected async executeStep(projectId: string, task: Task, userPost?: ChatPost): Promise<void> {
+    protected async executeStep(params: ExecuteStepParams): Promise<void> {
+        const { projectId, task, userPost, context } = params;
         try {
             const executor = this.stepExecutors.get(task.type);
             if (!executor) {
