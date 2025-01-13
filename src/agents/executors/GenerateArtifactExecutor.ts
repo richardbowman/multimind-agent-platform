@@ -28,9 +28,12 @@ export class GenerateArtifactExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
 
+    private taskManager?: TaskManager;
+
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
         this.artifactManager = params.artifactManager!;
+        this.taskManager = params.taskManager;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
@@ -54,6 +57,21 @@ export class GenerateArtifactExecutor implements StepExecutor {
             }
         };
 
+        // Get Q&A context from project metadata
+        let qaContext = '';
+        try {
+            const project = this.taskManager?.getProject(params.projectId);
+            if (project?.metadata?.answers) {
+                qaContext = `Relevant Q&A Context:\n${
+                    project.metadata.answers.map((a: any) => 
+                        `Q: ${a.question}\nA: ${a.answer}\n`
+                    ).join('\n')
+                }\n\n`;
+            }
+        } catch (error) {
+            Logger.warn('Failed to fetch Q&A context:', error);
+        }
+
         // Get existing artifacts from previous results
         let existingContent = '';
         const artifactIds = params.previousResult?.flatMap(r => r.response?.artifactIds || []) || [];
@@ -76,7 +94,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
             }
         }
 
-        const prompt = `Generate or modify a Markdown document based on the goal.
+        const prompt = `${qaContext}Generate or modify a Markdown document based on the goal.
 You have these options:
 1. Create a new document (leave artifactId blank)
 2. Replace an existing document (specify artifactId and set operation to "replace")
