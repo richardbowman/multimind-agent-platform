@@ -307,7 +307,16 @@ export abstract class StepBasedAgent extends Agent {
                     previousResult: priorResults,
                     message: userPost?.message,
                     stepGoal: task.description,
-                    overallGoal: project.name
+                    overallGoal: project.name,
+                    context: {
+                        channelId: userPost?.channel_id,
+                        threadId: userPost?.thread_id,
+                        artifacts: await this.artifactManager.getArtifacts({
+                            projectId,
+                            task: task.type
+                        }),
+                        projects: params.projects || []
+                    }
                 });
             } else {
                 stepResult = await executor.executeOld(
