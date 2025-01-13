@@ -76,6 +76,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({ onSendMessage }) => 
             onSendMessage(input.trim());
             setInput('');
             setShowSuggestions(false);
+            // Reset textarea height
+            if (inputRef.current) {
+                inputRef.current.style.height = 'auto';
+                inputRef.current.style.height = '40px';
+            }
         } else if (event.key === 'Tab' && showSuggestions) {
             event.preventDefault();
             const suggestion = suggestions[0];
