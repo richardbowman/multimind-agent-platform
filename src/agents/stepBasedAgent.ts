@@ -42,6 +42,12 @@ export interface ExecuteParams {
         handle: string;
         type: string;
     }>;
+    context?: {
+        channelId?: string;
+        threadId?: string;
+        artifacts?: Artifact[];
+        projects?: Project[];
+    };
 }
 
 export interface StepExecutor {

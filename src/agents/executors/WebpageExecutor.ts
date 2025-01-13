@@ -49,11 +49,18 @@ export class WebpageExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const { step, projectId, message } = params;
+        const { step, projectId, message, context } = params;
         
         try {
             // Extract URL from step or message
-            const url = this.extractUrl(params);
+            // Check context artifacts first for URLs
+            const contextUrls = context?.artifacts
+                ?.filter(a => a.metadata?.url)
+                .map(a => a.metadata.url) || [];
+            
+            // Extract URL from params with context URLs as fallback
+            const url = this.extractUrl(params) || 
+                contextUrls.find(u => u.includes(step) || u.includes(message || ''));
             if (!url) {
                 return {
                     type: 'invalid_url',
