@@ -3,7 +3,7 @@ import { useWebSocket } from '../contexts/DataContext';
 
 interface CommandInputProps {
     onSendMessage: (message: string) => void;
-    currentChannel?: string;
+    currentChannel: string|null;
 }
 
 const COMMANDS = [
@@ -13,7 +13,7 @@ const COMMANDS = [
     { command: '/channel', description: 'Send message to channel root' }
 ];
 
-export const CommandInput: React.FC<CommandInputProps> = ({ onSendMessage }) => {
+export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSendMessage }) => {
     const [input, setInput] = useState('');
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
