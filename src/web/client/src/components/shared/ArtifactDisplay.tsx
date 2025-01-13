@@ -2,6 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Artifact } from '../../../../../tools/artifact';
 import remarkGfm from 'remark-gfm'
+import { Box } from '@mui/material';
 
 interface ArtifactDisplayProps {
     artifact: Artifact;
@@ -13,7 +14,14 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     showMetadata = true
 }) => {
     return (
-        <div className="artifact-detail-content">
+        <Box component="main" sx={{ 
+            flexGrow: 1, 
+            display: 'flex',
+            flexDirection: "column",
+            flex: 1,
+            overflow: 'hidden',
+            position: 'relative'
+        }}>
             <div className="artifact-detail-header">
                 <h2>{artifact.metadata?.title || artifact.id}</h2>
                 <div className="artifact-meta">
@@ -47,6 +55,6 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     <ReactMarkdown remarkPlugins={[remarkGfm]}>{artifact.content as string}</ReactMarkdown>
                 )}
             </div>
-        </div>
+        </Box>
     );
 };

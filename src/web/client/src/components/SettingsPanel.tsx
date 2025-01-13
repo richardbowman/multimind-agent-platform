@@ -223,7 +223,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             <Box component="main" sx={{ 
                 flexGrow: 1, 
                 p: 3,
-                marginLeft: drawerOpen ? '250px' : 0,
+                marginLeft: drawerOpen ? 0: '-250px',
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
                 flex: 1,
                 overflowY: 'auto'

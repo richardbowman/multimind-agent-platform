@@ -300,7 +300,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 )}
                 <div ref={messagesEndRef} />
             </Box>
-            <CommandInput onSendMessage={handleSendMessage} />
+            <CommandInput onSendMessage={handleSendMessage} currentChannel={currentChannelId}/>
         </Box>
     );
 };

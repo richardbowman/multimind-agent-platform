@@ -31,7 +31,8 @@
                 "runtimeExecutable": "${workspaceFolder}/node_modules/.bin/electron.cmd"
             },
             "env": {
-                "NODE_OPTIONS": "--enable-source-maps"
+                "NODE_OPTIONS": "--enable-source-maps",
+                "NODE_ENV": "development"
             },
             "args": [
                 ".",

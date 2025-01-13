@@ -13,37 +13,7 @@ const ipcService: BaseRPCService = (window as any).electron
     ? new ElectronIPCService()
     : new WebSocketService();
 
-interface DataContextType {
-  messages: ClientMessage[];
-  channels: ClientChannel[];
-  tasks: ClientTask[];
-  artifacts: Artifact[];
-  handles: Array<{id: string, handle: string}>;
-  isLoading: boolean;
-  needsConfig: boolean;
-  currentChannelId: string | null;
-  setCurrentChannelId: (channelId: string | null) => void;
-  currentThreadId: string | null;
-  setCurrentThreadId: (threadId: string | null) => void;
-  logs: {
-    llm: Record<string, LLMLogEntry[]>;
-    system: any[];
-    api: any[];
-  };
-  sendMessage: (message: Partial<ClientMessage>) => void;
-  fetchChannels: () => void;
-  getSettings: () => Promise<any>;
-  updateSettings: (settings: any) => Promise<any>;
-  fetchTasks: (channelId: string, threadId: string | null) => void;
-  fetchArtifacts: (channelId: string, threadId: string | null) => void;
-  fetchAllArtifacts: () => void;
-  fetchHandles: () => void;
-  fetchLogs: (logType: 'llm' | 'system' | 'api') => void;
-  deleteArtifact: (artifactId: string) => void;
-  createChannel: (params: CreateChannelParams) => Promise<string>;
-}
-
-const DataContext = createContext<DataContextType | null>(null);
+const DataContext = createContext<typeof DataProvider | null>(null);
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<ClientMessage[]>([]);
@@ -138,7 +108,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setMessages([]); // Clear messages before loading new ones
         
         const [newMessages] = await Promise.all([
-          ipcService.getMessages(currentChannelId, currentThreadId || ''),
+          ipcService.getRPC().getMessages({channelId: currentChannelId, threadId: currentThreadId}),
           fetchTasks(currentChannelId, currentThreadId),
           fetchArtifacts(currentChannelId, currentThreadId)
         ]);

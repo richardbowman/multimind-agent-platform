@@ -237,7 +237,7 @@ export abstract class Agent {
 
                 let context: ConversationContext | undefined;
 
-                if (!post.getRootId() && handle && (post.message.startsWith(handle + " ") || autoRespond)) {
+                if (!post.getRootId() && handle && (post.message.startsWith(handle + " ") || (!post.message.startsWith("@") && autoRespond)) {
                     // Determine the type of activity using an LLM
                     await this.handleChannel({ userPost: post });
                 } else if (post.getRootId()) {

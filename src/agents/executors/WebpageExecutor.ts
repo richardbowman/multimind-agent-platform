@@ -32,11 +32,10 @@ export class WebpageExecutor implements StepExecutor {
 
     constructor(
         params: ExecutorConstructorParams & {
-            scrapeHelper: ScrapeHelper;
             modelHelpers: ModelHelpers;
         }
     ) {
-        this.scrapeHelper = params.scrapeHelper;
+        this.scrapeHelper = new ScrapeHelper(params.artifactManager, params.settings);
         this.llmService = params.llmService;
         this.artifactManager = params.artifactManager!;
         this.modelHelpers = params.modelHelpers!;

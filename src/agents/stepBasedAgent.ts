@@ -12,7 +12,7 @@ import Logger from '../helpers/logger';
 import { ModelMessageResponse, ModelResponse } from '../schemas/ModelResponse';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/localChatClient';
-import { AgentConfig } from 'src/tools/settingsManager';
+import { AgentConfig, Settings } from 'src/tools/settingsManager';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 
@@ -22,7 +22,7 @@ export interface StepResult {
     taskId?: string;
     finished?: boolean;
     goal?: string;
-    [key: string]: any;
+    allowReplan?: boolean;
     needsUserInput?: boolean;
     response: ModelResponse;
 }
@@ -57,8 +57,9 @@ export interface StepExecutor {
 export interface ExecutorConstructorParams {
     vectorDB: IVectorDatabase;
     llmService: ILLMService;
-    taskManager?: TaskManager;
-    artifactManager?: ArtifactManager;
+    taskManager: TaskManager;
+    artifactManager: ArtifactManager;
+    settings: Settings,
     userId?: string;
     config?: Record<string, any>;
 }
@@ -96,6 +97,7 @@ export abstract class StepBasedAgent extends Agent {
                     taskManager: this.projects,
                     artifactManager: this.artifactManager,
                     userId: this.userId,
+                    settings: this.settings,
                     ...executorConfig.config
                 });
                 
@@ -365,18 +367,24 @@ export abstract class StepBasedAgent extends Agent {
                 Logger.info(`Completed step "${task.type}" for project "${projectId}"`);
 
                 // If this was the last planned task, add a validation step
-                // const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
-                // if (task.type !== 'validation' && remainingTasks.length === 0) {
-                //     const validationTask: Task = {
-                //         id: crypto.randomUUID(),
-                //         type: 'validation',
-                //         description: 'Validate solution completeness',
-                //         creator: this.userId,
-                //         complete: false,
-                //         order: (task.order || 0) + 1
-                //     };
-                //     this.projects.addTask(project, validationTask);
-                // }
+                const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
+                if (stepResult.allowReplan && remainingTasks.length === 0) {
+                    // const validationTask: Task = {
+                    //     id: crypto.randomUUID(),
+                    //     type: 'validation',
+                    //     description: 'Validate solution completeness',
+                    //     creator: this.userId,
+                    //     complete: false,
+                    //     order: (task.order || 0) + 1
+                    // };
+                    // this.projects.addTask(project, validationTask);
+
+                    //TODO: hacky, we don't really post this message
+                    await this.planSteps(project.id, [InMemoryPost.fromLoad({
+                        ...userPost,
+                        message: `Replanning requested after ${stepResult.type} step completed`
+                    })]);
+                }
 
                 if (!stepResult.needsUserInput) {
                     await this.executeNextStep(projectId, userPost);

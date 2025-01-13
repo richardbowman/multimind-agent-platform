@@ -223,7 +223,45 @@ My goal is to help you define, document and refine product specifications.",
           }
         ]
       }
-    }
+    },
+     "DataGatherer": {
+       "className": "ConfigurableAgent",
+       "sourcePath": "../agents/configurableAgent",
+       "userId": "d9f8d7e6-5b4a-3c2b-1e0f-9d8c7b6a5e4g",
+       "handle": "@data",
+       "description": "Specializes in gathering and processing data from web sources",
+       "enabled": true,
+       "config": {
+         "purpose": "My name is Data Gatherer. \
+ My goal is to help you collect, process and analyze data from web sources.",
+         "finalInstructions": "When gathering data: \
+ 1. Verify the validity and reliability of sources \
+ 2. Extract and summarize key information \
+ 3. Organize data into structured formats \
+ 4. Track token usage and processing costs \
+ 5. Create reusable data artifacts \
+ 6. Validate data quality and relevance \
+ 7. Provide clear summaries and reports",
+         "executors": [
+           {
+             "className": "WebpageExecutor"
+           },
+           {
+             "className": "GenerateArtifactExecutor",
+             "config": {
+               "defaultFormat": "markdown",
+               "artifactTypes": ["data", "report", "summary"]
+             }
+           },
+           {
+             "className": "GoalConfirmationExecutor"
+           },
+           {
+             "className": "AnswerQuestionsExecutor"
+           }
+         ]
+       }
+     }
   },
   "bedrock": {
     "maxTokensPerMinute": 20000,

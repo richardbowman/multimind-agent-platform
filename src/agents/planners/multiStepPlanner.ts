@@ -62,12 +62,12 @@ export class MultiStepPlanner implements Planner {
         const currentTasks = tasks.filter(t => !t.complete);
 
         const completedSteps = completedTasks.length > 0 ? 
-            `## Completed Tasks\n${formatCompletedTasks(completedTasks)}\n\n` : 
-            `## Completed Tasks\n*No completed tasks yet*\n\n`;
+            formatCompletedTasks(completedTasks) : 
+            `*No completed tasks yet*`;
 
         const currentSteps = currentTasks.length > 0 ? 
-            `## Current Plan\n${formatCurrentTasks(currentTasks)}\n\n` : 
-            `## Current Plan\n*No tasks in current plan*\n\n`;
+            formatCurrentTasks(currentTasks) : 
+            `*No tasks in current plan*`;
 
         const stepDescriptions = executorMetadata
             .filter(metadata => metadata.planner)
@@ -89,17 +89,15 @@ ${userContext}
 ${stepDescriptions}
 
 ## TASK GOAL:
-- If the user's high-level goal is not solved, look at the Current Plan and decide if you need to change anything to achieve the goal.
-- If the current step is in-progress, don't remove it so it can process the new conversation from the user unless its clear we need to replan.
+- If the user's high-level goal is not solved, review the Current Plan and generate a new plan to solve the goal.
+- If the current step is in-progress, ensure this is the first step in the new plan.
+- Provide a complete plan of all steps including incomplete using actions from the available action types in the order to perform.
 
-- Provide a complete plan of all steps INCLUDING EXISTING STEPS required using actions from the available action types in the order to perform.
-
+## COMPLETED TA
 ${completedSteps}
 
-${currentSteps}
-
-## INSTRUCTIONS:
-${this.modelHelpers.getFinalInstructions()}`;
+## CURRENT PLAN
+${currentSteps}`;
 
         const response = await this.modelHelpers.generate<PlanStepsResponse>({
             ...handlerParams,

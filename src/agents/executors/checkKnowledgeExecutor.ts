@@ -115,6 +115,7 @@ ${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
         return {
             type: "research",
             finished: true,
+            allowReplan: true,
             response: {
                 message: responseMessage,
                 data: {
@@ -202,6 +203,7 @@ ${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
         return {
             type: "research",
             finished: true,
+            allowReplan: true,
             response: {
                 message: responseMessage,
                 data: {

@@ -177,6 +177,8 @@ export class ModelHelpers {
 
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = this.addDateToSystemPrompt(structure.getPrompt());
+        augmentedInstructions += `OVERALL PURPOSE: ${this.getPurpose()}\n\n${augmentedInstructions}\n\nOverall agent instructions: ${this.getFinalInstructions()}`;
+
         if (this.isMemoryEnabled) {
             const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
 
