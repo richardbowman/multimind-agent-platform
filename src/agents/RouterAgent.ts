@@ -114,15 +114,32 @@ Respond with:
             512
         );
 
-        // Always send the response message
-        await this.reply(userPost, {
-            message: response.response
-        });
-
         // If we're ready to route and have high confidence, suggest the agent
         if (response.readyToRoute && response.selectedAgent && response.confidence > 0.7) {
+            // Check if we've already suggested this agent in this thread
+            const hasSuggested = threadPosts.some(post => 
+                post.user_id === this.userId && 
+                post.message.includes(`I think ${response.selectedAgent} would be best suited`)
+            );
+
+            if (!hasSuggested) {
+                await this.reply(userPost, {
+                    message: response.response
+                });
+                
+                await this.reply(userPost, {
+                    message: `Based on our conversation, I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in?`
+                });
+            } else {
+                // If we've already suggested, just send the response
+                await this.reply(userPost, {
+                    message: response.response
+                });
+            }
+        } else {
+            // Always send the response message if we're not routing
             await this.reply(userPost, {
-                message: `Based on our conversation, I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in?`
+                message: response.response
             });
         }
     }
