@@ -112,16 +112,50 @@ export const CommandInput: React.FC<CommandInputProps> = ({ onSendMessage }) => 
 
     return (
         <div className="command-input">
-            <input
+            <textarea
                 ref={inputRef}
-                type="text"
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyPress}
                 placeholder="Type a message... (Use / for commands, @ for mentions)"
+                rows={1}
+                style={{
+                    width: '100%',
+                    minHeight: '40px',
+                    maxHeight: '200px',
+                    resize: 'none',
+                    overflowY: 'hidden',
+                    padding: '8px',
+                    borderRadius: '4px',
+                    border: '1px solid #ccc',
+                    fontFamily: 'inherit',
+                    fontSize: 'inherit',
+                    lineHeight: '1.5'
+                }}
+                onInput={(e) => {
+                    const target = e.target as HTMLTextAreaElement;
+                    target.style.height = 'auto';
+                    target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
+                }}
             />
             {showSuggestions && (
-                <div ref={suggestionsRef} className="suggestions-dropdown">
+                <div 
+                    ref={suggestionsRef} 
+                    className="suggestions-dropdown"
+                    style={{
+                        position: 'absolute',
+                        bottom: '100%',
+                        left: 0,
+                        right: 0,
+                        backgroundColor: '#fff',
+                        border: '1px solid #ccc',
+                        borderRadius: '4px',
+                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                        zIndex: 1000,
+                        maxHeight: '200px',
+                        overflowY: 'auto'
+                    }}
+                >
                     {suggestions.map((suggestion, index) => (
                         <div
                             key={index}
