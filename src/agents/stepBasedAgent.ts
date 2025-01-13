@@ -316,7 +316,7 @@ export abstract class StepBasedAgent extends Agent {
                             projectId,
                             task: task.type
                         }),
-                        projects: [project]
+                        projects: params.projects || []
                     }
                 });
             } else {
