@@ -106,8 +106,8 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                             >
                                 <ChevronLeftIcon />
                             </IconButton>
-                            <Typography variant="h6" noWrap sx={{ flexGrow: 1 }} component="div">
-                                Artifact
+                            <Typography variant="h6" noWrap sx={{ flexGrow: 1, textAlign: 'center' }} component="div">
+                                {artifacts.findIndex(a => a.id === selectedArtifact.id) + 1} of {artifacts.length}
                             </Typography>
                             <IconButton 
                                 onClick={() => {
