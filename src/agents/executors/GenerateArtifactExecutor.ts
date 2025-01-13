@@ -42,7 +42,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
             properties: {
                 artifactId: { 
                     type: 'string',
-                    description: 'ID of document to modify (leave blank for new document)'
+                    description: 'ID of document to modify (only required for replace/append operations)'
                 },
                 operation: { 
                     type: 'string',
@@ -62,25 +62,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
                     description: 'Message describing what was done'
                 }
             },
-            required: ['title', 'content', 'confirmationMessage', 'operation'],
-            if: {
-                properties: {
-                    artifactId: { const: '' }
-                }
-            },
-            then: {
-                properties: {
-                    operation: { const: 'create' }
-                }
-            },
-            else: {
-                properties: {
-                    operation: { 
-                        enum: ['replace', 'append'],
-                        description: 'Must be "replace" or "append" when modifying existing document'
-                    }
-                }
-            }
+            required: ['title', 'content', 'confirmationMessage', 'operation']
         };
 
         // Get Q&A context from project metadata
@@ -131,15 +113,15 @@ You have these options:
 ${existingContent}
 
 Provide:
-- artifactId: ID of document to modify (leave blank for new document)
+- artifactId: ID of document to modify (only required for replace/append operations)
 - operation: Must be "create" for new documents, "replace" or "append" for existing ones
 - title: Document title
 - content: New or additional content
 - confirmationMessage: Message describing what was done
 
 IMPORTANT RULES:
-- For NEW documents: artifactId must be blank and operation must be "create"
-- For EXISTING documents: artifactId must be provided and operation must be "replace" or "append"`;
+- For NEW documents: Use operation="create" and omit artifactId
+- For EXISTING documents: Use operation="replace" or "append" and provide artifactId`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         
