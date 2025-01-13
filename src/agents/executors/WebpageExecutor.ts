@@ -49,9 +49,10 @@ export class WebpageExecutor implements StepExecutor {
         return new Set(artifacts.map(a => a.metadata?.url));
     }
 
-    async execute(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        // Extract URL from step - assuming step is the URL or contains it
-        const url = this.extractUrlFromStep(step);
+    async execute(params: ExecuteParams): Promise<StepResult> {
+        const { step, projectId, message } = params;
+        // Extract URL from step or message
+        const url = this.extractUrlFromStep(step || message || '');
         if (!url) {
             return {
                 type: 'invalid_url',
@@ -63,7 +64,7 @@ export class WebpageExecutor implements StepExecutor {
         }
 
         try {
-            const summary = await this.processPage(url, step, goal, projectId);
+            const summary = await this.processPage(url, step || message || '', params.goal || params.overallGoal || '', projectId);
             
             // Get artifacts to calculate total token usage
             const artifacts = await this.artifactManager.getArtifacts({
