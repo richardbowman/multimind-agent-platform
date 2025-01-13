@@ -21,9 +21,9 @@ export class RouterAgent extends Agent {
         // Router agent doesn't process tasks
     }
 
-    protected async handlerThread(params: HandlerParams): Promise<void> {
+    private async getRoutingContext(params: HandlerParams) {
         const { userPost, threadPosts = [] } = params;
-
+        
         // Get channel data including any project goals
         const channelData = await this.chatClient.getChannelData(userPost.channel_id);
         const project = channelData?.projectId
@@ -43,12 +43,89 @@ export class RouterAgent extends Agent {
             .filter(Boolean)
             .join('\n');
 
+        // Get project tasks if exists
+        const projectTasks = project ? Object.values(project.tasks) : [];
+
+        // Get conversation context from thread posts if available
+        const conversationContext = threadPosts.length > 0
+            ? threadPosts.map(p => `${p.user_id === this.userId ? 'Assistant' : 'User'}: ${p.message}`).join('\n')
+            : userPost.message;
+
+        return {
+            channelData,
+            project,
+            agentOptions,
+            agentPromptOptions,
+            projectTasks,
+            conversationContext
+        };
+    }
+
+    private async handleRoutingResponse(
+        userPost: ChatPost,
+        response: ModelMessageResponse,
+        threadPosts: ChatPost[] = []
+    ) {
+        // Handle different next steps based on LLM's decision
+        switch (response.nextStep) {
+            case 'propose-transfer':
+                if (response.selectedAgent && response.confidence > 0.7) {
+                    await this.reply(userPost, {
+                        message: `I think ${response.selectedAgent} would be best suited to help with this. Would you like me to transfer this to them?\n\n${response.response}`
+                    }, {
+                        "routing-suggested": true,
+                        "proposed-agent": response.selectedAgent
+                    });
+                }
+                break;
+
+            case 'execute-transfer':
+                if (response.selectedAgent && response.confidence > 0.9) {
+                    await this.chatClient.postInChannel(
+                        userPost.channel_id,
+                        `${response.selectedAgent} ${response.response}`,
+                        {
+                            "routed-from": userPost.user_id,
+                            "routed-by": this.userId,
+                            "routed-agent": response.selectedAgent
+                        }
+                    );
+                }
+                break;
+
+            case 'ask-clarification':
+            case 'provide-information':
+            default:
+                // Check if we've already suggested this agent in this thread
+                const hasSuggested = threadPosts.some(post =>
+                    post.user_id === this.userId && post.props["routing-suggested"]
+                );
+
+                if (!hasSuggested) {
+                    await this.reply(userPost, {
+                        message: response.response,
+                    }, {
+                        "routing-suggested": true
+                    });
+                } else {
+                    await this.reply(userPost, {
+                        message: response.response
+                    });
+                }
+                break;
+        }
+    }
+
+    protected async handlerThread(params: HandlerParams): Promise<void> {
+        const { userPost, threadPosts = [] } = params;
+        const context = await this.getRoutingContext(params);
+
         const schema = {
             type: "object",
             properties: {
                 selectedAgent: {
                     type: "string",
-                    enum: agentOptions.map(a => a?.handle) || []
+                    enum: context.agentOptions.map(a => a?.handle) || []
                 },
                 reasoning: { type: "string" },
                 confidence: {
@@ -74,11 +151,6 @@ export class RouterAgent extends Agent {
                 }
             }
         };
-
-        // Get the full conversation context
-        const conversationContext = threadPosts
-            .map(p => `${p.user_id === this.userId ? 'Assistant' : 'User'}: ${p.message}`)
-            .join('\n');
 
         const prompt = `Analyze the ongoing conversation and determine the best way to respond. You must explicitly choose one of these next steps:
 
@@ -109,16 +181,16 @@ export class RouterAgent extends Agent {
    - Suggest next steps if appropriate
 
 Available agents:
-${agentPromptOptions}
+${context.agentPromptOptions}
 
-${project ? `Channel Project Details:
-- Name: ${project.name}
-- Goal: ${project.metadata?.description || 'No specific goal'}
-- Status: ${project.metadata?.status || 'active'}
+${context.project ? `Channel Project Details:
+- Name: ${context.project.name}
+- Goal: ${context.project.metadata?.description || 'No specific goal'}
+- Status: ${context.project.metadata?.status || 'active'}
 ` : ''}
 
 Conversation context:
-${conversationContext}
+${context.conversationContext}
 
 Respond with:
 - selectedAgent: The best agent to handle this (optional if unclear)
@@ -135,105 +207,18 @@ Respond with:
             512
         );
 
-        // Handle different next steps based on LLM's decision
-        switch (response.nextStep) {
-            case 'propose-transfer':
-                if (response.selectedAgent && response.confidence > 0.7) {
-                    await this.reply(userPost, {
-                        message: `I think ${response.selectedAgent} would be best suited to help with this. Would you like me to transfer this to them?\n\n${response.response}`
-                    }, {
-                        "routing-suggested": true,
-                        "proposed-agent": response.selectedAgent
-                    });
-                }
-                break;
-
-            case 'execute-transfer':
-                if (response.selectedAgent && response.confidence > 0.9) {
-                    await this.chatClient.postInChannel(
-                        userPost.channel_id,
-                        `${response.selectedAgent} ${response.response}`,
-                        {
-                            "routed-from": userPost.user_id,
-                            "routed-by": this.userId,
-                            "routed-agent": response.selectedAgent
-                        }
-                    );
-                }
-                break;
-
-            case 'ask-clarification':
-                await this.reply(userPost, {
-                    message: response.response
-                });
-                break;
-
-            case 'provide-information':
-            default:
-                await this.reply(userPost, {
-                    message: response.response
-                });
-                break;
-        }
-            // Check if we've already suggested this agent in this thread
-            const hasSuggested = threadPosts.some(post =>
-                post.user_id === this.userId && post.props["routing-suggested"]
-            );
-
-            if (!hasSuggested) {
-                await this.reply(userPost, {
-                    message: response.response,
-                }, {
-                    "routing-suggested": true
-                }
-                );
-            } else {
-                // Get the agent handle directly from the confirmation response
-                await this.chatClient.postInChannel(
-                    userPost.channel_id,
-                    `${response.selectedAgent} ${response.response}`,
-                    {
-                        "routed-from": userPost.user_id,
-                        "routed-by": this.userId
-                    }
-                );
-            }
-        } else {
-            // Always send the response message if we're not routing
-            await this.reply(userPost, {
-                message: response.response
-            });
-        }
+        await this.handleRoutingResponse(userPost, response, threadPosts);
     }
 
     protected async handleChannel(params: HandlerParams): Promise<void> {
-        const { userPost } = params;
-
-        // Get channel data including any project goals
-        const channelData = await this.chatClient.getChannelData(userPost.channel_id);
-        const projectGoal = channelData?.projectId
-            ? this.projects.getProject(channelData.projectId)?.metadata?.description
-            : null;
-
-        // Get agent descriptions from settings for channel members
-        const agentOptions = (channelData.members || [])
-            .filter(memberId => this.userId !== memberId)
-            .map(memberId => {
-                const agent = Object.values(this.settings.agents).find(a => a.userId === memberId);
-                return agent
-            });
-
-        const agentPromptOptions = agentOptions
-            .map(agent => `- ${agent?.handle}: ${agent?.description}`)
-            .filter(Boolean)
-            .join('\n');
+        const context = await this.getRoutingContext(params);
 
         const schema = {
             type: "object",
             properties: {
                 selectedAgent: {
                     type: "string",
-                    enum: agentOptions.map(a => a?.handle) || []
+                    enum: context.agentOptions.map(a => a?.handle) || []
                 },
                 reasoning: { type: "string" },
                 confidence: {
@@ -244,14 +229,21 @@ Respond with:
                 response: {
                     type: "string",
                     description: "The message to send to the user, which may include questions, explanations, or suggestions"
+                },
+                readyToRoute: {
+                    type: "boolean",
+                    description: "True if we have enough information to route to another agent"
                 }
             },
-            required: ["response", "reasoning", "confidence"]
+            required: ["response", "reasoning", "confidence", "readyToRoute"],
+            additionalProperties: {
+                nextStep: {
+                    type: "string",
+                    enum: ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information"],
+                    description: "The next step to take in the conversation"
+                }
+            }
         };
-
-        // Get project details if exists
-        const project = channelData?.projectId ? this.projects.getProject(channelData.projectId) : null;
-        const projectTasks = project ? Object.values(project.tasks) : [];
 
         const prompt = `Analyze the user's request and determine the best way to respond. Follow these guidelines:
 
@@ -271,44 +263,35 @@ Respond with:
    - Mention any blockers or important deadlines
 
 Available agents:
-${agentPromptOptions}
+${context.agentPromptOptions}
 
-${project ? `Channel Project Details:
-- Name: ${project.name}
-- Goal: ${project.metadata?.description || 'No specific goal'}
-- Status: ${project.metadata?.status || 'active'}
-- Tasks: ${projectTasks.length > 0 ?
-                    projectTasks.map(t => `\n  * ${t.description} (${t.complete ? '✅ complete' : t.inProgress ? '⏳ in progress' : '🆕 not started'})`).join('')
+${context.project ? `Channel Project Details:
+- Name: ${context.project.name}
+- Goal: ${context.project.metadata?.description || 'No specific goal'}
+- Status: ${context.project.metadata?.status || 'active'}
+- Tasks: ${context.projectTasks.length > 0 ?
+                    context.projectTasks.map(t => `\n  * ${t.description} (${t.complete ? '✅ complete' : t.inProgress ? '⏳ in progress' : '🆕 not started'})`).join('')
                     : 'No tasks'}
 ` : ''}
 
-User request: "${userPost.message}"
+User request: "${context.conversationContext}"
 
 Respond with:
 - selectedAgent: The best agent to handle this (optional if unclear)
 - reasoning: Your detailed reasoning including any questions for clarification
 - confidence: Your confidence level (0-1) in this selection
-- response: The message to send to the user, which may include questions, explanations, or suggestions`;
+- response: The message to send to the user, which may include questions, explanations, or suggestions
+- readyToRoute: True if we have enough information to route to another agent`;
 
         const response = await this.llmService.generateStructured(
-            userPost,
+            params.userPost,
             new StructuredOutputPrompt(schema, prompt),
             [],
             1024,
             512
         );
 
-        // Always send the response message
-        await this.reply(userPost, {
-            message: response.response
-        });
-
-        // If we have a selected agent and high confidence, suggest them
-        if (response.selectedAgent && response.confidence > 0.7) {
-            await this.reply(userPost, {
-                message: `I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in?`
-            });
-        }
+        await this.handleRoutingResponse(params.userPost, response);
     }
 
     protected projectCompleted(project: Project): void {
