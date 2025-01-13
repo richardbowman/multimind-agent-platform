@@ -38,17 +38,58 @@ export class GenerateArtifactExecutor implements StepExecutor {
             type: 'object',
             properties: {
                 artifactId: { type: 'string' },
+                operation: { 
+                    type: 'string',
+                    enum: ['replace', 'append']
+                },
                 title: { type: 'string' },
                 content: { type: 'string' },
                 confirmationMessage: { type: 'string' }
             },
-            required: ['title', 'content', 'confirmationMessage']
+            required: ['title', 'content', 'confirmationMessage'],
+            dependencies: {
+                artifactId: {
+                    required: ['operation']
+                }
+            }
         };
 
-        const prompt = `Generate a title, content for a Markdown document and a confirmation message based on the goal.
-Specify the existing artifact ID if you want to revise an existing artifact. Otherwise, leave this field blank.
+        // Get existing artifacts from previous results
+        let existingContent = '';
+        const artifactIds = params.previousResult?.flatMap(r => r.response?.artifactIds || []) || [];
+        
+        if (artifactIds.length > 0) {
+            try {
+                const artifacts = await Promise.all(
+                    artifactIds.map(id => this.artifactManager.getArtifact(id))
+                );
+                
+                existingContent = `Existing artifacts:\n${
+                    artifacts.map((a, i) => 
+                        `- Artifact ID: ${artifactIds[i]}\n` +
+                        `  Title: ${a.metadata?.title || 'Untitled'}\n` +
+                        `  Content:\n${a.content}\n`
+                    ).join('\n')
+                }\n\n`;
+            } catch (error) {
+                Logger.warn('Failed to fetch existing artifacts:', error);
+            }
+        }
 
-${params.previousResult ? `Consider this previous content:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
+        const prompt = `Generate or modify a Markdown document based on the goal.
+You have these options:
+1. Create a new document (leave artifactId blank)
+2. Replace an existing document (specify artifactId and set operation to "replace")
+3. Append to an existing document (specify artifactId and set operation to "append")
+
+${existingContent}
+
+Provide:
+- artifactId: ID of document to modify (or blank for new)
+- operation: "replace" or "append" (only if artifactId provided)
+- title: Document title
+- content: New or additional content
+- confirmationMessage: Message describing what was done`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         
@@ -59,12 +100,20 @@ ${params.previousResult ? `Consider this previous content:\n${JSON.stringify(par
             });
 
             // Prepare the artifact
+            let finalContent = result.content;
+            if (result.artifactId && result.operation === 'append') {
+                const existingArtifact = await this.artifactManager.getArtifact(result.artifactId);
+                finalContent = `${existingArtifact.content}\n\n${result.content}`;
+            }
+
             const artifact: Artifact = {
                 id: result.artifactId?.length > 0 ? result.artifactId : randomUUID(),
                 type: 'markdown',
-                content: result.content,
+                content: finalContent,
                 metadata: {
-                    title: result.title
+                    title: result.title,
+                    operation: result.operation || 'create',
+                    previousVersion: result.artifactId ? result.artifactId : undefined
                 }
             };
 
