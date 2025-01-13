@@ -110,12 +110,12 @@ export class RouterAgent extends Agent {
                     minimum: 0,
                     maximum: 1
                 },
-                suggestedQuestion: {
+                response: {
                     type: "string",
-                    description: "A helpful follow-up question to ask the user if clarification is needed"
+                    description: "The message to send to the user, which may include questions, explanations, or suggestions"
                 }
             },
-            required: ["selectedAgent", "reasoning", "confidence", "suggestedQuestion"]
+            required: ["response", "reasoning", "confidence"]
         };
 
         // Get project details if exists
@@ -154,10 +154,10 @@ ${project ? `Channel Project Details:
 User request: "${userPost.message}"
 
 Respond with:
-- selectedAgent: The best agent to handle this (or null if unclear)
+- selectedAgent: The best agent to handle this (optional if unclear)
 - reasoning: Your detailed reasoning including any questions for clarification
 - confidence: Your confidence level (0-1) in this selection
-- suggestedQuestion: A helpful follow-up question to ask the user (if needed)`;
+- response: The message to send to the user, which may include questions, explanations, or suggestions`;
 
         const response = await this.llmService.generateStructured(
             userPost,
@@ -167,25 +167,16 @@ Respond with:
             512
         );
 
-        if (!response.selectedAgent) {
-            await this.reply(userPost, {
-                message: "I apologize, but I'm not sure which agent would be best suited to help you. Could you please provide more details about your request?"
-            });
-            return;
-        }
+        // Always send the response message
+        await this.reply(userPost, {
+            message: response.response
+        });
 
-        // If confidence is high enough (e.g., > 0.7), suggest the agent
-        if (response.confidence > 0.7) {
-            const confirmationMessage: ModelMessageResponse = {
-                message: `I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in?\n\nReasoning: ${response.reasoning}`
-            };
-            await this.reply(userPost, confirmationMessage);
-        } else {
-            // If confidence is low, ask for clarification
-            const clarificationMessage: ModelMessageResponse = {
-                message: `I'm not entirely sure, but I think ${response.selectedAgent} might be able to help. Could you please provide more details about what you're looking to accomplish?`
-            };
-            await this.reply(userPost, clarificationMessage);
+        // If we have a selected agent and high confidence, suggest them
+        if (response.selectedAgent && response.confidence > 0.7) {
+            await this.reply(userPost, {
+                message: `I think ${response.selectedAgent} would be best suited to help you with this request. Would you like me to bring them in?`
+            });
         }
     }
 
