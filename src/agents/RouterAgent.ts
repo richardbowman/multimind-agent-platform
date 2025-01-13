@@ -65,7 +65,14 @@ export class RouterAgent extends Agent {
                     description: "True if we have enough information to route to another agent"
                 }
             },
-            required: ["response", "reasoning", "confidence", "readyToRoute"]
+            required: ["response", "reasoning", "confidence", "readyToRoute"],
+            additionalProperties: {
+                nextStep: {
+                    type: "string",
+                    enum: ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information"],
+                    description: "The next step to take in the conversation"
+                }
+            }
         };
 
         // Get the full conversation context
@@ -73,19 +80,33 @@ export class RouterAgent extends Agent {
             .map(p => `${p.user_id === this.userId ? 'Assistant' : 'User'}: ${p.message}`)
             .join('\n');
 
-        const prompt = `Analyze the ongoing conversation and determine the best way to respond. Follow these guidelines:
+        const prompt = `Analyze the ongoing conversation and determine the best way to respond. You must explicitly choose one of these next steps:
 
-1. If the request is clear and we have enough information:
+1. propose-transfer: When you have a good candidate agent but want user confirmation
    - Set readyToRoute: true
    - Select the most appropriate agent
    - Explain why they're the best choice
    - Include relevant project/task context
+   - Ask for user confirmation before transferring
 
-2. If more information is needed:
+2. execute-transfer: When you're highly confident and should immediately transfer
+   - Set readyToRoute: true
+   - Select the most appropriate agent
+   - Explain why they're the best choice
+   - Include all necessary context for the transfer
+   - Only use when confidence > 0.9
+
+3. ask-clarification: When you need more information
    - Set readyToRoute: false
-   - Politely ask clarifying questions
-   - Explain the channel's current project goals and tasks
+   - Politely ask specific clarifying questions
+   - Explain what information is missing
    - Suggest possible directions for the conversation
+
+4. provide-information: When you can answer directly
+   - Set readyToRoute: false
+   - Provide the requested information
+   - Explain any relevant context
+   - Suggest next steps if appropriate
 
 Available agents:
 ${agentPromptOptions}
@@ -114,8 +135,46 @@ Respond with:
             512
         );
 
-        // If we're ready to route and have high confidence, suggest the agent
-        if (response.readyToRoute && response.selectedAgent && response.confidence > 0.7) {
+        // Handle different next steps based on LLM's decision
+        switch (response.nextStep) {
+            case 'propose-transfer':
+                if (response.selectedAgent && response.confidence > 0.7) {
+                    await this.reply(userPost, {
+                        message: `I think ${response.selectedAgent} would be best suited to help with this. Would you like me to transfer this to them?\n\n${response.response}`
+                    }, {
+                        "routing-suggested": true,
+                        "proposed-agent": response.selectedAgent
+                    });
+                }
+                break;
+
+            case 'execute-transfer':
+                if (response.selectedAgent && response.confidence > 0.9) {
+                    await this.chatClient.postInChannel(
+                        userPost.channel_id,
+                        `${response.selectedAgent} ${response.response}`,
+                        {
+                            "routed-from": userPost.user_id,
+                            "routed-by": this.userId,
+                            "routed-agent": response.selectedAgent
+                        }
+                    );
+                }
+                break;
+
+            case 'ask-clarification':
+                await this.reply(userPost, {
+                    message: response.response
+                });
+                break;
+
+            case 'provide-information':
+            default:
+                await this.reply(userPost, {
+                    message: response.response
+                });
+                break;
+        }
             // Check if we've already suggested this agent in this thread
             const hasSuggested = threadPosts.some(post =>
                 post.user_id === this.userId && post.props["routing-suggested"]
