@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { IIPCService, ClientMessage, ClientChannel } from '../shared/IPCInterface';
+import { ClientMessage, ClientChannel } from '../shared/IPCInterface';
 import WebSocketService from '../services/WebSocketService';
 import { ElectronIPCService } from '../services/ElectronIPCService';
 import { Artifact } from '../../../../tools/artifact';
