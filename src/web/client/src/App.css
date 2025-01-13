@@ -466,7 +466,6 @@
 .artifact-viewer {
     background-color: #2a2a2a;
     border-radius: 8px;
-    width: 80%;
     max-width: 1000px;
     max-height: 80vh;
     position: relative;
@@ -475,7 +474,9 @@
 
 .artifact-content {
     padding: 2rem;
-    overflow-y: auto;
+    overflow-y: scroll;
+    overflow-x: hidden;
+    height: 100%;
 }
 
 .close-button {
