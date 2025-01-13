@@ -124,10 +124,25 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                                     <strong>Depends On:</strong> {selectedTask.dependsOn}
                                 </Typography>
                             )}
-                            {selectedTask.metadata && Object.entries(selectedTask.metadata).map(([key, value]) => (
-                                <Typography key={key} variant="body1">
-                                    <strong>{key}:</strong> {String(value)}
-                                </Typography>
+                            {selectedTask.props && Object.entries(selectedTask.props).map(([key, value]) => (
+                                <Box key={key} sx={{ 
+                                    p: 1,
+                                    bgcolor: 'background.paper',
+                                    borderRadius: 1,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    mb: 1
+                                }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                        {key}
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ 
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-word'
+                                    }}>
+                                        {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                                    </Typography>
+                                </Box>
                             ))}
                         </Stack>
                     )}
