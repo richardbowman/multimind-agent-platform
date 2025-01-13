@@ -33,20 +33,56 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const [userId] = useState('test');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
+    const [isAtBottom, setIsAtBottom] = useState(true);
+    const messagesContainerRef = useRef<HTMLDivElement>(null);
+
+    const checkScrollPosition = () => {
+        if (messagesContainerRef.current) {
+            const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
+            setIsAtBottom(scrollHeight - (scrollTop + clientHeight) < 50);
+        }
+    };
+
     const scrollToBottom = () => {
-        messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+        if (isAtBottom && messagesEndRef.current) {
+            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+        }
     };
 
     // Handle scrolling
     useEffect(() => {
-        if (messages.length > 0) {
+        const container = messagesContainerRef.current;
+        if (container) {
+            container.addEventListener('scroll', checkScrollPosition);
+            return () => container.removeEventListener('scroll', checkScrollPosition);
+        }
+    }, []);
+
+    // Scroll to bottom when new messages come in for current thread/channel
+    useEffect(() => {
+        const relevantMessages = messages.filter(message => 
+            message.channel_id === currentChannelId &&
+            (currentThreadId 
+                ? message.id === currentThreadId || message.props?.['root-id'] === currentThreadId
+                : !message.props?.['root-id'])
+        );
+
+        if (relevantMessages.length > 0) {
             scrollToBottom();
         }
-    }, [messages.length]);
+    }, [messages.length, currentChannelId, currentThreadId]);
 
-    // Scroll to bottom when messages are updated or when a message's inProgress status changes
+    // Scroll to bottom when in-progress messages update in current thread
     useEffect(() => {
-        if (messages.some(m => m.inProgress)) {
+        const hasRelevantInProgress = messages.some(m => 
+            m.inProgress &&
+            m.channel_id === currentChannelId &&
+            (currentThreadId 
+                ? m.id === currentThreadId || m.props?.['root-id'] === currentThreadId
+                : !m.props?.['root-id'])
+        );
+
+        if (hasRelevantInProgress) {
             scrollToBottom();
         }
     }, [messages]);
@@ -122,13 +158,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             mr: rightDrawerOpen ? '300px' : 0,
             transition: 'all 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
         }}>
-            <Box sx={{ 
-                flex: 1,
-                overflowY: 'auto',
-                p: 2,
-                bgcolor: 'background.paper',
-                width: '100%'
-            }}>
+            <Box 
+                ref={messagesContainerRef}
+                sx={{ 
+                    flex: 1,
+                    overflowY: 'auto',
+                    p: 2,
+                    bgcolor: 'background.paper',
+                    width: '100%'
+                }}
+                onScroll={checkScrollPosition}
+            >
                 {isLoading ? (
                     <Typography variant="body1" sx={{ 
                         textAlign: 'center',
