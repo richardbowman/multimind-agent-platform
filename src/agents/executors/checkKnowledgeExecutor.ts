@@ -37,11 +37,11 @@ export class KnowledgeCheckExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const mode = params.mode as ('quick' | 'detailed') || 'quick';
         return mode === 'quick' ? 
-            this.executeQuick(params.stepGoal||params.message, params.goal, params.step, params.projectId, params.previousResult) : 
-            this.executeDetailed(params.goal, params.step, params.projectId, params.previousResult);
+            this.executeQuick(params.stepGoal||params.message, params.goal, params.step, params.projectId, params.previousResult, params.context) : 
+            this.executeDetailed(params.goal, params.step, params.projectId, params.previousResult, params.context);
     }
 
-    private async executeQuick(stepInstructions: string, goal: string, stepType: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    private async executeQuick(stepInstructions: string, goal: string, stepType: string, projectId: string, previousResult?: any, context?: ExecuteParams['context']): Promise<StepResult> {
         const querySchema = await getGeneratedSchema(SchemaType.QuickQueriesResponse);
 
         const queryPrompt = `Given the overall goal and the user's request, generate 2-3 different search queries that will help find relevant information.
@@ -80,7 +80,18 @@ export class KnowledgeCheckExecutor implements StepExecutor {
         // only include relevant items
         searchResults = searchResults.filter(s => s.score > 0.5);
 
+        // Get relevant context artifacts
+        const contextArtifacts = context?.artifacts?.filter(a => 
+            a.metadata?.projectId === projectId
+        ) || [];
+
         const analysisPrompt = `You are analyzing research results for: "${goal}"
+
+Existing Context Artifacts:
+${contextArtifacts.map(a => `
+- ${a.metadata?.title || 'Untitled Artifact'}
+  Type: ${a.type}
+  Content: ${a.content.toString().slice(0, 200)}...`).join('\n')}
 
 Search Results:
 ${searchResults.map(r => `
@@ -90,7 +101,8 @@ Content: ${r.text}
 
 Analyze relevant results (skipping irrelevant results):
 1. Extract key findings and their sources
-2. Identify any information gaps`;
+2. Identify any information gaps
+3. Relate findings to existing context artifacts`;
 
         const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
         const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
@@ -128,7 +140,7 @@ ${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
         };
     }
 
-    private async executeDetailed(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    private async executeDetailed(goal: string, step: string, projectId: string, previousResult?: any, context?: ExecuteParams['context']): Promise<StepResult> {
         const querySchema = await getGeneratedSchema(SchemaType.QueriesResponse);
         const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
 
@@ -168,7 +180,18 @@ Explain the rationale for each query.`;
         }
 
 
+        // Get relevant context artifacts
+        const contextArtifacts = context?.artifacts?.filter(a => 
+            a.metadata?.projectId === projectId
+        ) || [];
+
         const analysisPrompt = `You are analyzing research results for: "${goal}"
+
+Existing Context Artifacts:
+${contextArtifacts.map(a => `
+- ${a.metadata?.title || 'Untitled Artifact'}
+  Type: ${a.type}
+  Content: ${a.content.toString().slice(0, 200)}...`).join('\n')}
 
 Search Results:
 ${searchResults.map(r => `
@@ -178,7 +201,8 @@ Content: ${r.text}
 
 Analyze relevant results (skipping irrelevant results):
 1. Extract key findings and their sources
-2. Identify any information gaps`;
+2. Identify any information gaps
+3. Relate findings to existing context artifacts`;
 
         const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
         const analysis = await this.modelHelpers.generate<ResearchResponse>({
