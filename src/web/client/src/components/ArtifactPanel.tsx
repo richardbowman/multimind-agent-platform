@@ -92,10 +92,36 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                 <DrawerHeader/>
                 {selectedArtifact && (
                     <Box sx={{ p: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <IconButton 
+                                onClick={() => {
+                                    const currentIndex = artifacts.findIndex(a => a.id === selectedArtifact.id);
+                                    const prevArtifact = artifacts[currentIndex - 1];
+                                    if (prevArtifact) {
+                                        setSelectedArtifact(prevArtifact);
+                                    }
+                                }}
+                                disabled={artifacts.findIndex(a => a.id === selectedArtifact.id) === 0}
+                                sx={{ color: '#999' }}
+                            >
+                                <ChevronLeftIcon />
+                            </IconButton>
                             <Typography variant="h6" noWrap sx={{ flexGrow: 1 }} component="div">
                                 Artifact
                             </Typography>
+                            <IconButton 
+                                onClick={() => {
+                                    const currentIndex = artifacts.findIndex(a => a.id === selectedArtifact.id);
+                                    const nextArtifact = artifacts[currentIndex + 1];
+                                    if (nextArtifact) {
+                                        setSelectedArtifact(nextArtifact);
+                                    }
+                                }}
+                                disabled={artifacts.findIndex(a => a.id === selectedArtifact.id) === artifacts.length - 1}
+                                sx={{ color: '#999' }}
+                            >
+                                <ChevronRightIcon />
+                            </IconButton>
                             <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: '#999' }}>
                                 <ChevronRightIcon />
                             </IconButton>
