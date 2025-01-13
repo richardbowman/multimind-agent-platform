@@ -16,7 +16,7 @@ export interface ChatClient {
     replyThreaded(post: ChatPost, response: string, props?: ConversationContext): Promise<ChatPost>;
 
     registerHandle(handleName: string): void;
-    getChannels(): Promise<[string, string][]>;
+    getChannels(): Promise<[string, string, string[] | undefined][]>;
     getHandles(): Promise<Record<string, string>>;
     
     /**
