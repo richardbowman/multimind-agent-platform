@@ -37,6 +37,11 @@ export interface ExecuteParams {
     projectId: string;
     previousResult?: ModelMessageResponse[];
     mode?: 'quick' | 'detailed';
+    agents?: Array<{
+        id: string;
+        handle: string;
+        type: string;
+    }>;
 }
 
 export interface StepExecutor {

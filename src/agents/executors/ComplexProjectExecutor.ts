@@ -67,9 +67,21 @@ export class ComplexProjectExecutor implements StepExecutor {
                 dependsOn: researchTaskId
             };
 
-            // Assign tasks to agents
-            this.taskManager.assignTaskToAgent(researchTaskId, RESEARCH_MANAGER_USER_ID);
-            this.taskManager.assignTaskToAgent(contentTaskId, CONTENT_MANAGER_USER_ID);
+            // Assign tasks to appropriate agents
+            const researchManager = params.agents?.find(a => a.type === 'research-manager');
+            const contentManager = params.agents?.find(a => a.type === 'content-manager');
+            
+            if (researchManager) {
+                this.taskManager.assignTaskToAgent(researchTaskId, researchManager.id);
+            } else {
+                Logger.warn('No research manager agent found');
+            }
+            
+            if (contentManager) {
+                this.taskManager.assignTaskToAgent(contentTaskId, contentManager.id);
+            } else {
+                Logger.warn('No content manager agent found');
+            }
 
             return {
                 type: "complex_project",

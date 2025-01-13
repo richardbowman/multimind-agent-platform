@@ -14,6 +14,10 @@ export class BrainstormExecutor implements StepExecutor {
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
     }
+    
+    private getCreativeDirectorAgent(params: ExecuteParams) {
+        return params.agents?.find(a => a.type === 'creative-director');
+    }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.BrainstormResponse);
