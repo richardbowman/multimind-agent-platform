@@ -168,13 +168,14 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         bottom: '100%',
                         left: 0,
                         right: 0,
-                        backgroundColor: '#fff',
-                        border: '1px solid #ccc',
+                        backgroundColor: '#2a2a2a',
+                        border: '1px solid #444',
                         borderRadius: '4px',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                         zIndex: 1000,
                         maxHeight: '200px',
-                        overflowY: 'auto'
+                        overflowY: 'auto',
+                        color: '#fff'
                     }}
                 >
                     {suggestions.map((suggestion, index) => (
@@ -182,6 +183,13 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                             key={index}
                             className="suggestion-item"
                             onClick={() => handleSuggestionClick(suggestion)}
+                            style={{
+                                padding: '8px 12px',
+                                cursor: 'pointer',
+                                borderBottom: '1px solid #444',
+                                color: '#fff',
+                                transition: 'background-color 0.2s'
+                            }}
                         >
                             {suggestion}
                         </div>
