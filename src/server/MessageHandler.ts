@@ -315,6 +315,9 @@ export class MessageHandler implements ServerMethods {
             throw new Error('Chat client is not initialized');
         }
 
+        // Always include the RouterAgent in the channel members
+        params.members = [...(params.members || []), 'router-agent'];
+
         // If a goal template is specified, create a project with its tasks
         if (params.goalTemplate) {
             const template = GoalTemplates.find(t => t.id === params.goalTemplate);
