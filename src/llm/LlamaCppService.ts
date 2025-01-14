@@ -1,7 +1,7 @@
 import { IEmbeddingFunction } from "chromadb";
 import { BaseLLMService } from "./BaseLLMService";
-import type { LLamaModel, LLamaContext, LLamaEmbedder } from "node-llama-cpp";
-import { ILLMService, LLMRequestParams, ModelRole } from "./ILLMService";
+import type { Llama, LlamaContext, LlamaModel, LlamaOptions } from "node-llama-cpp";
+import { IEmbeddingService, ILLMService, LLMRequestParams, ModelRole } from "./ILLMService";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 import Logger from "src/helpers/logger";
@@ -13,6 +13,7 @@ import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 import { getDataPath } from "src/helpers/paths";
 import axios from 'axios';
+import { ModelInfo } from "./types";
 
 interface HFModel {
     id: string;
@@ -28,10 +29,15 @@ interface HFModel {
     }>;
 }
 
-class LlamaEmbedder implements IEmbeddingFunction {
-    private context: LLamaContext;
+async function loadLlama(options?: LlamaOptions) : Promise<Llama> {
+    const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
+    return nlc.getLlama(options);
+}
 
-    constructor(context: LLamaContext) {
+class LlamaEmbedder implements IEmbeddingFunction {
+    private context: LlamaContext;
+
+    constructor(context: LlamaContext) {
         this.context = context;
     }
 
@@ -45,9 +51,9 @@ class LlamaEmbedder implements IEmbeddingFunction {
     }
 }
 
-export class LlamaCppService extends BaseLLMService {
-    private model?: LLamaModel;
-    private context?: LLamaContext;
+export class LlamaCppService extends BaseLLMService implements IEmbeddingService {
+    private model?: LlamaModel;
+    private context?: LlamaContext;
     private embedder?: LlamaEmbedder;
 
     constructor() {
@@ -149,8 +155,7 @@ export class LlamaCppService extends BaseLLMService {
 
     async initializeModel(modelName: string, repo: string, modelType: 'chat' | 'embedding'): Promise<void> {
         try {
-            const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
-            const {getLlama} = nlc;
+            const llama = await loadLlama();
             
             // Create models directory if it doesn't exist
             const modelDir = path.join(getDataPath(), "models");
@@ -166,8 +171,6 @@ export class LlamaCppService extends BaseLLMService {
                 await this.downloadModel(repo, modelName, modelDir);
             }
 
-            // Initialize the model
-            const llama = await getLlama();
             const model = await llama.loadModel({
                 modelPath: modelPath
             });
@@ -182,13 +185,6 @@ export class LlamaCppService extends BaseLLMService {
                 Logger.info("Llama.cpp embedding model initialized");
             }
 
-            const llama = await getLlama();
-            const model = await llama.loadModel({
-                modelPath: modelPath
-            });
-            const context = await model.createEmbeddingContext();
-            this.embedder = new LlamaEmbedder(context);
-            Logger.info("Llama.cpp embedding model initialized");
         } catch (error) {
             Logger.error("Failed to initialize Llama.cpp embedding model:", error);
             throw error;
