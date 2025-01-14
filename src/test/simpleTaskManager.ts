@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import fs from 'fs/promises';
 import * as Events from 'events';
-import { Project, ProjectMetadata, RecurrencePattern, Task, TaskManager } from '../tools/taskManager';
+import { CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager } from '../tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ContentProject } from 'src/agents/contentManager';
 import { AsyncQueue } from '../helpers/asyncQueue';
@@ -11,6 +11,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     private filePath: string;
     private savePending: boolean = false;
     private fileQueue: AsyncQueue = new AsyncQueue();
+    private lastCheckTime: number = Date.now();
 
     constructor(filePath: string) {
         super();
@@ -18,10 +19,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         Logger.info("Starting task manager (should not happen more than once)");
     }
 
-    async addTask(project: Project, task: Task) : Promise<Task> {
+    async addTask(project: Project, task: Task): Promise<Task> {
         // Set project ID and order
         task.projectId = project.id;
-        
+
         // Set order to be after existing tasks if not specified
         if (task.order === undefined) {
             const existingTasks = Object.values(this.projects[project.id].tasks || {});
@@ -38,7 +39,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             const previousTask = existingTasks
                 .filter(t => (t.order ?? Infinity) < (task.order ?? Infinity))
                 .sort((a, b) => (b.order ?? 0) - (a.order ?? 0))[0];
-            
+
             if (previousTask) {
                 task.dependsOn = previousTask.id;
             }
@@ -53,23 +54,25 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         return `project_${Date.now()}`;
     }
 
-    async addProject(project: Project): Promise<void> {
+    async addProject(project: Partial<Project>): Promise<void> {
         // Merge provided metadata with defaults
-        project.metadata = {
-            createdAt: new Date(),
-            updatedAt: new Date(),
-            status: 'active',
-            priority: 'medium',
-            ...project.metadata // Spread existing metadata to override defaults
+        const addProject: Project = {
+            ...project,
+            metadata: {
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'active',
+                priority: 'medium',
+                ...project.metadata // Spread existing metadata to override defaults
+            }
         };
-        this.projects[project.id] = project;
-        await this.save();
-    }
 
-    interface CreateProjectParams {
-        name: string;
-        tasks?: { description: string; type: string }[];
-        metadata?: Partial<ProjectMetadata>;
+        if (!project.id) {
+            throw new Error("Project ID required to add project");
+        } else {
+            this.projects[project.id] = addProject;
+            await this.save();
+        }
     }
 
     async createProject(params: CreateProjectParams): Promise<Project> {
@@ -78,20 +81,14 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             id: projectId,
             name: params.name,
             tasks: {},
-            metadata: {
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                status: 'active',
-                priority: 'medium',
-                ...params.metadata
-            }
+            metadata: params.metadata
         };
 
-        await this.addProject(project);
+        await this.addProject(project as Project);
 
         if (params.tasks) {
             for (const task of params.tasks) {
-                await this.addTask(project, {
+                await this.addTask(project as Project, {
                     id: crypto.randomUUID(),
                     description: task.description,
                     type: task.type,
@@ -161,7 +158,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     if (t.assignee !== userId || t.complete || t.inProgress) {
                         return false;
                     }
-                    
+
                     // If task depends on another task, check if dependency is complete
                     if (t.dependsOn) {
                         const dependentTask = project.tasks[t.dependsOn];
@@ -169,11 +166,11 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                             return false;
                         }
                     }
-                    
+
                     return true;
                 })
                 .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
-            
+
             if (userTasks.length > 0) {
                 return userTasks[0];
             }
@@ -184,7 +181,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
     async markTaskInProgress(task: Task | string): Promise<Task> {
         let taskFound = false;
-        const taskId = typeof (task) ==='string' ? task : task.id;
+        const taskId = typeof (task) === 'string' ? task : task.id;
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
             if (project.tasks?.hasOwnProperty(taskId)) {
@@ -213,9 +210,9 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     return task;
                 }
                 task.complete = true;
-                task.inProgress = false; 
+                task.inProgress = false;
                 taskFound = true;
-                
+
                 // Emit the 'taskCompleted' event with the completed task, creator, and assignee
                 this.emit('taskCompleted', { task, creator: task.creator, assignee: task.assignee });
 
@@ -278,7 +275,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
         // Get all tasks for the project
         const tasks = Object.values(project.tasks || {});
-        
+
         // Filter for not started tasks and sort by order
         const availableTasks = tasks
             .filter(t => !t.complete)
@@ -287,7 +284,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         // Return the first task or null if none found
         return availableTasks[0] || null;
     }
-    
+
     getAllTasks(projectId: string): Task[] {
         const project = this.projects[projectId];
         if (!project) {
@@ -315,28 +312,27 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
             if (project.tasks?.hasOwnProperty(taskId)) {
-                const task = project.tasks[taskId];
-                if (!task.isRecurring) {
+                if (project.tasks[taskId].type === "recurring") {
+                    const task = project.tasks[taskId] as RecurringTask;
+                    // Optionally update the next run date
+                    if (nextRunDate) {
+                        task.lastRunDate = nextRunDate;
+                    } else {
+                        task.lastRunDate = new Date();
+                    }
+                    taskFound = true;
+                    await this.save();
+                    break;
+                } else {
                     throw new Error('Task is not marked as recurring.');
                 }
-                // Optionally update the next run date
-                if (nextRunDate) {
-                    task.lastRunDate = nextRunDate;
-                } else {
-                    task.lastRunDate = new Date();
-                }
-                taskFound = true;
-                await this.save();
-                break;
+            }
+
+            if (!taskFound) {
+                throw new Error(`Task with ID ${taskId} not found.`);
             }
         }
-
-        if (!taskFound) {
-            throw new Error(`Task with ID ${taskId} not found.`);
-        }
     }
-
-    private lastCheckTime: number = Date.now();
 
     private async checkMissedTasks() {
         const now = Date.now();
@@ -378,7 +374,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
     startScheduler() {
         // Check for missed tasks on startup
-        this.checkMissedTasks().catch(err => 
+        this.checkMissedTasks().catch(err =>
             Logger.error('Error checking missed tasks:', err)
         );
 
