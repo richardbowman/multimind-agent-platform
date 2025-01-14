@@ -3,10 +3,10 @@ const nodeExternals = require('webpack-node-externals');
 
 module.exports = {
   target: 'node',
-  entry: './src/main.ts',
+  entry: './src/main.electron.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'main.js'
+    filename: 'main.electron.js'
   },
   module: {
     rules: [
