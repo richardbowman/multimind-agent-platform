@@ -46,7 +46,27 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         loadSettings();
     }, [getSettings]);
 
-    const handleChange = (key: string, value: string | number) => {
+    const [availableModels, setAvailableModels] = useState<Record<string, string[]>>({});
+    
+    useEffect(() => {
+        const fetchModels = async () => {
+            if (settings.providers?.chat) {
+                try {
+                    const models = await rpc.getAvailableModels(settings.providers.chat);
+                    setAvailableModels(prev => ({
+                        ...prev,
+                        [settings.providers!.chat]: models
+                    }));
+                } catch (error) {
+                    console.error('Failed to fetch available models:', error);
+                }
+            }
+        };
+        
+        fetchModels();
+    }, [settings.providers?.chat]);
+
+    const handleChange = async (key: string, value: string | number) => {
         // Get metadata using reflection
         const fieldMeta = metadata[key];
         const processedValue = fieldMeta?.type === 'number' ? Number(value) : value;
@@ -69,6 +89,19 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             current[parts[parts.length - 1]] = processedValue;
             return newSettings;
         });
+
+        // If this is a provider change, fetch new models
+        if (key === 'providers.chat') {
+            try {
+                const models = await rpc.getAvailableModels(value as string);
+                setAvailableModels(prev => ({
+                    ...prev,
+                    [value as string]: models
+                }));
+            } catch (error) {
+                console.error('Failed to fetch available models:', error);
+            }
+        }
     };
 
     const [saveSuccess, setSaveSuccess] = useState(false);
@@ -148,6 +181,30 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
         switch (metadata.type) {
             case 'select':
+                // Special handling for model selection
+                if (metadata.key.startsWith('models.')) {
+                    const provider = settings.providers?.chat;
+                    const models = provider ? availableModels[provider] || [] : [];
+                    
+                    return (
+                        <FormControl fullWidth variant="outlined">
+                            <InputLabel>{metadata.label}</InputLabel>
+                            <Select
+                                value={value}
+                                onChange={(e) => handleChange(metadata.key, e.target.value)}
+                                label={metadata.label}
+                            >
+                                {models.map(model => (
+                                    <MenuItem key={model} value={model}>
+                                        {model}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                    );
+                }
+                
+                // Regular select
                 return (
                     <FormControl fullWidth variant="outlined">
                         <InputLabel>{metadata.label}</InputLabel>

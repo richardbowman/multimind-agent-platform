@@ -38,6 +38,14 @@ export class MessageHandler implements ServerMethods {
         return settings;
     }
 
+    async getAvailableModels(provider: string): Promise<string[]> {
+        if (!this.services.llmServiceFactory) {
+            throw new Error('LLM Service Factory not initialized');
+        }
+        const service = this.services.llmServiceFactory.getService(provider);
+        return service.getAvailableModels();
+    }
+
     async updateSettings(settings: Partial<Settings>): Promise<Settings> {
         Logger.info('Update settings called');
         
