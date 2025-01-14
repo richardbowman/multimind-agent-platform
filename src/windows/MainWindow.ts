@@ -8,6 +8,7 @@ export class MainWindow {
     constructor(initialZoom: number = 1.0) {
         this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
+            ...options,
             width: 1200,
             height: 800,
             webPreferences: {
