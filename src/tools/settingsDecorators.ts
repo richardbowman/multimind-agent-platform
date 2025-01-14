@@ -23,14 +23,19 @@ export function getClientSettingsMetadata(target: any, prefix: string = ''): Rec
     
     // Handle null/undefined
     if (!target) {
+        console.log('Skipping null/undefined target');
         return metadata;
     }
 
+    console.log(`Getting metadata for ${prefix || 'root'}`);
+    
     // Get both own properties and prototype properties
     const properties = new Set([
         ...Object.getOwnPropertyNames(target),
         ...Object.getOwnPropertyNames(Object.getPrototypeOf(target))
     ]);
+    
+    console.log(`Found properties:`, Array.from(properties));
     
     for (const property of properties) {
         // Skip constructor and private/special properties
@@ -45,6 +50,7 @@ export function getClientSettingsMetadata(target: any, prefix: string = ''): Rec
                     Reflect.getMetadata('clientSettings', Object.getPrototypeOf(target), property);
         
         if (meta) {
+            console.log(`Found metadata for ${propertyPath}:`, meta);
             metadata[propertyPath] = meta;
         }
         
@@ -52,10 +58,12 @@ export function getClientSettingsMetadata(target: any, prefix: string = ''): Rec
         try {
             const value = target[property];
             if (value && typeof value === 'object' && !Array.isArray(value)) {
+                console.log(`Recursing into ${propertyPath}`);
                 const nestedMetadata = getClientSettingsMetadata(value, propertyPath);
                 Object.assign(metadata, nestedMetadata);
             }
         } catch (e) {
+            console.log(`Error accessing ${propertyPath}:`, e);
             // Skip properties that can't be accessed
             continue;
         }
