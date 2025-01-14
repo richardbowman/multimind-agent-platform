@@ -4,7 +4,7 @@ export function ClientSettings(metadata: {
     label: string;
     category: string;
     description?: string;
-    type?: 'string' | 'number' | 'boolean' | 'select';
+    type?: 'string' | 'number' | 'boolean' | 'select' | 'section';
     options?: string[];
     defaultValue?: any;
     min?: number;
@@ -55,19 +55,13 @@ export function getClientSettingsMetadata(target: any, prefix: string = ''): Rec
 
         const propertyPath = prefix ? `${prefix}.${property}` : property;
         
-        // Get metadata from the entire prototype chain
-        let meta = null;
-        let currentProto = target;
-        while (currentProto && !meta) {
-            meta = Reflect.getMetadata('clientSettings', currentProto, property);
-            currentProto = Object.getPrototypeOf(currentProto);
-        }
+        // Get metadata from both instance and prototype
+        const meta = Reflect.getMetadata('clientSettings', target, property) || 
+                    Reflect.getMetadata('clientSettings', Object.getPrototypeOf(target), property);
         
         if (meta) {
             console.log(`Found metadata for ${propertyPath}:`, meta);
             metadata[propertyPath] = meta;
-        } else {
-            console.log(`No metadata found for ${propertyPath}`);
         }
         
         // Recursively get metadata for object properties
