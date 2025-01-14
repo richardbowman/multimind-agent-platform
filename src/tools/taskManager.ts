@@ -21,18 +21,18 @@ export interface AddTaskParams {
     props?: Record<string, any>;
 }
 
-export interface Task extends AddTaskParams {
-    id: string;
-    projectId: string;
-    description: string;
-    type: 'standard' | 'recurring' | 'step';
-    creator: string;
-    assignee?: string;
-    complete?: boolean;
-    inProgress?: boolean;
-    order?: number;  // Lower numbers come first
-    dependsOn?: string;  // ID of the task that must complete before this one can start
-    props?: Record<string, any>;  // Flexible metadata field for storing step results etc
+export interface Task extends Readonly<AddTaskParams> {
+    readonly id: string;
+    readonly projectId: string;
+    readonly description: string;
+    readonly type: 'standard' | 'recurring' | 'step';
+    readonly creator: string;
+    readonly assignee?: string;
+    readonly complete?: boolean;
+    readonly inProgress?: boolean;
+    readonly order?: number;  // Lower numbers come first
+    readonly dependsOn?: string;  // ID of the task that must complete before this one can start
+    readonly props?: Readonly<Record<string, any>>;  // Flexible metadata field for storing step results etc
 }
 
 export interface RecurringTask extends Task {
@@ -81,5 +81,5 @@ export interface TaskManager extends EventEmitter {
     getNextTask(projectId: string): Task | null;
     getAllTasks(projectId: string): Task[];
     markTaskInProgress(task: Task | string): Promise<Task>;
-    getTaskById(taskId: string): Task | null;
+    getTaskById(taskId: string): Readonly<Task> | null;
 }
