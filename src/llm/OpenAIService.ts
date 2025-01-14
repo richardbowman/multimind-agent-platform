@@ -111,9 +111,10 @@ export class OpenAIService extends BaseLLMService {
                 }
             }
 
-            const model = params.modelType ? 
-                settings.models[params.modelType].openai || this.model :
-                this.model;
+            // const model = params.modelType ? 
+            //     settings.models[params.modelType].openai || this.model :
+            //     this.model;
+            const model = this.model;
 
             const response = await this.client.chat.completions.create({
                 model: model,
