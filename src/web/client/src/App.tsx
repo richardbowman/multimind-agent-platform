@@ -1,7 +1,10 @@
 import React, { useState } from 'react';
-import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled } from '@mui/material';
+import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import TaskIcon from '@mui/icons-material/Task';
+import MinimizeIcon from '@mui/icons-material/Minimize';
+import MaximizeIcon from '@mui/icons-material/CropSquare';
+import CloseIcon from '@mui/icons-material/Close';
 import { useWebSocket, DataProvider } from './contexts/DataContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
@@ -67,7 +70,14 @@ const AppContent: React.FC = () => {
             flexDirection: 'column',
             overflow: 'hidden'
         }}>
-            <AppBar position="fixed" sx={{ zIndex: (theme) => theme.zIndex.drawer + 1 }}>
+            <AppBar 
+                position="fixed" 
+                sx={{ 
+                    zIndex: (theme) => theme.zIndex.drawer + 1,
+                    WebkitAppRegion: 'drag',
+                    cursor: 'move'
+                }}
+            >
                 <Toolbar>
                     <IconButton
                         color="inherit"
@@ -75,7 +85,7 @@ const AppContent: React.FC = () => {
                         onClick={() => {
                             setLeftDrawerOpen(!leftDrawerOpen);
                         }}
-                        sx={{ mr: 2 }}
+                        sx={{ mr: 2, WebkitAppRegion: 'no-drag' }}
                     >
                         <MenuIcon />
                     </IconButton>
@@ -84,6 +94,7 @@ const AppContent: React.FC = () => {
                         onChange={(_, newValue) => setCurrentTab(newValue)}
                         textColor="inherit"
                         indicatorColor="secondary"
+                        sx={{ WebkitAppRegion: 'no-drag' }}
                     >
                         <Tab
                             label="Chat"
@@ -106,14 +117,32 @@ const AppContent: React.FC = () => {
                         />
                     </Tabs>
                     <Box sx={{ flexGrow: 1 }} /> {/* Spacer to push right icon to end */}
-                    <IconButton
-                        color="inherit"
-                        edge="end"
-                        onClick={() => setRightDrawerOpen(!rightDrawerOpen)}
-                        sx={{ ml: 2 }}
-                    >
-                        <TaskIcon />
-                    </IconButton>
+                    <Stack direction="row" spacing={1} sx={{ WebkitAppRegion: 'no-drag' }}>
+                        <IconButton
+                            color="inherit"
+                            edge="end"
+                            onClick={() => window.ipcRenderer.send('window-minimize')}
+                            sx={{ ml: 2 }}
+                        >
+                            <MinimizeIcon />
+                        </IconButton>
+                        <IconButton
+                            color="inherit"
+                            edge="end"
+                            onClick={() => window.ipcRenderer.send('window-maximize')}
+                            sx={{ ml: 2 }}
+                        >
+                            <MaximizeIcon />
+                        </IconButton>
+                        <IconButton
+                            color="inherit"
+                            edge="end"
+                            onClick={() => window.ipcRenderer.send('window-close')}
+                            sx={{ ml: 2 }}
+                        >
+                            <CloseIcon />
+                        </IconButton>
+                    </Stack>
                 </Toolbar>
             </AppBar>
             <Box sx={{ 
