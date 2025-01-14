@@ -42,12 +42,13 @@ export class ContentManager extends StepBasedAgent {
         this.registerStepExecutor(new OutlineExecutor(executorParams));
         this.registerStepExecutor(new AssignWritersExecutor(executorParams));
         this.registerStepExecutor(new EditingExecutor(executorParams));
+        this.registerStepExecutor(new DocumentRetrievalExecutor(executorParams));
         // this.registerStepExecutor(new ValidationExecutor(executorParams));
 
         this.modelHelpers.setPurpose(`You are planning how to create high-quality content.
 Break down the content creation into steps of research, outlining, writing and editing.
 Use 'check-knowledge' steps to gather information, 'outline' steps to structure the content,
-'writing' steps to develop sections, and 'editing' steps to improve quality.
+'writing' steps to develop sections, 'editing' steps to improve quality, and 'document-retrieval' steps to fetch stored artifacts.
 
 IMPORTANT: Always follow this pattern:
 1. Start with a 'check-knowledge' step to gather relevant information
