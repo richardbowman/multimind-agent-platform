@@ -378,7 +378,11 @@ export abstract class Agent {
         }[];
         metadata?: ProjectMetadata
     }): Promise<{ projectId: string, taskIds: string[] }> {
-        const project = await this.projects.createProject(projectName, tasks, metadata);
+        const project = await this.projects.createProject({
+            name: projectName,
+            tasks: tasks,
+            metadata: metadata
+        });
         
         // Get the task IDs from the created project
         const taskIds = Object.values(project.tasks).map(t => t.id);
