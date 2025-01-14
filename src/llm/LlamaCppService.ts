@@ -307,7 +307,8 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                         author: model.author,
                         downloads: model.downloads,
                         likes: model.likes,
-                        ggufFiles: model.ggufFiles
+                        ggufFiles: model.ggufFiles,
+                        combinedId: `${model.id}/${file.filename}`
                     }))
                 )
             ];
