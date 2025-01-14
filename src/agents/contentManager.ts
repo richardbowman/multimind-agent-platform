@@ -68,7 +68,10 @@ IMPORTANT: Always follow this pattern:
 
                     const post = await this.chatClient.getPost(project.metadata.originalPostId);
 
-                    await this.executeNextStep(project.id, post);
+                    await this.executeNextStep({
+                        projectId: project.id, 
+                        userPost: post
+                    });
                 }
             } else {
                 super.taskNotification(task);
