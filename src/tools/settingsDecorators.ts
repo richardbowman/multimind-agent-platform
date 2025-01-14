@@ -18,7 +18,7 @@ export function ClientSettings(metadata: {
     };
 }
 
-export function getClientSettingsMetadata(target: any, prefix: string = ''): Record<string, any> {
+export function getClientSettingsMetadata(target: any, prefix: string = '', parentLabel: string = ''): Record<string, any> {
     const metadata: Record<string, any> = {};
     
     // Handle null/undefined
@@ -27,7 +27,7 @@ export function getClientSettingsMetadata(target: any, prefix: string = ''): Rec
         return metadata;
     }
 
-    console.log(`Getting metadata for ${prefix || 'root'}`);
+    console.log(`Getting metadata for ${prefix || 'root'} with parent label ${parentLabel}`);
     
     // Get properties from the entire prototype chain
     const properties : Set<string> = new Set();
@@ -61,7 +61,11 @@ export function getClientSettingsMetadata(target: any, prefix: string = ''): Rec
         
         if (meta) {
             console.log(`Found metadata for ${propertyPath}:`, meta);
-            metadata[propertyPath] = meta;
+            const combinedMeta = { ...meta };
+            if (parentLabel) {
+                combinedMeta.label = `${parentLabel}: ${meta.label}`;
+            }
+            metadata[propertyPath] = combinedMeta;
         }
         
         // Recursively get metadata for object properties
@@ -69,7 +73,9 @@ export function getClientSettingsMetadata(target: any, prefix: string = ''): Rec
             const value = target[property];
             if (value && typeof value === 'object' && !Array.isArray(value)) {
                 console.log(`Recursing into ${propertyPath}`);
-                const nestedMetadata = getClientSettingsMetadata(value, propertyPath);
+                const currentLabel = meta?.label || '';
+                const newParentLabel = parentLabel ? `${parentLabel}: ${currentLabel}` : currentLabel;
+                const nestedMetadata = getClientSettingsMetadata(value, propertyPath, newParentLabel);
                 Object.assign(metadata, nestedMetadata);
             }
         } catch (e) {
