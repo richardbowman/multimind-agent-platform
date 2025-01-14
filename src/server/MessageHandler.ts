@@ -60,9 +60,15 @@ export class MessageHandler implements ServerMethods {
                 rpc.onTaskUpdate({
                     id: task.id,
                     description: task.description,
+                    type: task.type,
+                    assignee: task.assignee,
                     inProgress: task.inProgress || false,
                     complete: task.complete || false,
-                    threadId: task.metadata?.threadId || null
+                    threadId: task.metadata?.threadId || null,
+                    createdAt: task.metadata?.createdAt,
+                    updatedAt: task.metadata?.updatedAt,
+                    dependsOn: task.dependsOn,
+                    props: task.props
                 });
             });
         }
@@ -264,9 +270,15 @@ export class MessageHandler implements ServerMethods {
             return Object.values(project.tasks).map(task => ({
                 id: task.id,
                 description: task.description,
+                type: task.type,
+                assignee: task.assignee,
                 inProgress: task.inProgress || false,
                 complete: task.complete || false,
-                threadId: task.metadata?.threadId || null
+                threadId: task.metadata?.threadId || null,
+                createdAt: task.metadata?.createdAt,
+                updatedAt: task.metadata?.updatedAt,
+                dependsOn: task.dependsOn,
+                props: task.props
             }));
         });
 
