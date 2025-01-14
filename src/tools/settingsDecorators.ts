@@ -1,3 +1,5 @@
+import 'reflect-metadata';
+
 export function ClientSettings(metadata: {
     label: string;
     category: string;
