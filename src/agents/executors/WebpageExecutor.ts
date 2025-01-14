@@ -1,4 +1,7 @@
-import { StepExecutor, StepResult, ExecutorConstructorParams, ExecuteParams } from '../stepBasedAgent';
+import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
+import { StepExecutor } from '../StepExecutor';
+import { ExecuteParams } from '../ExecuteParams';
+import { StepResult } from '../StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import ScrapeHelper from '../../helpers/scrapeHelper';
 import { ILLMService } from "src/llm/ILLMService";
@@ -7,6 +10,7 @@ import crypto from 'crypto';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
+import { Artifact } from 'src/tools/artifact';
 
 /**
  * WebpageExecutor - Processes a single provided URL to:
@@ -71,36 +75,20 @@ export class WebpageExecutor implements StepExecutor {
                 };
             }
 
-            const summary = await this.processPage(url, step || message || '', params.goal || params.overallGoal || '', projectId);
-            
-            // Ensure browser cleanup
-            await this.scrapeHelper.cleanup();
-            
-            // Get artifacts to calculate total token usage
-            const artifacts = await this.artifactManager.getArtifacts({
-                type: 'summary',
-                metadata: {
-                    projectId,
-                    task: step
-                }
-            });
-
-            const totalTokens = artifacts.reduce((sum, artifact) =>
-                sum + (artifact.metadata?.tokenUsage?.outputTokens || 0), 0
-            );
+            const artifact = await this.processPage(url, step || message || '', params.goal || params.overallGoal || '', projectId);
 
             return {
                 finished: true,
                 type: 'webpage_summary',
                 response: {
-                    message: summary,
+                    message: artifact?.content || "I couldn't download this webpage.",
                     data: {
                         url,
-                        artifactIds: artifacts.map(a => a.id)
+                        artifactId: artifact?.id
                     },
                     _usage: {
-                        inputTokens: 0, // We don't track input tokens for the overall process
-                        outputTokens: totalTokens
+                        inputTokens: 0,
+                        outputTokens: artifact?.metadata?.tokenCount
                     }
                 }
             };
@@ -147,7 +135,7 @@ export class WebpageExecutor implements StepExecutor {
         }
     }
 
-    private async processPage(url: string, step: string, goal: string, projectId: string): Promise<string> {
+    private async processPage(url: string, step: string, goal: string, projectId: string): Promise<Artifact|null> {
         const scrapedUrls = await this.getScrapedUrls();
         let summaries: string[] = [];
 
@@ -160,7 +148,7 @@ export class WebpageExecutor implements StepExecutor {
                 a.metadata?.url === url
             );
             if (existingSummary) {
-                return existingSummary.content.toString();
+                return existingSummary;
             }
             Logger.info(`No existing summary found for URL, re-processing...: ${url}`);
         }
@@ -180,7 +168,7 @@ export class WebpageExecutor implements StepExecutor {
         summaries.push(summaryResponse.message);
 
         if (summaryResponse.message !== "NOT RELEVANT") {
-            await this.artifactManager.saveArtifact({
+            const artifact = await this.artifactManager.saveArtifact({
                 id: crypto.randomUUID(),
                 type: 'summary',
                 content: summaryResponse.message,
@@ -193,9 +181,10 @@ export class WebpageExecutor implements StepExecutor {
                 },
                 tokenCount: summaryResponse._usage?.outputTokens
             });
+            return artifact;
+        } else {
+            return null;
         }
-
-        return summaries.join("\n\n");
     }
 
     async summarizeContent(task: string, content: string, llmService: ILLMService): Promise<ModelMessageResponse> {

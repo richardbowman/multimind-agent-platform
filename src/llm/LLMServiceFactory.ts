@@ -3,7 +3,7 @@ import LMStudioService from "./lmstudioService";
 import { BedrockService } from "./BedrockService";
 import { AnthropicService } from "./AnthropicService";
 import { LlamaCppService } from "./LlamaCppService";
-import { Settings } from "../tools/settingsManager";
+import { Settings } from "../tools/settings";
 import { OpenAIService } from "./OpenAIService";
 
 export enum LLMProvider {

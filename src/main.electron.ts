@@ -38,10 +38,12 @@ app.whenReady().then(async () => {
 
         // Initialize backend services
         splashWindow.setMessage('Initializing backend services...');
-        backendServices = await initializeBackend(settingsManager, {
-            onProgress: (message) => splashWindow.setMessage(message),
+        backendServices = {
+            ...await initializeBackend(settingsManager, {
+                onProgress: (message) => splashWindow.setMessage(message)
+            }),
             mainWindow
-        });
+        };
 
         // Create main window
         splashWindow.setMessage('Loading main interface...');
@@ -55,7 +57,8 @@ app.whenReady().then(async () => {
 
     } catch (error) {
         backendServices = {
-            settingsManager 
+            settingsManager,
+            mainWindow
         };
 
         Logger.error('Error in main:', error);

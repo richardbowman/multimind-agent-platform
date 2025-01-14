@@ -1,4 +1,7 @@
-import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
+import { StepExecutor } from '../StepExecutor';
+import { ExecuteParams } from '../ExecuteParams';
+import { StepResult } from '../StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -9,6 +12,7 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import Logger from '../../helpers/logger';
 import { ExecutorType } from './ExecutorType';
+import { Artifact } from 'src/tools/artifact';
 
 /**
  * Executor that searches and analyzes existing knowledge in the vector database.
@@ -37,12 +41,12 @@ export class KnowledgeCheckExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const mode = params.mode as ('quick' | 'detailed') || 'quick';
         return mode === 'quick' ? 
-            this.executeQuick(params.stepGoal||params.message, params.goal, params.step, params.projectId, params.previousResult, params.context) : 
-            this.executeDetailed(params.goal, params.step, params.projectId, params.previousResult, params.context);
+            this.executeQuick(params.stepGoal||params.message, params.goal, params.step, params.projectId, params.previousResult, params.context?.artifacts) : 
+            this.executeDetailed(params.goal, params.step, params.projectId, params.previousResult);
     }
 
-    private async executeQuick(stepInstructions: string, goal: string, stepType: string, projectId: string, previousResult?: any, context?: ExecuteParams['context']): Promise<StepResult> {
-        const querySchema = await getGeneratedSchema(SchemaType.QuickQueriesResponse);
+    private async executeQuick(stepInstructions: string, goal: string, stepType: string, projectId: string, previousResult?: any, artifacts?: Artifact[]): Promise<StepResult> {
+        const querySchema = await   getGeneratedSchema(SchemaType.QuickQueriesResponse);
 
         const queryPrompt = `Given the overall goal and the user's request, generate 2-3 different search queries that will help find relevant information.
         Overall Goal : ${goal}
@@ -80,18 +84,17 @@ export class KnowledgeCheckExecutor implements StepExecutor {
         // only include relevant items
         searchResults = searchResults.filter(s => s.score > 0.5);
 
-        // Get relevant context artifacts
-        const contextArtifacts = context?.artifacts?.filter(a => 
-            a.metadata?.projectId === projectId
-        ) || [];
+        const analysisPrompt = `You are analyzing knowledgebase and past artifacts for: "${goal}"
 
-        const analysisPrompt = `You are analyzing research results for: "${goal}"
+Attached Artifacts:
+${artifacts?.map(a => `ID: ${a.id}
+Title: ${a.metadata?.title}
+Content: ${a.content}
+Date Created: ${a.metadata?.dateCreated}
+Date Created: ${a.metadata?.version}
+---
+`).join('\n')}
 
-Existing Context Artifacts:
-${contextArtifacts.map(a => `
-- ${a.metadata?.title || 'Untitled Artifact'}
-  Type: ${a.type}
-  Content: ${a.content.toString().slice(0, 200)}...`).join('\n')}
 
 Search Results:
 ${searchResults.map(r => `
@@ -101,8 +104,7 @@ Content: ${r.text}
 
 Analyze relevant results (skipping irrelevant results):
 1. Extract key findings and their sources
-2. Identify any information gaps
-3. Relate findings to existing context artifacts`;
+2. Identify any information gaps`;
 
         const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
         const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
@@ -140,7 +142,7 @@ ${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
         };
     }
 
-    private async executeDetailed(goal: string, step: string, projectId: string, previousResult?: any, context?: ExecuteParams['context']): Promise<StepResult> {
+    private async executeDetailed(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const querySchema = await getGeneratedSchema(SchemaType.QueriesResponse);
         const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
 
@@ -180,18 +182,7 @@ Explain the rationale for each query.`;
         }
 
 
-        // Get relevant context artifacts
-        const contextArtifacts = context?.artifacts?.filter(a => 
-            a.metadata?.projectId === projectId
-        ) || [];
-
         const analysisPrompt = `You are analyzing research results for: "${goal}"
-
-Existing Context Artifacts:
-${contextArtifacts.map(a => `
-- ${a.metadata?.title || 'Untitled Artifact'}
-  Type: ${a.type}
-  Content: ${a.content.toString().slice(0, 200)}...`).join('\n')}
 
 Search Results:
 ${searchResults.map(r => `
@@ -201,8 +192,7 @@ Content: ${r.text}
 
 Analyze relevant results (skipping irrelevant results):
 1. Extract key findings and their sources
-2. Identify any information gaps
-3. Relate findings to existing context artifacts`;
+2. Identify any information gaps`;
 
         const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
         const analysis = await this.modelHelpers.generate<ResearchResponse>({

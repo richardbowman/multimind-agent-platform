@@ -38,7 +38,7 @@ export interface GenerateInputParams extends GenerateParams {
 
 export interface GenerateParams {
     artifacts?: Artifact[];
-    projects?: Project<Task>[];
+    projects?: Project[];
     searchResults?: SearchResult[]
     message?: string;
     contextWindow?: number;
@@ -81,7 +81,7 @@ export abstract class Agent {
     protected isWorking: boolean = false;
     protected isMemoryEnabled: boolean = false;
 
-    protected abstract projectCompleted(project: Project<Task>): void;
+    protected abstract projectCompleted(project: Project): void;
     protected abstract processTask(task: Task): Promise<void>;
     protected abstract handlerThread(params: HandlerParams): Promise<void>;
     protected abstract handleChannel(params: HandlerParams): Promise<void>;
@@ -238,8 +238,12 @@ export abstract class Agent {
                 let context: ConversationContext | undefined;
 
                 if (!post.getRootId() && (handle && post.message.startsWith(handle + " ") || (!post.message.startsWith("@") && autoRespond))) {
-                    // Determine the type of activity using an LLM
-                    await this.handleChannel({ userPost: post });
+                    let requestedArtifacts: string[] = [], searchResults: SearchResult[] = [];
+
+                    const allArtifacts =    [...new Set([...requestedArtifacts, ...post.props["artifact-ids"]||[]].flat())];
+                    const artifacts = await this.mapRequestedArtifacts(allArtifacts);
+
+                    await this.handleChannel({ userPost: post, artifacts: artifacts });
                 } else if (post.getRootId()) {
                     const postRootId: string = post.getRootId() || "";
 

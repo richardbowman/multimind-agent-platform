@@ -1,4 +1,4 @@
-import { CreateChannelParams } from "src/shared/channelTypes";
+import { ChannelData, CreateChannelParams } from "src/shared/channelTypes";
 
 export interface ChatClient {
     onAddedToChannel(callback: (channelId: any, params: CreateChannelParams) => void): Promise<void>;

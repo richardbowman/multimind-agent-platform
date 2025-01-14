@@ -3,88 +3,19 @@ import { getExecutorMetadata } from './decorators/executorDecorator';
 import 'reflect-metadata';
 import { ChatPost, isValidChatPost } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
-import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { Project, Task, TaskManager } from '../tools/taskManager';
+import { Project, Task } from '../tools/taskManager';
 import { Planner } from './planners/planner';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import Logger from '../helpers/logger';
-import { ModelMessageResponse, ModelResponse } from '../schemas/ModelResponse';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/localChatClient';
-import { AgentConfig, Settings } from 'src/tools/settingsManager';
-import { ArtifactManager } from 'src/tools/artifactManager';
-import { IVectorDatabase } from 'src/llm/IVectorDatabase';
-import { Artifact } from 'src/tools/artifact';
-
-export interface ExecuteNextStepParams {
-    projectId: string;
-    userPost?: ChatPost;
-    context?: {
-        channelId?: string;
-        threadId?: string;
-        artifacts?: Artifact[];
-        projects?: Project[];
-    };
-}
-
-export interface ExecuteStepParams extends ExecuteNextStepParams {
-    task: Task
-}
-
-export interface StepResult {
-    type?: string;
-    projectId?: string;
-    taskId?: string;
-    finished?: boolean;
-    goal?: string;
-    allowReplan?: boolean;
-    needsUserInput?: boolean;
-    response: ModelResponse;
-}
-
-export interface ExecuteParams {
-    agentId: string;
-    message?: string;
-    stepGoal?: string;
-    overallGoal?: string;
-    goal: string;
-    step: string;
-    projectId: string;
-    previousResult?: ModelMessageResponse[];
-    mode?: 'quick' | 'detailed';
-    agents?: Array<{
-        id: string;
-        handle: string;
-        type: string;
-    }>;
-    context?: {
-        channelId?: string;
-        threadId?: string;
-        artifacts?: Artifact[];
-        projects?: Project[];
-    };
-}
-
-export interface StepExecutor {
-    /**
-     * @deprecated Use executeV2 instead which provides better parameter organization
-     */
-    executeOld?(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult>;
-    execute?(params: ExecuteParams): Promise<StepResult>;
-    onTaskNotification?(task: Task): Promise<void>;
-    onProjectCompleted?(project: Project): Promise<void>;
-}
-
-export interface ExecutorConstructorParams {
-    vectorDB: IVectorDatabase;
-    llmService: ILLMService;
-    taskManager: TaskManager;
-    artifactManager: ArtifactManager;
-    settings: Settings,
-    userId?: string;
-    config?: Record<string, any>;
-}
+import { AgentConfig } from 'src/tools/settings';
+import { StepResult } from './StepResult';
+import { StepExecutor } from './StepExecutor';
+import { ExecuteNextStepParams } from './ExecuteNextStepParams';
+import { ExecuteStepParams } from './ExecuteStepParams';
 
 export abstract class StepBasedAgent extends Agent {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
@@ -245,7 +176,7 @@ export abstract class StepBasedAgent extends Agent {
     }
 
     protected async executeNextStep(params: ExecuteNextStepParams): Promise<void> {
-        const { projectId, userPost, context } = params;
+        const { projectId } = params;
         const task = this.projects.getNextTask(projectId);
         if (!task) {
             Logger.warn('No tasks found to execute');
@@ -453,7 +384,10 @@ export abstract class StepBasedAgent extends Agent {
                 }
 
                 if (!stepResult.needsUserInput) {
-                    await this.executeNextStep(projectId, userPost);
+                    await this.executeNextStep({
+                        projectId, 
+                        userPost
+                    });
                 }
 
             } else {

@@ -1,4 +1,6 @@
-import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
+import { StepExecutor } from '../StepExecutor';
+import { StepResult } from '../StepResult';
 import { TaskManager } from '../../tools/taskManager';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { OnboardingProject } from '../onboardingConsultant';

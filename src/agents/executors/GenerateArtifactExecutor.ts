@@ -1,4 +1,7 @@
-import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
+import { StepExecutor } from '../StepExecutor';
+import { ExecuteParams } from '../ExecuteParams';
+import { StepResult } from '../StepResult';
 import { RequestArtifacts } from '../../schemas/ModelResponse';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -66,7 +69,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
         };
 
         // Get Q&A context from project metadata
-        let qaContext = '';
+        let qaContext;
         try {
             const project = this.taskManager?.getProject(params.projectId);
             if (project?.metadata?.answers) {
@@ -103,8 +106,11 @@ export class GenerateArtifactExecutor implements StepExecutor {
         }
 
         const prompt = `Goal: ${params.goal}
+
+${qaContext ? qaContext : `Past Results:
+${params.previousResult ? `Build upon these previous ideas:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`}
         
-        ${qaContext}Generate or modify a Markdown document based on the goal.
+Generate or modify a Markdown document based on the goal.
 You have these options:
 1. Create a NEW document (leave artifactId blank and set operation to "create")
 2. Replace an EXISTING document (specify artifactId and set operation to "replace")

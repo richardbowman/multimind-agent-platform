@@ -1,4 +1,7 @@
-import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
+import { StepExecutor } from '../StepExecutor';
+import { ExecuteParams } from '../ExecuteParams';
+import { StepResult } from '../StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -72,7 +75,7 @@ ${previousContext}`;
         }
 
         const newProjectId = this.taskManager.newProjectId();
-        const researchProject: Project<Task> = {
+        const researchProject: Project = {
             id: newProjectId,
             name: `Research project: ${result.goal}`,
             tasks: {},

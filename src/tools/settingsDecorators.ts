@@ -26,8 +26,6 @@ export function getClientSettingsMetadata(target: any, prefix: string = '', pare
         console.log('Skipping null/undefined target');
         return metadata;
     }
-
-    console.log(`Getting metadata for ${prefix || 'root'} with parent label ${parentLabel}`);
     
     // Get properties from the entire prototype chain
     const properties : Set<string> = new Set();
@@ -45,8 +43,6 @@ export function getClientSettingsMetadata(target: any, prefix: string = '', pare
         currentTarget = proto;
     }
     
-    console.log(`Found properties:`, Array.from(properties));
-    
     for (const property of properties) {
         // Skip constructor and private/special properties
         if (property === 'constructor' || property.startsWith('_')) {
@@ -60,7 +56,6 @@ export function getClientSettingsMetadata(target: any, prefix: string = '', pare
                     Reflect.getMetadata('clientSettings', Object.getPrototypeOf(target), property);
         
         if (meta) {
-            console.log(`Found metadata for ${propertyPath}:`, meta);
             const combinedMeta = { ...meta };
             if (parentLabel) {
                 combinedMeta.label = `${parentLabel}: ${meta.label}`;
@@ -72,7 +67,6 @@ export function getClientSettingsMetadata(target: any, prefix: string = '', pare
         try {
             const value = target[property];
             if (value && typeof value === 'object' && !Array.isArray(value)) {
-                console.log(`Recursing into ${propertyPath}`);
                 const currentLabel = meta?.label || '';
                 const newParentLabel = parentLabel ? `${parentLabel}: ${currentLabel}` : currentLabel;
                 const nestedMetadata = getClientSettingsMetadata(value, propertyPath, newParentLabel);

@@ -4231,6 +4231,16 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/webpack-node-externals@npm:^3":
+  version: 3.0.4
+  resolution: "@types/webpack-node-externals@npm:3.0.4"
+  dependencies:
+    "@types/node": "npm:*"
+    webpack: "npm:^5"
+  checksum: 10c0/07a324c0130fb5b49ae31010ecee2690330e9f397b13dd7e826f8b9adeb2be415c57261f5b39c20350aeb53c972d36cea38c6feed9414487c2bbdc3ae41429f4
+  languageName: node
+  linkType: hard
+
 "@types/ws@npm:^8.5.13, @types/ws@npm:^8.5.5":
   version: 8.5.13
   resolution: "@types/ws@npm:8.5.13"
@@ -11747,6 +11757,7 @@ __metadata:
     "@types/react": "npm:19.0.0"
     "@types/react-dom": "npm:19.0.0"
     "@types/turndown": "npm:^5.0.5"
+    "@types/webpack-node-externals": "npm:^3"
     "@types/ws": "npm:^8.5.13"
     "@xenova/transformers": "npm:^2.17.2"
     ajv: "npm:^8.17.1"
@@ -11811,6 +11822,7 @@ __metadata:
     webpack: "npm:^5.89.0"
     webpack-cli: "npm:^5.1.4"
     webpack-dev-server: "npm:^4.15.1"
+    webpack-node-externals: "npm:^3.0.0"
     ws: "npm:^8.18.0"
   languageName: unknown
   linkType: soft
@@ -16083,6 +16095,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"webpack-node-externals@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "webpack-node-externals@npm:3.0.0"
+  checksum: 10c0/9f645a4dc8e122dac43cdc8c1367d4b44af20c79632438b633acc1b4fe64ea7ba1ad6ab61bd0fc46e1b873158c48d8c7a25a489cdab1f31299f00eb3b81cfc61
+  languageName: node
+  linkType: hard
+
 "webpack-sources@npm:^3.2.3":
   version: 3.2.3
   resolution: "webpack-sources@npm:3.2.3"
@@ -16090,7 +16109,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"webpack@npm:^5.89.0":
+"webpack@npm:^5, webpack@npm:^5.89.0":
   version: 5.97.1
   resolution: "webpack@npm:5.97.1"
   dependencies:

@@ -1,9 +1,7 @@
-import { ILLMService, LLMRequestParams, ModelRole, StructuredOutputPrompt } from "./ILLMService";
+import { ILLMService, LLMRequestParams } from "./ILLMService";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { ChatPost } from "src/chat/chatClient";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
-import { LLMCallLogger } from "./LLMLogger";
 import { AsyncQueue } from "../helpers/asyncQueue";
 import { BaseLLMService } from "./BaseLLMService";
 import JSON5 from 'json5';

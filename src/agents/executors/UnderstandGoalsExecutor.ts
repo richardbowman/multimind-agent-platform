@@ -1,4 +1,7 @@
-import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
+import { StepExecutor } from '../StepExecutor';
+import { ExecuteParams } from '../ExecuteParams';
+import { StepResult } from '../StepResult';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import crypto from 'crypto';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";

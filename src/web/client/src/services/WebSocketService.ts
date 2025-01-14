@@ -60,8 +60,7 @@ export default class WebSocketService extends BaseRPCService {
   }
 
   connect(url: string = typeof window !== 'undefined' && (window as any).electron
-    ? 'ws://localhost:4001'
-    : process.env.REACT_APP_WS_URL || 'ws://localhost:4001') {
+    ? 'ws://localhost:4001' : 'ws://localhost:4001') {
     
     if (this.socket || this.isConnecting) {
       console.debug('WebSocket: Already connected or connecting, skipping connection attempt');

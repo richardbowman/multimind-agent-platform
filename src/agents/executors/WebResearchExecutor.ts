@@ -1,4 +1,6 @@
-import { StepExecutor, StepResult, ExecutorConstructorParams } from '../stepBasedAgent';
+import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
+import { StepExecutor } from '../StepExecutor';
+import { StepResult } from '../StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import SearchHelper, { DuckDuckGoProvider } from '../../helpers/searchHelper';
 import ScrapeHelper from '../../helpers/scrapeHelper';

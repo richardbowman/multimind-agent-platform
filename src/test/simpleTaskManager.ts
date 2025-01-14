@@ -7,7 +7,7 @@ import { ContentProject } from 'src/agents/contentManager';
 import { AsyncQueue } from '../helpers/asyncQueue';
 
 class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
-    private projects: { [projectId: string]: Project<Task> } = {};
+    private projects: { [projectId: string]: Project } = {};
     private filePath: string;
     private savePending: boolean = false;
     private fileQueue: AsyncQueue = new AsyncQueue();
@@ -18,7 +18,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         Logger.info("Starting task manager (should not happen more than once)");
     }
 
-    async addTask(project: Project<Task>, task: Task) : Promise<Task> {
+    async addTask(project: Project, task: Task) : Promise<Task> {
         // Set project ID and order
         task.projectId = project.id;
         
@@ -53,7 +53,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         return `project_${Date.now()}`;
     }
 
-    async addProject(project: Project<Task>): Promise<void> {
+    async addProject(project: Project): Promise<void> {
         // Merge provided metadata with defaults
         project.metadata = {
             createdAt: new Date(),
@@ -66,7 +66,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         await this.save();
     }
 
-    async createProject(name: string, tasks?: { description: string; type: string }[], metadata?: Partial<ProjectMetadata>): Promise<Project<Task>> {
+    async createProject(name: string, tasks?: { description: string; type: string }[], metadata?: Partial<ProjectMetadata>): Promise<Project> {
         const projectId = this.newProjectId();
         const project = {
             id: projectId,
@@ -98,7 +98,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         return project;
     }
 
-    getProject(projectId: string): Project<Task> {
+    getProject(projectId: string): Project {
         return this.projects[projectId];
     }
 
@@ -237,7 +237,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         return true;
     }
 
-    getProjectByTaskId(taskId: string): Project<Task> {
+    getProjectByTaskId(taskId: string): Project {
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
             if (project.tasks?.hasOwnProperty(taskId)) {
@@ -260,7 +260,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         await this.save();
     }
 
-    getProjects(): Project<Task>[] {
+    getProjects(): Project[] {
         return Object.values(this.projects);
     }
 

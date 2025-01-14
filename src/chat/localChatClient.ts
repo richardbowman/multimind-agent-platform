@@ -2,7 +2,7 @@ import Logger from "../helpers/logger";
 import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "../chat/chatClient";
 import * as fs from "fs/promises";
 import { AsyncQueue } from "../helpers/asyncQueue";
-import { CreateChannelParams } from "src/shared/channelTypes";
+import { ChannelData, CreateChannelParams } from "src/shared/channelTypes";
 import { EventEmitter } from "stream";
 
 export class InMemoryPost implements ChatPost {
@@ -58,14 +58,7 @@ export class InMemoryPost implements ChatPost {
 export class LocalChatStorage extends EventEmitter {
     
     channelNames: Record<string, string> = {};
-    channelData: Record<string, {
-        description?: string;
-        isPrivate?: boolean;
-        members?: string[];
-        defaultResponderId?: string;
-        projectId?: string;
-        artifactIds?: string[];
-    }> = {};
+    channelData: Record<string, ChannelData> = {};
     posts: ChatPost[] = [];
     callbacks: Function[] = [];
     userIdToHandleName: Record<string, string> = {}; // New mapping for user IDs to handle names
@@ -84,6 +77,7 @@ export class LocalChatStorage extends EventEmitter {
         const channelId = crypto.randomUUID();
         this.registerChannel(channelId, params.name);
         this.channelData[channelId] = {
+            id: channelId,
             description: params.description,
             isPrivate: params.isPrivate,
             members: params.members,
@@ -212,7 +206,9 @@ export class LocalTestClient implements ChatClient {
                 return {
                     id,
                     name,
-                    members: channelData?.members
+                    description: channelData.description,
+                    members: channelData?.members,
+                    defaultResponderId: channelData?.defaultResponderId
                 };
             })
         );
@@ -222,14 +218,7 @@ export class LocalTestClient implements ChatClient {
         return Promise.resolve(this.storage.userIdToHandleName);
     }
 
-    public async getChannelData(channelId: string): Promise<{
-        projectId?: string;
-        description?: string;
-        isPrivate?: boolean;
-        members?: string[];
-        defaultResponderId?: string;
-        artifactIds?: string[];
-    }> {
+    public async getChannelData(channelId: string): Promise<ChannelData> {
         const channelData = this.storage.channelData[channelId];
         if (!channelData) {
             throw new Error(`Channel ${channelId} not found`);
@@ -267,13 +256,14 @@ export class LocalTestClient implements ChatClient {
     }
 
     public async removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void> {
-        if (!this.channelData[channelId]) {
+        const channelData = await this.getChannelData(channelId);
+        if (!channelData) {
             throw new Error(`Channel ${channelId} not found`);
         }
         
-        if (this.channelData[channelId].artifactIds) {
-            this.channelData[channelId].artifactIds = 
-                this.channelData[channelId].artifactIds?.filter(id => id !== artifactId);
+        if (channelData.artifactIds) {
+            channelData.artifactIds = 
+                channelData.artifactIds?.filter(id => id !== artifactId);
             await this.storage.save();
         }
     }

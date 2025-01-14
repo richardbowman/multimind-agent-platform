@@ -1,4 +1,6 @@
-import { ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
+import { StepExecutor } from '../StepExecutor';
+import { StepResult } from '../StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { FinalResponse } from '../../schemas/finalResponse';

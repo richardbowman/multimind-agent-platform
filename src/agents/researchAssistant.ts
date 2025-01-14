@@ -10,7 +10,7 @@ import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 
-export interface ResearchProject extends Project<Task> {
+export interface ResearchProject extends Project {
     postId: string;
 }
 

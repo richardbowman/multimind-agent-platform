@@ -10,7 +10,7 @@ export enum ProjectManagerActivities {
     ScheduleTask = "schedule-task"
 }
 
-export interface PlanningProject extends Project<Task> {
+export interface PlanningProject extends Project {
     originalPostId: string;
     confirmationPostId?: string;
     goal: string;

@@ -20,7 +20,7 @@ export interface QuestionAnswer {
     answeredAt: string;
 }
 
-export interface OnboardingProject extends Project<Task> {
+export interface OnboardingProject extends Project {
     businessDescription?: string;
     businessGoals?: string[];
     serviceRequirements?: string;

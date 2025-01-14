@@ -51,7 +51,7 @@ export interface ProjectMetadata extends Record<string, any> {
     priority?: 'low' | 'medium' | 'high';
 }
 
-export interface Project<Task> {
+export interface Project {
     id: string;
     name: string;
     props?: Record<string, any>;
@@ -60,18 +60,18 @@ export interface Project<Task> {
 }
 
 export interface TaskManager extends EventEmitter {
-    replaceProject(project: Project<Task>): unknown;
+    replaceProject(project: Project): unknown;
     completeTask(id: string): Promise<Task>;
-    addProject(project: Project<Task>): Promise<void>;
-    createProject(name: string, tasks?: { description: string; type: string }[], metadata?: Partial<ProjectMetadata>): Promise<Project<Task>>;
-    addTask(project: Project<Task>, params: AddTaskParams): Promise<Task>;
-    getProject(projectId: string): Project<Task>;
+    addProject(project: Project): Promise<void>;
+    createProject(name: string, tasks?: { description: string; type: string }[], metadata?: Partial<ProjectMetadata>): Promise<Project>;
+    addTask(project: Project, params: AddTaskParams): Promise<Task>;
+    getProject(projectId: string): Project;
     newProjectId(): string;
     save(): Promise<void>;
     load(): Promise<void>;
     assignTaskToAgent(taskId: string, agentId: string): void;
     getNextTaskForUser(userId: string): Promise<Task | null>;
-    getProjects(): Project<Task>[];
+    getProjects(): Project[];
     getNextTask(projectId: string): Task | null;
     getAllTasks(projectId: string): Task[];
     markTaskInProgress(task: Task | string): Promise<Task>;

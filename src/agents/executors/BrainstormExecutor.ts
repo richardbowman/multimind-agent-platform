@@ -1,4 +1,7 @@
-import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
+import { StepExecutor } from '../StepExecutor';
+import { ExecuteParams } from '../ExecuteParams';
+import { StepResult } from '../StepResult';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';

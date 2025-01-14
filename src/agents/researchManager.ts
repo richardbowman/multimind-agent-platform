@@ -11,7 +11,7 @@ import { ResearchAggregationExecutor } from './executors/ResearchAggregationExec
 import { UnderstandGoalsExecutor } from "./executors/UnderstandGoalsExecutor";
 import { ResearchGoalsExecutor } from "./executors/ResearchGoalsExecutor";
 
-export interface ResearchProject extends Project<Task> {
+export interface ResearchProject extends Project {
     goal: string;
 }
 

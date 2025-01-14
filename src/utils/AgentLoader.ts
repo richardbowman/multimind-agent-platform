@@ -7,9 +7,7 @@ import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ILLMService } from 'src/llm/ILLMService';
 import { SettingsManager } from '../tools/settingsManager';
-// Remove path import since we're not using it anymore
-
-
+import path from "path";
 
 export interface AgentLoaderParams {
     llmService: ILLMService;
@@ -38,7 +36,7 @@ export class AgentLoader {
                 try {
                     // Use require.context to dynamically load agents
                     const agentContext = require.context('../agents', true, /\.ts$/);
-                    const module = agentContext(`./${definition.sourcePath}`);
+                    const module = agentContext("./" + definition.sourcePath);
                     const AgentClass = module[definition.className] || module.default;
 
                     if (!AgentClass) {

@@ -1,4 +1,7 @@
-import { ExecuteParams, ExecutorConstructorParams, StepExecutor, StepResult } from '../stepBasedAgent';
+import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
+import { StepExecutor } from '../StepExecutor';
+import { ExecuteParams } from '../ExecuteParams';
+import { StepResult } from '../StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -52,7 +55,7 @@ ${params.previousResult ? `Use these materials to inform the task planning:\n${J
         // Create a new project and writing tasks for each section
         try {
             const newProjectId = this.taskManager.newProjectId();
-            const writingProject : Project<Task> = {
+            const writingProject : Project = {
                 id: newProjectId,
                 name: `Writing project: ${params.goal}`,
                 tasks: {},

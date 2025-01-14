@@ -2,14 +2,13 @@ import React, { createContext, useContext, useEffect, useState, useCallback, use
 import { ClientMessage, ClientChannel } from '../shared/IPCInterface';
 import WebSocketService from '../services/WebSocketService';
 import { ElectronIPCService } from '../services/ElectronIPCService';
-import { Artifact } from '../../../../tools/artifact';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
 import { BaseRPCService } from '../shared/BaseRPCService';
 import { ClientTask } from '../shared/types';
 import { CreateChannelParams } from '../../../../shared/channelTypes';
 
 // Create service instance based on environment
-const ipcService: BaseRPCService = (window as any).electron 
+export const ipcService: BaseRPCService = (window as any).electron 
     ? new ElectronIPCService()
     : new WebSocketService();
 

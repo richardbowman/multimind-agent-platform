@@ -1,20 +1,4 @@
 {
-  "providers": {
-    "chat": "lmstudio",
-    "embeddings": "llama_cpp"
-  },
-  "searchProvider": "duckduckgo",
-  "scrapingProvider": "electron",
-  "searxngUrl": "http://localhost:8080/",
-  "chromadbUrl": "http://localhost:8001",
-  "chromaCollection": "webpage_scrapes",
-  "maxSearches": 3,
-  "maxFollows": 3,
-  "maxResearchRequests": 3,
-  "embeddingModel": "nomic-embed-text-v1.5.Q4_K_M.gguf",
-  "chatModel": "qwen2.5-coder-14b-instruct",
-  "contextSize": 16384,
-  "lmStudioBaseUrl": "ws://localhost:1234",
   "models": {
     "conversation": {
       "lmstudio": "qwen2.5-coder-14b-instruct",

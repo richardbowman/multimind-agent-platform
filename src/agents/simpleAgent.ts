@@ -5,7 +5,7 @@ import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { Project, Task } from 'src/tools/taskManager';
 
 export class SimpleAgent extends Agent {
-    protected projectCompleted(project: Project<Task>): void {
+    protected projectCompleted(project: Project): void {
         throw new Error('Method not implemented.');
     }
     protected processTask(task: Task): Promise<void> {

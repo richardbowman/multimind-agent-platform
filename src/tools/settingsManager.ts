@@ -10,158 +10,8 @@ import Logger from '../helpers/logger';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { EventEmitter } from 'events';
 import { app } from 'electron';
+import { Settings } from './settings';
 
-interface AgentDefinition {
-    className: string;
-    sourcePath: string;
-    userId: string;
-    handle?: string;
-    description?: string;
-    enabled: boolean;
-    config?: AgentConfig;
-    autoRespondChannelIds?: String[];
-}
-
-export interface AgentConfig {
-    purpose: string;
-    finalInstructions: string;
-    executors: {
-        className: string;
-        config?: Record<string, any>;
-    }[];
-}
-
-import { ClientSettings } from './settingsDecorators';
-
-export class Settings {
-    @ClientSettings({
-        label: 'UI Zoom Level',
-        category: 'UI Settings',
-        type: 'number',
-        defaultValue: 1.0,
-        min: 0.5,
-        max: 2.0,
-        step: 0.1,
-        description: 'Adjust the UI zoom level (0.5 = 50%, 1.0 = 100%, 2.0 = 200%)'
-    })
-    zoom: number = 1.0;
-
-    @ClientSettings({
-        label: 'Server Host',
-        category: 'Server Settings',
-        type: 'string',
-        defaultValue: 'localhost',
-        description: 'The host address for the server'
-    })
-    host: string = 'localhost';
-    port?: number;
-    protocol?: string;
-    wsUrl?: string;
-
-    // LLM Provider settings
-    providers?: {
-        chat: string;
-        embeddings: string;
-    };
-
-    models?: {
-        conversation: {
-            lmstudio: string;
-            anthropic: string;
-            bedrock: string;
-            openai: string;
-            openrouter: string;
-            llama_cpp: string;
-        },
-        reasoning: {
-            lmstudio: string;
-            anthropic: string;
-            bedrock: string;
-            openai: string;
-            openrouter: string;
-            llama_cpp: string;
-        },
-        document: {
-            lmstudio: string;
-            anthropic: string;
-            bedrock: string;
-            openai: string;
-            openrouter: string;
-            llama_cpp: string;
-        }
-    };
-
-    embeddingModel?: string;
-    embeddingProvider?: string;
-    lmStudioBaseUrl?: string;
-    contextSize?: number;
-
-    // API Keys
-    anthropic?: {
-        api: {
-            key: string;
-        },
-        model: string;
-    };
-
-    openai?: {
-        api: {
-            key: string;
-        },
-        model: string;
-    };
-
-    openrouter?: {
-        api: {
-            key: string;
-        },
-        model: string;
-    };
-
-    // Rate Limiting
-    anthropicMaxTokensPerMinute?: number;
-    anthropicDefaultDelayMs?: number;
-    anthropicWindowSizeMs?: number;
-    bedrockMaxTokensPerMinute?: number;
-    bedrockDefaultDelayMs?: number;
-    bedrockWindowSizeMs?: number;
-
-    // Vector DB Settings
-    vectorDatabaseType?: string;
-    chromadbUrl?: string;
-    chromaCollection?: string;
-
-    // Search Settings
-    searchProvider?: 'duckduckgo' | 'searxng' | 'google' | 'brave';
-    scrapingProvider?: 'puppeteer' | 'electron';
-    maxSearches?: number;
-    searxngUrl?: string;
-    maxFollows?: number;
-    maxResearchRequests?: number;
-    duckduckgo?: {
-        headless: boolean;
-        timeout: number;
-    };
-    brave?: {
-        apiKey: string;
-        endpoint: string;
-    };
-
-    // Channel configuration
-    defaultChannels?: Record<string, string>;
-    
-    // Agent configuration
-    agents?: {
-        [key: string]: AgentDefinition 
-    };
-
-    // Bedrock specific settings
-    bedrock?: {
-        maxTokensPerMinute: number;
-        defaultDelayMs: number;
-        windowSizeMs: number;
-    };
-}
 
 export class SettingsManager extends EventEmitter {
     private settings?: Settings;
@@ -211,7 +61,7 @@ export class SettingsManager extends EventEmitter {
 
     private async loadDefaults(): Promise<any> {
         try {
-            const defaultsPath = path.join(this.baseDir, 'dist/defaults.json5');
+            const defaultsPath = path.join(this.baseDir, 'defaults.json5');
             const data = await this.fileQueue.enqueue(() =>
                 fs.readFile(defaultsPath, 'utf-8')
             );
@@ -234,7 +84,8 @@ export class SettingsManager extends EventEmitter {
                 userSettings = JSON5.parse(data);
             } catch (err) {
             }
-            this.settings = this.deepMerge(defaults, userSettings);
+            this.settings = this.deepMerge(new Settings(), defaults);
+            this.settings = this.deepMerge(this.settings, userSettings);
         } catch (error: any) {
             if (error?.code === 'ENOENT') {
                 this.settings = defaults;

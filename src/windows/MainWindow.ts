@@ -9,8 +9,8 @@ export class MainWindow {
         this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
             ...options,
-            width: 1200,
-            height: 800,
+            width: 1200*initialZoom,
+            height: 800*initialZoom,
             webPreferences: {
                 preload: path.join(__dirname, './preload.js'),
                 contextIsolation: true,

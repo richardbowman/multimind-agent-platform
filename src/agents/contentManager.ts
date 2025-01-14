@@ -11,8 +11,9 @@ import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
+import { DocumentRetrievalExecutor } from './executors/DocumentRetrievalExecutor';
 
-export interface ContentProject extends Project<ContentTask> {
+export interface ContentProject extends Project {
     goal: string;
     description: string;
 }
