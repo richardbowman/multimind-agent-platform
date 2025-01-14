@@ -1,5 +1,29 @@
 const path = require('path');
 const nodeExternals = require('webpack-node-externals');
+const fs = require('fs');
+const { ConcatSource } = require('webpack-sources');
+
+class IncludeAllModulesPlugin {
+  constructor(options) {
+    this.directories = options.directories;
+  }
+
+  apply(compiler) {
+    compiler.hooks.emit.tapAsync('IncludeAllModulesPlugin', (compilation, callback) => {
+      this.directories.forEach(dir => {
+        const files = fs.readdirSync(dir);
+        files.forEach(file => {
+          if (file.endsWith('.ts')) {
+            const modulePath = path.join(dir, file);
+            const relativePath = path.relative(compiler.context, modulePath);
+            compilation.fileDependencies.add(modulePath);
+          }
+        });
+      });
+      callback();
+    });
+  }
+}
 
 module.exports = {
   target: 'node',
@@ -34,8 +58,25 @@ module.exports = {
       'node_modules'
     ]
   },
-  externals: [nodeExternals()], // Exclude node_modules
+  externals: [nodeExternals({
+    allowlist: [
+      /^@agents\//,
+      /^@executors\//,
+      /^@tools\//
+    ]
+  })],
   externalsPresets: {
     node: true // Treat built-in node modules as external
+  },
+  plugins: [
+    new IncludeAllModulesPlugin({
+      directories: [
+        path.resolve(__dirname, 'src/agents'),
+        path.resolve(__dirname, 'src/executors')
+      ]
+    })
+  ],
+  optimization: {
+    splitChunks: false // Disable chunk splitting to keep everything in one bundle
   }
 };
