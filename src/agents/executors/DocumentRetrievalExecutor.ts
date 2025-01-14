@@ -17,14 +17,27 @@ export class DocumentRetrievalExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const artifactIds = params.message?.match(/artifact-ids: \[(.*)\]/)?.[1]?.split(',') || [];
-        const artifacts = await Promise.all(artifactIds.map(id => this.artifactManager.getArtifact(id)));
+        // Extract the document request from the message
+        const documentRequest = params.message || '';
+        
+        // Search for relevant artifacts using the vector database
+        const searchResults = await this.artifactManager.vectorDb.query(
+            [documentRequest], 
+            {}, 
+            3 // Return top 3 matches
+        );
+
+        // Retrieve the full content of the matching artifacts
+        const artifacts = await Promise.all(
+            searchResults.map(result => this.artifactManager.getArtifact(result.id))
+        );
 
         return {
             success: true,
             result: artifacts.map(a => a.content).join('\n\n'),
             metadata: {
-                retrievedArtifactIds: artifactIds
+                retrievedArtifactIds: artifacts.map(a => a.id),
+                searchQuery: documentRequest
             }
         };
     }
