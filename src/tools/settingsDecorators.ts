@@ -29,11 +29,21 @@ export function getClientSettingsMetadata(target: any, prefix: string = ''): Rec
 
     console.log(`Getting metadata for ${prefix || 'root'}`);
     
-    // Get both own properties and prototype properties
-    const properties = new Set([
-        ...Object.getOwnPropertyNames(target),
-        ...Object.getOwnPropertyNames(Object.getPrototypeOf(target))
-    ]);
+    // Get properties from the entire prototype chain
+    const properties = new Set();
+    let currentTarget = target;
+    
+    while (currentTarget && currentTarget !== Object.prototype) {
+        // Get own properties including non-enumerable ones
+        Object.getOwnPropertyNames(currentTarget).forEach(prop => properties.add(prop));
+        
+        // Get properties from prototype
+        const proto = Object.getPrototypeOf(currentTarget);
+        if (proto && proto !== Object.prototype) {
+            Object.getOwnPropertyNames(proto).forEach(prop => properties.add(prop));
+        }
+        currentTarget = proto;
+    }
     
     console.log(`Found properties:`, Array.from(properties));
     
