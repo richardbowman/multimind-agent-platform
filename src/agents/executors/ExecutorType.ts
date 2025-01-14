@@ -17,5 +17,6 @@ export enum ExecutorType {
     UNDERSTAND_GOALS = 'understand_goals',
     VALIDATION = 'validation',
     WRITING = 'assign-writers',
-    BRAINSTORM = "brainstorm"
+    BRAINSTORM = "brainstorm",
+    DOCUMENT_RETRIEVAL = "document-retrieval"
 }
