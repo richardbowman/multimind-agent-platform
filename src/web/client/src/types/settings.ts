@@ -14,17 +14,28 @@ export interface Settings extends Record<string, any> {
     [key: string]: string | number | boolean;
 }
 
-export const CONFIG_METADATA: ConfigMetadata[] = [
-    // LLM Settings
-    {
-        key: 'providers.chat',
-        label: 'LLM Provider',
-        type: 'select',
-        category: 'LLM Settings',
-        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama-cpp'],
-        defaultValue: 'lmstudio',
-        required: true
-    },
+// Generate metadata from TypeScript annotations
+function getConfigMetadata(settings: Settings): ConfigMetadata[] {
+    const metadata: ConfigMetadata[] = [];
+    
+    // Example for zoom property
+    metadata.push({
+        key: 'zoom',
+        label: 'UI Zoom Level',
+        type: 'number',
+        category: 'UI Settings',
+        defaultValue: 1.0,
+        min: 0.5,
+        max: 2.0,
+        step: 0.1,
+        description: 'Adjust the UI zoom level'
+    });
+
+    // Add other properties here based on their annotations
+    // ...
+
+    return metadata;
+}
     // Conversation Models
     {
         key: 'models.conversation.lmstudio',
