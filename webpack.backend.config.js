@@ -2,6 +2,7 @@ const path = require('path');
 const nodeExternals = require('webpack-node-externals');
 const fs = require('fs');
 const { ConcatSource } = require('webpack-sources');
+const CopyWebpackPlugin = require('copy-webpack-plugin');
 
 class IncludeAllModulesPlugin {
   constructor(options) {
@@ -78,6 +79,14 @@ module.exports = {
         path.resolve(__dirname, 'src/agents'),
         path.resolve(__dirname, 'src/agents/executors'),
         path.resolve(__dirname, 'src/agents/planners')
+      ]
+    }),
+    new CopyWebpackPlugin({
+      patterns: [
+        {
+          from: path.resolve(__dirname, 'src/defaults.json5'),
+          to: path.resolve(__dirname, 'dist/defaults.json5')
+        }
       ]
     })
   ]

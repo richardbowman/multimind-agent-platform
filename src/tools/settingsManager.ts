@@ -211,7 +211,7 @@ export class SettingsManager extends EventEmitter {
 
     private async loadDefaults(): Promise<any> {
         try {
-            const defaultsPath = path.join(this.baseDir, 'defaults.json5');
+            const defaultsPath = path.join(this.baseDir, 'dist/defaults.json5');
             const data = await this.fileQueue.enqueue(() =>
                 fs.readFile(defaultsPath, 'utf-8')
             );
