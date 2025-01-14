@@ -21,8 +21,8 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useWebSocket } from '../contexts/DataContext';
-import { Settings } from '../../tools/settingsManager';
-import { getClientSettingsMetadata } from '../../tools/settingsDecorators';
+import { Settings } from '../../../../tools/settingsManager';
+import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { DrawerPage } from './GlobalArtifactViewer';
 
 export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
