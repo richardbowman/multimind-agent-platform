@@ -257,7 +257,7 @@ export class MessageHandler implements ServerMethods {
 
     async getArtifacts({ channelId, threadId }: { channelId: string; threadId: string | null }): Promise<any[]> {
         // Get all messages for this channel/thread
-        const messages = await this.services.chatClient.fetchPreviousMessages(channelId);
+        const messages = await this.services.chatClient.fetchPreviousMessages(channelId, 1000);
         const filteredMessages = messages.filter(message => {
             if (threadId) {
                 return message.getRootId() === threadId || message.id === threadId;
