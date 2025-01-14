@@ -34,18 +34,20 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'main.electron.js'
   },
-  devtool: 'source-map',
+  devtool: 'eval-cheap-module-source-map',
   module: {
     rules: [
       {
         test: /\.ts$/,
-        use: {
-          loader: 'ts-loader',
-          options: {
-            configFile: 'tsconfig.electron.json',
-            transpileOnly: true
+        use: [
+          {
+            loader: 'ts-loader',
+            options: {
+              configFile: 'tsconfig.electron.json',
+              transpileOnly: true
+            }
           }
-        },
+        ],
         exclude: /node_modules/
       }
     ]
@@ -60,8 +62,12 @@ module.exports = {
       path.resolve(__dirname, 'src'),
       'node_modules'
     ],
-    // Add this to handle context requires
     fullySpecified: false
+  },
+  output: {
+    path: path.resolve(__dirname, 'dist'),
+    filename: 'main.electron.js',
+    devtoolModuleFilenameTemplate: '[absolute-resource-path]'
   },
   externals: [nodeExternals({
     allowlist: [
