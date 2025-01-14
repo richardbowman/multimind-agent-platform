@@ -17,6 +17,7 @@ class IncludeAllModulesPlugin {
             const modulePath = path.join(dir, file);
             const relativePath = path.relative(compiler.context, modulePath);
             compilation.fileDependencies.add(modulePath);
+            console.log(modulePath, relativePath);
           }
         });
       });
