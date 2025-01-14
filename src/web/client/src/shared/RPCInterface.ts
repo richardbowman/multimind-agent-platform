@@ -44,4 +44,5 @@ export interface ClientMethods {
     onMessage(messages: ClientMessage[]): void;
     onLogUpdate(update: LogParam): void;
     onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }): void;
+    onTaskUpdate(task: ClientTask): void;
 }

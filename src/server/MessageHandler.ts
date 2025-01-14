@@ -54,6 +54,19 @@ export class MessageHandler implements ServerMethods {
     }
 
     setupClientEvents(rpc: ClientMethods) {
+        // Set up task update notifications
+        if (this.services?.taskManager) {
+            this.services.taskManager.on('taskUpdated', ({task}) => {
+                rpc.onTaskUpdate({
+                    id: task.id,
+                    description: task.description,
+                    inProgress: task.inProgress || false,
+                    complete: task.complete || false,
+                    threadId: task.metadata?.threadId || null
+                });
+            });
+        }
+
         // Set up message receiving for the user client
         if (this.services?.chatClient) {
             this.services.chatClient.receiveMessages(async (post: ChatPost) => {
