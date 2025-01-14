@@ -31,5 +31,6 @@ export enum SchemaType {
     QuickQueriesResponse = 'QuickQueriesResponse',
     ResearchUnderstandingResponse = 'ResearchUnderstandingResponse',
     CodeExecutionResponse = 'CodeExecutionResponse',
-    BrainstormResponse = 'BrainstormResponse'
+    BrainstormResponse = 'BrainstormResponse',
+    OutlineApprovalCheck = 'OutlineApprovalCheck'
 }

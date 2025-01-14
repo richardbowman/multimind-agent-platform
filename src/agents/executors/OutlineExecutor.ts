@@ -44,12 +44,22 @@ export class OutlineExecutor implements StepExecutor {
         if (params.message && previousOutline) {
             const feedback = params.message;
             
-            // Analyze if the feedback indicates approval
-            const approvalCheck = await this.modelHelpers.generate<{approved: boolean, changesNeeded: string[]}>({
+            // Analyze if the feedback indicates approval using structured output
+            const approvalSchema = await getGeneratedSchema(SchemaType.OutlineApprovalCheck);
+            const approvalCheck = await this.modelHelpers.generate<{
+                approved: boolean,
+                changesNeeded: string[],
+                confidence: number,
+                feedbackSummary: string
+            }>({
                 message: `Does this feedback indicate the outline is approved? Feedback: ${feedback}`,
-                instructions: `Analyze the feedback and determine if it indicates approval of the outline.
+                instructions: new StructuredOutputPrompt(
+                    approvalSchema,
+                    `Analyze the feedback and determine if it indicates approval of the outline.
 If the feedback contains words like "approved", "looks good", "proceed", or similar positive confirmation, return approved: true.
-If the feedback contains requests for changes, return approved: false and list the requested changes.`
+If the feedback contains requests for changes, return approved: false and list the requested changes.
+Also provide a confidence score (0-100) in your assessment and a brief summary of the feedback.`
+                )
             });
 
             if (approvalCheck.approved) {
