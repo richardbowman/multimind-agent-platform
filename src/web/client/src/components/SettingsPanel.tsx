@@ -271,41 +271,57 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 overflowY: 'auto'
             }}
             >
-                {Object.entries(categories).map(([category, metadataList]) => (
-                    <Paper 
-                        key={category}
-                        id={category}
-                        sx={{ 
-                            p: 3, 
-                            bgcolor: 'background.paper',
-                            borderRadius: 2,
-                            boxShadow: 1,
-                            mb: 3
-                        }}
-                    >
-                        <Typography variant="h6" gutterBottom sx={{ 
-                            mb: 2, 
-                            pb: 1, 
-                            borderBottom: '1px solid',
-                            borderColor: 'divider'
-                        }}>
-                            {category}
-                        </Typography>
-                        
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                            {metadataList.map(metadata => (
-                                <FormControl key={metadata.key} fullWidth>
-                                    {renderInput(metadata)}
-                                    {metadata.description && (
-                                        <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                                            {metadata.description}
-                                        </Typography>
-                                    )}
-                                </FormControl>
-                            ))}
-                        </Box>
-                    </Paper>
-                ))}
+                {Object.entries(categories).map(([category, metadataList]) => {
+                    // Filter model settings based on selected provider
+                    const filteredList = category === 'LLM Settings' 
+                        ? metadataList.filter(meta => {
+                            // Skip if not a model setting
+                            if (!meta.key.startsWith('models.')) return true;
+                            
+                            // Get the provider type from the key (e.g. models.conversation.lmstudio)
+                            const providerType = meta.key.split('.')[2];
+                            
+                            // Show only settings for the selected provider
+                            return providerType === settings.providers?.chat;
+                        })
+                        : metadataList;
+
+                    return (
+                        <Paper 
+                            key={category}
+                            id={category}
+                            sx={{ 
+                                p: 3, 
+                                bgcolor: 'background.paper',
+                                borderRadius: 2,
+                                boxShadow: 1,
+                                mb: 3
+                            }}
+                        >
+                            <Typography variant="h6" gutterBottom sx={{ 
+                                mb: 2, 
+                                pb: 1, 
+                                borderBottom: '1px solid',
+                                borderColor: 'divider'
+                            }}>
+                                {category}
+                            </Typography>
+                            
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                {filteredList.map(metadata => (
+                                    <FormControl key={metadata.key} fullWidth>
+                                        {renderInput(metadata)}
+                                        {metadata.description && (
+                                            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                {metadata.description}
+                                            </Typography>
+                                        )}
+                                    </FormControl>
+                                ))}
+                            </Box>
+                        </Paper>
+                    );
+                })}
                 
                 <Box sx={{ 
                     display: 'flex', 
