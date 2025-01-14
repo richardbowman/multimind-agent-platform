@@ -30,7 +30,7 @@ export function getClientSettingsMetadata(target: any, prefix: string = ''): Rec
     console.log(`Getting metadata for ${prefix || 'root'}`);
     
     // Get properties from the entire prototype chain
-    const properties = new Set();
+    const properties : Set<string> = new Set();
     let currentTarget = target;
     
     while (currentTarget && currentTarget !== Object.prototype) {
