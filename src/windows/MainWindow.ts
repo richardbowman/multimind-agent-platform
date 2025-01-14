@@ -14,17 +14,18 @@ export class MainWindow {
             webPreferences: {
                 preload: path.join(__dirname, './preload.js'),
                 contextIsolation: true,
-                nodeIntegration: false
+                nodeIntegration: false,
+                zoomFactor: initialZoom
             },
-            autoHideMenuBar: true,
+        autoHideMenuBar: true,
             show: false
         });
-        this.setZoomLevel(this.zoomLevel);
     }
 
     setZoomLevel(zoomLevel: number) {
         this.zoomLevel = Math.min(Math.max(zoomLevel, 0.5), 2.0); // Clamp between 0.5 and 2.0
         this.window.webContents.setZoomFactor(this.zoomLevel);
+        this.window.webContents.setZoomLevel(1);    
     }
 
     getZoomLevel(): number {
@@ -39,6 +40,8 @@ export class MainWindow {
             await this.window.loadFile(path.join(__dirname, './web/index.html'));
         }
         this.window.show();
+        this.window.webContents.setZoomFactor(this.zoomLevel);
+        this.window.webContents.setZoomLevel(1);          
     }
 
     getWindow(): BrowserWindow {
