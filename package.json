@@ -101,6 +101,7 @@
     "@types/react": "19.0.0",
     "@types/react-dom": "19.0.0",
     "@types/turndown": "^5.0.5",
+    "@types/webpack-node-externals": "^3",
     "@types/ws": "^8.5.13",
     "concurrently": "^9.1.0",
     "copy-webpack-plugin": "^12.0.2",
@@ -121,7 +122,8 @@
     "wait-on": "^8.0.1",
     "webpack": "^5.89.0",
     "webpack-cli": "^5.1.4",
-    "webpack-dev-server": "^4.15.1"
+    "webpack-dev-server": "^4.15.1",
+    "webpack-node-externals": "^3.0.0"
   },
   "packageManager": "yarn@4.6.0"
 }
