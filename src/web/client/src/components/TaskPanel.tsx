@@ -49,7 +49,14 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                 Tasks
             </Typography>
             <List>
-                {(tasks || []).map(task => (
+                {(tasks || [])
+                    .sort((a, b) => {
+                        // Sort completed tasks to the bottom
+                        if (a.complete && !b.complete) return 1;
+                        if (!a.complete && b.complete) return -1;
+                        return 0;
+                    })
+                    .map(task => (
                     <ListItem 
                         key={task.id}
                         sx={{
@@ -85,7 +92,9 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                                 color: task.inProgress ? '#000' : '#fff',
                                 whiteSpace: 'nowrap',
                                 overflow: 'hidden',
-                                textOverflow: 'ellipsis'
+                                textOverflow: 'ellipsis',
+                                textDecoration: task.complete ? 'line-through' : 'none',
+                                opacity: task.complete ? 0.7 : 1
                             }}
                             secondary={
                                 <React.Fragment>
@@ -94,7 +103,9 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                                         component="span"
                                         sx={{ 
                                             display: 'block',
-                                            color: task.inProgress ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)'
+                                            color: task.inProgress ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                                            textDecoration: task.complete ? 'line-through' : 'none',
+                                            opacity: task.complete ? 0.7 : 1
                                         }}
                                     >
                                         {task.assignee && `Assigned to: ${task.assignee}`}
@@ -104,7 +115,9 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                                         component="span"
                                         sx={{ 
                                             display: 'block',
-                                            color: task.inProgress ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)'
+                                            color: task.inProgress ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                                            textDecoration: task.complete ? 'line-through' : 'none',
+                                            opacity: task.complete ? 0.7 : 1
                                         }}
                                     >
                                         Type: {task.type}
