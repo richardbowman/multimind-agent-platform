@@ -130,7 +130,7 @@ const AppContent: React.FC = () => {
                         <IconButton
                             color="inherit"
                             edge="end"
-                            onClick={() => window.ipcService.getRPC().maximizeWindow()}
+                            onClick={() => ipcService.getRPC().maximizeWindow()}
                             sx={{ ml: 2 }}
                         >
                             <MaximizeIcon />
