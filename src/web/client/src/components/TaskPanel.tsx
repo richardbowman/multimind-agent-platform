@@ -51,7 +51,9 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
             <List>
                 {(tasks || [])
                     .sort((a, b) => {
-                        // Sort completed tasks to the bottom
+                        // Sort in-progress to top, then not started, then completed
+                        if (a.inProgress && !b.inProgress) return -1;
+                        if (!a.inProgress && b.inProgress) return 1;
                         if (a.complete && !b.complete) return 1;
                         if (!a.complete && b.complete) return -1;
                         return 0;
