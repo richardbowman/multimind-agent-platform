@@ -121,7 +121,7 @@ const AppContent: React.FC = () => {
                         <IconButton
                             color="inherit"
                             edge="end"
-                            onClick={() => window.ipcRenderer.send('window-minimize')}
+                            onClick={() => window.electron?.ipcRenderer?.send('window-minimize')}
                             sx={{ ml: 2 }}
                         >
                             <MinimizeIcon />
@@ -129,7 +129,7 @@ const AppContent: React.FC = () => {
                         <IconButton
                             color="inherit"
                             edge="end"
-                            onClick={() => window.ipcRenderer.send('window-maximize')}
+                            onClick={() => window.electron?.ipcRenderer?.send('window-maximize')}
                             sx={{ ml: 2 }}
                         >
                             <MaximizeIcon />
@@ -137,7 +137,7 @@ const AppContent: React.FC = () => {
                         <IconButton
                             color="inherit"
                             edge="end"
-                            onClick={() => window.ipcRenderer.send('window-close')}
+                            onClick={() => window.electron?.ipcRenderer?.send('window-close')}
                             sx={{ ml: 2 }}
                         >
                             <CloseIcon />

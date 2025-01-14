@@ -17,8 +17,17 @@ export class MainWindow {
                 nodeIntegration: false,
                 zoomFactor: initialZoom
             },
-        autoHideMenuBar: true,
+            autoHideMenuBar: true,
             show: false
+        });
+
+        // Setup window control handlers
+        this.window.on('maximize', () => {
+            this.window.webContents.send('window-state-changed', 'maximized');
+        });
+
+        this.window.on('unmaximize', () => {
+            this.window.webContents.send('window-state-changed', 'normal');
         });
     }
 
