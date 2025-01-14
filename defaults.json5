@@ -1,21 +1,10 @@
 {
-  // Server configuration
-  "port": 4001,
-  "wsUrl": "ws://localhost:4001",  // WebSocket URL for real-time communication
   "providers": {
     "chat": "lmstudio",
     "embeddings": "llama_cpp"
   },
   "searchProvider": "duckduckgo",
   "scrapingProvider": "electron",
-  "duckduckgo": {
-    "headless": true,
-    "timeout": 30000
-  },
-  "brave": {
-    "apiKey": "",
-    "endpoint": "https://api.search.brave.com/res/v1/web/search"
-  },
   "searxngUrl": "http://localhost:8080/",
   "chromadbUrl": "http://localhost:8001",
   "chromaCollection": "webpage_scrapes",
@@ -262,10 +251,5 @@ My goal is to help you define, document and refine product specifications.",
          ]
        }
      }
-  },
-  "bedrock": {
-    "maxTokensPerMinute": 20000,
-    "defaultDelayMs": 1000,
-    "windowSizeMs": 60000
   }
 }

@@ -5,9 +5,9 @@ export class BedrockConfig {
         label: 'Bedrock Max Tokens/Min',
         category: 'Rate Limiting',
         type: 'number',
-        defaultValue: 50000
+        defaultValue: 20000
     })
-    maxTokensPerMinute!: number;
+    maxTokensPerMinute: number = 20000;
 
     @ClientSettings({
         label: 'Bedrock Default Delay (ms)',
@@ -15,7 +15,7 @@ export class BedrockConfig {
         type: 'number',
         defaultValue: 1000
     })
-    defaultDelayMs!: number;
+    defaultDelayMs: number = 1000;
 
     @ClientSettings({
         label: 'Bedrock Window Size (ms)',
@@ -23,7 +23,7 @@ export class BedrockConfig {
         type: 'number',
         defaultValue: 60000
     })
-    windowSizeMs!: number;
+    windowSizeMs: number = 60000;
 }
 
 
@@ -35,7 +35,7 @@ export class DuckDuckGoConfig {
         defaultValue: true,
         description: 'Run DuckDuckGo searches in headless browser mode'
     })
-    headless!: boolean;
+    headless: boolean = true;
 
     @ClientSettings({
         label: 'DuckDuckGo Timeout (ms)',
@@ -44,7 +44,7 @@ export class DuckDuckGoConfig {
         defaultValue: 30000,
         description: 'Timeout for DuckDuckGo search operations'
     })
-    timeout!: number;
+    timeout: number = 30000;
 }
 export class BraveConfig {
     @ClientSettings({
@@ -54,7 +54,7 @@ export class BraveConfig {
         sensitive: true,
         description: 'API key for Brave Search'
     })
-    apiKey!: string;
+    apiKey: string = '';
 
     @ClientSettings({
         label: 'Brave Search Endpoint',
@@ -63,7 +63,7 @@ export class BraveConfig {
         defaultValue: 'https://api.search.brave.com/res/v1/web/search',
         description: 'API endpoint for Brave Search'
     })
-    endpoint!: string;
+    endpoint: string = 'https://api.search.brave.com/res/v1/web/search';
 }
 
 export class EmbeddingsModelByProvider {
@@ -297,9 +297,9 @@ export class Settings {
         description: 'The host address for the server'
     })
     host: string = 'localhost';
-    port!: number;
-    protocol!: string;
-    wsUrl!: string;
+    port: number = 4001;
+    protocol: string = 'ws';
+    wsUrl: string = 'ws://localhost:4001';
 
     @ClientSettings({
         label: 'Models',
