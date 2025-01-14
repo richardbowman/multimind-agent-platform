@@ -12,6 +12,21 @@ import https from 'https';
 import { createWriteStream } from 'fs';
 import { pipeline } from 'stream/promises';
 import { getDataPath } from "src/helpers/paths";
+import axios from 'axios';
+
+interface HFModel {
+    id: string;
+    lastModified: string;
+    tags: string[];
+    downloads: number;
+    likes: number;
+    modelId: string;
+    author: string;
+    siblings: Array<{
+        rfilename: string;
+        size: number;
+    }>;
+}
 
 class LlamaEmbedder implements IEmbeddingFunction {
     private context: LLamaContext;
@@ -196,6 +211,43 @@ export class LlamaCppService extends BaseLLMService {
     getEmbeddingModel(): IEmbeddingFunction {
         if (!this.embedder) throw new Error("Llama.cpp embedding model not initialized");
         return this.embedder;
+    }
+
+    async searchModels(query: string, limit: number = 10): Promise<HFModel[]> {
+        try {
+            const response = await axios.get('https://huggingface.co/api/models', {
+                params: {
+                    search: query,
+                    filter: 'gguf',
+                    sort: 'downloads',
+                    direction: -1,
+                    limit: limit
+                }
+            });
+
+            // Filter to only show models that have GGUF files
+            const models = response.data.filter((model: HFModel) => 
+                model.siblings.some(s => s.rfilename.endsWith('.gguf'))
+            );
+
+            return models.map((model: HFModel) => ({
+                id: model.id,
+                modelId: model.modelId,
+                author: model.author,
+                downloads: model.downloads,
+                likes: model.likes,
+                lastModified: model.lastModified,
+                ggufFiles: model.siblings
+                    .filter(s => s.rfilename.endsWith('.gguf'))
+                    .map(s => ({
+                        filename: s.rfilename,
+                        size: (s.size / 1024 / 1024).toFixed(2) + ' MB'
+                    }))
+            }));
+        } catch (error) {
+            Logger.error('Failed to search models:', error);
+            throw error;
+        }
     }
 
     async getAvailableModels(): Promise<string[]> {
