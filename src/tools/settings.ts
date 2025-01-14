@@ -242,6 +242,122 @@ interface AgentDefinition {
 
 export class Settings {
     @ClientSettings({
+        label: 'Chat Provider',
+        category: 'LLM Settings',
+        type: 'select',
+        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp'],
+        defaultValue: 'lmstudio'
+    })
+    chatProvider: string = 'lmstudio';
+
+    @ClientSettings({
+        label: 'Embeddings Provider',
+        category: 'Embeddings',
+        type: 'select',
+        options: ['openai', 'cohere', 'huggingface', 'local', 'llama_cpp'],
+        defaultValue: 'llama_cpp'
+    })
+    embeddingsProvider: string = 'llama_cpp';
+
+    @ClientSettings({
+        label: 'Search Provider',
+        category: 'Search Settings',
+        type: 'select',
+        options: ['duckduckgo', 'searxng', 'google', 'brave'],
+        defaultValue: 'duckduckgo'
+    })
+    searchProvider: string = 'duckduckgo';
+
+    @ClientSettings({
+        label: 'Scraping Provider',
+        category: 'Search Settings',
+        type: 'select',
+        options: ['puppeteer', 'electron'],
+        defaultValue: 'electron'
+    })
+    scrapingProvider: string = 'electron';
+
+    @ClientSettings({
+        label: 'SearXNG URL',
+        category: 'Search Settings',
+        type: 'string',
+        defaultValue: 'http://localhost:8080/'
+    })
+    searxngUrl: string = 'http://localhost:8080/';
+
+    @ClientSettings({
+        label: 'ChromaDB URL',
+        category: 'Vector DB',
+        type: 'string',
+        defaultValue: 'http://localhost:8001'
+    })
+    chromadbUrl: string = 'http://localhost:8001';
+
+    @ClientSettings({
+        label: 'Chroma Collection',
+        category: 'Vector DB',
+        type: 'string',
+        defaultValue: 'webpage_scrapes'
+    })
+    chromaCollection: string = 'webpage_scrapes';
+
+    @ClientSettings({
+        label: 'Max Searches',
+        category: 'Search Settings',
+        type: 'number',
+        defaultValue: 3
+    })
+    maxSearches: number = 3;
+
+    @ClientSettings({
+        label: 'Max Follows',
+        category: 'Search Settings',
+        type: 'number',
+        defaultValue: 3
+    })
+    maxFollows: number = 3;
+
+    @ClientSettings({
+        label: 'Max Research Requests',
+        category: 'Search Settings',
+        type: 'number',
+        defaultValue: 3
+    })
+    maxResearchRequests: number = 3;
+
+    @ClientSettings({
+        label: 'Embedding Model',
+        category: 'Embeddings',
+        type: 'string',
+        defaultValue: 'nomic-embed-text-v1.5.Q4_K_M.gguf'
+    })
+    embeddingModel: string = 'nomic-embed-text-v1.5.Q4_K_M.gguf';
+
+    @ClientSettings({
+        label: 'Chat Model',
+        category: 'LLM Settings',
+        type: 'string',
+        defaultValue: 'qwen2.5-coder-14b-instruct'
+    })
+    chatModel: string = 'qwen2.5-coder-14b-instruct';
+
+    @ClientSettings({
+        label: 'Context Size',
+        category: 'LLM Settings',
+        type: 'number',
+        defaultValue: 16384
+    })
+    contextSize: number = 16384;
+
+    @ClientSettings({
+        label: 'LM Studio Base URL',
+        category: 'LLM Settings',
+        type: 'string',
+        defaultValue: 'ws://localhost:1234'
+    })
+    lmStudioBaseUrl: string = 'ws://localhost:1234';
+
+    @ClientSettings({
         label: 'Embeddings Models',
         category: 'Embeddings',
         type: 'section',
