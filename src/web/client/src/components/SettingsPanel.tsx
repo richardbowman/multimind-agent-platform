@@ -21,7 +21,7 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useWebSocket } from '../contexts/DataContext';
-import { Settings } from '../../../../tools/settingsManager';
+import { Settings } from '../../../../tools/settings';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { DrawerPage } from './GlobalArtifactViewer';
 
@@ -30,6 +30,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const [validationMessage, setValidationMessage] = useState<string>('');
     const [successMessage, setSuccessMessage] = useState<string>('');
     const { getSettings, updateSettings } = useWebSocket();
+    const metadata = getClientSettingsMetadata(new Settings());
 
     useEffect(() => {
         const loadSettings = async () => {
@@ -47,7 +48,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
     const handleChange = (key: string, value: string | number) => {
         // Get metadata using reflection
-        const metadata = getClientSettingsMetadata(settings);
         const fieldMeta = metadata[key];
         const processedValue = fieldMeta?.type === 'number' ? Number(value) : value;
         
@@ -75,7 +75,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
     const handleSave = async () => {
         // Get all required fields from metadata
-        const metadata = getClientSettingsMetadata(settings);
         const missingFields = Object.entries(metadata)
             .filter(([_, meta]) => meta.required)
             .filter(([key, _]) => {
@@ -184,9 +183,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 );
         }
     };
-
-    // Get metadata using reflection
-    const metadata = getClientSettingsMetadata(settings);
     
     // Convert to array and group by category
     const categories = Object.entries(metadata).reduce((acc, [key, meta]) => {
