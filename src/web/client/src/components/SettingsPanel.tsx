@@ -22,6 +22,7 @@ import {
 import MenuIcon from '@mui/icons-material/Menu';
 import { useIPCService, useWebSocket } from '../contexts/DataContext';
 import { Settings } from '../../../../tools/settings';
+import { ModelInfo } from '../../../../llm/types';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { DrawerPage } from './GlobalArtifactViewer';
 
@@ -47,16 +48,24 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         loadSettings();
     }, [getSettings]);
 
-    const [availableModels, setAvailableModels] = useState<Record<string, string[]>>({});
+    const [availableModels, setAvailableModels] = useState<Record<string, ModelInfo[]>>({});
     
     useEffect(() => {
         const fetchModels = async () => {
             if (settings.providers?.chat) {
                 try {
                     const models = await ipcService.getRPC().getAvailableModels(settings.providers.chat);
+                    // Sort models with local first, then by name
+                    const sortedModels = models.sort((a, b) => {
+                        if (a.isLocal === b.isLocal) {
+                            return a.name.localeCompare(b.name);
+                        }
+                        return a.isLocal ? -1 : 1;
+                    });
+                
                     setAvailableModels(prev => ({
                         ...prev,
-                        [settings.providers!.chat]: models
+                        [settings.providers!.chat]: sortedModels
                     }));
                 } catch (error) {
                     console.error('Failed to fetch available models:', error);
@@ -194,10 +203,69 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                 value={value}
                                 onChange={(e) => handleChange(metadata.key, e.target.value)}
                                 label={metadata.label}
+                                MenuProps={{
+                                    PaperProps: {
+                                        style: {
+                                            maxHeight: 400,
+                                            width: 600
+                                        }
+                                    }
+                                }}
                             >
                                 {models.map(model => (
-                                    <MenuItem key={model} value={model}>
-                                        {model}
+                                    <MenuItem 
+                                        key={model.name} 
+                                        value={model.name}
+                                        sx={{
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'flex-start',
+                                            gap: 0.5,
+                                            py: 1.5
+                                        }}
+                                    >
+                                        <Box sx={{ 
+                                            display: 'flex', 
+                                            justifyContent: 'space-between',
+                                            width: '100%'
+                                        }}>
+                                            <Typography variant="body1" fontWeight={500}>
+                                                {model.name}
+                                            </Typography>
+                                            <Chip 
+                                                label={model.isLocal ? 'Local' : 'Remote'} 
+                                                size="small"
+                                                color={model.isLocal ? 'primary' : 'secondary'}
+                                                sx={{ ml: 1 }}
+                                            />
+                                        </Box>
+                                        <Box sx={{ 
+                                            display: 'flex', 
+                                            gap: 1,
+                                            fontSize: '0.875rem',
+                                            color: 'text.secondary'
+                                        }}>
+                                            {model.size && (
+                                                <Typography variant="caption">
+                                                    Size: {model.size}
+                                                </Typography>
+                                            )}
+                                            {model.author && (
+                                                <Typography variant="caption">
+                                                    By {model.author}
+                                                </Typography>
+                                            )}
+                                            {model.downloads && (
+                                                <Typography variant="caption">
+                                                    {model.downloads.toLocaleString()} downloads
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        {model.description && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                {model.description}
+                                            </Typography>
+                                        )}
                                     </MenuItem>
                                 ))}
                             </Select>
