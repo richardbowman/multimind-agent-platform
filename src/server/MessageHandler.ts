@@ -7,6 +7,8 @@ import { LLMCallLogger } from "../llm/LLMLogger";
 import { reinitializeBackend } from "../main.electron";
 import { CreateChannelParams } from "src/shared/channelTypes";
 import { GoalTemplates } from "src/schemas/goalTemplateSchema";
+import { Settings } from "src/tools/settings";
+import { getClientSettingsMetadata } from "src/tools/settingsDecorators";
 
 export class MessageHandler implements ServerMethods {
     createWrapper(): ServerMethods {
@@ -30,11 +32,14 @@ export class MessageHandler implements ServerMethods {
     }
 
     async getSettings(): Promise<any> {
-        return this.services.settingsManager.getSettings();
+        const settings = this.services.settingsManager.getSettings();
+        const defaults = new Settings();
+        const clientSettings = getClientSettingsMetadata(defaults);
+        return settings;
     }
 
-    async updateSettings(settings: any): Promise<any> {
-        console.log('update settings called', JSON.stringify(settings, 2, false));
+    async updateSettings(settings: Partial<Settings>): Promise<Settings> {
+        Logger.info('Update settings called');
         
         this.services.settingsManager.updateSettings(settings);
 
@@ -221,7 +226,7 @@ export class MessageHandler implements ServerMethods {
         return channels.map(channel => ({
             id: channel.id,
             name: channel.name.replace('#', ''),
-            description: '',
+            description: channel.description,
             members: channel.members || []
         }));
     }
