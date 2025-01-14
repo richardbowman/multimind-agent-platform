@@ -54,16 +54,17 @@ export class Settings {
         description: 'The host address for the server'
     })
     host: string = 'localhost';
-    port: number;
-    protocol: string;
-    wsUrl: string;
+    port?: number;
+    protocol?: string;
+    wsUrl?: string;
 
     // LLM Provider settings
-    providers: {
+    providers?: {
         chat: string;
         embeddings: string;
-    },
-    models: {
+    };
+
+    models?: {
         conversation: {
             lmstudio: string;
             anthropic: string;
@@ -88,71 +89,74 @@ export class Settings {
             openrouter: string;
             llama_cpp: string;
         }
-    },
-    embeddingModel: string;
-    embeddingProvider: string;
-    lmStudioBaseUrl: string;
-    contextSize: number;
+    };
+
+    embeddingModel?: string;
+    embeddingProvider?: string;
+    lmStudioBaseUrl?: string;
+    contextSize?: number;
 
     // API Keys
-    anthropic: {
+    anthropic?: {
         api: {
             key: string;
         },
         model: string;
-    },
-    openai: {
+    };
+
+    openai?: {
         api: {
             key: string;
         },
         model: string;
-    },
-    openrouter: {
+    };
+
+    openrouter?: {
         api: {
             key: string;
         },
         model: string;
-    }
+    };
 
     // Rate Limiting
-    anthropicMaxTokensPerMinute: number;
-    anthropicDefaultDelayMs: number;
-    anthropicWindowSizeMs: number;
-    bedrockMaxTokensPerMinute: number;
-    bedrockDefaultDelayMs: number;
-    bedrockWindowSizeMs: number;
+    anthropicMaxTokensPerMinute?: number;
+    anthropicDefaultDelayMs?: number;
+    anthropicWindowSizeMs?: number;
+    bedrockMaxTokensPerMinute?: number;
+    bedrockDefaultDelayMs?: number;
+    bedrockWindowSizeMs?: number;
 
     // Vector DB Settings
-    vectorDatabaseType: string;
-    chromadbUrl: string;
-    chromaCollection: string;
+    vectorDatabaseType?: string;
+    chromadbUrl?: string;
+    chromaCollection?: string;
 
     // Search Settings
-    searchProvider: 'duckduckgo' | 'searxng' | 'google' | 'brave';
-    scrapingProvider: 'puppeteer' | 'electron';
-    maxSearches: number;
-    searxngUrl: string;
-    maxFollows: number;
-    maxResearchRequests: number;
-    duckduckgo: {
+    searchProvider?: 'duckduckgo' | 'searxng' | 'google' | 'brave';
+    scrapingProvider?: 'puppeteer' | 'electron';
+    maxSearches?: number;
+    searxngUrl?: string;
+    maxFollows?: number;
+    maxResearchRequests?: number;
+    duckduckgo?: {
         headless: boolean;
         timeout: number;
     };
-    brave: {
+    brave?: {
         apiKey: string;
         endpoint: string;
     };
 
     // Channel configuration
-    defaultChannels: Record<string, string>;
+    defaultChannels?: Record<string, string>;
     
     // Agent configuration
-    agents: {
+    agents?: {
         [key: string]: AgentDefinition 
     };
 
     // Bedrock specific settings
-    bedrock: {
+    bedrock?: {
         maxTokensPerMinute: number;
         defaultDelayMs: number;
         windowSizeMs: number;
