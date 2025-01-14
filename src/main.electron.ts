@@ -39,7 +39,8 @@ app.whenReady().then(async () => {
         // Initialize backend services
         splashWindow.setMessage('Initializing backend services...');
         backendServices = await initializeBackend(settingsManager, {
-            onProgress: (message) => splashWindow.setMessage(message)
+            onProgress: (message) => splashWindow.setMessage(message),
+            mainWindow
         });
 
         // Create main window

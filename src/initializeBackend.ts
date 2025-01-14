@@ -117,6 +117,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         artifactManager,
         settingsManager,
         llmLogger: chatService.getLogger(),
-        logReader: new LogReader()
+        logReader: new LogReader(),
+        mainWindow: mainWindow
     };
 }

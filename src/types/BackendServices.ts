@@ -9,6 +9,8 @@ import { TaskManager } from "src/tools/taskManager";
 import { LogReader } from "src/server/LogReader";
 import { SettingsManager } from "../tools/settingsManager";
 
+import { MainWindow } from "../windows/MainWindow";
+
 export interface BackendServices {
     chatClient: ChatClient;
     taskManager: TaskManager;
@@ -16,4 +18,5 @@ export interface BackendServices {
     settingsManager: SettingsManager;
     llmLogger: LLMCallLogger;
     logReader: LogReader;
+    mainWindow: MainWindow;
 }
