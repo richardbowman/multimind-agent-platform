@@ -11,19 +11,15 @@ class IncludeAllModulesPlugin {
   apply(compiler) {
     compiler.hooks.emit.tapAsync('IncludeAllModulesPlugin', (compilation, callback) => {
       this.directories.forEach(dir => {
-        console.log(compilation);
         const files = fs.readdirSync(dir);
         files.forEach(file => {
           if (file.endsWith('.ts')) {
             const modulePath = path.join(dir, file);
             const relativePath = path.relative(compiler.context, modulePath);
-            compilation.contextDependencies.add(modulePath);
-            compilation.compilationDependencies.add(modulePath);
             compilation.fileDependencies.add(modulePath);
-            console.log(modulePath, relativePath);
           }
         });
-        console.log(Array.from(compilation.fileDependencies));
+        // console.log(Array.from(compilation.fileDependencies));
       });
       callback();
     });

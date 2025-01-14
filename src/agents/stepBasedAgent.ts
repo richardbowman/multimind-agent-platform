@@ -142,7 +142,7 @@ export abstract class StepBasedAgent extends Agent {
 
         const project = await this.projects.getProject(projectId);
         params.projects = [...params.projects || [], project];
-        
+
         const posts = [params.userPost];
         const plan = await this.planSteps(projectId, posts);
         await this.executeNextStep({
@@ -151,7 +151,8 @@ export abstract class StepBasedAgent extends Agent {
             context: {
                 channelId: params.userPost?.channel_id,
                 threadId: params.userPost?.thread_id,
-                projects: params.projects
+                projects: params.projects,
+                artifacts: params.artifacts
             }
         });
     }
@@ -235,7 +236,7 @@ export abstract class StepBasedAgent extends Agent {
             await this.reply(handlerParams.userPost, {
                 message: `🔄 Planning next steps:\n${nextStepsMessage}`
             }, {
-                "project-id": handlerParams.projects?.[0]
+                "project-id": handlerParams.projects?.[0].id
             });
         }
 
@@ -251,14 +252,8 @@ export abstract class StepBasedAgent extends Agent {
         }
         this.projects.markTaskInProgress(task);
         await this.executeStep({
-            projectId,
-            task,
-            userPost,
-            context: {
-                channelId: params.userPost?.channel_id,
-                threadId: params.userPost?.thread_id,
-                projects: params.projects
-            }
+            ...params,
+            task
         });
     }
 
@@ -313,6 +308,8 @@ export abstract class StepBasedAgent extends Agent {
                 }
             });
 
+            const parentProject = await this.projects.getProject(task.projectId);
+
             const plan = await this.planSteps(projectId, [{
                 message: task.description
             }]);
@@ -320,7 +317,7 @@ export abstract class StepBasedAgent extends Agent {
             await this.executeNextStep({
                 projectId,
                 context: {
-                    projects: params.projects
+                    projects: [parentProject]
                 }
             });
 
@@ -367,11 +364,8 @@ export abstract class StepBasedAgent extends Agent {
                     context: {
                         channelId: userPost?.channel_id,
                         threadId: userPost?.thread_id,
-                        artifacts: await this.artifactManager.getArtifacts({
-                            projectId,
-                            task: task.type
-                        }),
-                        projects: params.projects || []
+                        artifacts: params.context?.artifacts,
+                        projects: params.context?.projects
                     }
                 });
             } else {
