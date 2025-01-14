@@ -198,6 +198,8 @@ export class Settings {
         this.anthropic = new ProviderConfig();
         this.openrouter = new ProviderConfig();
         this.openai = new ProviderConfig();
+        this.duckduckgo = new DuckDuckGoConfig();
+        this.brave = new BraveConfig();
     }
 
     @ClientSettings({
@@ -421,55 +423,59 @@ export class Settings {
     })
     maxResearchRequests!: number;
 
+export class DuckDuckGoConfig {
+    @ClientSettings({
+        label: 'DuckDuckGo Headless Mode',
+        category: 'Search Settings',
+        type: 'boolean',
+        defaultValue: true,
+        description: 'Run DuckDuckGo searches in headless browser mode'
+    })
+    headless!: boolean;
+
+    @ClientSettings({
+        label: 'DuckDuckGo Timeout (ms)',
+        category: 'Search Settings',
+        type: 'number',
+        defaultValue: 30000,
+        description: 'Timeout for DuckDuckGo search operations'
+    })
+    timeout!: number;
+}
+
     @ClientSettings({
         label: 'DuckDuckGo Settings',
         category: 'Search Settings',
         type: 'string'
     })
-    duckduckgo!: {
-        @ClientSettings({
-            label: 'DuckDuckGo Headless Mode',
-            category: 'Search Settings',
-            type: 'boolean',
-            defaultValue: true,
-            description: 'Run DuckDuckGo searches in headless browser mode'
-        })
-        headless: boolean;
+    duckduckgo!: DuckDuckGoConfig;
 
-        @ClientSettings({
-            label: 'DuckDuckGo Timeout (ms)',
-            category: 'Search Settings',
-            type: 'number',
-            defaultValue: 30000,
-            description: 'Timeout for DuckDuckGo search operations'
-        })
-        timeout: number;
-    };
+export class BraveConfig {
+    @ClientSettings({
+        label: 'Brave Search API Key',
+        category: 'Search Settings',
+        type: 'string',
+        sensitive: true,
+        description: 'API key for Brave Search'
+    })
+    apiKey!: string;
+
+    @ClientSettings({
+        label: 'Brave Search Endpoint',
+        category: 'Search Settings',
+        type: 'string',
+        defaultValue: 'https://api.search.brave.com/res/v1/web/search',
+        description: 'API endpoint for Brave Search'
+    })
+    endpoint!: string;
+}
 
     @ClientSettings({
         label: 'Brave Search Settings',
         category: 'Search Settings',
         type: 'string'
     })
-    brave!: {
-        @ClientSettings({
-            label: 'Brave Search API Key',
-            category: 'Search Settings',
-            type: 'string',
-            sensitive: true,
-            description: 'API key for Brave Search'
-        })
-        apiKey: string;
-
-        @ClientSettings({
-            label: 'Brave Search Endpoint',
-            category: 'Search Settings',
-            type: 'string',
-            defaultValue: 'https://api.search.brave.com/res/v1/web/search',
-            description: 'API endpoint for Brave Search'
-        })
-        endpoint: string;
-    };
+    brave!: BraveConfig;
 
     // Channel configuration
     defaultChannels!: Record<string, string>;
