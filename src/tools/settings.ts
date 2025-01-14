@@ -239,6 +239,7 @@ export class Settings {
         this.openai = new ProviderConfig();
         this.duckduckgo = new DuckDuckGoConfig();
         this.brave = new BraveConfig();
+        this.bedrock = new BedrockConfig();
     }
 
     @ClientSettings({
@@ -364,29 +365,6 @@ export class Settings {
     })
     anthropicWindowSizeMs!: number;
 
-    @ClientSettings({
-        label: 'Bedrock Max Tokens/Min',
-        category: 'Rate Limiting',
-        type: 'number',
-        defaultValue: 50000
-    })
-    bedrockMaxTokensPerMinute!: number;
-
-    @ClientSettings({
-        label: 'Bedrock Default Delay (ms)',
-        category: 'Rate Limiting',
-        type: 'number',
-        defaultValue: 1000
-    })
-    bedrockDefaultDelayMs!: number;
-
-    @ClientSettings({
-        label: 'Bedrock Window Size (ms)',
-        category: 'Rate Limiting',
-        type: 'number',
-        defaultValue: 60000
-    })
-    bedrockWindowSizeMs!: number;
 
     // Vector DB Settings
     @ClientSettings({
@@ -485,34 +463,36 @@ export class Settings {
         [key: string]: AgentDefinition
     };
 
+export class BedrockConfig {
+    @ClientSettings({
+        label: 'Bedrock Max Tokens/Min',
+        category: 'Rate Limiting',
+        type: 'number',
+        defaultValue: 50000
+    })
+    maxTokensPerMinute!: number;
+
+    @ClientSettings({
+        label: 'Bedrock Default Delay (ms)',
+        category: 'Rate Limiting',
+        type: 'number',
+        defaultValue: 1000
+    })
+    defaultDelayMs!: number;
+
+    @ClientSettings({
+        label: 'Bedrock Window Size (ms)',
+        category: 'Rate Limiting',
+        type: 'number',
+        defaultValue: 60000
+    })
+    windowSizeMs!: number;
+}
+
     @ClientSettings({
         label: 'Bedrock Settings',
         category: 'Rate Limiting',
         type: 'string'
     })
-    bedrock!: {
-        @ClientSettings({
-            label: 'Bedrock Max Tokens/Min',
-            category: 'Rate Limiting',
-            type: 'number',
-            defaultValue: 50000
-        })
-        maxTokensPerMinute: number;
-
-        @ClientSettings({
-            label: 'Bedrock Default Delay (ms)',
-            category: 'Rate Limiting',
-            type: 'number',
-            defaultValue: 1000
-        })
-        defaultDelayMs: number;
-
-        @ClientSettings({
-            label: 'Bedrock Window Size (ms)',
-            category: 'Rate Limiting',
-            type: 'number',
-            defaultValue: 60000
-        })
-        windowSizeMs: number;
-    };
+    bedrock!: BedrockConfig;
 }
