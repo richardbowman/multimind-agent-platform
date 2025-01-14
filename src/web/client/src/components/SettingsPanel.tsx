@@ -73,13 +73,14 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
     const handleSave = async () => {
         // Get all required fields from metadata
-        const missingFields = CONFIG_METADATA
-            .filter(metadata => metadata.required)
-            .filter(metadata => {
-                const value = getNestedValue(settings, metadata.key);
+        const metadata = getClientSettingsMetadata(settings);
+        const missingFields = Object.entries(metadata)
+            .filter(([_, meta]) => meta.required)
+            .filter(([key, _]) => {
+                const value = getNestedValue(settings, key);
                 return !value && value !== 0 && value !== false;
             })
-            .map(metadata => metadata.label);
+            .map(([_, meta]) => meta.label);
 
         // Add provider-specific required fields
         const provider = settings.providers?.chat;
