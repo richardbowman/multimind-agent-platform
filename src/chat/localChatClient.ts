@@ -247,16 +247,17 @@ export class LocalTestClient implements ChatClient {
     }
 
     public async addArtifactToChannel(channelId: string, artifactId: string): Promise<void> {
-        if (!this.channelData[channelId]) {
+        const channelData = await this.getChannelData(channelId);
+        if (!channelData) {
             throw new Error(`Channel ${channelId} not found`);
         }
         
-        if (!this.channelData[channelId].artifactIds) {
-            this.channelData[channelId].artifactIds = [];
+        if (!channelData.artifactIds) {
+            channelData.artifactIds = [];
         }
         
-        if (!this.channelData[channelId].artifactIds?.includes(artifactId)) {
-            this.channelData[channelId].artifactIds?.push(artifactId);
+        if (!channelData.artifactIds?.includes(artifactId)) {
+            channelData.artifactIds?.push(artifactId);
             await this.storage.save();
         }
     }
@@ -306,11 +307,14 @@ export class LocalTestClient implements ChatClient {
         // Get the channel's project ID if it exists
         const channelData = this.storage.channelData[channelId];
         const projectId = channelData?.projectId;
+
+        const artifacts = channelData?.artifactIds;
         
         // Merge any existing props with the project ID
         const postProps = {
             ...(props || {}),
-            ...(projectId ? { 'project-id': projectId } : {})
+            ...(projectId ? { 'project-id': projectId } : {}),
+            ...(artifacts&&artifacts.length > 0 ? {"artifact-ids": artifacts} : {})
         };
 
         const post = new InMemoryPost(
