@@ -250,15 +250,21 @@ export class LlamaCppService extends BaseLLMService {
         }
     }
 
-    async getAvailableModels(): Promise<{
-        localModels: Array<{
-            name: string;
-            path: string;
+    async getAvailableModels(): Promise<Array<{
+        id: string;
+        name: string;
+        path?: string;
+        size: string;
+        lastModified: Date;
+        isLocal: boolean;
+        author?: string;
+        downloads?: number;
+        likes?: number;
+        ggufFiles?: Array<{
+            filename: string;
             size: string;
-            lastModified: Date;
         }>;
-        remoteModels: HFModel[];
-    }> {
+    }>> {
         try {
             const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
             const {getLlama} = nlc;
@@ -295,10 +301,38 @@ export class LlamaCppService extends BaseLLMService {
                 Logger.warn('Could not fetch remote models:', error);
             }
 
-            return {
-                localModels,
-                remoteModels
-            };
+            // Combine and sort models
+            const combinedModels = [
+                ...localModels.map(model => ({
+                    id: path.basename(model.name, '.gguf'),
+                    name: model.name,
+                    path: model.path,
+                    size: model.size,
+                    lastModified: model.lastModified,
+                    isLocal: true
+                })),
+                ...remoteModels.flatMap(model => 
+                    model.ggufFiles.map(file => ({
+                        id: model.id,
+                        name: file.filename,
+                        size: file.size,
+                        lastModified: new Date(model.lastModified),
+                        isLocal: false,
+                        author: model.author,
+                        downloads: model.downloads,
+                        likes: model.likes,
+                        ggufFiles: model.ggufFiles
+                    }))
+                )
+            ];
+
+            // Sort by name, with local models first
+            return combinedModels.sort((a, b) => {
+                if (a.isLocal === b.isLocal) {
+                    return a.name.localeCompare(b.name);
+                }
+                return a.isLocal ? -1 : 1;
+            });
         } catch (error) {
             await this.logger.logCall('getAvailableModels', {}, null, error);
             throw error;
