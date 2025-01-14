@@ -27,9 +27,13 @@ app.whenReady().then(async () => {
     try {
 
         settingsManager = await initializeConfig();
+        const _s = settingsManager.getSettings();
+        mainWindow = new MainWindow(_s.zoom, {
+            frame: false
+        });
 
         // Show splash screen with zoom from settings
-        splashWindow = new SplashWindow(settingsManager.settings.zoom);
+        splashWindow = new SplashWindow(_s.zoom);
         await splashWindow.show();
 
         // Initialize backend services
@@ -40,8 +44,6 @@ app.whenReady().then(async () => {
 
         // Create main window
         splashWindow.setMessage('Loading main interface...');
-        // Create main window with zoom from settings
-        mainWindow = new MainWindow(settingsManager.settings.zoom);
 
         // Set up IPC handlers
         setupIpcHandlers();
@@ -67,10 +69,6 @@ app.whenReady().then(async () => {
                 process.exit(1);
             }
         }
-
-        mainWindow = new MainWindow(settingsManager.settings.zoom, {
-            frame: false
-        });
 
         splashWindow.close();
         setupIpcHandlers(true);
