@@ -365,6 +365,30 @@ export class MessageHandler implements ServerMethods {
         await this.services.chatClient.deleteChannel(channelId);
     }
 
+    async minimizeWindow(): Promise<void> {
+        const mainWindow = this.services.mainWindow.getWindow();
+        mainWindow.minimize();
+    }
+
+    async maximizeWindow(): Promise<void> {
+        const mainWindow = this.services.mainWindow.getWindow();
+        if (mainWindow.isMaximized()) {
+            mainWindow.unmaximize();
+        } else {
+            mainWindow.maximize();
+        }
+    }
+
+    async closeWindow(): Promise<void> {
+        const mainWindow = this.services.mainWindow.getWindow();
+        mainWindow.close();
+    }
+
+    async getWindowState(): Promise<'maximized' | 'normal'> {
+        const mainWindow = this.services.mainWindow.getWindow();
+        return mainWindow.isMaximized() ? 'maximized' : 'normal';
+    }
+
     processArtifactContent(artifact: any) {
         const content = Buffer.isBuffer(artifact.content)
             ? artifact.metadata?.binary

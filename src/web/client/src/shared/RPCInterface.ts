@@ -5,6 +5,10 @@ import { ClientTask } from './types';
 
 export interface ServerMethods {
     sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage>;
+    minimizeWindow(): Promise<void>;
+    maximizeWindow(): Promise<void>;
+    closeWindow(): Promise<void>;
+    getWindowState(): Promise<'maximized' | 'normal'>;
     getMessages(params: { channelId: string; threadId: string | null; limit?: number }): Promise<ClientMessage[]>;
     getChannels(): Promise<ClientChannel[]>;
     getThreads(params: { channelId: string }): Promise<ClientThread[]>;

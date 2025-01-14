@@ -82,22 +82,6 @@ let configComplete = false;
 export async function setupIpcHandlers(hasConfigError: boolean = false) {
     if (ipcServer) ipcServer.cleanup();
 
-    // Add window control handlers
-    ipcMain.on('window-minimize', () => {
-        mainWindow.getWindow().minimize();
-    });
-
-    ipcMain.on('window-maximize', () => {
-        if (mainWindow.getWindow().isMaximized()) {
-            mainWindow.getWindow().unmaximize();
-        } else {
-            mainWindow.getWindow().maximize();
-        }
-    });
-
-    ipcMain.on('window-close', () => {
-        mainWindow.getWindow().close();
-    });
 
 
     ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow(), hasConfigError);
