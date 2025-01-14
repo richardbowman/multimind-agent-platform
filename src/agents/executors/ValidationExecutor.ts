@@ -32,37 +32,51 @@ export class ValidationExecutor implements StepExecutor {
         this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResults: any[]): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = generatedSchemaDef.ValidationResult;
 
         const systemPrompt = `You are validating whether a proposed solution addresses the original goal. 
 Analyze the previous steps and their results to determine if a reasonable effort has been made.
 
-Original Goal: ${goal}
+Original Goal: ${params.goal}
 
 Previous Results:
-${previousResults.map((r, i) => `Step ${i + 1}: ${r.message}`).join('\n\n')}
+${params.previousResult?.map((r, i) => `Step ${i + 1}: ${r.message}`).join('\n\n') || 'No previous results'}
 
 Evaluate whether the solution addresses the original goal, and the reasoning is sound and well-supported.
 
 If the solution is wrong, list the specific aspects that must be addressed.`;
 
+        // Adjust validation strictness based on execution mode
+        const validationPrompt = params.executionMode === 'task' 
+            ? `${systemPrompt}\n\nNote: This is running in task mode - be more lenient with validation since we can't request user input.`
+            : systemPrompt;
+
         const response = await this.modelHelpers.generate<ValidationResult>({
             message: "Validate solution completeness",
-            instructions: new StructuredOutputPrompt(schema, systemPrompt)
+            instructions: new StructuredOutputPrompt(schema, validationPrompt),
+            context: params.context
         });
 
-        const result : StepResult = {
+        const result: StepResult = {
             type: 'validation',
             finished: true,
-            needsUserInput: !response.isComplete,
+            // Only request user input in conversation mode
+            needsUserInput: params.executionMode === 'conversation' && !response.isComplete,
             missingAspects: response.missingAspects || [],
             response: {
                 message: response.message
             }
         };
 
-        // Ensure we always return a valid result with required fields
+        // If in task mode and validation failed, provide guidance for next steps
+        if (params.executionMode === 'task' && !response.isComplete) {
+            result.response.message = `Validation completed in task mode. Some aspects need attention:\n` +
+                `${response.missingAspects?.map(a => `- ${a}`).join('\n')}\n` +
+                `Continuing with next steps...`;
+            result.needsUserInput = false;
+        }
+
         return result;
     }
 }
