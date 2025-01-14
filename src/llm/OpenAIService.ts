@@ -1,4 +1,5 @@
 import { ClientOptions, OpenAI } from "openai";
+import { ModelInfo } from "./types";
 import { IEmbeddingFunction } from "chromadb";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
@@ -53,10 +54,17 @@ export class OpenAIService extends BaseLLMService {
         return Math.ceil(content.length / 4);
     }
 
-    async getAvailableModels(): Promise<string[]> {
+    async getAvailableModels(): Promise<ModelInfo[]> {
         try {
             const models = await this.client.models.list();
-            return models.data.map(m => m.id);
+            return models.data.map(m => ({
+                id: m.id,
+                name: m.id,
+                size: 'unknown', // OpenAI doesn't provide size info
+                lastModified: new Date(m.created * 1000),
+                isLocal: false,
+                author: 'OpenAI'
+            }));
         } catch (error) {
             await this.logger.logCall('getAvailableModels', {}, null, error);
             throw error;
