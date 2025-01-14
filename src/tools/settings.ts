@@ -213,6 +213,14 @@ export class LLMModels {
         description: 'Models for document processing tasks'
     })
     document: ModelByProvider = new ModelByProvider();
+
+    @ClientSettings({
+        label: 'Embeddings Models',
+        category: 'LLM Settings',
+        type: 'section',
+        description: 'Models for generating embeddings'
+    })
+    embeddings: ModelByProvider = new ModelByProvider();
 }
 
 export class APIConfig {
