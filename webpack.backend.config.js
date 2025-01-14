@@ -72,7 +72,7 @@ module.exports = {
     new IncludeAllModulesPlugin({
       directories: [
         path.resolve(__dirname, 'src/agents'),
-        path.resolve(__dirname, 'src/executors')
+        path.resolve(__dirname, 'src/agents/executors')
       ]
     })
   ],
