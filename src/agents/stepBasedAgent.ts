@@ -1,9 +1,8 @@
-import { Agent } from './agents';
+import { Agent, PlannerParams } from './agents';
 import { getExecutorMetadata } from './decorators/executorDecorator';
 import 'reflect-metadata';
-import { ChatPost, isValidChatPost } from '../chat/chatClient';
+import { isValidChatPost, Message } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Project, Task } from '../tools/taskManager';
 import { Planner } from './planners/planner';
@@ -15,7 +14,7 @@ import { AgentConfig } from 'src/tools/settings';
 import { StepResult } from './StepResult';
 import { StepExecutor } from './StepExecutor';
 import { ExecuteNextStepParams } from './ExecuteNextStepParams';
-import { ExecuteStepParams } from './ExecuteStepParams';
+import { ExecuteStepParams, StepTask } from './ExecuteStepParams';
 
 export abstract class StepBasedAgent extends Agent {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
@@ -150,9 +149,9 @@ export abstract class StepBasedAgent extends Agent {
         }
     }
 
-    protected async planSteps(projectId: string, posts: ChatPost[]): Promise<PlanStepsResponse> {
+    protected async planSteps(projectId: string, posts: Message[]): Promise<PlanStepsResponse> {
         const project = await this.projects.getProject(projectId);
-        const handlerParams: HandlerParams = {
+        const handlerParams: PlannerParams = {
             projects: [project],
             threadPosts: posts?.slice(0,-1),
             userPost: posts?.[posts?.length - 1]
@@ -177,11 +176,12 @@ export abstract class StepBasedAgent extends Agent {
 
     protected async executeNextStep(params: ExecuteNextStepParams): Promise<void> {
         const { projectId } = params;
-        const task = this.projects.getNextTask(projectId);
-        if (!task) {
+        const task = this.projects.getNextTask(projectId) as StepTask;
+        if (!task || task.type !== "step") {
             Logger.warn('No tasks found to execute');
             return;
         }
+
         this.projects.markTaskInProgress(task);
         await this.executeStep({
             ...params,
@@ -213,11 +213,15 @@ export abstract class StepBasedAgent extends Agent {
                 .filter(msg => msg)
                 .join('\n\n');
 
-            if (!parentTask.props) parentTask.props = {};
-            parentTask.props.result = {
-                message: combinedResult,
-                subProjectResults: completedResults
-            };
+            this.projects.updateTask(parentTask.id, {
+                props: {
+                    ...parentTask.props,
+                    result: {
+                        message: combinedResult,
+                        subProjectResults: completedResults
+                    }
+                }
+            });
 
             await this.projects.assignTaskToAgent(project.metadata.parentTaskId, this.userId);
             const parentProject = await this.projects.getProject(parentTask.projectId);
@@ -262,12 +266,12 @@ export abstract class StepBasedAgent extends Agent {
     protected async executeStep(params: ExecuteStepParams): Promise<void> {
         const { projectId, task, userPost, context } = params;
         try {
-            const executor = this.stepExecutors.get(task.type);
+            const executor = this.stepExecutors.get(task.stepType);
             if (!executor) {
-                throw new Error(`No executor found for step type: ${task.type}`);
+                throw new Error(`No executor found for step type: ${task.stepType}`);
             }
 
-            Logger.info(`Executing step "${task.type}" for project "${projectId}"`);
+            Logger.info(`Executing step "${task.stepType}" for project "${projectId}"`);
 
             const project = this.projects.getProject(projectId);
             if (!project) {
@@ -276,10 +280,16 @@ export abstract class StepBasedAgent extends Agent {
 
             // Get all prior completed tasks' results
             const tasks = this.projects.getAllTasks(projectId);
-            const priorResults = tasks
-                .filter(t => t.complete || t.inProgress && t.order !== undefined && t.order < (task.order || Infinity))
-                .sort((a, b) => (a.order || 0) - (b.order || 0))
-                .map(t => t.props?.result)
+            const priorSteps = tasks
+                .filter(t => t.type === "step")
+                .map(t => t as StepTask)
+                .filter(t => (t.complete || t.inProgress))
+                .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+            const priorResults = priorSteps
+                .map(t => t.props.result)
+                .filter(r => r !== undefined && r !== null)
+                .map(s => s?.response)
                 .filter(r => r); // Remove undefined/null results
 
             let stepResult: StepResult;
@@ -287,9 +297,10 @@ export abstract class StepBasedAgent extends Agent {
                 stepResult = await executor.execute({
                     agentId: this.userId,
                     goal: `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message}`,
-                    step: task.type,
+                    step: task.stepType,
                     projectId: projectId,
                     previousResult: priorResults,
+                    steps: priorSteps,
                     message: userPost?.message,
                     stepGoal: task.description,
                     overallGoal: project.name,
@@ -303,7 +314,7 @@ export abstract class StepBasedAgent extends Agent {
             } else {
                 stepResult = await executor.executeOld(
                     `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message}`,
-                    task.type,
+                    task.stepType,
                     projectId,
                     priorResults
                 );
@@ -315,11 +326,16 @@ export abstract class StepBasedAgent extends Agent {
             }
 
             // Store the result in task props
-            if (!task.props) task.props = {};
-            task.props.result = stepResult.response;
+            this.projects.updateTask(task.id, {
+                props: {
+                    ...task.props,
+                    result: stepResult.response,
+                    step: stepResult,
+                }
+            });
 
             // If this was a validation step, check if we need more work
-            if (task.type === 'validation') {
+            if (task.stepType === 'validation') {
                 if (!stepResult.isComplete && stepResult.missingAspects?.length > 0) {
                     // Plan additional steps only if validation failed
                     const planningPrompt = `Original Goal: ${project.name}\n\n` +
@@ -361,7 +377,7 @@ export abstract class StepBasedAgent extends Agent {
 
             if (stepResult.finished) {
                 this.projects.completeTask(task.id);
-                Logger.info(`Completed step "${task.type}" for project "${projectId}"`);
+                Logger.info(`Completed step "${task.stepType}" for project "${projectId}"`);
 
                 // If this was the last planned task, add a validation step
                 const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
@@ -415,8 +431,12 @@ export abstract class StepBasedAgent extends Agent {
         });
 
         const posts = [params.userPost];
+        const { userPost } = params;
         const plan = await this.planSteps(projectId, posts);
-        await this.executeNextStep(projectId, params.userPost);
+        await this.executeNextStep({
+            projectId, 
+            userPost
+        });
     }
 
     @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)

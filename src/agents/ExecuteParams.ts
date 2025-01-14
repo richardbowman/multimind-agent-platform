@@ -1,6 +1,7 @@
-import { ModelMessageResponse } from 'src/schemas/ModelResponse';
+import { ModelResponse } from 'src/schemas/ModelResponse';
 import { Artifact } from 'src/tools/artifact';
 import { Project } from 'src/tools/taskManager';
+import { StepTask } from './ExecuteStepParams';
 
 
 export interface ExecuteParams {
@@ -11,7 +12,8 @@ export interface ExecuteParams {
     goal: string;
     step: string;
     projectId: string;
-    previousResult?: ModelMessageResponse[];
+    previousResult?: ModelResponse[];
+    steps: StepTask[],
     mode?: 'quick' | 'detailed';
     agents?: Array<{
         id: string;
