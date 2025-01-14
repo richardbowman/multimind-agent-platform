@@ -248,27 +248,30 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
     async getAvailableModels(): Promise<ModelInfo[]> {
         try {
-            const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
-            const {getLlama} = nlc;
-            
-            const llama = await getLlama();
             const modelDir = process.env.LLAMA_MODEL_DIR || path.join(getDataPath(), "models");
             
             // Get local models
             const localModels = [];
             try {
-                const modelFiles = await llama.listModels({ modelDir });
-                for (const file of modelFiles) {
-                    try {
-                        const stats = await fs.stat(file.path);
-                        localModels.push({
-                            name: file.name,
-                            path: file.path,
-                            size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
-                            lastModified: stats.mtime
-                        });
-                    } catch (error) {
-                        Logger.warn(`Could not get stats for model ${file.name}:`, error);
+                // Read model directory
+                const files = await fs.readdir(modelDir);
+                
+                // Filter for GGUF files and get their stats
+                for (const fileName of files) {
+                    if (fileName.endsWith('.gguf')) {
+                        try {
+                            const filePath = path.join(modelDir, fileName);
+                            const stats = await fs.stat(filePath);
+                            
+                            localModels.push({
+                                name: fileName,
+                                path: filePath,
+                                size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
+                                lastModified: stats.mtime
+                            });
+                        } catch (error) {
+                            Logger.warn(`Could not get stats for model ${fileName}:`, error);
+                        }
                     }
                 }
             } catch (error) {
