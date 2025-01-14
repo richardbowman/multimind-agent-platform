@@ -31,9 +31,14 @@ export class OutlineExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        // If we have previous feedback, process it
-        if (params.previousResult?.feedback) {
-            const feedback = params.previousResult.feedback;
+        // Check if we have a previous outline result
+        const previousOutline = params.previousResult?.find?.(
+            (result: StepResult) => result.type === 'outline'
+        );
+
+        // If we have a message and a previous outline, treat it as feedback
+        if (params.message && previousOutline) {
+            const feedback = params.message;
             
             // Analyze if the feedback indicates approval
             const approvalCheck = await this.modelHelpers.generate<{approved: boolean, changesNeeded: string[]}>({
@@ -49,13 +54,13 @@ If the feedback contains requests for changes, return approved: false and list t
                     finished: true,
                     response: {
                         message: "Outline approved! Proceeding to next steps.",
-                        data: params.previousResult.data
+                        data: previousOutline.response.data
                     }
                 };
             } else {
                 // Revise outline based on feedback
                 const revisedOutline = await this.modelHelpers.generate<ContentOutline>({
-                    message: `Original outline: ${JSON.stringify(params.previousResult.data)}\n\nFeedback: ${feedback}`,
+                    message: `Original outline: ${JSON.stringify(previousOutline.response.data)}\n\nFeedback: ${feedback}`,
                     instructions: `Revise the outline based on the provided feedback. Make these specific changes: ${approvalCheck.changesNeeded.join(', ')}`
                 });
 
