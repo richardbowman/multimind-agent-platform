@@ -214,6 +214,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setNeedsConfig,
     setCurrentChannelId,
     setCurrentThreadId,
+    setTasks,
     getSettings: () => ipcService.getRPC().getSettings(),
     updateSettings: async (settings: any) => {
       try {
@@ -254,7 +255,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchHandles,
     deleteArtifact,
     setCurrentChannelId,
-    setCurrentThreadId
+    setCurrentThreadId,
+    setTasks
   ]);
 
   // Initialize the IPC service with the context methods
