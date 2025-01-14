@@ -325,7 +325,7 @@ export class Settings {
     @ClientSettings({
         label: 'Anthropic Configuration',
         category: 'API Keys',
-        type: 'string',
+        type: 'section',
         sensitive: true
     })
     anthropic: ProviderConfig = new ProviderConfig();
@@ -333,7 +333,7 @@ export class Settings {
     @ClientSettings({
         label: 'OpenAI Configuration',
         category: 'API Keys',
-        type: 'string',
+        type: 'section',
         sensitive: true
     })
     openai: ProviderConfig = new ProviderConfig();
@@ -341,7 +341,7 @@ export class Settings {
     @ClientSettings({
         label: 'OpenRouter Configuration',
         category: 'API Keys',
-        type: 'string',
+        type: 'section',
         sensitive: true
     })
     openrouter: ProviderConfig = new ProviderConfig();
@@ -449,7 +449,7 @@ export class Settings {
     @ClientSettings({
         label: 'DuckDuckGo Settings',
         category: 'Search Settings',
-        type: 'string'
+        type: 'section'
     })
     duckduckgo: DuckDuckGoConfig = new DuckDuckGoConfig();
 
@@ -457,7 +457,7 @@ export class Settings {
     @ClientSettings({
         label: 'Brave Search Settings',
         category: 'Search Settings',
-        type: 'string'
+        type: 'section'
     })
     brave: BraveConfig = new BraveConfig();
 
@@ -472,7 +472,7 @@ export class Settings {
     @ClientSettings({
         label: 'Bedrock Settings',
         category: 'Rate Limiting',
-        type: 'string'
+        type: 'section'
     })
     bedrock: BedrockConfig = new BedrockConfig();
 }
