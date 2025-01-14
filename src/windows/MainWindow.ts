@@ -3,8 +3,10 @@ import * as path from 'path';
 
 export class MainWindow {
     private window: BrowserWindow;
+    private zoomLevel: number = 1.0;
 
-    constructor() {
+    constructor(initialZoom: number = 1.0) {
+        this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
             width: 1200,
             height: 800,
@@ -16,6 +18,16 @@ export class MainWindow {
             autoHideMenuBar: true,
             show: false
         });
+        this.setZoomLevel(this.zoomLevel);
+    }
+
+    setZoomLevel(zoomLevel: number) {
+        this.zoomLevel = Math.min(Math.max(zoomLevel, 0.5), 2.0); // Clamp between 0.5 and 2.0
+        this.window.webContents.setZoomFactor(this.zoomLevel);
+    }
+
+    getZoomLevel(): number {
+        return this.zoomLevel;
     }
 
     async show() {
