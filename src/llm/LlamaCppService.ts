@@ -216,6 +216,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                     search: query,
                     filter: 'gguf',
                     sort: 'downloads',
+                    full: "full",
                     direction: -1,
                     limit: limit
                 }
