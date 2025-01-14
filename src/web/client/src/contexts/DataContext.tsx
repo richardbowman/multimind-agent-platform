@@ -9,12 +9,8 @@ import { CreateChannelParams } from '../../../../shared/channelTypes';
 
 const DataContext = createContext<DataContextMethods | null>(null);
 
-// Store the service on window for global access
-declare global {
-  interface Window {
-    ipcService: BaseRPCService;
-  }
-}
+// Create a context for the IPC service
+const IPCContext = createContext<BaseRPCService | null>(null);
 
 export interface DataContextMethods {
   messages: ClientMessage[];
@@ -263,17 +259,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTasks
   ]);
 
-  // Initialize the IPC service with the context methods
-  if (!window.ipcService) {
-    window.ipcService = (window as any).electron 
+  const ipcService = useMemo(() => {
+    return (window as any).electron 
       ? new ElectronIPCService(contextMethods)
       : new WebSocketService();
-  }
+  }, []);
 
   return (
-    <DataContext.Provider value={contextMethods}>
-      {children}
-    </DataContext.Provider>
+    <IPCContext.Provider value={ipcService}>
+      <DataContext.Provider value={contextMethods}>
+        {children}
+      </DataContext.Provider>
+    </IPCContext.Provider>
   );
 };
 
@@ -281,6 +278,14 @@ export const useWebSocket = () => {
   const context = useContext(DataContext);
   if (!context) {
     throw new Error('useWebSocket must be used within a DataProvider');
+  }
+  return context;
+};
+
+export const useIPCService = () => {
+  const context = useContext(IPCContext);
+  if (!context) {
+    throw new Error('useIPCService must be used within a DataProvider');
   }
   return context;
 };

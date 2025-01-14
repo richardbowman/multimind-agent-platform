@@ -5,7 +5,7 @@ import TaskIcon from '@mui/icons-material/Task';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
-import { useWebSocket, DataProvider } from './contexts/DataContext';
+import { useWebSocket, useIPCService, DataProvider } from './contexts/DataContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
@@ -48,6 +48,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'leftOpen' &
 
 const AppContent: React.FC = () => {
     const { currentChannelId, currentThreadId, setCurrentThreadId, needsConfig } = useWebSocket();
+    const ipcService = useIPCService();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
     const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
