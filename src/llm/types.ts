@@ -12,4 +12,6 @@ export interface ModelInfo {
         filename: string;
         size: string;
     }>;
+    // For local models, combines repo and filename
+    combinedId?: string;
 }

@@ -153,7 +153,11 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
         }
     }
 
-    async initializeModel(modelName: string, repo: string, modelType: 'chat' | 'embedding'): Promise<void> {
+    async initializeModel(combinedId: string, repo: string, modelType: 'chat' | 'embedding'): Promise<void> {
+        // Extract model name from combined ID
+        const modelName = combinedId.startsWith('local:') 
+            ? combinedId.slice('local:'.length)
+            : combinedId;
         try {
             const llama = await loadLlama();
             
@@ -265,10 +269,13 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                             const stats = await fs.stat(filePath);
                             
                             localModels.push({
+                                id: `local:${fileName}`,
                                 name: fileName,
                                 path: filePath,
                                 size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
-                                lastModified: stats.mtime
+                                lastModified: stats.mtime,
+                                isLocal: true,
+                                combinedId: `local:${fileName}`
                             });
                         } catch (error) {
                             Logger.warn(`Could not get stats for model ${fileName}:`, error);
@@ -289,14 +296,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
             // Combine and sort models
             const combinedModels = [
-                ...localModels.map(model => ({
-                    id: path.basename(model.name, '.gguf'),
-                    name: model.name,
-                    path: model.path,
-                    size: model.size,
-                    lastModified: model.lastModified,
-                    isLocal: true
-                })),
+                ...localModels,
                 ...remoteModels.flatMap(model => 
                     model.ggufFiles.map(file => ({
                         id: model.id,
