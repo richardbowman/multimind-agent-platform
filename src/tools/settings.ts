@@ -117,7 +117,7 @@ export class ModelByProvider {
         type: 'string',
         description: 'Model path or identifier for LM Studio'
     })
-    lmstudio!: string;
+    lmstudio: string = 'qwen2.5-coder-14b-instruct';
 
     @ClientSettings({
         label: 'Anthropic Model',
@@ -125,7 +125,7 @@ export class ModelByProvider {
         type: 'string',
         description: 'Model identifier for Anthropic'
     })
-    anthropic!: string;
+    anthropic: string = 'claude-3-opus-20240229';
 
     @ClientSettings({
         label: 'Bedrock Model',
@@ -133,7 +133,7 @@ export class ModelByProvider {
         type: 'string',
         description: 'Model identifier for AWS Bedrock'
     })
-    bedrock!: string;
+    bedrock: string = 'anthropic.claude-3-sonnet-20240229-v1:0';
 
     @ClientSettings({
         label: 'OpenAI Model',
@@ -141,7 +141,7 @@ export class ModelByProvider {
         type: 'string',
         description: 'Model identifier for OpenAI'
     })
-    openai!: string;
+    openai: string = 'gpt-4-turbo-preview';
 
     @ClientSettings({
         label: 'OpenRouter Model',
@@ -149,7 +149,7 @@ export class ModelByProvider {
         type: 'string',
         description: 'Model identifier for OpenRouter'
     })
-    openrouter!: string;
+    openrouter: string = 'anthropic/claude-3-opus';
 
     @ClientSettings({
         label: 'Llama.cpp Model',
@@ -157,7 +157,7 @@ export class ModelByProvider {
         type: 'string',
         description: 'Model path for Llama.cpp'
     })
-    llama_cpp!: string;
+    llama_cpp: string = 'codellama-13b-instruct.Q4_K_M.gguf';
 }
 
 export interface AgentConfig {
@@ -177,7 +177,7 @@ export class LLMProviders {
         options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp'],
         defaultValue: 'lmstudio'
     })
-    chat!: string;
+    chat: string = 'lmstudio';
 
     @ClientSettings({
         label: 'Embeddings Provider',
@@ -186,7 +186,7 @@ export class LLMProviders {
         options: ['openai', 'cohere', 'huggingface', 'local', 'llama_cpp'],
         defaultValue: 'local'
     })
-    embeddings!: string;
+    embeddings: string = 'llama_cpp';
 }
 
 export class LLMModels {
