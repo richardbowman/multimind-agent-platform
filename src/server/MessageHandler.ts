@@ -39,7 +39,7 @@ export class MessageHandler implements ServerMethods {
         return settings;
     }
 
-    async getAvailableModels(provider: string): Promise<string[]> {
+    async getAvailableModels(provider: string): Promise<ModelInfo[]> {
         const service = LLMServiceFactory.createServiceByName(provider, this.services.settingsManager.getSettings());
         return service.getAvailableModels();
     }

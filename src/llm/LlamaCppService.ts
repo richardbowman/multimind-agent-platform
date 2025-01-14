@@ -250,21 +250,7 @@ export class LlamaCppService extends BaseLLMService {
         }
     }
 
-    async getAvailableModels(): Promise<Array<{
-        id: string;
-        name: string;
-        path?: string;
-        size: string;
-        lastModified: Date;
-        isLocal: boolean;
-        author?: string;
-        downloads?: number;
-        likes?: number;
-        ggufFiles?: Array<{
-            filename: string;
-            size: string;
-        }>;
-    }>> {
+    async getAvailableModels(): Promise<ModelInfo[]> {
         try {
             const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
             const {getLlama} = nlc;

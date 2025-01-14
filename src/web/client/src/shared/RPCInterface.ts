@@ -39,7 +39,7 @@ export interface ServerMethods {
      */
     deleteChannel(channelId: string): Promise<void>;
 
-    getAvailableModels(provider: string): Promise<string[]>;
+    getAvailableModels(provider: string): Promise<ModelInfo[]>;
 }
 
 export interface ClientMethods {
