@@ -7,7 +7,7 @@ import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ILLMService } from 'src/llm/ILLMService';
 import { SettingsManager } from '../tools/settingsManager';
-import path from 'path';
+// Remove path import since we're not using it anymore
 
 
 
@@ -36,10 +36,10 @@ export class AgentLoader {
                 }
 
                 try {
-                    // Dynamically import the agent class using absolute path
-                    const modulePath = path.join("./src", "agents", "researchManager.ts");
-                    const module = await import(modulePath);
-                    const AgentClass : Agent = module[definition.className];
+                    // Use require.context to dynamically load agents
+                    const agentContext = require.context('../agents', true, /\.ts$/);
+                    const module = agentContext(`./${definition.sourcePath}`);
+                    const AgentClass = module[definition.className] || module.default;
 
                     if (!AgentClass) {
                         throw new Error(`Agent class ${definition.className} not found in module`);
