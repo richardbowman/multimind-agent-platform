@@ -55,13 +55,19 @@ export function getClientSettingsMetadata(target: any, prefix: string = ''): Rec
 
         const propertyPath = prefix ? `${prefix}.${property}` : property;
         
-        // Get metadata from both instance and prototype
-        const meta = Reflect.getMetadata('clientSettings', target, property) || 
-                    Reflect.getMetadata('clientSettings', Object.getPrototypeOf(target), property);
+        // Get metadata from the entire prototype chain
+        let meta = null;
+        let currentProto = target;
+        while (currentProto && !meta) {
+            meta = Reflect.getMetadata('clientSettings', currentProto, property);
+            currentProto = Object.getPrototypeOf(currentProto);
+        }
         
         if (meta) {
             console.log(`Found metadata for ${propertyPath}:`, meta);
             metadata[propertyPath] = meta;
+        } else {
+            console.log(`No metadata found for ${propertyPath}`);
         }
         
         // Recursively get metadata for object properties
