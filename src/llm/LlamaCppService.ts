@@ -39,10 +39,9 @@ export class LlamaCppService extends BaseLLMService {
         super('llama-cpp');
     }
 
-    private async downloadModel(repo: string, modelDir: string): Promise<string> {
+    private async downloadModel(repo: string, modelName: string, modelDir: string): Promise<string> {
         try {
-            const modelName = 'nomic-embed-text-v1.5.Q4_K_M.gguf';
-            const modelPath = path.join(getDataPath(), "models", modelName);
+            const modelPath = path.join(modelDir, modelName);
             
             // Check if model already exists
             try {
@@ -54,7 +53,8 @@ export class LlamaCppService extends BaseLLMService {
                 Logger.info(`Downloading model ${repo}...`);
                 await fs.mkdir(modelDir, { recursive: true });
 
-                const url = `https://huggingface.co/nomic-ai/nomic-embed-text-v1.5-GGUF/resolve/main/nomic-embed-text-v1.5.Q4_K_M.gguf`;
+                // Construct URL from repo and model name
+                const url = `https://huggingface.co/${repo}/resolve/main/${modelName}`;
                 const fileStream = createWriteStream(modelPath);
                 
                 Logger.info(`Downloading from ${url}`);
@@ -132,20 +132,39 @@ export class LlamaCppService extends BaseLLMService {
         }
     }
 
-    async initializeEmbeddingModel(modelName: string): Promise<void> {
+    async initializeModel(modelName: string, repo: string, modelType: 'chat' | 'embedding'): Promise<void> {
         try {
             const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
             const {getLlama} = nlc;
-            const modelPath = path.join(getDataPath(), "models", modelName);
+            
+            // Create models directory if it doesn't exist
+            const modelDir = path.join(getDataPath(), "models");
+            await fs.mkdir(modelDir, { recursive: true });
+            
+            const modelPath = path.join(modelDir, modelName);
 
             // Check if model exists
             try {
                 await fs.access(modelPath);
             } catch {
                 // If not, download it
-                const modelDir = path.dirname(modelPath);
-                await fs.mkdir(modelDir, { recursive: true });
-                const downloadedPath = await this.downloadModel('nomic-ai/nomic-embed-text-v1.5', modelDir);
+                await this.downloadModel(repo, modelName, modelDir);
+            }
+
+            // Initialize the model
+            const llama = await getLlama();
+            const model = await llama.loadModel({
+                modelPath: modelPath
+            });
+
+            if (modelType === 'chat') {
+                const context = await model.createContext();
+                this.context = context;
+                Logger.info("Llama.cpp chat model initialized");
+            } else if (modelType === 'embedding') {
+                const context = await model.createEmbeddingContext();
+                this.embedder = new LlamaEmbedder(context);
+                Logger.info("Llama.cpp embedding model initialized");
             }
 
             const llama = await getLlama();
@@ -161,22 +180,12 @@ export class LlamaCppService extends BaseLLMService {
         }
     }
 
-    async initializeChatModel(modelPath: string): Promise<void> {
-        try {
-            const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
-            const {getLlama} = nlc;
+    async initializeChatModel(modelName: string, repo: string): Promise<void> {
+        return this.initializeModel(modelName, repo, 'chat');
+    }
 
-            const llama = await getLlama();
-            const model = await llama.loadModel({
-                modelPath: modelPath
-            });
-            const context = await model.createContext();
-            this.context = context;
-            Logger.info("Llama.cpp chat model initialized");
-        } catch (error) {
-            Logger.error("Failed to initialize Llama.cpp chat model:", error);
-            throw error;
-        }
+    async initializeEmbeddingModel(modelName: string, repo: string): Promise<void> {
+        return this.initializeModel(modelName, repo, 'embedding');
     }
 
     async countTokens(message: string): Promise<number> {
