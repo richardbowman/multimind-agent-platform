@@ -50,7 +50,7 @@ export interface DataContextMethods {
   setCurrentThreadId: React.Dispatch<React.SetStateAction<string | null>>;
   getSettings: () => Promise<any>;
   updateSettings: (settings: any) => Promise<any>;
-  createChannel: (params: CreateChannelParams) => Promise<void>;
+  createChannel: (params: CreateChannelParams) => Promise<string>;
 }
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -90,58 +90,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     ipcService.on('needsConfig', ({ needsConfig }) => {
       setNeedsConfig(needsConfig);
-    });
-
-    // Set up message and log update handlers
-    ipcService.on('onMessage', async (messages: ClientMessage[]) => {
-      // Check if any new messages contain artifact references
-      const hasArtifactLinks = messages.some(message => 
-        message.content?.includes('artifact:') || 
-        message.metadata?.artifactIds?.length > 0
-      );
-
-      setMessages(prev => {
-        // Filter out any existing messages that match the new message IDs
-        const filteredPrev = prev.filter(prevMessage => 
-          !messages.some(newMessage => newMessage.id === prevMessage.id)
-        );
-        // Merge and sort the remaining old messages with the new ones
-        return [...filteredPrev, ...messages].sort((a, b) => a.create_at - b.create_at);
-      });
-
-      // If we found artifact links and have a current channel/thread, refresh artifacts
-      if (hasArtifactLinks && currentChannelId) {
-        await fetchArtifacts(currentChannelId, currentThreadId);
-      }
-    });
-
-    ipcService.on('onLogUpdate', (update) => {
-      if (update.type === 'llm') {
-        setLogs(prev => ({
-          ...prev,
-          llm: {
-            ...prev.llm,
-            [update.entry.service]: [
-              ...(prev.llm[update.entry.service] || []),
-              update.entry
-            ]
-          }
-        }));
-      }
-    });
-
-    ipcService.on('onTaskUpdate', (task) => {
-      setTasks(prevTasks => {
-        // Find and replace the updated task
-        const existingIndex = prevTasks.findIndex(t => t.id === task.id);
-        if (existingIndex >= 0) {
-          const newTasks = [...prevTasks];
-          newTasks[existingIndex] = task;
-          return newTasks;
-        }
-        // If it's a new task, add it to the list
-        return [...prevTasks, task];
-      });
     });
 
     ipcService.connect();
