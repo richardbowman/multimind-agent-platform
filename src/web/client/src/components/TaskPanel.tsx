@@ -22,7 +22,7 @@ interface TaskPanelProps {
 }
 
 export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => {
-    const { tasks, fetchTasks, users } = useWebSocket();
+    const { tasks, fetchTasks, handles } = useWebSocket();
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [dialogOpen, setDialogOpen] = useState(false);
 
@@ -114,7 +114,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                                             opacity: task.complete ? 0.7 : 1
                                         }}
                                     >
-                                        {task.assignee && `Assigned to: ${users[task.assignee]?.handle || task.assignee}`}
+                                        {task.assignee && `Assigned to: ${handles.find(h => h.id === task.assignee)?.handle || task.assignee}`}
                                     </Typography>
                                     <Typography 
                                         variant="caption" 
@@ -163,7 +163,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                                 {selectedTask.props?.stepType && ` (${selectedTask.props.stepType})`}
                             </Typography>
                             <Typography variant="body1">
-                                <strong>Assignee:</strong> {selectedTask.assignee ? (users[selectedTask.assignee]?.handle || selectedTask.assignee) : 'Unassigned'}
+                                <strong>Assignee:</strong> {selectedTask.assignee ? (handles.find(h => h.id === selectedTask.assignee)?.handle || selectedTask.assignee) : 'Unassigned'}
                             </Typography>
                             {selectedTask.dependsOn && (
                                 <Typography variant="body1">
