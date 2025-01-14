@@ -9,6 +9,7 @@ import { CreateChannelParams } from "src/shared/channelTypes";
 import { GoalTemplates } from "src/schemas/goalTemplateSchema";
 import { Settings } from "src/tools/settings";
 import { getClientSettingsMetadata } from "src/tools/settingsDecorators";
+import { LLMServiceFactory } from "src/llm/LLMServiceFactory";
 
 export class MessageHandler implements ServerMethods {
     createWrapper(): ServerMethods {
@@ -39,10 +40,7 @@ export class MessageHandler implements ServerMethods {
     }
 
     async getAvailableModels(provider: string): Promise<string[]> {
-        if (!this.services.llmServiceFactory) {
-            throw new Error('LLM Service Factory not initialized');
-        }
-        const service = this.services.llmServiceFactory.getService(provider);
+        const service = LLMServiceFactory.createServiceByName(provider, this.services.settingsManager.getSettings());
         return service.getAvailableModels();
     }
 

@@ -38,6 +38,8 @@ export interface ServerMethods {
      * @returns Promise resolving when deletion is complete
      */
     deleteChannel(channelId: string): Promise<void>;
+
+    getAvailableModels(provider: string): Promise<string[]>;
 }
 
 export interface ClientMethods {
