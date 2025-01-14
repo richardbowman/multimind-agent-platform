@@ -5,7 +5,7 @@ export class MainWindow {
     private window: BrowserWindow;
     private zoomLevel: number = 1.0;
 
-    constructor(initialZoom: number = 1.0) {
+    constructor(initialZoom: number = 1.0, options?: Electron.BrowserWindowConstructorOptions) {
         this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
             ...options,
