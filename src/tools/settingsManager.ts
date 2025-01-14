@@ -32,6 +32,15 @@ export interface AgentConfig {
 }
 
 export interface Settings {
+    /**
+     * UI zoom level (0.5 = 50%, 1.0 = 100%, 2.0 = 200%)
+     * @default 1.0
+     * @minimum 0.5
+     * @maximum 2.0
+     * @step 0.1
+     */
+    zoom: number;
+
     // Server settings
     host: string;
     port: number;
