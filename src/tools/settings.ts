@@ -222,18 +222,11 @@ export class APIConfig {
         type: 'string',
         sensitive: true
     })
-    key!: string;
+    key: string = "";
 }
 
 export class ProviderConfig {
     api: APIConfig = new APIConfig();
-
-    @ClientSettings({
-        label: 'Model',
-        category: 'API Keys',
-        type: 'string'
-    })
-    model!: string;
 }
 
 interface AgentDefinition {
