@@ -1,6 +1,7 @@
 const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const webpack = require('webpack');
 
 module.exports = {
   entry: './src/web/client/src/index.tsx',
@@ -51,6 +52,11 @@ module.exports = {
           to: 'splash.html'
         }
       ]
+    }),
+    new webpack.DefinePlugin({
+      'process.env.NODE_ENV': JSON.stringify(process.env.NODE_ENV || 'development'),
+      'process.platform': JSON.stringify('browser'),
+      'process.version': JSON.stringify('0.0.0')
     })
   ],
   devServer: {
