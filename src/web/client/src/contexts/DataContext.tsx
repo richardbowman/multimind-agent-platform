@@ -170,6 +170,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setArtifacts(remainingArtifacts);
   }, []);
 
+  const addArtifactToChannel = useCallback(async (channelId: string, artifactId: string) => {
+    await ipcService.getRPC().addArtifactToChannel(channelId, artifactId);
+    // Refresh artifacts after adding
+    await fetchArtifacts(channelId, currentThreadId);
+  }, [currentThreadId]);
+
+  const removeArtifactFromChannel = useCallback(async (channelId: string, artifactId: string) => {
+    await ipcService.getRPC().removeArtifactFromChannel(channelId, artifactId);
+    // Refresh artifacts after removing
+    await fetchArtifacts(channelId, currentThreadId);
+  }, [currentThreadId]);
+
   const fetchLogs = useCallback(async (logType: 'llm' | 'system' | 'api') => {
     const newLogs = await ipcService.getRPC().getLogs(logType);
     setLogs(prev => ({
@@ -193,6 +205,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     handles,
     fetchHandles,
     deleteArtifact,
+    addArtifactToChannel, 
+    removeArtifactFromChannel,
+    addArtifactToChannel,
+    removeArtifactFromChannel,
     currentChannelId,
     setCurrentChannelId,
     currentThreadId,
