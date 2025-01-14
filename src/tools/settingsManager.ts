@@ -31,18 +31,29 @@ export interface AgentConfig {
     }[];
 }
 
-export interface Settings {
-    /**
-     * UI zoom level (0.5 = 50%, 1.0 = 100%, 2.0 = 200%)
-     * @default 1.0
-     * @minimum 0.5
-     * @maximum 2.0
-     * @step 0.1
-     */
-    zoom: number;
+import { ClientSettings } from './settingsDecorators';
 
-    // Server settings
-    host: string;
+export class Settings {
+    @ClientSettings({
+        label: 'UI Zoom Level',
+        category: 'UI Settings',
+        type: 'number',
+        defaultValue: 1.0,
+        min: 0.5,
+        max: 2.0,
+        step: 0.1,
+        description: 'Adjust the UI zoom level (0.5 = 50%, 1.0 = 100%, 2.0 = 200%)'
+    })
+    zoom: number = 1.0;
+
+    @ClientSettings({
+        label: 'Server Host',
+        category: 'Server Settings',
+        type: 'string',
+        defaultValue: 'localhost',
+        description: 'The host address for the server'
+    })
+    host: string = 'localhost';
     port: number;
     protocol: string;
     wsUrl: string;

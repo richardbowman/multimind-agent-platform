@@ -14,27 +14,16 @@ export interface Settings extends Record<string, any> {
     [key: string]: string | number | boolean;
 }
 
-// Generate metadata from TypeScript annotations
+import { getClientSettingsMetadata } from '../../tools/settingsDecorators';
+import { Settings } from '../../tools/settingsManager';
+
+// Generate metadata from TypeScript decorators
 function getConfigMetadata(settings: Settings): ConfigMetadata[] {
-    const metadata: ConfigMetadata[] = [];
-    
-    // Example for zoom property
-    metadata.push({
-        key: 'zoom',
-        label: 'UI Zoom Level',
-        type: 'number',
-        category: 'UI Settings',
-        defaultValue: 1.0,
-        min: 0.5,
-        max: 2.0,
-        step: 0.1,
-        description: 'Adjust the UI zoom level'
-    });
-
-    // Add other properties here based on their annotations
-    // ...
-
-    return metadata;
+    const metadata = getClientSettingsMetadata(settings);
+    return Object.entries(metadata).map(([key, meta]) => ({
+        key,
+        ...meta
+    }));
 }
     // Conversation Models
     {
