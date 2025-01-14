@@ -5,7 +5,7 @@ import TaskIcon from '@mui/icons-material/Task';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
-import { useWebSocket, DataProvider, ipcService } from './contexts/DataContext';
+import { useWebSocket, DataProvider } from './contexts/DataContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
@@ -129,7 +129,7 @@ const AppContent: React.FC = () => {
                         <IconButton
                             color="inherit"
                             edge="end"
-                            onClick={() => ipcService.getRPC().maximizeWindow()}
+                            onClick={() => window.ipcService.getRPC().maximizeWindow()}
                             sx={{ ml: 2 }}
                         >
                             <MaximizeIcon />
@@ -137,7 +137,7 @@ const AppContent: React.FC = () => {
                         <IconButton
                             color="inherit"
                             edge="end"
-                            onClick={() => ipcService.getRPC().closeWindow()}
+                            onClick={() => window.ipcService.getRPC().closeWindow()}
                             sx={{ ml: 2 }}
                         >
                             <CloseIcon />

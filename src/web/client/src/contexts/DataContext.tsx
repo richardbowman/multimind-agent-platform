@@ -9,8 +9,12 @@ import { CreateChannelParams } from '../../../../shared/channelTypes';
 
 const DataContext = createContext<DataContextMethods | null>(null);
 
-// We'll initialize this after creating the context methods
-let ipcService: BaseRPCService;
+// Store the service on window for global access
+declare global {
+  interface Window {
+    ipcService: BaseRPCService;
+  }
+}
 
 export interface DataContextMethods {
   messages: ClientMessage[];
@@ -260,8 +264,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ]);
 
   // Initialize the IPC service with the context methods
-  if (!ipcService) {
-    ipcService = (window as any).electron 
+  if (!window.ipcService) {
+    window.ipcService = (window as any).electron 
       ? new ElectronIPCService(contextMethods)
       : new WebSocketService();
   }
