@@ -25,7 +25,7 @@ export interface Task extends AddTaskParams {
     id: string;
     projectId: string;
     description: string;
-    type: string;
+    type: 'standard' | 'recurring' | 'step';
     creator: string;
     assignee?: string;
     complete?: boolean;
@@ -36,7 +36,7 @@ export interface Task extends AddTaskParams {
 }
 
 export interface RecurringTask extends Task {
-    isRecurring: boolean;
+    type: "recurring",
     recurrencePattern: RecurrencePattern;
     lastRunDate?: Date; // To keep track of the last run date
 }
@@ -59,15 +59,17 @@ export interface Project {
     metadata: ProjectMetadata;
 }
 
+export interface CreateProjectParams {
+    name: string;
+    tasks?: { description: string; type: string }[];
+    metadata?: Partial<ProjectMetadata>;
+}
+
 export interface TaskManager extends EventEmitter {
     replaceProject(project: Project): unknown;
     completeTask(id: string): Promise<Task>;
     addProject(project: Project): Promise<void>;
-    createProject(params: {
-        name: string;
-        tasks?: { description: string; type: string }[];
-        metadata?: Partial<ProjectMetadata>;
-    }): Promise<Project>;
+    createProject(params: CreateProjectParams): Promise<Project>;
     addTask(project: Project, params: AddTaskParams): Promise<Task>;
     getProject(projectId: string): Project;
     newProjectId(): string;
