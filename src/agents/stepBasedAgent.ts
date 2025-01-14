@@ -109,9 +109,10 @@ export abstract class StepBasedAgent extends Agent {
         // Initialize executors
         for (const executorConfig of config.executors) {
             try {
-                // Dynamically import the executor class
-                const module = await import(`./executors/${executorConfig.className}`);
-                const ExecutorClass = module[executorConfig.className];
+                // Use require.context to load executors
+                const executorContext = require.context('./executors', true, /\.ts$/);
+                const module = executorContext(`./${executorConfig.className}.ts`);
+                const ExecutorClass = module[executorConfig.className] || module.default;
                 
                 // Create instance with config
                 const executor = new ExecutorClass({
