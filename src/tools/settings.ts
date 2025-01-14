@@ -251,7 +251,7 @@ export class Settings {
     @ClientSettings({
         label: 'Embeddings Models',
         category: 'Embeddings',
-        type: 'string',
+        type: 'section',
         description: 'Model configurations for embeddings'
     })
     embeddingsModels: EmbeddingsModelByProvider = new EmbeddingsModelByProvider();
