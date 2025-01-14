@@ -12,7 +12,46 @@ export const ipcService: BaseRPCService = (window as any).electron
     ? new ElectronIPCService()
     : new WebSocketService();
 
-const DataContext = createContext<typeof DataProvider | null>(null);
+const DataContext = createContext<DataContextMethods | null>(null);
+
+export interface DataContextMethods {
+  messages: ClientMessage[];
+  channels: ClientChannel[];
+  tasks: ClientTask[];
+  artifacts: any[];
+  logs: {
+    llm: Record<string, LLMLogEntry[]>;
+    system: any[];
+    api: any[];
+  };
+  handles: Array<{id: string, handle: string}>;
+  currentChannelId: string | null;
+  currentThreadId: string | null;
+  isLoading: boolean;
+  needsConfig: boolean;
+  sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
+  fetchChannels: () => Promise<void>;
+  fetchTasks: (channelId: string, threadId: string | null) => Promise<void>;
+  fetchArtifacts: (channelId: string, threadId: string | null) => Promise<void>;
+  fetchAllArtifacts: () => Promise<void>;
+  fetchLogs: (logType: 'llm' | 'system' | 'api') => Promise<void>;
+  fetchHandles: () => Promise<void>;
+  deleteArtifact: (artifactId: string) => Promise<void>;
+  addArtifactToChannel: (channelId: string, artifactId: string) => Promise<void>;
+  removeArtifactFromChannel: (channelId: string, artifactId: string) => Promise<void>;
+  setMessages: React.Dispatch<React.SetStateAction<ClientMessage[]>>;
+  setLogs: React.Dispatch<React.SetStateAction<{
+    llm: Record<string, LLMLogEntry[]>;
+    system: any[];
+    api: any[];
+  }>>;
+  setNeedsConfig: React.Dispatch<React.SetStateAction<boolean>>;
+  setCurrentChannelId: React.Dispatch<React.SetStateAction<string | null>>;
+  setCurrentThreadId: React.Dispatch<React.SetStateAction<string | null>>;
+  getSettings: () => Promise<any>;
+  updateSettings: (settings: any) => Promise<any>;
+  createChannel: (params: CreateChannelParams) => Promise<void>;
+}
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<ClientMessage[]>([]);

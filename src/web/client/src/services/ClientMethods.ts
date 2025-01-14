@@ -1,8 +1,9 @@
 import type { ClientMessage } from '../shared/IPCInterface';
 import type { LogParam } from '../../../../llm/LLMLogger';
 import type { DataContextMethods } from '../contexts/DataContext';
+import { ClientMethods } from '../shared/RPCInterface';
 
-export const createClientMethods = (contextMethods: DataContextMethods) => ({
+export const createClientMethods : ClientMethods = (contextMethods: DataContextMethods) => ({
     onMessage: async (messages: ClientMessage[]) => {
         // Update messages directly in context
         contextMethods.setMessages(prev => {
