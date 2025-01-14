@@ -37,7 +37,7 @@ export class AgentLoader {
 
                 try {
                     // Dynamically import the agent class using absolute path
-                    const modulePath = path.resolve(__dirname, '..', definition.sourcePath);
+                    const modulePath = path.join("./src", "agents", "researchManager.ts");
                     const module = await import(modulePath);
                     const AgentClass : Agent = module[definition.className];
 
