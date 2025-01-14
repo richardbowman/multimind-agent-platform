@@ -304,6 +304,7 @@ export abstract class StepBasedAgent extends Agent {
                     message: userPost?.message,
                     stepGoal: task.description,
                     overallGoal: project.name,
+                    executionMode: userPost ? 'conversation' : 'task',
                     context: {
                         channelId: userPost?.channel_id,
                         threadId: userPost?.thread_id,

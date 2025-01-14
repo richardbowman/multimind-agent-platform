@@ -15,6 +15,7 @@ export interface ExecuteParams {
     previousResult?: ModelResponse[];
     steps: StepTask[],
     mode?: 'quick' | 'detailed';
+    executionMode: 'conversation' | 'task';
     agents?: Array<{
         id: string;
         handle: string;
