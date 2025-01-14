@@ -180,54 +180,28 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async markTaskInProgress(task: Task | string): Promise<Task> {
-        let taskFound = false;
         const taskId = typeof (task) === 'string' ? task : task.id;
-        for (const projectId in this.projects) {
-            const project = this.projects[projectId];
-            if (project.tasks?.hasOwnProperty(taskId)) {
-                const existingTask = project.tasks[taskId];
-                existingTask.inProgress = true;
-                taskFound = true;
-                this.emit('taskInProgress', { task: existingTask });
-                break;
-            }
-        }
-        if (!taskFound) {
-            throw new Error(`Task with ID ${taskId} not found.`);
-        }
-        await this.save();
-        return this.getProjectByTaskId(taskId).tasks[taskId];
+        return this.updateTask(taskId, { inProgress: true });
     }
 
     async completeTask(id: string): Promise<Task> {
-        let taskFound = false;
-        for (const projectId in this.projects) {
-            const project = this.projects[projectId];
-            if (project.tasks?.hasOwnProperty(id)) {
-                const task = project.tasks[id];
-                // Skip if task is already completed
-                if (task.complete) {
-                    return task;
-                }
-                task.complete = true;
-                task.inProgress = false;
-                taskFound = true;
+        const task = await this.updateTask(id, { 
+            complete: true,
+            inProgress: false 
+        });
 
-                // Emit the 'taskCompleted' event with the completed task, creator, and assignee
-                this.emit('taskCompleted', { task, creator: task.creator, assignee: task.assignee });
+        // Check if all tasks in the project are completed
+        if (this.areAllTasksCompleted(task.projectId)) {
+            const project = this.getProject(task.projectId);
+            this.emit('projectCompleted', { 
+                project, 
+                task, 
+                creator: task.creator, 
+                assignee: task.assignee 
+            });
+        }
 
-                // Check if all tasks in the project are completed
-                if (this.areAllTasksCompleted(projectId)) {
-                    this.emit('projectCompleted', { project, task, creator: task.creator, assignee: task.assignee });
-                }
-                break;
-            }
-        }
-        if (!taskFound) {
-            throw new Error(`Task with ID ${id} not found.`);
-        }
-        await this.save();
-        return this.getProjectByTaskId(id).tasks[id];
+        return task;
     }
 
     private areAllTasksCompleted(projectId: string): boolean {
@@ -296,14 +270,57 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
     }
 
-    getTaskById(taskId: string): Task | null {
+    getTaskById(taskId: string): Readonly<Task> | null {
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
             if (project.tasks?.hasOwnProperty(taskId)) {
-                return project.tasks[taskId];
+                // Return a deep frozen copy to prevent direct modification
+                return Object.freeze(JSON.parse(JSON.stringify(project.tasks[taskId])));
             }
         }
         return null;
+    }
+
+    async updateTask(taskId: string, updates: Partial<Task>): Promise<Task> {
+        let taskFound = false;
+        for (const projectId in this.projects) {
+            const project = this.projects[projectId];
+            if (project.tasks?.hasOwnProperty(taskId)) {
+                const existingTask = project.tasks[taskId];
+                
+                // Create updated task object
+                const updatedTask = {
+                    ...existingTask,
+                    ...updates,
+                    // Ensure these properties can't be changed
+                    id: existingTask.id,
+                    projectId: existingTask.projectId,
+                    type: existingTask.type
+                };
+
+                // Validate task properties
+                if (updatedTask.order !== undefined && typeof updatedTask.order !== 'number') {
+                    throw new Error('Task order must be a number');
+                }
+                if (updatedTask.complete !== undefined && typeof updatedTask.complete !== 'boolean') {
+                    throw new Error('Task complete status must be a boolean');
+                }
+
+                // Update the task
+                project.tasks[taskId] = updatedTask;
+                taskFound = true;
+
+                // Emit taskUpdated event
+                this.emit('taskUpdated', { task: updatedTask, project });
+
+                await this.save();
+                return updatedTask;
+            }
+        }
+
+        if (!taskFound) {
+            throw new Error(`Task with ID ${taskId} not found`);
+        }
     }
 
     // Method to handle recurring tasks
