@@ -1,5 +1,49 @@
 import { ClientSettings } from './settingsDecorators';
 
+export class EmbeddingsModelByProvider {
+    @ClientSettings({
+        label: 'OpenAI Embeddings Model',
+        category: 'Embeddings',
+        type: 'string',
+        description: 'Model identifier for OpenAI embeddings',
+        defaultValue: 'text-embedding-3-small'
+    })
+    openai!: string;
+
+    @ClientSettings({
+        label: 'Cohere Embeddings Model',
+        category: 'Embeddings',
+        type: 'string',
+        description: 'Model identifier for Cohere embeddings',
+        defaultValue: 'embed-english-v3.0'
+    })
+    cohere!: string;
+
+    @ClientSettings({
+        label: 'HuggingFace Embeddings Model',
+        category: 'Embeddings',
+        type: 'string',
+        description: 'Model identifier for HuggingFace embeddings'
+    })
+    huggingface!: string;
+
+    @ClientSettings({
+        label: 'Local Embeddings Model',
+        category: 'Embeddings',
+        type: 'string',
+        description: 'Model path for local embeddings'
+    })
+    local!: string;
+
+    @ClientSettings({
+        label: 'Llama.cpp Embeddings Model',
+        category: 'Embeddings',
+        type: 'string',
+        description: 'Model path for Llama.cpp embeddings'
+    })
+    llama_cpp!: string;
+}
+
 export class ModelByProvider {
     @ClientSettings({
         label: 'LM Studio Model',
@@ -150,10 +194,19 @@ interface AgentDefinition {
 export class Settings {
     constructor() {
         this.models = new LLMModels();
+        this.embeddingsModels = new EmbeddingsModelByProvider();
         this.anthropic = new ProviderConfig();
         this.openrouter = new ProviderConfig();
         this.openai = new ProviderConfig();
     }
+
+    @ClientSettings({
+        label: 'Embeddings Models',
+        category: 'Embeddings',
+        type: 'string',
+        description: 'Model configurations for embeddings'
+    })
+    embeddingsModels!: EmbeddingsModelByProvider;
 
     @ClientSettings({
         label: 'UI Zoom Level',
@@ -374,7 +427,22 @@ export class Settings {
         type: 'string'
     })
     duckduckgo!: {
+        @ClientSettings({
+            label: 'DuckDuckGo Headless Mode',
+            category: 'Search Settings',
+            type: 'boolean',
+            defaultValue: true,
+            description: 'Run DuckDuckGo searches in headless browser mode'
+        })
         headless: boolean;
+
+        @ClientSettings({
+            label: 'DuckDuckGo Timeout (ms)',
+            category: 'Search Settings',
+            type: 'number',
+            defaultValue: 30000,
+            description: 'Timeout for DuckDuckGo search operations'
+        })
         timeout: number;
     };
 
@@ -384,7 +452,22 @@ export class Settings {
         type: 'string'
     })
     brave!: {
+        @ClientSettings({
+            label: 'Brave Search API Key',
+            category: 'Search Settings',
+            type: 'string',
+            sensitive: true,
+            description: 'API key for Brave Search'
+        })
         apiKey: string;
+
+        @ClientSettings({
+            label: 'Brave Search Endpoint',
+            category: 'Search Settings',
+            type: 'string',
+            defaultValue: 'https://api.search.brave.com/res/v1/web/search',
+            description: 'API endpoint for Brave Search'
+        })
         endpoint: string;
     };
 
@@ -396,10 +479,34 @@ export class Settings {
         [key: string]: AgentDefinition 
     };
 
-    // Bedrock specific settings
+    @ClientSettings({
+        label: 'Bedrock Settings',
+        category: 'Rate Limiting',
+        type: 'string'
+    })
     bedrock!: {
+        @ClientSettings({
+            label: 'Bedrock Max Tokens/Min',
+            category: 'Rate Limiting',
+            type: 'number',
+            defaultValue: 50000
+        })
         maxTokensPerMinute: number;
+
+        @ClientSettings({
+            label: 'Bedrock Default Delay (ms)',
+            category: 'Rate Limiting',
+            type: 'number',
+            defaultValue: 1000
+        })
         defaultDelayMs: number;
+
+        @ClientSettings({
+            label: 'Bedrock Window Size (ms)',
+            category: 'Rate Limiting',
+            type: 'number',
+            defaultValue: 60000
+        })
         windowSizeMs: number;
     };
 }
