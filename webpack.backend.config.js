@@ -12,7 +12,13 @@ module.exports = {
     rules: [
       {
         test: /\.ts$/,
-        use: 'ts-loader',
+        use: {
+          loader: 'ts-loader',
+          options: {
+            configFile: 'tsconfig.electron.json',
+            transpileOnly: true
+          }
+        },
         exclude: /node_modules/
       }
     ]
