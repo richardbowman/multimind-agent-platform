@@ -68,7 +68,7 @@
   "agents": {
     "RouterAgent": {
       "className": "RouterAgent",
-      "sourcePath": "../agents/RouterAgent",
+      "sourcePath": "RouterAgent.ts",
       "userId": "router-agent",
       "handle": "@router",
       "description": "Routes requests to appropriate specialized agents",
@@ -79,7 +79,7 @@
     },
     "SimpleAgent": {
       "className": "SimpleAgent",
-      "sourcePath": "../agents/simpleAgent",
+      "sourcePath": "simpleAgent.ts",
       "userId": "simple-agent",
       "handle": "@ai",
       "description": "Just a generic AI agent",
@@ -87,7 +87,7 @@
     },
     "ResearchAssistant": {
       "className": "ResearchAssistant",
-      "sourcePath": "../agents/researchAssistant",
+      "sourcePath": "researchAssistant.ts",
       "userId": "rg7fwbna43byucb174hm7nnuwr",
       "handle": "@researchteam",
       "description": "Conducts web research and information gathering",
@@ -99,7 +99,7 @@
     },
     "ResearchManager": {
       "className": "ResearchManager",
-      "sourcePath": "../agents/researchManager",
+      "sourcePath": "researchManager.ts",
       "userId": "xi8rrsssmidwjnfwf4qx9qr33o",
       "handle": "@research",
       "description": "Manages and coordinates research activities",
@@ -107,7 +107,7 @@
     },
     "ContentManager": {
       "className": "ContentManager",
-      "sourcePath": "../agents/contentManager",
+      "sourcePath": "contentManager.ts",
       "userId": "9d039c4e-f99d-4fb7-a160-452ac261569c",
       "handle": "@content",
       "description": "Manages content creation and organization",
@@ -115,7 +115,7 @@
     },
     "ContentWriter": {
       "className": "ContentWriter",
-      "sourcePath": "../agents/contentWriter",
+      "sourcePath": "contentWriter.ts",
       "userId": "66025743-45bc-4625-a27f-52aa09dde128",
       "handle": "@writer",
       "description": "Writes and generates content",
@@ -123,7 +123,7 @@
     },
     "ProjectManager": {
       "className": "ConfigurableAgent",
-      "sourcePath": "../agents/configurableAgent",
+      "sourcePath": "configurableAgent.ts",
       "userId": "2e330aba-4888-42b8-8685-ecdc7f4b1b43",
       "handle": "@pm",
       "description": "Manages projects and coordinates tasks",
@@ -166,7 +166,7 @@ My goal is to help develop standardized processes for your business.",
     },
     "OnboardingConsultant": {
       "className": "OnboardingConsultant",
-      "sourcePath": "../agents/onboardingConsultant",
+      "sourcePath": "onboardingConsultant.ts",
       "userId": "c7776380-6cda-44b9-8113-890706cd1ec1",
       "handle": "@onboarding",
       "description": "Handles user onboarding processes",
@@ -177,7 +177,7 @@ My goal is to help develop standardized processes for your business.",
     },
     "SolverAgent": {
       "className": "SolverAgent",
-      "sourcePath": "../agents/solverAgent",
+      "sourcePath": "solverAgent.ts",
       "userId": "b8f7d3e1-9c24-4b9a-8e5f-2d6a91f0e3d2",
       "handle": "@solver",
       "description": "Solves problems and provides solutions",
@@ -185,7 +185,7 @@ My goal is to help develop standardized processes for your business.",
     },
     "ProductManagerAnalyst": {
       "className": "ConfigurableAgent",
-      "sourcePath": "../agents/configurableAgent",
+      "sourcePath": "configurableAgent.ts",
       "userId": "c9f8d7e6-5b4a-3c2b-1e0f-9d8c7b6a5e4f",
       "handle": "@product",
       "description": "Helps create and document product specifications",
@@ -226,7 +226,7 @@ My goal is to help you define, document and refine product specifications.",
     },
      "DataGatherer": {
        "className": "ConfigurableAgent",
-       "sourcePath": "../agents/configurableAgent",
+       "sourcePath": "configurableAgent.ts",
        "userId": "d9f8d7e6-5b4a-3c2b-1e0f-9d8c7b6a5e4g",
        "handle": "@data",
        "description": "Specializes in gathering and processing data from web sources",
