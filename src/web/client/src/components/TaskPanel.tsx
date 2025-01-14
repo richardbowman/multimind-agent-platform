@@ -70,7 +70,9 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                             cursor: 'pointer',
                             '&:hover': {
                                 bgcolor: task.inProgress ? 'primary.dark' : 'action.hover'
-                            }
+                            },
+                            textDecoration: task.complete ? 'line-through' : 'none',
+                            opacity: task.complete ? 0.7 : 1
                         }}
                         onClick={() => {
                             setSelectedTask(task);
@@ -86,6 +88,8 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                                 '&.Mui-checked': {
                                     color: 'primary.main',
                                 },
+                                textDecoration: task.complete ? 'line-through' : 'none',
+                                opacity: task.complete ? 0.7 : 1
                             }}
                         />
                         <ListItemText
