@@ -250,15 +250,55 @@ export class LlamaCppService extends BaseLLMService {
         }
     }
 
-    async getAvailableModels(): Promise<string[]> {
+    async getAvailableModels(): Promise<{
+        localModels: Array<{
+            name: string;
+            path: string;
+            size: string;
+            lastModified: Date;
+        }>;
+        remoteModels: HFModel[];
+    }> {
         try {
             const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
             const {getLlama} = nlc;
             
             const llama = await getLlama();
-            const modelDir = process.env.LLAMA_MODEL_DIR || './models';
-            const modelFiles = await llama.listModels({ modelDir });
-            return modelFiles.map(f => f.name);
+            const modelDir = process.env.LLAMA_MODEL_DIR || path.join(getDataPath(), "models");
+            
+            // Get local models
+            const localModels = [];
+            try {
+                const modelFiles = await llama.listModels({ modelDir });
+                for (const file of modelFiles) {
+                    try {
+                        const stats = await fs.stat(file.path);
+                        localModels.push({
+                            name: file.name,
+                            path: file.path,
+                            size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
+                            lastModified: stats.mtime
+                        });
+                    } catch (error) {
+                        Logger.warn(`Could not get stats for model ${file.name}:`, error);
+                    }
+                }
+            } catch (error) {
+                Logger.warn('Could not list local models:', error);
+            }
+
+            // Get top remote models
+            let remoteModels: HFModel[] = [];
+            try {
+                remoteModels = await this.searchModels('', 10); // Get top 10 most downloaded models
+            } catch (error) {
+                Logger.warn('Could not fetch remote models:', error);
+            }
+
+            return {
+                localModels,
+                remoteModels
+            };
         } catch (error) {
             await this.logger.logCall('getAvailableModels', {}, null, error);
             throw error;
