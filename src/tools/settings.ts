@@ -283,7 +283,7 @@ export class Settings {
     @ClientSettings({
         label: 'Models',
         category: 'LLM Settings',
-        type: 'string',
+        type: 'section',
         description: 'Model configurations for different tasks'
     })
     models: LLMModels = new LLMModels();
