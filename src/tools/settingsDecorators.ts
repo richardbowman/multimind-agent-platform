@@ -18,14 +18,26 @@ export function ClientSettings(metadata: {
     };
 }
 
-export function getClientSettingsMetadata(target: any): Record<string, any> {
-    const properties = Object.getOwnPropertyNames(target);
+export function getClientSettingsMetadata(target: any, prefix: string = ''): Record<string, any> {
     const metadata: Record<string, any> = {};
     
+    // Get own properties
+    const properties = Object.getOwnPropertyNames(target);
+    
     for (const property of properties) {
+        const propertyPath = prefix ? `${prefix}.${property}` : property;
+        
+        // Get metadata for current property
         const meta = Reflect.getMetadata('clientSettings', target, property);
         if (meta) {
-            metadata[property] = meta;
+            metadata[propertyPath] = meta;
+        }
+        
+        // Recursively get metadata for object properties
+        const value = target[property];
+        if (value && typeof value === 'object' && !Array.isArray(value)) {
+            const nestedMetadata = getClientSettingsMetadata(value, propertyPath);
+            Object.assign(metadata, nestedMetadata);
         }
     }
     
