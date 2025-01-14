@@ -248,7 +248,7 @@ interface AgentDefinition {
     autoRespondChannelIds?: String[];
 }
 
-export class Settings {
+export class ProvidersConfig {
     @ClientSettings({
         label: 'Chat Provider',
         category: 'LLM Settings',
@@ -256,7 +256,7 @@ export class Settings {
         options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp'],
         defaultValue: 'lmstudio'
     })
-    chatProvider: string = 'lmstudio';
+    chat: string = 'lmstudio';
 
     @ClientSettings({
         label: 'Embeddings Provider',
@@ -265,7 +265,16 @@ export class Settings {
         options: ['openai', 'cohere', 'huggingface', 'local', 'llama_cpp'],
         defaultValue: 'llama_cpp'
     })
-    embeddingsProvider: string = 'llama_cpp';
+    embeddings: string = 'llama_cpp';
+}
+
+export class Settings {
+    @ClientSettings({
+        label: 'Providers',
+        category: 'LLM Settings',
+        type: 'section'
+    })
+    providers: ProvidersConfig = new ProvidersConfig();
 
     @ClientSettings({
         label: 'Search Provider',
