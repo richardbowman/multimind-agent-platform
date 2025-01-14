@@ -80,6 +80,12 @@ export class LLMProviders {
 }
 
 export class LLMModels {
+    constructor() {
+        this.conversation = new ModelByProvider();
+        this.reasoning = new ModelByProvider();
+        this.document = new ModelByProvider();
+    }
+
     @ClientSettings({
         label: 'Conversation Models',
         category: 'LLM Settings',
@@ -116,6 +122,10 @@ export class APIConfig {
 }
 
 export class ProviderConfig {
+    constructor() {
+        this.api = new APIConfig();
+    }
+
     api!: APIConfig;
 
     @ClientSettings({
@@ -138,6 +148,13 @@ interface AgentDefinition {
 }
 
 export class Settings {
+    constructor() {
+        this.models = new LLMModels();
+        this.anthropic = new ProviderConfig();
+        this.openrouter = new ProviderConfig();
+        this.openai = new ProviderConfig();
+    }
+
     @ClientSettings({
         label: 'UI Zoom Level',
         category: 'UI Settings',
@@ -168,11 +185,7 @@ export class Settings {
         type: 'string',
         description: 'Model configurations for different tasks'
     })
-    models!: {
-        conversation: ModelByProvider,
-        reasoning: ModelByProvider,
-        document: ModelByProvider
-    };
+    models!: LLMModels;
 
     @ClientSettings({
         label: 'Embedding Model',
