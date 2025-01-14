@@ -47,11 +47,12 @@ ${previousResult ? `Use these research findings to inform the outline:\n${JSON.s
 
         return {
             type: "outline",
-            finished: true,
+            finished: false,
+            needsUserInput: true,
             response: {
-                message: `**Content Outline**\n\n# ${result.title}\n\n${result.sections.map(s => 
+                message: `**Draft Content Outline**\n\n# ${result.title}\n\n${result.sections.map(s => 
                     `## ${s.heading}\n${s.description}\n\nKey Points:\n${s.keyPoints.map(p => `- ${p}`).join('\n')}`
-                ).join('\n\n')}\n\n**Strategy:**\n${result.strategy}`,
+                ).join('\n\n')}\n\n**Strategy:**\n${result.strategy}\n\nPlease review this outline and provide feedback or approval to proceed.`,
                 data: result
             }
         };
