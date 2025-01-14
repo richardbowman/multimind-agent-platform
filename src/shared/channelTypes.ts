@@ -7,3 +7,9 @@ export interface CreateChannelParams {
     projectId?: string;
     goalTemplate?: string;
 }
+
+export interface ChannelData {
+    id: string;
+    name: string;
+    members?: string[];
+}
