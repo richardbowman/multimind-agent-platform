@@ -32,8 +32,13 @@ module.exports = {
     extensions: ['.tsx', '.ts', '.js'],
     alias: {
       '@': path.resolve(__dirname, 'src'),
-      '@web': path.resolve(__dirname, 'src/web')
-    }
+      '@web': path.resolve(__dirname, 'src/web'),
+      'src': path.resolve(__dirname, 'src')
+    },
+    modules: [
+      path.resolve(__dirname, 'src'),
+      'node_modules'
+    ]
   },
   plugins: [
     new HtmlWebpackPlugin({

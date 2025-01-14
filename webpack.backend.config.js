@@ -26,8 +26,13 @@ module.exports = {
   resolve: {
     extensions: ['.ts', '.js'],
     alias: {
-      '@': path.resolve(__dirname, 'src')
-    }
+      '@': path.resolve(__dirname, 'src'),
+      'src': path.resolve(__dirname, 'src')
+    },
+    modules: [
+      path.resolve(__dirname, 'src'),
+      'node_modules'
+    ]
   },
   externals: [nodeExternals()], // Exclude node_modules
   externalsPresets: {
