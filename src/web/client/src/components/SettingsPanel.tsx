@@ -20,7 +20,7 @@ import {
   Toolbar
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useWebSocket } from '../contexts/DataContext';
+import { useIPCService, useWebSocket } from '../contexts/DataContext';
 import { Settings } from '../../../../tools/settings';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { DrawerPage } from './GlobalArtifactViewer';
@@ -30,6 +30,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const [validationMessage, setValidationMessage] = useState<string>('');
     const [successMessage, setSuccessMessage] = useState<string>('');
     const { getSettings, updateSettings } = useWebSocket();
+    const ipcService = useIPCService();
     const metadata = getClientSettingsMetadata(new Settings());
 
     useEffect(() => {
@@ -52,7 +53,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         const fetchModels = async () => {
             if (settings.providers?.chat) {
                 try {
-                    const models = await rpc.getAvailableModels(settings.providers.chat);
+                    const models = await ipcService.getRPC().getAvailableModels(settings.providers.chat);
                     setAvailableModels(prev => ({
                         ...prev,
                         [settings.providers!.chat]: models
@@ -93,7 +94,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         // If this is a provider change, fetch new models
         if (key === 'providers.chat') {
             try {
-                const models = await rpc.getAvailableModels(value as string);
+                const models = await ipcService.getRPC().getAvailableModels(value as string);
                 setAvailableModels(prev => ({
                     ...prev,
                     [value as string]: models
