@@ -206,8 +206,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     deleteArtifact,
     addArtifactToChannel, 
     removeArtifactFromChannel,
-    addArtifactToChannel,
-    removeArtifactFromChannel,
     currentChannelId,
     setCurrentChannelId,
     currentThreadId,
