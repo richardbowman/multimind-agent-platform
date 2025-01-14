@@ -139,6 +139,11 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         sensitive?: boolean;
         required?: boolean;
     }) => {
+        // Skip rendering for section type fields
+        if (metadata.type === 'section') {
+            return null;
+        }
+
         const value = getNestedValue(settings, metadata.key) ?? metadata.defaultValue ?? '';
 
         switch (metadata.type) {
