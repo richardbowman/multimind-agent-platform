@@ -7,12 +7,10 @@ import { BaseRPCService } from '../shared/BaseRPCService';
 import { ClientTask } from '../shared/types';
 import { CreateChannelParams } from '../../../../shared/channelTypes';
 
-// Create service instance based on environment
-export const ipcService: BaseRPCService = (window as any).electron 
-    ? new ElectronIPCService(contextMethods)
-    : new WebSocketService();
-
 const DataContext = createContext<DataContextMethods | null>(null);
+
+// We'll initialize this after creating the context methods
+let ipcService: BaseRPCService;
 
 export interface DataContextMethods {
   messages: ClientMessage[];
@@ -258,6 +256,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setCurrentChannelId,
     setCurrentThreadId
   ]);
+
+  // Initialize the IPC service with the context methods
+  if (!ipcService) {
+    ipcService = (window as any).electron 
+      ? new ElectronIPCService(contextMethods)
+      : new WebSocketService();
+  }
 
   return (
     <DataContext.Provider value={contextMethods}>
