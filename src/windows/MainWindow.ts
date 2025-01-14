@@ -9,7 +9,7 @@ export class MainWindow {
             width: 1200,
             height: 800,
             webPreferences: {
-                preload: path.join(__dirname, '../preload.js'),
+                preload: path.join(__dirname, './preload.js'),
                 contextIsolation: true,
                 nodeIntegration: false
             },
@@ -20,10 +20,10 @@ export class MainWindow {
 
     async show() {
         if (process.env.NODE_ENV === 'development') {
-            await this.window.loadFile(path.join(__dirname, '../web/index.html'));
+            await this.window.loadFile(path.join(__dirname, './web/index.html'));
             this.window.webContents.openDevTools();
         } else {
-            await this.window.loadFile(path.join(__dirname, '../web/index.html'));
+            await this.window.loadFile(path.join(__dirname, './web/index.html'));
         }
         this.window.show();
     }

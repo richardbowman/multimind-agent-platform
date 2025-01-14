@@ -18,14 +18,14 @@ export class SplashWindow {
             webPreferences: {
                 contextIsolation: true,
                 nodeIntegration: false,
-                preload: path.join(__dirname, '../preload.js'),
+                preload: path.join(__dirname, './preload.js'),
                 backgroundThrottling: false // Prevent animations from stuttering
             }
         });
     }
 
     async show() {
-        await this.window.loadFile(path.join(__dirname, '../web/splash.html'));
+        await this.window.loadFile(path.join(__dirname, './web/splash.html'));
         this.window.show();
     }
 
