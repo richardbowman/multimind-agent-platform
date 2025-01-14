@@ -7,10 +7,12 @@ import { createClientMethods } from './ClientMethods';
 export class ElectronIPCService extends BaseRPCService {
     status: { configured: boolean; ready: boolean; message?: string; };
     connected: boolean;
+    private contextMethods: DataContextMethods;
 
-    constructor() {
+    constructor(contextMethods: DataContextMethods) {
         super();
         this.connected = false;
+        this.contextMethods = contextMethods;
         if (!(window as any).electron) {
             throw new Error('Electron IPC not available');
         }
@@ -22,7 +24,7 @@ export class ElectronIPCService extends BaseRPCService {
         const safeHandlers = createSafeRPCHandlers();
         this.rpc = createBirpc<ServerMethods, ClientMethods>(
             {
-                ...createClientMethods(contextMethods)
+                ...createClientMethods(this.contextMethods)
             },
             {
                 post: (data) => {

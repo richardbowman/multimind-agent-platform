@@ -9,7 +9,7 @@ import { CreateChannelParams } from '../../../../shared/channelTypes';
 
 // Create service instance based on environment
 export const ipcService: BaseRPCService = (window as any).electron 
-    ? new ElectronIPCService()
+    ? new ElectronIPCService(contextMethods)
     : new WebSocketService();
 
 const DataContext = createContext<DataContextMethods | null>(null);
@@ -190,7 +190,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, []);
   
-  const value = useMemo(() => ({
+  const contextMethods = useMemo(() => ({
     messages, 
     channels, 
     tasks,
@@ -260,7 +260,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ]);
 
   return (
-    <DataContext.Provider value={value}>
+    <DataContext.Provider value={contextMethods}>
       {children}
     </DataContext.Provider>
   );
