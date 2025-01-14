@@ -21,7 +21,8 @@ import {
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useWebSocket } from '../contexts/DataContext';
-import { Settings, ConfigMetadata } from '../types/settings';
+import { Settings } from '../../tools/settingsManager';
+import { getClientSettingsMetadata } from '../../tools/settingsDecorators';
 import { DrawerPage } from './GlobalArtifactViewer';
 
 export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
@@ -125,7 +126,17 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         return path.split('.').reduce((current, part) => current?.[part], obj);
     };
 
-    const renderInput = (metadata: ConfigMetadata) => {
+    const renderInput = (metadata: {
+        key: string;
+        label: string;
+        type: string;
+        category: string;
+        description?: string;
+        options?: string[];
+        defaultValue?: any;
+        sensitive?: boolean;
+        required?: boolean;
+    }) => {
         const value = getNestedValue(settings, metadata.key) ?? metadata.defaultValue ?? '';
 
         switch (metadata.type) {
@@ -171,14 +182,30 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         }
     };
 
-    // Group settings by category
-    const categories = CONFIG_METADATA.reduce((acc, metadata) => {
-        if (!acc[metadata.category]) {
-            acc[metadata.category] = [];
+    // Get metadata using reflection
+    const metadata = getClientSettingsMetadata(settings);
+    
+    // Convert to array and group by category
+    const categories = Object.entries(metadata).reduce((acc, [key, meta]) => {
+        if (!acc[meta.category]) {
+            acc[meta.category] = [];
         }
-        acc[metadata.category].push(metadata);
+        acc[meta.category].push({
+            key,
+            ...meta
+        });
         return acc;
-    }, {} as Record<string, ConfigMetadata[]>);
+    }, {} as Record<string, Array<{
+        key: string;
+        label: string;
+        type: string;
+        category: string;
+        description?: string;
+        options?: string[];
+        defaultValue?: any;
+        sensitive?: boolean;
+        required?: boolean;
+    }>>);
 
     return (
         <Box sx={{ 
