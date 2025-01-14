@@ -87,6 +87,31 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                                 overflow: 'hidden',
                                 textOverflow: 'ellipsis'
                             }}
+                            secondary={
+                                <React.Fragment>
+                                    <Typography 
+                                        variant="caption" 
+                                        component="span"
+                                        sx={{ 
+                                            display: 'block',
+                                            color: task.inProgress ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)'
+                                        }}
+                                    >
+                                        {task.assignee && `Assigned to: ${task.assignee}`}
+                                    </Typography>
+                                    <Typography 
+                                        variant="caption" 
+                                        component="span"
+                                        sx={{ 
+                                            display: 'block',
+                                            color: task.inProgress ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)'
+                                        }}
+                                    >
+                                        Type: {task.type}
+                                        {task.props?.stepType && ` (${task.props.stepType})`}
+                                    </Typography>
+                                </React.Fragment>
+                            }
                         />
                     </ListItem>
                 ))}
@@ -114,11 +139,13 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                             <Typography variant="body1">
                                 <strong>Last Updated:</strong> {new Date(selectedTask.updatedAt).toLocaleString()}
                             </Typography>
-                            {selectedTask.assignee && (
-                                <Typography variant="body1">
-                                    <strong>Assignee:</strong> {selectedTask.assignee}
-                                </Typography>
-                            )}
+                            <Typography variant="body1">
+                                <strong>Type:</strong> {selectedTask.type}
+                                {selectedTask.props?.stepType && ` (${selectedTask.props.stepType})`}
+                            </Typography>
+                            <Typography variant="body1">
+                                <strong>Assignee:</strong> {selectedTask.assignee || 'Unassigned'}
+                            </Typography>
                             {selectedTask.dependsOn && (
                                 <Typography variant="body1">
                                     <strong>Depends On:</strong> {selectedTask.dependsOn}
