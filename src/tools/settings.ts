@@ -190,19 +190,13 @@ export class LLMProviders {
 }
 
 export class LLMModels {
-    constructor() {
-        this.conversation = new ModelByProvider();
-        this.reasoning = new ModelByProvider();
-        this.document = new ModelByProvider();
-    }
-
     @ClientSettings({
         label: 'Conversation Models',
         category: 'LLM Settings',
         type: 'section',
         description: 'Models for conversation tasks'
     })
-    conversation!: ModelByProvider;
+    conversation: ModelByProvider = new ModelByProvider();
 
     @ClientSettings({
         label: 'Reasoning Models',
@@ -210,7 +204,7 @@ export class LLMModels {
         type: 'section',
         description: 'Models for reasoning tasks'
     })
-    reasoning!: ModelByProvider;
+    reasoning: ModelByProvider = new ModelByProvider();
 
     @ClientSettings({
         label: 'Document Models',
@@ -218,7 +212,7 @@ export class LLMModels {
         type: 'section',
         description: 'Models for document processing tasks'
     })
-    document!: ModelByProvider;
+    document: ModelByProvider = new ModelByProvider();
 }
 
 export class APIConfig {
@@ -232,11 +226,7 @@ export class APIConfig {
 }
 
 export class ProviderConfig {
-    constructor() {
-        this.api = new APIConfig();
-    }
-
-    api!: APIConfig;
+    api: APIConfig = new APIConfig();
 
     @ClientSettings({
         label: 'Model',
@@ -258,24 +248,13 @@ interface AgentDefinition {
 }
 
 export class Settings {
-    constructor() {
-        this.models = new LLMModels();
-        this.embeddingsModels = new EmbeddingsModelByProvider();
-        this.anthropic = new ProviderConfig();
-        this.openrouter = new ProviderConfig();
-        this.openai = new ProviderConfig();
-        this.duckduckgo = new DuckDuckGoConfig();
-        this.brave = new BraveConfig();
-        this.bedrock = new BedrockConfig();
-    }
-
     @ClientSettings({
         label: 'Embeddings Models',
         category: 'Embeddings',
         type: 'string',
         description: 'Model configurations for embeddings'
     })
-    embeddingsModels!: EmbeddingsModelByProvider;
+    embeddingsModels: EmbeddingsModelByProvider = new EmbeddingsModelByProvider();
 
     @ClientSettings({
         label: 'UI Zoom Level',
@@ -307,7 +286,7 @@ export class Settings {
         type: 'string',
         description: 'Model configurations for different tasks'
     })
-    models!: LLMModels;
+    models: LLMModels = new LLMModels();
 
     @ClientSettings({
         label: 'Embedding Model',
@@ -349,7 +328,7 @@ export class Settings {
         type: 'string',
         sensitive: true
     })
-    anthropic!: ProviderConfig;
+    anthropic: ProviderConfig = new ProviderConfig();
 
     @ClientSettings({
         label: 'OpenAI Configuration',
@@ -357,7 +336,7 @@ export class Settings {
         type: 'string',
         sensitive: true
     })
-    openai!: ProviderConfig;
+    openai: ProviderConfig = new ProviderConfig();
 
     @ClientSettings({
         label: 'OpenRouter Configuration',
@@ -365,7 +344,7 @@ export class Settings {
         type: 'string',
         sensitive: true
     })
-    openrouter!: ProviderConfig;
+    openrouter: ProviderConfig = new ProviderConfig();
 
     // Rate Limiting
     @ClientSettings({
@@ -472,7 +451,7 @@ export class Settings {
         category: 'Search Settings',
         type: 'string'
     })
-    duckduckgo!: DuckDuckGoConfig;
+    duckduckgo: DuckDuckGoConfig = new DuckDuckGoConfig();
 
 
     @ClientSettings({
@@ -480,7 +459,7 @@ export class Settings {
         category: 'Search Settings',
         type: 'string'
     })
-    brave!: BraveConfig;
+    brave: BraveConfig = new BraveConfig();
 
     // Channel configuration
     defaultChannels!: Record<string, string>;
@@ -495,5 +474,5 @@ export class Settings {
         category: 'Rate Limiting',
         type: 'string'
     })
-    bedrock!: BedrockConfig;
+    bedrock: BedrockConfig = new BedrockConfig();
 }
