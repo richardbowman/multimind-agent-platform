@@ -74,7 +74,7 @@ export class EmbeddingsModelByProvider {
         description: 'Model identifier for OpenAI embeddings',
         defaultValue: 'text-embedding-3-small'
     })
-    openai!: string;
+    openai: string = 'text-embedding-3-small';
 
     @ClientSettings({
         label: 'Cohere Embeddings Model',
@@ -83,7 +83,7 @@ export class EmbeddingsModelByProvider {
         description: 'Model identifier for Cohere embeddings',
         defaultValue: 'embed-english-v3.0'
     })
-    cohere!: string;
+    cohere: string = 'embed-english-v3.0';
 
     @ClientSettings({
         label: 'HuggingFace Embeddings Model',
@@ -91,7 +91,7 @@ export class EmbeddingsModelByProvider {
         type: 'string',
         description: 'Model identifier for HuggingFace embeddings'
     })
-    huggingface!: string;
+    huggingface: string = '';
 
     @ClientSettings({
         label: 'Local Embeddings Model',
@@ -99,7 +99,7 @@ export class EmbeddingsModelByProvider {
         type: 'string',
         description: 'Model path for local embeddings'
     })
-    local!: string;
+    local: string = '';
 
     @ClientSettings({
         label: 'Llama.cpp Embeddings Model',
@@ -107,7 +107,7 @@ export class EmbeddingsModelByProvider {
         type: 'string',
         description: 'Model path for Llama.cpp embeddings'
     })
-    llama_cpp!: string;
+    llama_cpp: string = '';
 }
 
 export class ModelByProvider {
