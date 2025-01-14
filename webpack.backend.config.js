@@ -57,13 +57,17 @@ module.exports = {
     modules: [
       path.resolve(__dirname, 'src'),
       'node_modules'
-    ]
+    ],
+    // Add this to handle dynamic imports correctly
+    fullySpecified: false
   },
   externals: [nodeExternals({
     allowlist: [
       /^@agents\//,
       /^@executors\//,
-      /^@tools\//
+      /^@tools\//,
+      // Add this to allow importing from src directory
+      /^src\//
     ]
   })],
   externalsPresets: {

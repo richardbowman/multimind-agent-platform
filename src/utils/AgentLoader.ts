@@ -7,6 +7,7 @@ import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ILLMService } from 'src/llm/ILLMService';
 import { SettingsManager } from '../tools/settingsManager';
+import path from 'path';
 
 
 
@@ -35,8 +36,9 @@ export class AgentLoader {
                 }
 
                 try {
-                    // Dynamically import the agent class
-                    const module = await import(definition.sourcePath);
+                    // Dynamically import the agent class using absolute path
+                    const modulePath = path.resolve(__dirname, '..', definition.sourcePath);
+                    const module = await import(modulePath);
                     const AgentClass : Agent = module[definition.className];
 
                     if (!AgentClass) {
