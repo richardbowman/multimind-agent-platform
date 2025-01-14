@@ -46,8 +46,10 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     }, [getSettings]);
 
     const handleChange = (key: string, value: string | number) => {
-        const metadata = CONFIG_METADATA.find(m => m.key === key);
-        const processedValue = metadata?.type === 'number' ? Number(value) : value;
+        // Get metadata using reflection
+        const metadata = getClientSettingsMetadata(settings);
+        const fieldMeta = metadata[key];
+        const processedValue = fieldMeta?.type === 'number' ? Number(value) : value;
         
         // Handle nested keys (e.g. "providers.chat")
         const parts = key.split('.');
