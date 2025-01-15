@@ -84,6 +84,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                             opacity: task.complete ? 0.7 : 1
                         }}
                         onClick={() => {
+                            alert('open');
                             setSelectedTask(task);
                             setDialogOpen(true);
                         }}
