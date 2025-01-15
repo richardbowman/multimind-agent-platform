@@ -42,7 +42,8 @@ export interface ServerMethods {
     deleteChannel(channelId: string): Promise<void>;
 
     getAvailableModels(provider: string): Promise<ModelInfo[]>;
-    getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]>
+    getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]>;
+    rebuildVectorDB(): Promise<void>;
 }
 
 export interface ClientMethods {

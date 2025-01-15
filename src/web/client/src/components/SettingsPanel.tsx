@@ -479,9 +479,26 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 
                 <Box sx={{ 
                     display: 'flex', 
-                    justifyContent: 'flex-end', 
+                    justifyContent: 'space-between', 
                     mt: 2 
                 }}>
+                    <Button
+                        variant="outlined"
+                        color="warning"
+                        onClick={async () => {
+                            if (window.confirm('Are you sure you want to rebuild the VectorDB? This may take some time.')) {
+                                try {
+                                    await ipcService.getRPC().rebuildVectorDB();
+                                    setSuccessMessage('VectorDB rebuild started successfully');
+                                } catch (error) {
+                                    setValidationMessage(`Failed to rebuild VectorDB: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                                }
+                            }
+                        }}
+                        sx={{ mr: 2 }}
+                    >
+                        Rebuild VectorDB
+                    </Button>
                     <Button
                         variant="contained"
                         onClick={handleSave}

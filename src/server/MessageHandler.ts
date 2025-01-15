@@ -50,6 +50,20 @@ export class MessageHandler implements ServerMethods {
         const service = LLMServiceFactory.createServiceByName(provider, this.services.settingsManager.getSettings());
         return service.getAvailableEmbedders();
     }
+
+    async rebuildVectorDB(): Promise<void> {
+        Logger.info('Rebuilding VectorDB...');
+        // Get all collections
+        const collections = await this.services.vectorDB.listCollections();
+        
+        // Reindex each collection
+        for (const collection of collections) {
+            Logger.info(`Reindexing collection: ${collection.name}`);
+            await this.services.vectorDB.reindexCollection(collection.name);
+        }
+        
+        Logger.info('VectorDB rebuild complete');
+    }
     
     async updateSettings(settings: Partial<Settings>): Promise<Settings> {
         Logger.info('Update settings called');
