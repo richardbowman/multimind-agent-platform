@@ -82,6 +82,14 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
         }
     }
 
+    private getLlamaOptions(): { gpu: { type: false | "auto" } } {
+        return {
+            gpu: {
+                type: this.settings.models.conversation.llama_cpp_execution_mode === 'CPU-only' ? false : "auto"
+            }
+        };
+    }
+
     private async downloadModel(owner: string, repo: string, modelName: string, modelDir: string): Promise<string> {
         try {
             // Create repo-specific directory
@@ -188,7 +196,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
     async initializeModel(modelId: string, modelType: 'chat' | 'embedding'): Promise<void> {
         try {
             if (!this.llama) {
-                this.llama = await loadLlama();
+                this.llama = await loadLlama(this.getLlamaOptions());
             }
             
             // Create models directory if it doesn't exist
