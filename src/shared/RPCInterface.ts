@@ -44,6 +44,7 @@ export interface ServerMethods {
     getAvailableModels(provider: string): Promise<ModelInfo[]>;
     getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]>;
     rebuildVectorDB(): Promise<void>;
+    getProject(projectId: string): Promise<any>;
 }
 
 export interface ClientMethods {
@@ -51,4 +52,5 @@ export interface ClientMethods {
     onLogUpdate(update: LogParam): void;
     onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }): void;
     onTaskUpdate(task: ClientTask): void;
+    onProjectUpdate(project: any): void;
 }

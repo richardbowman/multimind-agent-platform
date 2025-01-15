@@ -51,6 +51,35 @@ export class ServerRPCHandler implements ServerMethods {
         return service.getAvailableEmbedders();
     }
 
+    async getProject(projectId: string): Promise<any> {
+        const project = this.services.taskManager.getProject(projectId);
+        if (!project) {
+            throw new Error(`Project ${projectId} not found`);
+        }
+        
+        // Convert to client-friendly format
+        return {
+            id: project.id,
+            name: project.name,
+            props: project.props,
+            tasks: Object.values(project.tasks).map(task => ({
+                id: task.id,
+                description: task.description,
+                projectId: task.projectId,
+                type: task.type,
+                assignee: task.assignee,
+                inProgress: task.inProgress || false,
+                complete: task.complete || false,
+                threadId: task.props?.threadId || null,
+                createdAt: task.props?.createdAt,
+                updatedAt: task.props?.updatedAt,
+                dependsOn: task.dependsOn,
+                props: task.props
+            })),
+            metadata: project.metadata
+        };
+    }
+
     async rebuildVectorDB(): Promise<void> {
         Logger.info('Rebuilding VectorDB...');
         // Get all collections
@@ -83,6 +112,31 @@ export class ServerRPCHandler implements ServerMethods {
     setupClientEvents(rpc: ClientMethods) {
         // Set up task update notifications
         if (this.services?.taskManager) {
+            // Set up project update notifications
+            this.services.taskManager.on('projectUpdated', ({project}) => {
+                rpc.onProjectUpdate({
+                    id: project.id,
+                    name: project.name,
+                    props: project.props,
+                    tasks: Object.values(project.tasks).map(task => ({
+                        id: task.id,
+                        description: task.description,
+                        projectId: task.projectId,
+                        type: task.type,
+                        assignee: task.assignee,
+                        inProgress: task.inProgress || false,
+                        complete: task.complete || false,
+                        threadId: task.props?.threadId || null,
+                        createdAt: task.props?.createdAt,
+                        updatedAt: task.props?.updatedAt,
+                        dependsOn: task.dependsOn,
+                        props: task.props
+                    })),
+                    metadata: project.metadata
+                });
+            });
+
+            // Set up task update notifications
             this.services.taskManager.on('taskUpdated', ({task}) => {
                 rpc.onTaskUpdate({
                     id: task.id,
