@@ -68,13 +68,18 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
         super('llama-cpp');
         
         const shutdown = async () => {
-            if (this.llama) {
-                await this.llama.dispose();
-            }
+            await this.shutdown();
         }
         
         process.on('SIGTERM', shutdown);
         process.on('SIGINT', shutdown);
+    }
+
+    async shutdown(): Promise<void> {
+        if (this.llama) {
+            await this.llama.dispose();
+            this.llama = undefined;
+        }
     }
 
     private async downloadModel(owner: string, repo: string, modelName: string, modelDir: string): Promise<string> {
@@ -433,16 +438,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             let grammar;
             if (params.parseJSON && params.opts?.tools?.[0]?.parameters) {
                 // Create grammar from JSON schema if structured output is requested
-                grammar = await this.llama.createGrammarForJsonSchema({
-                    type: "object",
-                    properties: {
-                        ...params.opts.tools[0].parameters,
-                        message: {
-                            type: "string"
-                        }
-                    },
-                    required: ["message"]
-                });
+                grammar = await this.llama.createGrammarForJsonSchema(params.opts.tools[0].parameters);
             }
 
             const completion = await this.session.prompt(prompt, {
