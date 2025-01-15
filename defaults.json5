@@ -161,7 +161,7 @@ My goal is to help you define, document and refine product specifications.",
      "DataGatherer": {
        "className": "ConfigurableAgent",
        "sourcePath": "configurableAgent.ts",
-       "userId": "d9f8d7e6-5b4a-3c2b-1e0f-9d8c7b6a5e4g",
+       "userId": "data-gather",
        "handle": "@data",
        "description": "Specializes in gathering and processing data from web sources",
        "enabled": true,

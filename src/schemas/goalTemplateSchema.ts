@@ -74,9 +74,14 @@ export const GoalTemplates: GoalTemplate[] = [
         description: 'Template for running a marketing campaign',
         supportingAgents: [
             '66025743-45bc-4625-a27f-52aa09dde128', // ContentWriter
-            '9d039c4e-f99d-4fb7-a160-452ac261569c' // ContentManager
+            '9d039c4e-f99d-4fb7-a160-452ac261569c', // ContentManager
+            'data-gather' //data gatherer
         ],
         initialTasks: [
+            {
+                description: 'Share existing website information with the agents',
+                type: 'planning',
+            },
             {
                 description: 'Define campaign goals',
                 type: 'planning',
