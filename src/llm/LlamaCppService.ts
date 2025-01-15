@@ -1,7 +1,7 @@
 import { IEmbeddingFunction } from "chromadb";
 import { BaseLLMService } from "./BaseLLMService";
 import { type LlamaChatSession, type Llama, type LlamaContext, type LlamaModel, type LlamaOptions, LlamaChatSessionOptions } from "node-llama-cpp";
-import { IEmbeddingService, ILLMService, LLMRequestParams, ModelRole } from "./ILLMService";
+import { EmbedderModelInfo, IEmbeddingService, ILLMService, LLMRequestParams, ModelRole } from "./ILLMService";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 import Logger from "src/helpers/logger";
@@ -103,6 +103,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                                 let bytesDownloaded = 0;
                                 redirectResponse.on('data', (chunk) => {
                                     bytesDownloaded += chunk.length;
+                                    Logger.progress(`Downloading ${bytesDownloaded} bytes downloaded of ${modelName}`)
                                 });
 
                                 pipeline(redirectResponse, fileStream)
