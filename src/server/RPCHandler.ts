@@ -54,6 +54,24 @@ export class ServerRPCHandler implements ServerMethods {
         return service.getAvailableEmbedders();
     }
 
+    async markTaskComplete(taskId: string, complete: boolean): Promise<ClientTask> {
+        const task = await this.services.taskManager.completeTask(taskId);
+        return {
+            id: task.id,
+            projectId: task.projectId,
+            description: task.description,
+            type: task.type,
+            assignee: task.assignee,
+            inProgress: task.inProgress || false,
+            complete: task.complete || false,
+            threadId: task.props?.threadId || null,
+            createdAt: task.props?.createdAt,
+            updatedAt: task.props?.updatedAt,
+            dependsOn: task.dependsOn,
+            props: task.props
+        };
+    }
+
     async getProject(projectId: string): Promise<ClientProject> {
         const project = this.services.taskManager.getProject(projectId);
         if (!project) {

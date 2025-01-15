@@ -13,6 +13,7 @@ import {
     ListItemText
 } from '@mui/material';
 import { useWebSocket } from '../contexts/DataContext';
+import { LoadingButton } from '@mui/lab';
 
 interface TaskDialogProps {
     open: boolean;
@@ -142,6 +143,26 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 </Box>
             </DialogContent>
             <DialogActions>
+                {selectedTask && (
+                    <LoadingButton
+                        variant="contained"
+                        color={selectedTask.complete ? "secondary" : "primary"}
+                        onClick={async () => {
+                            try {
+                                await markTaskComplete(selectedTask.id, !selectedTask.complete);
+                                setSelectedTask({
+                                    ...selectedTask,
+                                    complete: !selectedTask.complete,
+                                    inProgress: selectedTask.complete ? false : selectedTask.inProgress
+                                });
+                            } catch (error) {
+                                console.error('Failed to update task:', error);
+                            }
+                        }}
+                    >
+                        {selectedTask.complete ? 'Mark Incomplete' : 'Mark Complete'}
+                    </LoadingButton>
+                )}
                 <Button onClick={onClose}>Close</Button>
             </DialogActions>
         </Dialog>

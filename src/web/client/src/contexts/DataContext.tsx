@@ -49,7 +49,8 @@ export interface DataContextMethods {
   getSettings: () => Promise<any>;
   updateSettings: (settings: any) => Promise<any>;
   createChannel: (params: CreateChannelParams) => Promise<string>;
-  setTasks: React.Dispatch<React.SetStateAction<ClientTask[]>>
+  setTasks: React.Dispatch<React.SetStateAction<ClientTask[]>>;
+  markTaskComplete: (taskId: string, complete: boolean) => Promise<void>;
 }
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -235,7 +236,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         throw error;
       }
     },
-    createChannel: (params: CreateChannelParams) => ipcService.getRPC().createChannel(params)
+    createChannel: (params: CreateChannelParams) => ipcService.getRPC().createChannel(params),
+    markTaskComplete: async (taskId: string, complete: boolean) => {
+        const updatedTask = await ipcService.getRPC().markTaskComplete(taskId, complete);
+        setTasks(prev => prev.map(t => 
+            t.id === updatedTask.id ? updatedTask : t
+        ));
+    }
   }), [
     messages, 
     channels, 

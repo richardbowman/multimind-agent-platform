@@ -47,6 +47,7 @@ export interface ServerMethods {
     getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]>;
     rebuildVectorDB(): Promise<void>;
     getProject(projectId: string): Promise<ClientProject>;
+    markTaskComplete(taskId: string, complete: boolean): Promise<ClientTask>;
 }
 
 export interface ClientMethods {
