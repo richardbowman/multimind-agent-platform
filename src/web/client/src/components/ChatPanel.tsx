@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState, useCallback } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { 
     Box, 
     Typography, 
@@ -46,6 +46,39 @@ interface ChatPanelProps {
 export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen }) => {
     const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useWebSocket();
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
+    const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
+    
+    // Automatically expand the last 2 messages
+    const visibleMessages = useMemo(() => {
+        const filtered = messages
+            .filter(message => message.channel_id === currentChannelId)
+            .filter(message => {
+                if (currentThreadId) {
+                    return message.id === currentThreadId || 
+                           message.props?.['root-id'] === currentThreadId;
+                } else {
+                    return !message.props?.['root-id'];
+                }
+            });
+            
+        // Always expand the last 2 messages
+        const lastTwoIds = filtered.slice(-2).map(m => m.id);
+        setExpandedMessages(prev => new Set([...prev, ...lastTwoIds]));
+        
+        return filtered;
+    }, [messages, currentChannelId, currentThreadId]);
+
+    const toggleMessageExpansion = useCallback((messageId: string) => {
+        setExpandedMessages(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(messageId)) {
+                newSet.delete(messageId);
+            } else {
+                newSet.add(messageId);
+            }
+            return newSet;
+        });
+    }, []);
     const [metadataDialogOpen, setMetadataDialogOpen] = useState(false);
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [taskDialogOpen, setTaskDialogOpen] = useState(false);
@@ -373,7 +406,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                     }}>
                         Loading messages...
                     </Typography>
-                ) : messages.length === 0 ? (
+                ) : visibleMessages.length === 0 ? (
                     <Typography variant="body1" sx={{ 
                         textAlign: 'center',
                         color: 'text.secondary',
@@ -383,17 +416,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         No messages yet
                     </Typography>
                 ) : (
-                (messages||[])
-                    .filter(message => message.channel_id === currentChannelId)
-                    .filter(message => {
-                        if (currentThreadId) {
-                            return message.id === currentThreadId || 
-                                   message.props?.['root-id'] === currentThreadId;
-                        } else {
-                            return !message.props?.['root-id'];
-                        }
-                    })
-                    .map((message) => (
+                visibleMessages.map((message, index) => (
                         <Paper key={message.id} sx={{ 
                             mb: 2,
                             p: 2,
@@ -424,7 +447,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                     {new Date(message.create_at).toLocaleString()}
                                 </Typography>
                             </Box>
-                            <Box>
+                            <Box sx={{ 
+                                position: 'relative',
+                                overflow: 'hidden',
+                                maxHeight: expandedMessages.has(message.id) ? 'none' : '4.5em',
+                                '&:after': expandedMessages.has(message.id) ? {} : {
+                                    content: '""',
+                                    position: 'absolute',
+                                    bottom: 0,
+                                    left: 0,
+                                    right: 0,
+                                    height: '1.5em',
+                                    background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)'
+                                }
+                            }}>
                                 <ReactMarkdown 
                                     remarkPlugins={[remarkGfm]}
                                     components={{
@@ -433,6 +469,39 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                 >
                                     {message.message}
                                 </ReactMarkdown>
+                                {!expandedMessages.has(message.id) && (
+                                    <Button
+                                        size="small"
+                                        onClick={() => toggleMessageExpansion(message.id)}
+                                        sx={{
+                                            position: 'absolute',
+                                            bottom: 0,
+                                            right: 0,
+                                            zIndex: 1,
+                                            textTransform: 'none',
+                                            color: 'primary.main',
+                                            backgroundColor: 'background.paper',
+                                            '&:hover': {
+                                                backgroundColor: 'background.default'
+                                            }
+                                        }}
+                                    >
+                                        Show more
+                                    </Button>
+                                )}
+                                {expandedMessages.has(message.id) && (
+                                    <Button
+                                        size="small"
+                                        onClick={() => toggleMessageExpansion(message.id)}
+                                        sx={{
+                                            mt: 1,
+                                            textTransform: 'none',
+                                            color: 'primary.main'
+                                        }}
+                                    >
+                                        Show less
+                                    </Button>
+                                )}
                                 {message.inProgress && <Spinner />}
                                 {!currentThreadId && messages.some(m => m.props?.['root-id'] === message.id) && (
                                     <Box
