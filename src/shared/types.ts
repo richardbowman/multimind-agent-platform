@@ -1,5 +1,6 @@
 export interface ClientTask {
     id: string;
+    projectId: string;
     description: string;
     type: string;
     assignee?: string;

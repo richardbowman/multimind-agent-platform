@@ -1,16 +1,16 @@
 import { ipcMain, BrowserWindow } from 'electron';
 import { createBirpc } from 'birpc';
 import { BackendServices } from '../types/BackendServices';
-import { MessageHandler } from './MessageHandler';
+import { ServerRPCHandler } from './RPCHandler';
 import { createSafeServerRPCHandlers } from './rpcUtils';
 import { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 
 export class ElectronIPCServer {
-    private handler: MessageHandler;
+    private handler: ServerRPCHandler;
     private rpc: ReturnType<typeof createBirpc<ClientMethods, ServerMethods>>|undefined;
 
     constructor(private services: BackendServices, private mainWindow: BrowserWindow, hasConfigError: boolean) {
-        this.handler = new MessageHandler(services);
+        this.handler = new ServerRPCHandler(services);
         this.setupRPC();
         this.handler.setupClientEvents(this.getRPC()!);
     }

@@ -4,17 +4,17 @@ import express from 'express';
 import { createBirpc } from 'birpc';
 import { createSafeServerRPCHandlers } from './rpcUtils';
 import Logger from '../helpers/logger';
-import { MessageHandler } from './MessageHandler';
+import { ServerRPCHandler } from './RPCHandler';
 import { BackendServices } from '../types/BackendServices';
 import { ClientMethods, ServerMethods } from 'src/shared/RPCInterface';
 
 export class WebSocketServer {
     private io: Server;
     private httpServer: ReturnType<typeof createServer>;
-    private handler: MessageHandler;
+    private handler: ServerRPCHandler;
 
     constructor(services: BackendServices, port?: number) {
-        this.handler = new MessageHandler(services);
+        this.handler = new ServerRPCHandler(services);
         const _s = services.settingsManager.getSettings();
 
         const app = express();

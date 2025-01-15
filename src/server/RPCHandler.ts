@@ -13,7 +13,7 @@ import { LLMServiceFactory } from "src/llm/LLMServiceFactory";
 import { ModelInfo } from "src/llm/types";
 import { EmbedderModelInfo } from "src/llm/ILLMService";
 
-export class MessageHandler implements ServerMethods {
+export class ServerRPCHandler implements ServerMethods {
     createWrapper(): ServerMethods {
         const handler = this;
         return new Proxy({} as ServerMethods, {
@@ -86,6 +86,7 @@ export class MessageHandler implements ServerMethods {
             this.services.taskManager.on('taskUpdated', ({task}) => {
                 rpc.onTaskUpdate({
                     id: task.id,
+                    projectId: task.projectId,
                     description: task.description,
                     type: task.type,
                     assignee: task.assignee,
@@ -286,8 +287,13 @@ export class MessageHandler implements ServerMethods {
             return true;
         });
 
+        const channelData = await this.services.chatClient.getChannelData(channelId);
+
         // Extract project IDs from posts
-        const projectIds = [...new Set(posts.map(p => p.props["project-id"]).filter(id => id != undefined))];
+        const projectIds = [
+            ...new Set(posts.map(p => p.props["project-id"])),
+            channelData.projectId
+        ].filter(id => id != undefined);
         
         // Get tasks from storage that match these project IDs and convert to ClientTask format
         const tasks = projectIds.flatMap(projectId => {
@@ -297,13 +303,14 @@ export class MessageHandler implements ServerMethods {
             return Object.values(project.tasks).map(task => ({
                 id: task.id,
                 description: task.description,
+                projectId: task.projectId,
                 type: task.type,
                 assignee: task.assignee,
                 inProgress: task.inProgress || false,
                 complete: task.complete || false,
-                threadId: task.metadata?.threadId || null,
-                createdAt: task.metadata?.createdAt,
-                updatedAt: task.metadata?.updatedAt,
+                threadId: task.props?.threadId || null,
+                createdAt: task.props?.createdAt,
+                updatedAt: task.props?.updatedAt,
                 dependsOn: task.dependsOn,
                 props: task.props
             }));
