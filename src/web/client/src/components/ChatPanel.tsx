@@ -18,7 +18,7 @@ import { Spinner } from './Spinner';
 import { useWebSocket } from '../contexts/DataContext';
 import remarkGfm from 'remark-gfm'
 import Link from '@mui/material/Link';
-import { TaskPanel } from './TaskPanel';
+import { TaskDialog } from './TaskDialog';
 
 // Custom link component that opens links in system browser
 const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -415,13 +415,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 </DialogContent>
             </Dialog>
 
-            <TaskPanel 
-                channelId={currentChannelId} 
-                threadId={currentThreadId}
+            <TaskDialog
+                open={taskDialogOpen}
+                onClose={() => setTaskDialogOpen(false)}
                 selectedTask={selectedTask}
                 setSelectedTask={setSelectedTask}
-                dialogOpen={taskDialogOpen}
-                setDialogOpen={setTaskDialogOpen}
+                tasks={tasks.filter(t => t.projectId === selectedMessage?.props?.['project-id'])}
             />
         </Box>
     );
