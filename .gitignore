@@ -6,7 +6,6 @@ chrome
 src/playground.ts
 TODO
 .aider*
-src/**/*.js
 data
 dist
 src/web/client/build
