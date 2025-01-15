@@ -180,8 +180,16 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
 
     async getAvailableModels(): Promise<string[]> {
         try {
-            const models = await this.lmStudioClient.llm.listAvailable();
-            return models.map(m => m.identifier);
+            // Get both loaded and available models
+            const loadedModels = await this.lmStudioClient.llm.listLoaded();
+            const availableModels = await this.lmStudioClient.llm.listModels();
+            
+            // Combine and deduplicate model identifiers
+            const allModels = [...loadedModels, ...availableModels];
+            const uniqueIdentifiers = new Set<string>();
+            allModels.forEach(model => uniqueIdentifiers.add(model.identifier));
+            
+            return Array.from(uniqueIdentifiers);
         } catch (error) {
             await this.logger.logCall('getAvailableModels', {}, null, error);
             throw error;
