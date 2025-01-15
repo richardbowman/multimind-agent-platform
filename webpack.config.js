@@ -54,6 +54,10 @@ module.exports = {
         {
           from: './src/web/client/public/splash.js',
           to: 'splash.js'
+        },
+        {
+          from: './defaults.json5',
+          to: 'defaults.json5'
         }
       ]
     }),
