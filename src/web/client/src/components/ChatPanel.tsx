@@ -465,7 +465,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                 position: 'relative',
                                 margin: '-16px',
                                 padding: '16px',
-                                background: 'linear-gradient(to bottom, rgba(42,42,42,0) 0%, rgba(24,24,24,1) 100%)',
+                                background: expandedMessages.has(message.id) ? 'linear-gradient(to bottom, rgba(42,42,42,0) 0%, rgba(24,24,24,1) 100%)' : undefined,
                                 borderRadius: 2
                             }}>
                                 {!expandedMessages.has(message.id) && (
