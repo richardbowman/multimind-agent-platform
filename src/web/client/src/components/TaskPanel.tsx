@@ -139,11 +139,53 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
             <Dialog 
                 open={dialogOpen} 
                 onClose={() => setDialogOpen(false)}
-                maxWidth="sm"
+                maxWidth="md"
                 fullWidth
             >
                 <DialogTitle>Task Details</DialogTitle>
                 <DialogContent>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Box sx={{ width: '30%', overflowY: 'auto', p: 1 }}>
+                            <Typography variant="h6" sx={{ mb: 1 }}>Project Tasks</Typography>
+                            <List>
+                                {(tasks || []).map(task => (
+                                    <ListItem 
+                                        key={task.id}
+                                        sx={{
+                                            mb: 1,
+                                            bgcolor: task.id === selectedTask?.id ? 'primary.light' : 'background.paper',
+                                            borderRadius: 1,
+                                            border: '1px solid',
+                                            borderColor: task.id === selectedTask?.id ? 'primary.main' : 'divider',
+                                            cursor: 'pointer',
+                                            '&:hover': {
+                                                bgcolor: task.id === selectedTask?.id ? 'primary.dark' : 'action.hover'
+                                            }
+                                        }}
+                                        onClick={() => setSelectedTask(task)}
+                                    >
+                                        <ListItemText
+                                            primary={task.description}
+                                            primaryTypographyProps={{ 
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                            }}
+                                            secondary={
+                                                <Typography 
+                                                    variant="caption" 
+                                                    component="span"
+                                                    sx={{ display: 'block' }}
+                                                >
+                                                    {task.complete ? 'Complete' : (task.inProgress ? 'In Progress' : 'Not Started')}
+                                                </Typography>
+                                            }
+                                        />
+                                    </ListItem>
+                                ))}
+                            </List>
+                        </Box>
+                        <Box sx={{ width: '70%' }}>
                     {selectedTask && (
                         <Stack spacing={2} sx={{ mt: 1 }}>
                             <Typography variant="body1">
@@ -192,6 +234,8 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => 
                             ))}
                         </Stack>
                     )}
+                        </Box>
+                    </Box>
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setDialogOpen(false)}>Close</Button>
