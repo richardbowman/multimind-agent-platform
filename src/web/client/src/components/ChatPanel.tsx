@@ -186,6 +186,87 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 }}
                 onScroll={checkScrollPosition}
             >
+                {/* Goal Planning Card */}
+                {channels.find(c => c.id === currentChannelId)?.goalTemplate && (
+                    <Paper 
+                        elevation={0}
+                        sx={{ 
+                            mb: 2,
+                            p: 2,
+                            bgcolor: 'background.paper',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 2
+                        }}
+                    >
+                        <Typography 
+                            variant="overline" 
+                            sx={{ 
+                                mb: 1,
+                                color: 'text.secondary',
+                                display: 'block'
+                            }}
+                        >
+                            Project Planning
+                        </Typography>
+                        {(() => {
+                            const template = GoalTemplates.find(
+                                t => t.id === channels.find(c => c.id === currentChannelId)?.goalTemplate
+                            );
+                            const projectId = channels.find(c => c.id === currentChannelId)?.projectId;
+                            const planningTasks = tasks.filter(t => 
+                                t.projectId === projectId && 
+                                t.type === 'planning'
+                            );
+
+                            return template ? (
+                                <Box>
+                                    <Typography variant="h6" sx={{ mb: 1 }}>
+                                        {template.name}
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ mb: 2 }}>
+                                        {template.description}
+                                    </Typography>
+                                    
+                                    {planningTasks.length > 0 ? (
+                                        <Box sx={{ mt: 2 }}>
+                                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                                Planning Tasks:
+                                            </Typography>
+                                            <List dense sx={{ mb: 2 }}>
+                                                {planningTasks.map(task => (
+                                                    <ListItem key={task.id} sx={{ p: 0 }}>
+                                                        <ListItemButton
+                                                            onClick={() => {
+                                                                setSelectedTask(task);
+                                                                setTaskDialogOpen(true);
+                                                            }}
+                                                        >
+                                                            <Typography variant="body2">
+                                                                {task.description}
+                                                            </Typography>
+                                                        </ListItemButton>
+                                                    </ListItem>
+                                                ))}
+                                            </List>
+                                        </Box>
+                                    ) : (
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            No planning tasks created yet
+                                        </Typography>
+                                    )}
+
+                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                        Supporting Agents: {template.supportingAgents
+                                            .map(id => handles.find(h => h.id === id)?.handle || 'Unknown')
+                                            .join(', ')}
+                                    </Typography>
+                                </Box>
+                            ) : null;
+                        })()}
+                    </Paper>
+                )}
+
                 {isLoading ? (
                     <Typography variant="body1" sx={{ 
                         textAlign: 'center',
