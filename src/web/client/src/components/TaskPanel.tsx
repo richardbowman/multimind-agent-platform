@@ -80,9 +80,6 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                             opacity: task.complete ? 0.7 : 1
                         }}
                         onClick={() => {
-                            alert('open');
-                            setSelectedTask(task);
-                            setDialogOpen(true);
                         }}
                     >
                         <Checkbox
@@ -96,6 +93,11 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                                 },
                                 textDecoration: task.complete ? 'line-through' : 'none',
                                 opacity: task.complete ? 0.7 : 1
+                            }}
+                            onClick={(e) => {
+                                e.stopPropagation();
+                                setLocalSelectedTask(task);
+                                setLocalDialogOpen(true);
                             }}
                         />
                         <ListItemText
