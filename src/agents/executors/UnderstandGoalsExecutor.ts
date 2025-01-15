@@ -12,6 +12,7 @@ import { IntakeQuestionsResponse } from '../../schemas/IntakeQuestionsResponse';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
+import { Artifact } from 'src/tools/artifact';
 
 /**
  * Executor that generates targeted questions to understand user requirements.

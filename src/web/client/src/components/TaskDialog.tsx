@@ -30,7 +30,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     setSelectedTask,
     tasks
 }) => {
-    const { handles, tasks: allTasks } = useWebSocket();
+    const { fetchTasks, handles, tasks: allTasks } = useWebSocket();
     const ipcService = useIPCService();
     
     // Filter tasks to only show those from the current project
@@ -151,6 +151,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         onClick={async () => {
                             try {
                                 await ipcService.getRPC().markTaskComplete(selectedTask.id, !selectedTask.complete);
+
                                 setSelectedTask({
                                     ...selectedTask,
                                     complete: !selectedTask.complete,

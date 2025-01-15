@@ -137,7 +137,7 @@ export class ArtifactManager {
     }
 
     try {
-      const content = await this.fileQueue.enqueue(() => fs.readFile(contentPath));
+      const content = (await this.fileQueue.enqueue(() => fs.readFile(contentPath))).toString();
       const type = metadata[artifactId].type; // Retrieve the artifact type from metadata
       return { id: artifactId, type, content, metadata: metadata[artifactId] };
     } catch (error) {

@@ -2,7 +2,7 @@ import { HandlerParams } from '../agents';
 import { PlanStepsResponse } from '../../schemas/PlanStepsResponse';
 import { ChatPost } from '../../chat/chatClient';
 import { Planner } from './planner';
-import { Task } from '../../tools/taskManager';
+import { AddTaskParams, Task, TaskType } from '../../tools/taskManager';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
@@ -136,16 +136,15 @@ ${currentSteps}`;
                 //     mentionedTaskIds.add(step.existingId);
                 // } else {
                     // Create new task
-                    const newTask: StepTask = {
-                        id: crypto.randomUUID(),
-                        type: 'step',
-                        projectId: project.id,
-                        stepType: step.actionType,
+                    const newTask: AddTaskParams = {
+                        type: TaskType.Step,
                         description: step.context || step.actionType,
                         creator: this.userId,
                         complete: false,
                         order: index,
-                        props: {}
+                        props: {
+                            stepType: step.actionType
+                        }
                     };
                     this.projects.addTask(project, newTask);
                 // }

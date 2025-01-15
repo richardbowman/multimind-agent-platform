@@ -1,6 +1,6 @@
 import { CreateChannelParams } from 'src/shared/channelTypes';
 import { LogParam } from '../llm/LLMLogger';
-import { ClientMessage } from "./types";
+import { ClientMessage, ClientProject } from "./types";
 import { ClientChannel } from "./types";
 import { ClientThread } from "./types";
 import { ClientTask } from './types';

@@ -18,7 +18,7 @@ export interface AddTaskParams {
     id?: string;
     description: string;
     type: TaskType;
-    category: string;
+    category?: string;
     creator: string;
     assignee?: string;
     complete?: boolean;
@@ -89,7 +89,7 @@ export interface TaskManager extends EventEmitter {
     assignTaskToAgent(taskId: string, agentId: string): Promise<void>;
     getNextTaskForUser(userId: string): Promise<Task | null>;
     getProjects(): Project[];
-    getNextTask(projectId: string): Task | null;
+    getNextTask(projectId: string, type?: TaskType): Task | null;
     getAllTasks(projectId: string): Task[];
     markTaskInProgress(task: Task | string): Promise<Task>;
     getTaskById(taskId: string): Readonly<Task> | null;

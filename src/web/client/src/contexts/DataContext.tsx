@@ -91,16 +91,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     severity: 'info'
   });
 
-  const handleSnackbarClose = useCallback((
+  const handleSnackbarClose = (
     event: React.SyntheticEvent | Event,
     reason?: SnackbarCloseReason,
   ) => {
-    if (reason === 'clickaway') {
-      return;
-    }
-
     setSnackbarOpen(false);
-  }, []);
+  };
 
   useEffect(() => {
     console.debug('WebSocketContext stable mount - connecting');
@@ -227,8 +223,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const handleSnackbarClick = useCallback(() => {
     if (snackbarOptions.onClick) {
       snackbarOptions.onClick();
-      setSnackbarOpen(false);
     }
+    setSnackbarOpen(false);
   }, [snackbarOptions]);
 
   const contextMethods = useMemo(() => ({

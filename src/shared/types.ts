@@ -1,3 +1,4 @@
+
 export interface ClientTask {
     id: string;
     projectId: string;
@@ -32,4 +33,34 @@ export interface ClientProject {
         originalPostId?: string;
         parentTaskId?: any;
     };
+}export interface ClientThread {
+    rootMessage: ClientMessage;
+    replies: ClientMessage[];
+    last_message_at: number;
+    channel_id: string;
 }
+export interface ClientChannel {
+    id: string;
+    name: string;
+    description?: string;
+    members: string[];
+    projectId: string;
+}
+export interface ClientMessage {
+    id: string;
+    channel_id: string;
+    thread_id?: string;
+    message: string;
+    user_id: string;
+    create_at: number;
+    directed_at?: string;
+    props?: Record<string, any>;
+    inProgress?: boolean;
+    reply_count: number;
+
+    getRootId(): string | null;
+    isReply(): boolean;
+    hasUUID(): boolean;
+    getActivityType(): string | null;
+}
+

@@ -78,6 +78,7 @@ export class LocalChatStorage extends EventEmitter {
         this.registerChannel(channelId, params.name);
         this.channelData[channelId] = {
             id: channelId,
+            name: params.name,
             description: params.description,
             isPrivate: params.isPrivate,
             members: params.members,
@@ -208,7 +209,8 @@ export class LocalTestClient implements ChatClient {
                     name,
                     description: channelData.description,
                     members: channelData?.members,
-                    defaultResponderId: channelData?.defaultResponderId
+                    defaultResponderId: channelData?.defaultResponderId,
+                    projectId: channelData?.projectId
                 };
             })
         );

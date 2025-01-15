@@ -1,8 +1,7 @@
-import type { ClientMessage } from '../../../../shared/IPCInterface';
 import type { LogParam } from '../../../../llm/LLMLogger';
 import type { DataContextMethods } from '../contexts/DataContext';
 import { ClientMethods } from '../../../../shared/RPCInterface';
-import { ClientTask } from '../../../../shared/types';
+import { ClientMessage, ClientTask } from '../../../../shared/types';
 
 export const createClientMethods = (contextMethods: DataContextMethods) => ({
     onMessage: async (messages: ClientMessage[]) => {
@@ -25,21 +24,13 @@ export const createClientMethods = (contextMethods: DataContextMethods) => ({
                         contextMethods.setCurrentChannelId(latestMessage.channel_id);
                         contextMethods.setCurrentThreadId(latestMessage.thread_id || null);
                         
-                        // Then fetch the messages for the new channel/thread
-                        contextMethods.setMessages([]); // Clear current messages
-                        ipcService.getRPC().getMessages({
-                            channelId: latestMessage.channel_id, 
-                            threadId: latestMessage.thread_id
-                        }).then(newMessages => {
-                            contextMethods.setMessages(newMessages);
-                        });
-                        
                         // Fetch related tasks and artifacts
+                        contextMethods.fetchChannels();
                         contextMethods.fetchTasks(latestMessage.channel_id, latestMessage.thread_id || null);
                         contextMethods.fetchArtifacts(latestMessage.channel_id, latestMessage.thread_id || null);
                     }
                 });
-        });
+        };
 
         // Update messages directly in context
         contextMethods.setMessages(prev => {

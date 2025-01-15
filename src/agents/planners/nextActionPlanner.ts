@@ -2,7 +2,7 @@ import { HandlerParams } from '../agents';
 import { NextActionResponse } from '../../schemas/NextActionResponse';
 import { PlanStepsResponse } from '../../schemas/PlanStepsResponse';
 import { Planner } from './planner';
-import { Task } from '../../tools/taskManager';
+import { AddTaskParams, Task, TaskType } from '../../tools/taskManager';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
@@ -80,13 +80,14 @@ ${this.modelHelpers.getFinalInstructions()}`;
 
         // Create new task for the next action
         if (response.action) {
-            const newTask: Task = {
-                id: crypto.randomUUID(),
-                type: response.action.actionType,
+            const newTask: AddTaskParams = {
+                type: TaskType.Step,
                 description: response.action.parameters || response.action.actionType,
                 creator: this.userId,
-                complete: false,
-                order: currentTasks.length // Add to end of current tasks
+                order: currentTasks.length, // Add to end of current tasks
+                props: {
+                    stepType: response.action.actionType
+                }
             };
             this.projects.addTask(project, newTask);
         }

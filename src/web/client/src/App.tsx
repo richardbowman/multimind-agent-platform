@@ -76,6 +76,10 @@ const AppContent: React.FC = () => {
     const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
 
     React.useEffect(() => {
+        console.log('test');
+    }, [snackbarOpen]);
+
+    React.useEffect(() => {
         if (needsConfig) {
             setCurrentTab('settings');
         } else {
@@ -245,7 +249,7 @@ const AppContent: React.FC = () => {
             </Box>
             <Snackbar
                 open={snackbarOpen}
-                autoHideDuration={6000}
+                autoHideDuration={2000}
                 onClose={(event, reason) => {
                     handleSnackbarClose(event, reason);
                     setSnackbarOpen(false);
@@ -258,7 +262,7 @@ const AppContent: React.FC = () => {
                         size="small"
                         aria-label="close"
                         color="inherit"
-                        onClick={handleSnackbarClose}
+                        onClick={(event, reason) => {handleSnackbarClose(event, reason); setSnackbarOpen(false);}}
                     >
                         <CloseIcon fontSize="small" />
                     </IconButton></React.Fragment>}

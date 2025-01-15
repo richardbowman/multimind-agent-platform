@@ -4,11 +4,11 @@ import { StepResult } from './StepResult';
 
 export interface StepTaskProps {
     result?: StepResult;
+    stepType: string;
 }
 
 export interface StepTask extends Task {
     type: TaskType.Step,
-    stepType: string;
     props: StepTaskProps;
 }
 

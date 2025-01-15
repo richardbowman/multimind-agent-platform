@@ -1,7 +1,7 @@
 import cron from 'node-cron';
 import fs from 'fs/promises';
 import * as Events from 'events';
-import { AddTaskParams, CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager } from '../tools/taskManager';
+import { AddTaskParams, CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager, TaskType } from '../tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ContentProject } from 'src/agents/contentManager';
 import { AsyncQueue } from '../helpers/asyncQueue';
@@ -265,7 +265,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         return availableTasks[0] || null;
     }
 
-    getAllTasks(projectId: string): Task[] {
+    getAllTasks(projectId: string, type?: TaskType): Task[] {
         const project = this.projects[projectId];
         if (!project) {
             return [];
@@ -273,6 +273,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
         // Get all tasks and sort by order
         return Object.values(project.tasks || {})
+            .filter(t => type ? t.type === type : true)
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
     }
 

@@ -1,34 +1,4 @@
-export interface ClientMessage {
-    id: string;
-    channel_id: string;
-    thread_id?: string;
-    message: string;
-    user_id: string;
-    create_at: number;
-    directed_at?: string;
-    props?: Record<string, any>;
-    inProgress?: boolean;
-    reply_count: number;
-    
-    getRootId(): string | null;
-    isReply(): boolean;
-    hasUUID(): boolean;
-    getActivityType(): string | null;
-}
-
-export interface ClientChannel {
-    id: string;
-    name: string;
-    description?: string;
-    members: string[];
-}
-
-export interface ClientThread {
-    rootMessage: ClientMessage;
-    replies: ClientMessage[];
-    last_message_at: number;
-    channel_id: string;
-}
+import { ClientChannel, ClientMessage } from "./types";
 
 export interface IPCHandlers {
     sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
