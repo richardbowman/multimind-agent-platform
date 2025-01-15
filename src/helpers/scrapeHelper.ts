@@ -19,7 +19,7 @@ class ScrapeHelper {
     private browser: Browser | null = null;
     private artifactManager: ArtifactManager;
     private settings: Settings;
-    private electronWindow?: Electron.BrowserWindow;
+    private electronWindow: Electron.BrowserWindow|null = null;
 
     constructor(artifactManager: ArtifactManager, settings: Settings) {
         this.artifactManager = artifactManager;
