@@ -1,6 +1,8 @@
 import { CreateChannelParams } from 'src/shared/channelTypes';
 import { LogParam } from '../llm/LLMLogger';
-import { ClientMessage, ClientChannel, ClientThread } from './IPCInterface';
+import { ClientMessage } from "./types";
+import { ClientChannel } from "./types";
+import { ClientThread } from "./types";
 import { ClientTask } from './types';
 import { EmbedderModelInfo } from 'src/llm/ILLMService';
 import { ModelInfo } from 'src/llm/types';

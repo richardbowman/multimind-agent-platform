@@ -2,7 +2,9 @@ import { BackendServices } from "../types/BackendServices";
 import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
 import Logger from "../helpers/logger";
 import { ChatPost } from "../chat/chatClient";
-import { ClientChannel, ClientMessage, ClientThread } from "../shared/IPCInterface";
+import { ClientMessage } from "src/shared/types";
+import { ClientChannel } from "src/shared/types";
+import { ClientThread } from "src/shared/types";
 import { LLMCallLogger } from "../llm/LLMLogger";
 import { reinitializeBackend } from "../main.electron";
 import { CreateChannelParams } from "src/shared/channelTypes";
@@ -12,6 +14,7 @@ import { getClientSettingsMetadata } from "src/tools/settingsDecorators";
 import { LLMServiceFactory } from "src/llm/LLMServiceFactory";
 import { ModelInfo } from "src/llm/types";
 import { EmbedderModelInfo } from "src/llm/ILLMService";
+import { ClientProject } from "src/shared/types";
 
 export class ServerRPCHandler implements ServerMethods {
     createWrapper(): ServerMethods {
@@ -113,7 +116,7 @@ export class ServerRPCHandler implements ServerMethods {
         // Set up task update notifications
         if (this.services?.taskManager) {
             // Set up project update notifications
-            this.services.taskManager.on('projectUpdated', ({project}) => {
+            this.services.taskManager.on('projectUpdated', ({project : Project}) => {
                 const clientProject = {
                     id: project.id,
                     name: project.name,
@@ -320,7 +323,6 @@ export class ServerRPCHandler implements ServerMethods {
     }
 
     async getChannels(): Promise<ClientChannel[]> {
-        console.log('loading channels');
         if (!this.services?.chatClient) {
             throw new Error('Chat client is not initialized');
         }
@@ -329,7 +331,8 @@ export class ServerRPCHandler implements ServerMethods {
             id: channel.id,
             name: channel.name.replace('#', ''),
             description: channel.description,
-            members: channel.members || []
+            members: channel.members || [],
+            projectId: channel.projectId
         }));
     }
 
