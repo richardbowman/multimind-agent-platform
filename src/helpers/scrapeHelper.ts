@@ -130,10 +130,16 @@ class ScrapeHelper {
                 await this.electronWindow.loadURL(url);
                 this.electronWindow.show();
 
-                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for page load
-
+                // Wait for DOM ready with timeout fallback
                 const webContents = this.electronWindow.webContents;
-                actualUrl = this.electronWindow.webContents.getURL();
+                await Promise.race([
+                    new Promise<void>(resolve => webContents.once('dom-ready', resolve)),
+                    new Promise<void>((_, reject) => setTimeout(() => reject(new Error('DOM ready timeout')), 5000))
+                ]).catch(error => {
+                    Logger.warn(`DOM ready event timed out for ${url}:`, error);
+                });
+
+                actualUrl = webContents.getURL();
                 htmlContent = await webContents.executeJavaScript('document.body.innerHTML');
                 title = await webContents.executeJavaScript('document.title');
             } else {
