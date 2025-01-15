@@ -5,12 +5,18 @@ import { LLMCallLogger } from "./LLMLogger";
 import { ModelType } from "./LLMServiceFactory";
 import { ModelInfo } from "./types";
 
+export interface EmbedderModelInfo extends ModelInfo {
+    pipelineTag: string;
+    supportedTasks: string[];
+}
+
 export interface ILLMService {
     initializeChatModel(modelPath: string): Promise<void>;
     sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     countTokens(content: string): Promise<number>;
     getLogger(): LLMCallLogger;
     getAvailableModels(): Promise<ModelInfo[]>;
+    getAvailableEmbedders(): Promise<EmbedderModelInfo[]>;
 
     /** @deprecated */
     generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: any): Promise<T>;

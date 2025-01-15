@@ -239,22 +239,31 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
         return this.embedder;
     }
 
-    async searchModels(query: string, limit: number = 10): Promise<HFModel[]> {
+    async searchModels(query: string, limit: number = 10, pipelineTag?: string): Promise<HFModel[]> {
         try {
+            const params: Record<string, any> = {
+                search: query,
+                sort: 'downloads',
+                full: "full",
+                direction: -1,
+                limit: limit
+            };
+
+            if (pipelineTag) {
+                params.pipeline_tag = pipelineTag;
+            } else {
+                params.filter = 'gguf';
+            }
+
             const response = await axios.get('https://huggingface.co/api/models', {
-                params: {
-                    search: query,
-                    filter: 'gguf',
-                    sort: 'downloads',
-                    full: "full",
-                    direction: -1,
-                    limit: limit
-                }
+                params
             });
 
-            // Filter to only show models that have GGUF files
+            // Filter based on pipeline tag or GGUF files
             const models = response.data.filter((model: HFModel) => 
-                model.siblings.some(s => s.rfilename.endsWith('.gguf'))
+                pipelineTag 
+                    ? model.pipeline_tag === pipelineTag
+                    : model.siblings.some(s => s.rfilename.endsWith('.gguf'))
             );
 
             return models.map((model: HFModel) => ({
@@ -264,8 +273,10 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 downloads: model.downloads,
                 likes: model.likes,
                 lastModified: model.lastModified,
+                pipelineTag: model.pipeline_tag,
+                supportedTasks: model.tags?.filter(t => t.startsWith('task:')) || [],
                 ggufFiles: model.siblings
-                    .filter(s => s.rfilename.endsWith('.gguf'))
+                    .filter(s => pipelineTag || s.rfilename.endsWith('.gguf'))
                     .map(s => ({
                         filename: s.rfilename,
                         size: (s.size / 1024 / 1024).toFixed(2) + ' MB'
@@ -273,6 +284,22 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             }));
         } catch (error) {
             Logger.error('Failed to search models:', error);
+            throw error;
+        }
+    }
+
+    async getAvailableEmbedders(): Promise<EmbedderModelInfo[]> {
+        try {
+            // Search for embedding models
+            const embeddingModels = await this.searchModels('', 10, 'sentence-similarity');
+            
+            return embeddingModels.map(model => ({
+                ...model,
+                pipelineTag: model.pipelineTag || '',
+                supportedTasks: model.supportedTasks || []
+            }));
+        } catch (error) {
+            await this.logger.logCall('getAvailableEmbedders', {}, null, error);
             throw error;
         }
     }
