@@ -494,17 +494,29 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                     </Box>
                                 )}
                                 {expandedMessages.has(message.id) && message.message.split('\n').length > 3 && (
-                                    <Button
-                                        size="small"
-                                        onClick={() => toggleMessageExpansion(message.id)}
-                                        sx={{
-                                            mt: 1,
-                                            textTransform: 'none',
-                                            color: 'primary.main'
-                                        }}
-                                    >
-                                        Show less
-                                    </Button>
+                                    <Box sx={{ 
+                                        position: 'absolute', 
+                                        bottom: 0, 
+                                        right: 0,
+                                        zIndex: 1,
+                                        p: 1,
+                                        bgcolor: 'background.paper',
+                                        borderRadius: '4px 0 4px 0'
+                                    }}>
+                                        <Button
+                                            size="small"
+                                            onClick={() => toggleMessageExpansion(message.id)}
+                                            sx={{
+                                                textTransform: 'none',
+                                                color: 'primary.main',
+                                                '&:hover': {
+                                                    backgroundColor: 'background.default'
+                                                }
+                                            }}
+                                        >
+                                            Show less
+                                        </Button>
+                                    </Box>
                                 )}
                                 {message.inProgress && <Spinner />}
                                 {expandedMessages.has(message.id) && !currentThreadId && messages.some(m => m.props?.['root-id'] === message.id) && (
