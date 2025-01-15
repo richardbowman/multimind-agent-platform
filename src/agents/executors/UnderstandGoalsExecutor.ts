@@ -40,8 +40,21 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         this.userId = params.userId || 'executor';
     }
 
-    private formatMessage(goal: string, project: any): string {
+    private formatMessage(goal: string, project: any, artifacts?: Artifact[]): string {
         let message = `${goal}\n\n`;
+
+        // Include relevant artifacts if available
+        if (artifacts && artifacts.length > 0) {
+            message += "📁 Relevant Artifacts:\n\n";
+            artifacts.forEach((artifact, index) => {
+                message += `Artifact ${index + 1} (${artifact.type}):\n`;
+                if (typeof artifact.content === 'string') {
+                    message += artifact.content.substring(0, 1000) + '\n\n';
+                } else {
+                    message += `[Binary data - ${artifact.content.length} bytes]\n\n`;
+                }
+            });
+        }
 
         // Include existing Q&A if available
         if (project.metadata?.answers?.length > 0) {
@@ -79,7 +92,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         
         const project = this.taskManager.getProject(params.projectId);
         
-        const formattedMessage = this.formatMessage(params.goal, project);
+        const formattedMessage = this.formatMessage(params.goal, project, params.context?.artifacts);
 
         const response : IntakeQuestionsResponse = await this.modelHelpers.generate({
             message: formattedMessage,
