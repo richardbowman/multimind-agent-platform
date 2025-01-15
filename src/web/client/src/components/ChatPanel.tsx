@@ -503,7 +503,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                     </Button>
                                 )}
                                 {message.inProgress && <Spinner />}
-                                {!currentThreadId && messages.some(m => m.props?.['root-id'] === message.id) && (
+                                {expandedMessages.has(message.id) && !currentThreadId && messages.some(m => m.props?.['root-id'] === message.id) && (
                                     <Box
                                         onClick={() => setCurrentThreadId(message.id)}
                                         sx={{
