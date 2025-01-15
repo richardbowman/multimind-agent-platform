@@ -17,7 +17,8 @@ import {
   ListItemButton,
   ListItemText,
   IconButton,
-  Toolbar
+  Toolbar,
+  Chip
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useIPCService, useWebSocket } from '../contexts/DataContext';
