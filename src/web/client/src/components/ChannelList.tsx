@@ -208,10 +208,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                 return (
                                     <MenuItem key={handle.id} value={handle.id}>
                                         <Checkbox checked={isSelected} />
-                                        <ListItemText 
-                                            primary={handle.handle} 
-                                            secondary={isSelected ? `(${handle.id})` : undefined}
-                                        />
+                                        <ListItemText primary={handle.handle} />
                                     </MenuItem>
                                 );
                             })}
