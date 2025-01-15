@@ -245,7 +245,10 @@ const AppContent: React.FC = () => {
             <Snackbar
                 open={snackbarOpen}
                 autoHideDuration={6000}
-                onClose={handleSnackbarClose}
+                onClose={(event, reason) => {
+                    handleSnackbarClose(event, reason);
+                    setSnackbarOpen(false);
+                }}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
                 action={<React.Fragment>
                     <Button color="secondary" size="small" onClick={handleSnackbarClick}>

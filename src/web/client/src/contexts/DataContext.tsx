@@ -34,6 +34,7 @@ export interface DataContextMethods {
   currentThreadId: string | null;
   isLoading: boolean;
   needsConfig: boolean;
+  snackbarOpen: boolean;
   showSnackbar: (options: SnackbarOptions) => void;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   fetchChannels: () => Promise<void>;
@@ -237,6 +238,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currentThreadId,
     isLoading,
     needsConfig,
+    snackbarOpen,
     showSnackbar,
     snackbarOpen,
     snackbarOptions,
