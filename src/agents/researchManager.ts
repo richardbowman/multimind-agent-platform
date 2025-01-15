@@ -41,8 +41,9 @@ Step 3. 'aggregate-research' to compile findings`);
                     }]);
 
                     const project = await this.projects.getProject(task.projectId);
-                    const post = await this.chatClient.getPost(project?.metadata?.originalPostId);
-                    await this.executeNextStep(project.id, post);
+                    await this.executeNextStep({
+                        projectId: project.id
+                    });
                 }
             } else {
                 super.taskNotification(task);

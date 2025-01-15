@@ -2,7 +2,7 @@ import { ModelHelpers } from '../../llm/modelHelpers';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ArtifactManager } from '../../tools/artifactManager';
-import { TaskManager } from '../../tools/taskManager';
+import { Project, TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { OnboardingProject, QuestionAnswer } from '../onboardingConsultant';
 import { CreateArtifact } from '../../schemas/ModelResponse';
@@ -104,7 +104,7 @@ export class CreatePlanExecutor implements StepExecutor {
         return project;
     }
 
-    private getAnswersForType(project: OnboardingProject, questionType: string): QuestionAnswer[] {
+    private getAnswersForType(project: Project, questionType: string): QuestionAnswer[] {
         if (!project.metadata.answers) return [];
         
         return project.metadata.answers.filter((answer : AnswerMetadata) => {

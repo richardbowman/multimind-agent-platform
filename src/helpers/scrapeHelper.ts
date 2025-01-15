@@ -127,9 +127,6 @@ class ScrapeHelper {
                 if (!this.electronWindow) {
                     throw new Error('Electron window not initialized');
                 }
-                await this.electronWindow.loadURL(url);
-                this.electronWindow.show();
-
                 // Wait for DOM ready with timeout fallback
                 const webContents = this.electronWindow.webContents;
                 await Promise.race([
@@ -138,6 +135,8 @@ class ScrapeHelper {
                 ]).catch(error => {
                     Logger.warn(`DOM ready event timed out for ${url}:`, error);
                 });
+                await this.electronWindow.loadURL(url);
+                this.electronWindow.show();
 
                 actualUrl = webContents.getURL();
                 htmlContent = await webContents.executeJavaScript('document.body.innerHTML');

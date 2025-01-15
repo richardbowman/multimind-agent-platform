@@ -36,26 +36,23 @@ app.whenReady().then(async () => {
         splashWindow = new SplashWindow(_s.zoom);
         await splashWindow.show();
 
-        setTimeout(async () => {
+        // Initialize backend services
+        splashWindow.setMessage('Initializing backend services...');
+        backendServices = {
+            ...await initializeBackend(settingsManager),
+            mainWindow
+        };
 
-            // Initialize backend services
-            splashWindow.setMessage('Initializing backend services...');
-            backendServices = {
-                ...await initializeBackend(settingsManager),
-                mainWindow
-            };
+        // Create main window
+        splashWindow.setMessage('Loading main interface...');
 
-            // Create main window
-            splashWindow.setMessage('Loading main interface...');
+        // Set up IPC handlers
+        setupIpcHandlers();
+        await mainWindow.show();
+        mainWindow.getWindow().on("close", shutdown);
 
-            // Set up IPC handlers
-            setupIpcHandlers();
-            await mainWindow.show();
-            mainWindow.getWindow().on("close", shutdown);
-
-            // Close splash screen
-            splashWindow.close();
-        }, 500);
+        // Close splash screen
+        splashWindow.close();
 
     } catch (error) {
         backendServices = {

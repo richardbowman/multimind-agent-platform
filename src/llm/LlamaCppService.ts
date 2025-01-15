@@ -305,9 +305,8 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
             if (pipelineTag) {
                 params.pipeline_tag = pipelineTag;
-            } else {
-                params.filter = 'gguf';
             }
+            params.filter = 'gguf';
 
             const response = await axios.get('https://huggingface.co/api/models', {
                 params
@@ -315,9 +314,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
             // Filter based on pipeline tag or GGUF files
             const models = response.data.filter((model: HFModel) => 
-                pipelineTag 
-                    ? model.pipeline_tag === pipelineTag
-                    : model.siblings.some(s => s.rfilename.endsWith('.gguf'))
+                model.siblings.some(s => s.rfilename.endsWith('.gguf'))
             );
 
             return models.map((model: HFModel) => ({
@@ -330,7 +327,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 pipelineTag: model.pipeline_tag,
                 supportedTasks: model.tags?.filter(t => t.startsWith('task:')) || [],
                 ggufFiles: model.siblings
-                    .filter(s => pipelineTag || s.rfilename.endsWith('.gguf'))
+                    .filter(s => s.rfilename.endsWith('.gguf'))
                     .map(s => ({
                         filename: s.rfilename,
                         size: (s.size / 1024 / 1024).toFixed(2) + ' MB'
@@ -347,11 +344,20 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             // Search for embedding models
             const embeddingModels = await this.searchModels('', 10, 'sentence-similarity');
             
-            return embeddingModels.map(model => ({
-                ...model,
-                pipelineTag: model.pipelineTag || '',
-                supportedTasks: model.supportedTasks || []
-            }));
+            return embeddingModels.flatMap(model => 
+                    model.ggufFiles.map(file => ({
+                        id: `${model.id}/${file.filename}`,
+                        name: file.filename,
+                        size: file.size,
+                        lastModified: new Date(model.lastModified),
+                        isLocal: false,
+                        author: model.author,
+                        downloads: model.downloads,
+                        likes: model.likes,
+                        ggufFiles: model.ggufFiles,
+                        repo: model.id
+                    }))
+                );
         } catch (error) {
             await this.logger.logCall('getAvailableEmbedders', {}, null, error);
             throw error;

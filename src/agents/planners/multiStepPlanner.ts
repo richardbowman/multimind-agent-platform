@@ -115,20 +115,26 @@ ${currentSteps}`;
         );
 
         if (Array.isArray(response.steps) && response.steps.length > 0) {
+            // mark all incomplete tasks complete to recreate based on planning
+            const incompleteTasks = tasks.filter(t => !t.complete);
+            for (const task of incompleteTasks) {
+                this.projects.completeTask(task.id);
+            }
+
             // Track which tasks are mentioned in the response
-            const mentionedTaskIds = new Set<string>();
+            // const mentionedTaskIds = new Set<string>();
 
             // Update task order and status based on response
             response.steps.forEach((step, index) => {
-                if (step.existingId && existingTaskMap.has(step.existingId)) {
-                    // Update existing task
-                    this.projects.updateTask(step.existingId, {
-                        order: index,
-                        stepType: step.actionType,
-                        description: step.context
-                    } as Partial<StepTask>)
-                    mentionedTaskIds.add(step.existingId);
-                } else {
+                // if (step.existingId && existingTaskMap.has(step.existingId)) {
+                //     // Update existing task
+                //     this.projects.updateTask(step.existingId, {
+                //         order: index,
+                //         stepType: step.actionType,
+                //         description: step.context
+                //     } as Partial<StepTask>)
+                //     mentionedTaskIds.add(step.existingId);
+                // } else {
                     // Create new task
                     const newTask: StepTask = {
                         id: crypto.randomUUID(),
@@ -142,15 +148,15 @@ ${currentSteps}`;
                         props: {}
                     };
                     this.projects.addTask(project, newTask);
-                }
+                // }
             });
 
             // Mark unmentioned tasks as completed only if we got a valid steps list
-            for (const [taskId, task] of existingTaskMap) {
-                if (!mentionedTaskIds.has(taskId)) {
-                    this.projects.completeTask(taskId);
-                }
-            }
+            // for (const [taskId, task] of existingTaskMap) {
+            //     if (!mentionedTaskIds.has(taskId)) {
+            //         this.projects.completeTask(taskId);
+            //     }
+            // }
         }
 
         return response;

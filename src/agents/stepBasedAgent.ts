@@ -15,6 +15,7 @@ import { StepResult } from './interfaces/StepResult';
 import { StepExecutor } from './interfaces/StepExecutor';
 import { ExecuteNextStepParams } from './interfaces/ExecuteNextStepParams';
 import { ExecuteStepParams, StepTask } from './interfaces/ExecuteStepParams';
+import { pathExists } from 'fs-extra';
 
 export abstract class StepBasedAgent extends Agent {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
@@ -213,23 +214,20 @@ export abstract class StepBasedAgent extends Agent {
                 .filter(msg => msg)
                 .join('\n\n');
 
-            this.projects.updateTask(parentTask.id, {
+            await this.projects.updateTask(parentTask.id, {
                 props: {
                     ...parentTask.props,
                     result: {
-                        message: combinedResult,
-                        subProjectResults: completedResults
+                        response: {
+                            message: combinedResult,
+                            subProjectResults: completedResults
+                        }
                     }
                 }
             });
 
             await this.projects.assignTaskToAgent(project.metadata.parentTaskId, this.userId);
-            const parentProject = await this.projects.getProject(parentTask.projectId);
-
-            // Store the combined results in the project's metadata
-            parentProject.metadata.subProjectResults = completedResults;
-
-            this.projects.completeTask(project.metadata.parentTaskId);
+            await this.projects.completeTask(project.metadata.parentTaskId);
         }
     }
 
@@ -292,12 +290,19 @@ export abstract class StepBasedAgent extends Agent {
                 .map(s => s?.response)
                 .filter(r => r); // Remove undefined/null results
 
+            const agents = Object.values(this.settings.agents).filter(a => a.handle).map(a => ({
+                id: a.userId,
+                handle: a.handle!,
+                type: ""
+            }));
+
             let stepResult: StepResult;
             if (executor.execute) {
                 stepResult = await executor.execute({
                     agentId: this.userId,
                     goal: `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message}`,
                     step: task.stepType,
+                    stepId: task.id,
                     projectId: projectId,
                     previousResult: priorResults,
                     steps: priorSteps,
@@ -305,6 +310,7 @@ export abstract class StepBasedAgent extends Agent {
                     stepGoal: task.description,
                     overallGoal: project.name,
                     executionMode: userPost ? 'conversation' : 'task',
+                    agents: agents,    
                     context: {
                         channelId: userPost?.channel_id,
                         threadId: userPost?.thread_id,
@@ -330,10 +336,9 @@ export abstract class StepBasedAgent extends Agent {
             this.projects.updateTask(task.id, {
                 props: {
                     ...task.props,
-                    result: stepResult.response,
-                    step: stepResult,
+                    result: stepResult,
                 }
-            });
+            } as Partial<StepTask>);
 
             // If this was a validation step, check if we need more work
             if (task.stepType === 'validation') {

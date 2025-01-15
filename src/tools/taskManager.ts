@@ -15,7 +15,7 @@ export enum TaskType {
 }
 
 export interface AddTaskParams {
-    id: string;
+    id?: string;
     description: string;
     type: TaskType;
     category: string;
@@ -49,7 +49,7 @@ export interface RecurringTask extends Task {
     lastRunDate?: Date; // To keep track of the last run date
 }
 
-export interface ProjectMetadata extends Record<string, any> {
+export interface ProjectMetadata {
     createdAt: Date;
     updatedAt: Date;
     status: 'active' | 'completed' | 'archived';
@@ -57,6 +57,9 @@ export interface ProjectMetadata extends Record<string, any> {
     tags?: string[];
     description?: string;
     priority?: 'low' | 'medium' | 'high';
+    originalPostId?: string;
+    parentTaskId?: any;
+    contentArtifactId?: any;
 }
 
 export interface Project {
@@ -83,7 +86,7 @@ export interface TaskManager extends EventEmitter {
     newProjectId(): string;
     save(): Promise<void>;
     load(): Promise<void>;
-    assignTaskToAgent(taskId: string, agentId: string): void;
+    assignTaskToAgent(taskId: string, agentId: string): Promise<void>;
     getNextTaskForUser(userId: string): Promise<Task | null>;
     getProjects(): Project[];
     getNextTask(projectId: string): Task | null;

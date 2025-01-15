@@ -1,10 +1,11 @@
 import cron from 'node-cron';
 import fs from 'fs/promises';
 import * as Events from 'events';
-import { CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager } from '../tools/taskManager';
+import { AddTaskParams, CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager } from '../tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ContentProject } from 'src/agents/contentManager';
 import { AsyncQueue } from '../helpers/asyncQueue';
+import { randomUUID } from 'crypto';
 
 class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     private projects: { [projectId: string]: Project } = {};
@@ -19,9 +20,12 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         Logger.info("Starting task manager (should not happen more than once)");
     }
 
-    async addTask(project: Project, task: Task): Promise<Task> {
-        // Set project ID and order
-        task.projectId = project.id;
+    async addTask(project: Project, addTask: AddTaskParams): Promise<Task> {
+        const task = {
+            id: randomUUID(),
+            ...addTask,
+            projectId: project.id
+        }
 
         // Set order to be after existing tasks if not specified
         if (task.order === undefined) {
@@ -131,14 +135,16 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         }
     }
 
-    assignTaskToAgent(taskId: string, assignee: string): void {
+    async assignTaskToAgent(taskId: string, assignee: string): Promise<void> {
         let taskFound = false;
         for (const projectId in this.projects) {
             const project = this.projects[projectId];
             if (project.tasks?.hasOwnProperty(taskId)) {
                 const task = project.tasks[taskId];
-                task.assignee = assignee;
                 taskFound = true;
+                await this.updateTask(task.id, {
+                    assignee
+                })
                 // Emit the 'taskAssigned' event with the task and agent ID
                 this.emit('taskAssigned', { task, assignee: assignee });
                 break;

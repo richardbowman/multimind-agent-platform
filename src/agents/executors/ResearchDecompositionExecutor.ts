@@ -8,12 +8,13 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { Project, Task, TaskManager, TaskType } from 'src/tools/taskManager';
+import { AddTaskParams, Project, Task, TaskManager, TaskType } from 'src/tools/taskManager';
 import { randomUUID } from 'crypto';
 import { ResearchDecomposition } from '../../schemas/research-manager';
 import { ModelResponse } from 'src/schemas/ModelResponse';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { TaskCategories } from '../interfaces/taskCategories';
+import Logger from 'src/helpers/logger';
 
 /**
  * Executor that breaks down research requests into manageable tasks.
@@ -53,21 +54,21 @@ export class ResearchDecompositionExecutor implements StepExecutor {
         const pendingTasks: Set<string> = new Set();
 
         const systemPrompt = `
-You are a Web Research manager. You develop a list of one or more search requests for your team of research assistants that will summarize websites from the results. Make sure each research request is complete with
-all details necessary to perform a high quality Web-based search. Make sure they are not duplicative.
+You are a Web Research manager. You develop a list of one or more search requests for your team of research assistants that will summarize websites from the results. Make sure each research request is independent and complete with
+all details necessary to perform a high quality Web-based search (the searches may not rely on each other). Specify a MAXIMUM of ${process.env.MAX_RESEARCH_REQUESTS} search requests. Use as FEW AS POSSIBLE. Make sure they are not duplicative.
 
 Follow these steps:
-1) Restate the user's goal.
-2) Consider the previous research context provided (if any).
-3) Analyze the request and explain how you will satisfy it.
-4) Specify a MAXIMUM of ${process.env.MAX_RESEARCH_REQUESTS} research requests. Use as FEW AS POSSIBLE.
+1) "goal": Restate the user's goal.
+2) Consider previous research context provided (if any).
+3) "strategy": explain your thinking on the search requests.
+4) "researchRequested": your list of Web search queries goals.
 
 Previous research context:
 ${previousContext}`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const result = await this.modelHelpers.generate<ResearchDecomposition>({
-            message: `${goal}\n\nConsider this previous context when planning the research:\n${previousContext}`,
+            message: `${goal}`,
             instructions
         });
 
@@ -86,7 +87,8 @@ ${previousContext}`;
                 status: 'active',
                 owner: params.agentId,
                 description: goal,
-                priority: 'medium'
+                priority: 'medium',
+                parentTaskId: params.stepId
             }
         };
 
@@ -96,27 +98,26 @@ ${previousContext}`;
 
         // Create research tasks and assign to researchers
         for (const researchRequest of result.researchRequested) {
-            const id = randomUUID();
             const description = `${researchRequest} [${result.goal}]`;
 
-            const task: Task = {
-                id,
-                type: TaskType.Standard,
-                category: TaskCategories.WebResearch,
-                projectId,
-                description,
-                creator: params.agentId
-            }
-
-            pendingTasks.add(id);
-
-            await this.taskManager.addTask(
+            const task = await this.taskManager.addTask(
                 researchProject,
-                task
+                {
+                    type: TaskType.Standard,
+                    category: TaskCategories.WebResearch,
+                    description,
+                    creator: params.agentId
+                }
             );
+            pendingTasks.add(task.id);
 
             //TODO: major todo, figure out task delegation
-            await this.taskManager.assignTaskToAgent(id, "rg7fwbna43byucb174hm7nnuwr");
+            const researcher = params.agents?.find(a => a.handle === "@researchteam");
+            if (researcher) {
+                await this.taskManager.assignTaskToAgent(task.id, researcher.id);
+            } else {
+                Logger.error("Failed to find @researchteam user to assign to");
+            }
 
         }
 

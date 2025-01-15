@@ -5,26 +5,27 @@ import { StepTask } from './ExecuteStepParams';
 
 
 export interface ExecuteParams {
-    agentId: string;
-    message?: string;
-    stepGoal?: string;
-    overallGoal?: string;
-    goal: string;
-    step: string;
-    projectId: string;
-    previousResult?: ModelResponse[];
-    steps: StepTask[],
-    mode?: 'quick' | 'detailed';
-    executionMode: 'conversation' | 'task';
-    agents?: Array<{
-        id: string;
-        handle: string;
-        type: string;
+    readonly agentId: string;
+    readonly message?: string;
+    readonly stepGoal?: string;
+    readonly overallGoal?: string;
+    readonly goal: string;
+    readonly step: string;
+    readonly stepId: string;
+    readonly projectId: string;
+    readonly previousResult?: ModelResponse[];
+    readonly steps: StepTask[],
+    readonly mode?: 'quick' | 'detailed';
+    readonly executionMode: 'conversation' | 'task';
+    readonly agents?: Array<{
+        readonly id: string;
+        readonly handle: string;
+        readonly type: string;
     }>;
-    context?: {
-        channelId?: string;
-        threadId?: string;
-        artifacts?: Artifact[];
-        projects?: Project[];
+    readonly context?: {
+        readonly channelId?: string;
+        readonly threadId?: string;
+        readonly artifacts?: Artifact[];
+        readonly projects?: Project[];
     };
 }

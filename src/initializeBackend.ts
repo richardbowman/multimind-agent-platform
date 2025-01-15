@@ -24,7 +24,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     // Initialize the models
     try {
         Logger.progress('Initializing embedding model...', 0.2);
-        await embeddingService.initializeEmbeddingModel(_s.embeddingModel);
+        await embeddingService.initializeEmbeddingModel(_s.models.embeddings[_s.providers.embeddings]);
         Logger.progress('Initializing chat model...', 0.3);
         await chatService.initializeChatModel(_s.models.conversation[_s.providers.chat]);
     } catch (error) {

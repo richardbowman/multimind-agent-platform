@@ -1,4 +1,5 @@
 window.electron.status((log) => {
+    alert(log);
     document.getElementById('message').textContent = log.message;
     // Update progress bar based on message
     if (log.percentComplete > 0) {

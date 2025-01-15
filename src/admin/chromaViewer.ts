@@ -3,9 +3,11 @@ import ChromaDBService from '../llm/chromaService'; // Adjust the import path ac
 import Logger from 'src/helpers/logger';
 import { formatMarkdownForTerminal } from 'src/helpers/formatters';
 import LMStudioService from 'src/llm/lmstudioService';
-import { EMBEDDING_MODEL } from 'src/helpers/config';
+import { SettingsManager } from 'src/tools/settingsManager';
 
 async function runSearchTool() {
+    const settings = new SettingsManager().getSettings();
+
     const screen = Blessed.screen({
         smartCSR: true,
         useBCE: true,
@@ -27,7 +29,7 @@ async function runSearchTool() {
         hidden: true
     });
 
-    Logger.logBox = Blessed.log({
+    const logBox = Blessed.log({
         top: '80%',
         left: '50%',
         width: '50%',
@@ -44,12 +46,12 @@ async function runSearchTool() {
         },
         label: 'Logs'
     });
-    screen.append(Logger.logBox);
+    screen.append(logBox);
 
     const lmStudioService = new LMStudioService();
     // Initialize the embedding and LLaMA models
-    await lmStudioService.initializeEmbeddingModel(EMBEDDING_MODEL);
-    const chromaDBService = new ChromaDBService(lmStudioService);
+    await lmStudioService.initializeEmbeddingModel(settings.models.embeddings[settings.providers.embeddings]);
+    const chromaDBService = new ChromaDBService(lmStudioService, lmStudioService);
 
 
 

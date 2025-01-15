@@ -60,7 +60,7 @@ IMPORTANT: Always follow this pattern:
                         message: "Writers completed tasks."
                     }]);
 
-                    const post = await this.chatClient.getPost(project.metadata.originalPostId);
+                    const post = project.metadata.originalPostId ? await this.getMessage(project.metadata.originalPostId) : undefined;
 
                     await this.executeNextStep({
                         projectId: project.id, 
@@ -80,15 +80,15 @@ IMPORTANT: Always follow this pattern:
 
     }
 
-    protected async projectCompleted(project: ContentProject): Promise<void> {
-        const finalContent = Object.values(project.tasks).reduce((acc, task) => acc + task.content, '\n\n');
+    protected async projectCompleted(project: Project): Promise<void> {
+        const finalContent = Object.values(project.tasks).reduce((acc, task) => acc + task.props?.content, '\n\n');
         const responseMessage = `The combined content has been shared:\n${finalContent}`;
         const content : Artifact = {
             id: randomUUID(),
             content: finalContent,
             type: "content",
             metadata: {
-                goal: project.goal,
+                goal: project.name,
                 projectId: project.id
             }
         }
@@ -102,21 +102,31 @@ IMPORTANT: Always follow this pattern:
             await this.projects.assignTaskToAgent(project.metadata.parentTaskId, this.userId);
 
             const parentTask = await this.projects.getTaskById(project.metadata.parentTaskId);
-            const parentProject = await this.projects.getProject(parentTask.projectId);
+            if (parentTask) {
+                const parentProject = await this.projects.getProject(parentTask.projectId);
 
-            // Store the artifact ID in the project's metadata for editing tasks
-            parentProject.metadata.contentArtifactId = content.id;
+                // Store the artifact ID in the project's metadata for editing tasks
+                parentProject.metadata.contentArtifactId = content.id;
 
-            this.projects.completeTask(project.metadata.parentTaskId);
+                this.projects.completeTask(project.metadata.parentTaskId);
 
-            const post = await this.chatClient.getPost(parentProject.metadata.originalPostId);
-            this.reply(post, { message: responseMessage }, {
-                "artifact-ids": [content.id]
-            });
+                if (parentProject.metadata.originalPostId) {
+                    const post = await this.getMessage(parentProject.metadata.originalPostId);
+                    if (post) {
+                        this.reply(post, { message: responseMessage }, {
+                            "artifact-ids": [content.id]
+                        });
+                    } else {
+                        Logger.error(`Couldn't find post ${parentProject.metadata.originalPostId}`);
+                    }
+                } else {
+                    Logger.error("Could not find associated post.");
+                }
+            } else {
+                Logger.error("Could not find parent task");
+            }
         } else {
-            // this.chatClient.postInChannel(PROJECTS_CHANNEL_ID, responseMessage, {
-            //     "artifact-ids": [content.id]
-            // });
+            Logger.error("Could not find parent task ID");
         }
     }
 
