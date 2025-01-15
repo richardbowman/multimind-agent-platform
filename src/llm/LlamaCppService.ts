@@ -62,7 +62,9 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
     private async downloadModel(repo: string, modelName: string, modelDir: string): Promise<string> {
         try {
-            const modelPath = path.join(modelDir, modelName);
+            // Create repo-specific directory
+            const repoDir = path.join(modelDir, repo);
+            const modelPath = path.join(repoDir, modelName);
             
             // Check if model already exists
             try {
@@ -72,7 +74,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             } catch {
                 // If not, download it
                 Logger.info(`Downloading model ${repo}...`);
-                await fs.mkdir(modelDir, { recursive: true });
+                await fs.mkdir(repoDir, { recursive: true });
 
                 // Construct URL from repo and model name
                 const url = `https://huggingface.co/${repo}/resolve/main/${modelName}`;
