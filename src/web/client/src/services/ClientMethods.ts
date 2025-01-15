@@ -3,7 +3,6 @@ import type { LogParam } from '../../../../llm/LLMLogger';
 import type { DataContextMethods } from '../contexts/DataContext';
 import { ClientMethods } from '../../../../shared/RPCInterface';
 import { ClientTask } from '../../../../shared/types';
-import { enqueueSnackbar } from 'notistack';
 
 export const createClientMethods = (contextMethods: DataContextMethods) => ({
     onMessage: async (messages: ClientMessage[]) => {
@@ -12,8 +11,9 @@ export const createClientMethods = (contextMethods: DataContextMethods) => ({
             if (message.channel_id !== contextMethods.currentChannelId || 
                 message.thread_id !== contextMethods.currentThreadId) {
                 
-                enqueueSnackbar(`New message in ${message.channel_id}`, {
-                    variant: 'info',
+                contextMethods.showSnackbar({
+                    message: `New message in ${message.channel_id}`,
+                    severity: 'info',
                     persist: true,
                     onClick: () => {
                         contextMethods.setCurrentChannelId(message.channel_id);

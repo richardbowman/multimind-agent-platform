@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack, Snackbar, Alert } from '@mui/material';
-import { SnackbarProvider } from 'notistack';
 import MenuIcon from '@mui/icons-material/Menu';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
@@ -259,11 +258,9 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <SnackbarProvider maxSnack={3}>
-            <DataProvider>
-                <AppContent />
-            </DataProvider>
-        </SnackbarProvider>
+        <DataProvider>
+            <AppContent />
+        </DataProvider>
     );
 };
 
