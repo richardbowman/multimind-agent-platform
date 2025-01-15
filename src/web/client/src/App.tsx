@@ -46,24 +46,34 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'leftOpen' &
 }));
 
 const AppContent: React.FC = () => {
-    const { currentChannelId, currentThreadId, setCurrentThreadId, needsConfig } = useWebSocket();
-    const [toastOpen, setToastOpen] = useState(false);
-    const [toastMessage, setToastMessage] = useState('');
-    const [toastSeverity, setToastSeverity] = useState<'info' | 'success' | 'warning' | 'error'>('info');
+    const { 
+        currentChannelId, 
+        currentThreadId, 
+        setCurrentThreadId, 
+        needsConfig,
+        showSnackbar 
+    } = useWebSocket();
+
+    const [snackbarOpen, setSnackbarOpen] = useState(false);
+    const [snackbarOptions, setSnackbarOptions] = useState<SnackbarOptions>({
+        message: '',
+        severity: 'info'
+    });
 
     useEffect(() => {
         const handleProgressUpdate = (log: { message: string, type?: string }) => {
-            setToastMessage(log.message);
-            setToastSeverity(log.type || 'info');
-            setToastOpen(true);
+            showSnackbar({
+                message: log.message,
+                severity: log.type || 'info'
+            });
         };
 
         // Assuming you have an electron or similar IPC service
         (window as any).electron.status(handleProgressUpdate);
-    }, []);
+    }, [showSnackbar]);
 
-    const handleToastClose = () => {
-        setToastOpen(false);
+    const handleSnackbarClose = () => {
+        setSnackbarOpen(false);
     };
     const ipcService = useIPCService();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
@@ -239,17 +249,23 @@ const AppContent: React.FC = () => {
                 ) : null}
             </Box>
             <Snackbar
-                open={toastOpen}
+                open={snackbarOpen}
                 autoHideDuration={6000}
-                onClose={handleToastClose}
+                onClose={handleSnackbarClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+                onClick={() => {
+                    if (snackbarOptions.onClick) {
+                        snackbarOptions.onClick();
+                        handleSnackbarClose();
+                    }
+                }}
             >
                 <Alert 
-                    onClose={handleToastClose} 
-                    severity={toastSeverity}
+                    onClose={handleSnackbarClose} 
+                    severity={snackbarOptions.severity}
                     sx={{ width: '100%' }}
                 >
-                    {toastMessage}
+                    {snackbarOptions.message}
                 </Alert>
             </Snackbar>
         </Box>

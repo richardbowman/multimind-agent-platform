@@ -11,6 +11,13 @@ const DataContext = createContext<DataContextMethods | null>(null);
 // Create a context for the IPC service
 const IPCContext = createContext<BaseRPCService | null>(null);
 
+export interface SnackbarOptions {
+  message: string;
+  severity: 'info' | 'success' | 'warning' | 'error';
+  persist?: boolean;
+  onClick?: () => void;
+}
+
 export interface DataContextMethods {
   messages: ClientMessage[];
   channels: ClientChannel[];
@@ -26,6 +33,7 @@ export interface DataContextMethods {
   currentThreadId: string | null;
   isLoading: boolean;
   needsConfig: boolean;
+  showSnackbar: (options: SnackbarOptions) => void;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   fetchChannels: () => Promise<void>;
   fetchTasks: (channelId: string, threadId: string | null) => Promise<void>;
@@ -71,6 +79,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [isLoading, setIsLoading] = useState(true);
   const [needsConfig, setNeedsConfig] = useState(true);
+  const [snackbarOpen, setSnackbarOpen] = useState(false);
+  const [snackbarOptions, setSnackbarOptions] = useState<SnackbarOptions>({
+    message: '',
+    severity: 'info'
+  });
 
   useEffect(() => {
     console.debug('WebSocketContext stable mount - connecting');
@@ -189,6 +202,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, []);
   
+  const showSnackbar = useCallback((options: SnackbarOptions) => {
+    setSnackbarOptions(options);
+    setSnackbarOpen(true);
+  }, []);
+
   const contextMethods = useMemo(() => ({
     messages, 
     channels, 
@@ -200,6 +218,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currentThreadId,
     isLoading,
     needsConfig,
+    showSnackbar,
     sendMessage, 
     fetchChannels, 
     fetchTasks,
