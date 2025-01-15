@@ -49,7 +49,15 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             artifacts.forEach((artifact, index) => {
                 message += `Artifact ${index + 1} (${artifact.type}):\n`;
                 if (typeof artifact.content === 'string') {
-                    message += artifact.content.substring(0, 1000) + '\n\n';
+                    const maxLength = 1000;
+                    const content = artifact.content;
+                    if (content.length > maxLength) {
+                        message += `[First ${maxLength} characters shown - document truncated]\n`;
+                        message += content.substring(0, maxLength) + '\n\n';
+                        message += `[Document continues... Total length: ${content.length} characters]\n\n`;
+                    } else {
+                        message += content + '\n\n';
+                    }
                 } else {
                     message += `[Binary data - ${artifact.content.length} bytes]\n\n`;
                 }
