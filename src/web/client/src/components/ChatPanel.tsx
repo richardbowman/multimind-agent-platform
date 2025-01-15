@@ -469,23 +469,29 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                 borderRadius: 2
                             }}>
                                 {!expandedMessages.has(message.id) && (
-                                    <Button
-                                        size="small"
-                                        onClick={() => toggleMessageExpansion(message.id)}
-                                        sx={{
-                                            bottom: 0,
-                                            right: 0,
-                                            zIndex: 1,
-                                            textTransform: 'none',
-                                            color: 'primary.main',
-                                            backgroundColor: 'background.paper',
-                                            '&:hover': {
-                                                backgroundColor: 'background.default'
-                                            }
-                                        }}
-                                    >
-                                        Show more
-                                    </Button>
+                                    <Box sx={{ 
+                                        position: 'absolute', 
+                                        bottom: 0, 
+                                        right: 0,
+                                        zIndex: 1,
+                                        p: 1,
+                                        bgcolor: 'background.paper',
+                                        borderRadius: '4px 0 4px 0'
+                                    }}>
+                                        <Button
+                                            size="small"
+                                            onClick={() => toggleMessageExpansion(message.id)}
+                                            sx={{
+                                                textTransform: 'none',
+                                                color: 'primary.main',
+                                                '&:hover': {
+                                                    backgroundColor: 'background.default'
+                                                }
+                                            }}
+                                        >
+                                            Show more
+                                        </Button>
+                                    </Box>
                                 )}
                                 {expandedMessages.has(message.id) && message.message.split('\n').length > 3 && (
                                     <Button
