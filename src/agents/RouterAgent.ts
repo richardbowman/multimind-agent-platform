@@ -67,9 +67,14 @@ export class RouterAgent extends Agent {
         threadPosts: ChatPost[] = []
     ) {
         // Handle different next steps based on LLM's decision
+        if (!response.nextStep) {
+            // Default to provide-information if no nextStep specified
+            response.nextStep = 'provide-information';
+        }
+
         switch (response.nextStep) {
             case 'propose-transfer':
-                if (response.selectedAgent && response.confidence > 0.7) {
+                if (response.selectedAgent) {
                     await this.reply(userPost, {
                         message: `I think ${response.selectedAgent} would be best suited to help with this. Would you like me to transfer this to them?\n\n${response.response}`
                     }, {
@@ -142,8 +147,8 @@ export class RouterAgent extends Agent {
                     description: "True if we have enough information to route to another agent"
                 }
             },
-            required: ["response", "reasoning", "confidence", "readyToRoute"],
-            additionalProperties: {
+            required: ["response", "reasoning", "confidence"],
+            properties: {
                 nextStep: {
                     type: "string",
                     enum: ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information"],
