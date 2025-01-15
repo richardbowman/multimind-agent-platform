@@ -57,13 +57,24 @@ class LlamaEmbedder implements IEmbeddingFunction {
 }
 
 export class LlamaCppService extends BaseLLMService implements IEmbeddingService {
+    private llama?: Llama;
     private model?: LlamaModel;
     private context?: LlamaContext;
     private embedder?: LlamaEmbedder;
-    session: LlamaChatSession;
+    private session?: LlamaChatSession;
+    embeddingContext: any;
 
     constructor() {
         super('llama-cpp');
+        
+        const shutdown = async () => {
+            if (this.llama) {
+                await this.llama.dispose();
+            }
+        }
+        
+        process.on('SIGTERM', shutdown);
+        process.on('SIGINT', shutdown);
     }
 
     private async downloadModel(owner: string, repo: string, modelName: string, modelDir: string): Promise<string> {
@@ -171,7 +182,9 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
     async initializeModel(modelId: string, modelType: 'chat' | 'embedding'): Promise<void> {
         try {
-            const llama = await loadLlama();
+            if (!this.llama) {
+                this.llama = await loadLlama();
+            }
             
             // Create models directory if it doesn't exist
             const modelDir = path.join(getDataPath(), "models");
@@ -196,11 +209,17 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 }
             }
 
-            const model = await llama.loadModel({
+            const model = await this.llama.loadModel({
                 modelPath: modelPath
             });
             
             if (modelType === 'chat') {
+                if (this.context) {
+                    await this.context.dispose();
+                }
+                if (this.model) {
+                    await this.model.dispose();
+                }
                 const context = await model.createContext();
                 this.context = context;
                 this.model = model;
@@ -209,7 +228,10 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 });
                 Logger.info("Llama.cpp chat model initialized");
             } else if (modelType === 'embedding') {
-                const context = await model.createEmbeddingContext();
+                if (this.embeddingContext) {
+                    await this.embeddingContext.dispose();
+                }
+                this.embeddingContext = await model.createEmbeddingContext();
                 this.embedder = new LlamaEmbedder(context);
                 Logger.info("Llama.cpp embedding model initialized");
             }
