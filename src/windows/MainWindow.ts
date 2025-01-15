@@ -1,9 +1,11 @@
 import { BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
+import Logger from 'src/helpers/logger';
 
 export class MainWindow {
     private window: BrowserWindow;
     private zoomLevel: number = 1.0;
+    private infoEvent: (...args: any[]) => void;
 
     constructor(initialZoom: number = 1.0, options?: Electron.BrowserWindowConstructorOptions) {
         this.zoomLevel = initialZoom;
@@ -29,6 +31,9 @@ export class MainWindow {
         this.window.on('unmaximize', () => {
             this.window.webContents.send('window-state-changed', 'normal');
         });
+
+        this.infoEvent = this.onInfo.bind(this);
+        Logger.on("_progress", this.infoEvent);
     }
 
     setZoomLevel(zoomLevel: number) {
@@ -53,7 +58,22 @@ export class MainWindow {
         this.window.webContents.setZoomLevel(1);          
     }
 
+    setMessage(message: any) {
+        if (!this.window.isDestroyed) {
+            this.window.webContents.send('status', message);
+        }
+    }
+
+    onInfo(logEntry) {
+        this.setMessage(logEntry);
+    }
+
     getWindow(): BrowserWindow {
         return this.window;
+    }
+
+    close() {
+        this.window.close();
+        Logger.off("_progress", this.infoEvent);
     }
 }
