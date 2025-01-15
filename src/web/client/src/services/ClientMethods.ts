@@ -11,13 +11,28 @@ export const createClientMethods = (contextMethods: DataContextMethods) => ({
             if (message.channel_id !== contextMethods.currentChannelId || 
                 message.thread_id !== contextMethods.currentThreadId) {
                 
+                const channelName = contextMethods.channels.find(c => c.id === message.channel_id)?.name || 'a channel';
                 contextMethods.showSnackbar({
-                    message: `New message in ${message.channel_id}`,
+                    message: `New message in ${channelName}`,
                     severity: 'info',
                     persist: true,
                     onClick: () => {
+                        // Set both channel and thread first
                         contextMethods.setCurrentChannelId(message.channel_id);
-                        contextMethods.setCurrentThreadId(message.thread_id);
+                        contextMethods.setCurrentThreadId(message.thread_id || null);
+                        
+                        // Then fetch the messages for the new channel/thread
+                        contextMethods.setMessages([]); // Clear current messages
+                        ipcService.getRPC().getMessages({
+                            channelId: message.channel_id, 
+                            threadId: message.thread_id
+                        }).then(newMessages => {
+                            contextMethods.setMessages(newMessages);
+                        });
+                        
+                        // Fetch related tasks and artifacts
+                        contextMethods.fetchTasks(message.channel_id, message.thread_id || null);
+                        contextMethods.fetchArtifacts(message.channel_id, message.thread_id || null);
                     }
                 });
             }
