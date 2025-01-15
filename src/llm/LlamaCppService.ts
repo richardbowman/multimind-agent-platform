@@ -100,10 +100,12 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                                     return;
                                 }
 
+                                const totalSize = parseInt(redirectResponse.headers['content-length'] || '0', 10);
                                 let bytesDownloaded = 0;
                                 redirectResponse.on('data', (chunk) => {
                                     bytesDownloaded += chunk.length;
-                                    Logger.progress(`Downloading ${bytesDownloaded} bytes downloaded of ${modelName}`)
+                                    const percent = totalSize > 0 ? ((bytesDownloaded / totalSize) * 100).toFixed(1) : '?';
+                                    Logger.progress(`Downloading ${bytesDownloaded}/${totalSize} bytes (${percent}%) of ${modelName}`);
                                 });
 
                                 pipeline(redirectResponse, fileStream)
@@ -114,9 +116,12 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                                     .catch(reject);
                             }).on('error', reject);
                         } else if (response.statusCode === 200) {
+                            const totalSize = parseInt(response.headers['content-length'] || '0', 10);
                             let bytesDownloaded = 0;
                             response.on('data', (chunk) => {
                                 bytesDownloaded += chunk.length;
+                                const percent = totalSize > 0 ? ((bytesDownloaded / totalSize) * 100).toFixed(1) : '?';
+                                Logger.progress(`Downloading ${bytesDownloaded}/${totalSize} bytes (${percent}%) of ${modelName}`);
                             });
 
                             pipeline(response, fileStream)
