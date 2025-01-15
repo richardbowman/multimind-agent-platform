@@ -51,14 +51,12 @@ const AppContent: React.FC = () => {
         currentThreadId, 
         setCurrentThreadId, 
         needsConfig,
-        showSnackbar 
+        showSnackbar,
+        snackbarOpen,
+        snackbarOptions,
+        handleSnackbarClose,
+        handleSnackbarClick
     } = useWebSocket();
-
-    const [snackbarOpen, setSnackbarOpen] = useState(false);
-    const [snackbarOptions, setSnackbarOptions] = useState<SnackbarOptions>({
-        message: '',
-        severity: 'info'
-    });
 
     useEffect(() => {
         const handleProgressUpdate = (log: { message: string, type?: string }) => {
@@ -71,10 +69,6 @@ const AppContent: React.FC = () => {
         // Assuming you have an electron or similar IPC service
         (window as any).electron.status(handleProgressUpdate);
     }, [showSnackbar]);
-
-    const handleSnackbarClose = () => {
-        setSnackbarOpen(false);
-    };
     const ipcService = useIPCService();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
@@ -253,12 +247,7 @@ const AppContent: React.FC = () => {
                 autoHideDuration={6000}
                 onClose={handleSnackbarClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                onClick={() => {
-                    if (snackbarOptions.onClick) {
-                        snackbarOptions.onClick();
-                        handleSnackbarClose();
-                    }
-                }}
+                onClick={handleSnackbarClick}
             >
                 <Alert 
                     onClose={handleSnackbarClose} 
