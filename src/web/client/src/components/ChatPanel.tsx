@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
+import { useIPCService } from '../contexts/IPCServiceContext';
 import { 
     Box, 
     Typography, 
@@ -48,6 +49,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const [selectedTask, setSelectedTask] = useState<any>(null);
     const [taskDialogOpen, setTaskDialogOpen] = useState(false);
     const [userId] = useState('test');
+    const [currentProject, setCurrentProject] = useState<ClientProject | null>(null);
+    const ipcService = useIPCService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
     const [isAtBottom, setIsAtBottom] = useState(true);
@@ -65,6 +68,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
         }
     };
+
+    const fetchProject = useCallback(async (projectId: string) => {
+        try {
+            const project = await ipcService.getRPC().getProject(projectId);
+            setCurrentProject(project);
+        } catch (error) {
+            console.error('Failed to fetch project:', error);
+            setCurrentProject(null);
+        }
+    }, [ipcService]);
+
+    useEffect(() => {
+        // Get project ID from channel metadata
+        const channel = channels.find(c => c.id === currentChannelId);
+        if (channel?.projectId) {
+            fetchProject(channel.projectId);
+        } else {
+            setCurrentProject(null);
+        }
+    }, [currentChannelId, channels, fetchProject]);
 
     // Handle scrolling
     useEffect(() => {
@@ -186,8 +209,80 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 }}
                 onScroll={checkScrollPosition}
             >
+                {/* Project Overview Card */}
+                {currentProject && (
+                    <Paper 
+                        elevation={0}
+                        sx={{ 
+                            mb: 2,
+                            p: 2,
+                            bgcolor: 'background.paper',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 2
+                        }}
+                    >
+                        <Typography 
+                            variant="overline" 
+                            sx={{ 
+                                mb: 1,
+                                color: 'text.secondary',
+                                display: 'block'
+                            }}
+                        >
+                            Project Overview
+                        </Typography>
+                        <Box>
+                            <Typography variant="h6" sx={{ mb: 1 }}>
+                                {currentProject.name}
+                            </Typography>
+                            <Typography variant="body2" sx={{ mb: 2 }}>
+                                {currentProject.metadata.description}
+                            </Typography>
+                            
+                            <Box sx={{ mt: 2 }}>
+                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
+                                    Tasks:
+                                </Typography>
+                                <List dense sx={{ mb: 2 }}>
+                                    {currentProject.tasks.map(task => (
+                                        <ListItem key={task.id} sx={{ p: 0 }}>
+                                            <ListItemButton
+                                                onClick={() => {
+                                                    setSelectedTask(task);
+                                                    setTaskDialogOpen(true);
+                                                }}
+                                            >
+                                                <Typography variant="body2">
+                                                    {task.description}
+                                                </Typography>
+                                                {task.complete && (
+                                                    <Typography variant="caption" sx={{ ml: 1, color: 'success.main' }}>
+                                                        ✓
+                                                    </Typography>
+                                                )}
+                                                {task.inProgress && (
+                                                    <Typography variant="caption" sx={{ ml: 1, color: 'warning.main' }}>
+                                                        ⌛
+                                                    </Typography>
+                                                )}
+                                            </ListItemButton>
+                                        </ListItem>
+                                    ))}
+                                </List>
+                            </Box>
+
+                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                Status: {currentProject.metadata.status} | 
+                                Created: {new Date(currentProject.metadata.createdAt).toLocaleDateString()} | 
+                                Last Updated: {new Date(currentProject.metadata.updatedAt).toLocaleDateString()}
+                            </Typography>
+                        </Box>
+                    </Paper>
+                )}
+
                 {/* Goal Planning Card */}
-                {channels.find(c => c.id === currentChannelId)?.goalTemplate && (
+                {!currentProject && channels.find(c => c.id === currentChannelId)?.goalTemplate && (
                     <Paper 
                         elevation={0}
                         sx={{ 
