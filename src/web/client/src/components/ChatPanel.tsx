@@ -420,7 +420,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 onClose={() => setTaskDialogOpen(false)}
                 selectedTask={selectedTask}
                 setSelectedTask={setSelectedTask}
-                tasks={tasks.filter(t => t.projectId === selectedMessage?.props?.['project-id'])}
+                tasks={tasks}
             />
         </Box>
     );

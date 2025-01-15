@@ -29,7 +29,15 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     setSelectedTask,
     tasks
 }) => {
-    const { handles } = useWebSocket();
+    const { handles, tasks: allTasks } = useWebSocket();
+    
+    // Filter tasks to only show those from the current project
+    const projectTasks = React.useMemo(() => {
+        if (!tasks || tasks.length === 0) return [];
+        const projectId = tasks[0]?.projectId;
+        if (!projectId) return tasks;
+        return allTasks.filter(t => t.projectId === projectId);
+    }, [tasks, allTasks]);
 
     return (
         <Dialog 
@@ -44,7 +52,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     <Box sx={{ width: '30%', overflowY: 'auto', p: 1 }}>
                         <Typography variant="h6" sx={{ mb: 1 }}>Project Tasks</Typography>
                         <List>
-                            {(tasks || []).map(task => (
+                            {projectTasks.map(task => (
                                 <ListItem 
                                     key={task.id}
                                     sx={{
