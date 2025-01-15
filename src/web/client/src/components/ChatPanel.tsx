@@ -1,5 +1,16 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { Box, Typography, List, ListItem, ListItemText, Paper } from '@mui/material';
+import { 
+    Box, 
+    Typography, 
+    List, 
+    ListItem, 
+    ListItemText, 
+    Paper,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    Stack
+} from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
