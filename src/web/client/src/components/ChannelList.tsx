@@ -182,7 +182,9 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                                 {template.description}
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-                                                Supporting Agents: {template.supportingAgents.join(', ')}
+                                                Supporting Agents: {template.supportingAgents
+                                                    .map(id => webSocket.handles.find(h => h.id === id)?.handle || 'Unknown')
+                                                    .join(', ')}
                                             </Typography>
                                         </CardContent>
                                     </CardActionArea>
@@ -199,12 +201,18 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                             onChange={(e) => setSelectedAgents(e.target.value as string[])}
                             renderValue={(selected) => (selected as string[]).join(', ')}
                         >
-                            {webSocket.handles.map((handle) => (
-                                <MenuItem key={handle.id} value={handle.id}>
-                                    <Checkbox checked={selectedAgents.indexOf(handle.id) > -1} />
-                                    <ListItemText primary={handle.handle} />
-                                </MenuItem>
-                            ))}
+                            {webSocket.handles.map((handle) => {
+                                const isSelected = selectedAgents.includes(handle.id);
+                                return (
+                                    <MenuItem key={handle.id} value={handle.id}>
+                                        <Checkbox checked={isSelected} />
+                                        <ListItemText 
+                                            primary={handle.handle} 
+                                            secondary={isSelected ? `(${handle.id})` : undefined}
+                                        />
+                                    </MenuItem>
+                                );
+                            })}
                         </Select>
                     </FormControl>
                 </DialogContent>
