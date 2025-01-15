@@ -12,7 +12,7 @@ import {
     ListItem,
     ListItemText
 } from '@mui/material';
-import { useWebSocket } from '../contexts/DataContext';
+import { useWebSocket, useIPCService } from '../contexts/DataContext';
 import { LoadingButton } from '@mui/lab';
 
 interface TaskDialogProps {
@@ -31,6 +31,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     tasks
 }) => {
     const { handles, tasks: allTasks } = useWebSocket();
+    const ipcService = useIPCService();
     
     // Filter tasks to only show those from the current project
     const projectTasks = React.useMemo(() => {
@@ -149,7 +150,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         color={selectedTask.complete ? "secondary" : "primary"}
                         onClick={async () => {
                             try {
-                                await markTaskComplete(selectedTask.id, !selectedTask.complete);
+                                await ipcService.getRPC().markTaskComplete(selectedTask.id, !selectedTask.complete);
                                 setSelectedTask({
                                     ...selectedTask,
                                     complete: !selectedTask.complete,
