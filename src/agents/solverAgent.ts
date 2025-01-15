@@ -15,10 +15,20 @@ export class SolverAgent extends StepBasedAgent {
         throw new Error('Method not implemented.');
     }
     constructor(params: AgentConstructorParams) {
-        // Initialize model helpers before calling super
-        const modelHelpers = new ModelHelpers(params.llmService, params.userId);
-        modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning who can write code.`);
-        modelHelpers.setFinalInstructions(`SOLVING INSTRUCTIONS
+        // Create planner with the correct parameters
+        const planner = new MultiStepPlanner(
+            params.llmService,
+            params.taskManager,
+            params.userId,
+            this.modelHelpers
+        );
+
+        // Call super with params and planner
+        super(params, planner);
+
+        // Set purpose and instructions
+        this.modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning who can write code.`);
+        this.modelHelpers.setFinalInstructions(`SOLVING INSTRUCTIONS
         Use steps of constructive thinking, critical refutation, and validation to develop robust solutions. 
         In the reasoning field, explain the complexity you see in this goal.
         
@@ -35,36 +45,14 @@ export class SolverAgent extends StepBasedAgent {
         
         Adapt your approach to the complexity of each problem, using more cycles as needed.`);
 
-        // Create planner with the correct parameters
-        const planner = new MultiStepPlanner(
-            params.llmService,
-            params.taskManager,
-            params.userId,
-            modelHelpers
-        );
-
-        // Call super with params and planner
-        super(params, planner);
-
-        // Create standardized params
-        const executorParams = {
-            llmService: params.llmService,
-            taskManager: params.taskManager,
-            artifactManager: this.artifactManager,
-            vectorDBService: params.vectorDBService,
-            userId: params.userId,
-            modelHelpers: modelHelpers,
-            vectorDB: params.vectorDBService
-        };
-
-        // Register executors after super is called
-        this.registerStepExecutor(new GoalConfirmationExecutor(executorParams));
-        this.registerStepExecutor(new ThinkingExecutor(executorParams));
-        this.registerStepExecutor(new RefutingExecutor(executorParams));
-        this.registerStepExecutor(new ValidationExecutor(executorParams));
-        this.registerStepExecutor(new KnowledgeCheckExecutor(executorParams));
-        this.registerStepExecutor(new CodeExecutorExecutor(executorParams));
-        this.registerStepExecutor(new FinalResponseExecutor(executorParams));
+        // Register executors using getExecutorParams
+        this.registerStepExecutor(new GoalConfirmationExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new ThinkingExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new RefutingExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new KnowledgeCheckExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new CodeExecutorExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new FinalResponseExecutor(this.getExecutorParams()));
 
     }
 
