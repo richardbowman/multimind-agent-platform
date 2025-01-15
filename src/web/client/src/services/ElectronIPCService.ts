@@ -3,6 +3,7 @@ import { BaseRPCService } from '../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../shared/rpcUtils';
 import { createClientMethods } from './ClientMethods';
+import { DataContextMethods } from '../contexts/DataContext';
 
 export class ElectronIPCService extends BaseRPCService {
     status: { configured: boolean; ready: boolean; message?: string; };

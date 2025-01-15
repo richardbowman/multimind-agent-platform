@@ -8,6 +8,7 @@ import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
+import { ExecutorType } from './executors/ExecutorType';
 
 
 export interface ResearchProject extends Project {
@@ -24,8 +25,18 @@ export class ResearchAssistant extends StepBasedAgent {
         this.searchHelper = SearchHelper.create(params.settings, this.artifactManager);
         this.scrapeHelper = new ScrapeHelper(this.artifactManager, params.settings);
 
-        this.modelHelpers.setPurpose("You are a research assistant who thoroughly summarizes web results.");
-        this.modelHelpers.setFinalInstructions("PROPER PROCESS: do a 'check-knowledge' first, then a 'validation' step to see if you can meet the goals. If not, then add 'web_search' and 'validation' as needed until you get the answer. Make sure your final step is a `final_response`");
+        this.modelHelpers.setPurpose("You are a research assistant who performs web searches to meet the goal.");
+        this.modelHelpers.setFinalInstructions(`
+For incoming new user requests, you should typically follow this order:
+1) ${ExecutorType.CHECK_KNOWLEDGE}
+2) ${ExecutorType.VALIDATION}
+3) ${ExecutorType.FINAL_RESPONSE}
+
+If you've already done this, you should follow this order:
+1) ${ExecutorType.WEB_RESEARCH}
+2) ${ExecutorType.VALIDATION}
+3) ${ExecutorType.FINAL_RESPONSE}
+`);
 
         // Create standardized params
         const executorParams = {
@@ -37,7 +48,8 @@ export class ResearchAssistant extends StepBasedAgent {
             searchHelper: this.searchHelper,
             scrapeHelper: this.scrapeHelper,
             modelHelpers: this.modelHelpers,
-            vectorDB: params.vectorDBService
+            vectorDB: params.vectorDBService,
+            settings: params.settings
         };
 
         // Register step executors

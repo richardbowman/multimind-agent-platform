@@ -1,9 +1,12 @@
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
+import { electron } from 'process';
+import Logger from 'src/helpers/logger';
 
 export class SplashWindow {
     private window: BrowserWindow;
     private zoomLevel: number = 1.0;
+    private infoEvent: (...args: any[]) => void;
 
     constructor(initialZoom: number = 1.0) {
         this.zoomLevel = initialZoom;
@@ -25,29 +28,27 @@ export class SplashWindow {
                 zoomFactor: this.zoomLevel
             }
         });
-    }
-
-    setZoomLevel(zoomLevel: number) {
-        // this.zoomLevel = Math.min(Math.max(zoomLevel, 0.5), 2.0); // Clamp between 0.5 and 2.0
-        // this.window.webContents.setZoomFactor(this.zoomLevel);
-    }
-
-    getZoomLevel(): number {
-        return this.zoomLevel;
+        this.infoEvent = this.onInfo.bind(this);
+        Logger.on("_progress", this.infoEvent);
     }
 
     async show() {
         await this.window.loadFile(path.join(__dirname, './web/splash.html'));
         this.window.show();
         this.window.webContents.setZoomFactor(this.zoomLevel);
-        this.window.webContents.setZoomLevel(1);        
+        this.window.webContents.setZoomLevel(1);
     }
 
-    setMessage(message: string) {
-        this.window.webContents.send('splash-message', message);
+    setMessage(message: any) {
+        this.window.webContents.send('status', message);
+    }
+
+    onInfo(logEntry) {
+        this.setMessage(logEntry);
     }
 
     close() {
         this.window.close();
+        Logger.off("_info", this.infoEvent);
     }
 }

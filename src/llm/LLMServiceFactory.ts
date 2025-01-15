@@ -47,10 +47,13 @@ export class LLMServiceFactory {
                 throw new Error(`Unsupported embedding provider: ${settings.providers.embeddings}`);
         }
     }
-
     static createService(settings: Settings, modelType: ModelType = ModelType.CONVERSATION): ILLMService {
-        // Create main chat service
-        switch (settings.providers.chat) {
+        return this.createServiceByName(settings.providers.chat, settings, modelType);
+    }
+
+    static createServiceByName(name: string, settings: Settings, modelType: ModelType = ModelType.CONVERSATION): ILLMService {
+            // Create main chat service
+        switch (name) {
             case LLMProvider.LMSTUDIO:
                 return new LMStudioService(settings.lmStudioBaseUrl);
             case LLMProvider.BEDROCK:

@@ -11,6 +11,7 @@ import { ContentOutline } from 'src/schemas/outline';
 import { ExecutorType } from './ExecutorType';
 import { ExecuteParams } from '../ExecuteParams';
 import { StructuredInputPrompt } from 'src/prompts/structuredInputPrompt';
+import { OutlineApprovalCheck } from 'src/schemas/OutlineApprovalCheck';
 
 /**
  * Executor that creates structured content outlines for documents.
@@ -46,12 +47,7 @@ export class OutlineExecutor implements StepExecutor {
             
             // Analyze if the feedback indicates approval using structured output
             const approvalSchema = await getGeneratedSchema(SchemaType.OutlineApprovalCheck);
-            const approvalCheck = await this.modelHelpers.generate<{
-                approved: boolean,
-                changesNeeded: string[],
-                confidence: number,
-                feedbackSummary: string
-            }>({
+            const approvalCheck = await this.modelHelpers.generate<OutlineApprovalCheck>({
                 message: `Does this feedback indicate the outline is approved? Feedback: ${feedback}`,
                 instructions: new StructuredOutputPrompt(
                     approvalSchema,

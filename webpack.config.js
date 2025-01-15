@@ -50,6 +50,10 @@ module.exports = {
         {
           from: './src/web/client/public/splash.html',
           to: 'splash.html'
+        },
+        {
+          from: './src/web/client/public/splash.js',
+          to: 'splash.js'
         }
       ]
     }),

@@ -11,9 +11,6 @@ import { ResearchAggregationExecutor } from './executors/ResearchAggregationExec
 import { UnderstandGoalsExecutor } from "./executors/UnderstandGoalsExecutor";
 import { ResearchGoalsExecutor } from "./executors/ResearchGoalsExecutor";
 
-export interface ResearchProject extends Project {
-    goal: string;
-}
 
 export class ResearchManager extends StepBasedAgent {
     protected processTask(task: Task): Promise<void> {
@@ -21,9 +18,7 @@ export class ResearchManager extends StepBasedAgent {
     }
 
     constructor(params: AgentConstructorParams) {
-        const modelHelpers = new ModelHelpers(params.llmService, params.userId);
-        const planner = new MultiStepPlanner(params.llmService, params.taskManager, params.userId, modelHelpers);
-        super(params, planner);
+        super(params);
 
         // Create standardized params
         const executorParams = {

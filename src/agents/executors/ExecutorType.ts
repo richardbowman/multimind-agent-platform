@@ -18,5 +18,6 @@ export enum ExecutorType {
     VALIDATION = 'validation',
     WRITING = 'assign-writers',
     BRAINSTORM = "brainstorm",
-    DOCUMENT_RETRIEVAL = "document-retrieval"
+    DOCUMENT_RETRIEVAL = "document-retrieval",
+    WEB_RESEARCH = "web_search"
 }

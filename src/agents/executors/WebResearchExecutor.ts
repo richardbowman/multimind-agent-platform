@@ -15,6 +15,7 @@ import { SearchQueryResponse } from '../../schemas/SearchQueryResponse';
 import { LinkSelectionResponse } from '../../schemas/LinkSelectionResponse';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
+import { ExecutorType } from './ExecutorType';
 
 /**
  * WebSearchExecutor - An intelligent web research agent that:
@@ -35,7 +36,7 @@ import { SchemaType } from '../../schemas/SchemaTypes';
  * - Structured output using JSON schemas
  * - Artifact management for persistence
  */
-@StepExecutorDecorator('web_search', 'Performs web searches and summarizes results')
+@StepExecutorDecorator(ExecutorType.WEB_RESEARCH, 'Performs web searches and summarizes results')
 export class WebSearchExecutor implements StepExecutor {
     private searchHelper: SearchHelper;
     private scrapeHelper: ScrapeHelper;

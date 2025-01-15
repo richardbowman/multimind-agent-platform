@@ -381,7 +381,7 @@ export abstract class StepBasedAgent extends Agent {
                 Logger.info(`Completed step "${task.stepType}" for project "${projectId}"`);
 
                 // If this was the last planned task, add a validation step
-                const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete);
+                const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete && t.type === "step");
                 if (stepResult.allowReplan && remainingTasks.length === 0) {
                     // const validationTask: Task = {
                     //     id: crypto.randomUUID(),

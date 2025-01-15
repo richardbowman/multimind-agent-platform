@@ -36,24 +36,25 @@ app.whenReady().then(async () => {
         splashWindow = new SplashWindow(_s.zoom);
         await splashWindow.show();
 
-        // Initialize backend services
-        splashWindow.setMessage('Initializing backend services...');
-        backendServices = {
-            ...await initializeBackend(settingsManager, {
-                onProgress: (message) => splashWindow.setMessage(message)
-            }),
-            mainWindow
-        };
+        setTimeout(async () => {
 
-        // Create main window
-        splashWindow.setMessage('Loading main interface...');
+            // Initialize backend services
+            splashWindow.setMessage('Initializing backend services...');
+            backendServices = {
+                ...await initializeBackend(settingsManager),
+                mainWindow
+            };
 
-        // Set up IPC handlers
-        setupIpcHandlers();
-        await mainWindow.show();
+            // Create main window
+            splashWindow.setMessage('Loading main interface...');
 
-        // Close splash screen
-        splashWindow.close();
+            // Set up IPC handlers
+            setupIpcHandlers();
+            await mainWindow.show();
+
+            // Close splash screen
+            splashWindow.close();
+        }, 500);
 
     } catch (error) {
         backendServices = {
@@ -108,9 +109,14 @@ export async function setupIpcHandlers(hasConfigError: boolean = false) {
 }
 
 export async function reinitializeBackend() {
+    const _s = settingsManager.getSettings();
+    splashWindow = new SplashWindow(_s.zoom);
+
     backendServices =  await initializeBackend(settingsManager);
     ipcServer.reinitialize(backendServices);
     configComplete = true;
+
+    await splashWindow.close();
 }
 
 app.on('window-all-closed', () => {

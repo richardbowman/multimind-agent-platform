@@ -12,7 +12,7 @@ import { ILLMService } from 'src/llm/ILLMService';
 import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { Settings } from "src/tools/settingsManager";
+import { Settings } from "src/tools/settings";
 
 export interface ActionMetadata {
     activityType: string;
@@ -30,9 +30,15 @@ export interface HandlerParams extends GenerateParams {
     threadPosts?: ChatPost[];
 }
 
+export interface PlannerParams extends GenerateParams {
+    userPost: Message;
+    rootPost?: Message;
+    threadPosts?: Message[];
+}
+
 export interface GenerateInputParams extends GenerateParams {
     instructions: string | InputPrompt | StructuredOutputPrompt;
-    threadPosts?: ChatPost[];
+    threadPosts?: Message[];
     model?: string;
 }
 
@@ -254,7 +260,7 @@ export abstract class Agent {
                     if (posts.length > 1 && posts[1].user_id === this.userId) {
                         // Get all available actions for this response type
                         const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
-                        const projects = [];
+                        const projects : Project[] = [];
                         for (const projectId of projectIds) {
                             const project = this.projects.getProject(projectId);
                             if (project) projects.push(project);
@@ -376,7 +382,7 @@ export abstract class Agent {
             description: string;
             type: string;
         }[];
-        metadata?: ProjectMetadata
+        metadata?: Partial<ProjectMetadata>
     }): Promise<{ projectId: string, taskIds: string[] }> {
         const project = await this.projects.createProject({
             name: projectName,

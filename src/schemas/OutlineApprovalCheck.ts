@@ -1,4 +1,3 @@
-import { SchemaType } from './SchemaTypes';
 
 /**
  * Response from checking if an outline has been approved
@@ -24,9 +23,3 @@ export interface OutlineApprovalCheck {
      */
     feedbackSummary: string;
 }
-
-// Register the schema type
-export const OutlineApprovalCheckSchema = {
-    type: SchemaType.OutlineApprovalCheck,
-    interface: OutlineApprovalCheck
-};

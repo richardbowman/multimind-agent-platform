@@ -8,6 +8,7 @@ import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from './ExecutorType';
+import { ExecuteParams } from '../ExecuteParams';
 const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
 /**
@@ -63,6 +64,7 @@ If the solution is wrong, list the specific aspects that must be addressed.`;
             finished: true,
             // Only request user input in conversation mode
             needsUserInput: params.executionMode === 'conversation' && !response.isComplete,
+            allowReplan: params.executionMode === 'task' && !response.isComplete,
             missingAspects: response.missingAspects || [],
             response: {
                 message: response.message

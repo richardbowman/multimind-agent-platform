@@ -1,7 +1,9 @@
-import { ChatPost } from "src/chat/chatClient";
+import { ChatPost, Message } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { ILLMService, LLMRequestParams, LLMTool, StructuredOutputPrompt } from "./ILLMService";
 import { LLMCallLogger } from "./LLMLogger";
+import { ModelType } from "./LLMServiceFactory";
+import { ModelInfo } from "./types";
 
 export abstract class BaseLLMService implements ILLMService {
     protected logger: LLMCallLogger;
@@ -11,7 +13,7 @@ export abstract class BaseLLMService implements ILLMService {
     abstract getEmbeddingModel(): any;
     abstract sendLLMRequest<T extends ModelResponse>(params: LLMRequestParams & { modelType?: ModelType }): Promise<GenerateOutputParams<T>>;
     abstract countTokens(content: string): Promise<number>;
-    abstract getAvailableModels(): Promise<string[]>;
+    abstract getAvailableModels(): Promise<ModelInfo[]>;
 
     constructor(name: string) {
         this.logger = new LLMCallLogger(name);
@@ -60,7 +62,7 @@ export abstract class BaseLLMService implements ILLMService {
         return result.response.message || '';
     }
 
-    async generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T> {
+    async generateStructured<T extends ModelResponse>(userPost: Message, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T> {
         const messages = [
             ...(history ? this.mapPosts(userPost, history) : []),
             {

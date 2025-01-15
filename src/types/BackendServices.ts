@@ -10,6 +10,7 @@ import { LogReader } from "src/server/LogReader";
 import { SettingsManager } from "../tools/settingsManager";
 
 import { MainWindow } from "../windows/MainWindow";
+import { ILLMService } from "src/llm/ILLMService";
 
 export interface BackendServices {
     chatClient: ChatClient;
@@ -19,4 +20,5 @@ export interface BackendServices {
     llmLogger: LLMCallLogger;
     logReader: LogReader;
     mainWindow: MainWindow;
+    llmService: ILLMService;
 }

@@ -11,6 +11,7 @@ import { TaskManager } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import crypto from 'crypto';
 import { ModelHelpers } from 'src/llm/modelHelpers';
+import { StepTask } from '../ExecuteStepParams';
 
 export class MultiStepPlanner implements Planner {
     constructor(
@@ -108,7 +109,7 @@ ${currentSteps}`;
 
         // Create a map of existing tasks by ID
         const existingTaskMap = new Map(
-            tasks.map(task => [task.id, task])
+            tasks.map(task => [task.id, task as StepTask])
         );
 
         if (Array.isArray(response.steps) && response.steps.length > 0) {
@@ -119,21 +120,24 @@ ${currentSteps}`;
             response.steps.forEach((step, index) => {
                 if (step.existingId && existingTaskMap.has(step.existingId)) {
                     // Update existing task
-                    const existingTask = existingTaskMap.get(step.existingId)!;
-                    existingTask.order = index;
-                    if (step.actionType) existingTask.type = step.actionType;
-                    if (step.context) existingTask.description = step.context;
+                    this.projects.updateTask(step.existingId, {
+                        order: index,
+                        stepType: step.actionType,
+                        description: step.context
+                    } as Partial<StepTask>)
                     mentionedTaskIds.add(step.existingId);
                 } else {
                     // Create new task
-                    const newTask: Task = {
+                    const newTask: StepTask = {
                         id: crypto.randomUUID(),
+                        type: 'step',
                         projectId: project.id,
-                        type: step.actionType,
+                        stepType: step.actionType,
                         description: step.context || step.actionType,
                         creator: this.userId,
                         complete: false,
-                        order: index
+                        order: index,
+                        props: {}
                     };
                     this.projects.addTask(project, newTask);
                 }

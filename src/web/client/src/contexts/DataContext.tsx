@@ -49,6 +49,7 @@ export interface DataContextMethods {
   getSettings: () => Promise<any>;
   updateSettings: (settings: any) => Promise<any>;
   createChannel: (params: CreateChannelParams) => Promise<string>;
+  setTasks: React.Dispatch<React.SetStateAction<ClientTask[]>>
 }
 
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {

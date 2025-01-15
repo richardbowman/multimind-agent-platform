@@ -1,7 +1,7 @@
 import { ILLMService } from 'src/llm/ILLMService';
 import { IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { ArtifactManager } from 'src/tools/artifactManager';
-import { Settings } from 'src/tools/settingsManager';
+import { Settings } from 'src/tools/settings';
 import { TaskManager } from 'src/tools/taskManager';
 
 

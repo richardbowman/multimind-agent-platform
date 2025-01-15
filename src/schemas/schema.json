@@ -728,6 +728,38 @@
       ],
       "type": "object"
     },
+    "OutlineApprovalCheck": {
+      "additionalProperties": false,
+      "description": "Response from checking if an outline has been approved",
+      "properties": {
+        "approved": {
+          "description": "Whether the outline has been approved",
+          "type": "boolean"
+        },
+        "changesNeeded": {
+          "description": "List of requested changes if not approved",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "confidence": {
+          "description": "Confidence score (0-100) in the approval assessment",
+          "type": "number"
+        },
+        "feedbackSummary": {
+          "description": "Brief summary of the feedback provided",
+          "type": "string"
+        }
+      },
+      "required": [
+        "approved",
+        "changesNeeded",
+        "confidence",
+        "feedbackSummary"
+      ],
+      "type": "object"
+    },
     "OutlineSection": {
       "additionalProperties": false,
       "description": "Represents a content outline section",
@@ -1105,7 +1137,9 @@
         "LinkSelectionResponse",
         "QuickQueriesResponse",
         "ResearchUnderstandingResponse",
-        "CodeExecutionResponse"
+        "CodeExecutionResponse",
+        "BrainstormResponse",
+        "OutlineApprovalCheck"
       ],
       "type": "string"
     },

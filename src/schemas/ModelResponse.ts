@@ -1,5 +1,3 @@
-import { response } from "express";
-import { StringMap } from "ts-json-schema-generator";
 
 export interface ModelResponse extends Record<string, any> {
 

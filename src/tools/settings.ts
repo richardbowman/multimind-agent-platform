@@ -70,41 +70,16 @@ export class EmbeddingsModelByProvider {
     @ClientSettings({
         label: 'OpenAI Embeddings Model',
         category: 'Embeddings',
-        type: 'string',
+        type: 'select',
         description: 'Model identifier for OpenAI embeddings',
         defaultValue: 'text-embedding-3-small'
     })
     openai: string = 'text-embedding-3-small';
 
     @ClientSettings({
-        label: 'Cohere Embeddings Model',
-        category: 'Embeddings',
-        type: 'string',
-        description: 'Model identifier for Cohere embeddings',
-        defaultValue: 'embed-english-v3.0'
-    })
-    cohere: string = 'embed-english-v3.0';
-
-    @ClientSettings({
-        label: 'HuggingFace Embeddings Model',
-        category: 'Embeddings',
-        type: 'string',
-        description: 'Model identifier for HuggingFace embeddings'
-    })
-    huggingface: string = '';
-
-    @ClientSettings({
-        label: 'Local Embeddings Model',
-        category: 'Embeddings',
-        type: 'string',
-        description: 'Model path for local embeddings'
-    })
-    local: string = '';
-
-    @ClientSettings({
         label: 'Llama.cpp Embeddings Model',
         category: 'Embeddings',
-        type: 'string',
+        type: 'select',
         description: 'Model path for Llama.cpp embeddings'
     })
     llama_cpp: string = '';
@@ -114,7 +89,7 @@ export class ModelByProvider {
     @ClientSettings({
         label: 'LM Studio Model',
         category: 'LLM Settings',
-        type: 'string',
+        type: 'select',
         description: 'Model path or identifier for LM Studio'
     })
     lmstudio: string = 'qwen2.5-coder-14b-instruct';
@@ -122,7 +97,7 @@ export class ModelByProvider {
     @ClientSettings({
         label: 'Anthropic Model',
         category: 'LLM Settings',
-        type: 'string',
+        type: 'select',
         description: 'Model identifier for Anthropic'
     })
     anthropic: string = 'claude-3-opus-20240229';
@@ -130,7 +105,7 @@ export class ModelByProvider {
     @ClientSettings({
         label: 'Bedrock Model',
         category: 'LLM Settings',
-        type: 'string',
+        type: 'select',
         description: 'Model identifier for AWS Bedrock'
     })
     bedrock: string = 'anthropic.claude-3-sonnet-20240229-v1:0';
@@ -138,7 +113,7 @@ export class ModelByProvider {
     @ClientSettings({
         label: 'OpenAI Model',
         category: 'LLM Settings',
-        type: 'string',
+        type: 'select',
         description: 'Model identifier for OpenAI'
     })
     openai: string = 'gpt-4-turbo-preview';
@@ -146,7 +121,7 @@ export class ModelByProvider {
     @ClientSettings({
         label: 'OpenRouter Model',
         category: 'LLM Settings',
-        type: 'string',
+        type: 'select',
         description: 'Model identifier for OpenRouter'
     })
     openrouter: string = 'anthropic/claude-3-opus';
@@ -154,7 +129,7 @@ export class ModelByProvider {
     @ClientSettings({
         label: 'Llama.cpp Model',
         category: 'LLM Settings',
-        type: 'string',
+        type: 'select',
         description: 'Model path for Llama.cpp'
     })
     llama_cpp: string = 'codellama-13b-instruct.Q4_K_M.gguf';
@@ -220,7 +195,7 @@ export class LLMModels {
         type: 'section',
         description: 'Models for generating embeddings'
     })
-    embeddings: ModelByProvider = new ModelByProvider();
+    embeddings: EmbeddingsModelByProvider = new EmbeddingsModelByProvider();
 }
 
 export class APIConfig {
@@ -343,22 +318,6 @@ export class Settings {
     maxResearchRequests: number = 3;
 
     @ClientSettings({
-        label: 'Embedding Model',
-        category: 'Embeddings',
-        type: 'string',
-        defaultValue: 'nomic-embed-text-v1.5.Q4_K_M.gguf'
-    })
-    embeddingModel: string = 'nomic-embed-text-v1.5.Q4_K_M.gguf';
-
-    @ClientSettings({
-        label: 'Chat Model',
-        category: 'LLM Settings',
-        type: 'string',
-        defaultValue: 'qwen2.5-coder-14b-instruct'
-    })
-    chatModel: string = 'qwen2.5-coder-14b-instruct';
-
-    @ClientSettings({
         label: 'Context Size',
         category: 'LLM Settings',
         type: 'number',
@@ -373,14 +332,6 @@ export class Settings {
         defaultValue: 'ws://localhost:1234'
     })
     lmStudioBaseUrl: string = 'ws://localhost:1234';
-
-    @ClientSettings({
-        label: 'Embeddings Models',
-        category: 'Embeddings',
-        type: 'section',
-        description: 'Model configurations for embeddings'
-    })
-    embeddingsModels: EmbeddingsModelByProvider = new EmbeddingsModelByProvider();
 
     @ClientSettings({
         label: 'UI Zoom Level',
@@ -413,23 +364,6 @@ export class Settings {
         description: 'Model configurations for different tasks'
     })
     models: LLMModels = new LLMModels();
-
-    @ClientSettings({
-        label: 'Embedding Model',
-        category: 'Embeddings',
-        type: 'string',
-        description: 'Model identifier for embeddings'
-    })
-    embeddingModel!: string;
-
-    @ClientSettings({
-        label: 'Embedding Provider',
-        category: 'Embeddings',
-        type: 'select',
-        options: ['openai', 'cohere', 'huggingface', 'local', 'llama_cpp'],
-        defaultValue: 'local'
-    })
-    embeddingProvider!: string;
 
     @ClientSettings({
         label: 'LM Studio Base URL',

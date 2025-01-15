@@ -3,26 +3,28 @@ import { appendFileSync, mkdirSync } from 'fs';
 import * as path from 'path';
 import { getDataPath } from './paths';
 import { Socket } from 'socket.io';
+import EventEmitter from 'events';
 
 declare global {
     var socket: Socket | undefined;
 }
 
-class Logger {
-    private static logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.log`);
+class LogManager extends EventEmitter {
+    private logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.log`);
 
-    private static ensureLogDirectoryExists(): void {
+    private ensureLogDirectoryExists(): void {
         const dir = path.dirname(Logger.logFilePath);
         mkdirSync(dir, { recursive: true });
     }
 
-    static log(level: string, message: string): void {
+    log(level: string, message: string, details?: Record<string, any>): void {
         const timestamp = new Date().toISOString();
         const formattedMessage = `[${timestamp}] ${level.toUpperCase()}: ${message}\n`;
         const logEntry = {
             timestamp: new Date().getTime(),
             level: level.toUpperCase(),
-            message
+            message,
+            details
         };
 
         // Ensure directory exists and append to log file
@@ -33,38 +35,46 @@ class Logger {
         if (global.socket) {
             global.socket.emit('system_log', logEntry);
         }
+        this.emit("_" + level.toLowerCase(), logEntry);
         
         if (level !== "verbose") console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`)
-        // if (this.logBox && level !== "verbose") this.logBox.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`);
     }
 
-    static info(message: string, error?: any): void {
+    public info(message: string, error?: any): void {
         const infoMsg = error?.message 
             ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
             : message;
         this.log('info', infoMsg);
     }
 
-    static warn(message: string, error?: any): void {
+    public warn(message: string, error?: any): void {
         const warnMsg = error ?.message
             ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
             : message;
         this.log('warn', warnMsg);
     }
 
-    static verbose(message: string, error?: any): void {
+    public verbose(message: string, error?: any): void {
         const verboseMsg = error?.message 
             ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
             : message;
         this.log('verbose', verboseMsg);
     }
 
-    static error(message: string, error?: any): void {
+    public error(message: string, error?: any): void {
         const errorMsg = error?.message 
             ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
             : message;
         this.log('error', errorMsg);
     }
+
+    public progress(message: string, percentComplete?: number): void {
+        this.log('progress', message, {
+            percentComplete
+        });
+    }
 }
+
+const Logger = new LogManager();
 
 export default Logger;

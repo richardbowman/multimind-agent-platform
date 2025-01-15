@@ -100,7 +100,7 @@ ${previousContext}`;
 
             const task: Task = {
                 id,
-                type: "research",
+                type: "standard",
                 projectId,
                 description,
                 creator: params.agentId

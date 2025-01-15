@@ -12,28 +12,31 @@ import { getDataPath } from "./helpers/paths";
 import path from "path";
 
 export async function initializeBackend(settingsManager: SettingsManager, options: { 
-    reindex?: boolean,
-    onProgress?: (message: string) => void 
+    reindex?: boolean
 } = {}): Promise<BackendServices> {
-    const { onProgress } = options;
 
     const _s = settingsManager.getSettings();
 
-    onProgress?.('Initializing LLM services...');
+    Logger.progress('Initializing LLM services...', 0.1);
     const chatService = LLMServiceFactory.createService(_s);
     const embeddingService = LLMServiceFactory.createEmbeddingService(_s);
 
     // Initialize the models
-    onProgress?.('Initializing embedding model...');
-    await embeddingService.initializeEmbeddingModel(_s.embeddingModel);
-    onProgress?.('Initializing chat model...');
-    await chatService.initializeChatModel(_s.models.conversation[_s.providers.chat]);
+    try {
+        Logger.progress('Initializing embedding model...', 0.2);
+        await embeddingService.initializeEmbeddingModel(_s.embeddingModel);
+        Logger.progress('Initializing chat model...', 0.3);
+        await chatService.initializeChatModel(_s.models.conversation[_s.providers.chat]);
+    } catch (error) {
+        throw error;
+    }
 
+    Logger.progress('Loading vector database', 0.3);
     const vectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
     const artifactManager = new ArtifactManager(vectorDB);
 
     vectorDB.on("needsReindex", async () => {
-        Logger.info("Reindexing");
+        Logger.progress("Reindexing vector database", 0.4);
         await artifactManager.indexArtifacts();
     });
 
@@ -45,7 +48,10 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     const tasks = new SimpleTaskManager(path.join(dataDir, "tasks.json"));
 
     // Load previously saved tasks
+    Logger.progress("Loading tasks", 0.6);
     await tasks.load();
+
+    Logger.progress("Loading chats", 0.6);
     await chatStorage.load();
 
     // Handle graceful shutdown
@@ -75,14 +81,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         settingsManager: settingsManager
     });
 
-    // if (settings.defaultChannels) {
-    //     Object.entries(settings.defaultChannels).forEach(([name, id]) => {
-    //         params.chatStorage.createChannel(id, `#${name}`);
-    //         channelIds.push(id);
-    //         Logger.info(`Registered channel: ${name} (${id})`);
-    //     });
-    // }
-    if (!Object.values(chatStorage.channelNames).includes("#welcome")) {
+      if (!Object.values(chatStorage.channelNames).includes("#welcome")) {
         await chatStorage.createChannel({
             name: "#welcome",
             description: "This is where we'll get started",
@@ -117,6 +116,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         artifactManager,
         settingsManager,
         llmLogger: chatService.getLogger(),
-        logReader: new LogReader()
+        logReader: new LogReader(),
+        llmService: chatService
     };
 }

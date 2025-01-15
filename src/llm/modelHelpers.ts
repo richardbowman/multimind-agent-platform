@@ -170,14 +170,14 @@ export class ModelHelpers {
             params,
             schema: structure.getSchema()
         };
-        const cachedResponse = this.modelCache.get(structure.getPrompt(), cacheContext);
-        if (cachedResponse) {
-            return cachedResponse as T;
-        }
+        // const cachedResponse = this.modelCache.get(structure.getPrompt(), cacheContext);
+        // if (cachedResponse) {
+        //     return cachedResponse as T;
+        // }
 
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = this.addDateToSystemPrompt(structure.getPrompt());
-        augmentedInstructions += `OVERALL PURPOSE: ${this.getPurpose()}\n\n${augmentedInstructions}\n\nOverall agent instructions: ${this.getFinalInstructions()}`;
+        augmentedInstructions = `OVERALL PURPOSE: ${this.getPurpose()}\n\n${augmentedInstructions}\n\nOverall agent instructions: ${this.getFinalInstructions()}`;
 
         if (this.isMemoryEnabled) {
             const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
@@ -240,7 +240,7 @@ export class ModelHelpers {
                 }
                 
                 // Cache the response
-                this.modelCache.set(structure.getPrompt(), cacheContext, response);
+                //this.modelCache.set(structure.getPrompt(), cacheContext, response);
                 
                 return response;
             } catch (error) {

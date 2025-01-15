@@ -8,7 +8,7 @@ import crypto from 'crypto';
 // Note: playwright-extra is compatible with most puppeteer-extra plugins
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import Logger from './logger';
-import { Settings } from 'src/tools/settingsManager';
+import { Settings } from 'src/tools/settings';
 
 import { BrowserWindow } from "electron";
 
@@ -30,7 +30,7 @@ class ScrapeHelper {
         // Only initialize browser when actually scraping
         if (this.settings.scrapingProvider === 'puppeteer' && !this.browser) {
             this.browser = await chromium.launch({ headless: true });
-        }
+    }
         if (this.settings.scrapingProvider === 'electron' && !this.electronWindow) {
             this.electronWindow = new BrowserWindow({
                 width: 1920,
