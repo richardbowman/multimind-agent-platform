@@ -1,5 +1,4 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
-import { useIPCService } from '../contexts/IPCServiceContext';
 import { 
     Box, 
     Typography, 
@@ -11,15 +10,17 @@ import {
     DialogTitle,
     DialogContent,
     Stack,
-    Button
+    Button,
+    ListItemButton
 } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
-import { useWebSocket } from '../contexts/DataContext';
+import { useIPCService, useWebSocket } from '../contexts/DataContext';
 import remarkGfm from 'remark-gfm'
 import Link from '@mui/material/Link';
 import { TaskDialog } from './TaskDialog';
+import { ClientProject } from '../../../../shared/types';
 
 // Custom link component that opens links in system browser
 const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -52,6 +53,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const [currentProject, setCurrentProject] = useState<ClientProject | null>(null);
     const ipcService = useIPCService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
+    const { channels } = useWebSocket();
 
     const [isAtBottom, setIsAtBottom] = useState(true);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
