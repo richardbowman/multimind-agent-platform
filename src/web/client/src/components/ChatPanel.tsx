@@ -211,8 +211,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 }}
                 onScroll={checkScrollPosition}
             >
-                {/* Project Overview Card */}
-                {currentProject && (
+                {/* Project Overview Card - Only show when not in thread view */}
+                {currentProject && !currentThreadId && (
                     <Paper 
                         elevation={0}
                         sx={{ 
