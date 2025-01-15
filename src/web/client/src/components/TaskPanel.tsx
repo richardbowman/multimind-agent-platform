@@ -54,7 +54,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                 Tasks
             </Typography>
             <List>
-                {(tasks || [])
+                {Array.from(new Map((tasks || []).map(task => [task.id, task])).values())
                     .sort((a, b) => {
                         // Sort in-progress to top, then not started, then completed
                         if (a.inProgress && !b.inProgress) return -1;
