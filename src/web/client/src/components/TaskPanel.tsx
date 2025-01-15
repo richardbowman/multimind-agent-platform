@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
 import { 
     Box, 
