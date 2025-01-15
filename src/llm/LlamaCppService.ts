@@ -153,11 +153,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
         }
     }
 
-    async initializeModel(combinedId: string, repo: string, modelType: 'chat' | 'embedding'): Promise<void> {
-        // Extract model name from combined ID
-        const modelName = combinedId.startsWith('local:') 
-            ? combinedId.slice('local:'.length)
-            : combinedId;
+    async initializeModel(modelId: string, modelType: 'chat' | 'embedding'): Promise<void> {
         try {
             const llama = await loadLlama();
             
@@ -165,19 +161,59 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             const modelDir = path.join(getDataPath(), "models");
             await fs.mkdir(modelDir, { recursive: true });
             
-            const modelPath = path.join(modelDir, modelName);
+            // For local models, use the filename directly
+            if (modelId.startsWith('local:')) {
+                const modelName = modelId.slice('local:'.length);
+                const modelPath = path.join(modelDir, modelName);
+                
+                // Check if model exists
+                try {
+                    await fs.access(modelPath);
+                } catch {
+                    throw new Error(`Local model ${modelName} not found`);
+                }
 
-            // Check if model exists
-            try {
-                await fs.access(modelPath);
-            } catch {
-                // If not, download it
-                await this.downloadModel(repo, modelName, modelDir);
+                const model = await llama.loadModel({
+                    modelPath: modelPath
+                });
+
+                if (modelType === 'chat') {
+                    const context = await model.createContext();
+                    this.context = context;
+                    Logger.info("Llama.cpp chat model initialized");
+                } else if (modelType === 'embedding') {
+                    const context = await model.createEmbeddingContext();
+                    this.embedder = new LlamaEmbedder(context);
+                    Logger.info("Llama.cpp embedding model initialized");
+                }
+            } 
+            // For remote models, extract repo and filename
+            else {
+                const [repo, modelName] = modelId.split('/');
+                const modelPath = path.join(modelDir, modelName);
+
+                // Check if model exists
+                try {
+                    await fs.access(modelPath);
+                } catch {
+                    // If not, download it
+                    await this.downloadModel(repo, modelName, modelDir);
+                }
+
+                const model = await llama.loadModel({
+                    modelPath: modelPath
+                });
+
+                if (modelType === 'chat') {
+                    const context = await model.createContext();
+                    this.context = context;
+                    Logger.info("Llama.cpp chat model initialized");
+                } else if (modelType === 'embedding') {
+                    const context = await model.createEmbeddingContext();
+                    this.embedder = new LlamaEmbedder(context);
+                    Logger.info("Llama.cpp embedding model initialized");
+                }
             }
-
-            const model = await llama.loadModel({
-                modelPath: modelPath
-            });
 
             if (modelType === 'chat') {
                 const context = await model.createContext();
@@ -195,12 +231,12 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
         }
     }
 
-    async initializeChatModel(modelName: string, repo: string): Promise<void> {
-        return this.initializeModel(modelName, repo, 'chat');
+    async initializeChatModel(modelId: string): Promise<void> {
+        return this.initializeModel(modelId, 'chat');
     }
 
-    async initializeEmbeddingModel(modelName: string, repo: string): Promise<void> {
-        return this.initializeModel(modelName, repo, 'embedding');
+    async initializeEmbeddingModel(modelId: string): Promise<void> {
+        return this.initializeModel(modelId, 'embedding');
     }
 
     async countTokens(message: string): Promise<number> {
