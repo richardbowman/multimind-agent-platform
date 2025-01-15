@@ -18,7 +18,8 @@ import {
   ListItemText,
   IconButton,
   Toolbar,
-  Chip
+  Chip,
+  Autocomplete
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useIPCService, useWebSocket } from '../contexts/DataContext';
@@ -215,89 +216,98 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         [];
                     
                     return (
-                        <FormControl fullWidth variant="outlined">
-                            <InputLabel>{metadata.label}</InputLabel>
-                            <Select
-                                value={value}
-                                onChange={(e) => handleChange(metadata.key, e.target.value)}
-                                label={metadata.label}
-                                MenuProps={{
-                                    PaperProps: {
-                                        style: {
-                                            maxHeight: 400,
-                                            width: 600
-                                        }
-                                    }
-                                }}
-                            >
-                                {models.map(model => (
-                                    <MenuItem 
-                                        key={model.name||model.id} 
-                                        value={model.id}
-                                        sx={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'flex-start',
-                                            gap: 0.5,
-                                            py: 1.5
-                                        }}
-                                    >
-                                        <Box sx={{ 
-                                            display: 'flex', 
-                                            justifyContent: 'space-between',
-                                            width: '100%'
-                                        }}>
-                                            <Typography variant="body1" fontWeight={500}>
-                                                {model.name||model.id}
-                                            </Typography>
-                                            <Chip 
-                                                label={model.id.includes('/') ? 'Remote' : 'Local'} 
-                                                size="small"
-                                                color={model.id.includes('/') ? 'secondary' : 'primary'}
-                                                sx={{ ml: 1 }}
-                                            />
-                                        </Box>
-                                        {'pipelineTag' in model && (
-                                            <Typography variant="caption" color="text.secondary">
-                                                Pipeline: {model.pipelineTag}
-                                            </Typography>
-                                        )}
-                                        {'supportedTasks' in model && model.supportedTasks.length > 0 && (
-                                            <Typography variant="caption" color="text.secondary">
-                                                Tasks: {model.supportedTasks.join(', ')}
-                                            </Typography>
-                                        )}
-                                        <Box sx={{ 
-                                            display: 'flex', 
-                                            gap: 1,
-                                            fontSize: '0.875rem',
-                                            color: 'text.secondary'
-                                        }}>
-                                            {model.size && (
-                                                <Typography variant="caption">
-                                                    Size: {model.size}
-                                                </Typography>
-                                            )}
-                                            {model.author && (
-                                                <Typography variant="caption">
-                                                    By {model.author}
-                                                </Typography>
-                                            )}
-                                            {model.downloads && (
-                                                <Typography variant="caption">
-                                                    {model.downloads.toLocaleString()} downloads
-                                                </Typography>
-                                            )}
-                                        </Box>
-                                        {model.description && (
-                                            <Typography variant="caption" color="text.secondary">
-                                                {model.description}
+                        <Autocomplete
+                            options={models}
+                            value={models.find(m => m.id === value) || null}
+                            onChange={(_, newValue) => handleChange(metadata.key, newValue?.id || '')}
+                            getOptionLabel={(option) => option.name || option.id}
+                            renderInput={(params) => (
+                                <TextField 
+                                    {...params} 
+                                    label={metadata.label}
+                                    variant="outlined"
+                                />
+                            )}
+                            filterOptions={(options, state) => {
+                                const inputValue = state.inputValue.toLowerCase();
+                                return options.filter(option =>
+                                    (option.name?.toLowerCase().includes(inputValue) || 
+                                    option.id.toLowerCase().includes(inputValue) ||
+                                    option.pipelineTag?.toLowerCase().includes(inputValue) ||
+                                    option.supportedTasks?.join(' ').toLowerCase().includes(inputValue) ||
+                                    option.description?.toLowerCase().includes(inputValue))
+                                );
+                            }}
+                            renderOption={(props, option) => (
+                                <Box 
+                                    component="li" 
+                                    {...props}
+                                    sx={{
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        alignItems: 'flex-start',
+                                        gap: 0.5,
+                                        py: 1.5,
+                                        width: '100%'
+                                    }}
+                                >
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        justifyContent: 'space-between',
+                                        width: '100%'
+                                    }}>
+                                        <Typography variant="body1" fontWeight={500}>
+                                            {option.name || option.id}
+                                        </Typography>
+                                        <Chip 
+                                            label={option.id.includes('/') ? 'Remote' : 'Local'} 
+                                            size="small"
+                                            color={option.id.includes('/') ? 'secondary' : 'primary'}
+                                            sx={{ ml: 1 }}
+                                        />
+                                    </Box>
+                                    {'pipelineTag' in option && (
+                                        <Typography variant="caption" color="text.secondary">
+                                            Pipeline: {option.pipelineTag}
+                                        </Typography>
+                                    )}
+                                    {'supportedTasks' in option && option.supportedTasks.length > 0 && (
+                                        <Typography variant="caption" color="text.secondary">
+                                            Tasks: {option.supportedTasks.join(', ')}
+                                        </Typography>
+                                    )}
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        gap: 1,
+                                        fontSize: '0.875rem',
+                                        color: 'text.secondary'
+                                    }}>
+                                        {option.size && (
+                                            <Typography variant="caption">
+                                                Size: {option.size}
                                             </Typography>
                                         )}
-                                    </MenuItem>
-                                ))}
-                            </Select>
-                        </FormControl>
+                                        {option.author && (
+                                            <Typography variant="caption">
+                                                By {option.author}
+                                            </Typography>
+                                        )}
+                                        {option.downloads && (
+                                            <Typography variant="caption">
+                                                {option.downloads.toLocaleString()} downloads
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                    {option.description && (
+                                        <Typography variant="caption" color="text.secondary">
+                                            {option.description}
+                                        </Typography>
+                                    )}
+                                </Box>
+                            )}
+                            sx={{ width: '100%' }}
+                            isOptionEqualToValue={(option, value) => option.id === value.id}
+                        />
                     );
                 }
                 
