@@ -3,13 +3,14 @@ import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../sc
 import { IEmbeddingFunction } from "chromadb";
 import { LLMCallLogger } from "./LLMLogger";
 import { ModelType } from "./LLMServiceFactory";
+import { ModelInfo } from "./types";
 
 export interface ILLMService {
     initializeChatModel(modelPath: string): Promise<void>;
     sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     countTokens(content: string): Promise<number>;
     getLogger(): LLMCallLogger;
-    getAvailableModels(): Promise<string[]>;
+    getAvailableModels(): Promise<ModelInfo[]>;
 
     /** @deprecated */
     generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: any): Promise<T>;

@@ -1,6 +1,6 @@
 import { IEmbeddingFunction } from "chromadb";
 import { BaseLLMService } from "./BaseLLMService";
-import type { Llama, LlamaContext, LlamaModel, LlamaOptions } from "node-llama-cpp";
+import { type LlamaChatSession, type Llama, type LlamaContext, type LlamaModel, type LlamaOptions, LlamaChatSessionOptions } from "node-llama-cpp";
 import { IEmbeddingService, ILLMService, LLMRequestParams, ModelRole } from "./ILLMService";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
@@ -34,6 +34,11 @@ async function loadLlama(options?: LlamaOptions) : Promise<Llama> {
     return nlc.getLlama(options);
 }
 
+async function loadLlamaChatSession(options: LlamaChatSessionOptions) : Promise<LlamaChatSession> {
+    const nlc: typeof import("node-llama-cpp") = await Function('return import("node-llama-cpp")')();
+    return new nlc.LlamaChatSession(options);
+}
+
 class LlamaEmbedder implements IEmbeddingFunction {
     private context: LlamaContext;
 
@@ -55,15 +60,16 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
     private model?: LlamaModel;
     private context?: LlamaContext;
     private embedder?: LlamaEmbedder;
+    session: LlamaChatSession;
 
     constructor() {
         super('llama-cpp');
     }
 
-    private async downloadModel(repo: string, modelName: string, modelDir: string): Promise<string> {
+    private async downloadModel(owner: string, repo: string, modelName: string, modelDir: string): Promise<string> {
         try {
             // Create repo-specific directory
-            const repoDir = path.join(modelDir, repo);
+            const repoDir = path.join(modelDir, owner, repo);
             const modelPath = path.join(repoDir, modelName);
             
             // Check if model already exists
@@ -77,8 +83,9 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 await fs.mkdir(repoDir, { recursive: true });
 
                 // Construct URL from repo and model name
-                const url = `https://huggingface.co/${repo}/resolve/main/${modelName}`;
+                const url = `https://huggingface.co/${owner}/${repo}/resolve/main/${modelName}?download=true`;
                 const fileStream = createWriteStream(modelPath);
+                
                 
                 Logger.info(`Downloading from ${url}`);
                 await new Promise((resolve, reject) => {
@@ -175,8 +182,8 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             } catch {
                 if (!isLocal) {
                     // If not local and not found, download it
-                    const [repo, modelName] = modelId.split('/');
-                    await this.downloadModel(repo, modelName, modelDir);
+                    const [owner, repo, modelName] = modelId.split('/');
+                    await this.downloadModel(owner, repo, modelName, modelDir);
                 } else {
                     throw new Error(`Local model ${modelId} not found`);
                 }
@@ -189,6 +196,10 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             if (modelType === 'chat') {
                 const context = await model.createContext();
                 this.context = context;
+                this.model = model;
+                this.session = await loadLlamaChatSession({
+                    contextSequence: this.context.getSequence()
+                });
                 Logger.info("Llama.cpp chat model initialized");
             } else if (modelType === 'embedding') {
                 const context = await model.createEmbeddingContext();
@@ -203,11 +214,19 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
     }
 
     async initializeChatModel(modelId: string): Promise<void> {
-        return this.initializeModel(modelId, 'chat');
+        try {
+            return this.initializeModel(modelId, 'chat');
+        } catch (error) {
+            throw error;
+        }
     }
 
     async initializeEmbeddingModel(modelId: string): Promise<void> {
-        return this.initializeModel(modelId, 'embedding');
+        try {
+            return this.initializeModel(modelId, 'embedding');
+        } catch (error) {
+            throw error;
+        }
     }
 
     async countTokens(message: string): Promise<number> {
@@ -353,7 +372,8 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
         prompt += "Assistant:";
 
         try {
-            const completion = await this.context.completion(prompt, {
+            this.session.resetChatHistory();
+            const completion = await this.session.prompt(prompt, {
                 temperature: params.opts?.temperature ?? 0.7,
                 maxTokens: params.opts?.maxPredictedTokens,
                 topP: params.opts?.topP
