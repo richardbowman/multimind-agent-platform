@@ -138,7 +138,7 @@ const AppContent: React.FC = () => {
                         <IconButton
                             color="inherit"
                             edge="end"
-                            onClick={() => window.ipcService.getRPC().closeWindow()}
+                            onClick={() => ipcService.getRPC().closeWindow()}
                             sx={{ ml: 2 }}
                         >
                             <CloseIcon />
