@@ -160,27 +160,23 @@ export class RouterAgent extends Agent {
         const prompt = `Analyze the ongoing conversation and determine the best way to respond. You must explicitly choose one of these next steps:
 
 1. propose-transfer: When you have a good candidate agent but want user confirmation
-   - Set readyToRoute: true
    - Select the most appropriate agent
    - Explain why they're the best choice
    - Include relevant project/task context
    - Ask for user confirmation before transferring
 
 2. execute-transfer: When you're highly confident and should immediately transfer
-   - Set readyToRoute: true
    - Select the most appropriate agent
    - Explain why they're the best choice
    - Include all necessary context for the transfer
    - Only use when confidence > 0.9
 
 3. ask-clarification: When you need more information
-   - Set readyToRoute: false
    - Politely ask specific clarifying questions
    - Explain what information is missing
    - Suggest possible directions for the conversation
 
 4. provide-information: When you can answer directly
-   - Set readyToRoute: false
    - Provide the requested information
    - Explain any relevant context
    - Suggest next steps if appropriate
