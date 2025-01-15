@@ -50,12 +50,17 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     }, [getSettings]);
 
     const [availableModels, setAvailableModels] = useState<Record<string, ModelInfo[]>>({});
+    const [availableEmbedders, setAvailableEmbedders] = useState<Record<string, EmbedderModelInfo[]>>({});
     
     useEffect(() => {
         const fetchModels = async () => {
             if (settings.providers?.chat) {
                 try {
-                    const models = await ipcService.getRPC().getAvailableModels(settings.providers.chat);
+                    const [models, embedders] = await Promise.all([
+                        ipcService.getRPC().getAvailableModels(settings.providers.chat),
+                        ipcService.getRPC().getAvailableEmbedders(settings.providers.chat)
+                    ]);
+
                     // Sort models with local first, then by name
                     const sortedModels = models.sort((a, b) => {
                         if (a.isLocal === b.isLocal) {
@@ -63,13 +68,21 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         }
                         return a.isLocal ? -1 : 1;
                     });
+
+                    // Sort embedders by downloads
+                    const sortedEmbedders = embedders.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
                 
                     setAvailableModels(prev => ({
                         ...prev,
                         [settings.providers!.chat]: sortedModels
                     }));
+
+                    setAvailableEmbedders(prev => ({
+                        ...prev,
+                        [settings.providers!.chat]: sortedEmbedders
+                    }));
                 } catch (error) {
-                    console.error('Failed to fetch available models:', error);
+                    console.error('Failed to fetch models:', error);
                 }
             }
         };
@@ -195,7 +208,11 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 // Special handling for model selection
                 if (metadata.key.startsWith('models.')) {
                     const provider = settings.providers?.chat;
-                    const models = provider ? availableModels[provider] || [] : [];
+                    const models = provider ? 
+                        (metadata.key.includes('embedding') ? 
+                            availableEmbedders[provider] || [] :
+                            availableModels[provider] || []) : 
+                        [];
                     
                     return (
                         <FormControl fullWidth variant="outlined">
@@ -240,6 +257,16 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                                 sx={{ ml: 1 }}
                                             />
                                         </Box>
+                                        {'pipelineTag' in model && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                Pipeline: {model.pipelineTag}
+                                            </Typography>
+                                        )}
+                                        {'supportedTasks' in model && model.supportedTasks.length > 0 && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                Tasks: {model.supportedTasks.join(', ')}
+                                            </Typography>
+                                        )}
                                         <Box sx={{ 
                                             display: 'flex', 
                                             gap: 1,
