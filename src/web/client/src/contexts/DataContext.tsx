@@ -35,8 +35,11 @@ export interface DataContextMethods {
   isLoading: boolean;
   needsConfig: boolean;
   snackbarOpen: boolean;
+  snackbarOptions: SnackbarOptions;
   setSnackbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
   showSnackbar: (options: SnackbarOptions) => void;
+  handleSnackbarClose: (event: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => void;
+  handleSnackbarClick: () => void;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   fetchChannels: () => Promise<void>;
   fetchTasks: (channelId: string, threadId: string | null) => Promise<void>;
