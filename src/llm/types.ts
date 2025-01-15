@@ -1,5 +1,5 @@
 export interface ModelInfo {
-    id: string;
+    id: string; // For local models: "local:filename.gguf", for remote: "repo/filename.gguf"
     name: string;
     path?: string;
     size: string;
@@ -12,6 +12,4 @@ export interface ModelInfo {
         filename: string;
         size: string;
     }>;
-    // For local models, combines repo and filename
-    combinedId?: string;
 }

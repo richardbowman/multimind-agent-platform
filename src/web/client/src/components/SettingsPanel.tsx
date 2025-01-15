@@ -216,7 +216,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                 {models.map(model => (
                                     <MenuItem 
                                         key={model.name} 
-                                        value={model.name}
+                                        value={model.id}
                                         sx={{
                                             display: 'flex',
                                             flexDirection: 'column',

@@ -274,8 +274,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                                 path: filePath,
                                 size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
                                 lastModified: stats.mtime,
-                                isLocal: true,
-                                combinedId: `local:${fileName}`
+                                isLocal: true
                             });
                         } catch (error) {
                             Logger.warn(`Could not get stats for model ${fileName}:`, error);
@@ -308,7 +307,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                         downloads: model.downloads,
                         likes: model.likes,
                         ggufFiles: model.ggufFiles,
-                        combinedId: `${model.id}/${file.filename}`
+                        id: `${model.id}/${file.filename}`
                     }))
                 )
             ];
