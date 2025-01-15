@@ -78,7 +78,14 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                         <ListItemIcon>
                                             <FolderIcon />
                                         </ListItemIcon>
-                                        <ListItemText primary={artifact.metadata?.title || artifact.id} />
+                                        <ListItemText 
+                                            primary={artifact.metadata?.title || artifact.id} 
+                                            secondary={
+                                                typeof artifact.content === 'string' 
+                                                    ? artifact.content.split('\n').slice(0, 2).join('\n')
+                                                    : ''
+                                            }
+                                        />
 
                                     </ListItem>
                                 ))}
