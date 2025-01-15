@@ -66,5 +66,9 @@ export const createClientMethods = (contextMethods: DataContextMethods) => ({
             // If it's a new task, add it to the list
             return [...prevTasks, task];
         });
-    }
+    },
+
+    onProjectUpdate(project) {
+        console.log('project update not handled yet');
+    },
 } as ClientMethods);
