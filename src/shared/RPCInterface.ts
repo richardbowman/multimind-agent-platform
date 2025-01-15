@@ -44,7 +44,23 @@ export interface ServerMethods {
     getAvailableModels(provider: string): Promise<ModelInfo[]>;
     getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]>;
     rebuildVectorDB(): Promise<void>;
-    getProject(projectId: string): Promise<any>;
+    getProject(projectId: string): Promise<{
+        id: string;
+        name: string;
+        props?: Record<string, any>;
+        tasks: ClientTask[];
+        metadata: {
+            createdAt: Date;
+            updatedAt: Date;
+            status: 'active' | 'completed' | 'archived';
+            owner?: string;
+            tags?: string[];
+            description?: string;
+            priority?: 'low' | 'medium' | 'high';
+            originalPostId?: string;
+            parentTaskId?: any;
+        };
+    }>;
 }
 
 export interface ClientMethods {
@@ -52,5 +68,21 @@ export interface ClientMethods {
     onLogUpdate(update: LogParam): void;
     onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }): void;
     onTaskUpdate(task: ClientTask): void;
-    onProjectUpdate(project: any): void;
+    onProjectUpdate(project: {
+        id: string;
+        name: string;
+        props?: Record<string, any>;
+        tasks: ClientTask[];
+        metadata: {
+            createdAt: Date;
+            updatedAt: Date;
+            status: 'active' | 'completed' | 'archived';
+            owner?: string;
+            tags?: string[];
+            description?: string;
+            priority?: 'low' | 'medium' | 'high';
+            originalPostId?: string;
+            parentTaskId?: any;
+        };
+    }): void;
 }

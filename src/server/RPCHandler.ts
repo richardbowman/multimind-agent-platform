@@ -51,7 +51,23 @@ export class ServerRPCHandler implements ServerMethods {
         return service.getAvailableEmbedders();
     }
 
-    async getProject(projectId: string): Promise<any> {
+    async getProject(projectId: string): Promise<{
+        id: string;
+        name: string;
+        props?: Record<string, any>;
+        tasks: ClientTask[];
+        metadata: {
+            createdAt: Date;
+            updatedAt: Date;
+            status: 'active' | 'completed' | 'archived';
+            owner?: string;
+            tags?: string[];
+            description?: string;
+            priority?: 'low' | 'medium' | 'high';
+            originalPostId?: string;
+            parentTaskId?: any;
+        };
+    }> {
         const project = this.services.taskManager.getProject(projectId);
         if (!project) {
             throw new Error(`Project ${projectId} not found`);
@@ -114,7 +130,7 @@ export class ServerRPCHandler implements ServerMethods {
         if (this.services?.taskManager) {
             // Set up project update notifications
             this.services.taskManager.on('projectUpdated', ({project}) => {
-                rpc.onProjectUpdate({
+                const clientProject = {
                     id: project.id,
                     name: project.name,
                     props: project.props,
@@ -133,7 +149,8 @@ export class ServerRPCHandler implements ServerMethods {
                         props: task.props
                     })),
                     metadata: project.metadata
-                });
+                };
+                rpc.onProjectUpdate(clientProject);
             });
 
             // Set up task update notifications
