@@ -162,8 +162,8 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             await fs.mkdir(modelDir, { recursive: true });
             
             // For local models, use the filename directly
-            if (modelId.startsWith('local:')) {
-                const modelName = modelId.slice('local:'.length);
+            if (modelId.startsWith('local/')) {
+                const modelName = modelId.slice('local/'.length);
                 const modelPath = path.join(modelDir, modelName);
                 
                 // Check if model exists
@@ -305,7 +305,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                             const stats = await fs.stat(filePath);
                             
                             localModels.push({
-                                id: `local:${fileName}`,
+                                id: `local/${fileName}`,
                                 name: fileName,
                                 path: filePath,
                                 size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
