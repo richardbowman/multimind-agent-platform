@@ -389,6 +389,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                                         setMetadataDialogOpen(false);
                                                         setSelectedTask(projectTasks[0]);
                                                         setTaskDialogOpen(true);
+                                                    } else {
+                                                        // If no tasks found, create a new task for this project
+                                                        setSelectedTask({
+                                                            projectId: value,
+                                                            description: `New task for project ${value}`,
+                                                            type: 'standard',
+                                                            complete: false,
+                                                            inProgress: false,
+                                                            createdAt: new Date().toISOString(),
+                                                            updatedAt: new Date().toISOString()
+                                                        });
+                                                        setTaskDialogOpen(true);
                                                     }
                                                 }}
                                             >
