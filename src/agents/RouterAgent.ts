@@ -3,7 +3,7 @@ import { Project, Task } from '../tools/taskManager';
 import { ModelMessageResponse } from '../schemas/ModelResponse';
 import { StructuredOutputPrompt } from '../llm/ILLMService';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { Settings } from "src/tools/settingsManager";
+import { ChatPost } from 'src/chat/chatClient';
 
 
 export class RouterAgent extends Agent {
@@ -90,8 +90,8 @@ export class RouterAgent extends Agent {
                             "routed-agent": response.selectedAgent
                         }
                     );
+                    break;
                 }
-                break;
 
             case 'ask-clarification':
             case 'provide-information':
