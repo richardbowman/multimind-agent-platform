@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import { 
-    Box, 
-    Typography, 
-    List, 
-    ListItem, 
-    ListItemText, 
+import {
+    Box,
+    Typography,
+    List,
+    ListItem,
+    ListItemText,
     Paper,
     Dialog,
     DialogTitle,
@@ -47,24 +47,24 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useWebSocket();
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
     const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
-    
+
     // Automatically expand the last 2 messages
     const visibleMessages = useMemo(() => {
         const filtered = messages
             .filter(message => message.channel_id === currentChannelId)
             .filter(message => {
                 if (currentThreadId) {
-                    return message.id === currentThreadId || 
-                           message.props?.['root-id'] === currentThreadId;
+                    return message.id === currentThreadId ||
+                        message.props?.['root-id'] === currentThreadId;
                 } else {
                     return !message.props?.['root-id'];
                 }
             });
-            
+
         // Always expand the last 2 messages
         const lastTwoIds = filtered.slice(-2).map(m => m.id);
         setExpandedMessages(prev => new Set([...prev, ...lastTwoIds]));
-        
+
         return filtered;
     }, [messages, currentChannelId, currentThreadId]);
 
@@ -135,9 +135,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
 
     // Scroll to bottom when new messages come in for current thread/channel
     useEffect(() => {
-        const relevantMessages = messages.filter(message => 
+        const relevantMessages = messages.filter(message =>
             message.channel_id === currentChannelId &&
-            (currentThreadId 
+            (currentThreadId
                 ? message.id === currentThreadId || message.props?.['root-id'] === currentThreadId
                 : !message.props?.['root-id'])
         );
@@ -149,10 +149,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
 
     // Scroll to bottom when in-progress messages update in current thread
     useEffect(() => {
-        const hasRelevantInProgress = messages.some(m => 
+        const hasRelevantInProgress = messages.some(m =>
             m.inProgress &&
             m.channel_id === currentChannelId &&
-            (currentThreadId 
+            (currentThreadId
                 ? m.id === currentThreadId || m.props?.['root-id'] === currentThreadId
                 : !m.props?.['root-id'])
         );
@@ -170,7 +170,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         // Handle special commands
         if (content.startsWith('/')) {
             const [command, ...args] = content.split(' ');
-            
+
             switch (command) {
                 case '/retry':
                     if (lastMessage) {
@@ -184,7 +184,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         });
                     }
                     return;
-                    
+
                 case '/channel':
                     // Send message to channel root regardless of current thread
                     const channelMessage = args.join(' ');
@@ -218,12 +218,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             thread_id: currentThreadId || undefined,
             props: currentThreadId ? { 'root-id': currentThreadId } : {}
         };
-        
+
         sendMessage(message);
     };
 
     return (
-        <Box sx={{ 
+        <Box sx={{
             display: 'flex',
             flexDirection: 'column',
             height: 'calc(100vh - 64px)',
@@ -233,9 +233,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             mr: rightDrawerOpen ? '300px' : 0,
             transition: 'all 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
         }}>
-            <Box 
+            <Box
                 ref={messagesContainerRef}
-                sx={{ 
+                sx={{
                     flex: 1,
                     overflowY: 'auto',
                     p: 2,
@@ -246,9 +246,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             >
                 {/* Project Overview Card - Only show when not in thread view */}
                 {currentProject && !currentThreadId && (
-                    <Paper 
+                    <Paper
                         elevation={0}
-                        sx={{ 
+                        sx={{
                             mb: 2,
                             p: 2,
                             bgcolor: 'background.paper',
@@ -257,9 +257,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             borderRadius: 2
                         }}
                     >
-                        <Typography 
-                            variant="overline" 
-                            sx={{ 
+                        <Typography
+                            variant="overline"
+                            sx={{
                                 mb: 1,
                                 color: 'text.secondary',
                                 display: 'block'
@@ -274,7 +274,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             <Typography variant="body2" sx={{ mb: 2 }}>
                                 {currentProject.metadata.description}
                             </Typography>
-                            
+
                             <Box sx={{ mt: 2 }}>
                                 <Typography variant="subtitle2" sx={{ mb: 1 }}>
                                     Tasks:
@@ -308,8 +308,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             </Box>
 
                             <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                Status: {currentProject.metadata.status} | 
-                                Created: {new Date(currentProject.metadata.createdAt).toLocaleDateString()} | 
+                                Status: {currentProject.metadata.status} |
+                                Created: {new Date(currentProject.metadata.createdAt).toLocaleDateString()} |
                                 Last Updated: {new Date(currentProject.metadata.updatedAt).toLocaleDateString()}
                             </Typography>
                         </Box>
@@ -318,9 +318,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
 
                 {/* Goal Planning Card */}
                 {!currentProject && channels.find(c => c.id === currentChannelId)?.goalTemplate && (
-                    <Paper 
+                    <Paper
                         elevation={0}
-                        sx={{ 
+                        sx={{
                             mb: 2,
                             p: 2,
                             bgcolor: 'background.paper',
@@ -329,9 +329,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             borderRadius: 2
                         }}
                     >
-                        <Typography 
-                            variant="overline" 
-                            sx={{ 
+                        <Typography
+                            variant="overline"
+                            sx={{
                                 mb: 1,
                                 color: 'text.secondary',
                                 display: 'block'
@@ -344,8 +344,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                 t => t.id === channels.find(c => c.id === currentChannelId)?.goalTemplate
                             );
                             const projectId = channels.find(c => c.id === currentChannelId)?.projectId;
-                            const planningTasks = tasks.filter(t => 
-                                t.projectId === projectId && 
+                            const planningTasks = tasks.filter(t =>
+                                t.projectId === projectId &&
                                 t.type === 'planning'
                             );
 
@@ -357,7 +357,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                     <Typography variant="body2" sx={{ mb: 2 }}>
                                         {template.description}
                                     </Typography>
-                                    
+
                                     {planningTasks.length > 0 ? (
                                         <Box sx={{ mt: 2 }}>
                                             <Typography variant="subtitle2" sx={{ mb: 1 }}>
@@ -398,7 +398,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 )}
 
                 {isLoading ? (
-                    <Typography variant="body1" sx={{ 
+                    <Typography variant="body1" sx={{
                         textAlign: 'center',
                         color: 'text.secondary',
                         fontStyle: 'italic',
@@ -407,7 +407,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         Loading messages...
                     </Typography>
                 ) : visibleMessages.length === 0 ? (
-                    <Typography variant="body1" sx={{ 
+                    <Typography variant="body1" sx={{
                         textAlign: 'center',
                         color: 'text.secondary',
                         fontStyle: 'italic',
@@ -416,13 +416,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         No messages yet
                     </Typography>
                 ) : (
-                visibleMessages.map((message, index) => (
-                        <Paper key={message.id} sx={{ 
+                    visibleMessages.map((message, index) => (
+                        <Paper key={message.id} sx={{
                             mb: 2,
                             p: 2,
                             bgcolor: 'background.default'
                         }}>
-                            <Box sx={{ 
+                            <Box sx={{
                                 display: 'flex',
                                 justifyContent: 'space-between',
                                 mb: 1
@@ -430,9 +430,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                 <Typography variant="subtitle2" sx={{ color: 'primary.main' }}>
                                     {handles.find(h => h.id === message.user_id)?.handle || 'Unknown User'}
                                 </Typography>
-                                <Typography 
-                                    variant="caption" 
-                                    sx={{ 
+                                <Typography
+                                    variant="caption"
+                                    sx={{
                                         color: 'text.secondary',
                                         cursor: 'pointer',
                                         '&:hover': {
@@ -447,21 +447,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                     {new Date(message.create_at).toLocaleString()}
                                 </Typography>
                             </Box>
-                            <Box sx={{ 
+                            <Box sx={{
                                 position: 'relative',
                                 overflow: 'hidden',
-                                maxHeight: expandedMessages.has(message.id) ? 'none' : '4.5em',
-                                '&:after': expandedMessages.has(message.id) ? {} : {
-                                    content: '""',
-                                    position: 'absolute',
-                                    bottom: 0,
-                                    left: 0,
-                                    right: 0,
-                                    height: '1.5em',
-                                    background: 'linear-gradient(to bottom, rgba(42,42,42,0) 0%, rgba(42,42,42,1) 100%)'
-                                }
+                                maxHeight: expandedMessages.has(message.id) ? 'none' : '4.5em'
                             }}>
-                                <ReactMarkdown 
+                                <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
                                     components={{
                                         a: CustomLink
@@ -469,12 +460,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                 >
                                     {message.message}
                                 </ReactMarkdown>
+                            </Box>
+                            <Box sx={{
+                                position: 'relative',
+                                margin: '-16px',
+                                padding: '16px',
+                                background: 'linear-gradient(to bottom, rgba(42,42,42,0) 0%, rgba(24,24,24,1) 100%)',
+                                borderRadius: 2
+                            }}>
                                 {!expandedMessages.has(message.id) && (
                                     <Button
                                         size="small"
                                         onClick={() => toggleMessageExpansion(message.id)}
                                         sx={{
-                                            position: 'absolute',
                                             bottom: 0,
                                             right: 0,
                                             zIndex: 1,
@@ -526,9 +524,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         </Paper>
                     )))}
                 {tasks.filter(task => task.inProgress && !task.complete && (task.threadId === currentThreadId)).length > 0 && (
-                    <Paper 
+                    <Paper
                         elevation={0}
-                        sx={{ 
+                        sx={{
                             mt: 2,
                             p: 2,
                             bgcolor: 'background.paper',
@@ -537,9 +535,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             borderRadius: 2
                         }}
                     >
-                        <Typography 
-                            variant="overline" 
-                            sx={{ 
+                        <Typography
+                            variant="overline"
+                            sx={{
                                 mb: 1,
                                 color: 'text.secondary',
                                 display: 'block'
@@ -551,7 +549,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             {tasks
                                 .filter(task => task.inProgress && !task.complete && (task.threadId === currentThreadId))
                                 .map(task => (
-                                    <Paper 
+                                    <Paper
                                         key={task.id}
                                         elevation={0}
                                         sx={{
@@ -577,10 +575,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 )}
                 <div ref={messagesEndRef} />
             </Box>
-            <CommandInput onSendMessage={handleSendMessage} currentChannel={currentChannelId}/>
-            
-            <Dialog 
-                open={metadataDialogOpen} 
+            <CommandInput onSendMessage={handleSendMessage} currentChannel={currentChannelId} />
+
+            <Dialog
+                open={metadataDialogOpen}
                 onClose={() => setMetadataDialogOpen(false)}
                 maxWidth="sm"
                 fullWidth
@@ -607,7 +605,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             {selectedMessage.props && Object.entries(selectedMessage.props).map(([key, value]) => {
                                 const isProjectId = key === 'project-id';
                                 return (
-                                    <Box key={key} sx={{ 
+                                    <Box key={key} sx={{
                                         p: 1,
                                         bgcolor: 'background.paper',
                                         borderRadius: 1,
@@ -621,7 +619,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                         {isProjectId ? (
                                             <Button
                                                 variant="text"
-                                                sx={{ 
+                                                sx={{
                                                     p: 0,
                                                     textTransform: 'none',
                                                     justifyContent: 'flex-start',
@@ -651,7 +649,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                                     }
                                                 }}
                                             >
-                                                <Typography variant="body2" sx={{ 
+                                                <Typography variant="body2" sx={{
                                                     whiteSpace: 'pre-wrap',
                                                     wordBreak: 'break-word'
                                                 }}>
@@ -659,7 +657,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                                 </Typography>
                                             </Button>
                                         ) : (
-                                            <Typography variant="body2" sx={{ 
+                                            <Typography variant="body2" sx={{
                                                 whiteSpace: 'pre-wrap',
                                                 wordBreak: 'break-word'
                                             }}>
