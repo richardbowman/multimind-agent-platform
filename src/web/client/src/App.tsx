@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack } from '@mui/material';
+import React, { useState, useEffect } from 'react';
+import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack, Snackbar, Alert } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import TaskIcon from '@mui/icons-material/Task';
 import MinimizeIcon from '@mui/icons-material/Minimize';
@@ -48,6 +48,28 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'leftOpen' &
 
 const AppContent: React.FC = () => {
     const { currentChannelId, currentThreadId, setCurrentThreadId, needsConfig } = useWebSocket();
+    const [toastOpen, setToastOpen] = useState(false);
+    const [toastMessage, setToastMessage] = useState('');
+    const [toastSeverity, setToastSeverity] = useState<'info' | 'success' | 'warning' | 'error'>('info');
+
+    useEffect(() => {
+        const handleProgressUpdate = (log: { message: string, type?: string }) => {
+            setToastMessage(log.message);
+            setToastSeverity(log.type || 'info');
+            setToastOpen(true);
+        };
+
+        // Assuming you have an electron or similar IPC service
+        window.electron?.status(handleProgressUpdate);
+
+        return () => {
+            window.electron?.removeStatusListener(handleProgressUpdate);
+        };
+    }, []);
+
+    const handleToastClose = () => {
+        setToastOpen(false);
+    };
     const ipcService = useIPCService();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
@@ -221,6 +243,20 @@ const AppContent: React.FC = () => {
                     <LogViewer logType={currentLogTab} />
                 ) : null}
             </Box>
+            <Snackbar
+                open={toastOpen}
+                autoHideDuration={6000}
+                onClose={handleToastClose}
+                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
+            >
+                <Alert 
+                    onClose={handleToastClose} 
+                    severity={toastSeverity}
+                    sx={{ width: '100%' }}
+                >
+                    {toastMessage}
+                </Alert>
+            </Snackbar>
         </Box>
     );
 };
