@@ -162,9 +162,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             await fs.mkdir(modelDir, { recursive: true });
             
             const [repo, modelName] = modelId.split('/');
-            const modelPath = modelId.startsWith('local/') 
-                ? path.join(modelDir, modelName) // For local models, use standard path
-                : path.join(modelDir, modelName); // For remote models, use same path structure
+            const modelPath = path.join(modelDir, repo, modelName); // Store in repo-specific subdirectory
 
             // Check if model exists
             try {
@@ -271,13 +269,15 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                             const filePath = path.join(modelDir, fileName);
                             const stats = await fs.stat(filePath);
                             
+                            // For local models, use "local" as the repo name
                             localModels.push({
                                 id: `local/${fileName}`,
                                 name: fileName,
                                 path: filePath, // Store actual local path
                                 size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
                                 lastModified: stats.mtime,
-                                isLocal: true
+                                isLocal: true,
+                                repo: 'local'
                             });
                         } catch (error) {
                             Logger.warn(`Could not get stats for model ${fileName}:`, error);
@@ -301,7 +301,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 ...localModels,
                 ...remoteModels.flatMap(model => 
                     model.ggufFiles.map(file => ({
-                        id: model.id,
+                        id: `${model.id}/${file.filename}`,
                         name: file.filename,
                         size: file.size,
                         lastModified: new Date(model.lastModified),
@@ -310,7 +310,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                         downloads: model.downloads,
                         likes: model.likes,
                         ggufFiles: model.ggufFiles,
-                        id: `${model.id}/${file.filename}`
+                        repo: model.id
                     }))
                 )
             ];

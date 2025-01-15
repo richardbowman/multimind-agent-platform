@@ -1,11 +1,11 @@
 export interface ModelInfo {
-    id: string; // Format: "repo/filename.gguf" (for local models, repo is "local")
-    path?: string; // Optional local filesystem path for local models
+    id: string; // Format: "repo/filename.gguf"
+    path?: string; // Local filesystem path
     name: string;
-    path?: string;
     size: string;
     lastModified: Date;
     isLocal: boolean;
+    repo: string; // Repository name (e.g. "TheBloke", "local")
     author?: string;
     downloads?: number;
     likes?: number;
