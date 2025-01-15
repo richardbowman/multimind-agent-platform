@@ -10,6 +10,8 @@ import { GoalTemplates } from "src/schemas/goalTemplateSchema";
 import { Settings } from "src/tools/settings";
 import { getClientSettingsMetadata } from "src/tools/settingsDecorators";
 import { LLMServiceFactory } from "src/llm/LLMServiceFactory";
+import { ModelInfo } from "src/llm/types";
+import { EmbedderModelInfo } from "src/llm/ILLMService";
 
 export class MessageHandler implements ServerMethods {
     createWrapper(): ServerMethods {
@@ -44,6 +46,11 @@ export class MessageHandler implements ServerMethods {
         return service.getAvailableModels();
     }
 
+    async getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]> {
+        const service = LLMServiceFactory.createServiceByName(provider, this.services.settingsManager.getSettings());
+        return service.getAvailableEmbedders();
+    }
+    
     async updateSettings(settings: Partial<Settings>): Promise<Settings> {
         Logger.info('Update settings called');
         

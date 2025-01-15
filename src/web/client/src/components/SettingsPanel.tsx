@@ -58,7 +58,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 try {
                     const [models, embedders] = await Promise.all([
                         ipcService.getRPC().getAvailableModels(settings.providers.chat),
-                        ipcService.getRPC().getAvailableEmbedders(settings.providers.chat)
+                        ipcService.getRPC().getAvailableEmbedders(settings.providers.embeddings)
                     ]);
 
                     // Sort models with local first, then by name
@@ -232,7 +232,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             >
                                 {models.map(model => (
                                     <MenuItem 
-                                        key={model.name} 
+                                        key={model.name||model.id} 
                                         value={model.id}
                                         sx={{
                                             display: 'flex',
@@ -248,10 +248,10 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                             width: '100%'
                                         }}>
                                             <Typography variant="body1" fontWeight={500}>
-                                                {model.name}
+                                                {model.name||model.id}
                                             </Typography>
                                             <Chip 
-                                                label={model.id.includes('/') ? model.id.split('/')[0] : 'Local'} 
+                                                label={model.id.includes('/') ? 'Remote' : 'Local'} 
                                                 size="small"
                                                 color={model.id.includes('/') ? 'secondary' : 'primary'}
                                                 sx={{ ml: 1 }}

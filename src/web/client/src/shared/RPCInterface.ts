@@ -2,6 +2,8 @@ import { CreateChannelParams } from 'src/shared/channelTypes';
 import { LLMLogEntry, LogParam } from '../../../../llm/LLMLogger';
 import { ClientMessage, ClientChannel, ClientThread } from './IPCInterface';
 import { ClientTask } from './types';
+import { EmbedderModelInfo } from 'src/llm/ILLMService';
+import { ModelInfo } from 'src/llm/types';
 
 export interface ServerMethods {
     sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage>;
@@ -40,6 +42,7 @@ export interface ServerMethods {
     deleteChannel(channelId: string): Promise<void>;
 
     getAvailableModels(provider: string): Promise<ModelInfo[]>;
+    getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]>
 }
 
 export interface ClientMethods {
