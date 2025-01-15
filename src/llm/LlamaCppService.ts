@@ -232,7 +232,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                     await this.embeddingContext.dispose();
                 }
                 this.embeddingContext = await model.createEmbeddingContext();
-                this.embedder = new LlamaEmbedder(context);
+                this.embedder = new LlamaEmbedder(this.embeddingContext);
                 Logger.info("Llama.cpp embedding model initialized");
             }
 
@@ -411,7 +411,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(
         params: LLMRequestParams
     ): Promise<T> {
-        if (!this.context || !this.model) {
+        if (!this.context || !this.model || !this.llama || !this.session) {
             throw new Error("Llama.cpp model not initialized");
         }
 
@@ -429,19 +429,42 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
         try {
             this.session.resetChatHistory();
+
+            let grammar;
+            if (params.parseJSON && params.opts?.tools?.[0]?.parameters) {
+                // Create grammar from JSON schema if structured output is requested
+                grammar = await this.llama.createGrammarForJsonSchema({
+                    type: "object",
+                    properties: {
+                        ...params.opts.tools[0].parameters,
+                        message: {
+                            type: "string"
+                        }
+                    },
+                    required: ["message"]
+                });
+            }
+
             const completion = await this.session.prompt(prompt, {
                 temperature: params.opts?.temperature ?? 0.7,
                 maxTokens: params.opts?.maxPredictedTokens,
-                topP: params.opts?.topP
+                topP: params.opts?.topP,
+                grammar
             });
 
             const result = completion.trim();
 
-            if (params.parseJSON) {
-                return JSON5.parse(result) as T;
+            if (params.parseJSON && grammar) {
+                try {
+                    const parsed = grammar.parse(result);
+                    return parsed as T;
+                } catch (error) {
+                    Logger.error("Failed to parse structured output:", error);
+                    throw new Error(`Failed to parse structured output: ${error.message}`);
+                }
             }
 
-            return result as T;
+            return { message: result } as T;
         } catch (error) {
             await this.logger.logCall('completion', params, null, error);
             throw error;
