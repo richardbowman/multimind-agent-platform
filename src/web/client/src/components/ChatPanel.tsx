@@ -458,7 +458,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                     left: 0,
                                     right: 0,
                                     height: '1.5em',
-                                    background: 'linear-gradient(to bottom, rgba(255,255,255,0) 0%, rgba(255,255,255,1) 100%)'
+                                    background: 'linear-gradient(to bottom, rgba(42,42,42,0) 0%, rgba(42,42,42,1) 100%)'
                                 }
                             }}>
                                 <ReactMarkdown 
