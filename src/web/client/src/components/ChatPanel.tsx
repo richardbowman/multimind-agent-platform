@@ -30,6 +30,8 @@ interface ChatPanelProps {
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen }) => {
     const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useWebSocket();
+    const [selectedMessage, setSelectedMessage] = useState<any>(null);
+    const [metadataDialogOpen, setMetadataDialogOpen] = useState(false);
     const [userId] = useState('test');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -212,7 +214,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                 <Typography variant="subtitle2" sx={{ color: 'primary.main' }}>
                                     {handles.find(h => h.id === message.user_id)?.handle || 'Unknown User'}
                                 </Typography>
-                                <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                <Typography 
+                                    variant="caption" 
+                                    sx={{ 
+                                        color: 'text.secondary',
+                                        cursor: 'pointer',
+                                        '&:hover': {
+                                            textDecoration: 'underline'
+                                        }
+                                    }}
+                                    onClick={() => {
+                                        setSelectedMessage(message);
+                                        setMetadataDialogOpen(true);
+                                    }}
+                                >
                                     {new Date(message.create_at).toLocaleString()}
                                 </Typography>
                             </Box>
@@ -301,6 +316,56 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 <div ref={messagesEndRef} />
             </Box>
             <CommandInput onSendMessage={handleSendMessage} currentChannel={currentChannelId}/>
+            
+            <Dialog 
+                open={metadataDialogOpen} 
+                onClose={() => setMetadataDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Message Metadata</DialogTitle>
+                <DialogContent>
+                    {selectedMessage && (
+                        <Stack spacing={2} sx={{ mt: 2 }}>
+                            <Typography variant="body1">
+                                <strong>ID:</strong> {selectedMessage.id}
+                            </Typography>
+                            <Typography variant="body1">
+                                <strong>Channel ID:</strong> {selectedMessage.channel_id}
+                            </Typography>
+                            <Typography variant="body1">
+                                <strong>Thread ID:</strong> {selectedMessage.thread_id || 'None'}
+                            </Typography>
+                            <Typography variant="body1">
+                                <strong>Created At:</strong> {new Date(selectedMessage.create_at).toLocaleString()}
+                            </Typography>
+                            <Typography variant="body1">
+                                <strong>User ID:</strong> {selectedMessage.user_id}
+                            </Typography>
+                            {selectedMessage.props && Object.entries(selectedMessage.props).map(([key, value]) => (
+                                <Box key={key} sx={{ 
+                                    p: 1,
+                                    bgcolor: 'background.paper',
+                                    borderRadius: 1,
+                                    border: '1px solid',
+                                    borderColor: 'divider',
+                                    mb: 1
+                                }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                        {key}
+                                    </Typography>
+                                    <Typography variant="body2" sx={{ 
+                                        whiteSpace: 'pre-wrap',
+                                        wordBreak: 'break-word'
+                                    }}>
+                                        {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                                    </Typography>
+                                </Box>
+                            ))}
+                        </Stack>
+                    )}
+                </DialogContent>
+            </Dialog>
         </Box>
     );
 };
