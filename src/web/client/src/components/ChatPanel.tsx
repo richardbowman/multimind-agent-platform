@@ -9,7 +9,8 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    Stack
+    Stack,
+    Button
 } from '@mui/material';
 import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
@@ -353,26 +354,59 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             <Typography variant="body1">
                                 <strong>User ID:</strong> {selectedMessage.user_id}
                             </Typography>
-                            {selectedMessage.props && Object.entries(selectedMessage.props).map(([key, value]) => (
-                                <Box key={key} sx={{ 
-                                    p: 1,
-                                    bgcolor: 'background.paper',
-                                    borderRadius: 1,
-                                    border: '1px solid',
-                                    borderColor: 'divider',
-                                    mb: 1
-                                }}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                                        {key}
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ 
-                                        whiteSpace: 'pre-wrap',
-                                        wordBreak: 'break-word'
+                            {selectedMessage.props && Object.entries(selectedMessage.props).map(([key, value]) => {
+                                const isProjectId = key === 'project-id';
+                                return (
+                                    <Box key={key} sx={{ 
+                                        p: 1,
+                                        bgcolor: 'background.paper',
+                                        borderRadius: 1,
+                                        border: '1px solid',
+                                        borderColor: 'divider',
+                                        mb: 1
                                     }}>
-                                        {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                                    </Typography>
-                                </Box>
-                            ))}
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                            {key}
+                                        </Typography>
+                                        {isProjectId ? (
+                                            <Button
+                                                variant="text"
+                                                sx={{ 
+                                                    p: 0,
+                                                    textTransform: 'none',
+                                                    justifyContent: 'flex-start',
+                                                    '&:hover': {
+                                                        textDecoration: 'underline'
+                                                    }
+                                                }}
+                                                onClick={() => {
+                                                    const projectTasks = tasks.filter(t => t.projectId === value);
+                                                    if (projectTasks.length > 0) {
+                                                        setSelectedMessage(null);
+                                                        setMetadataDialogOpen(false);
+                                                        setSelectedTask(projectTasks[0]);
+                                                        setDialogOpen(true);
+                                                    }
+                                                }}
+                                            >
+                                                <Typography variant="body2" sx={{ 
+                                                    whiteSpace: 'pre-wrap',
+                                                    wordBreak: 'break-word'
+                                                }}>
+                                                    {value}
+                                                </Typography>
+                                            </Button>
+                                        ) : (
+                                            <Typography variant="body2" sx={{ 
+                                                whiteSpace: 'pre-wrap',
+                                                wordBreak: 'break-word'
+                                            }}>
+                                                {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                );
+                            })}
                         </Stack>
                     )}
                 </DialogContent>
