@@ -258,9 +258,11 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <DataProvider>
-            <AppContent />
-        </DataProvider>
+        <SnackbarProvider maxSnack={3}>
+            <DataProvider>
+                <AppContent />
+            </DataProvider>
+        </SnackbarProvider>
     );
 };
 

@@ -3,9 +3,26 @@ import type { LogParam } from '../../../../llm/LLMLogger';
 import type { DataContextMethods } from '../contexts/DataContext';
 import { ClientMethods } from '../../../../shared/RPCInterface';
 import { ClientTask } from '../../../../shared/types';
+import { enqueueSnackbar } from 'notistack';
 
 export const createClientMethods = (contextMethods: DataContextMethods) => ({
     onMessage: async (messages: ClientMessage[]) => {
+        // Check for messages not in current thread
+        messages.forEach(message => {
+            if (message.channel_id !== contextMethods.currentChannelId || 
+                message.thread_id !== contextMethods.currentThreadId) {
+                
+                enqueueSnackbar(`New message in ${message.channel_id}`, {
+                    variant: 'info',
+                    persist: true,
+                    onClick: () => {
+                        contextMethods.setCurrentChannelId(message.channel_id);
+                        contextMethods.setCurrentThreadId(message.thread_id);
+                    }
+                });
+            }
+        });
+
         // Update messages directly in context
         contextMethods.setMessages(prev => {
             const filteredPrev = prev.filter(prevMessage => 
