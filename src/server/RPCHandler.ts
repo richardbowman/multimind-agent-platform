@@ -51,23 +51,7 @@ export class ServerRPCHandler implements ServerMethods {
         return service.getAvailableEmbedders();
     }
 
-    async getProject(projectId: string): Promise<{
-        id: string;
-        name: string;
-        props?: Record<string, any>;
-        tasks: ClientTask[];
-        metadata: {
-            createdAt: Date;
-            updatedAt: Date;
-            status: 'active' | 'completed' | 'archived';
-            owner?: string;
-            tags?: string[];
-            description?: string;
-            priority?: 'low' | 'medium' | 'high';
-            originalPostId?: string;
-            parentTaskId?: any;
-        };
-    }> {
+    async getProject(projectId: string): Promise<ClientProject> {
         const project = this.services.taskManager.getProject(projectId);
         if (!project) {
             throw new Error(`Project ${projectId} not found`);
