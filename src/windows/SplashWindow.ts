@@ -40,7 +40,9 @@ export class SplashWindow {
     }
 
     setMessage(message: any) {
-        this.window.webContents.send('status', message);
+        if (!this.window.isDestroyed) {
+            this.window.webContents.send('status', message);
+        }
     }
 
     onInfo(logEntry) {
@@ -49,6 +51,6 @@ export class SplashWindow {
 
     close() {
         this.window.close();
-        Logger.off("_info", this.infoEvent);
+        Logger.off("_progress", this.infoEvent);
     }
 }

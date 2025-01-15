@@ -8,10 +8,17 @@ export enum RecurrencePattern {
     Monthly,
 }
 
+export enum TaskType {
+    Standard = "standard",
+    Recurring = "recurring",
+    Step = "step"
+}
+
 export interface AddTaskParams {
     id: string;
     description: string;
-    type: string;
+    type: TaskType;
+    category: string;
     creator: string;
     assignee?: string;
     complete?: boolean;
@@ -25,7 +32,8 @@ export interface Task extends Readonly<AddTaskParams> {
     readonly id: string;
     readonly projectId: string;
     readonly description: string;
-    readonly type: 'standard' | 'recurring' | 'step';
+    readonly type: TaskType;
+    readonly category: string;
     readonly creator: string;
     readonly assignee?: string;
     readonly complete?: boolean;
@@ -36,7 +44,7 @@ export interface Task extends Readonly<AddTaskParams> {
 }
 
 export interface RecurringTask extends Task {
-    type: "recurring",
+    type: TaskType.Recurring,
     recurrencePattern: RecurrencePattern;
     lastRunDate?: Date; // To keep track of the last run date
 }

@@ -1,7 +1,7 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { ExecuteParams } from '../ExecuteParams';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -11,7 +11,7 @@ import { OnboardingProject } from '../onboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { SchemaType } from 'src/schemas/SchemaTypes';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
 export interface AnswerMetadata {
     questionId: string;
@@ -38,7 +38,8 @@ export class AnswerQuestionsExecutor implements StepExecutor {
     private taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
         this.taskManager = params.taskManager!;
     }
 
@@ -46,7 +47,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
 
         const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
-        const intakeQuestions = Object.values(project.tasks).filter(t => t.type === 'process-answers' && !t.complete);
+        const intakeQuestions = Object.values(project.tasks).filter(t => t.category === 'process-answers' && !t.complete);
 
         if (intakeQuestions.length === 0) {
             return {

@@ -1,5 +1,5 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from "../../llm/modelHelpers";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -7,7 +7,7 @@ import { GoalConfirmationResponse } from "../../schemas/goalConfirmation";
 import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ILLMService } from "../../llm/ILLMService";
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
 /**
  * Executor that validates and confirms user goals before proceeding.
@@ -26,7 +26,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, params.userId || 'executor');
+        this.modelHelpers = params.modelHelpers;
     }
 
     async executeOld(goal: string, step: string, projectId: string): Promise<any> {

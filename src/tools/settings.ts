@@ -133,16 +133,6 @@ export class ModelByProvider {
         description: 'Model path for Llama.cpp'
     })
     llama_cpp: string = 'codellama-13b-instruct.Q4_K_M.gguf';
-
-    @ClientSettings({
-        label: 'Llama.cpp Execution Mode',
-        category: 'LLM Settings',
-        type: 'select',
-        options: ['Auto', 'CPU-only'],
-        defaultValue: 'Auto',
-        description: 'Execution mode for Llama.cpp (Auto uses GPU if available, CPU-only forces CPU execution)'
-    })
-    llama_cpp_execution_mode: string = 'Auto';
 }
 
 export interface AgentConfig {
@@ -382,6 +372,16 @@ export class Settings {
         description: 'Base URL for LM Studio API'
     })
     lmStudioBaseUrl!: string;
+
+    @ClientSettings({
+        label: 'Llama.cpp Execution Mode',
+        category: 'LLM Settings',
+        type: 'select',
+        options: ['Auto', 'CPU-only'],
+        defaultValue: 'Auto',
+        description: 'Execution mode for Llama.cpp (Auto uses GPU if available, CPU-only forces CPU execution)'
+    })
+    llama_cpp_execution_mode: string = 'Auto';    
 
     @ClientSettings({
         label: 'Context Size',

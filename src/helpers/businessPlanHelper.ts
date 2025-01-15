@@ -32,7 +32,7 @@ export async function updateBusinessPlan(
 
     const response = await modelHelpers.generate({
         message: JSON.stringify({
-            goals: Object.values(project.tasks).filter(t => t.type === 'business-goal'),
+            goals: Object.values(project.tasks).filter(t => t.category === 'business-goal'),
             existingPlan: existingContent,
             projectId: project.id,
             latestUpdate: project.props?.latestUpdate || '',

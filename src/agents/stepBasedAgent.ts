@@ -11,10 +11,10 @@ import Logger from '../helpers/logger';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/localChatClient';
 import { AgentConfig } from 'src/tools/settings';
-import { StepResult } from './StepResult';
-import { StepExecutor } from './StepExecutor';
-import { ExecuteNextStepParams } from './ExecuteNextStepParams';
-import { ExecuteStepParams, StepTask } from './ExecuteStepParams';
+import { StepResult } from './interfaces/StepResult';
+import { StepExecutor } from './interfaces/StepExecutor';
+import { ExecuteNextStepParams } from './interfaces/ExecuteNextStepParams';
+import { ExecuteStepParams, StepTask } from './interfaces/ExecuteStepParams';
 
 export abstract class StepBasedAgent extends Agent {
     protected stepExecutors: Map<string, StepExecutor> = new Map();

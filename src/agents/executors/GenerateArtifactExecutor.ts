@@ -1,7 +1,7 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { ExecuteParams } from '../ExecuteParams';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { StepResult } from '../interfaces/StepResult';
 import { RequestArtifacts } from '../../schemas/ModelResponse';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -10,7 +10,7 @@ import { randomUUID } from 'crypto';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
 /**
  * Executor that generates and manages Markdown document artifacts.
@@ -34,7 +34,8 @@ export class GenerateArtifactExecutor implements StepExecutor {
     private taskManager?: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
         this.artifactManager = params.artifactManager!;
         this.taskManager = params.taskManager;
     }

@@ -1,10 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import { ClientMessage, ClientChannel } from '../shared/IPCInterface';
+import { ClientMessage, ClientChannel } from '../../../../shared/IPCInterface';
 import WebSocketService from '../services/WebSocketService';
 import { ElectronIPCService } from '../services/ElectronIPCService';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
-import { BaseRPCService } from '../shared/BaseRPCService';
-import { ClientTask } from '../shared/types';
+import { BaseRPCService } from '../../../../shared/BaseRPCService';
+import { ClientTask } from '../../../../shared/types';
 import { CreateChannelParams } from '../../../../shared/channelTypes';
 
 const DataContext = createContext<DataContextMethods | null>(null);

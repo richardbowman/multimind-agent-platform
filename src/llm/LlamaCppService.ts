@@ -63,10 +63,13 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
     private embedder?: LlamaEmbedder;
     private session?: LlamaChatSession;
     embeddingContext: any;
+    private gpuMode: string;
 
-    constructor() {
+    constructor(gpuMode: string) {
         super('llama-cpp');
         
+        this.gpuMode = gpuMode;
+
         const shutdown = async () => {
             await this.shutdown();
         }
@@ -91,12 +94,10 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             this.llama = undefined;
         }
     }
-    
-    private getLlamaOptions(): { gpu: { type: false | "auto" } } {
+
+    private getLlamaOptions(): LlamaOptions {
         return {
-            gpu: {
-                type: this.settings.models.conversation.llama_cpp_execution_mode === 'CPU-only' ? false : "auto"
-            }
+            gpu: this.gpuMode === 'CPU-only' ? false : "auto"
         };
     }
 
@@ -207,7 +208,6 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
         try {
             if (!this.llama) {
                 const options = this.getLlamaOptions();
-                Logger.info(`Initializing Llama.cpp with execution mode: ${this.settings.models.conversation.llama_cpp_execution_mode}`);
                 this.llama = await loadLlama(options);
             }
             

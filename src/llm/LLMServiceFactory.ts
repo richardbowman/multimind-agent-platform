@@ -30,7 +30,7 @@ export class LLMServiceFactory {
             case LLMProvider.BEDROCK:
                 return new BedrockService(
                     settings.models.conversation.bedrock,
-                    settings.embeddingModel
+                    undefined
                 );
             case LLMProvider.OPENAI:
                 if (!settings.openai?.api?.key) {
@@ -39,10 +39,10 @@ export class LLMServiceFactory {
                 return new OpenAIService(
                     settings.openai.api.key,
                     settings.models.conversation.openai || "gpt-3.5-turbo",
-                    settings.embeddingModel || "text-embedding-ada-002"
+                    settings.models.embeddings.openai || "text-embedding-ada-002"
                 );
             case LLMProvider.LLAMA_CPP:
-                return new LlamaCppService();
+                return new LlamaCppService(settings.llama_cpp_execution_mode);
             default:
                 throw new Error(`Unsupported embedding provider: ${settings.providers.embeddings}`);
         }
@@ -67,7 +67,7 @@ export class LLMServiceFactory {
                     settings.models.conversation.anthropic
                 );
             case LLMProvider.LLAMA_CPP:
-                return new LlamaCppService();
+                return new LlamaCppService(settings.llama_cpp_execution_mode);
             case LLMProvider.OPENAI:
                 if (!settings.openai?.api?.key) {
                     throw new Error("OpenAI API key is required");
@@ -75,7 +75,7 @@ export class LLMServiceFactory {
                 return new OpenAIService(
                     settings.openai.api.key,
                     settings.models.conversation.openai || "gpt-3.5-turbo",
-                    settings.embeddingModel || "text-embedding-ada-002"
+                    settings.models.embeddings.openai || "text-embedding-ada-002"
                 );
             case LLMProvider.OPENROUTER:
                 if (!settings.openrouter?.api?.key) {
@@ -84,7 +84,7 @@ export class LLMServiceFactory {
                 return new OpenAIService(
                     settings.openrouter.api.key,
                     settings.models.conversation.openrouter || "gpt-3.5-turbo",
-                    settings.embeddingModel || "text-embedding-ada-002",
+                    undefined,
                     "https://openrouter.ai/api/v1"
                 );
             default:

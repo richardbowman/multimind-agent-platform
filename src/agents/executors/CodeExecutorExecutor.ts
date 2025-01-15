@@ -1,12 +1,12 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getQuickJS } from 'quickjs-emscripten';
 import { CodeExecutionResponse } from 'src/schemas/CodeExecutionResponse';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 
@@ -28,7 +28,8 @@ export class CodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
     }
     
     private getCodeReviewerAgent(params: ExecuteParams) {

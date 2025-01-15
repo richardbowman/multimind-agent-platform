@@ -7,12 +7,12 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { OnboardingProject, QuestionAnswer } from '../onboardingConsultant';
 import { CreateArtifact } from '../../schemas/ModelResponse';
 import { OperationalGuideResponse, QAItem } from '../../schemas/OperationalGuideResponse';
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { StepResult } from '../interfaces/StepResult';
 import { updateBusinessPlan } from '../../helpers/businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 import { AnswerMetadata } from './AnswerQuestionsExecutor';
 
 /**
@@ -38,14 +38,14 @@ export class CreatePlanExecutor implements StepExecutor {
 
     constructor(params: ExecutorConstructorParams) {
         this.userId = params.userId || 'executor';
-        this.modelHelpers = new ModelHelpers(params.llmService, this.userId);
+        this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
         this.artifactManager = params.artifactManager!;
     }
 
     async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
         const project = await this.getProjectWithPlan(projectId);
-        const businessGoals = Object.values(project.tasks).filter(t => t.type === 'create-plan');
+        const businessGoals = Object.values(project.tasks).filter(t => t.category === 'create-plan');
 
         const answers = this.getAnswersForType(project, 'process-answers');
 
@@ -109,7 +109,7 @@ export class CreatePlanExecutor implements StepExecutor {
         
         return project.metadata.answers.filter((answer : AnswerMetadata) => {
             const task = project.tasks[answer.questionId];
-            return task?.type === questionType;
+            return task?.category === questionType;
         });
     }
 

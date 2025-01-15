@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack, Snackbar, Alert } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import TaskIcon from '@mui/icons-material/Task';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
@@ -14,7 +13,7 @@ import { ArtifactPanel } from './components/ArtifactPanel';
 import { GlobalArtifactViewer } from './components/GlobalArtifactViewer';
 import { LogViewer } from './components/LogViewer';
 import { SettingsPanel } from './components/SettingsPanel';
-import './App.css';
+import './styles/App.css';
 
 const leftDrawerWidth = 250;
 const rightDrawerWidth = 300;
@@ -60,11 +59,7 @@ const AppContent: React.FC = () => {
         };
 
         // Assuming you have an electron or similar IPC service
-        window.electron?.status(handleProgressUpdate);
-
-        return () => {
-            window.electron?.removeStatusListener(handleProgressUpdate);
-        };
+        (window as any).electron.status(handleProgressUpdate);
     }, []);
 
     const handleToastClose = () => {

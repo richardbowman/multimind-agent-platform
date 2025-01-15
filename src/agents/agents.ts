@@ -77,7 +77,7 @@ export abstract class Agent {
 
     protected readonly llmService: ILLMService;
     protected readonly userId: string;
-    protected readonly chromaDBService: IVectorDatabase;
+    protected readonly vectorDBService: IVectorDatabase;
     protected readonly promptBuilder: SystemPromptBuilder;
     protected readonly projects: TaskManager;
     protected readonly artifactManager: ArtifactManager;
@@ -96,14 +96,14 @@ export abstract class Agent {
         this.chatClient = params.chatClient;
         this.llmService = params.llmService;
         this.userId = params.userId;
-        this.chromaDBService = params.vectorDBService;
+        this.vectorDBService = params.vectorDBService;
         this.projects = params.taskManager;
         this.messagingHandle = params.messagingHandle;
         this.settings = params.settings;
         
         this.modelHelpers = new ModelHelpers(this.llmService, this.userId);
         this.promptBuilder = new SystemPromptBuilder();
-        this.artifactManager = params.artifactManager || new ArtifactManager(this.chromaDBService);
+        this.artifactManager = params.artifactManager || new ArtifactManager(this.vectorDBService);
 
         if (this.projects) {
             this.projects.on("taskAssigned", async (event) => {
@@ -131,6 +131,22 @@ export abstract class Agent {
         } else {
             Logger.warn(`Agent ${this.constructor.name} didn't provide access to task manager`);
         }
+    }
+
+    protected getExecutorParams() {
+        // Create standardized params
+        const executorParams = {
+            llmService: this.llmService,
+            taskManager: this.projects,
+            artifactManager: this.artifactManager,
+            vectorDBService: this.vectorDBService,
+            userId: this.userId,
+            vectorDB: this.vectorDBService,
+            modelHelpers: new ModelHelpers(this.llmService, this.userId),
+            settings: this.settings
+        };
+        executorParams.modelHelpers.setPurpose(this.modelHelpers.getPurpose())
+        return executorParams;
     }
 
     public abstract initialize?(): Promise<void>;

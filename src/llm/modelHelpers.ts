@@ -207,8 +207,6 @@ export class ModelHelpers {
         // Augment instructions with context and generate a response
         const history = params.threadPosts || params.projectChain?.posts.slice(0, -1) || [];
 
-        const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
-
         const { contextWindow, maxTokens } = params;
 
         let response: T;
@@ -217,6 +215,7 @@ export class ModelHelpers {
 
         while (attempts < maxAttempts) {
             try {
+                const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
                 response = await this.model.generateStructured<T>(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
 
                 // Validate response against schema
@@ -235,15 +234,17 @@ export class ModelHelpers {
                     throw new Error(`Response does not conform to schema:\n${errors}`);
                 }
 
-                if (params.artifacts) {
-                    response.artifactIds = params.artifacts?.map(a => a.id);
-                }
+                //TODO: seems confusing hopefully not used
+                // if (params.artifacts) {
+                //     response.artifactIds = params.artifacts?.map(a => a.id);
+                // }
                 
                 // Cache the response
                 //this.modelCache.set(structure.getPrompt(), cacheContext, response);
                 
                 return response;
             } catch (error) {
+                Logger.error("Error generating", error);
                 if (attempts >= maxAttempts - 1) {
                     throw error;
                 }

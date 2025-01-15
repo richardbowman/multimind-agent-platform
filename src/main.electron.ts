@@ -10,7 +10,7 @@ import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
 import { SplashWindow } from './windows/SplashWindow';
 import { ConfigurationError } from './errors/ConfigurationError';
 import { MainWindow } from './windows/MainWindow';
-import { BackendServices } from './types/BackendServices';
+import { BackendServices, BackendServicesConfigNeeded, BackendServicesWithWindows } from './types/BackendServices';
 import { ElectronIPCServer } from './server/ElectronIPCServer';
 import { SettingsManager } from './tools/settingsManager';
 
@@ -18,7 +18,7 @@ let mainWindow: MainWindow;
 let splashWindow: SplashWindow;
 let settingsManager: SettingsManager;
 
-export let backendServices: BackendServices;
+export let backendServices: BackendServicesWithWindows|BackendServicesConfigNeeded;
 
 // Set up global error handling
 setupUnhandledRejectionHandler();
@@ -51,6 +51,7 @@ app.whenReady().then(async () => {
             // Set up IPC handlers
             setupIpcHandlers();
             await mainWindow.show();
+            mainWindow.getWindow().on("close", shutdown);
 
             // Close splash screen
             splashWindow.close();
@@ -87,8 +88,6 @@ let configComplete = false;
 export async function setupIpcHandlers(hasConfigError: boolean = false) {
     if (ipcServer) ipcServer.cleanup();
 
-
-
     ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow(), hasConfigError);
     configComplete = !hasConfigError;
 
@@ -101,7 +100,7 @@ export async function setupIpcHandlers(hasConfigError: boolean = false) {
                 message: hasConfigError ? "Initial configuration required" : undefined
             };
             console.log('firing backend status', JSON.stringify(status, 2, false));
-            ipcServer.getRPC().onBackendStatus(status);
+            ipcServer!.getRPC()!.onBackendStatus(status);
         }
     });
 
@@ -119,14 +118,15 @@ export async function reinitializeBackend() {
     await splashWindow.close();
 }
 
-app.on('window-all-closed', () => {
-    if (process.platform !== 'darwin') {
-        if (ipcServer) {
-            ipcServer.cleanup();
-        }
-        app.quit();
+async function shutdown() {
+    if (ipcServer) {
+        ipcServer.cleanup();
     }
-});
+    if (backendServices.cleanup) await backendServices.cleanup();
+    app.quit();
+}
+
+app.on('window-all-closed', shutdown);
 
 app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {

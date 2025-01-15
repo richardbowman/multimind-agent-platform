@@ -1,17 +1,18 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { ExecuteParams } from '../ExecuteParams';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { Project, Task, TaskManager } from 'src/tools/taskManager';
+import { Project, Task, TaskManager, TaskType } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { WritingResponse } from '../../schemas/writing';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
+import { TaskCategories } from '../interfaces/taskCategories';
 
 /**
  * Executor that manages content writing task assignments and coordination.
@@ -33,7 +34,8 @@ export class AssignWritersExecutor implements StepExecutor {
     private taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
         this.taskManager = params.taskManager!;
     }
 
@@ -75,7 +77,8 @@ ${params.previousResult ? `Use these materials to inform the task planning:\n${J
                 const task = await this.taskManager.addTask(writingProject, {
                     id: crypto.randomUUID(),
                     creator: params.agentId,
-                    type: 'writing',
+                    type: TaskType.Standard,
+                    category: TaskCategories.Writing,
                     description: `# ${section.title}\n\n${section.description}\n\n## Key Points:\n${
                         section.keyPoints?.map(p => `- ${p}`).join('\n')||""
                     }\n\n## Research Findings:\n${

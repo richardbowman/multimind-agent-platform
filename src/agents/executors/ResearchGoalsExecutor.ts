@@ -1,7 +1,7 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { ExecuteParams } from '../ExecuteParams';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -17,7 +17,7 @@ export class ResearchGoalsExecutor implements StepExecutor {
     taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
     }
 

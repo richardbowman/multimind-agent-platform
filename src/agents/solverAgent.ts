@@ -15,16 +15,7 @@ export class SolverAgent extends StepBasedAgent {
         throw new Error('Method not implemented.');
     }
     constructor(params: AgentConstructorParams) {
-        // Create planner with the correct parameters
-        const planner = new MultiStepPlanner(
-            params.llmService,
-            params.taskManager,
-            params.userId,
-            this.modelHelpers
-        );
-
-        // Call super with params and planner
-        super(params, planner);
+        super(params);
 
         // Set purpose and instructions
         this.modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning who can write code.`);

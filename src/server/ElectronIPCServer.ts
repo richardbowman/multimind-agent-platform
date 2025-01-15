@@ -3,7 +3,7 @@ import { createBirpc } from 'birpc';
 import { BackendServices } from '../types/BackendServices';
 import { MessageHandler } from './MessageHandler';
 import { createSafeServerRPCHandlers } from './rpcUtils';
-import { ClientMethods, ServerMethods } from '../web/client/src/shared/RPCInterface';
+import { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 
 export class ElectronIPCServer {
     private handler: MessageHandler;
@@ -12,7 +12,7 @@ export class ElectronIPCServer {
     constructor(private services: BackendServices, private mainWindow: BrowserWindow, hasConfigError: boolean) {
         this.handler = new MessageHandler(services);
         this.setupRPC();
-        this.handler.setupClientEvents(this.getRPC());
+        this.handler.setupClientEvents(this.getRPC()!);
     }
 
     private setupRPC() {
@@ -46,12 +46,12 @@ export class ElectronIPCServer {
             this.rpc.$close();
             this.rpc = undefined;
         }
-        if (this.handler instanceof MessageHandler) {
-            this.handler.cleanup?.();
-        }
     }
 
     async reinitialize(services: BackendServices) {
+        if (!this.getRPC()) {
+            throw new Error("RPC has been terminated");
+        }
         this.services = services;
         this.handler.setServices(services);
         this.handler.setupClientEvents(this.getRPC());

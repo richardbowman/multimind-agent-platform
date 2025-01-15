@@ -1,6 +1,6 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -10,7 +10,7 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import { EditingResponse } from '../../schemas/editing';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from 'src/tools/taskManager';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
 /**
  * Executor that reviews and improves content quality.
@@ -33,7 +33,8 @@ export class EditingExecutor implements StepExecutor {
     private taskManager: TaskManager
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
         this.artifactManager = params.artifactManager!;
         this.taskManager = params.taskManager!;
     }

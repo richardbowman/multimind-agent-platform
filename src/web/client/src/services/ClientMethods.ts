@@ -1,8 +1,8 @@
-import type { ClientMessage } from '../shared/IPCInterface';
+import type { ClientMessage } from '../../../../shared/IPCInterface';
 import type { LogParam } from '../../../../llm/LLMLogger';
 import type { DataContextMethods } from '../contexts/DataContext';
-import { ClientMethods } from '../shared/RPCInterface';
-import { ClientTask } from '../shared/types';
+import { ClientMethods } from '../../../../shared/RPCInterface';
+import { ClientTask } from '../../../../shared/types';
 
 export const createClientMethods = (contextMethods: DataContextMethods) => ({
     onMessage: async (messages: ClientMessage[]) => {
@@ -16,8 +16,8 @@ export const createClientMethods = (contextMethods: DataContextMethods) => ({
 
         // Check for artifact references
         const hasArtifactLinks = messages.some(message => 
-            message.content?.includes('artifact:') || 
-            message.metadata?.artifactIds?.length > 0
+            message.message?.includes('artifact:') || 
+            message.props?.artifactIds?.length > 0
         );
 
         if (hasArtifactLinks && contextMethods.currentChannelId) {

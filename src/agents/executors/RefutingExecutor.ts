@@ -1,6 +1,6 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -8,7 +8,7 @@ import { ILLMService } from '../../llm/ILLMService';
 import { RefutingResponse } from '../../schemas/refuting';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
 /**
  * Executor that critically analyzes arguments and identifies potential flaws.
@@ -27,7 +27,8 @@ export class RefutingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {

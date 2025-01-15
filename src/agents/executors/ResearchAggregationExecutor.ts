@@ -1,6 +1,6 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import crypto from 'crypto';
 import { ILLMService } from '../../llm/ILLMService';
@@ -12,7 +12,7 @@ import { ArtifactManager } from '../../tools/artifactManager';
 import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { ResearchArtifactResponse } from '../../schemas/research-manager';
 import Logger from '../../helpers/logger';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
 /**
  * Executor that combines and synthesizes research findings into comprehensive reports.
@@ -35,7 +35,8 @@ export class ResearchAggregationExecutor implements StepExecutor {
     private vectorDB: IVectorDatabase;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
         this.artifactManager = params.artifactManager!;
         this.vectorDB = params.vectorDB!;
     }

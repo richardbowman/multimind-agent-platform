@@ -1,6 +1,6 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { StepResult } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import SearchHelper, { DuckDuckGoProvider } from '../../helpers/searchHelper';
 import ScrapeHelper from '../../helpers/scrapeHelper';
@@ -15,7 +15,7 @@ import { SearchQueryResponse } from '../../schemas/SearchQueryResponse';
 import { LinkSelectionResponse } from '../../schemas/LinkSelectionResponse';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
 /**
  * WebSearchExecutor - An intelligent web research agent that:

@@ -1,13 +1,13 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { StepResult } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { FinalResponse } from '../../schemas/finalResponse';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/modelHelpers';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
 /**
  * Executor that synthesizes all previous results into a final response.
@@ -27,7 +27,8 @@ import { ExecutorType } from './ExecutorType';
 export class FinalResponseExecutor implements StepExecutor {
     modelHelpers: ModelHelpers;
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {

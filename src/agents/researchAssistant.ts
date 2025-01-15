@@ -8,7 +8,7 @@ import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { ExecutorType } from './executors/ExecutorType';
+import { ExecutorType } from './interfaces/ExecutorType';
 
 
 export interface ResearchProject extends Project {
@@ -38,25 +38,14 @@ If you've already done this, you should follow this order:
 3) ${ExecutorType.FINAL_RESPONSE}
 `);
 
-        // Create standardized params
-        const executorParams = {
-            llmService: params.llmService,
-            taskManager: params.taskManager,
-            artifactManager: this.artifactManager,
-            vectorDBService: params.vectorDBService,
-            userId: params.userId,
-            searchHelper: this.searchHelper,
-            scrapeHelper: this.scrapeHelper,
-            modelHelpers: this.modelHelpers,
-            vectorDB: params.vectorDBService,
-            settings: params.settings
-        };
-
         // Register step executors
-        this.registerStepExecutor(new WebSearchExecutor(executorParams));
-        this.registerStepExecutor(new ValidationExecutor(executorParams));
-        this.registerStepExecutor(new KnowledgeCheckExecutor(executorParams));
-        this.registerStepExecutor(new FinalResponseExecutor(executorParams));
+        this.registerStepExecutor(new WebSearchExecutor({
+            ...this.getExecutorParams(),
+            searchHelper: this.searchHelper,
+        }));
+        this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new KnowledgeCheckExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new FinalResponseExecutor(this.getExecutorParams()));
     }
     
     public async initialize(): Promise<void> {

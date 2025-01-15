@@ -1,8 +1,11 @@
 import { ModelResponse } from 'src/schemas/ModelResponse';
 
+export enum StepResultType {
+    DecomposeResearch = "decompose-research"
+}
 
 export interface StepResult {
-    type?: string;
+    type?: StepResultType;
     projectId?: string;
     taskId?: string;
     finished?: boolean;

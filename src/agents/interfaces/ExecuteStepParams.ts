@@ -1,4 +1,4 @@
-import { Task } from 'src/tools/taskManager';
+import { Task, TaskType } from 'src/tools/taskManager';
 import { ExecuteNextStepParams } from './ExecuteNextStepParams';
 import { StepResult } from './StepResult';
 
@@ -7,7 +7,7 @@ export interface StepTaskProps {
 }
 
 export interface StepTask extends Task {
-    type: "step",
+    type: TaskType.Step,
     stepType: string;
     props: StepTaskProps;
 }

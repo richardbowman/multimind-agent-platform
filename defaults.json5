@@ -1,43 +1,4 @@
 {
-  "models": {
-    "conversation": {
-      "lmstudio": "qwen2.5-coder-14b-instruct",
-      "anthropic": "claude-3-opus-20240229",
-      "bedrock": "anthropic.claude-3-sonnet-20240229-v1:0",
-      "openai": "gpt-4-turbo-preview",
-      "openrouter": "anthropic/claude-3-opus",
-      "llama_cpp": "codellama-13b-instruct.Q4_K_M.gguf"
-    },
-    "reasoning": {
-      "lmstudio": "qwen2.5-coder-14b-instruct",
-      "anthropic": "claude-3-opus-20240229",
-      "bedrock": "anthropic.claude-3-sonnet-20240229-v1:0",
-      "openai": "gpt-4-turbo-preview",
-      "openrouter": "anthropic/claude-3-opus",
-      "llama_cpp": "codellama-13b-instruct.Q4_K_M.gguf"
-    },
-    "document": {
-      "lmstudio": "qwen2.5-coder-14b-instruct",
-      "anthropic": "claude-3-opus-20240229",
-      "bedrock": "anthropic.claude-3-sonnet-20240229-v1:0",
-      "openai": "gpt-4-turbo-preview",
-      "openrouter": "anthropic/claude-3-opus",
-      "llama_cpp": "codellama-13b-instruct.Q4_K_M.gguf"
-    },
-    "embeddings": {
-      "lmstudio": "text-embedding-nomic-embed-text-v1.5",
-      "openai": "text-embedding-ada-002",
-      "llama_cpp": "nomic-embed-text-v1.5.Q4_K_M.gguf"
-    }
-  },
-  "defaultChannels": {
-    "research": "ku9ap3s76tbx5nmw17at4nxitc",
-    "projects": "kpmrcgw67jnfbr55cbnwxy64rc",
-    "content": "752db071-eeef-40b5-acb8-ef79c3259ccc",
-    "onboarding": "6eda3cc4-2762-4cbc-917c-820458dc1ef6",
-    "factChecking": "8ca10337-00e8-4a09-a973-16a3e50dc8b6",
-    "solver": "f1e2d3c4-b5a6-4789-8901-2345f6789012"
-  },
   "agents": {
     "RouterAgent": {
       "className": "RouterAgent",

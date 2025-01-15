@@ -1,6 +1,6 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -8,8 +8,8 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ContentOutline } from 'src/schemas/outline';
-import { ExecutorType } from './ExecutorType';
-import { ExecuteParams } from '../ExecuteParams';
+import { ExecutorType } from '../interfaces/ExecutorType';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StructuredInputPrompt } from 'src/prompts/structuredInputPrompt';
 import { OutlineApprovalCheck } from 'src/schemas/OutlineApprovalCheck';
 
@@ -30,7 +30,8 @@ export class OutlineExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {

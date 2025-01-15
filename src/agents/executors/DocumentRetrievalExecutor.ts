@@ -1,11 +1,11 @@
 import { ModelHelpers } from "src/llm/modelHelpers";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { StepExecutorDecorator } from "../decorators/executorDecorator";
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { ExecuteParams } from '../ExecuteParams';
-import { StepResult } from '../StepResult';
-import { ExecutorType } from "./ExecutorType";
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { StepResult } from '../interfaces/StepResult';
+import { ExecutorType } from "../interfaces/ExecutorType";
 import { IVectorDatabase } from "src/llm/IVectorDatabase";
 import { message } from "blessed";
 
@@ -16,7 +16,8 @@ export class DocumentRetrievalExecutor implements StepExecutor {
     private vectorDB: IVectorDatabase;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
         this.artifactManager = params.artifactManager!;
         this.vectorDB = params.vectorDB;
         this.modelHelpers.setPurpose(`You are a document retrieval specialist. Your job is to find and return requested documents from the artifact store.`);

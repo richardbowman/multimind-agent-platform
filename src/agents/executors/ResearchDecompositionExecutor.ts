@@ -1,18 +1,19 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { ExecuteParams } from '../ExecuteParams';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { Project, Task, TaskManager } from 'src/tools/taskManager';
+import { Project, Task, TaskManager, TaskType } from 'src/tools/taskManager';
 import { randomUUID } from 'crypto';
 import { ResearchDecomposition } from '../../schemas/research-manager';
 import { ModelResponse } from 'src/schemas/ModelResponse';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
+import { TaskCategories } from '../interfaces/taskCategories';
 
 /**
  * Executor that breaks down research requests into manageable tasks.
@@ -34,7 +35,8 @@ export class ResearchDecompositionExecutor implements StepExecutor {
     private taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
         this.taskManager = params.taskManager!;
     }
 
@@ -51,9 +53,8 @@ export class ResearchDecompositionExecutor implements StepExecutor {
         const pendingTasks: Set<string> = new Set();
 
         const systemPrompt = `
-You are a Web Research manager. You develop a list of one or more research requests for your team of research assistants who will search the Internet
-based on your research requests and provide you with the results they find. Make sure each research request is complete with
-all details necessary to perform a high quality Internet search. Make sure they are not duplicative.
+You are a Web Research manager. You develop a list of one or more search requests for your team of research assistants that will summarize websites from the results. Make sure each research request is complete with
+all details necessary to perform a high quality Web-based search. Make sure they are not duplicative.
 
 Follow these steps:
 1) Restate the user's goal.
@@ -100,7 +101,8 @@ ${previousContext}`;
 
             const task: Task = {
                 id,
-                type: "standard",
+                type: TaskType.Standard,
+                category: TaskCategories.WebResearch,
                 projectId,
                 description,
                 creator: params.agentId
@@ -119,7 +121,7 @@ ${previousContext}`;
         }
 
         return {
-            type: "decompose-research",
+            type: StepResultType.DecomposeResearch,
             finished: false, // Don't mark as finished until researchers complete their work
             response: {
                 message: `Research plan created:\n\n${result.strategy}\n\nTasks:\n${result.researchRequested.map(t => `- ${t}`).join('\n')}\n\nWaiting for researchers to complete their tasks...`,

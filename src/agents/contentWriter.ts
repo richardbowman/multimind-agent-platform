@@ -66,7 +66,7 @@ export class ContentWriter extends Agent {
 
     async processTask(task: ContentTask) {
         try {
-            const searchResults = await this.chromaDBService.query([task.description], undefined, 10);
+            const searchResults = await this.vectorDBService.query([task.description], undefined, 10);
             const history : ModelMessageHistory[] = [
                 {
                     "role": "system",

@@ -6,7 +6,7 @@ import { createSafeServerRPCHandlers } from './rpcUtils';
 import Logger from '../helpers/logger';
 import { MessageHandler } from './MessageHandler';
 import { BackendServices } from '../types/BackendServices';
-import { ClientMethods, ServerMethods } from 'src/web/client/src/shared/RPCInterface';
+import { ClientMethods, ServerMethods } from 'src/shared/RPCInterface';
 
 export class WebSocketServer {
     private io: Server;

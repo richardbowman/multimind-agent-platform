@@ -1,8 +1,8 @@
 import { BackendServices } from "../types/BackendServices";
-import { ClientMethods, ServerMethods } from "../web/client/src/shared/RPCInterface";
+import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
 import Logger from "../helpers/logger";
 import { ChatPost } from "../chat/chatClient";
-import { ClientChannel, ClientMessage, ClientThread } from "../web/client/src/shared/IPCInterface";
+import { ClientChannel, ClientMessage, ClientThread } from "../shared/IPCInterface";
 import { LLMCallLogger } from "../llm/LLMLogger";
 import { reinitializeBackend } from "../main.electron";
 import { CreateChannelParams } from "src/shared/channelTypes";

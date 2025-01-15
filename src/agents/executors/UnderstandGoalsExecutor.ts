@@ -1,16 +1,15 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { ExecuteParams } from '../ExecuteParams';
-import { StepResult } from '../StepResult';
-import { SchemaInliner } from '../../helpers/schemaInliner';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { StepResult } from '../interfaces/StepResult';
 import crypto from 'crypto';
-import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
-import { TaskManager } from '../../tools/taskManager';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { TaskManager, TaskType } from '../../tools/taskManager';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import Logger from 'src/helpers/logger';
 import { IntakeQuestionsResponse } from '../../schemas/IntakeQuestionsResponse';
-import { ExecutorType } from './ExecutorType';
+import { ExecutorType } from '../interfaces/ExecutorType';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 
@@ -35,7 +34,8 @@ export class UnderstandGoalsExecutor implements StepExecutor {
     taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
         this.taskManager = params.taskManager!;
         this.userId = params.userId || 'executor';
     }
@@ -111,7 +111,8 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             const q = response.intakeQuestions[i];
             await this.taskManager.addTask(project, {
                 id: crypto.randomUUID(),
-                type: 'process-answers',
+                type: TaskType.Step,
+                category: 'process-answers',
                 description: `Gather answer to Q: ${q.question}; Purpose: ${q.purpose}`,
                 creator: this.userId,
                 complete: false,
@@ -121,9 +122,9 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         
         // Update existing tasks to continue numbering after the new questions
         for (const task of existingTasks) {
-            if (task.order !== undefined) {
-                task.order = task.order + response.intakeQuestions.length + 1;
-            }
+            await this.taskManager.updateTask(task.id, {
+                order: task.order||0 + response.intakeQuestions.length + 1
+            });
         }
 
         return {

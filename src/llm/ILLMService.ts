@@ -11,6 +11,7 @@ export interface EmbedderModelInfo extends ModelInfo {
 }
 
 export interface ILLMService {
+    shutdown(): Promise<void>;
     initializeChatModel(modelPath: string): Promise<void>;
     sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     countTokens(content: string): Promise<number>;
@@ -26,16 +27,15 @@ export interface ILLMService {
     generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T>;
 }
 
+export interface JSONSchema extends Record<string, any> {
+    type: "object" | "array";
+}
+
 export interface LLMTool {
     name: string;
     description: string;
-    parameters: Record<string, any>;
-    type?: "function";  // Claude specific
-    function?: {        // Claude specific
-        name: string;
-        parameters: Record<string, any>;
-        description?: string;
-    };
+    parameters: JSONSchema;
+    type?: "function";
 }
 
 export interface LLMPredictionOpts {

@@ -2,6 +2,7 @@ import { Project } from "src/tools/taskManager";
 import { Task } from "src/tools/taskManager";
 import { StepBasedAgent } from './stepBasedAgent';
 import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
+import { Planner } from "./planners/planner";
 
 export enum ProjectManagerActivities {
     AnswerQuestions = "answer-questions",
@@ -26,6 +27,10 @@ export class ConfigurableAgent extends StepBasedAgent {
     }
     
     async initialize() {
+        if (!this.agentName) {
+            throw new Error(`No name found for agent ${this.agentName}`);
+        }
+
         const agentConfig = this.settings.agents[this.agentName].config;
         
         if (!agentConfig) {

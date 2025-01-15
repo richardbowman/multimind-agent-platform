@@ -7,6 +7,7 @@ import { BaseLLMService } from "./BaseLLMService";
 import { LLMRequestParams } from "./ILLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
 import Logger from "src/helpers/logger";
+import { error } from "console";
 
 export class OpenAIService extends BaseLLMService {
     private client: OpenAI;
@@ -128,15 +129,19 @@ export class OpenAIService extends BaseLLMService {
                 model: model,
                 messages,
                 tools,
-                tool_choice: toolChoice,
+                // tool_choice: toolChoice,
                 temperature: params.opts?.temperature,
                 max_tokens: params.opts?.maxPredictedTokens,
                 top_p: params.opts?.topP,
             });
 
+            if (response?.error) {
+                throw new Error(`Error from LLM provider ${error.code} ${error.message}\n${error.metadata ? JSON.stringify(error.metadata, undefined, 2) : ''}`);
+            }
+
             const result = {
                 response: params.parseJSON ?
-                    JSON.parse(response.choices[0].message.tool_calls[0].function.arguments || '{}') :
+                    JSON.parse(response?.choices?.[0].message?.tool_calls?.[0]?.function?.arguments || '{}') :
                     { message: response.choices[0].message?.content || '' },
                 metadata: {
                     _usage: {

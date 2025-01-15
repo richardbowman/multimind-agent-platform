@@ -60,6 +60,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         try {
             await tasks.save();
             await chatStorage.save();
+            if (chatService.shutdown) await chatService.shutdown();
             process.exit(0);
         } catch (error) {
             console.error('Error during shutdown:', error);
@@ -117,6 +118,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         settingsManager,
         llmLogger: chatService.getLogger(),
         logReader: new LogReader(),
-        llmService: chatService
+        llmService: chatService,
+        cleanup: shutdown,
     };
 }

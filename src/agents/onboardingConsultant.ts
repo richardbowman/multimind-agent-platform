@@ -65,23 +65,6 @@ Let's start by discussing your main business goals. What would you like to achie
 
     constructor(params: AgentConstructorParams) {
         super(params);
-        
-        // Create standardized params
-        const executorParams = {
-            llmService: this.llmService,
-            vectorDB: params.vectorDBService,
-            taskManager: params.taskManager,
-            artifactManager: this.artifactManager,
-            userId: params.userId
-        };
-
-        // Register our specialized executors
-        this.registerStepExecutor(new AnswerQuestionsExecutor(executorParams));
-        this.registerStepExecutor(new UnderstandGoalsExecutor(executorParams));
-        this.registerStepExecutor(new CreatePlanExecutor(executorParams));
-        this.registerStepExecutor(new ReviewProgressExecutor(executorParams));
-        // this.registerStepExecutor(new ValidationExecutor(executorParams));
-
         this.modelHelpers.setPurpose(`You are an Onboarding Agent focused on helping users achieve their business goals with this platform called Multimind. The service is designed
 to help individuals and businesses automate tasks. It provides Web-based research and content creation agents. Your goal is to ensure that the rest of the agents in the platform
 are trained and educated on what the user would like to achieve with the platform. You should build an understanding of their goals and desired approach. 
@@ -106,7 +89,13 @@ this.modelHelpers.setFinalInstructions(`To kickoff with a new user, create the f
 2. create_revise_plan
 `);
 
-//2. validation
+        // Register our specialized executors
+        this.registerStepExecutor(new AnswerQuestionsExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new UnderstandGoalsExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new CreatePlanExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new ReviewProgressExecutor(this.getExecutorParams()));
+        // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
+
 
         }
 }

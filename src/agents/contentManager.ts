@@ -12,6 +12,7 @@ import { StepBasedAgent } from './stepBasedAgent';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { DocumentRetrievalExecutor } from './executors/DocumentRetrievalExecutor';
+import { TaskCategories } from './interfaces/taskCategories';
 
 export interface ContentProject extends Project {
     goal: string;
@@ -25,26 +26,7 @@ export interface ContentTask extends Task {
 
 export class ContentManager extends StepBasedAgent {
     constructor(params: AgentConstructorParams) {
-        const modelHelpers = new ModelHelpers(params.llmService, params.userId);
-        const planner = new MultiStepPlanner(params.llmService, params.taskManager, params.userId, modelHelpers)
-        super(params, planner);
-
-        // Create standardized params
-        const executorParams = {
-            llmService: params.llmService,
-            vectorDB: params.vectorDBService,
-            taskManager: params.taskManager,
-            artifactManager: this.artifactManager,
-            userId: params.userId
-        };
-
-        // Register our specialized executors
-        this.registerStepExecutor(new KnowledgeCheckExecutor(executorParams));
-        this.registerStepExecutor(new OutlineExecutor(executorParams));
-        this.registerStepExecutor(new AssignWritersExecutor(executorParams));
-        this.registerStepExecutor(new EditingExecutor(executorParams));
-        this.registerStepExecutor(new DocumentRetrievalExecutor(executorParams));
-        // this.registerStepExecutor(new ValidationExecutor(executorParams));
+        super(params);
 
         this.modelHelpers.setPurpose(`You are planning how to create high-quality content.
 Break down the content creation into steps of research, outlining, writing and editing.
@@ -56,11 +38,21 @@ IMPORTANT: Always follow this pattern:
 2. Follow with an 'outline' step to structure the content
 3. Then you can 'assign-writers' to have the writers create the sections
 4. End with an 'editing' step to improve the final content`);
+
+
+        // Register our specialized executors
+        this.registerStepExecutor(new KnowledgeCheckExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new OutlineExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new AssignWritersExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new EditingExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new DocumentRetrievalExecutor(this.getExecutorParams()));
+        // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
+
     }
 
-    protected async taskNotification(task: ContentTask): Promise<void> {
+    protected async taskNotification(task: Task): Promise<void> {
         try {
-            if (task.type === "assign-writers") {
+            if (task.category === TaskCategories.Writing) {
                 if (task.complete) {
                     const project = this.projects.getProject(task.projectId);
 

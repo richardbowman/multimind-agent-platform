@@ -1,14 +1,14 @@
-import { ExecutorConstructorParams } from '../ExecutorConstructorParams';
-import { StepExecutor } from '../StepExecutor';
-import { StepResult } from '../StepResult';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { StepResult } from '../interfaces/StepResult';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ValidationResult } from '../../schemas/validation';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ExecutorType } from './ExecutorType';
-import { ExecuteParams } from '../ExecuteParams';
+import { ExecutorType } from '../interfaces/ExecutorType';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
 const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
 /**
@@ -30,7 +30,8 @@ export class ValidationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
-        this.modelHelpers = new ModelHelpers(params.llmService, 'executor');
+        this.modelHelpers = params.modelHelpers;
+
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
