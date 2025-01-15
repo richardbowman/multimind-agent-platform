@@ -489,7 +489,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                         Show more
                                     </Button>
                                 )}
-                                {expandedMessages.has(message.id) && (
+                                {expandedMessages.has(message.id) && message.message.split('\n').length > 3 && (
                                     <Button
                                         size="small"
                                         onClick={() => toggleMessageExpansion(message.id)}
