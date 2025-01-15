@@ -161,18 +161,22 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             const modelDir = path.join(getDataPath(), "models");
             await fs.mkdir(modelDir, { recursive: true });
             
-            const [repo, modelName] = modelId.split('/');
-            const modelPath = path.join(modelDir, repo, modelName); // Store in repo-specific subdirectory
+            // For local models, modelId is just the filename
+            const isLocal = !modelId.includes('/');
+            const modelPath = isLocal 
+                ? path.join(modelDir, modelId) // Local models go directly in modelDir
+                : path.join(modelDir, ...modelId.split('/')); // Remote models use repo subdirs
 
             // Check if model exists
             try {
                 await fs.access(modelPath);
             } catch {
-                if (!modelId.startsWith('local/')) {
+                if (!isLocal) {
                     // If not local and not found, download it
+                    const [repo, modelName] = modelId.split('/');
                     await this.downloadModel(repo, modelName, modelDir);
                 } else {
-                    throw new Error(`Local model ${modelName} not found`);
+                    throw new Error(`Local model ${modelId} not found`);
                 }
             }
 
@@ -269,15 +273,14 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                             const filePath = path.join(modelDir, fileName);
                             const stats = await fs.stat(filePath);
                             
-                            // For local models, use "local" as the repo name
+                            // For local models, use the filename as both repo and model name
                             localModels.push({
-                                id: `local/${fileName}`,
+                                id: fileName,
                                 name: fileName,
                                 path: filePath, // Store actual local path
                                 size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
                                 lastModified: stats.mtime,
-                                isLocal: true,
-                                repo: 'local'
+                                repo: fileName // Use filename as repo for local models
                             });
                         } catch (error) {
                             Logger.warn(`Could not get stats for model ${fileName}:`, error);

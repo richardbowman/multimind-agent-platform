@@ -4,8 +4,7 @@ export interface ModelInfo {
     name: string;
     size: string;
     lastModified: Date;
-    isLocal: boolean;
-    repo: string; // Repository name (e.g. "TheBloke", "local")
+    repo: string; // Repository name (e.g. "TheBloke")
     author?: string;
     downloads?: number;
     likes?: number;
