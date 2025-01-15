@@ -53,6 +53,7 @@ const AppContent: React.FC = () => {
         needsConfig,
         showSnackbar,
         snackbarOpen,
+        setSnackbarOpen,
         snackbarOptions,
         handleSnackbarClose,
         handleSnackbarClick

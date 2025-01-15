@@ -35,6 +35,7 @@ export interface DataContextMethods {
   isLoading: boolean;
   needsConfig: boolean;
   snackbarOpen: boolean;
+  setSnackbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
   showSnackbar: (options: SnackbarOptions) => void;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   fetchChannels: () => Promise<void>;
@@ -239,8 +240,8 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isLoading,
     needsConfig,
     snackbarOpen,
+    setSnackbarOpen,
     showSnackbar,
-    snackbarOpen,
     snackbarOptions,
     handleSnackbarClose,
     handleSnackbarClick,
