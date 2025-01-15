@@ -144,4 +144,48 @@ export class AnthropicService extends BaseLLMService {
         // This is a rough estimate based on GPT tokenization rules
         return Math.ceil(content.length / 4);
     }
+
+    async getAvailableModels(): Promise<ModelInfo[]> {
+        // Anthropic's available models as of 2025
+        const models: ModelInfo[] = [
+            {
+                id: "claude-3-opus-20240229",
+                name: "Claude 3 Opus",
+                size: "Large",
+                lastModified: new Date("2024-02-29"),
+                isLocal: false,
+                author: "Anthropic",
+                downloads: 0
+            },
+            {
+                id: "claude-3-sonnet-20240229",
+                name: "Claude 3 Sonnet",
+                size: "Medium",
+                lastModified: new Date("2024-02-29"),
+                isLocal: false,
+                author: "Anthropic",
+                downloads: 0
+            },
+            {
+                id: "claude-3-haiku-20240307",
+                name: "Claude 3 Haiku",
+                size: "Small",
+                lastModified: new Date("2024-03-07"),
+                isLocal: false,
+                author: "Anthropic",
+                downloads: 0
+            },
+            {
+                id: "claude-2.1",
+                name: "Claude 2.1",
+                size: "Large",
+                lastModified: new Date("2023-11-01"),
+                isLocal: false,
+                author: "Anthropic",
+                downloads: 0
+            }
+        ];
+
+        return models;
+    }
 }
