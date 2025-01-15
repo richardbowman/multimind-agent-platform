@@ -178,48 +178,10 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 }
             }
 
-                const model = await llama.loadModel({
-                    modelPath: modelPath
-                });
-
-                if (modelType === 'chat') {
-                    const context = await model.createContext();
-                    this.context = context;
-                    Logger.info("Llama.cpp chat model initialized");
-                } else if (modelType === 'embedding') {
-                    const context = await model.createEmbeddingContext();
-                    this.embedder = new LlamaEmbedder(context);
-                    Logger.info("Llama.cpp embedding model initialized");
-                }
-            } 
-            // For remote models, extract repo and filename
-            else {
-                const [repo, modelName] = modelId.split('/');
-                const modelPath = path.join(modelDir, modelName);
-
-                // Check if model exists
-                try {
-                    await fs.access(modelPath);
-                } catch {
-                    // If not, download it
-                    await this.downloadModel(repo, modelName, modelDir);
-                }
-
-                const model = await llama.loadModel({
-                    modelPath: modelPath
-                });
-
-                if (modelType === 'chat') {
-                    const context = await model.createContext();
-                    this.context = context;
-                    Logger.info("Llama.cpp chat model initialized");
-                } else if (modelType === 'embedding') {
-                    const context = await model.createEmbeddingContext();
-                    this.embedder = new LlamaEmbedder(context);
-                    Logger.info("Llama.cpp embedding model initialized");
-                }
-            }
-
+            const model = await llama.loadModel({
+                modelPath: modelPath
+            });
+            
             if (modelType === 'chat') {
                 const context = await model.createContext();
                 this.context = context;
