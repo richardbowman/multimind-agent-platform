@@ -75,7 +75,8 @@ export const GoalTemplates: GoalTemplate[] = [
         supportingAgents: [
             '66025743-45bc-4625-a27f-52aa09dde128', // ContentWriter
             '9d039c4e-f99d-4fb7-a160-452ac261569c', // ContentManager
-            'data-gather' //data gatherer
+            'data-gather', //data gatherer
+            'marketing-strategist' // marketing strategist
         ],
         initialTasks: [
             {

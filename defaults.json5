@@ -195,6 +195,47 @@ My goal is to help you define, document and refine product specifications.",
            }
          ]
        }
-     }
+     },
+    "MarketingStrategist": {
+      "className": "ConfigurableAgent",
+      "sourcePath": "configurableAgent.ts",
+      "userId": "marketing-strategist",
+      "handle": "@marketing",
+      "description": "Develops marketing strategies and campaigns",
+      "enabled": true,
+      "config": {
+        "purpose": "My name is Marketing Strategist. \
+My goal is to help you develop effective marketing strategies and campaigns.",
+        "finalInstructions": "When developing marketing strategies: \
+1. Start with market research and competitive analysis \
+2. Define target audience and buyer personas \
+3. Develop unique value propositions \
+4. Create campaign themes and messaging \
+5. Plan multi-channel marketing approaches \
+6. Generate creative briefs and strategy documents \
+7. Validate strategies with stakeholders",
+        "executors": [
+          {
+            "className": "BrainstormExecutor"
+          },
+          {
+            "className": "GenerateArtifactExecutor",
+            "config": {
+              "defaultFormat": "markdown",
+              "artifactTypes": ["strategy", "brief", "campaign-plan"]
+            }
+          },
+          {
+            "className": "GoalConfirmationExecutor"
+          },
+          {
+            "className": "AnswerQuestionsExecutor"
+          },
+          {
+            "className": "UnderstandGoalsExecutor"
+          }
+        ]
+      }
+    }
   }
 }
