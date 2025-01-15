@@ -247,15 +247,19 @@ const AppContent: React.FC = () => {
                 autoHideDuration={6000}
                 onClose={handleSnackbarClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                onClick={handleSnackbarClick}
             >
-                <Alert 
-                    onClose={handleSnackbarClose} 
-                    severity={snackbarOptions.severity}
-                    sx={{ width: '100%' }}
-                >
-                    {snackbarOptions.message}
-                </Alert>
+                <div onClick={handleSnackbarClick}>
+                    <Alert 
+                        onClose={(e) => {
+                            e.stopPropagation();
+                            handleSnackbarClose();
+                        }} 
+                        severity={snackbarOptions.severity}
+                        sx={{ width: '100%', cursor: 'pointer' }}
+                    >
+                        {snackbarOptions.message}
+                    </Alert>
+                </div>
             </Snackbar>
         </Box>
     );
