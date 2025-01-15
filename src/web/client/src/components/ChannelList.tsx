@@ -199,7 +199,9 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                             multiple
                             value={selectedAgents}
                             onChange={(e) => setSelectedAgents(e.target.value as string[])}
-                            renderValue={(selected) => (selected as string[]).join(', ')}
+                            renderValue={(selected) => (selected as string[])
+                                .map(id => webSocket.handles.find(h => h.id === id)?.handle || 'Unknown')
+                                .join(', ')}
                         >
                             {webSocket.handles.map((handle) => {
                                 const isSelected = selectedAgents.includes(handle.id);
