@@ -5,6 +5,7 @@ import type { LLMLogEntry } from '../../../../llm/LLMLogger';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/types';
 import { CreateChannelParams } from '../../../../shared/channelTypes';
+import { SnackbarCloseReason } from '@mui/material/Snackbar';
 
 const DataContext = createContext<DataContextMethods | null>(null);
 
@@ -28,7 +29,7 @@ export interface DataContextMethods {
     system: any[];
     api: any[];
   };
-  handles: Array<{id: string, handle: string}>;
+  handles: Array<{ id: string, handle: string }>;
   currentChannelId: string | null;
   currentThreadId: string | null;
   isLoading: boolean;
@@ -63,7 +64,7 @@ export interface DataContextMethods {
 export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ClientChannel[]>([]);
-  const [handles, setHandles] = useState<Array<{id: string, handle: string}>>([]);
+  const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);
   const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<ClientTask[]>([]);
@@ -85,13 +86,20 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     severity: 'info'
   });
 
-  const handleSnackbarClose = useCallback(() => {
+  const handleSnackbarClose = useCallback((
+    event: React.SyntheticEvent | Event,
+    reason?: SnackbarCloseReason,
+  ) => {
+    if (reason === 'clickaway') {
+      return;
+    }
+
     setSnackbarOpen(false);
   }, []);
 
   useEffect(() => {
     console.debug('WebSocketContext stable mount - connecting');
-    
+
     // Listen for connected event before fetching data
     ipcService.on('connected', () => {
       console.debug('WebSocketContext: received connected event');
@@ -122,18 +130,18 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       if (currentChannelId) {
         setIsLoading(true);
         setMessages([]); // Clear messages before loading new ones
-        
+
         const [newMessages] = await Promise.all([
-          ipcService.getRPC().getMessages({channelId: currentChannelId, threadId: currentThreadId}),
+          ipcService.getRPC().getMessages({ channelId: currentChannelId, threadId: currentThreadId }),
           fetchTasks(currentChannelId, currentThreadId),
           fetchArtifacts(currentChannelId, currentThreadId)
         ]);
-        
+
         setMessages(newMessages);
         setIsLoading(false);
       }
     };
-    
+
     loadChannelData();
   }, [currentChannelId, currentThreadId]);
 
@@ -148,7 +156,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const result = await ipcService.getRPC().sendMessage(message);
     if (result) {
       setMessages(prev => {
-        const newMessages = [result].filter(message => 
+        const newMessages = [result].filter(message =>
           !prev.some(m => m.id === message.id)
         );
         return [...prev, ...newMessages].sort((a, b) => a.create_at - b.create_at);
@@ -205,7 +213,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       [logType]: newLogs
     }));
   }, []);
-  
+
   const showSnackbar = useCallback((options: SnackbarOptions) => {
     setSnackbarOptions(options);
     setSnackbarOpen(true);
@@ -219,10 +227,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, [snackbarOptions]);
 
   const contextMethods = useMemo(() => ({
-    messages, 
-    channels, 
+    messages,
+    channels,
     tasks,
-    artifacts, 
+    artifacts,
     logs,
     handles,
     currentChannelId,
@@ -234,15 +242,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     snackbarOptions,
     handleSnackbarClose,
     handleSnackbarClick,
-    sendMessage, 
-    fetchChannels, 
+    sendMessage,
+    fetchChannels,
     fetchTasks,
     fetchArtifacts,
     fetchAllArtifacts,
     fetchLogs,
     fetchHandles,
     deleteArtifact,
-    addArtifactToChannel, 
+    addArtifactToChannel,
     removeArtifactFromChannel,
     setMessages,
     setLogs,
@@ -254,15 +262,15 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     updateSettings: async (settings: any) => {
       try {
         const updatedSettings = await ipcService.getRPC().updateSettings(settings);
-        
-        if (settings.host !== undefined || 
-            settings.port !== undefined || 
-            settings.protocol !== undefined) {
+
+        if (settings.host !== undefined ||
+          settings.port !== undefined ||
+          settings.protocol !== undefined) {
           ipcService.disconnect();
           await ipcService.connect();
           await Promise.all([fetchChannels(), fetchHandles()]);
         }
-        
+
         return updatedSettings;
       } catch (error) {
         console.error('Failed to update settings:', error);
@@ -271,24 +279,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     },
     createChannel: (params: CreateChannelParams) => ipcService.getRPC().createChannel(params),
     markTaskComplete: async (taskId: string, complete: boolean) => {
-        const updatedTask = await ipcService.getRPC().markTaskComplete(taskId, complete);
-        setTasks(prev => prev.map(t => 
-            t.id === updatedTask.id ? updatedTask : t
-        ));
+      const updatedTask = await ipcService.getRPC().markTaskComplete(taskId, complete);
+      setTasks(prev => prev.map(t =>
+        t.id === updatedTask.id ? updatedTask : t
+      ));
     }
   }), [
-    messages, 
-    channels, 
+    messages,
+    channels,
     tasks,
-    artifacts, 
+    artifacts,
     logs,
     handles,
     currentChannelId,
     currentThreadId,
     isLoading,
     needsConfig,
-    sendMessage, 
-    fetchChannels, 
+    sendMessage,
+    fetchChannels,
     fetchTasks,
     fetchArtifacts,
     fetchAllArtifacts,
@@ -301,7 +309,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   ]);
 
   const ipcService = useMemo(() => {
-    return (window as any).electron 
+    return (window as any).electron
       ? new ElectronIPCService(contextMethods)
       : new WebSocketService();
   }, []);

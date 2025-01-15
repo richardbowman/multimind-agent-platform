@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack, Snackbar, Alert } from '@mui/material';
+import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack, Snackbar, Alert, Button } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
@@ -46,10 +46,10 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'leftOpen' &
 }));
 
 const AppContent: React.FC = () => {
-    const { 
-        currentChannelId, 
-        currentThreadId, 
-        setCurrentThreadId, 
+    const {
+        currentChannelId,
+        currentThreadId,
+        setCurrentThreadId,
         needsConfig,
         showSnackbar,
         snackbarOpen,
@@ -92,9 +92,9 @@ const AppContent: React.FC = () => {
             flexDirection: 'column',
             overflow: 'hidden'
         }}>
-            <AppBar 
-                position="fixed" 
-                sx={{ 
+            <AppBar
+                position="fixed"
+                sx={{
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                     WebkitAppRegion: 'drag',
                     cursor: 'move'
@@ -167,7 +167,7 @@ const AppContent: React.FC = () => {
                     </Stack>
                 </Toolbar>
             </AppBar>
-            <Box sx={{ 
+            <Box sx={{
                 height: 'calc(100vh - 64px)', // Account for AppBar height
                 display: 'flex',
                 flexDirection: 'column',
@@ -230,14 +230,14 @@ const AppContent: React.FC = () => {
                         </Drawer>
                     </>
                 ) : currentTab === 'artifacts' ? (
-                    <GlobalArtifactViewer 
+                    <GlobalArtifactViewer
                         drawerOpen={leftDrawerOpen}
                         onDrawerToggle={() => setLeftDrawerOpen(!leftDrawerOpen)}
                     />
                 ) : currentTab === 'settings' ? (
-                    <SettingsPanel 
+                    <SettingsPanel
                         drawerOpen={leftDrawerOpen}
-                        onDrawerToggle={() => setLeftDrawerOpen(!leftDrawerOpen)}/>
+                        onDrawerToggle={() => setLeftDrawerOpen(!leftDrawerOpen)} />
                 ) : currentTab === 'logs' ? (
                     <LogViewer logType={currentLogTab} />
                 ) : null}
@@ -247,20 +247,19 @@ const AppContent: React.FC = () => {
                 autoHideDuration={6000}
                 onClose={handleSnackbarClose}
                 anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-            >
-                <div onClick={handleSnackbarClick}>
-                    <Alert 
-                        onClose={(e) => {
-                            e.stopPropagation();
-                            handleSnackbarClose();
-                        }} 
-                        severity={snackbarOptions.severity}
-                        sx={{ width: '100%', cursor: 'pointer' }}
+                action={<React.Fragment>
+                    <Button color="secondary" size="small" onClick={handleSnackbarClick}>
+                        Jump
+                    </Button><IconButton
+                        size="small"
+                        aria-label="close"
+                        color="inherit"
+                        onClick={handleSnackbarClose}
                     >
-                        {snackbarOptions.message}
-                    </Alert>
-                </div>
-            </Snackbar>
+                        <CloseIcon fontSize="small" />
+                    </IconButton></React.Fragment>}
+                message={snackbarOptions.message}
+            />
         </Box>
     );
 };
