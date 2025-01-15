@@ -146,46 +146,52 @@ export class AnthropicService extends BaseLLMService {
     }
 
     async getAvailableModels(): Promise<ModelInfo[]> {
-        // Anthropic's available models as of 2025
-        const models: ModelInfo[] = [
-            {
-                id: "claude-3-opus-20240229",
-                name: "Claude 3 Opus",
-                size: "Large",
-                lastModified: new Date("2024-02-29"),
+        try {
+            // Get the list of available models from Anthropic's API
+            const response = await this.client.models.list();
+            
+            // Map the API response to our ModelInfo interface
+            return response.data.map(model => ({
+                id: model.id,
+                name: model.name || model.id,
+                size: model.size || 'Unknown',
+                lastModified: new Date(),
                 isLocal: false,
-                author: "Anthropic",
+                author: 'Anthropic',
                 downloads: 0
-            },
-            {
-                id: "claude-3-sonnet-20240229",
-                name: "Claude 3 Sonnet",
-                size: "Medium",
-                lastModified: new Date("2024-02-29"),
-                isLocal: false,
-                author: "Anthropic",
-                downloads: 0
-            },
-            {
-                id: "claude-3-haiku-20240307",
-                name: "Claude 3 Haiku",
-                size: "Small",
-                lastModified: new Date("2024-03-07"),
-                isLocal: false,
-                author: "Anthropic",
-                downloads: 0
-            },
-            {
-                id: "claude-2.1",
-                name: "Claude 2.1",
-                size: "Large",
-                lastModified: new Date("2023-11-01"),
-                isLocal: false,
-                author: "Anthropic",
-                downloads: 0
-            }
-        ];
-
-        return models;
+            }));
+        } catch (error) {
+            Logger.error("Failed to fetch available models from Anthropic:", error);
+            // Return a fallback list if the API call fails
+            return [
+                {
+                    id: "claude-3-opus-20240229",
+                    name: "Claude 3 Opus",
+                    size: "Large",
+                    lastModified: new Date("2024-02-29"),
+                    isLocal: false,
+                    author: "Anthropic",
+                    downloads: 0
+                },
+                {
+                    id: "claude-3-sonnet-20240229",
+                    name: "Claude 3 Sonnet",
+                    size: "Medium",
+                    lastModified: new Date("2024-02-29"),
+                    isLocal: false,
+                    author: "Anthropic",
+                    downloads: 0
+                },
+                {
+                    id: "claude-3-haiku-20240307",
+                    name: "Claude 3 Haiku",
+                    size: "Small",
+                    lastModified: new Date("2024-03-07"),
+                    isLocal: false,
+                    author: "Anthropic",
+                    downloads: 0
+                }
+            ];
+        }
     }
 }
