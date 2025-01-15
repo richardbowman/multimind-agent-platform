@@ -172,6 +172,11 @@ ${context.project ? `Channel Project Details:
 - Name: ${context.project.name}
 - Goal: ${context.project.metadata?.description || 'No specific goal'}
 - Status: ${context.project.metadata?.status || 'active'}
+- Tasks:
+${Object.values(context.project.tasks)
+  .sort((a, b) => (a.order || 0) - (b.order || 0))
+  .map((task, index) => `  ${index + 1}. ${task.description}${task.complete ? ' (completed)' : ''}`)
+  .join('\n')}
 ` : ''}
 
 Conversation context:
