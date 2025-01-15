@@ -233,14 +233,12 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                             <Typography variant="body1" fontWeight={500}>
                                                 {model.name}
                                             </Typography>
-                                            {model.isLocal && (
-                                                <Chip 
-                                                    label="Local" 
-                                                    size="small"
-                                                    color="primary"
-                                                    sx={{ ml: 1 }}
-                                                />
-                                            )}
+                                            <Chip 
+                                                label={model.isLocal ? 'Local' : model.id.split('/')[0]} 
+                                                size="small"
+                                                color={model.isLocal ? 'primary' : 'secondary'}
+                                                sx={{ ml: 1 }}
+                                            />
                                         </Box>
                                         <Box sx={{ 
                                             display: 'flex', 

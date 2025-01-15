@@ -161,17 +161,22 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             const modelDir = path.join(getDataPath(), "models");
             await fs.mkdir(modelDir, { recursive: true });
             
-            // For local models, use the filename directly
-            if (modelId.startsWith('local/')) {
-                const modelName = modelId.slice('local/'.length);
-                const modelPath = path.join(modelDir, modelName);
-                
-                // Check if model exists
-                try {
-                    await fs.access(modelPath);
-                } catch {
+            const [repo, modelName] = modelId.split('/');
+            const modelPath = modelId.startsWith('local/') 
+                ? path.join(modelDir, modelName) // For local models, use standard path
+                : path.join(modelDir, modelName); // For remote models, use same path structure
+
+            // Check if model exists
+            try {
+                await fs.access(modelPath);
+            } catch {
+                if (!modelId.startsWith('local/')) {
+                    // If not local and not found, download it
+                    await this.downloadModel(repo, modelName, modelDir);
+                } else {
                     throw new Error(`Local model ${modelName} not found`);
                 }
+            }
 
                 const model = await llama.loadModel({
                     modelPath: modelPath
@@ -307,7 +312,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                             localModels.push({
                                 id: `local/${fileName}`,
                                 name: fileName,
-                                path: filePath,
+                                path: filePath, // Store actual local path
                                 size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
                                 lastModified: stats.mtime,
                                 isLocal: true
