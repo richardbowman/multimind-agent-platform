@@ -19,12 +19,21 @@ import {
 interface TaskPanelProps {
     channelId: string | null;
     threadId: string | null;
+    selectedTask: any;
+    setSelectedTask: (task: any) => void;
+    dialogOpen: boolean;
+    setDialogOpen: (open: boolean) => void;
 }
 
-export const TaskPanel: React.FC<TaskPanelProps> = ({ channelId, threadId }) => {
+export const TaskPanel: React.FC<TaskPanelProps> = ({ 
+    channelId, 
+    threadId,
+    selectedTask,
+    setSelectedTask,
+    dialogOpen,
+    setDialogOpen
+}) => {
     const { tasks, fetchTasks, handles } = useWebSocket();
-    const [selectedTask, setSelectedTask] = useState<any>(null);
-    const [dialogOpen, setDialogOpen] = useState(false);
 
     useEffect(() => {
         let isSubscribed = true;

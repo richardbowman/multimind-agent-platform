@@ -44,6 +44,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useWebSocket();
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
     const [metadataDialogOpen, setMetadataDialogOpen] = useState(false);
+    const [selectedTask, setSelectedTask] = useState<any>(null);
+    const [taskDialogOpen, setTaskDialogOpen] = useState(false);
     const [userId] = useState('test');
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
@@ -411,6 +413,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                     )}
                 </DialogContent>
             </Dialog>
+
+            <TaskPanel 
+                channelId={currentChannelId} 
+                threadId={currentThreadId}
+                selectedTask={selectedTask}
+                setSelectedTask={setSelectedTask}
+                dialogOpen={taskDialogOpen}
+                setDialogOpen={setTaskDialogOpen}
+            />
         </Box>
     );
 };
