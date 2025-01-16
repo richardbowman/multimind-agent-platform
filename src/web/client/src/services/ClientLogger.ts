@@ -9,7 +9,7 @@ export class ClientLogger {
 
     private async log(level: string, message: string, details?: Record<string, any>): Promise<void> {
         try {
-            //await this.rpc.logClientEvent(level, message, details);
+            await this.rpc.getRPC().logClientEvent(level, message, details);
         } catch (error) {
             console.error('Failed to send client log:', error);
         }
