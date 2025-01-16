@@ -12,7 +12,8 @@ export enum LLMProvider {
     ANTHROPIC = "anthropic",
     LLAMA_CPP = "llama_cpp",
     OPENAI = "openai",
-    OPENROUTER = "openrouter"
+    OPENROUTER = "openrouter",
+    DEEPSEEK = "deepseek"
 }
 
 
@@ -86,6 +87,16 @@ export class LLMServiceFactory {
                     settings.models.conversation.openrouter || "gpt-3.5-turbo",
                     undefined,
                     "https://openrouter.ai/api/v1"
+                );
+            case LLMProvider.DEEPSEEK:
+                if (!settings.deepseek?.api?.key) {
+                    throw new Error("DeepSeek API key is required");
+                }
+                return new OpenAIService(
+                    settings.deepseek.api.key,
+                    settings.models.conversation.deepseek || "deepseek-chat",
+                    undefined,
+                    "https://api.deepseek.com/v1"
                 );
             default:
                 throw new Error(`Unsupported chat provider: ${settings.providers.chat}`);

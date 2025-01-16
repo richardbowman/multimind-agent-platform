@@ -135,6 +135,15 @@ export class ModelByProvider {
     openrouter: string = 'anthropic/claude-3-opus';
 
     @ClientSettings({
+        label: 'DeepSeek Model',
+        category: 'LLM Settings',
+        type: 'select',
+        description: 'Model identifier for DeepSeek',
+        defaultValue: 'deepseek-chat'
+    })
+    deepseek: string = 'deepseek-chat';
+
+    @ClientSettings({
         label: 'Llama.cpp Model',
         category: 'LLM Settings',
         type: 'select',
@@ -157,7 +166,7 @@ export class LLMProviders {
         label: 'Chat Provider',
         category: 'LLM Settings',
         type: 'select',
-        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp'],
+        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp', 'deepseek'],
         defaultValue: 'lmstudio'
     })
     chat: string = 'lmstudio';
@@ -407,6 +416,14 @@ export class Settings {
         sensitive: true
     })
     openrouter: ProviderConfig = new ProviderConfig();
+
+    @ClientSettings({
+        label: 'DeepSeek Configuration',
+        category: 'API Keys',
+        type: 'section',
+        sensitive: true
+    })
+    deepseek: ProviderConfig = new ProviderConfig();
 
     // Rate Limiting
     @ClientSettings({
