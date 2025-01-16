@@ -6,6 +6,7 @@ import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/types';
 import { CreateChannelParams } from '../../../../shared/channelTypes';
 import { useSnackbar } from './SnackbarContext';
+import { createClientMethods } from '../services/ClientMethods';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 // Create a context for the IPC service

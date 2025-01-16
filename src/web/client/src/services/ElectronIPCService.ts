@@ -6,11 +6,10 @@ import { createClientMethods } from './ClientMethods';
 import { DataContextMethods } from '../contexts/DataContext';
 
 export class ElectronIPCService extends BaseRPCService {
-    status: { configured: boolean; ready: boolean; message?: string; };
-    connected: boolean;
+    private status: { configured: boolean; ready: boolean; message?: string; };
+    private connected: boolean;
     private contextMethods: DataContextMethods;
-
-    private showSnackbar: (options: any) => void;
+    private clientMethods: ReturnType<typeof createClientMethods>;
     
     constructor(clientMethods: ReturnType<typeof createClientMethods>) {
         super();
