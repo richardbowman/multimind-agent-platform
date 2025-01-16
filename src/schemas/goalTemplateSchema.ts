@@ -52,6 +52,37 @@ export interface InitialTask {
  */
 export const GoalTemplates: GoalTemplate[] = [
     {
+        id: 'welcome-channel',
+        name: 'Welcome Channel Setup',
+        description: 'Template for initializing a welcome channel and onboarding new users',
+        supportingAgents: [
+            'data', // Data agent
+            'onboarding' // Onboarding agent
+        ],
+        initialTasks: [
+            {
+                description: 'Gather and analyze any existing documents using the data agent',
+                type: 'data-collection',
+                metadata: {
+                    agent: 'data'
+                }
+            },
+            {
+                description: 'Generate an onboarding plan using the onboarding agent',
+                type: 'onboarding',
+                dependsOn: ['gather-existing-documents'],
+                metadata: {
+                    agent: 'onboarding'
+                }
+            },
+            {
+                description: 'Create personalized welcome message and platform introduction',
+                type: 'communication',
+                dependsOn: ['generate-onboarding-plan']
+            }
+        ]
+    },
+    {
         id: 'software-project',
         name: 'Software Development Project',
         description: 'Template for managing a software development project',
