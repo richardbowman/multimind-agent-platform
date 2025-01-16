@@ -46,25 +46,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         let message = `${goal}\n\n`;
 
         // Include relevant artifacts if available
-        if (artifacts && artifacts.length > 0) {
-            message += "📁 Relevant Artifacts:\n\n";
-            artifacts.forEach((artifact, index) => {
-                message += `Artifact ${index + 1} (${artifact.type}):\n`;
-                if (typeof artifact.content === 'string') {
-                    const maxLength = 1000;
-                    const content = artifact.content;
-                    if (content.length > maxLength) {
-                        message += `[First ${maxLength} characters shown - document truncated]\n`;
-                        message += content.substring(0, maxLength) + '\n\n';
-                        message += `[Document continues... Total length: ${content.length} characters]\n\n`;
-                    } else {
-                        message += content + '\n\n';
-                    }
-                } else {
-                    message += `[Binary data - ${artifact.content.length} bytes]\n\n`;
-                }
-            });
-        }
+        message += this.modelHelpers.formatArtifacts(artifacts);
 
         // Include existing Q&A if available
         if (project.metadata?.answers?.length > 0) {

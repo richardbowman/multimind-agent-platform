@@ -300,6 +300,29 @@ export class ModelHelpers {
         return artifact;
     }
 
+    public formatArtifacts(artifacts?: Artifact[]): string {
+        if (!artifacts || artifacts.length === 0) return '';
+
+        let message = "📁 Relevant Artifacts:\n\n";
+        artifacts.forEach((artifact, index) => {
+            message += `Artifact ${index + 1} (${artifact.type}):\n`;
+            if (typeof artifact.content === 'string') {
+                const maxLength = 1000;
+                const content = artifact.content;
+                if (content.length > maxLength) {
+                    message += `[First ${maxLength} characters shown - document truncated]\n`;
+                    message += content.substring(0, maxLength) + '\n\n';
+                    message += `[Document continues... Total length: ${content.length} characters]\n\n`;
+                } else {
+                    message += content + '\n\n';
+                }
+            } else {
+                message += `[Binary data - ${artifact.content.length} bytes]\n\n`;
+            }
+        });
+        return message;
+    }
+
     private async generateOld(instructions: string, params: GenerateParams): Promise<ModelMessageResponse> {
         // Check cache first
         const cacheContext = { params };
