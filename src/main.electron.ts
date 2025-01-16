@@ -30,7 +30,7 @@ app.whenReady().then(async () => {
         const _s = settingsManager.getSettings();
         mainWindow = new MainWindow(_s.zoom, _s.windowWidth, _s.windowHeight, {
             frame: false
-        });
+        }, settingsManager);
 
         // Show splash screen with zoom from settings
         splashWindow = new SplashWindow(_s.zoom);

@@ -6,8 +6,16 @@ export class MainWindow {
     private window: BrowserWindow;
     private zoomLevel: number = 1.0;
     private infoEvent: (...args: any[]) => void;
+    private settingsManager: SettingsManager;
 
-    constructor(initialZoom: number = 1.0, width: number = 1200, height: number = 800, options?: Electron.BrowserWindowConstructorOptions) {
+    constructor(
+        initialZoom: number = 1.0, 
+        width: number = 1200, 
+        height: number = 800, 
+        options?: Electron.BrowserWindowConstructorOptions,
+        settingsManager?: SettingsManager
+    ) {
+        this.settingsManager = settingsManager;
         this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
             ...options,
@@ -50,9 +58,20 @@ export class MainWindow {
         // Save window size when resized
         this.window.on('resize', () => {
             const [width, height] = this.window.getSize();
+            const unzoomedWidth = Math.round(width / this.zoomLevel);
+            const unzoomedHeight = Math.round(height / this.zoomLevel);
+            
+            // Update settings
+            if (this.settingsManager) {
+                const settings = this.settingsManager.getSettings();
+                settings.windowWidth = unzoomedWidth;
+                settings.windowHeight = unzoomedHeight;
+                this.settingsManager.saveSettings();
+            }
+
             this.window.webContents.send('save-window-size', { 
-                width: Math.round(width / this.zoomLevel),
-                height: Math.round(height / this.zoomLevel)
+                width: unzoomedWidth,
+                height: unzoomedHeight
             });
         });
 
