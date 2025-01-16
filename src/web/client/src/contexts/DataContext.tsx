@@ -22,7 +22,7 @@ export interface DataContextMethods {
   currentChannelId: string | null;
   currentThreadId: string | null;
   isLoading: boolean;
-  needsConfig: boolean;
+  needsConfig: boolean | null;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   fetchChannels: () => Promise<void>;
   fetchTasks: (channelId: string, threadId: string | null) => Promise<void>;
@@ -100,7 +100,7 @@ export const DataProvider: React.FC<{
     }
   });
   const [isLoading, setIsLoading] = useState(true);
-  const [needsConfig, setNeedsConfig] = useState(true);
+  const [needsConfig, setNeedsConfig] = useState(null);
 
   // Fetch messages whenever channel or thread changes
   useEffect(() => {

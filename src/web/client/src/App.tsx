@@ -57,14 +57,15 @@ const AppContent: React.FC = () => {
     } = useWebSocket();
 
     const ipcService = useIPCService();
-    const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
+    const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings' | 'none'>('none');
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
     const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
 
     React.useEffect(() => {
-        if (needsConfig) {
+        // wait for explicit answer, we start this as null
+        if (needsConfig === true) {
             setCurrentTab('settings');
-        } else {
+        } else if (needsConfig === false) {
             setCurrentTab('chat');
         }
     }, [needsConfig]);
