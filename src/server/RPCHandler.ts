@@ -439,16 +439,25 @@ export class ServerRPCHandler implements ServerMethods {
         await this.services.chatClient.removeArtifactFromChannel(channelId, artifactId);
     }
 
-    async getLogs(logType: 'llm' | 'system' | 'api'): Promise<any> {
+    async getLogs(logType: 'llm' | 'system' | 'api', params?: {
+        limit?: number;
+        offset?: number;
+        filter?: {
+            level?: string[];
+            search?: string;
+            startTime?: number;
+            endTime?: number;
+        };
+    }): Promise<any> {
         switch (logType) {
             case 'llm':
                 return await LLMCallLogger.getAllLogs();
             case 'system':
-                return this.services.logReader.readLogs();
+                return this.services.logReader.getLogs(params || {});
             case 'api':
-                return []; // TODO: Implement API logs
+                return { logs: [], total: 0 }; // TODO: Implement API logs
             default:
-                return [];
+                return { logs: [], total: 0 };
         }
     }
 

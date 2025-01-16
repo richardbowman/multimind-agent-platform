@@ -7,8 +7,28 @@ import { ClientTask } from './types';
 import { EmbedderModelInfo } from 'src/llm/ILLMService';
 import { ModelInfo } from 'src/llm/types';
 
+export interface LogEntry {
+    timestamp: string;
+    level: string;
+    message: string;
+    details?: Record<string, any>;
+}
+
 export interface ServerMethods {
     sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage>;
+    getSystemLogs(params: {
+        limit?: number;
+        offset?: number;
+        filter?: {
+            level?: string[];
+            search?: string;
+            startTime?: number;
+            endTime?: number;
+        };
+    }): Promise<{
+        logs: LogEntry[];
+        total: number;
+    }>;
     minimizeWindow(): Promise<void>;
     maximizeWindow(): Promise<void>;
     closeWindow(): Promise<void>;
