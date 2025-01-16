@@ -55,28 +55,34 @@ export class MainWindow {
         return this.zoomLevel;
     }
 
-    async show() {
-        // Save window size when resized
-        this.window.on('resize', () => {
-            const [width, height] = this.window.getSize();
-            const unzoomedWidth = Math.round(width / this.zoomLevel);
-            const unzoomedHeight = Math.round(height / this.zoomLevel);
-            
-            // Update settings
-            if (this.settingsManager) {
-                const settings = this.settingsManager.getSettings();
+    private debounceResize = (() => {
+        let timeout: NodeJS.Timeout;
+        return () => {
+            clearTimeout(timeout);
+            timeout = setTimeout(() => {
+                const [width, height] = this.window.getSize();
+                const unzoomedWidth = Math.round(width / this.zoomLevel);
+                const unzoomedHeight = Math.round(height / this.zoomLevel);
                 
-                this.settingsManager.updateSettings({
-                    windowWidth: unzoomedWidth,
-                    windowHeight: unzoomedHeight
-                });
-            }
+                // Update settings
+                if (this.settingsManager) {
+                    this.settingsManager.updateSettings({
+                        windowWidth: unzoomedWidth,
+                        windowHeight: unzoomedHeight
+                    });
+                }
 
-            this.window.webContents.send('save-window-size', { 
-                width: unzoomedWidth,
-                height: unzoomedHeight
-            });
-        });
+                this.window.webContents.send('save-window-size', { 
+                    width: unzoomedWidth,
+                    height: unzoomedHeight
+                });
+            }, 500); // 500ms debounce
+        };
+    })();
+
+    async show() {
+        // Save window size when resized with debounce
+        this.window.on('resize', this.debounceResize);
 
         if (process.env.NODE_ENV === 'development') {
             await this.window.loadFile(path.join(__dirname, './web/index.html'));
