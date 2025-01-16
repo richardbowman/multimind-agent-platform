@@ -70,6 +70,7 @@ export class CreateChannelExecutor implements StepExecutor {
 
     async execute(params: ExecuteParams & { executionMode: 'conversation' | 'task' }): Promise<StepResult> {
         const { goal, context } = params;
+        const artifactIds = context?.artifacts?.map(a => a.id) || [];
         
         // Extract channel creation requirements from the goal
         const channelPurpose = goal;
@@ -142,7 +143,8 @@ Write in a professional but approachable tone.`;
                     channelId,
                     template: selectedTemplate,
                     supportingAgents: selectedTemplate.supportingAgents,
-                    initialTasks: selectedTemplate.initialTasks
+                    initialTasks: selectedTemplate.initialTasks,
+                    artifactIds
                 }
             }
         };
