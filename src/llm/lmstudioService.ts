@@ -179,6 +179,31 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
     }
 
     async getAvailableModels(): Promise<string[]> {
+        return this.getAvailableModelsInternal();
+    }
+
+    async getAvailableEmbedders(): Promise<EmbedderModelInfo[]> {
+        try {
+            const loadedModels = await this.lmStudioClient.embedding.listLoaded();
+            const availableModels = await this.lmStudioClient.embedding.listModels();
+            
+            // Combine and deduplicate model identifiers
+            const allModels = [...loadedModels, ...availableModels];
+            const uniqueIdentifiers = new Set<string>();
+            allModels.forEach(model => uniqueIdentifiers.add(model.identifier));
+            
+            return Array.from(uniqueIdentifiers).map(identifier => ({
+                identifier,
+                pipelineTag: "text-embedding",
+                supportedTasks: ["text-embedding"]
+            }));
+        } catch (error) {
+            await this.logger.logCall('getAvailableEmbedders', {}, null, error);
+            throw error;
+        }
+    }
+
+    private async getAvailableModelsInternal(): Promise<string[]> {
         try {
             // Get both loaded and available models
             const loadedModels = await this.lmStudioClient.llm.listLoaded();
