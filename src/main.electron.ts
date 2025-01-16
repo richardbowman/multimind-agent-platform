@@ -28,7 +28,7 @@ app.whenReady().then(async () => {
 
         settingsManager = await initializeConfig();
         const _s = settingsManager.getSettings();
-        mainWindow = new MainWindow(_s.zoom, {
+        mainWindow = new MainWindow(_s.zoom, _s.windowWidth, _s.windowHeight, {
             frame: false
         });
 

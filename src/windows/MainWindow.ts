@@ -7,12 +7,12 @@ export class MainWindow {
     private zoomLevel: number = 1.0;
     private infoEvent: (...args: any[]) => void;
 
-    constructor(initialZoom: number = 1.0, options?: Electron.BrowserWindowConstructorOptions) {
+    constructor(initialZoom: number = 1.0, width: number = 1200, height: number = 800, options?: Electron.BrowserWindowConstructorOptions) {
         this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
             ...options,
-            width: 1200*initialZoom,
-            height: 800*initialZoom,
+            width: Math.round(width * initialZoom),
+            height: Math.round(height * initialZoom),
             webPreferences: {
                 preload: path.join(__dirname, './preload.js'),
                 contextIsolation: true,
@@ -47,6 +47,15 @@ export class MainWindow {
     }
 
     async show() {
+        // Save window size when resized
+        this.window.on('resize', () => {
+            const [width, height] = this.window.getSize();
+            this.window.webContents.send('save-window-size', { 
+                width: Math.round(width / this.zoomLevel),
+                height: Math.round(height / this.zoomLevel)
+            });
+        });
+
         if (process.env.NODE_ENV === 'development') {
             await this.window.loadFile(path.join(__dirname, './web/index.html'));
             this.window.webContents.openDevTools();

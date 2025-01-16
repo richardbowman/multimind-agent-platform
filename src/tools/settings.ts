@@ -343,6 +343,28 @@ export class Settings {
     zoom: number = 1.0;
 
     @ClientSettings({
+        label: 'Window Width',
+        category: 'UI Settings',
+        type: 'number',
+        defaultValue: 1200,
+        min: 800,
+        max: 2560,
+        description: 'Default window width in pixels'
+    })
+    windowWidth: number = 1200;
+
+    @ClientSettings({
+        label: 'Window Height',
+        category: 'UI Settings',
+        type: 'number',
+        defaultValue: 800,
+        min: 600,
+        max: 1440,
+        description: 'Default window height in pixels'
+    })
+    windowHeight: number = 800;
+
+    @ClientSettings({
         label: 'Server Host',
         category: 'Server Settings',
         type: 'string',
