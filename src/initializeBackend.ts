@@ -62,7 +62,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     await sleep();
 
     // Handle graceful shutdown
-    async function shutdown() {
+    async function shutdown() : Promise<void> {
         console.log('Shutting down gracefully...');
         try {
             await tasks.save();

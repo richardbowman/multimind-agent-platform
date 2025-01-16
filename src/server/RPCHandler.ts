@@ -1,4 +1,4 @@
-import { BackendServices } from "../types/BackendServices";
+import { BackendServices, BackendServicesConfigNeeded, BackendServicesWithWindows } from "../types/BackendServices";
 import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
 import Logger from "../helpers/logger";
 import { ChatPost } from "../chat/chatClient";
@@ -246,7 +246,7 @@ export class ServerRPCHandler implements ServerMethods {
         // });
     }
     
-    constructor(private services: BackendServices) {
+    constructor(private services: BackendServicesConfigNeeded|BackendServicesWithWindows) {
     }
 
     public setServices(services) {

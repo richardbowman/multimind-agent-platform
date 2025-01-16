@@ -18,7 +18,7 @@ export interface BackendServicesConfigNeeded extends Partial<BackendServices> {
 }
 
 export interface BackendServices extends BackendServicesOnly {
-    cleanup(): void;
+    cleanup(): Promise<void>;
 
     chatClient: ChatClient;
     taskManager: TaskManager;
@@ -27,6 +27,8 @@ export interface BackendServices extends BackendServicesOnly {
     logReader: LogReader;
     llmService: ILLMService;
     vectorDB: IVectorDatabase;
+
+    mainWindow: MainWindow;
 }
 
 export interface BackendServicesOnly {

@@ -108,7 +108,11 @@ export async function reinitializeBackend() {
     const _s = settingsManager.getSettings();
     splashWindow = new SplashWindow(_s.zoom);
 
-    backendServices =  await initializeBackend(settingsManager);
+    backendServices = {
+        ...await initializeBackend(settingsManager),
+        mainWindow: mainWindow
+    } as BackendServicesWithWindows;
+
     ipcServer.reinitialize(backendServices);
     configComplete = true;
 

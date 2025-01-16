@@ -1,6 +1,6 @@
 import { ipcMain, BrowserWindow } from 'electron';
 import { createBirpc } from 'birpc';
-import { BackendServices } from '../types/BackendServices';
+import { BackendServices, BackendServicesConfigNeeded, BackendServicesWithWindows } from '../types/BackendServices';
 import { ServerRPCHandler } from './RPCHandler';
 import { createSafeServerRPCHandlers } from './rpcUtils';
 import { ClientMethods, ServerMethods } from '../shared/RPCInterface';
@@ -9,7 +9,7 @@ export class ElectronIPCServer {
     private handler: ServerRPCHandler;
     private rpc: ReturnType<typeof createBirpc<ClientMethods, ServerMethods>>|undefined;
 
-    constructor(private services: BackendServices, private mainWindow: BrowserWindow, hasConfigError: boolean) {
+    constructor(private services: BackendServicesConfigNeeded|BackendServicesWithWindows, private mainWindow: BrowserWindow, hasConfigError: boolean) {
         this.handler = new ServerRPCHandler(services);
         this.setupRPC();
         this.handler.setupClientEvents(this.getRPC()!);
@@ -48,7 +48,7 @@ export class ElectronIPCServer {
         }
     }
 
-    async reinitialize(services: BackendServices) {
+    async reinitialize(services: BackendServicesConfigNeeded|BackendServicesWithWindows) {
         if (!this.getRPC()) {
             throw new Error("RPC has been terminated");
         }
