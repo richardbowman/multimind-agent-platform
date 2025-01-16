@@ -99,10 +99,10 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [needsConfig, setNeedsConfig] = useState(true);
 
   useEffect(() => {
-    console.debug('WebSocketContext stable mount - connecting');
+    console.debug('WebSocketContext stable mount - setting up listeners');
 
-    // Listen for connected event before fetching data
-    ipcService.on('connected', () => {
+    // Setup event listeners
+    const connectedHandler = () => {
       console.debug('WebSocketContext: received connected event');
       setNeedsConfig(false);
       Promise.all([
@@ -111,23 +111,29 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
       ]).catch(error => {
         console.error('Error fetching initial data:', error);
       });
-    });
+    };
 
-    ipcService.on('needsConfig', ({ needsConfig }) => {
+    const needsConfigHandler = ({ needsConfig }: { needsConfig: boolean }) => {
       setNeedsConfig(needsConfig);
-    });
+    };
 
-    ipcService.connect();
+    ipcService.on('connected', connectedHandler);
+    ipcService.on('needsConfig', needsConfigHandler);
 
-    (window as any).electron.status(function(logEntry : any) {
-        // Snackbar handling moved to SnackbarContext
-    });
+    // Connect after setting up listeners
+    const connectTimeout = setTimeout(() => {
+      console.debug('WebSocketContext: initiating connection');
+      ipcService.connect();
+    }, 100); // Small delay to ensure context is fully initialized
 
     return () => {
       console.debug('WebSocketContext unmounting');
+      clearTimeout(connectTimeout);
+      ipcService.off('connected', connectedHandler);
+      ipcService.off('needsConfig', needsConfigHandler);
       ipcService.disconnect();
     };
-  }, []);
+  }, [ipcService]);
 
   // Fetch messages whenever channel or thread changes
   useEffect(() => {
