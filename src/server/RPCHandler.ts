@@ -508,21 +508,49 @@ export class ServerRPCHandler implements ServerMethods {
         if (params.goalTemplate) {
             const template = GoalTemplates.find(t => t.id === params.goalTemplate);
             if (template) {
+                // Resolve agent handles to IDs
+                const resolvedAgents = await Promise.all(
+                    template.supportingAgents.map(async (agentRef) => {
+                        if (agentRef.startsWith('@')) {
+                            // Lookup agent by handle
+                            const handle = agentRef.slice(1);
+                            const agent = this.services.agents.get(handle);
+                            if (!agent) {
+                                throw new Error(`Agent with handle @${handle} not found`);
+                            }
+                            return agent.userId;
+                        }
+                        // Assume it's already an ID
+                        return agentRef;
+                    })
+                );
+
+                // Create project with resolved agent IDs
                 const project = await this.services.taskManager.createProject({
                     name: params.name,
                     tasks: template.initialTasks.map((task, i) => ({
                         description: task.description,
-                        type: task.type
+                        type: task.type,
+                        assignee: task.metadata?.agent ? resolvedAgents[i] : undefined
                     })),
                     metadata: {
                         description: params.description || '',
-                        tags: template.tags
+                        tags: template.tags,
+                        supportingAgents: resolvedAgents
                     }
                 });
                 const projectId = project.id;
 
                 // Associate the project with the channel
                 params.projectId = projectId;
+                
+                // Add supporting agents to channel members if not already present
+                const existingMembers = new Set(params.members || []);
+                resolvedAgents.forEach(agentId => {
+                    if (!existingMembers.has(agentId)) {
+                        params.members = [...(params.members || []), agentId];
+                    }
+                });
             }
         }
 
