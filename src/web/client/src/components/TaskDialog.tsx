@@ -59,13 +59,31 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                     key={task.id}
                                     sx={{
                                         mb: 1,
-                                        bgcolor: task.id === selectedTask?.id ? 'primary.light' : 'background.paper',
+                                        bgcolor: task.id === selectedTask?.id 
+                                            ? 'primary.light' 
+                                            : task.inProgress 
+                                                ? 'warning.light'
+                                                : task.complete
+                                                    ? 'success.light'
+                                                    : 'background.paper',
                                         borderRadius: 1,
                                         border: '1px solid',
-                                        borderColor: task.id === selectedTask?.id ? 'primary.main' : 'divider',
+                                        borderColor: task.id === selectedTask?.id 
+                                            ? 'primary.main' 
+                                            : task.inProgress
+                                                ? 'warning.main'
+                                                : task.complete
+                                                    ? 'success.main'
+                                                    : 'divider',
                                         cursor: 'pointer',
                                         '&:hover': {
-                                            bgcolor: task.id === selectedTask?.id ? 'primary.dark' : 'action.hover'
+                                            bgcolor: task.id === selectedTask?.id 
+                                                ? 'primary.dark' 
+                                                : task.inProgress
+                                                    ? 'warning.dark'
+                                                    : task.complete
+                                                        ? 'success.dark'
+                                                        : 'action.hover'
                                         }
                                     }}
                                     onClick={() => setSelectedTask(task)}
