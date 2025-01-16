@@ -25,7 +25,7 @@ export class ElectronIPCService extends BaseRPCService {
         const safeHandlers = createSafeRPCHandlers();
         this.rpc = createBirpc<ServerMethods, ClientMethods>(
             {
-                ...createClientMethods(this.contextMethods)
+                ...createClientMethods(this.contextMethods, this.contextMethods.showSnackbar)
             },
             {
                 post: (data) => {

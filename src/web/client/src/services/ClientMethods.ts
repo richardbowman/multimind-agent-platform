@@ -2,8 +2,12 @@ import type { LogParam } from '../../../../llm/LLMLogger';
 import type { DataContextMethods } from '../contexts/DataContext';
 import { ClientMethods } from '../../../../shared/RPCInterface';
 import { ClientMessage, ClientTask } from '../../../../shared/types';
+import { useSnackbar } from '../contexts/SnackbarContext';
 
-export const createClientMethods = (contextMethods: DataContextMethods) => ({
+export const createClientMethods = (contextMethods: DataContextMethods) => {
+  const { showSnackbar } = useSnackbar();
+  
+  return {
     onClientLogProcessed: async (success, message) => {
         return
     },
@@ -19,7 +23,7 @@ export const createClientMethods = (contextMethods: DataContextMethods) => ({
 
         if (latestMessage) {
             const channelName = contextMethods.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
-            contextMethods.showSnackbar({
+            showSnackbar({
                 message: `New message in ${channelName}`,
                 severity: 'info',
                 persist: true,
