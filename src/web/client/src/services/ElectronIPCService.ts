@@ -11,10 +11,9 @@ export class ElectronIPCService extends BaseRPCService {
     private contextMethods: DataContextMethods;
     private clientMethods: ReturnType<typeof createClientMethods>;
     
-    constructor(clientMethods: ReturnType<typeof createClientMethods>) {
+    constructor() {
         super();
         this.connected = false;
-        this.clientMethods = clientMethods;
         if (!(window as any).electron) {
             throw new Error('Electron IPC not available');
         }

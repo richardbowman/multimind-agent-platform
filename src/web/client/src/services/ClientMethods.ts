@@ -2,7 +2,11 @@ import type { LogParam } from '../../../../llm/LLMLogger';
 import type { DataContextMethods } from '../contexts/DataContext';
 import { ClientMessage, ClientTask } from '../../../../shared/types';
 
-export const createClientMethods = (contextMethods: DataContextMethods, showSnackbar: (options: any) => void) => {
+export const useClientMethods = () => {
+  const contextMethods = useWebSocket();
+  const { showSnackbar } = useSnackbar();
+  
+  return useMemo(() => ({
     return {
         onClientLogProcessed: async (success, message) => {
             return

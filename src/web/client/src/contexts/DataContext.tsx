@@ -52,8 +52,9 @@ export interface DataContextMethods {
 }
 
 export const DataProvider: React.FC<{ 
-  children: React.ReactNode | (({ contextMethods }: { contextMethods: DataContextMethods }) => React.ReactNode)
+  children: React.ReactNode
 }> = ({ children }) => {
+  const ipcService = useIPCService();
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ClientChannel[]>([]);
   const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);

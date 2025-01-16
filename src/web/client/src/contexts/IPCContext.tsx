@@ -10,24 +10,28 @@ const IPCContext = createContext<BaseRPCService | null>(null);
 
 export const IPCProvider: React.FC<{
   children: React.ReactNode;
-  contextMethods: DataContextMethods;
-}> = ({ children, contextMethods }) => {
+}> = ({ children }) => {
+  const [ipcService, setIpcService] = useState<BaseRPCService | null>(null);
   const { showSnackbar } = useSnackbar();
-  
-  const clientMethods = useMemo(() => 
-    createClientMethods(contextMethods, showSnackbar),
-    [contextMethods, showSnackbar]
-  );
 
-  const ipcService = useMemo(() => {
-    const service = (window as any).electron
-      ? new ElectronIPCService(clientMethods)
-      : new WebSocketService(clientMethods);
+  // Initialize IPC service
+  useEffect(() => {
+    const initializeService = async () => {
+      const service = (window as any).electron
+        ? new ElectronIPCService()
+        : new WebSocketService();
       
-    // Ensure context methods are properly bound
-    service.setupRPC();
-    return service;
-  }, [clientMethods]);
+      // Setup RPC but don't connect yet
+      service.setupRPC();
+      setIpcService(service);
+    };
+
+    initializeService();
+  }, []);
+
+  if (!ipcService) {
+    return null; // Or loading spinner
+  }
 
   return (
     <IPCContext.Provider value={ipcService}>

@@ -245,17 +245,15 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <SnackbarProvider>
-            <DataProvider>
-                {({ contextMethods }) => (
-                    <IPCProvider contextMethods={contextMethods}>
-                        <LogProvider>
-                            <AppContent />
-                        </LogProvider>
-                    </IPCProvider>
-                )}
-            </DataProvider>
-        </SnackbarProvider>
+        <IPCProvider>
+            <SnackbarProvider>
+                <DataProvider>
+                    <LogProvider>
+                        <AppContent />
+                    </LogProvider>
+                </DataProvider>
+            </SnackbarProvider>
+        </IPCProvider>
     );
 };
 
