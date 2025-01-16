@@ -21,14 +21,19 @@ describe('ComplexProjectExecutor', () => {
             addTask: jest.fn(),
             assignTaskToAgent: jest.fn(),
             updateProject: jest.fn(),
-            getProject: jest.fn()
+            getProject: jest.fn(),
+            updateTask: jest.fn(),
+            getAllTasks: jest.fn()
         } as unknown as jest.Mocked<TaskManager>;
 
         mockParams = {
             goal: 'Test project goal',
             step: 'create',
             projectId: 'test-project',
-            executionMode: 'task'
+            executionMode: 'task',
+            agentId: 'test-agent',
+            stepId: 'test-step',
+            steps: []
         };
 
         executor = new ComplexProjectExecutor({
@@ -50,7 +55,11 @@ describe('ComplexProjectExecutor', () => {
         mockTaskManager.createProject.mockResolvedValue({
             id: 'new-project',
             name: 'Test Project',
-            metadata: {},
+            metadata: {
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'active'
+            },
             tasks: {}
         });
 
@@ -94,8 +103,8 @@ describe('ComplexProjectExecutor', () => {
         const researchTaskCall = mockTaskManager.addTask.mock.calls[0][1];
         const contentTaskCall = mockTaskManager.addTask.mock.calls[1][1];
 
-        expect(researchTaskCall.props.stepType).toBe('research');
-        expect(contentTaskCall.props.stepType).toBe('content_creation');
-        expect(contentTaskCall.props.dependsOn).toBeDefined();
+        expect(researchTaskCall.props?.stepType).toBe('research');
+        expect(contentTaskCall.props?.stepType).toBe('content_creation');
+        expect(contentTaskCall.props?.dependsOn).toBeDefined();
     });
 });

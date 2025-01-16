@@ -29,7 +29,10 @@ describe('UnderstandGoalsExecutor', () => {
             goal: 'Test goal',
             step: 'understand',
             projectId: 'test-project',
-            executionMode: 'conversation'
+            executionMode: 'conversation',
+            agentId: 'test-agent',
+            stepId: 'test-step',
+            steps: []
         };
 
         executor = new UnderstandGoalsExecutor({
@@ -51,7 +54,12 @@ describe('UnderstandGoalsExecutor', () => {
         mockModelHelpers.generate.mockResolvedValue(mockResponse);
         mockTaskManager.getProject.mockReturnValue({
             id: 'test-project',
-            metadata: {},
+            metadata: {
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'active',
+                answers: []
+            },
             tasks: {}
         });
 
