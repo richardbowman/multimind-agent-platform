@@ -87,6 +87,8 @@ AI Service Integration:
 this.modelHelpers.setFinalInstructions(`To kickoff with a new user, create the following steps in this order:
 1. understand_goals
 2. create_revise_plan
+
+For an existing user who has answered sufficient questions, move on to create_revise_plan.
 `);
 
         // Register our specialized executors
