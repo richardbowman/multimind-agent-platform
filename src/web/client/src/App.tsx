@@ -76,10 +76,6 @@ const AppContent: React.FC = () => {
     const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
 
     React.useEffect(() => {
-        console.log('test');
-    }, [snackbarOpen]);
-
-    React.useEffect(() => {
         if (needsConfig) {
             setCurrentTab('settings');
         } else {

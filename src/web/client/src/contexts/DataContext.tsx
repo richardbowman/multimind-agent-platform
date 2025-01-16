@@ -14,8 +14,9 @@ const IPCContext = createContext<BaseRPCService | null>(null);
 
 export interface SnackbarOptions {
   message: string;
-  severity: 'info' | 'success' | 'warning' | 'error';
+  severity: 'info' | 'success' | 'warning' | 'error' | 'progress';
   persist?: boolean;
+  percentComplete: number;
   onClick?: () => void;
 }
 
@@ -118,6 +119,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     });
 
     ipcService.connect();
+
+    (window as any).electron.status(function(logEntry : any) {
+        showSnackbar({
+            message: logEntry.message,
+            severity: "progress",
+            percentComplete: logEntry.data.percentComplete
+        });
+    });
 
     return () => {
       console.debug('WebSocketContext unmounting');
