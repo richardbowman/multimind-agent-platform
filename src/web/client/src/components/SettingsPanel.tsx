@@ -57,10 +57,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         const fetchModels = async () => {
             if (settings.providers?.chat) {
                 try {
-                    const [models, embedders] = await Promise.all([
-                        ipcService.getRPC().getAvailableModels(settings.providers.chat),
-                        ipcService.getRPC().getAvailableEmbedders(settings.providers.embeddings)
-                    ]);
+                    const models = await ipcService.getRPC().getAvailableModels(settings.providers.chat);
 
                     // Sort models with local first, then by name
                     const sortedModels = models.sort((a, b) => {
@@ -70,26 +67,40 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         return a.isLocal ? -1 : 1;
                     });
 
-                    // Sort embedders by downloads
-                    const sortedEmbedders = embedders.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
-                
                     setAvailableModels(prev => ({
                         ...prev,
                         [settings.providers!.chat]: sortedModels
-                    }));
-
-                    setAvailableEmbedders(prev => ({
-                        ...prev,
-                        [settings.providers!.chat]: sortedEmbedders
                     }));
                 } catch (error) {
                     console.error('Failed to fetch models:', error);
                 }
             }
-        };
-        
+        }
         fetchModels();
     }, [settings.providers?.chat]);
+    
+    useEffect(() => {
+        const fetchEmbeddingModels = async () => {
+            if (settings.providers?.embeddings) {
+                try {
+                    const embedders = await ipcService.getRPC().getAvailableEmbedders(settings.providers.embeddings);
+
+                    // Sort embedders by downloads
+                    const sortedEmbedders = embedders.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
+
+                    setAvailableEmbedders(prev => ({
+                        ...prev,
+                        [settings.providers!.embeddings]: sortedEmbedders
+                    }));
+                } catch (error) {
+                    console.error('Failed to fetch models:', error);
+                }
+            }
+
+        };
+        
+        fetchEmbeddingModels();
+    }, [settings.providers?.embeddings]);
 
     const handleChange = async (key: string, value: string | number) => {
         // Get metadata using reflection
@@ -442,7 +453,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             >
                 {Object.entries(categories).map(([category, metadataList]) => {
                     // Filter model settings based on selected provider
-                    const filteredList = category === 'LLM Settings' 
+                    const filteredList = category === 'LLM Settings' || category === 'Embeddings'
                         ? metadataList.filter(meta => {
                             // Skip if not a model setting
                             if (!meta.key.startsWith('models.')) return true;

@@ -83,6 +83,14 @@ export class EmbeddingsModelByProvider {
         description: 'Model path for Llama.cpp embeddings'
     })
     llama_cpp: string = '';
+
+    @ClientSettings({
+        label: 'LM Studio Model',
+        category: 'Embeddings',
+        type: 'select',
+        description: 'Model path or identifier for LM Studio'
+    })
+    lmstudio: string = 'qwen2.5-coder-14b-instruct';
 }
 
 export class ModelByProvider {
@@ -158,7 +166,7 @@ export class LLMProviders {
         label: 'Embeddings Provider',
         category: 'LLM Settings',
         type: 'select',
-        options: ['openai', 'cohere', 'huggingface', 'local', 'llama_cpp'],
+        options: ['openai', 'lmstudio', 'llama_cpp'],
         defaultValue: 'local'
     })
     embeddings: string = 'llama_cpp';
@@ -237,7 +245,7 @@ export class ProvidersConfig {
         label: 'Embeddings Provider',
         category: 'Embeddings',
         type: 'select',
-        options: ['openai', 'cohere', 'huggingface', 'local', 'llama_cpp', 'lmstudio'],
+        options: ['openai', 'llama_cpp', 'lmstudio'],
         defaultValue: 'llama_cpp'
     })
     embeddings: string = 'llama_cpp';
@@ -366,14 +374,6 @@ export class Settings {
     models: LLMModels = new LLMModels();
 
     @ClientSettings({
-        label: 'LM Studio Base URL',
-        category: 'LLM Settings',
-        type: 'string',
-        description: 'Base URL for LM Studio API'
-    })
-    lmStudioBaseUrl!: string;
-
-    @ClientSettings({
         label: 'Llama.cpp Execution Mode',
         category: 'LLM Settings',
         type: 'select',
@@ -382,14 +382,6 @@ export class Settings {
         description: 'Execution mode for Llama.cpp (Auto uses GPU if available, CPU-only forces CPU execution)'
     })
     llama_cpp_execution_mode: string = 'Auto';    
-
-    @ClientSettings({
-        label: 'Context Size',
-        category: 'LLM Settings',
-        type: 'number',
-        description: 'Maximum context size in tokens'
-    })
-    contextSize!: number;
 
     // API Keys
     @ClientSettings({
@@ -451,70 +443,6 @@ export class Settings {
         defaultValue: 'vectra'
     })
     vectorDatabaseType!: string;
-
-    @ClientSettings({
-        label: 'ChromaDB URL',
-        category: 'Vector DB',
-        type: 'string'
-    })
-    chromadbUrl!: string;
-
-    @ClientSettings({
-        label: 'Chroma Collection',
-        category: 'Vector DB',
-        type: 'string'
-    })
-    chromaCollection!: string;
-
-    // Search Settings
-    @ClientSettings({
-        label: 'Search Provider',
-        category: 'Search Settings',
-        type: 'select',
-        options: ['duckduckgo', 'searxng', 'google', 'brave'],
-        defaultValue: 'duckduckgo'
-    })
-    searchProvider!: 'duckduckgo' | 'searxng' | 'google' | 'brave';
-
-    @ClientSettings({
-        label: 'Scraping Provider',
-        category: 'Search Settings',
-        type: 'select',
-        options: ['puppeteer', 'electron'],
-        defaultValue: 'puppeteer'
-    })
-    scrapingProvider!: 'puppeteer' | 'electron';
-
-    @ClientSettings({
-        label: 'Max Searches',
-        category: 'Search Settings',
-        type: 'number',
-        defaultValue: 3
-    })
-    maxSearches!: number;
-
-    @ClientSettings({
-        label: 'SearXNG URL',
-        category: 'Search Settings',
-        type: 'string'
-    })
-    searxngUrl!: string;
-
-    @ClientSettings({
-        label: 'Max Follows',
-        category: 'Search Settings',
-        type: 'number',
-        defaultValue: 3
-    })
-    maxFollows!: number;
-
-    @ClientSettings({
-        label: 'Max Research Requests',
-        category: 'Search Settings',
-        type: 'number',
-        defaultValue: 5
-    })
-    maxResearchRequests!: number;
 
     @ClientSettings({
         label: 'DuckDuckGo Settings',

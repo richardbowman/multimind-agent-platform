@@ -48,12 +48,11 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: './src/web/client/public/splash.html',
-          to: 'splash.html'
-        },
-        {
-          from: './src/web/client/public/splash.js',
-          to: 'splash.js'
+          from: '**/*',
+          context: './src/web/client/public',
+          globOptions: {
+            ignore: ["**/index.html"]
+          }
         },
         {
           from: './defaults.json5',

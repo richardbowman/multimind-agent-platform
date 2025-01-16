@@ -1,13 +1,13 @@
 // lmstudioService.ts
 
-import { EmbeddingSpecificModel, LLMSpecificModel, LMStudioClient } from "@lmstudio/sdk";
+import { EmbeddingSpecificModel, LLMSpecificModel, LMStudioClient, ModelDescriptor } from "@lmstudio/sdk";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 
-import { IEmbeddingService, LLMPredictionOpts, LLMRequestParams } from "./ILLMService";
+import { EmbedderModelInfo, IEmbeddingService, LLMPredictionOpts, LLMRequestParams } from "./ILLMService";
 
 interface LMStudioRequestParams extends LLMRequestParams {
     messages: ModelMessageHistory[];
@@ -44,6 +44,7 @@ import { ILLMService, ModelRole, StructuredOutputPrompt } from "./ILLMService";
 
 import { BaseLLMService } from "./BaseLLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
+import { ModelInfo } from "./types";
 
 export default class LMStudioService extends BaseLLMService implements IEmbeddingService {
     private lmStudioClient: LMStudioClient;
@@ -55,6 +56,10 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         this.lmStudioClient = new LMStudioClient({
             baseUrl: baseUrl
         });
+    }
+
+    async shutdown(): Promise<void> {
+        return;
     }
 
     countTokens(message: string): Promise<number> {
@@ -178,22 +183,26 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         return this.chatModel;
     }
 
-    async getAvailableModels(): Promise<string[]> {
+    async getAvailableModels(): Promise<ModelInfo[]> {
         return this.getAvailableModelsInternal();
     }
 
     async getAvailableEmbedders(): Promise<EmbedderModelInfo[]> {
         try {
             const loadedModels = await this.lmStudioClient.embedding.listLoaded();
-            const availableModels = await this.lmStudioClient.embedding.listModels();
+            // const availableModels = await this.lmStudioClient.embedding.listModels();
             
             // Combine and deduplicate model identifiers
-            const allModels = [...loadedModels, ...availableModels];
+            const allModels = [...loadedModels] //, ...availableModels];
             const uniqueIdentifiers = new Set<string>();
             allModels.forEach(model => uniqueIdentifiers.add(model.identifier));
             
             return Array.from(uniqueIdentifiers).map(identifier => ({
-                identifier,
+                id: identifier,
+                name: identifier,
+                size: "?",
+                lastModified: new Date(),
+                repo: "",
                 pipelineTag: "text-embedding",
                 supportedTasks: ["text-embedding"]
             }));
@@ -206,25 +215,21 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
     private async getAvailableModelsInternal(): Promise<ModelInfo[]> {
         try {
             // Get both loaded and available models
-            const loadedModels = await this.lmStudioClient.llm.listLoaded();
-            const availableModels = await this.lmStudioClient.llm.listModels();
+            const loadedModels : ModelDescriptor[] = await this.lmStudioClient.llm.listLoaded();
+            // const availableModels = await this.lmStudioClient.llm.listModels();
             
             // Combine and deduplicate models
-            const allModels = [...loadedModels, ...availableModels];
-            const uniqueModels = new Map<string, any>();
+            const allModels = [...loadedModels]; //, ...availableModels];
+            const uniqueModels = new Map<string, ModelDescriptor>();
             allModels.forEach(model => uniqueModels.set(model.identifier, model));
             
             return Array.from(uniqueModels.values()).map(model => ({
                 id: model.identifier,
-                path: model.path,
-                name: model.name,
-                size: model.size,
-                lastModified: new Date(model.lastModified),
-                repo: model.repo,
-                author: model.author,
-                downloads: model.downloads,
-                likes: model.likes,
-                ggufFiles: model.ggufFiles
+                path: model.identifier,
+                name: model.identifier,
+                size: "?",
+                lastModified: new Date(),
+                repo: ""
             }));
         } catch (error) {
             await this.logger.logCall('getAvailableModels', {}, null, error);
