@@ -244,10 +244,13 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+    const { showSnackbar } = useSnackbar();
+    const clientMethods = useClientMethods(showSnackbar);
+
     return (
         <IPCProvider>
             <SnackbarProvider>
-                <DataProvider>
+                <DataProvider clientMethods={clientMethods}>
                     <LogProvider>
                         <AppContent />
                     </LogProvider>

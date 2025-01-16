@@ -4,11 +4,10 @@ import { ClientMessage, ClientTask } from '../../../../shared/types';
 import { useMemo } from 'react';
 import { useSnackbar } from '../contexts/SnackbarContext';
 
-export const useClientMethods = () => {
+export const useClientMethods = (showSnackbar: (options: any) => void) => {
     const contextMethods = useWebSocket();
-    const { showSnackbar } = useSnackbar();
 
-    return useMemo(() => ({
+    return {
         onClientLogProcessed: async (success, message) => {
             return
         },
@@ -118,5 +117,5 @@ export const useClientMethods = () => {
         onProjectUpdate(project) {
             console.log('project update not handled yet');
         }
-    }), [contextMethods, showSnackbar]);
+    };
 };

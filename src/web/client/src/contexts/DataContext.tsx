@@ -50,14 +50,13 @@ export interface DataContextMethods {
 }
 
 export const DataProvider: React.FC<{ 
-  children: React.ReactNode
-}> = ({ children }) => {
+  children: React.ReactNode;
+  clientMethods: ClientMethods;
+}> = ({ children, clientMethods }) => {
   const ipcService = useIPCService();
-  const clientMethods = useClientMethods();
 
-  
   useEffect(() => {
-    if (ipcService && clientMethods) {
+    if (ipcService) {
       ipcService.setupRPC(clientMethods);
     }
   }, [ipcService, clientMethods]);
