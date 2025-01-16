@@ -86,6 +86,7 @@ export class ClientLogger {
 
     private async log(level: string, message: string, details?: Record<string, any>): Promise<void> {
         try {
+            this.originalConsole.log("SENDING LOG");
             await this.logHandler(level, message, details);
         } catch (error) {
             console.error('Failed to send client log:', error);
