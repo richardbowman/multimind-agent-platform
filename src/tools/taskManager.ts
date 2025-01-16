@@ -94,4 +94,5 @@ export interface TaskManager extends EventEmitter {
     markTaskInProgress(task: Task | string): Promise<Task>;
     getTaskById(taskId: string): Readonly<Task> | null;
     updateTask(taskId: string, updates: Partial<Task>): Promise<Task>;
+    updateProject(projectId: string, updates: Partial<Project>): Promise<Project>;
 }

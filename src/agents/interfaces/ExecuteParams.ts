@@ -27,5 +27,6 @@ export interface ExecuteParams {
         readonly threadId?: string;
         readonly artifacts?: Artifact[];
         readonly projects?: Project[];
+        readonly threadPosts?: ChatPost[];
     };
 }
