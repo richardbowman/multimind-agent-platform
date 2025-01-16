@@ -9,6 +9,7 @@ import {
     Checkbox
 } from '@mui/material';
 import { TaskDialog } from './TaskDialog';
+import { TaskCard } from './TaskCard';
 
 interface TaskPanelProps {
     channelId: string | null;
