@@ -91,13 +91,24 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               <LinearProgress
                 variant="determinate"
                 value={(options.percentComplete || 0)*100}
-                sx={{ mt: 1 }}
+                sx={{ 
+                  mt: 1,
+                  width: '100%',
+                  minWidth: 300, // Set a minimum width
+                  maxWidth: 500  // Set a maximum width
+                }}
               />
             </Box>
           ) : (
             options.message
           )
         }
+        sx={{
+          minWidth: 300, // Match the snackbar width to progress bar
+          '& .MuiSnackbarContent-message': {
+            width: '100%' // Make message container full width
+          }
+        }}
       />
     </SnackbarContext.Provider>
   );
