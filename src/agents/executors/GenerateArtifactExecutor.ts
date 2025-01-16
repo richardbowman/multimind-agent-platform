@@ -11,6 +11,7 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { TaskManager } from 'src/tools/taskManager';
 
 /**
  * Executor that generates and manages Markdown document artifacts.
