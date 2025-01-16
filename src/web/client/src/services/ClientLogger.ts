@@ -11,6 +11,28 @@ export class ClientLogger {
     }
 
     /**
+     * Sets up global error handlers
+     */
+    public setupGlobalErrorHandlers(): void {
+        // Handle uncaught exceptions
+        window.addEventListener('error', (event) => {
+            this.error(`Uncaught error: ${event.message}`, {
+                filename: event.filename,
+                lineno: event.lineno,
+                colno: event.colno,
+                error: event.error?.stack
+            });
+        });
+
+        // Handle unhandled promise rejections
+        window.addEventListener('unhandledrejection', (event) => {
+            this.error(`Unhandled promise rejection: ${event.reason}`, {
+                reason: event.reason?.stack || event.reason
+            });
+        });
+    }
+
+    /**
      * Intercepts all console methods and routes them through the logger
      */
     public interceptConsole(): void {

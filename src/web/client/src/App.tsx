@@ -236,6 +236,7 @@ const App: React.FC = () => {
     const [logger] = useState(() => {
         const logger = new ClientLogger(useIPCService());
         logger.interceptConsole();
+        logger.setupGlobalErrorHandlers();
         return logger;
     });
 
@@ -243,6 +244,9 @@ const App: React.FC = () => {
         // Cleanup on unmount
         return () => {
             logger.restoreConsole();
+            // Clean up error handlers
+            window.removeEventListener('error', () => {});
+            window.removeEventListener('unhandledrejection', () => {});
         };
     }, [logger]);
 
