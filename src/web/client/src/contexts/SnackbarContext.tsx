@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
-import { Snackbar, IconButton, Button } from '@mui/material';
+import { Box } from '@mui/material';
+import { Snackbar, IconButton, Button, LinearProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SnackbarCloseReason } from '@mui/material/Snackbar';
 
@@ -83,7 +84,20 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             </IconButton>
           </>
         }
-        message={options.message}
+        message={
+          options.severity === 'progress' ? (
+            <Box sx={{ width: '100%' }}>
+              <Box>{options.message}</Box>
+              <LinearProgress
+                variant="determinate"
+                value={options.percentComplete || 0}
+                sx={{ mt: 1 }}
+              />
+            </Box>
+          ) : (
+            options.message
+          )
+        }
       />
     </SnackbarContext.Provider>
   );
