@@ -11,8 +11,8 @@ import Logger from '../../helpers/logger';
 import { IntakeQuestionsResponse } from '../../schemas/IntakeQuestionsResponse';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
-import { SchemaType } from 'src/schemas/SchemaTypes';
-import { Artifact } from 'src/tools/artifact';
+import { SchemaType } from '../../schemas/SchemaTypes';
+import { Artifact } from '../../tools/artifact';
 import { StepTask } from '../interfaces/ExecuteStepParams';
 
 /**

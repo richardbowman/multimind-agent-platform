@@ -1,12 +1,11 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from "../../llm/modelHelpers";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { GoalConfirmationResponse } from "../../schemas/goalConfirmation";
 import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
-import { ILLMService } from "../../llm/ILLMService";
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResult } from '../interfaces/StepResult';

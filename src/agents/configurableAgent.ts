@@ -4,20 +4,6 @@ import { StepBasedAgent } from './stepBasedAgent';
 import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 import { Planner } from "./planners/planner";
 
-export enum ProjectManagerActivities {
-    AnswerQuestions = "answer-questions",
-    GenerateArtifact = "generate-artifact",
-    KickoffCombinedProject = "kickoff-complex-project",
-    ScheduleTask = "schedule-task"
-}
-
-export interface PlanningProject extends Project {
-    originalPostId: string;
-    confirmationPostId?: string;
-    goal: string;
-    description: string;
-}
-
 export class ConfigurableAgent extends StepBasedAgent {
     agentName: string | undefined;
 
@@ -44,7 +30,7 @@ export class ConfigurableAgent extends StepBasedAgent {
         throw new Error('Method not implemented.');
     }
     
-    protected async projectCompleted(project: PlanningProject): Promise<void> {
+    protected async projectCompleted(project: Project): Promise<void> {
         await super.projectCompleted(project);
     }
 }

@@ -3,7 +3,8 @@ import { ModelResponse } from 'src/schemas/ModelResponse';
 export enum StepResultType {
     DecomposeResearch = "decompose-research",
     Question = "Question",
-    AnswerQuestion = "AnswerQuestion"
+    AnswerQuestion = "AnswerQuestion",
+    ComplexProjectKickoff = "ComplexProjectKickoff"
 }
 
 export interface StepResult {

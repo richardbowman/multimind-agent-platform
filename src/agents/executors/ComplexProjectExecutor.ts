@@ -1,12 +1,11 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { TaskManager } from '../../tools/taskManager';
-import { Task } from '../../tools/taskManager';
+import { TaskManager, TaskType } from '../../tools/taskManager';
 import { randomUUID } from 'crypto';
 import Logger from '../../helpers/logger';
 
@@ -53,7 +52,7 @@ export class ComplexProjectExecutor implements StepExecutor {
                     status: 'active',
                     createdAt: new Date(),
                     updatedAt: new Date(),
-                    originalPostId: params.context?.postId
+                    parentTaskId: params.stepId
                 }
             });
 
@@ -62,15 +61,10 @@ export class ComplexProjectExecutor implements StepExecutor {
             await this.taskManager.addTask(project, {
                 id: researchTaskId,
                 description: researchTask,
-                creator: 'system',
-                type: TaskType.Step,
+                creator: params.agentId,
+                type: TaskType.Standard,
                 props: {
-                    stepType: ExecutorType.RESEARCH,
                     goal: projectGoal
-                },
-                metadata: {
-                    requiredFor: 'content-creation',
-                    priority: 'high'
                 }
             });
 
@@ -79,16 +73,11 @@ export class ComplexProjectExecutor implements StepExecutor {
             await this.taskManager.addTask(project, {
                 id: contentTaskId,
                 description: contentTask,
-                creator: 'system',
-                type: TaskType.Step,
+                creator: params.agentId,
+                type: TaskType.Standard,
                 props: {
-                    stepType: ExecutorType.CONTENT_CREATION,
                     goal: projectGoal,
                     dependsOn: researchTaskId
-                },
-                metadata: {
-                    dependsOn: researchTaskId,
-                    status: 'pending-research'
                 }
             });
 
@@ -108,16 +97,8 @@ export class ComplexProjectExecutor implements StepExecutor {
                 Logger.warn('No content manager agent found');
             }
 
-            // Update project with task references
-            await this.taskManager.updateProject(project.id, {
-                metadata: {
-                    ...project.metadata,
-                    mainTasks: [researchTaskId, contentTaskId]
-                }
-            });
-
             return {
-                type: "complex_project",
+                type: StepResultType.ComplexProjectKickoff,
                 projectId: project.id,
                 finished: true,
                 response: {
@@ -130,7 +111,7 @@ export class ComplexProjectExecutor implements StepExecutor {
         } catch (error) {
             Logger.error('Error in ComplexProjectExecutor:', error);
             return {
-                type: "complex_project",
+                type: StepResultType.ComplexProjectKickoff,
                 finished: true,
                 response: {
                     message: 'Failed to create the complex project. Please try again later.'
