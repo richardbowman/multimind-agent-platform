@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack, Snackbar, Alert, Button } from '@mui/material';
+import { ClientLogger } from './services/ClientLogger';
 import MenuIcon from '@mui/icons-material/Menu';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
@@ -232,6 +233,19 @@ const AppContent: React.FC = () => {
 };
 
 const App: React.FC = () => {
+    const [logger] = useState(() => {
+        const logger = new ClientLogger(useIPCService());
+        logger.interceptConsole();
+        return logger;
+    });
+
+    useEffect(() => {
+        // Cleanup on unmount
+        return () => {
+            logger.restoreConsole();
+        };
+    }, [logger]);
+
     return (
         <SnackbarProvider>
             <DataProvider>
