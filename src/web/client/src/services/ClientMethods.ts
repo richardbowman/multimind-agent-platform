@@ -9,7 +9,6 @@ export const useClientMethods = () => {
     const { showSnackbar } = useSnackbar();
 
     return useMemo(() => ({
-        return {
             onClientLogProcessed: async (success, message) => {
                 return
             },
@@ -119,6 +118,6 @@ export const useClientMethods = () => {
             onProjectUpdate(project) {
                 console.log('project update not handled yet');
             }
-        }
-    }));
+        };
+    }, [contextMethods, showSnackbar]);
 };
