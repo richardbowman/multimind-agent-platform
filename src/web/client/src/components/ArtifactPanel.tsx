@@ -4,11 +4,11 @@ import { useWebSocket } from '../contexts/DataContext';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { ArtifactViewer } from './ArtifactViewer';
-import { Box, Typography, List, ListItem, ListItemText, ListItemIcon, Drawer, IconButton, Tooltip, styled, useTheme, Divider } from '@mui/material';
-import FolderIcon from '@mui/icons-material/Folder';
+import { Box, Typography, List, Drawer, styled, useTheme, Divider } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
+import { ArtifactCard } from './ArtifactCard';
 
 interface ArtifactPanelProps {
     channelId: string | null;
@@ -69,50 +69,23 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
             <Divider />
             <List>
                 {(artifacts || []).map((artifact: Artifact) => (
-                    <ListItem
+                    <ArtifactCard
                         key={artifact.id}
-                        button
+                        artifact={artifact}
                         onClick={() => handleArtifactClick(artifact)}
-                    >
-                        <ListItemIcon sx={{ minWidth: 36 }}>
-                            <FolderIcon fontSize="small" />
-                        </ListItemIcon>
-                        <ListItemText
-                            primary={artifact.metadata?.title || 'Untitled'}
-                            secondary={`Type: ${artifact.type} | ID: ${artifact.id}`}
-                            primaryTypographyProps={{ color: '#fff' }}
-                            secondaryTypographyProps={{ color: '#666' }}
-                        />
-                        <Box sx={{ display: 'flex', gap: 1 }}>
-                            <Tooltip title="Add to channel">
-                                <IconButton
-                                    size="small"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (currentChannelId) {
-                                            addArtifactToChannel(currentChannelId, artifact.id);
-                                        }
-                                    }}
-                                >
-                                    <AddIcon fontSize="small" sx={{ color: '#666' }} />
-                                </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Remove from channel">
-                                <IconButton
-                                    size="small"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (currentChannelId) {
-                                            removeArtifactFromChannel(currentChannelId, artifact.id);
-                                        }
-                                    }}
-                                >
-                                    <RemoveIcon fontSize="small" sx={{ color: '#666' }} />
-                                </IconButton>
-                            </Tooltip>
-                            <ChevronRightIcon sx={{ color: '#666' }} />
-                        </Box>
-                    </ListItem>
+                        onAddClick={(e) => {
+                            e.stopPropagation();
+                            if (currentChannelId) {
+                                addArtifactToChannel(currentChannelId, artifact.id);
+                            }
+                        }}
+                        onRemoveClick={(e) => {
+                            e.stopPropagation();
+                            if (currentChannelId) {
+                                removeArtifactFromChannel(currentChannelId, artifact.id);
+                            }
+                        }}
+                    />
                 ))}
             </List>
 
