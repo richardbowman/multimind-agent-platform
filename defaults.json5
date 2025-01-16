@@ -191,6 +191,9 @@ My goal is to help you define, document and refine product specifications.",
              }
            },
            {
+            "className": "DocumentRetrievalExecutor"
+           },
+           {
              "className": "GoalConfirmationExecutor"
            },
            {

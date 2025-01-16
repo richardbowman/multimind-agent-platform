@@ -70,6 +70,7 @@ export abstract class StepBasedAgent extends Agent {
                     artifactManager: this.artifactManager,
                     userId: this.userId,
                     settings: this.settings,
+                    vectorDB: this.vectorDBService,
                     modelHelpers: new ModelHelpers(this.llmService, this.userId),
                     ...executorConfig.config
                 });

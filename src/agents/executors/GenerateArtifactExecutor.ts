@@ -12,6 +12,8 @@ import { Artifact } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { TaskManager } from 'src/tools/taskManager';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
 
 /**
  * Executor that generates and manages Markdown document artifacts.

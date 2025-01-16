@@ -55,6 +55,7 @@ Goal to analyze: "${goal}"`;
         return {
             finished: result.understanding,
             needsUserInput: !result.understanding,
+            goal: result.message,
             response: {
                 message: result.message
             }

@@ -11,8 +11,9 @@ export class ContentWriter extends Agent {
     async initialize?(): Promise<void> { }
     
     protected handlerThread(params: HandlerParams): Promise<void> {
-        throw new Error('Method not implemented.');
+        return this.handleChannel(params);
     }
+
     protected async handleChannel(params: HandlerParams): Promise<void> {
         let projectId = params.userPost.props["project-id"];
         if (!projectId) {
@@ -21,11 +22,12 @@ export class ContentWriter extends Agent {
 
         try {
             let project = projectId ? await this.projects.getProject(projectId) : undefined;
-            if (!project) {
+            if (!project || !project.metadata.tags?.includes("writing-request")) {
                 // Create new project if it doesn't exist
                 const newProject : CreateProjectParams = {
                     name: "Solve the user's writing request",
                     metadata: {
+                        tags: ["writing-request"],
                         owner: this.userId,
                         originalPostId: params.userPost.id
                     }
@@ -40,7 +42,7 @@ export class ContentWriter extends Agent {
                 description: "Content Section: " + params.userPost.message,
                 type: TaskType.Standard,
                 category: TaskCategories.Writing,
-                creator: this.userId,
+                creator: this.userId
             });
             await this.processTask(task);
         } catch (error) {
@@ -91,7 +93,7 @@ export class ContentWriter extends Agent {
 
         // Compile content from all tasks
         const content = completedTasks
-            .map(task => (task as ContentTask).content)
+            .map(task => task.props?.content)
             .filter(Boolean)
             .join('\n\n');
 

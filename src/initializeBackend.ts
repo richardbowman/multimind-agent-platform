@@ -11,6 +11,7 @@ import { SettingsManager } from "./tools/settingsManager";
 import { getDataPath } from "./helpers/paths";
 import path from "path";
 import { sleep } from "./utils/sleep";
+import { ServerRPCHandler } from "./server/RPCHandler";
 
 export async function initializeBackend(settingsManager: SettingsManager, options: { 
     reindex?: boolean
@@ -89,7 +90,20 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         settingsManager: settingsManager
     });
 
-      if (!Object.values(chatStorage.channelNames).includes("#welcome")) {
+    // Initialize all agents
+    for (const [name, agent] of agents.entries()) {
+        if (agent.initialize) {
+            await agent.initialize();
+            Logger.info(`Initialized agent: ${name}`);
+        }
+    }
+
+    chatStorage.announceChannels();
+
+    const USER_ID = "test";
+    const userClient = new LocalTestClient(USER_ID, "test", chatStorage);
+
+    if (!Object.values(chatStorage.channelNames).includes("#welcome")) {
         // Create RPC handler and use it to create channel
         const rpcHandler = new ServerRPCHandler({
             chatClient: userClient,
@@ -111,19 +125,6 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             goalTemplate: 'welcome-channel' // Use the template
         });
     }
-
-    // Initialize all agents
-    for (const [name, agent] of agents.entries()) {
-        if (agent.initialize) {
-            await agent.initialize();
-            Logger.info(`Initialized agent: ${name}`);
-        }
-    }
-
-    chatStorage.announceChannels();
-
-    const USER_ID = "test";
-    const userClient = new LocalTestClient(USER_ID, "test", chatStorage);
 
     // Handle reindex option
     if (options.reindex) {

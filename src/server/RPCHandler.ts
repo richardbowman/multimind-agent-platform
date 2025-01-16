@@ -513,13 +513,12 @@ export class ServerRPCHandler implements ServerMethods {
                     template.supportingAgents.map(async (agentRef) => {
                         if (agentRef.startsWith('@')) {
                             // Lookup agent by handle
-                            const handle = agentRef.slice(1);
                             const handles = await this.services.chatClient?.getHandles();
                             if (!handles) {
                                 throw new Error(`Could not get handles map`);
                             }
                             // Find the agent ID that matches this handle
-                            const agentEntry = Object.entries(handles).find(([id, name]) => name === handle);
+                            const agentEntry = Object.entries(handles).find(([id, name]) => name === agentRef);
                             if (!agentEntry) {
                                 throw new Error(`Agent with handle @${handle} not found`);
                             }

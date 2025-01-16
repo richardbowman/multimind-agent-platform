@@ -65,7 +65,7 @@ Select the most relevant documents (1-3) and explain your choices.`;
 
         const selectionResponse = await this.modelHelpers.generate({
             message: selectionPrompt,
-            systemPrompt: `You are a document selection expert. Analyze the request and available documents, then select the most relevant ones.`
+            instructions: `You are a document selection expert. Analyze the request and available documents, then select the most relevant ones.`
         });
 
         // Parse selected artifact IDs from LLM response
@@ -83,8 +83,8 @@ Select the most relevant documents (1-3) and explain your choices.`;
             response: {
                 message: `Selected documents:\n\n${selectionResponse.message}\n\n` +
                     `Document Contents:\n${selectedArtifacts.map(a => `# ${a.metadata?.title || 'Untitled'}\n\n${a.content}`).join('\n\n')}`,
+                artifactIds: selectedIds,
                 data: {
-                    retrievedArtifactIds: selectedIds,
                     searchQuery: documentRequest,
                     selectionReasoning: selectionResponse.message
                 }

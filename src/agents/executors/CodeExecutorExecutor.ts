@@ -9,6 +9,7 @@ import { CodeExecutionResponse } from 'src/schemas/CodeExecutionResponse';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
 
 /**
  * Executor that safely runs JavaScript code in an isolated sandbox environment. 

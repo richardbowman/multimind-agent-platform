@@ -106,6 +106,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             type: 'answer_analysis',
             finished: modelResponse.shouldContinue,
             needsUserInput: !modelResponse.shouldContinue,
+            allowReplan: modelResponse.shouldContinue,
             response: {
                 message: modelResponse.message
             }

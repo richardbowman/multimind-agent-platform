@@ -1139,7 +1139,8 @@
         "ResearchUnderstandingResponse",
         "CodeExecutionResponse",
         "BrainstormResponse",
-        "OutlineApprovalCheck"
+        "OutlineApprovalCheck",
+        "ArtifactGeneration"
       ],
       "type": "string"
     },
