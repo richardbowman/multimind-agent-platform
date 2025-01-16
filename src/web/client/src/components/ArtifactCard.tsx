@@ -51,7 +51,7 @@ export const ArtifactCard: React.FC<ArtifactCardProps> = ({
             <FolderIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
             <ListItemText
                 primary={artifact.metadata?.title || 'Untitled'}
-                secondary={`Type: ${artifact.type} | ID: ${artifact.id}`}
+                secondary={`Type: ${artifact.type}`}
                 primaryTypographyProps={{ 
                     color: selected ? '#fff' : 'text.primary',
                     whiteSpace: 'nowrap',
