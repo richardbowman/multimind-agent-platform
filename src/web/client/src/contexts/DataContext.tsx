@@ -270,11 +270,13 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setTasks
   ]);
 
+  const { showSnackbar } = useSnackbar();
+  
   const ipcService = useMemo(() => {
     return (window as any).electron
-      ? new ElectronIPCService(contextMethods)
+      ? new ElectronIPCService(contextMethods, showSnackbar)
       : new WebSocketService();
-  }, []);
+  }, [showSnackbar]);
 
   return (
     <IPCContext.Provider value={ipcService}>
