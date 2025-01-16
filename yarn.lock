@@ -2118,7 +2118,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lmstudio/lms-isomorphic@npm:^0.4.0":
+"@lmstudio/lms-isomorphic@npm:^0.4.2":
   version: 0.4.2
   resolution: "@lmstudio/lms-isomorphic@npm:0.4.2"
   dependencies:
@@ -2127,13 +2127,14 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@lmstudio/sdk@npm:^0.3.0":
-  version: 0.3.0
-  resolution: "@lmstudio/sdk@npm:0.3.0"
+"@lmstudio/sdk@npm:^0.4.3":
+  version: 0.4.3
+  resolution: "@lmstudio/sdk@npm:0.4.3"
   dependencies:
-    "@lmstudio/lms-isomorphic": "npm:^0.4.0"
+    "@lmstudio/lms-isomorphic": "npm:^0.4.2"
     chalk: "npm:^4.1.2"
-  checksum: 10c0/6d2405b391375b618122a0c93433a36ef2edb5dab6750711eb22705ff3117891e09fd92de2442190ecdcdce8a4effb0fc1f6a55c836cb5d187204748e91db49f
+    zod: "npm:^3.22.4"
+  checksum: 10c0/18c891f90b21aee0df6868cb7bca3a25d6016c9656c9542a1740c1b0d78d48c164596155d2ba7ff4d96ad20bd1e01c8d95004a18777b5f08552d3355fc85276a
   languageName: node
   linkType: hard
 
@@ -11784,7 +11785,7 @@ __metadata:
     "@emotion/react": "npm:^11.14.0"
     "@emotion/styled": "npm:^11.14.0"
     "@langchain/core": "npm:^0.3.27"
-    "@lmstudio/sdk": "npm:^0.3.0"
+    "@lmstudio/sdk": "npm:^0.4.3"
     "@mattermost/client": "npm:^10.1.0"
     "@mattermost/types": "npm:^10.1.0"
     "@mui/icons-material": "npm:^6.3.1"

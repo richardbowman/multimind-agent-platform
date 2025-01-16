@@ -1,10 +1,10 @@
 // lmstudioService.ts
 
-import { EmbeddingSpecificModel, LLMSpecificModel, LMStudioClient, ModelDescriptor } from "@lmstudio/sdk";
+import { EmbeddingSpecificModel, LLMPredictionConfig, LLMSpecificModel, LMStudioClient, ModelDescriptor } from "@lmstudio/sdk";
 import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
-import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
+import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 
 import { EmbedderModelInfo, IEmbeddingService, LLMPredictionOpts, LLMRequestParams } from "./ILLMService";
@@ -64,7 +64,7 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
 
     countTokens(message: string): Promise<number> {
         if (!this.chatModel) throw new Error("LM Studio not initalized");
-        return this.chatModel.unstable_countTokens(message);
+        return this.chatModel.countTokens(message);
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
@@ -124,13 +124,13 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
             ...history || [], userMessage
         ];
 
-        const opts: LLMPredictionOpts = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens };
+        const opts: LLMPredictionConfig = { structured: { type: "json", jsonSchema: instructions.getSchema() }, maxPredictedTokens: maxTokens };
 
         // If contextWindowLength is provided, truncate the history
         const contextLength = parseInt(process.env.CONTEXT_SIZE || "") || contextWindowLength || 4096;
         let tokenCount = 0;
         for (let i = messageChain.length - 1; i >= 0; i--) {
-            const messageTokens = await this.chatModel.unstable_countTokens(messageChain[i].content);
+            const messageTokens = await this.chatModel.countTokens(messageChain[i].content);
             tokenCount += messageTokens;
 
             if (tokenCount > contextLength) {
@@ -252,7 +252,7 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
             const contextLength = parseInt(process.env.CONTEXT_SIZE || "") || params.opts.contextWindowLength || 4096;
             let tokenCount = 0;
             for (let i = messageChain.length - 1; i >= 0; i--) {
-                const messageTokens = await this.chatModel.unstable_countTokens(messageChain[i].content);
+                const messageTokens = await this.chatModel.countTokens(messageChain[i].content);
                 tokenCount += messageTokens;
 
                 if (tokenCount > contextLength) {
@@ -263,7 +263,7 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         }
 
         try {
-            const toolOpts: Partial<LLMPredictionOpts> = {};
+            const toolOpts: Partial<LLMPredictionConfig> = {};
             if (params.opts?.tools?.length == 1) {
                 toolOpts.structured = {
                     type: "json",
@@ -279,11 +279,16 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
                 };
             }
 
-            const prediction = await this.chatModel.respond(messageChain, {
-                maxPredictedTokens: params.opts?.maxPredictedTokens,
-                temperature: params.opts?.temperature,
-                ...toolOpts
-            });
+            let prediction;
+            try {
+                prediction = await this.chatModel.respond(messageChain, {
+                    maxPredictedTokens: params.opts?.maxPredictedTokens,
+                    temperature: params.opts?.temperature,
+                    ...toolOpts
+                });
+            } catch (error) {
+                Logger.error('error running prediction', error);
+            }
 
             const resultBody = prediction.content;
 

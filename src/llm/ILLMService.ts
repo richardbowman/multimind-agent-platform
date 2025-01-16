@@ -27,14 +27,21 @@ export interface ILLMService {
     generateStructured<T extends ModelResponse>(userPost: ChatPost, instructions: StructuredOutputPrompt, history?: ChatPost[], contextWindowLength?: number, maxTokens?: number): Promise<T>;
 }
 
-export interface JSONSchema extends Record<string, any> {
+export interface JSONObjectSchema extends JSONSchema {
+    type: "object";
+}
+
+export interface JSONSchema {
     type: "object" | "array";
+    properties: Record<string, any>;
+    required?: string[];
+    additionalProperties?: boolean;
 }
 
 export interface LLMTool {
     name: string;
     description: string;
-    parameters: JSONSchema;
+    parameters: JSONObjectSchema;
     type?: "function";
 }
 
