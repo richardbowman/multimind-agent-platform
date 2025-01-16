@@ -95,14 +95,34 @@ export class CreateChannelExecutor implements StepExecutor {
             defaultResponderId: selectedTemplate.supportingAgents[0] || 'router-agent'
         });
 
+        // Generate a detailed explanation using the LLM
+        const explanationPrompt = `You just created a new channel called "${channelPurpose}" using the "${selectedTemplate.name}" template. 
+The channel includes these supporting agents: ${selectedTemplate.supportingAgents.join(', ')}.
+The channel's purpose is: ${channelPurpose}
+
+Please write a clear, friendly message to the user explaining:
+1. What the channel is for
+2. Which agents are included and why
+3. What initial tasks have been set up
+4. How they can use the channel to achieve their goals
+
+Write in a professional but approachable tone.`;
+
+        const explanationResponse = await this.modelHelpers.model.sendLLMRequest({
+            messages: [{ role: 'user', content: explanationPrompt }],
+            parseJSON: false
+        });
+
         return {
             finished: true,
             response: {
-                message: `Created new channel "${channelPurpose}" using template: ${selectedTemplate.name}`,
+                message: explanationResponse.message || `Created new channel "${channelPurpose}"`,
                 reasoning: `Selected template ${selectedTemplate.name} based on channel purpose: ${channelPurpose}`,
                 data: {
                     channelId,
-                    template: selectedTemplate
+                    template: selectedTemplate,
+                    supportingAgents: selectedTemplate.supportingAgents,
+                    initialTasks: selectedTemplate.initialTasks
                 }
             }
         };
