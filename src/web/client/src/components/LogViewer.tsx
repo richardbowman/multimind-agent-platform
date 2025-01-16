@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
 import DOMPurify from 'dompurify';
-import { AppBar, Toolbar, Tabs, Tab, TextField, Box, styled } from '@mui/material';
+import { AppBar, Toolbar, Tabs, Tab, TextField, Box, styled, FormControlLabel, Switch } from '@mui/material';
 
 interface LogViewerProps {
     logType: 'llm' | 'system';
@@ -12,6 +12,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const { logs, fetchLogs } = useWebSocket();
     const [filterText, setFilterText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
+    const [showVerbose, setShowVerbose] = useState(false);
 
     const refreshLogs = useCallback(async () => {
         setIsLoading(true);
@@ -129,7 +130,8 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
             
             case 'system':
                 return logs.system?.logs?.filter(log => 
-                    filterLog(log.message)
+                    filterLog(log.message) && 
+                    (showVerbose || log.level.toLowerCase() !== 'verbose')
                 ).map((log, index) => (
                     <div key={index} className={`log-entry ${log.level?.toLowerCase()}`}>
                         <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
@@ -156,6 +158,19 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                         <Tab label="API Logs" value="api" />
                     </Tabs>
                     <Box sx={{ flexGrow: 1 }} />
+                    <FormControlLabel
+                        control={
+                            <Switch
+                                checked={showVerbose}
+                                onChange={(e) => setShowVerbose(e.target.checked)}
+                                size="small"
+                                color="primary"
+                            />
+                        }
+                        label="Show Verbose"
+                        labelPlacement="start"
+                        sx={{ mr: 2 }}
+                    />
                     <TextField
                         variant="outlined"
                         placeholder="Filter logs..."
