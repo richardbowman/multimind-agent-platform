@@ -480,23 +480,8 @@ export class ServerRPCHandler implements ServerMethods {
         try {
             // Log to both the main logger and LLM logger
             Logger.log(level, `[CLIENT] ${message}`, details);
-            this.services.llmLogger.log({
-                type: 'client',
-                level,
-                message,
-                details,
-                timestamp: new Date().toISOString()
-            });
-            
-            // Notify client of successful logging
-            if (this.services.clientRPC) {
-                this.services.clientRPC.onClientLogProcessed(true);
-            }
         } catch (error) {
             Logger.error('Failed to process client log event:', error);
-            if (this.services.clientRPC) {
-                this.services.clientRPC.onClientLogProcessed(false, error.message);
-            }
         }
     }
 
