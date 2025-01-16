@@ -28,7 +28,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             sx={{
                 mb: 1,
                 bgcolor: selected 
-                    ? 'primary.light' 
+                    ? task.inProgress
+                        ? 'primary.dark'
+                        : 'primary.light'
                     : task.inProgress 
                         ? 'action.selected'
                         : task.complete
@@ -37,7 +39,9 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 borderRadius: 1,
                 border: '1px solid',
                 borderColor: selected 
-                    ? 'primary.main' 
+                    ? task.inProgress
+                        ? 'primary.dark'
+                        : 'primary.main'
                     : task.inProgress
                         ? 'primary.main'
                         : task.complete
@@ -75,7 +79,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <ListItemText
                 primary={task.description}
                 primaryTypographyProps={{ 
-                    color: 'text.primary',
+                    color: selected && task.inProgress ? '#fff' : 'text.primary',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
