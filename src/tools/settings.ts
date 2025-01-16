@@ -333,7 +333,7 @@ export class Settings {
     @ClientSettings({
         label: 'UI Zoom Level',
         category: 'UI Settings',
-        type: 'number',
+        type: 'slider',
         defaultValue: 1.0,
         min: 0.5,
         max: 2.0,
@@ -345,10 +345,11 @@ export class Settings {
     @ClientSettings({
         label: 'Window Width',
         category: 'UI Settings',
-        type: 'number',
+        type: 'slider',
         defaultValue: 1200,
         min: 800,
         max: 2560,
+        step: 10,
         description: 'Default window width in pixels'
     })
     windowWidth: number = 1200;
@@ -356,10 +357,11 @@ export class Settings {
     @ClientSettings({
         label: 'Window Height',
         category: 'UI Settings',
-        type: 'number',
+        type: 'slider',
         defaultValue: 800,
         min: 600,
         max: 1440,
+        step: 10,
         description: 'Default window height in pixels'
     })
     windowHeight: number = 800;
