@@ -103,4 +103,4 @@ export const createClientMethods = (contextMethods: DataContextMethods, showSnac
     onProjectUpdate(project) {
         console.log('project update not handled yet');
     },
-} as ClientMethods);
+} as ClientMethods;
