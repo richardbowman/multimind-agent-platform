@@ -62,31 +62,33 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         return sanitizedText.replace(regex, '<mark>$1</mark>');
     };
 
-    const [page, setPage] = useState(1);
-    const [totalPages, setTotalPages] = useState(1);
+    const [loadedLogs, setLoadedLogs] = useState<any[]>([]);
+    const [hasMore, setHasMore] = useState(true);
     const pageSize = 50;
 
-    const loadPage = useCallback(async (pageNumber: number) => {
+    const loadMoreLogs = useCallback(async () => {
         try {
             const newLogs = await fetchLogs(currentLogTab, {
                 limit: pageSize,
-                offset: (pageNumber - 1) * pageSize,
+                offset: loadedLogs.length,
                 filter: {
                     search: filterText
                 }
             });
             
-            setPage(pageNumber);
-            setTotalPages(Math.ceil(newLogs.total / pageSize));
+            setLoadedLogs(prev => [...prev, ...newLogs.logs]);
+            setHasMore(newLogs.total > loadedLogs.length + newLogs.logs.length);
         } catch (error) {
             console.error('Error loading logs:', error);
         }
-    }, [currentLogTab, filterText, fetchLogs]);
+    }, [currentLogTab, filterText, fetchLogs, loadedLogs.length]);
 
     useEffect(() => {
-        // Reset to first page when log type or filter changes
-        loadPage(1);
-    }, [currentLogTab, filterText, loadPage]);
+        // Reset loaded logs when log type or filter changes
+        setLoadedLogs([]);
+        setHasMore(true);
+        loadMoreLogs();
+    }, [currentLogTab, filterText]);
 
     const renderLogs = () => {
         switch (currentLogTab) {
@@ -186,29 +188,28 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 }}
             >
                 {renderLogs()}
-                <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'center', 
-                    alignItems: 'center',
-                    gap: 2,
-                    py: 2
-                }}>
-                    <button 
-                        onClick={() => loadPage(page - 1)}
-                        disabled={page === 1}
-                        style={{ padding: '4px 8px' }}
-                    >
-                        Previous
-                    </button>
-                    <span>Page {page} of {totalPages}</span>
-                    <button 
-                        onClick={() => loadPage(page + 1)}
-                        disabled={page === totalPages}
-                        style={{ padding: '4px 8px' }}
-                    >
-                        Next
-                    </button>
-                </Box>
+                {hasMore && (
+                    <Box sx={{ 
+                        display: 'flex', 
+                        justifyContent: 'center', 
+                        py: 2
+                    }}>
+                        <button 
+                            onClick={loadMoreLogs}
+                            style={{ 
+                                padding: '8px 16px',
+                                backgroundColor: '#1976d2',
+                                color: 'white',
+                                border: 'none',
+                                borderRadius: '4px',
+                                cursor: 'pointer',
+                                fontSize: '14px'
+                            }}
+                        >
+                            Load More
+                        </button>
+                    </Box>
+                )}
             </Box>
         </Box>
     );
