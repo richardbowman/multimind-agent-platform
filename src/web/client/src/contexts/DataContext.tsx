@@ -5,20 +5,10 @@ import type { LLMLogEntry } from '../../../../llm/LLMLogger';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/types';
 import { CreateChannelParams } from '../../../../shared/channelTypes';
-import { SnackbarCloseReason } from '@mui/material/Snackbar';
-
 const DataContext = createContext<DataContextMethods | null>(null);
 
 // Create a context for the IPC service
 const IPCContext = createContext<BaseRPCService | null>(null);
-
-export interface SnackbarOptions {
-  message: string;
-  severity: 'info' | 'success' | 'warning' | 'error' | 'progress';
-  persist?: boolean;
-  percentComplete: number;
-  onClick?: () => void;
-}
 
 export interface DataContextMethods {
   messages: ClientMessage[];
@@ -35,12 +25,6 @@ export interface DataContextMethods {
   currentThreadId: string | null;
   isLoading: boolean;
   needsConfig: boolean;
-  snackbarOpen: boolean;
-  snackbarOptions: SnackbarOptions;
-  setSnackbarOpen: React.Dispatch<React.SetStateAction<boolean>>;
-  showSnackbar: (options: SnackbarOptions) => void;
-  handleSnackbarClose: (event: React.SyntheticEvent | Event, reason?: SnackbarCloseReason) => void;
-  handleSnackbarClick: () => void;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   fetchChannels: () => Promise<void>;
   fetchTasks: (channelId: string, threadId: string | null) => Promise<void>;
@@ -86,18 +70,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   });
   const [isLoading, setIsLoading] = useState(true);
   const [needsConfig, setNeedsConfig] = useState(true);
-  const [snackbarOpen, setSnackbarOpen] = useState(false);
-  const [snackbarOptions, setSnackbarOptions] = useState<SnackbarOptions>({
-    message: '',
-    severity: 'info'
-  });
-
-  const handleSnackbarClose = (
-    event: React.SyntheticEvent | Event,
-    reason?: SnackbarCloseReason,
-  ) => {
-    setSnackbarOpen(false);
-  };
 
   useEffect(() => {
     console.debug('WebSocketContext stable mount - connecting');
@@ -224,17 +196,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }));
   }, []);
 
-  const showSnackbar = useCallback((options: SnackbarOptions) => {
-    setSnackbarOptions(options);
-    setSnackbarOpen(true);
-  }, []);
-
-  const handleSnackbarClick = useCallback(() => {
-    if (snackbarOptions.onClick) {
-      snackbarOptions.onClick();
-    }
-    setSnackbarOpen(false);
-  }, [snackbarOptions]);
 
   const contextMethods = useMemo(() => ({
     messages,
@@ -247,12 +208,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     currentThreadId,
     isLoading,
     needsConfig,
-    snackbarOpen,
-    setSnackbarOpen,
-    showSnackbar,
-    snackbarOptions,
-    handleSnackbarClose,
-    handleSnackbarClick,
     sendMessage,
     fetchChannels,
     fetchTasks,

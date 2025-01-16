@@ -4,7 +4,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
-import { useWebSocket, useIPCService, DataProvider, SnackbarOptions } from './contexts/DataContext';
+import { useWebSocket, useIPCService, DataProvider } from './contexts/DataContext';
+import { SnackbarProvider } from './contexts/SnackbarContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
@@ -50,13 +51,7 @@ const AppContent: React.FC = () => {
         currentChannelId,
         currentThreadId,
         setCurrentThreadId,
-        needsConfig,
-        showSnackbar,
-        snackbarOpen,
-        setSnackbarOpen,
-        snackbarOptions,
-        handleSnackbarClose,
-        handleSnackbarClick
+        needsConfig
     } = useWebSocket();
 
     useEffect(() => {
@@ -243,27 +238,6 @@ const AppContent: React.FC = () => {
                     <LogViewer logType={currentLogTab} />
                 ) : null}
             </Box>
-            <Snackbar
-                open={snackbarOpen}
-                autoHideDuration={2000}
-                onClose={(event, reason) => {
-                    handleSnackbarClose(event, reason);
-                    setSnackbarOpen(false);
-                }}
-                anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
-                action={<React.Fragment>
-                    <Button color="secondary" size="small" onClick={handleSnackbarClick}>
-                        Jump
-                    </Button><IconButton
-                        size="small"
-                        aria-label="close"
-                        color="inherit"
-                        onClick={(event, reason) => {handleSnackbarClose(event, reason); setSnackbarOpen(false);}}
-                    >
-                        <CloseIcon fontSize="small" />
-                    </IconButton></React.Fragment>}
-                message={snackbarOptions.message}
-            />
         </Box>
     );
 };
@@ -271,7 +245,9 @@ const AppContent: React.FC = () => {
 const App: React.FC = () => {
     return (
         <DataProvider>
-            <AppContent />
+            <SnackbarProvider>
+                <AppContent />
+            </SnackbarProvider>
         </DataProvider>
     );
 };
