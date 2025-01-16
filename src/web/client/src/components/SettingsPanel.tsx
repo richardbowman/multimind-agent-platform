@@ -346,29 +346,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     </FormControl>
                 );
             case 'number':
-                if (metadata.type === 'slider') {
-                    return (
-                        <Box sx={{ width: '100%' }}>
-                            <Typography gutterBottom>
-                                {metadata.label}: {value}
-                            </Typography>
-                            <Slider
-                                value={value}
-                                onChange={(_, newValue) => handleChange(metadata.key, newValue)}
-                                min={metadata.min || 0}
-                                max={metadata.max || 100}
-                                step={metadata.step || 1}
-                                valueLabelDisplay="auto"
-                                sx={{ width: '95%', ml: '2.5%' }}
-                            />
-                            {metadata.description && (
-                                <Typography variant="caption" color="text.secondary">
-                                    {metadata.description}
-                                </Typography>
-                            )}
-                        </Box>
-                    );
-                }
                 return (
                     <TextField
                         type="number"
@@ -378,6 +355,28 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         variant="outlined"
                         fullWidth
                     />
+                );
+            case 'slider':
+                return (
+                    <Box sx={{ width: '100%' }}>
+                        <Typography gutterBottom>
+                            {metadata.label}: {value}
+                        </Typography>
+                        <Slider
+                            value={value}
+                            onChange={(_, newValue) => handleChange(metadata.key, newValue)}
+                            min={metadata.min || 0}
+                            max={metadata.max || 100}
+                            step={metadata.step || 1}
+                            valueLabelDisplay="auto"
+                            sx={{ width: '95%', ml: '2.5%' }}
+                        />
+                        {metadata.description && (
+                            <Typography variant="caption" color="text.secondary">
+                                {metadata.description}
+                            </Typography>
+                        )}
+                    </Box>
                 );
             default:
                 return (
