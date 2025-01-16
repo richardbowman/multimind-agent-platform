@@ -22,37 +22,39 @@ export class ElectronIPCService extends BaseRPCService {
     }
 
     private setupRPC(clientMethods: ClientMethods) {
-        // Initialize birpc
-        const safeHandlers = createSafeRPCHandlers();
+        if (this.rpc) {
+            this.wrapper = clientMethods;
+        } else {
+            // Initialize birpc
+            const safeHandlers = createSafeRPCHandlers();
 
-        const methods : ClientMethods = {
-            
+            this.rpc = createBirpc<ServerMethods, ClientMethods>(
+                {
+                    onBackendStatus: (arg) => this.wrapper.onBackendStatus.call(this, arg),
+                },
+                {
+                    post: (data) => {
+                        (window as any).electron.send('birpc', data);
+                    },
+                    on: (handler) => {
+                        const cleanup = (window as any).electron.receive('birpc', handler);
+                        return () => cleanup();
+                    },
+                    serialize: safeHandlers.serialize,
+                    deserialize: safeHandlers.deserialize,
+                    timeout: 180000
+                }
+            );
+            this.on("onBackendStatus",  (status: { configured: boolean; ready: boolean; message?: string }) => {
+                this.status = status;
+                if (this.connected) {
+                    this.fireStatus();
+                }
+            });
+
         }
-
-        this.rpc = createBirpc<ServerMethods, ClientMethods>(
-            {
-                ...methods
-            },
-            {
-                post: (data) => {
-                    (window as any).electron.send('birpc', data);
-                },
-                on: (handler) => {
-                    const cleanup = (window as any).electron.receive('birpc', handler);
-                    return () => cleanup();
-                },
-                serialize: safeHandlers.serialize,
-                deserialize: safeHandlers.deserialize,
-                timeout: 180000
-            }
-        );
-        this.on("onBackendStatus",  (status: { configured: boolean; ready: boolean; message?: string }) => {
-            this.status = status;
-            if (this.connected) {
-                this.fireStatus();
-            }
-        });
     }
+
     fireStatus() {
         console.log('FIRE STATUS', this.status);
         if (this.status.configured) {
