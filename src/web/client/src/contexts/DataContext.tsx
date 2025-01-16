@@ -98,43 +98,6 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [isLoading, setIsLoading] = useState(true);
   const [needsConfig, setNeedsConfig] = useState(true);
 
-  useEffect(() => {
-    console.debug('WebSocketContext stable mount - setting up listeners');
-
-    // Setup event listeners
-    const connectedHandler = () => {
-      console.debug('WebSocketContext: received connected event');
-      setNeedsConfig(false);
-      Promise.all([
-        fetchChannels(),
-        fetchHandles()
-      ]).catch(error => {
-        console.error('Error fetching initial data:', error);
-      });
-    };
-
-    const needsConfigHandler = ({ needsConfig }: { needsConfig: boolean }) => {
-      setNeedsConfig(needsConfig);
-    };
-
-    ipcService.on('connected', connectedHandler);
-    ipcService.on('needsConfig', needsConfigHandler);
-
-    // Connect after setting up listeners
-    const connectTimeout = setTimeout(() => {
-      console.debug('WebSocketContext: initiating connection');
-      ipcService.connect();
-    }, 100); // Small delay to ensure context is fully initialized
-
-    return () => {
-      console.debug('WebSocketContext unmounting');
-      clearTimeout(connectTimeout);
-      ipcService.off('connected', connectedHandler);
-      ipcService.off('needsConfig', needsConfigHandler);
-      ipcService.disconnect();
-    };
-  }, [ipcService]);
-
   // Fetch messages whenever channel or thread changes
   useEffect(() => {
     const loadChannelData = async () => {
@@ -357,6 +320,38 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     service.setupRPC();
     return service;
   }, [clientMethods]);
+
+  useEffect(() => {
+    console.debug('WebSocketContext stable mount - setting up listeners');
+
+    // Setup event listeners
+    const connectedHandler = () => {
+      console.debug('WebSocketContext: received connected event');
+      setNeedsConfig(false);
+      Promise.all([
+        fetchChannels(),
+        fetchHandles()
+      ]).catch(error => {
+        console.error('Error fetching initial data:', error);
+      });
+    };
+
+    const needsConfigHandler = ({ needsConfig }: { needsConfig: boolean }) => {
+      setNeedsConfig(needsConfig);
+    };
+
+    ipcService.on('connected', connectedHandler);
+    ipcService.on('needsConfig', needsConfigHandler);
+
+    ipcService.connect();
+
+    return () => {
+      console.debug('WebSocketContext unmounting');
+      ipcService.off('connected', connectedHandler);
+      ipcService.off('needsConfig', needsConfigHandler);
+      ipcService.disconnect();
+    };
+  }, [ipcService]);  
 
   return (
     <IPCContext.Provider value={ipcService}>
