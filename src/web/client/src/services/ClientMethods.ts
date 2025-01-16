@@ -4,9 +4,7 @@ import { ClientMethods } from '../../../../shared/RPCInterface';
 import { ClientMessage, ClientTask } from '../../../../shared/types';
 import { useSnackbar } from '../contexts/SnackbarContext';
 
-export const createClientMethods = (contextMethods: DataContextMethods) => {
-  const { showSnackbar } = useSnackbar();
-  
+export const createClientMethods = (contextMethods: DataContextMethods, showSnackbar: (options: any) => void) => {
   return {
     onClientLogProcessed: async (success, message) => {
         return
