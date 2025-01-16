@@ -73,6 +73,26 @@ export class CreateChannelExecutor implements StepExecutor {
         
         // Extract channel creation requirements from the goal
         const channelPurpose = goal;
+        
+        // Generate a channel name using the LLM
+        const namePrompt = `Generate a concise, descriptive channel name for a channel with this purpose:
+${channelPurpose}
+
+The name should:
+- Be 2-4 words
+- Use lowercase with hyphens between words
+- Be clear and specific
+- Avoid special characters except hyphens
+
+Return ONLY the channel name.`;
+
+        const nameResponse = await this.modelHelpers.model.sendLLMRequest({
+            messages: [{ role: 'user', content: namePrompt }],
+            parseJSON: false
+        });
+        
+        const channelName = nameResponse.message?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') || channelPurpose.toLowerCase().replace(/\s+/g, '-');
+        
         const selectedTemplate = await this.findBestTemplate(channelPurpose);
 
         if (!selectedTemplate) {
@@ -87,7 +107,7 @@ export class CreateChannelExecutor implements StepExecutor {
 
         // Create the channel using the selected template
         const channelId = await this.createChannel({
-            name: channelPurpose,
+            name: channelName,
             description: `Channel for: ${channelPurpose}`,
             isPrivate: false,
             members: selectedTemplate.supportingAgents,
@@ -96,7 +116,7 @@ export class CreateChannelExecutor implements StepExecutor {
         });
 
         // Generate a detailed explanation using the LLM
-        const explanationPrompt = `You just created a new channel called "${channelPurpose}" using the "${selectedTemplate.name}" template. 
+        const explanationPrompt = `You just created a new channel called "${channelName}" using the "${selectedTemplate.name}" template. 
 The channel includes these supporting agents: ${selectedTemplate.supportingAgents.join(', ')}.
 The channel's purpose is: ${channelPurpose}
 
