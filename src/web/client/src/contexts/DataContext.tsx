@@ -203,6 +203,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
         total: newLogs.total
       }
     }));
+    return newLogs;
   }, []);
 
 
