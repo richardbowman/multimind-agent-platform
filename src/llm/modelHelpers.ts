@@ -363,17 +363,19 @@ export class ModelHelpers {
         const history = (params as HandlerParams).threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
         const response = await this.model.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:params.message||params.content||""}, history);
 
-        if (typeof response === "string") {
-            // Cache the response
-            this.modelCache.set(instructions, cacheContext, response);
-            return response;
-        } else {
-            (response as RequestArtifacts).artifactIds = params.artifacts?.map(a => a.id);
-            
-            // Cache the response
-            this.modelCache.set(instructions, cacheContext, response);
-            
-            return response;
+        // Ensure response is an object with message property
+        const formattedResponse: ModelMessageResponse = typeof response === "string" 
+            ? { message: response }
+            : response;
+
+        // Set artifact IDs if we have any
+        if (params.artifacts?.length) {
+            formattedResponse.artifactIds = params.artifacts.map(a => a.id);
         }
+
+        // Cache the response
+        this.modelCache.set(instructions, cacheContext, formattedResponse);
+        
+        return formattedResponse;
     }
 }
