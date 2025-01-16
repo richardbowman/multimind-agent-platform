@@ -185,8 +185,8 @@ export class LogReader extends EventEmitter {
         
         this.updateCache();
 
-        // Start with most recent logs first
-        let filtered = [...this.logCache].reverse();
+        // Start with logs in chronological order
+        let filtered = [...this.logCache];
         let filterTime = 0;
         let paginationTime = 0;
         
@@ -222,9 +222,8 @@ export class LogReader extends EventEmitter {
         const paginationStart = Date.now();
         const offset = params.offset || 0;
         const limit = params.limit || 100;
-        // Reverse the filtered logs to show most recent first
-        const reversed = filtered.reverse();
-        const paginated = reversed.slice(offset, offset + limit);
+        // Get the requested page of logs
+        const paginated = filtered.slice(offset, offset + limit);
         paginationTime = Date.now() - paginationStart;
 
         Logger.verbose(`Processed getLogs in ${Date.now() - startTime}ms (Filter: ${filterTime}ms, Pagination: ${paginationTime}ms) - Returning ${paginated.length} of ${filtered.length} entries`);

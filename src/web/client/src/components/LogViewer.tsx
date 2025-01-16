@@ -186,22 +186,22 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                     overflowY: 'auto', 
                     padding: 1,
                     display: 'flex',
-                    flexDirection: 'column-reverse' // Reverse order
+                    flexDirection: 'column'
                 }}
                 onScroll={(e) => {
                     const { scrollTop } = e.currentTarget;
                     console.log('ScrollTop:', scrollTop);
-                    if (scrollTop > -10 && hasMore) {
+                    if (scrollTop < 100 && hasMore) {
                         loadMoreLogs();
                     }
                 }}
             >
+                {renderLogs()}
                 {hasMore && (
                     <Box sx={{ textAlign: 'center', py: 2 }}>
                         Loading more logs...
                     </Box>
                 )}
-                {renderLogs()}
             </Box>
         </Box>
     );
