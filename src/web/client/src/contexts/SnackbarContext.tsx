@@ -33,8 +33,7 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         setOptions({
           message: logEntry.message,
           severity: logEntry.type || 'progress',
-          percentComplete: logEntry.details?.percentComplete,
-          persist: true,
+          percentComplete: logEntry.details?.percentComplete
         });
         setOpen(true);
       });
@@ -64,7 +63,7 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       {children}
       <Snackbar
         open={open}
-        autoHideDuration={options.persist ? null : 2000}
+        autoHideDuration={options.persist ? null : 6000}
         onClose={handleClose}
         anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
         action={

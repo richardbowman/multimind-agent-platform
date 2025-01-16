@@ -108,7 +108,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         });
 
         const docId = crypto.randomUUID();
-        await saveToFile(projectId, type, docId, content);
+        // await saveToFile(projectId, type, docId, content);
 
         const chunks = await splitter.createDocuments([content]);
 
@@ -158,10 +158,8 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     }
 
     async reindexCollection(name: string): Promise<void> {
-        await syncQueue.enqueue(async () => {
-            await this.clearCollection();
-            await this.initializeCollection(name);
-        });
+        await this.clearCollection();
+        await this.initializeCollection(name);
     }
 
     async getTokenCount(content: string): Promise<number> {

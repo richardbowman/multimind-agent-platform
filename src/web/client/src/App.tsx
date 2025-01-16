@@ -54,17 +54,6 @@ const AppContent: React.FC = () => {
         needsConfig
     } = useWebSocket();
 
-    useEffect(() => {
-        const handleProgressUpdate = (log: { message: string, type?: string }) => {
-            showSnackbar({
-                message: log.message,
-                severity: log.type || 'info'
-            });
-        };
-
-        // Assuming you have an electron or similar IPC service
-        (window as any).electron.status(handleProgressUpdate);
-    }, [showSnackbar]);
     const ipcService = useIPCService();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings'>('chat');
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);

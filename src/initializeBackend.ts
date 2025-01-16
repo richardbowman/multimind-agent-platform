@@ -10,6 +10,7 @@ import { LogReader } from "./server/LogReader";
 import { SettingsManager } from "./tools/settingsManager";
 import { getDataPath } from "./helpers/paths";
 import path from "path";
+import { sleep } from "./utils/sleep";
 
 export async function initializeBackend(settingsManager: SettingsManager, options: { 
     reindex?: boolean
@@ -20,6 +21,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     Logger.progress('Initializing LLM services...', 0.1);
     const chatService = LLMServiceFactory.createService(_s);
     const embeddingService = LLMServiceFactory.createEmbeddingService(_s);
+    await sleep();
 
     // Initialize the models
     try {
@@ -30,10 +32,13 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     } catch (error) {
         throw error;
     }
+    await sleep();
 
     Logger.progress('Loading vector database', 0.3);
     const vectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
     const artifactManager = new ArtifactManager(vectorDB);
+
+    await sleep();
 
     vectorDB.on("needsReindex", async () => {
         Logger.progress("Reindexing vector database", 0.4);
@@ -50,9 +55,11 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     // Load previously saved tasks
     Logger.progress("Loading tasks", 0.6);
     await tasks.load();
+    await sleep();
 
     Logger.progress("Loading chats", 0.6);
     await chatStorage.load();
+    await sleep();
 
     // Handle graceful shutdown
     async function shutdown() {
@@ -119,6 +126,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         llmLogger: chatService.getLogger(),
         logReader: new LogReader(),
         llmService: chatService,
+        vectorDB,
         cleanup: shutdown,
     };
 }

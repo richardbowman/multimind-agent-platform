@@ -19,21 +19,21 @@ export class ArtifactManager {
     this.fileQueue = new AsyncQueue();
 
     // Ensure the .output directory exists
-    this.fileQueue.enqueue(() => 
+    this.fileQueue.enqueue(() =>
       fs.mkdir(this.storageDir, { recursive: true })
     ).catch(err => Logger.error('Error creating output directory:', err));
   }
 
   async getArtifacts(filter: { type?: string } = {}): Promise<Artifact[]> {
     const artifacts = await this.listArtifacts();
-    
+
     if (filter.type) {
       return artifacts.filter(artifact => artifact.type === filter.type);
     }
-    
+
     return artifacts;
   }
-  
+
   private async loadArtifactMetadata(): Promise<Record<string, any>> {
     try {
       const data = await this.fileQueue.enqueue(() =>
@@ -70,7 +70,7 @@ export class ArtifactManager {
     }
 
     try {
-      await this.fileQueue.enqueue(() => 
+      await this.fileQueue.enqueue(() =>
         fs.mkdir(artifactDir, { recursive: true })
       );
     } catch (error) {
@@ -83,10 +83,10 @@ export class ArtifactManager {
     }
 
     // Ensure content is always a string or Buffer
-    const content = typeof artifact.content === 'string' ? 
-      artifact.content : 
-      Buffer.isBuffer(artifact.content) ? 
-        artifact.content : 
+    const content = typeof artifact.content === 'string' ?
+      artifact.content :
+      Buffer.isBuffer(artifact.content) ?
+        artifact.content :
         JSON.stringify(artifact.content);
 
     const filePath = path.join(artifactDir, `${artifact.type}_v${version}.md`);
@@ -106,6 +106,12 @@ export class ArtifactManager {
     // Save updated metadata
     await this.saveArtifactMetadata(metadata);
 
+    await this.indexArtifact(artifact);
+
+    return artifact;
+  }
+
+  protected async indexArtifact(artifact: Artifact): Promise<void> {
     // Index the artifact into Chroma
     await this.vectorDb.handleContentChunks(
       artifact.content.toString(),
@@ -116,8 +122,6 @@ export class ArtifactManager {
       artifact.type,
       artifact.id
     );
-
-    return artifact;
   }
 
   async loadArtifact(artifactId: string, version?: number): Promise<Artifact | undefined> {
@@ -168,7 +172,7 @@ export class ArtifactManager {
   async deleteArtifact(artifactId: string): Promise<void> {
     // Load current metadata
     const metadata = await this.loadArtifactMetadata();
-    
+
     // Check if artifact exists
     if (!metadata[artifactId]) {
       throw new Error(`Artifact ${artifactId} not found`);
@@ -199,19 +203,12 @@ export class ArtifactManager {
   async indexArtifacts(reindex: boolean = false): Promise<void> {
     const artifacts = await this.listArtifacts();
     Logger.info(`Indexing ${artifacts.length} artifacts`);
-    
-    for (const artifact of artifacts) {
-      await this.vectorDb.handleContentChunks(
-        artifact.content.toString(),
-        artifact.metadata?.url || '',
-        artifact.metadata?.task || 'summary',
-        artifact.metadata?.projectId || artifact.id,
-        artifact.metadata?.title || artifact.type,
-        artifact.type,
-        artifact.id
-      );
+
+    for (let i = 0; i < artifacts.length; i++) {
+      Logger.progress(`Indexing ${i} of ${artifacts.length} artifacts`, i/artifacts.length)
+      await this.indexArtifact(artifacts[i]);
     }
-    
+
     Logger.info('Finished indexing artifacts');
   }
 }

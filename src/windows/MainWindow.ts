@@ -58,14 +58,12 @@ export class MainWindow {
         this.window.webContents.setZoomLevel(1);          
     }
 
-    setMessage(message: any) {
-        if (!this.window.isDestroyed) {
-            this.window.webContents.send('status', message);
-        }
+    setMessage(message: string) {
+        this.window.webContents.send('status', { message });
     }
 
     onInfo(logEntry) {
-        this.setMessage(logEntry);
+        this.window.webContents.send('status', logEntry);
     }
 
     getWindow(): BrowserWindow {

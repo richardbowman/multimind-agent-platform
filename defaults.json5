@@ -1,4 +1,7 @@
 {
+  "defaultChannels": {
+    "onboarding": "6eda3cc4-2762-4cbc-917c-820458dc1ef6",
+  },
   "agents": {
     "RouterAgent": {
       "className": "RouterAgent",

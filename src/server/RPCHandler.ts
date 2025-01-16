@@ -2,7 +2,7 @@ import { BackendServices } from "../types/BackendServices";
 import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
 import Logger from "../helpers/logger";
 import { ChatPost } from "../chat/chatClient";
-import { ClientMessage } from "src/shared/types";
+import { ClientMessage, ClientTask } from "src/shared/types";
 import { ClientChannel } from "src/shared/types";
 import { ClientThread } from "src/shared/types";
 import { LLMCallLogger } from "../llm/LLMLogger";
@@ -37,10 +37,13 @@ export class ServerRPCHandler implements ServerMethods {
         });
     }
 
-    async getSettings(): Promise<any> {
+    async getSettings(): Promise<Settings> {
         const settings = this.services.settingsManager.getSettings();
-        const defaults = new Settings();
-        const clientSettings = getClientSettingsMetadata(defaults);
+
+        // test getting defaults
+        // const defaults = new Settings();
+        // const clientSettings = getClientSettingsMetadata(defaults);
+
         return settings;
     }
 
@@ -103,14 +106,13 @@ export class ServerRPCHandler implements ServerMethods {
 
     async rebuildVectorDB(): Promise<void> {
         Logger.info('Rebuilding VectorDB...');
-        // Get all collections
-        const collections = await this.services.vectorDB.listCollections();
-        
-        // Reindex each collection
-        for (const collection of collections) {
-            Logger.info(`Reindexing collection: ${collection.name}`);
-            await this.services.vectorDB.reindexCollection(collection.name);
-        }
+
+        const _s = await this.getSettings();
+
+        Logger.info(`Reindexing collection: ${_s.chromaCollection}`);
+        await this.services.vectorDB.reindexCollection(_s.chromaCollection);
+
+        await this.services.artifactManager.indexArtifacts(true);
         
         Logger.info('VectorDB rebuild complete');
     }

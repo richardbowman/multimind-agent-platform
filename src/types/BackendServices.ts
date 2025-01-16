@@ -7,6 +7,7 @@ import { SettingsManager } from "../tools/settingsManager";
 
 import { MainWindow } from "../windows/MainWindow";
 import { ILLMService } from "src/llm/ILLMService";
+import { IVectorDatabase } from "src/llm/IVectorDatabase";
 
 export interface BackendServicesWithWindows extends BackendServices {
     mainWindow: MainWindow;
@@ -25,6 +26,7 @@ export interface BackendServices extends BackendServicesOnly {
     llmLogger: LLMCallLogger;
     logReader: LogReader;
     llmService: ILLMService;
+    vectorDB: IVectorDatabase;
 }
 
 export interface BackendServicesOnly {
