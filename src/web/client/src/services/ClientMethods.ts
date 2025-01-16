@@ -11,12 +11,13 @@ export const useClientMethods = (showSnackbar: (options: any) => void, contextMe
         },
 
         onMessage: async (messages: ClientMessage[]) => {
-            // Find the latest message from a different channel/thread
+            // Find the latest message from a different channel/thread or not the current thread root
             const latestMessage = messages
                 .filter(message => 
                     message.channel_id !== contextMethods.currentChannelId || 
                     (message.channel_id === contextMethods.currentChannelId && 
-                     message.thread_id !== contextMethods.currentThreadId)
+                     message.thread_id !== contextMethods.currentThreadId &&
+                     message.id !== contextMethods.currentThreadId)
                 )
                 .sort((a, b) => b.create_at - a.create_at)[0];
 
