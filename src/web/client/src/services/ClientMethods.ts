@@ -70,6 +70,17 @@ export function createClientMethods(contextMethods: DataContextMethods, showSnac
                         ]
                     }
                 }));
+            } else if (update.type === 'system') {
+                contextMethods.setLogs(prev => ({
+                    ...prev,
+                    system: {
+                        logs: [
+                            ...(prev.system.logs || []),
+                            update.entry
+                        ],
+                        total: (prev.system.total || 0) + 1
+                    }
+                }));
             }
         },
 
