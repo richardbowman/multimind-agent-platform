@@ -12,11 +12,10 @@ export class ElectronIPCService extends BaseRPCService {
 
     private showSnackbar: (options: any) => void;
     
-    constructor(contextMethods: DataContextMethods, showSnackbar: (options: any) => void) {
+    constructor(clientMethods: ReturnType<typeof createClientMethods>) {
         super();
         this.connected = false;
-        this.contextMethods = contextMethods;
-        this.showSnackbar = showSnackbar;
+        this.clientMethods = clientMethods;
         if (!(window as any).electron) {
             throw new Error('Electron IPC not available');
         }
@@ -34,7 +33,7 @@ export class ElectronIPCService extends BaseRPCService {
         const safeHandlers = createSafeRPCHandlers();
         this.rpc = createBirpc<ServerMethods, ClientMethods>(
             {
-                ...createClientMethods(this.contextMethods, this.showSnackbar)
+                ...this.clientMethods
             },
             {
                 post: (data) => {
