@@ -450,7 +450,12 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             // Get the provider type from the key (e.g. models.conversation.lmstudio)
                             const providerType = meta.key.split('.')[2];
                             
-                            // Show only settings for the selected provider
+                            // For embedding models, check against embeddings provider
+                            if (meta.key.includes('embedding')) {
+                                return providerType === settings.providers?.embeddings;
+                            }
+                            
+                            // For chat models, check against chat provider
                             return providerType === settings.providers?.chat;
                         })
                         : metadataList;
