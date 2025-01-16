@@ -21,7 +21,8 @@ describe('GoalConfirmationExecutor', () => {
             step: 'confirm',
             projectId: 'test-project',
             context: {
-                threadPosts: []
+                channelId: 'test-channel',
+                threadId: 'test-thread'
             },
             executionMode: 'conversation',
             agentId: 'test-agent',

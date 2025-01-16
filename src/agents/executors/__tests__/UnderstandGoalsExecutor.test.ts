@@ -54,12 +54,14 @@ describe('UnderstandGoalsExecutor', () => {
         mockModelHelpers.generate.mockResolvedValue(mockResponse);
         mockTaskManager.getProject.mockReturnValue({
             id: 'test-project',
+            name: 'Test Project',
             metadata: {
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 status: 'active'
             },
-            tasks: {}
+            tasks: {},
+            props: {}
         });
 
         const result = await executor.execute(mockParams);
@@ -81,12 +83,14 @@ describe('UnderstandGoalsExecutor', () => {
         mockModelHelpers.generate.mockResolvedValue(mockResponse);
         mockTaskManager.getProject.mockReturnValue({
             id: 'test-project',
+            name: 'Test Project',
             metadata: {
                 createdAt: new Date(),
                 updatedAt: new Date(),
                 status: 'active'
             },
-            tasks: {}
+            tasks: {},
+            props: {}
         });
 
         await executor.execute(mockParams);
