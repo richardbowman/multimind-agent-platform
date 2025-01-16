@@ -40,6 +40,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     const [isPrivate, setIsPrivate] = useState(false);
     const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+    const [defaultResponderId, setDefaultResponderId] = useState<string | null>(null);
 
     const webSocket = useWebSocket();
 
@@ -50,7 +51,8 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 description,
                 isPrivate,
                 members: selectedAgents,
-                goalTemplate: selectedTemplate
+                goalTemplate: selectedTemplate,
+                defaultResponderId: defaultResponderId || undefined
             });
             setOpen(false);
             setChannelName('');
@@ -193,7 +195,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                         ))}
                     </Grid>
 
-                    <FormControl fullWidth>
+                    <FormControl fullWidth sx={{ mb: 2 }}>
                         <InputLabel>Add Agents</InputLabel>
                         <Select
                             multiple
@@ -212,6 +214,22 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                     </MenuItem>
                                 );
                             })}
+                        </Select>
+                    </FormControl>
+
+                    <FormControl fullWidth>
+                        <InputLabel>Default Responding Agent</InputLabel>
+                        <Select
+                            value={defaultResponderId || ''}
+                            onChange={(e) => setDefaultResponderId(e.target.value as string)}
+                            disabled={selectedAgents.length === 0}
+                        >
+                            <MenuItem value="">None</MenuItem>
+                            {selectedAgents.map((agentId) => (
+                                <MenuItem key={agentId} value={agentId}>
+                                    {webSocket.handles.find(h => h.id === agentId)?.handle || 'Unknown'}
+                                </MenuItem>
+                            ))}
                         </Select>
                     </FormControl>
                 </DialogContent>
