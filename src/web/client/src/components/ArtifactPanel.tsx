@@ -4,7 +4,7 @@ import { useWebSocket } from '../contexts/DataContext';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { ArtifactViewer } from './ArtifactViewer';
-import { Box, Typography, List, Drawer, styled, useTheme, Divider } from '@mui/material';
+import { Box, Typography, List, Drawer, styled, useTheme, Divider, IconButton } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
