@@ -238,11 +238,14 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                     option.description?.toLowerCase().includes(inputValue))
                                 );
                             }}
-                            renderOption={(props, option) => (
-                                <Box 
-                                    component="li" 
-                                    {...props}
-                                    sx={{
+                            renderOption={(props, option) => {
+                                const { key, ...restProps } = props;
+                                return (
+                                    <Box 
+                                        component="li" 
+                                        key={key}
+                                        {...restProps}
+                                        sx={{
                                         display: 'flex',
                                         flexDirection: 'column',
                                         alignItems: 'flex-start',
@@ -304,7 +307,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                         </Typography>
                                     )}
                                 </Box>
-                            )}
+                            )}}
                             sx={{ width: '100%' }}
                             isOptionEqualToValue={(option, value) => option.id === value.id}
                         />
