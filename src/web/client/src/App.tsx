@@ -4,7 +4,8 @@ import MenuIcon from '@mui/icons-material/Menu';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
-import { useWebSocket, useIPCService, DataProvider } from './contexts/DataContext';
+import { useWebSocket, DataProvider } from './contexts/DataContext';
+import { IPCProvider } from './contexts/IPCContext';
 import { SnackbarProvider } from './contexts/SnackbarContext';
 import { LogProvider } from './contexts/LogContext';
 import { ChatPanel } from './components/ChatPanel';
@@ -246,9 +247,13 @@ const App: React.FC = () => {
     return (
         <SnackbarProvider>
             <DataProvider>
-                <LogProvider>
-                    <AppContent />
-                </LogProvider>
+                {({ contextMethods }) => (
+                    <IPCProvider contextMethods={contextMethods}>
+                        <LogProvider>
+                            <AppContent />
+                        </LogProvider>
+                    </IPCProvider>
+                )}
             </DataProvider>
         </SnackbarProvider>
     );

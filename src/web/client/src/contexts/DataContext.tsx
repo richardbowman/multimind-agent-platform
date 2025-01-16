@@ -9,8 +9,6 @@ import { useSnackbar } from './SnackbarContext';
 import { createClientMethods } from '../services/ClientMethods';
 const DataContext = createContext<DataContextMethods | null>(null);
 
-// Create a context for the IPC service
-const IPCContext = createContext<BaseRPCService | null>(null);
 
 export interface DataContextMethods {
   messages: ClientMessage[];
@@ -53,7 +51,9 @@ export interface DataContextMethods {
   markTaskComplete: (taskId: string, complete: boolean) => Promise<void>;
 }
 
-export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+export const DataProvider: React.FC<{ 
+  children: React.ReactNode | (({ contextMethods }: { contextMethods: DataContextMethods }) => React.ReactNode)
+}> = ({ children }) => {
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ClientChannel[]>([]);
   const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);
@@ -306,59 +306,12 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const { showSnackbar } = useSnackbar();
   
-  const clientMethods = useMemo(() => 
-    createClientMethods(contextMethods, showSnackbar),
-    [contextMethods, showSnackbar]
-  );
-
-  const ipcService = useMemo(() => {
-    const service = (window as any).electron
-      ? new ElectronIPCService(clientMethods)
-      : new WebSocketService(clientMethods);
-      
-    // Ensure context methods are properly bound
-    service.setupRPC();
-    return service;
-  }, [clientMethods]);
-
-  useEffect(() => {
-    console.debug('WebSocketContext stable mount - setting up listeners');
-
-    // Setup event listeners
-    const connectedHandler = () => {
-      console.debug('WebSocketContext: received connected event');
-      setNeedsConfig(false);
-      Promise.all([
-        fetchChannels(),
-        fetchHandles()
-      ]).catch(error => {
-        console.error('Error fetching initial data:', error);
-      });
-    };
-
-    const needsConfigHandler = ({ needsConfig }: { needsConfig: boolean }) => {
-      setNeedsConfig(needsConfig);
-    };
-
-    ipcService.on('connected', connectedHandler);
-    ipcService.on('needsConfig', needsConfigHandler);
-
-    ipcService.connect();
-
-    return () => {
-      console.debug('WebSocketContext unmounting');
-      ipcService.off('connected', connectedHandler);
-      ipcService.off('needsConfig', needsConfigHandler);
-      ipcService.disconnect();
-    };
-  }, [ipcService]);  
-
   return (
-    <IPCContext.Provider value={ipcService}>
-      <DataContext.Provider value={contextMethods}>
-        {children}
-      </DataContext.Provider>
-    </IPCContext.Provider>
+    <DataContext.Provider value={contextMethods}>
+      {typeof children === 'function' 
+        ? children({ contextMethods }) 
+        : children}
+    </DataContext.Provider>
   );
 };
 
@@ -370,10 +323,3 @@ export const useWebSocket = () => {
   return context;
 };
 
-export const useIPCService = () => {
-  const context = useContext(IPCContext);
-  if (!context) {
-    throw new Error('useIPCService must be used within a DataProvider');
-  }
-  return context;
-};
