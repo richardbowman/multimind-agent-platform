@@ -452,6 +452,30 @@ export class ServerRPCHandler implements ServerMethods {
         }
     }
 
+    async logClientEvent(level: string, message: string, details?: Record<string, any>): Promise<void> {
+        try {
+            // Log to both the main logger and LLM logger
+            Logger.log(level, `[CLIENT] ${message}`, details);
+            this.services.llmLogger.log({
+                type: 'client',
+                level,
+                message,
+                details,
+                timestamp: new Date().toISOString()
+            });
+            
+            // Notify client of successful logging
+            if (this.services.clientRPC) {
+                this.services.clientRPC.onClientLogProcessed(true);
+            }
+        } catch (error) {
+            Logger.error('Failed to process client log event:', error);
+            if (this.services.clientRPC) {
+                this.services.clientRPC.onClientLogProcessed(false, error.message);
+            }
+        }
+    }
+
     async getHandles(): Promise<Array<{id: string; handle: string}>> {
         const handleSet = await this.services.chatClient.getHandles();
         const handles = Object.entries(handleSet).map(([id, name]) => ({

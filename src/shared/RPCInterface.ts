@@ -26,6 +26,14 @@ export interface ServerMethods {
     updateSettings(settings: any): Promise<any>;
     getLogs(logType: 'llm' | 'system' | 'api'): Promise<any>;
     getHandles(): Promise<Array<{id: string; handle: string}>>;
+
+    /**
+     * Log a client-side error or event
+     * @param level - Log level (error, warn, info, debug)
+     * @param message - The log message
+     * @param details - Additional metadata about the error/event
+     */
+    logClientEvent(level: string, message: string, details?: Record<string, any>): Promise<void>;
     
     /**
      * Create a new channel
@@ -56,4 +64,11 @@ export interface ClientMethods {
     onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }): void;
     onTaskUpdate(task: ClientTask): void;
     onProjectUpdate(project: ClientProject): void;
+    
+    /**
+     * Callback when a client log event is successfully processed
+     * @param success - Whether the log was successfully recorded
+     * @param message - Optional status message
+     */
+    onClientLogProcessed(success: boolean, message?: string): void;
 }
