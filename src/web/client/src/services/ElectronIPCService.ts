@@ -2,14 +2,10 @@ import { createBirpc } from 'birpc';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../../../../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../../../../shared/rpcUtils';
-import { createClientMethods } from './ClientMethods';
-import { DataContextMethods } from '../contexts/DataContext';
 
 export class ElectronIPCService extends BaseRPCService {
     private status: { configured: boolean; ready: boolean; message?: string; };
     private connected: boolean;
-    private contextMethods: DataContextMethods;
-    private clientMethods: ReturnType<typeof createClientMethods>;
     
     constructor() {
         super();
@@ -22,16 +18,14 @@ export class ElectronIPCService extends BaseRPCService {
         this.setupRPC = this.setupRPC.bind(this);
         this.connect = this.connect.bind(this);
         this.disconnect = this.disconnect.bind(this);
-        
-        this.setupRPC();
     }
 
-    private setupRPC() {
+    private setupRPC(clientMethods: ClientMethods) {
         // Initialize birpc
         const safeHandlers = createSafeRPCHandlers();
         this.rpc = createBirpc<ServerMethods, ClientMethods>(
             {
-                ...this.clientMethods
+                ...clientMethods
             },
             {
                 post: (data) => {

@@ -1,12 +1,10 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
-import WebSocketService from '../services/WebSocketService';
-import { ElectronIPCService } from '../services/ElectronIPCService';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
-import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/types';
 import { CreateChannelParams } from '../../../../shared/channelTypes';
 import { useSnackbar } from './SnackbarContext';
-import { createClientMethods } from '../services/ClientMethods';
+import { useIPCService } from './IPCContext';
+import { useClientMethods } from '../services/ClientMethods';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 
@@ -55,6 +53,15 @@ export const DataProvider: React.FC<{
   children: React.ReactNode
 }> = ({ children }) => {
   const ipcService = useIPCService();
+  const clientMethods = useClientMethods();
+
+  
+  useEffect(() => {
+    if (ipcService && clientMethods) {
+      ipcService.setupRPC(clientMethods);
+    }
+  }, [ipcService, clientMethods]);
+
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ClientChannel[]>([]);
   const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);
@@ -65,6 +72,8 @@ export const DataProvider: React.FC<{
   });
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
 
+
+  
   const setCurrentChannelId = useCallback((channelId: string | null) => {
     if (channelId) {
       localStorage.setItem('lastChannelId', channelId);
