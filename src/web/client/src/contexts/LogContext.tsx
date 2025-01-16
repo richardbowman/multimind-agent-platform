@@ -12,7 +12,9 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const ipcService = useIPCService();
     
     const logger = useMemo(() => {
-        const logger = new ClientLogger(ipcService);
+        const logger = new ClientLogger((level, message, details) => {
+            return ipcService.getRPC().logClientEvent(level, message, details);
+        });
         logger.interceptConsole();
         logger.setupGlobalErrorHandlers();
         return logger;

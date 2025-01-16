@@ -2,6 +2,7 @@ export class ClientLogger {
     private logHandler: (level: string, message: string, details?: Record<string, any>) => Promise<void>;
     private originalConsole: typeof console;
     private isConsoleIntercepted = false;
+    private areErrorHandlersSetup = false;
 
     constructor(logHandler: (level: string, message: string, details?: Record<string, any>) => Promise<void>) {
         this.logHandler = logHandler;
@@ -12,6 +13,8 @@ export class ClientLogger {
      * Sets up global error handlers
      */
     public setupGlobalErrorHandlers(): void {
+        if (this.areErrorHandlersSetup) return;
+        
         // Handle uncaught exceptions
         window.addEventListener('error', (event) => {
             this.error(`Uncaught error: ${event.message}`, {
@@ -28,6 +31,8 @@ export class ClientLogger {
                 reason: event.reason?.stack || event.reason
             });
         });
+
+        this.areErrorHandlersSetup = true;
     }
 
     /**
