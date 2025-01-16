@@ -62,18 +62,50 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         return sanitizedText.replace(regex, '<mark>$1</mark>');
     };
 
+    const [page, setPage] = useState(1);
+    const [hasMore, setHasMore] = useState(true);
+    const pageSize = 50;
+
+    const loadMoreLogs = useCallback(async () => {
+        if (!hasMore) return;
+        
+        try {
+            const newLogs = await fetchLogs(currentLogTab, {
+                limit: pageSize,
+                offset: (page - 1) * pageSize,
+                filter: {
+                    search: filterText
+                }
+            });
+            
+            setPage(p => p + 1);
+            setHasMore(newLogs.total > page * pageSize);
+        } catch (error) {
+            console.error('Error loading more logs:', error);
+        }
+    }, [page, hasMore, currentLogTab, filterText, fetchLogs]);
+
+    useEffect(() => {
+        // Reset pagination when log type or filter changes
+        setPage(1);
+        setHasMore(true);
+        refreshLogs();
+    }, [currentLogTab, filterText]);
+
     const renderLogs = () => {
         switch (currentLogTab) {
             case 'llm':
                 return Object.entries(logs.llm).flatMap(([service, entries]) => 
-                    entries.filter(log => 
-                        filterLog(JSON.stringify({
-                            method: log.method,
-                            input: log.input,
-                            output: log.output,
-                            error: log.error
-                        }))
-                    ).map((log, index) => (
+                    entries
+                        .filter(log => 
+                            filterLog(JSON.stringify({
+                                method: log.method,
+                                input: log.input,
+                                output: log.output,
+                                error: log.error
+                            }))
+                        )
+                        .map((log, index) => (
                         <div key={`${service}-${index}`} className="log-entry info">
                             <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                             <span className="log-level">{service.toUpperCase()}</span>
@@ -148,7 +180,26 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                     {isLoading && <Box sx={{ ml: 2, color: '#999' }}>Loading...</Box>}
                 </LogToolbar>
             </AppBar>
-            <Box sx={{ flex: 1, overflowY: 'auto', padding: 1 }}>
+            <Box 
+                sx={{ 
+                    flex: 1, 
+                    overflowY: 'auto', 
+                    padding: 1,
+                    display: 'flex',
+                    flexDirection: 'column-reverse' // Reverse order
+                }}
+                onScroll={(e) => {
+                    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+                    if (scrollHeight - (scrollTop + clientHeight) < 100 && hasMore) {
+                        loadMoreLogs();
+                    }
+                }}
+            >
+                {hasMore && (
+                    <Box sx={{ textAlign: 'center', py: 2 }}>
+                        Loading more logs...
+                    </Box>
+                )}
                 {renderLogs()}
             </Box>
         </Box>
