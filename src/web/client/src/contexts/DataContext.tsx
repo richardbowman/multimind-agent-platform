@@ -93,11 +93,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     ipcService.connect();
 
     (window as any).electron.status(function(logEntry : any) {
-        showSnackbar({
-            message: logEntry.message,
-            severity: "progress",
-            percentComplete: logEntry.data.percentComplete
-        });
+        // Snackbar handling moved to SnackbarContext
     });
 
     return () => {
