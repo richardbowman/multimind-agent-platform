@@ -4,11 +4,11 @@ import DOMPurify from 'dompurify';
 import { AppBar, Toolbar, Tabs, Tab, TextField, Box, styled } from '@mui/material';
 
 interface LogViewerProps {
-    logType: 'llm' | 'system' | 'api';
+    logType: 'llm' | 'system';
 }
 
 export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType }) => {
-    const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>(initialLogType);
+    const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system'>(initialLogType);
     const { logs, fetchLogs } = useWebSocket();
     const [filterText, setFilterText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
@@ -32,16 +32,6 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         const handleLogUpdate = () => {
             refreshLogs();
         };
-
-        // Subscribe to log updates through RPC
-        const rpc = window.electron?.rpc;
-        if (rpc) {
-            rpc.onLogUpdate((update) => {
-                if (update.type === 'system') {
-                    refreshLogs();
-                }
-            });
-        }
 
         return () => {
             console.log('LogViewer: Cleaning up log subscription for type:', currentLogTab);
@@ -141,24 +131,13 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 return logs.system?.logs?.filter(log => 
                     filterLog(log.message)
                 ).map((log, index) => (
-                    <div key={index} className={`log-entry ${log.level.toLowerCase()}`}>
+                    <div key={index} className={`log-entry ${log.level?.toLowerCase()}`}>
                         <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                         <span className="log-level">{log.level}</span>
                         <span className="log-message" dangerouslySetInnerHTML={{ __html: highlightText(log.message) }} />
                     </div>
                 )) || [];
-            
-            case 'api':
-                return logs.api?.logs?.logs?.filter(log =>
-                    filterLog(JSON.stringify(log))
-                ).map((log, index) => (
-                    <div key={index} className="log-entry info">
-                        <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
-                        <span className="log-level">API</span>
-                        <span className="log-message" dangerouslySetInnerHTML={{ __html: highlightText(JSON.stringify(log, null, 2)) }} />
-                    </div>
-                )) || [];
-        }
+            }
     };
 
     const LogToolbar = styled(Toolbar)(({ theme }) => ({

@@ -23,7 +23,7 @@ export class MultiStepPlanner implements Planner {
     ) {}
 
     public async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
-        Logger.progress(`Planning steps for ${handlerParams.message}`);
+        Logger.progress(`Planning steps for ${handlerParams.userPost.message}`);
 
         const executorMetadata = Array.from(this.stepExecutors.entries())
             .map(([key, executor]) => {

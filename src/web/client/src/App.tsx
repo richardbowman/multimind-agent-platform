@@ -66,7 +66,7 @@ const AppContent: React.FC = () => {
             setCurrentTab('chat');
         }
     }, [needsConfig]);
-    const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('llm');
+    const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('system');
 
     return (
         <Box sx={{

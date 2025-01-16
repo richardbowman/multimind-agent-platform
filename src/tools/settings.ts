@@ -161,26 +161,6 @@ export interface AgentConfig {
     }[];
 }
 
-export class LLMProviders {
-    @ClientSettings({
-        label: 'Chat Provider',
-        category: 'LLM Settings',
-        type: 'select',
-        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp', 'deepseek'],
-        defaultValue: 'lmstudio'
-    })
-    chat: string = 'lmstudio';
-
-    @ClientSettings({
-        label: 'Embeddings Provider',
-        category: 'LLM Settings',
-        type: 'select',
-        options: ['openai', 'lmstudio', 'llama_cpp'],
-        defaultValue: 'local'
-    })
-    embeddings: string = 'llama_cpp';
-}
-
 export class LLMModels {
     @ClientSettings({
         label: 'Conversation Models',
@@ -245,7 +225,7 @@ export class ProvidersConfig {
         label: 'Chat Provider',
         category: 'LLM Settings',
         type: 'select',
-        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp'],
+        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp', 'deepseek'],
         defaultValue: 'lmstudio'
     })
     chat: string = 'lmstudio';
