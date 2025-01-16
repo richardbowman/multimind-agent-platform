@@ -4,7 +4,7 @@ import { useWebSocket } from '../contexts/DataContext';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { ArtifactViewer } from './ArtifactViewer';
-import { Box, Typography, List, Drawer, styled, useTheme, Divider, IconButton } from '@mui/material';
+import { Box, Typography, List, Drawer, styled, useTheme, Divider, IconButton, Button } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
@@ -136,10 +136,40 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                                 <CloseIcon />
                             </IconButton>
                         </Box>
-                        <ArtifactViewer
-                            artifact={selectedArtifact}
-                            onClose={() => setDrawerOpen(false)}
-                        />
+                        <Box sx={{ mb: 2 }}>
+                            <ArtifactViewer
+                                artifact={selectedArtifact}
+                                onClose={() => setDrawerOpen(false)}
+                            />
+                        </Box>
+                        {currentChannelId && (
+                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                                <Button
+                                    variant="contained"
+                                    color="primary"
+                                    startIcon={<AddIcon />}
+                                    onClick={() => {
+                                        if (currentChannelId && selectedArtifact) {
+                                            addArtifactToChannel(currentChannelId, selectedArtifact.id);
+                                        }
+                                    }}
+                                >
+                                    Add to Channel
+                                </Button>
+                                <Button
+                                    variant="outlined"
+                                    color="error"
+                                    startIcon={<RemoveIcon />}
+                                    onClick={() => {
+                                        if (currentChannelId && selectedArtifact) {
+                                            removeArtifactFromChannel(currentChannelId, selectedArtifact.id);
+                                        }
+                                    }}
+                                >
+                                    Remove from Channel
+                                </Button>
+                            </Box>
+                        )}
                     </Box>
                 )}
             </Drawer>

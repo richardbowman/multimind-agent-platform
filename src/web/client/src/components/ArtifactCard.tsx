@@ -62,27 +62,7 @@ export const ArtifactCard: React.FC<ArtifactCardProps> = ({
                     color: selected ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary'
                 }}
             />
-            <Box sx={{ display: 'flex', gap: 1 }}>
-                <Tooltip title="Add to channel">
-                    <IconButton
-                        size="small"
-                        onClick={onAddClick}
-                        sx={{ color: selected ? '#fff' : 'text.secondary' }}
-                    >
-                        <AddIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
-                <Tooltip title="Remove from channel">
-                    <IconButton
-                        size="small"
-                        onClick={onRemoveClick}
-                        sx={{ color: selected ? '#fff' : 'text.secondary' }}
-                    >
-                        <RemoveIcon fontSize="small" />
-                    </IconButton>
-                </Tooltip>
-                <ChevronRightIcon sx={{ color: selected ? '#fff' : 'text.secondary' }} />
-            </Box>
+            <ChevronRightIcon sx={{ color: selected ? '#fff' : 'text.secondary' }} />
         </ListItem>
     );
 };
