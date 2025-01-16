@@ -110,9 +110,18 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     </Box>
                 )}
                 <Box sx={{ display: 'flex', gap: 2 }}>
-                    <Box sx={{ width: '30%', overflowY: 'auto', p: 1 }}>
-                        <Typography variant="h6" sx={{ mb: 1 }}>Project Tasks</Typography>
-                        <List>
+                    <Box sx={{ 
+                        width: '30%',
+                        height: '70vh',
+                        overflowY: 'auto',
+                        p: 1,
+                        borderRight: '1px solid',
+                        borderColor: 'divider'
+                    }}>
+                        <Typography variant="h6" sx={{ mb: 1, position: 'sticky', top: 0, bgcolor: 'background.paper', zIndex: 1 }}>
+                            Project Tasks
+                        </Typography>
+                        <List sx={{ overflowY: 'auto' }}>
                             {projectTasks.map(task => (
                                 <TaskCard
                                     key={task.id}
@@ -123,7 +132,12 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                             ))}
                         </List>
                     </Box>
-                    <Box sx={{ width: '70%' }}>
+                    <Box sx={{ 
+                        width: '70%',
+                        height: '70vh',
+                        overflowY: 'auto',
+                        pl: 2
+                    }}>
                         {selectedTask && (
                             <Stack spacing={2} sx={{ mt: 1 }}>
                                 <Typography variant="body1">
