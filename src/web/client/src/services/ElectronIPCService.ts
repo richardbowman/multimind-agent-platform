@@ -69,17 +69,7 @@ export class ElectronIPCService extends BaseRPCService {
         if (this.status) {
             this.fireStatus();
         }
-        
-        // Restore last used channel after connection
-        const lastChannelId = localStorage.getItem('lastChannelId');
-        if (lastChannelId) {
-            // Use a small delay to ensure context is ready
-            setTimeout(() => {
-                if (this.clientMethods.setCurrentChannelId) {
-                    this.clientMethods.setCurrentChannelId(lastChannelId);
-                }
-            }, 100);
-        }
+
     }
 
     disconnect(): void {

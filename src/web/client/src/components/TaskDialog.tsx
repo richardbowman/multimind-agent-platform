@@ -118,7 +118,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                     sx={{
                                         mb: 1,
                                         bgcolor: task.id === selectedTask?.id 
-                                            ? 'primary.light' 
+                                            ? 'primary.dark' 
                                             : task.inProgress 
                                                 ? 'warning.light'
                                                 : task.complete

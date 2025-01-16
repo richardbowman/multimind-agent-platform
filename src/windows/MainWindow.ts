@@ -20,8 +20,8 @@ export class MainWindow {
         this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
             ...options,
-            width: Math.round(width * initialZoom),
-            height: Math.round(height * initialZoom),
+            width: Math.round(width * this.zoomLevel),
+            height: Math.round(height * this.zoomLevel),
             webPreferences: {
                 preload: path.join(__dirname, './preload.js'),
                 contextIsolation: true,
@@ -91,8 +91,8 @@ export class MainWindow {
             await this.window.loadFile(path.join(__dirname, './web/index.html'));
         }
         this.window.show();
-        this.window.webContents.setZoomFactor(this.zoomLevel);
-        this.window.webContents.setZoomLevel(1);          
+        this.window.webContents.setZoomFactor(1);
+        this.window.webContents.setZoomLevel(this.zoomLevel);          
     }
 
     setMessage(message: string) {

@@ -1,11 +1,10 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
-import { IconButton, Tooltip } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { ArtifactViewer } from './ArtifactViewer';
-import { Box, Typography, List, ListItem, ListItemText, ListItemIcon, Drawer, IconButton, styled, useTheme, Divider } from '@mui/material';
+import { Box, Typography, List, ListItem, ListItemText, ListItemIcon, Drawer, IconButton, Tooltip, styled, useTheme, Divider } from '@mui/material';
 import FolderIcon from '@mui/icons-material/Folder';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
