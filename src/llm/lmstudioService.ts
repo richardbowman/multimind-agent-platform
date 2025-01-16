@@ -203,18 +203,29 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         }
     }
 
-    private async getAvailableModelsInternal(): Promise<string[]> {
+    private async getAvailableModelsInternal(): Promise<ModelInfo[]> {
         try {
             // Get both loaded and available models
             const loadedModels = await this.lmStudioClient.llm.listLoaded();
             const availableModels = await this.lmStudioClient.llm.listModels();
             
-            // Combine and deduplicate model identifiers
+            // Combine and deduplicate models
             const allModels = [...loadedModels, ...availableModels];
-            const uniqueIdentifiers = new Set<string>();
-            allModels.forEach(model => uniqueIdentifiers.add(model.identifier));
+            const uniqueModels = new Map<string, any>();
+            allModels.forEach(model => uniqueModels.set(model.identifier, model));
             
-            return Array.from(uniqueIdentifiers);
+            return Array.from(uniqueModels.values()).map(model => ({
+                id: model.identifier,
+                path: model.path,
+                name: model.name,
+                size: model.size,
+                lastModified: new Date(model.lastModified),
+                repo: model.repo,
+                author: model.author,
+                downloads: model.downloads,
+                likes: model.likes,
+                ggufFiles: model.ggufFiles
+            }));
         } catch (error) {
             await this.logger.logCall('getAvailableModels', {}, null, error);
             throw error;
