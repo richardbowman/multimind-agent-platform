@@ -190,6 +190,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 }}
                 onScroll={(e) => {
                     const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
+                    console.log(scrollHeight - (scrollTop + clientHeight), hasMore);
                     if (scrollHeight - (scrollTop + clientHeight) < 100 && hasMore) {
                         loadMoreLogs();
                     }
