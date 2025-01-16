@@ -12,7 +12,8 @@ import {
     ListItem,
     ListItemText
 } from '@mui/material';
-import { useWebSocket, useIPCService } from '../contexts/DataContext';
+import { useWebSocket } from '../contexts/DataContext';
+import { useIPCService } from '../contexts/IPCContext';
 import { useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 
