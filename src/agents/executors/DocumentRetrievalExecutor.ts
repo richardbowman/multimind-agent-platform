@@ -32,21 +32,61 @@ export class DocumentRetrievalExecutor implements StepExecutor {
         const searchResults = await this.vectorDB.query(
             [documentRequest], 
             {}, 
-            3 // Return top 3 matches
+            5 // Return top 5 matches for filtering
         );
 
-        // Retrieve the full content of the matching artifacts
-        const artifacts = await Promise.all(
-            searchResults.filter(result => result.metadata.artifactId).map(result => this.artifactManager.loadArtifact(result.metadata.artifactId))
+        // Get artifact metadata for filtering
+        const artifactMetadatas = await Promise.all(
+            searchResults
+                .filter(result => result.metadata.artifactId)
+                .map(async result => {
+                    const artifact = await this.artifactManager.loadArtifact(result.metadata.artifactId);
+                    return {
+                        id: artifact.id,
+                        title: artifact.metadata?.title || 'Untitled',
+                        contentPreview: artifact.content.slice(0, 200) + '...',
+                        score: result.score
+                    };
+                })
+        );
+
+        // Have LLM select the most relevant artifacts
+        const selectionPrompt = `You are helping select the most relevant documents for this request:
+"${documentRequest}"
+
+Here are the candidate documents:
+${artifactMetadatas.map((a, i) => 
+    `${i + 1}. ${a.title}\n` +
+    `   Preview: ${a.contentPreview}\n` +
+    `   Relevance Score: ${a.score.toFixed(2)}`
+).join('\n\n')}
+
+Select the most relevant documents (1-3) and explain your choices.`;
+
+        const selectionResponse = await this.modelHelpers.generate({
+            message: selectionPrompt,
+            systemPrompt: `You are a document selection expert. Analyze the request and available documents, then select the most relevant ones.`
+        });
+
+        // Parse selected artifact IDs from LLM response
+        const selectedIds = artifactMetadatas
+            .filter((_, i) => selectionResponse.message.includes(`${i + 1}.`))
+            .map(a => a.id);
+
+        // Retrieve full content of selected artifacts
+        const selectedArtifacts = await Promise.all(
+            selectedIds.map(id => this.artifactManager.loadArtifact(id))
         );
 
         return {
             finished: true,
             response: {
-                message: artifacts.map(a => a.content).join('\n\n'),
+                message: `Selected documents:\n\n${selectionResponse.message}\n\n` +
+                    `Document Contents:\n${selectedArtifacts.map(a => `# ${a.metadata?.title || 'Untitled'}\n\n${a.content}`).join('\n\n')}`,
                 data: {
-                    retrievedArtifactIds: artifacts.map(a => a.id),
-                    searchQuery: documentRequest
+                    retrievedArtifactIds: selectedIds,
+                    searchQuery: documentRequest,
+                    selectionReasoning: selectionResponse.message
                 }
             },
         };
