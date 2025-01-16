@@ -127,7 +127,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 );
             
             case 'system':
-                return logs.system?.logs?.logs?.filter(log => 
+                return logs.system?.logs?.filter(log => 
                     filterLog(log.message)
                 ).map((log, index) => (
                     <div key={index} className={`log-entry ${log.level.toLowerCase()}`}>
@@ -191,7 +191,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 onScroll={(e) => {
                     const { scrollTop } = e.currentTarget;
                     console.log('ScrollTop:', scrollTop);
-                    if (scrollTop < 100 && hasMore) {
+                    if (scrollTop > -10 && hasMore) {
                         loadMoreLogs();
                     }
                 }}
