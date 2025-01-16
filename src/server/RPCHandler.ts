@@ -499,9 +499,10 @@ export class ServerRPCHandler implements ServerMethods {
             throw new Error('Chat client is not initialized');
         }
 
-        // Always include the RouterAgent in the channel members and set as default responder
+        // Always include the RouterAgent in the channel members
         params.members = [...(params.members || []), 'router-agent'];
-        params.defaultResponderId = 'router-agent';
+        // Use the selected default responder or fallback to router-agent
+        params.defaultResponderId = params.defaultResponderId || 'router-agent';
 
         // If a goal template is specified, create a project with its tasks
         if (params.goalTemplate) {
