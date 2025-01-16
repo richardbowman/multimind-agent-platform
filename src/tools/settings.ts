@@ -237,7 +237,7 @@ export class ProvidersConfig {
         label: 'Embeddings Provider',
         category: 'Embeddings',
         type: 'select',
-        options: ['openai', 'cohere', 'huggingface', 'local', 'llama_cpp'],
+        options: ['openai', 'cohere', 'huggingface', 'local', 'llama_cpp', 'lmstudio'],
         defaultValue: 'llama_cpp'
     })
     embeddings: string = 'llama_cpp';
