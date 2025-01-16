@@ -28,29 +28,29 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             sx={{
                 mb: 1,
                 bgcolor: selected 
-                    ? 'primary.dark' 
+                    ? 'primary.light' 
                     : task.inProgress 
-                        ? 'warning.light'
+                        ? 'action.selected'
                         : task.complete
-                            ? 'success.light'
-                            : 'background.default',
+                            ? 'action.disabledBackground'
+                            : 'background.paper',
                 borderRadius: 1,
                 border: '1px solid',
                 borderColor: selected 
                     ? 'primary.main' 
                     : task.inProgress
-                        ? 'warning.main'
+                        ? 'primary.main'
                         : task.complete
-                            ? 'success.main'
+                            ? 'divider'
                             : 'divider',
                 cursor: 'pointer',
                 '&:hover': {
                     bgcolor: selected 
-                        ? 'primary.dark' 
+                        ? 'primary.light' 
                         : task.inProgress
-                            ? 'warning.dark'
+                            ? 'action.hover'
                             : task.complete
-                                ? 'success.dark'
+                                ? 'action.disabledBackground'
                                 : 'action.hover'
                 },
                 textDecoration: task.complete ? 'line-through' : 'none',
@@ -75,7 +75,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
             <ListItemText
                 primary={task.description}
                 primaryTypographyProps={{ 
-                    color: task.inProgress ? '#000' : '#fff',
+                    color: 'text.primary',
                     whiteSpace: 'nowrap',
                     overflow: 'hidden',
                     textOverflow: 'ellipsis',
@@ -89,7 +89,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                             component="span"
                             sx={{ 
                                 display: 'block',
-                                color: task.inProgress ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                                color: 'text.secondary',
                                 textDecoration: task.complete ? 'line-through' : 'none',
                                 opacity: task.complete ? 0.7 : 1
                             }}
