@@ -69,7 +69,8 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                     limit: pageSize,
                     offset: loadedLogs.length,
                     filter: {
-                        search: filterText
+                        search: filterText,
+                        showVerbose: showVerbose
                     }
                 });
                 

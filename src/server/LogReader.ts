@@ -199,6 +199,12 @@ export class LogReader extends EventEmitter {
                     params.filter!.level!.includes(entry.level)
                 );
             }
+            
+            if (!params.filter.showVerbose) {
+                filtered = filtered.filter(entry =>
+                    entry.level.toLowerCase() !== 'verbose'
+                );
+            }
             if (params.filter.search) {
                 const search = params.filter.search.toLowerCase();
                 filtered = filtered.filter(entry =>

@@ -24,6 +24,7 @@ export interface ServerMethods {
             search?: string;
             startTime?: number;
             endTime?: number;
+            showVerbose?: boolean;
         };
     }): Promise<{
         logs: LogEntry[];
