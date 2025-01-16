@@ -1,12 +1,10 @@
-import { BaseRPCService } from "../../../../shared/BaseRPCService"
-
 export class ClientLogger {
-    private rpc: BaseRPCService;
+    private logHandler: (level: string, message: string, details?: Record<string, any>) => Promise<void>;
     private originalConsole: typeof console;
     private isConsoleIntercepted = false;
 
-    constructor(rpc: BaseRPCService) {
-        this.rpc = rpc;
+    constructor(logHandler: (level: string, message: string, details?: Record<string, any>) => Promise<void>) {
+        this.logHandler = logHandler;
         this.originalConsole = { ...console };
     }
 
@@ -83,7 +81,7 @@ export class ClientLogger {
 
     private async log(level: string, message: string, details?: Record<string, any>): Promise<void> {
         try {
-            await this.rpc.getRPC().logClientEvent(level, message, details);
+            await this.logHandler(level, message, details);
         } catch (error) {
             console.error('Failed to send client log:', error);
         }

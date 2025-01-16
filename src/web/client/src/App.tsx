@@ -6,6 +6,7 @@ import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
 import { useWebSocket, useIPCService, DataProvider } from './contexts/DataContext';
 import { SnackbarProvider } from './contexts/SnackbarContext';
+import { LogProvider } from './contexts/LogContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
@@ -69,22 +70,6 @@ const AppContent: React.FC = () => {
     }, [needsConfig]);
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system' | 'api'>('system');
 
-    const [logger] = useState(() => {
-        const logger = new ClientLogger(useIPCService());
-        logger.interceptConsole();
-        logger.setupGlobalErrorHandlers();
-        return logger;
-    });
-
-    useEffect(() => {
-        // Cleanup on unmount
-        return () => {
-            logger.restoreConsole();
-            // Clean up error handlers
-            window.removeEventListener('error', () => {});
-            window.removeEventListener('unhandledrejection', () => {});
-        };
-    }, [logger]);
 
     return (
         <Box sx={{
@@ -253,7 +238,9 @@ const App: React.FC = () => {
     return (
         <SnackbarProvider>
             <DataProvider>
-                <AppContent />
+                <LogProvider>
+                    <AppContent />
+                </LogProvider>
             </DataProvider>
         </SnackbarProvider>
     );
