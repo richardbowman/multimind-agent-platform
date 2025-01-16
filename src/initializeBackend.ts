@@ -94,7 +94,8 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             name: "#welcome",
             description: "This is where we'll get started",
             members: [_s.agents["OnboardingConsultant"].userId],
-            defaultResponderId: _s.agents["OnboardingConsultant"].userId
+            defaultResponderId: _s.agents["OnboardingConsultant"].userId,
+            goalTemplate: 'welcome-channel' // Use the template
         });
     }
 
