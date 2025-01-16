@@ -5,6 +5,7 @@ import type { LLMLogEntry } from '../../../../llm/LLMLogger';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/types';
 import { CreateChannelParams } from '../../../../shared/channelTypes';
+import { useSnackbar } from './SnackbarContext';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 // Create a context for the IPC service

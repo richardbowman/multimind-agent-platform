@@ -233,11 +233,11 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
     return (
-        <DataProvider>
-            <SnackbarProvider>
+        <SnackbarProvider>
+            <DataProvider>
                 <AppContent />
-            </SnackbarProvider>
-        </DataProvider>
+            </DataProvider>
+        </SnackbarProvider>
     );
 };
 

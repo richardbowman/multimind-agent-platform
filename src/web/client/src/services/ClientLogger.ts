@@ -1,15 +1,15 @@
-import { RPCService } from './RPCService';
+import { BaseRPCService } from "../../../../shared/BaseRPCService"
 
 export class ClientLogger {
-    private rpc: RPCService;
+    private rpc: BaseRPCService;
 
-    constructor(rpc: RPCService) {
+    constructor(rpc: BaseRPCService) {
         this.rpc = rpc;
     }
 
     private async log(level: string, message: string, details?: Record<string, any>): Promise<void> {
         try {
-            await this.rpc.logClientEvent(level, message, details);
+            //await this.rpc.logClientEvent(level, message, details);
         } catch (error) {
             console.error('Failed to send client log:', error);
         }

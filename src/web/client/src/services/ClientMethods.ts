@@ -14,7 +14,7 @@ export const createClientMethods = (contextMethods: DataContextMethods, showSnac
         // Find the latest message not in current thread
         const latestMessage = messages
             .filter(message => 
-                message.channel_id !== contextMethods.currentChannelId || 
+                message.channel_id !== contextMethods.currentChannelId && 
                 message.thread_id !== contextMethods.currentThreadId
             )
             .sort((a, b) => b.create_at - a.create_at)[0];

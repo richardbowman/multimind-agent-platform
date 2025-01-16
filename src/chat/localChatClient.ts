@@ -71,6 +71,7 @@ export class LocalChatStorage extends EventEmitter {
         super();
         this.storagePath = storagePath;
         this.queue = new AsyncQueue();
+        this.setMaxListeners(100);
     }
 
     async createChannel(params: CreateChannelParams): Promise<string> {

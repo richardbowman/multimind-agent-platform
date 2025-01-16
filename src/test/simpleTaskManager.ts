@@ -18,6 +18,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         super();
         this.filePath = filePath;
         Logger.info("Starting task manager (should not happen more than once)");
+        this.setMaxListeners(100);
     }
 
     async addTask(project: Project, addTask: AddTaskParams): Promise<Task> {
