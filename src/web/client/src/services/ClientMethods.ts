@@ -4,9 +4,7 @@ import { ClientMessage, ClientTask } from '../../../../shared/types';
 import { useMemo } from 'react';
 import { useSnackbar } from '../contexts/SnackbarContext';
 
-export const useClientMethods = (showSnackbar: (options: any) => void) => {
-    const contextMethods = useWebSocket();
-
+export const useClientMethods = (showSnackbar: (options: any) => void, contextMethods: DataContextMethods) => {
     return {
         onClientLogProcessed: async (success, message) => {
             return
@@ -16,15 +14,16 @@ export const useClientMethods = (showSnackbar: (options: any) => void) => {
             // Find the latest message not in current thread
             const latestMessage = messages
                 .filter(message =>
-                    message.channel_id !== contextMethods.currentChannelId &&
+                    message.channel_id !== contextMethods.currentChannelId ||
                     message.thread_id !== contextMethods.currentThreadId
                 )
                 .sort((a, b) => b.create_at - a.create_at)[0];
 
             if (latestMessage) {
+                console.log('message received', latestMessage);
                 const channelName = contextMethods.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
                 showSnackbar({
-                    message: `New message in ${channelName}`,
+                    message: `New message in #${channelName}`,
                     severity: 'info',
                     persist: true,
                     onClick: () => {
