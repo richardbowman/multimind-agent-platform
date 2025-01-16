@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useCallback } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { Snackbar, IconButton, Button } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SnackbarCloseReason } from '@mui/material/Snackbar';
@@ -25,6 +25,19 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     message: '',
     severity: 'info'
   });
+  
+  useEffect(() => {
+      // Assuming you have an electron or similar IPC service
+      (window as any).electron.status((logEntry) => {
+        setOptions({
+          message: logEntry.message,
+          severity: logEntry.type || 'info',
+          percentComplete: logEntry.data.percentComplete,
+          persist: true,
+        });
+        setOpen(true);
+      });
+  }, []);
 
   const showSnackbar = useCallback((newOptions: SnackbarOptions) => {
     setOptions(newOptions);
