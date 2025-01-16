@@ -10,8 +10,11 @@ export default class WebSocketService extends BaseRPCService {
   private socket: Socket | null = null;
   private isConnecting: boolean = false;
 
-  constructor() {
+  private showSnackbar: (options: any) => void;
+  
+  constructor(showSnackbar: (options: any) => void) {
     super();
+    this.showSnackbar = showSnackbar;
     // Initialize with a placeholder RPC instance
     this.setupPlaceholderRPC();
   }
@@ -48,7 +51,7 @@ export default class WebSocketService extends BaseRPCService {
         onLogUpdate: () => {},
         onBackendStatus: () => {},
         onTaskUpdate: () => {}
-      }),
+      }, this.showSnackbar),
       {
         post: (data) => {
           const stack = new Error().stack;
@@ -88,7 +91,7 @@ export default class WebSocketService extends BaseRPCService {
       // Set up the real RPC instance once connected
       const safeHandlers = createSafeRPCHandlers();
       this.rpc = createBirpc<ServerMethods, ClientMethods>(
-        createClientMethods(this.emit.bind(this)),
+        createClientMethods(this.emit.bind(this), this.showSnackbar),
         {
           post: (data) => {
             return this.socket!.emit('birpc', data);

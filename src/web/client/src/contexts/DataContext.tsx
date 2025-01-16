@@ -275,7 +275,7 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const ipcService = useMemo(() => {
     return (window as any).electron
       ? new ElectronIPCService(contextMethods, showSnackbar)
-      : new WebSocketService();
+      : new WebSocketService(showSnackbar);
   }, [showSnackbar]);
 
   return (
