@@ -6,7 +6,8 @@ import { createSafeRPCHandlers } from '../../../../shared/rpcUtils';
 export class ElectronIPCService extends BaseRPCService {
     private status: { configured: boolean; ready: boolean; message?: string; };
     private connected: boolean;
-    
+    private wrapper: ClientMethods;
+
     constructor() {
         super();
         this.connected = false;
@@ -23,9 +24,14 @@ export class ElectronIPCService extends BaseRPCService {
     private setupRPC(clientMethods: ClientMethods) {
         // Initialize birpc
         const safeHandlers = createSafeRPCHandlers();
+
+        const methods : ClientMethods = {
+            
+        }
+
         this.rpc = createBirpc<ServerMethods, ClientMethods>(
             {
-                ...clientMethods
+                ...methods
             },
             {
                 post: (data) => {
