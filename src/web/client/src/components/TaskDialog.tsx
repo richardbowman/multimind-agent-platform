@@ -123,7 +123,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                 ? 'warning.light'
                                                 : task.complete
                                                     ? 'success.light'
-                                                    : 'background.paper',
+                                                    : 'background.default',
                                         borderRadius: 1,
                                         border: '1px solid',
                                         borderColor: task.id === selectedTask?.id 
