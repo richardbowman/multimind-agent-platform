@@ -33,18 +33,23 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
 
     useEffect(() => {
         console.log('LogViewer: Setting up log subscription for type:', currentLogTab);
-        // Reset lastFetch to 0 when logType changes to force immediate refresh
-        setLastFetch(0);
+        
+        // Initial fetch
         refreshLogs();
 
-        // Set up periodic refresh every 5 seconds
-        const intervalId = setInterval(refreshLogs, 5000);
+        // Set up event listener for log updates
+        const handleLogUpdate = () => {
+            refreshLogs();
+        };
+
+        // Subscribe to log updates
+        window.electron?.onSystemLogUpdate(handleLogUpdate);
 
         return () => {
             console.log('LogViewer: Cleaning up log subscription for type:', currentLogTab);
-            clearInterval(intervalId);
+            window.electron?.offSystemLogUpdate(handleLogUpdate);
         };
-    }, [currentLogTab]); // Remove refreshLogs from dependencies to prevent recreation on lastFetch changes
+    }, [currentLogTab, refreshLogs]);
 
     const filterLog = (content: string) => {
         if (!filterText) return true;

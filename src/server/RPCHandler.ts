@@ -133,6 +133,19 @@ export class ServerRPCHandler implements ServerMethods {
     }
 
     setupClientEvents(rpc: ClientMethods) {
+        // Set up log update notifications
+        if (this.services?.logReader) {
+            this.services.logReader.on('update', () => {
+                rpc.onLogUpdate({
+                    type: 'system',
+                    entry: {
+                        timestamp: new Date().toISOString(),
+                        message: 'Logs updated'
+                    }
+                });
+            });
+        }
+
         // Set up task update notifications
         if (this.services?.taskManager) {
             // Set up project update notifications

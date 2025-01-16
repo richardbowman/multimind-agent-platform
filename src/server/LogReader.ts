@@ -2,6 +2,7 @@ import { readFileSync, existsSync, statSync, openSync, readSync, closeSync } fro
 import { join } from 'path';
 import { getDataPath } from 'src/helpers/paths';
 import Logger from 'src/helpers/logger';
+import EventEmitter from 'events';
 
 export interface LogEntry {
     timestamp: string;
@@ -9,11 +10,12 @@ export interface LogEntry {
     message: string;
 }
 
-export class LogReader {
+export class LogReader extends EventEmitter {
     private logFilePath: string;
     private logCache: LogEntry[] = [];
     private lastModified = 0;
     private cacheSize = 10000; // Keep last 10k entries in memory
+    private updateDebounceTimeout: NodeJS.Timeout | null = null;
 
     constructor() {
         const today = new Date().toISOString().split('T')[0];
@@ -149,6 +151,19 @@ export class LogReader {
 
             closeSync(fd);
             Logger.verbose(`Cache updated in ${Date.now() - startTime}ms - New entries: ${newEntries}, Continuations: ${continuationLines}, Cache size: ${this.logCache.length}`);
+
+            // Emit update event with debounce
+            if (newEntries > 0) {
+                if (this.updateDebounceTimeout) {
+                    clearTimeout(this.updateDebounceTimeout);
+                }
+                this.updateDebounceTimeout = setTimeout(() => {
+                    this.emit('update', {
+                        newEntries,
+                        totalEntries: this.logCache.length
+                    });
+                }, 500); // Debounce for 500ms
+            }
         } catch (error) {
             Logger.error('Error updating log cache:', error);
         }
