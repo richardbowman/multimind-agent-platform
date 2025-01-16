@@ -12,24 +12,15 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const { logs, fetchLogs } = useWebSocket();
     const [filterText, setFilterText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
-    const [lastFetch, setLastFetch] = useState(0);
 
     const refreshLogs = useCallback(async () => {
-        // Prevent multiple simultaneous fetches
-        if (isLoading) return;
-        
-        // Only fetch if more than 5 seconds have passed since last fetch
-        const now = Date.now();
-        if (now - lastFetch < 5000) return;
-        
         setIsLoading(true);
         try {
             await fetchLogs(currentLogTab);
-            setLastFetch(now);
         } finally {
             setIsLoading(false);
         }
-    }, [currentLogTab, fetchLogs, isLoading, lastFetch]);
+    }, [currentLogTab, fetchLogs]);
 
     useEffect(() => {
         console.log('LogViewer: Setting up log subscription for type:', currentLogTab);
