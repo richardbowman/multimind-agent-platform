@@ -106,14 +106,14 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const renderLogs = () => {
         switch (currentLogTab) {
             case 'llm':
-                return Object.entries(logs.llm).flatMap(([service, entries]) => 
-                    entries
+                return Object.entries(logs?.llm || {}).flatMap(([service, entries]) => 
+                    (Array.isArray(entries) ? entries : [])
                         .filter(log => 
                             filterLog(JSON.stringify({
-                                method: log.method,
-                                input: log.input,
-                                output: log.output,
-                                error: log.error
+                                method: log?.method,
+                                input: log?.input,
+                                output: log?.output,
+                                error: log?.error
                             }))
                         )
                         .slice(0, loadedLogs.length || undefined) // Apply pagination
