@@ -8,6 +8,7 @@ import {
     Tooltip
 } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
+import LanguageIcon from '@mui/icons-material/Language';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -48,7 +49,11 @@ export const ArtifactCard: React.FC<ArtifactCardProps> = ({
             }}
             onClick={onClick}
         >
-            <DescriptionIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+            {artifact.type === 'webpage' ? (
+                <LanguageIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+            ) : (
+                <DescriptionIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+            )}
             <ListItemText
                 primary={artifact.metadata?.title || 'Untitled'}
                 secondary={`Type: ${artifact.type}`}
