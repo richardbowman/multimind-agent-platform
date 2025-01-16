@@ -32,8 +32,8 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
       (window as any).electron.status((logEntry) => {
         setOptions({
           message: logEntry.message,
-          severity: logEntry.type || 'info',
-          percentComplete: logEntry.data.percentComplete,
+          severity: logEntry.type || 'progress',
+          percentComplete: logEntry.details?.percentComplete,
           persist: true,
         });
         setOpen(true);
@@ -90,7 +90,7 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               <Box>{options.message}</Box>
               <LinearProgress
                 variant="determinate"
-                value={options.percentComplete || 0}
+                value={(options.percentComplete || 0)*100}
                 sx={{ mt: 1 }}
               />
             </Box>
