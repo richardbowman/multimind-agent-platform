@@ -114,57 +114,12 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         <Typography variant="h6" sx={{ mb: 1 }}>Project Tasks</Typography>
                         <List>
                             {projectTasks.map(task => (
-                                <ListItem 
+                                <TaskCard
                                     key={task.id}
-                                    sx={{
-                                        mb: 1,
-                                        bgcolor: task.id === selectedTask?.id 
-                                            ? 'primary.dark' 
-                                            : task.inProgress 
-                                                ? 'warning.light'
-                                                : task.complete
-                                                    ? 'success.light'
-                                                    : 'background.default',
-                                        borderRadius: 1,
-                                        border: '1px solid',
-                                        borderColor: task.id === selectedTask?.id 
-                                            ? 'primary.main' 
-                                            : task.inProgress
-                                                ? 'warning.main'
-                                                : task.complete
-                                                    ? 'success.main'
-                                                    : 'divider',
-                                        cursor: 'pointer',
-                                        '&:hover': {
-                                            bgcolor: task.id === selectedTask?.id 
-                                                ? 'primary.dark' 
-                                                : task.inProgress
-                                                    ? 'warning.dark'
-                                                    : task.complete
-                                                        ? 'success.dark'
-                                                        : 'action.hover'
-                                        }
-                                    }}
+                                    task={task}
+                                    selected={task.id === selectedTask?.id}
                                     onClick={() => setSelectedTask(task)}
-                                >
-                                    <ListItemText
-                                        primary={task.description}
-                                        primaryTypographyProps={{ 
-                                            whiteSpace: 'nowrap',
-                                            overflow: 'hidden',
-                                            textOverflow: 'ellipsis'
-                                        }}
-                                        secondary={
-                                            <Typography 
-                                                variant="caption" 
-                                                component="span"
-                                                sx={{ display: 'block' }}
-                                            >
-                                                {task.complete ? 'Complete' : (task.inProgress ? 'In Progress' : 'Not Started')}
-                                            </Typography>
-                                        }
-                                    />
-                                </ListItem>
+                                />
                             ))}
                         </List>
                     </Box>
