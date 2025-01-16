@@ -18,6 +18,7 @@ export class LogReader extends EventEmitter {
     private updateDebounceTimeout: NodeJS.Timeout | null = null;
 
     constructor() {
+        super();
         const today = new Date().toISOString().split('T')[0];
         this.logFilePath = join(getDataPath(), `output-${today}.log`);
         this.initializeCache();
