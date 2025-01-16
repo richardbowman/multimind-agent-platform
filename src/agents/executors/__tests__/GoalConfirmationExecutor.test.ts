@@ -21,7 +21,10 @@ describe('GoalConfirmationExecutor', () => {
             step: 'confirm',
             projectId: 'test-project',
             threadPosts: [],
-            executionMode: 'conversation'
+            executionMode: 'conversation',
+            agentId: 'test-agent',
+            stepId: 'test-step',
+            steps: []
         };
 
         executor = new GoalConfirmationExecutor({
