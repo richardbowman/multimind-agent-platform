@@ -62,7 +62,8 @@ export class CreateChannelExecutor implements StepExecutor {
             ...params,
             projectId,
             members: params.members,
-            defaultResponderId: params.defaultResponderId
+            defaultResponderId: params.defaultResponderId,
+            artifactIds: artifactIds
         });
 
         return channelId;
