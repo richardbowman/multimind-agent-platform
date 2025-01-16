@@ -1,12 +1,13 @@
 import { BrowserWindow, ipcMain } from 'electron';
 import * as path from 'path';
 import Logger from 'src/helpers/logger';
+import { SettingsManager } from 'src/tools/settingsManager';
 
 export class MainWindow {
     private window: BrowserWindow;
     private zoomLevel: number = 1.0;
     private infoEvent: (...args: any[]) => void;
-    private settingsManager: SettingsManager;
+    private settingsManager?: SettingsManager;
 
     constructor(
         initialZoom: number = 1.0, 
@@ -64,9 +65,11 @@ export class MainWindow {
             // Update settings
             if (this.settingsManager) {
                 const settings = this.settingsManager.getSettings();
-                settings.windowWidth = unzoomedWidth;
-                settings.windowHeight = unzoomedHeight;
-                this.settingsManager.saveSettings();
+                
+                this.settingsManager.updateSettings({
+                    windowWidth: unzoomedWidth,
+                    windowHeight: unzoomedHeight
+                });
             }
 
             this.window.webContents.send('save-window-size', { 
