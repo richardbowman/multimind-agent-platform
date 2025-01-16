@@ -50,6 +50,28 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         >
             <DialogTitle>Task Details</DialogTitle>
             <DialogContent>
+                {tasks.length > 0 && tasks[0].project && (
+                    <Box sx={{ 
+                        mb: 3,
+                        p: 2,
+                        bgcolor: 'background.paper',
+                        borderRadius: 1,
+                        border: '1px solid',
+                        borderColor: 'divider'
+                    }}>
+                        <Typography variant="h6" sx={{ mb: 1 }}>
+                            Project: {tasks[0].project.name}
+                        </Typography>
+                        {tasks[0].project.description && (
+                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                {tasks[0].project.description}
+                            </Typography>
+                        )}
+                        <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+                            Project ID: {tasks[0].project.id}
+                        </Typography>
+                    </Box>
+                )}
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <Box sx={{ width: '30%', overflowY: 'auto', p: 1 }}>
                         <Typography variant="h6" sx={{ mb: 1 }}>Project Tasks</Typography>
