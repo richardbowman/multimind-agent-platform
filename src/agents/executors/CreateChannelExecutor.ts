@@ -29,7 +29,7 @@ export class CreateChannelExecutor implements StepExecutor {
         
         // Extract channel creation requirements from the goal
         const channelPurpose = goal;
-        const selectedTemplate = this.findBestTemplate(channelPurpose);
+        const selectedTemplate = await this.findBestTemplate(channelPurpose);
 
         if (!selectedTemplate) {
             return {
@@ -65,14 +65,37 @@ export class CreateChannelExecutor implements StepExecutor {
         };
     }
 
-    private findBestTemplate(channelPurpose: string): GoalTemplate | undefined {
-        // Simple matching based on keywords in the purpose
-        const purposeLower = channelPurpose.toLowerCase();
-        
-        return GoalTemplates.find(template => {
-            const templateNameMatch = template.name.toLowerCase().includes(purposeLower);
-            const descriptionMatch = template.description.toLowerCase().includes(purposeLower);
-            return templateNameMatch || descriptionMatch;
-        });
+    private async findBestTemplate(channelPurpose: string): Promise<GoalTemplate | undefined> {
+        // Create a prompt for the LLM to select the best template
+        const templateOptions = GoalTemplates.map(t => 
+            `Template: ${t.name}\nDescription: ${t.description}\nID: ${t.id}`
+        ).join('\n\n');
+
+        const prompt = `You are helping select the best channel template for a new project. 
+Here are the available templates:
+
+${templateOptions}
+
+The channel purpose is: ${channelPurpose}
+
+Please select the most appropriate template ID from the list above. 
+Return ONLY the template ID as your response.`;
+
+        try {
+            const response = await this.modelHelpers.model.sendLLMRequest({
+                messages: [{ role: 'user', content: prompt }],
+                parseJSON: false
+            });
+
+            const selectedId = response.message?.trim();
+            if (!selectedId) {
+                return undefined;
+            }
+
+            return GoalTemplates.find(t => t.id === selectedId);
+        } catch (error) {
+            console.error('Error selecting template:', error);
+            return undefined;
+        }
     }
 }
