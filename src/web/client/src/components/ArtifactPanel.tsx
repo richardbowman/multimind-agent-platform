@@ -38,20 +38,20 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     const [drawerOpen, setDrawerOpen] = useState(false);
     const theme = useTheme();
     
+    const prevChannelId = useRef<string | null>(null);
+    const prevThreadId = useRef<string | null>(null);
+
     useEffect(() => {
-        let isSubscribed = true;
-
-        const loadArtifacts = async () => {
-            if (channelId && isSubscribed) {
-                await fetchArtifacts(channelId, threadId);
+        // Only fetch if channel/thread actually changed
+        if (channelId !== prevChannelId.current || 
+            threadId !== prevThreadId.current) {
+            prevChannelId.current = channelId;
+            prevThreadId.current = threadId;
+            
+            if (channelId) {
+                fetchArtifacts(channelId, threadId);
             }
-        };
-
-        loadArtifacts();
-
-        return () => {
-            isSubscribed = false;
-        };
+        }
     }, [channelId, threadId]);
 
     const handleArtifactClick = (artifact: Artifact) => {

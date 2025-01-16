@@ -184,8 +184,25 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const fetchArtifacts = useCallback(async (channelId: string, threadId: string | null) => {
+    // Only fetch if we have a valid channel ID
+    if (!channelId) return;
+    
+    // Debounce artifact fetching
     const newArtifacts = await ipcService.getRPC().getArtifacts({ channelId, threadId });
-    setArtifacts(newArtifacts);
+    
+    // Only update state if artifacts have actually changed
+    setArtifacts(prev => {
+      const prevIds = new Set(prev.map(a => a.id));
+      const newIds = new Set(newArtifacts.map(a => a.id));
+      
+      // If sets are equal, return previous artifacts to prevent re-render
+      if (prevIds.size === newIds.size && 
+          [...prevIds].every(id => newIds.has(id))) {
+        return prev;
+      }
+      
+      return newArtifacts;
+    });
   }, []);
 
   const fetchAllArtifacts = useCallback(async () => {
