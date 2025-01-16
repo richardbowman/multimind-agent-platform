@@ -25,7 +25,7 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         
         // Cleanup on unmount
         return () => {
-            logger.restoreConsole();
+            logger.cleanup();
         };
     }, [logger]);
 

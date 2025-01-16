@@ -3,6 +3,7 @@ export class ClientLogger {
     private originalConsole: typeof console;
     private isConsoleIntercepted = false;
     private areErrorHandlersSetup = false;
+    private errorHandlerCleanups: (() => void)[] = [];
 
     constructor(logHandler: (level: string, message: string, details?: Record<string, any>) => Promise<void>) {
         this.logHandler = logHandler;
@@ -16,21 +17,25 @@ export class ClientLogger {
         if (this.areErrorHandlersSetup) return;
         
         // Handle uncaught exceptions
-        window.addEventListener('error', (event) => {
+        const errorHandler = (event: ErrorEvent) => {
             this.error(`Uncaught error: ${event.message}`, {
                 filename: event.filename,
                 lineno: event.lineno,
                 colno: event.colno,
                 error: event.error?.stack
             });
-        });
+        };
+        window.addEventListener('error', errorHandler);
+        this.errorHandlerCleanups.push(() => window.removeEventListener('error', errorHandler));
 
         // Handle unhandled promise rejections
-        window.addEventListener('unhandledrejection', (event) => {
+        const rejectionHandler = (event: PromiseRejectionEvent) => {
             this.error(`Unhandled promise rejection: ${event.reason}`, {
                 reason: event.reason?.stack || event.reason
             });
-        });
+        };
+        window.addEventListener('unhandledrejection', rejectionHandler);
+        this.errorHandlerCleanups.push(() => window.removeEventListener('unhandledrejection', rejectionHandler));
 
         this.areErrorHandlersSetup = true;
     }
@@ -82,6 +87,13 @@ export class ClientLogger {
         console.debug = this.originalConsole.debug;
 
         this.isConsoleIntercepted = false;
+    }
+
+    public cleanup(): void {
+        this.restoreConsole();
+        this.errorHandlerCleanups.forEach(cleanup => cleanup());
+        this.errorHandlerCleanups = [];
+        this.areErrorHandlersSetup = false;
     }
 
     private async log(level: string, message: string, details?: Record<string, any>): Promise<void> {
