@@ -45,53 +45,85 @@ export class ComplexProjectExecutor implements StepExecutor {
 
             const { projectName, projectGoal, researchTask, contentTask, responseMessage } = responseJSON;
 
-            // Create tasks
-            const tasks: Record<string, Task> = {};
-            
-            // Create research task first
-            const researchTaskId = randomUUID();
-            tasks[researchTaskId] = {
-                id: researchTaskId,
-                description: `${researchTask} [${projectGoal}]`,
-                creator: 'system',
-                projectId: params.projectId,
-                type: "web-research",
-                complete: false
-            };
+            // Create the project first
+            const project = await this.taskManager.createProject({
+                name: projectName,
+                metadata: {
+                    description: projectGoal,
+                    status: 'active',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    originalPostId: params.context?.postId
+                }
+            });
 
-            // Create content task that depends on research completion
-            const contentTaskId = randomUUID();
-            tasks[contentTaskId] = {
-                id: contentTaskId,
-                description: `${contentTask} [${projectGoal}]`,
+            // Create research task
+            const researchTaskId = randomUUID();
+            await this.taskManager.addTask(project, {
+                id: researchTaskId,
+                description: researchTask,
                 creator: 'system',
-                projectId: params.projectId,
-                type: "create-full-content",
-                complete: false,
-                dependsOn: researchTaskId
-            };
+                type: TaskType.Step,
+                props: {
+                    stepType: ExecutorType.RESEARCH,
+                    goal: projectGoal
+                },
+                metadata: {
+                    requiredFor: 'content-creation',
+                    priority: 'high'
+                }
+            });
+
+            // Create content task with dependency
+            const contentTaskId = randomUUID();
+            await this.taskManager.addTask(project, {
+                id: contentTaskId,
+                description: contentTask,
+                creator: 'system',
+                type: TaskType.Step,
+                props: {
+                    stepType: ExecutorType.CONTENT_CREATION,
+                    goal: projectGoal,
+                    dependsOn: researchTaskId
+                },
+                metadata: {
+                    dependsOn: researchTaskId,
+                    status: 'pending-research'
+                }
+            });
 
             // Assign tasks to appropriate agents
             const researchManager = params.agents?.find(a => a.handle === '@research');
             const contentManager = params.agents?.find(a => a.handle === '@content');
             
             if (researchManager) {
-                this.taskManager.assignTaskToAgent(researchTaskId, researchManager.id);
+                await this.taskManager.assignTaskToAgent(researchTaskId, researchManager.id);
             } else {
                 Logger.warn('No research manager agent found');
             }
             
             if (contentManager) {
-                this.taskManager.assignTaskToAgent(contentTaskId, contentManager.id);
+                await this.taskManager.assignTaskToAgent(contentTaskId, contentManager.id);
             } else {
                 Logger.warn('No content manager agent found');
             }
 
+            // Update project with task references
+            await this.taskManager.updateProject(project.id, {
+                metadata: {
+                    ...project.metadata,
+                    mainTasks: [researchTaskId, contentTaskId]
+                }
+            });
+
             return {
                 type: "complex_project",
+                projectId: project.id,
                 finished: true,
                 response: {
-                    message: responseMessage
+                    message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
+                        `1. Research: ${researchTask} [${researchTaskId}]\n` +
+                        `2. Content: ${contentTask} [${contentTaskId}]`
                 }
             };
 
