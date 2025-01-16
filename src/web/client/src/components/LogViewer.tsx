@@ -13,6 +13,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const [filterText, setFilterText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showVerbose, setShowVerbose] = useState(false);
+    const [verboseToggleTimestamp, setVerboseToggleTimestamp] = useState(Date.now());
 
     const refreshLogs = useCallback(async () => {
         setIsLoading(true);
@@ -80,10 +81,10 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         } catch (error) {
             console.error('Error loading logs:', error);
         }
-    }, [currentLogTab, filterText, fetchLogs, loadedLogs.length]);
+    }, [currentLogTab, filterText, fetchLogs, loadedLogs.length, showVerbose]);
 
     useEffect(() => {
-        // Reset loaded logs when log type or filter changes
+        // Reset loaded logs when log type, filter, or verbose toggle changes
         setLoadedLogs([]);
         setHasMore(true);
         
@@ -93,7 +94,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         } else {
             loadMoreLogs();
         }
-    }, [currentLogTab, filterText]);
+    }, [currentLogTab, filterText, verboseToggleTimestamp]);
 
     const renderLogs = () => {
         switch (currentLogTab) {
@@ -163,7 +164,10 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                         control={
                             <Switch
                                 checked={showVerbose}
-                                onChange={(e) => setShowVerbose(e.target.checked)}
+                                onChange={(e) => {
+                                    setShowVerbose(e.target.checked);
+                                    setVerboseToggleTimestamp(Date.now());
+                                }}
                                 size="small"
                                 color="primary"
                             />
