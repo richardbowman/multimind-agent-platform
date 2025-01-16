@@ -185,11 +185,23 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     await fetchArtifacts(channelId, currentThreadId);
   }, [currentThreadId]);
 
-  const fetchLogs = useCallback(async (logType: 'llm' | 'system' | 'api') => {
-    const newLogs = await ipcService.getRPC().getLogs(logType);
+  const fetchLogs = useCallback(async (logType: 'llm' | 'system' | 'api', params?: {
+    limit?: number;
+    offset?: number;
+    filter?: {
+      search?: string;
+    };
+  }) => {
+    const newLogs = await ipcService.getRPC().getLogs(logType, params);
     setLogs(prev => ({
       ...prev,
-      [logType]: newLogs
+      [logType]: {
+        ...prev[logType],
+        logs: params?.offset 
+          ? [...(prev[logType]?.logs || []), ...newLogs.logs]
+          : newLogs.logs,
+        total: newLogs.total
+      }
     }));
   }, []);
 

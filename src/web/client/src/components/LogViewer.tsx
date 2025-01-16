@@ -127,7 +127,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 );
             
             case 'system':
-                return logs.system?.logs?.filter(log => 
+                return logs.system?.logs?.logs?.filter(log => 
                     filterLog(log.message)
                 ).map((log, index) => (
                     <div key={index} className={`log-entry ${log.level.toLowerCase()}`}>
@@ -138,7 +138,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 )) || [];
             
             case 'api':
-                return logs.api?.logs?.filter(log =>
+                return logs.api?.logs?.logs?.filter(log =>
                     filterLog(JSON.stringify(log))
                 ).map((log, index) => (
                     <div key={index} className="log-entry info">
