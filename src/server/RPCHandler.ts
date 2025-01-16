@@ -514,7 +514,7 @@ export class ServerRPCHandler implements ServerMethods {
                         if (agentRef.startsWith('@')) {
                             // Lookup agent by handle
                             const handle = agentRef.slice(1);
-                            const agent = this.services.agents.get(handle);
+                            const agent = this.services.chatClient?.getHandles();
                             if (!agent) {
                                 throw new Error(`Agent with handle @${handle} not found`);
                             }
