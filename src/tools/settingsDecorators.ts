@@ -4,7 +4,7 @@ export function ClientSettings(metadata: {
     label: string;
     category: string;
     description?: string;
-    type?: 'string' | 'number' | 'boolean' | 'select' | 'section';
+    type?: 'string' | 'number' | 'boolean' | 'select' | 'section' | 'slider';
     options?: string[];
     defaultValue?: any;
     min?: number;
