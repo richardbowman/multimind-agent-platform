@@ -5,7 +5,7 @@ import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
 import { useWebSocket, DataProvider } from './contexts/DataContext';
-import { IPCProvider } from './contexts/IPCContext';
+import { IPCProvider, useIPCService } from './contexts/IPCContext';
 import { SnackbarProvider } from './contexts/SnackbarContext';
 import { LogProvider } from './contexts/LogContext';
 import { ChatPanel } from './components/ChatPanel';
