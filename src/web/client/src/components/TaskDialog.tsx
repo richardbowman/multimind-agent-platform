@@ -13,6 +13,7 @@ import {
     ListItemText
 } from '@mui/material';
 import { useWebSocket, useIPCService } from '../contexts/DataContext';
+import { useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 
 interface TaskDialogProps {
@@ -32,6 +33,22 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 }) => {
     const { fetchTasks, handles, tasks: allTasks } = useWebSocket();
     const ipcService = useIPCService();
+    const [projectDetails, setProjectDetails] = useState<any>(null);
+
+    useEffect(() => {
+        const fetchProjectDetails = async () => {
+            if (tasks.length > 0 && tasks[0].projectId) {
+                try {
+                    const project = await ipcService.getRPC().getProject(tasks[0].projectId);
+                    setProjectDetails(project);
+                } catch (error) {
+                    console.error('Failed to fetch project details:', error);
+                }
+            }
+        };
+
+        fetchProjectDetails();
+    }, [tasks, ipcService]);
     
     // Filter tasks to only show those from the current project
     const projectTasks = React.useMemo(() => {
@@ -50,7 +67,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         >
             <DialogTitle>Task Details</DialogTitle>
             <DialogContent>
-                {tasks.length > 0 && tasks[0].project && (
+                {projectDetails && (
                     <Box sx={{ 
                         mb: 3,
                         p: 2,
@@ -60,16 +77,26 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         borderColor: 'divider'
                     }}>
                         <Typography variant="h6" sx={{ mb: 1 }}>
-                            Project: {tasks[0].project.name}
+                            Project: {projectDetails.name}
                         </Typography>
-                        {tasks[0].project.description && (
+                        {projectDetails.description && (
                             <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                {tasks[0].project.description}
+                                {projectDetails.description}
                             </Typography>
                         )}
                         <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
-                            Project ID: {tasks[0].project.id}
+                            Project ID: {projectDetails.id}
                         </Typography>
+                        {projectDetails.metadata?.status && (
+                            <Typography variant="caption" sx={{ display: 'block' }}>
+                                Status: {projectDetails.metadata.status}
+                            </Typography>
+                        )}
+                        {projectDetails.metadata?.priority && (
+                            <Typography variant="caption" sx={{ display: 'block' }}>
+                                Priority: {projectDetails.metadata.priority}
+                            </Typography>
+                        )}
                     </Box>
                 )}
                 <Box sx={{ display: 'flex', gap: 2 }}>
