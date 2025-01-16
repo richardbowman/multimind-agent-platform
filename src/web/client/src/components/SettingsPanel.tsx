@@ -208,7 +208,9 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             case 'select':
                 // Special handling for model selection
                 if (metadata.key.startsWith('models.')) {
-                    const provider = settings.providers?.chat;
+                    const provider = metadata.key.includes('embedding') ? 
+                        settings.providers?.embeddings : 
+                        settings.providers?.chat;
                     const models = provider ? 
                         (metadata.key.includes('embedding') ? 
                             availableEmbedders[provider] || [] :
