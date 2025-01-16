@@ -4,6 +4,10 @@ import { ClientMethods } from '../../../../shared/RPCInterface';
 import { ClientMessage, ClientTask } from '../../../../shared/types';
 
 export const createClientMethods = (contextMethods: DataContextMethods) => ({
+    onClientLogProcessed: async (success, message) => {
+        return
+    },
+    
     onMessage: async (messages: ClientMessage[]) => {
         // Find the latest message not in current thread
         const latestMessage = messages
@@ -15,21 +19,21 @@ export const createClientMethods = (contextMethods: DataContextMethods) => ({
 
         if (latestMessage) {
             const channelName = contextMethods.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
-            contextMethods.showSnackbar({
-                message: `New message in ${channelName}`,
-                severity: 'info',
-                persist: true,
-                onClick: () => {
-                        // Set both channel and thread first
-                        contextMethods.setCurrentChannelId(latestMessage.channel_id);
-                        contextMethods.setCurrentThreadId(latestMessage.thread_id || null);
+            // contextMethods.showSnackbar({
+            //     message: `New message in ${channelName}`,
+            //     severity: 'info',
+            //     persist: true,
+            //     onClick: () => {
+            //             // Set both channel and thread first
+            //             contextMethods.setCurrentChannelId(latestMessage.channel_id);
+            //             contextMethods.setCurrentThreadId(latestMessage.thread_id || null);
                         
-                        // Fetch related tasks and artifacts
-                        contextMethods.fetchChannels();
-                        contextMethods.fetchTasks(latestMessage.channel_id, latestMessage.thread_id || null);
-                        contextMethods.fetchArtifacts(latestMessage.channel_id, latestMessage.thread_id || null);
-                    }
-                });
+            //             // Fetch related tasks and artifacts
+            //             contextMethods.fetchChannels();
+            //             contextMethods.fetchTasks(latestMessage.channel_id, latestMessage.thread_id || null);
+            //             contextMethods.fetchArtifacts(latestMessage.channel_id, latestMessage.thread_id || null);
+            //         }
+            //     });
         };
 
         // Update messages directly in context
