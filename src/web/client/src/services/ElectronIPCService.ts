@@ -30,18 +30,60 @@ export class ElectronIPCService extends BaseRPCService {
 
             this.rpc = createBirpc<ServerMethods, ClientMethods>(
                 {
-                    onClientLogProcessed: (success, message) => 
-                        this.wrapper.onClientLogProcessed.call(this, success, message),
-                    onMessage: (messages) => 
-                        this.wrapper.onMessage.call(this, messages),
-                    onLogUpdate: (update) => 
-                        this.wrapper.onLogUpdate.call(this, update),
-                    onBackendStatus: (status) => 
-                        this.wrapper.onBackendStatus.call(this, status),
-                    onTaskUpdate: (task) => 
-                        this.wrapper.onTaskUpdate.call(this, task),
-                    onProjectUpdate: (project) => 
-                        this.wrapper.onProjectUpdate.call(this, project),
+                    onClientLogProcessed: (success, message) => {
+                        console.log('[IPC] onClientLogProcessed', { success, message });
+                        try {
+                            return this.wrapper.onClientLogProcessed.call(this, success, message);
+                        } catch (error) {
+                            console.error('[IPC] Error in onClientLogProcessed:', error);
+                            throw error;
+                        }
+                    },
+                    onMessage: (messages) => {
+                        console.log('[IPC] onMessage', { messageCount: messages.length });
+                        try {
+                            return this.wrapper.onMessage.call(this, messages);
+                        } catch (error) {
+                            console.error('[IPC] Error in onMessage:', error);
+                            throw error;
+                        }
+                    },
+                    onLogUpdate: (update) => {
+                        console.log('[IPC] onLogUpdate', { type: update.type });
+                        try {
+                            return this.wrapper.onLogUpdate.call(this, update);
+                        } catch (error) {
+                            console.error('[IPC] Error in onLogUpdate:', error);
+                            throw error;
+                        }
+                    },
+                    onBackendStatus: (status) => {
+                        console.log('[IPC] onBackendStatus', status);
+                        try {
+                            return this.wrapper.onBackendStatus.call(this, status);
+                        } catch (error) {
+                            console.error('[IPC] Error in onBackendStatus:', error);
+                            throw error;
+                        }
+                    },
+                    onTaskUpdate: (task) => {
+                        console.log('[IPC] onTaskUpdate', { taskId: task.id });
+                        try {
+                            return this.wrapper.onTaskUpdate.call(this, task);
+                        } catch (error) {
+                            console.error('[IPC] Error in onTaskUpdate:', error);
+                            throw error;
+                        }
+                    },
+                    onProjectUpdate: (project) => {
+                        console.log('[IPC] onProjectUpdate', { projectId: project.id });
+                        try {
+                            return this.wrapper.onProjectUpdate.call(this, project);
+                        } catch (error) {
+                            console.error('[IPC] Error in onProjectUpdate:', error);
+                            throw error;
+                        }
+                    },
                 },
                 {
                     post: (data) => {
