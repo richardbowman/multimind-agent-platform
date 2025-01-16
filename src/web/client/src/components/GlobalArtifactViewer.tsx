@@ -7,6 +7,7 @@ import { ArtifactCard } from './ArtifactCard';
 import Grid from '@mui/material/Grid2';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
+import DescriptionIcon from '@mui/icons-material/Description';
 import MenuIcon from '@mui/icons-material/Menu';
 
 export interface DrawerPage {
@@ -56,6 +57,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 {Object.entries(artifactFolders).map(([type, artifacts]) => (
                     <Accordion key={type}>
                         <AccordionSummary>
+                            <FolderIcon sx={{ mr: 1 }} />
                             <Typography>{type} ({artifacts.length})</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
