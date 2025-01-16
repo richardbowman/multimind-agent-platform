@@ -87,7 +87,7 @@ Return ONLY the template ID as your response.`;
                 parseJSON: false
             });
 
-            const selectedId = response.message?.trim();
+            const selectedId = response.response.message?.trim();
             if (!selectedId) {
                 return undefined;
             }
