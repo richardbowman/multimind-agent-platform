@@ -8,6 +8,8 @@ import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ILLMService } from "../../llm/ILLMService";
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { StepResult } from '../interfaces/StepResult';
 
 /**
  * Executor that validates and confirms user goals before proceeding.
@@ -29,7 +31,8 @@ export class GoalConfirmationExecutor implements StepExecutor {
         this.modelHelpers = params.modelHelpers;
     }
 
-    async executeOld(goal: string, step: string, projectId: string): Promise<any> {
+    async execute(params: ExecuteParams & { executionMode: 'conversation' | 'task' }): Promise<StepResult> {
+        const { goal, step, projectId, threadPosts } = params;
         const schema = await getGeneratedSchema(SchemaType.GoalConfirmationResponse);
 
         const prompt = `As an AI assistant, your task is to:
@@ -41,7 +44,8 @@ Goal to analyze: "${goal}"`;
 
         const result = await this.modelHelpers.generate<GoalConfirmationResponse>({
             message: goal,
-            instructions: new StructuredOutputPrompt(schema, prompt)
+            instructions: new StructuredOutputPrompt(schema, prompt),
+            threadPosts
         });
 
         return {
