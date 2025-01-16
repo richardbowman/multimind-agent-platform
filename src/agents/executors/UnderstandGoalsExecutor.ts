@@ -7,7 +7,7 @@ import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { TaskManager, TaskType } from '../../tools/taskManager';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
-import Logger from 'src/helpers/logger';
+import Logger from '../../helpers/logger';
 import { IntakeQuestionsResponse } from '../../schemas/IntakeQuestionsResponse';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';

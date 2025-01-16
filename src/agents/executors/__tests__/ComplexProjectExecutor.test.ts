@@ -32,7 +32,7 @@ describe('ComplexProjectExecutor', () => {
                     },
                     tasks: {}
                 });
-            }),
+            }) as jest.MockedFunction<TaskManager['updateProject']>,
             getProject: jest.fn(),
             updateTask: jest.fn(),
             getAllTasks: jest.fn(),

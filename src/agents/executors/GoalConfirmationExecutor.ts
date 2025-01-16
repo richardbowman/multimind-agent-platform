@@ -50,7 +50,7 @@ Goal to analyze: "${goal}"`;
         const result = await this.modelHelpers.generate<GoalConfirmationResponse>({
             message: goal,
             instructions: new StructuredOutputPrompt(schema, prompt),
-            threadPosts
+            threadPosts: params.context?.threadPosts || []
         });
 
         return {
