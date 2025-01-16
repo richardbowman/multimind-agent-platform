@@ -56,7 +56,11 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ClientChannel[]>([]);
   const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);
-  const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
+  const [currentChannelId, setCurrentChannelId] = useState<string | null>(() => {
+    // Try to get last used channel from localStorage
+    const lastChannel = localStorage.getItem('lastChannelId');
+    return lastChannel || null;
+  });
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
   const [tasks, setTasks] = useState<ClientTask[]>([]);
   const [artifacts, setArtifacts] = useState<any[]>([]);

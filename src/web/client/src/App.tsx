@@ -179,8 +179,16 @@ const AppContent: React.FC = () => {
                             }}
                         >
                             <Toolbar /> {/* For spacing under app bar */}
-                            <ChannelList />
-                            <ThreadList channelId={currentChannelId} />
+                            <ChannelList 
+                                onChannelSelect={(channelId) => {
+                                    setCurrentChannelId(channelId);
+                                    setCurrentThreadId(null); // Reset thread when changing channels
+                                }}
+                            />
+                            <ThreadList 
+                                channelId={currentChannelId}
+                                onThreadSelect={setCurrentThreadId}
+                            />
                         </Drawer>
 
 
