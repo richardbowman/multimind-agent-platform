@@ -7,6 +7,7 @@ import Logger from '../helpers/logger';
 import { ServerRPCHandler } from './RPCHandler';
 import { BackendServices } from '../types/BackendServices';
 import { ClientMethods, ServerMethods } from 'src/shared/RPCInterface';
+import { OllamaRouter } from './OllamaRouter';
 
 export class WebSocketServer {
     private io: Server;
@@ -18,7 +19,12 @@ export class WebSocketServer {
         const _s = services.settingsManager.getSettings();
 
         const app = express();
+        app.use(express.json()); // Add JSON body parsing
         this.httpServer = createServer(app);
+
+        // Add Ollama compatibility endpoint
+        const ollamaRouter = new OllamaRouter(services);
+        app.use('/ollama', ollamaRouter.getRouter());
 
         this.io = new Server(this.httpServer, {
             cors: {
