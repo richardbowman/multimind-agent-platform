@@ -9,6 +9,7 @@ import { CreatePlanExecutor } from './executors/CreatePlanExecutor';
 import { ReviewProgressExecutor } from './executors/ReviewProgressExecutor';
 import { UnderstandGoalsExecutor } from './executors/UnderstandGoalsExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
+import { CreateChannelExecutor } from './executors/CreateChannelExecutor';
 
 
 

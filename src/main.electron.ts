@@ -88,7 +88,7 @@ export async function setupIpcHandlers(hasConfigError: boolean = false) {
     ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow(), hasConfigError);
     configComplete = !hasConfigError;
 
-    mainWindow.getWindow().webContents.on('did-finish-load', () => {
+    mainWindow.getWindow().webContents.on('dom-ready', () => {
         console.log('did finish load');
         if (ipcServer.getRPC()) {
             const status = {
@@ -96,8 +96,11 @@ export async function setupIpcHandlers(hasConfigError: boolean = false) {
                 ready: configComplete,
                 message: hasConfigError ? "Initial configuration required" : undefined
             };
-            console.log('firing backend status', JSON.stringify(status, 2, false));
-            ipcServer!.getRPC()!.onBackendStatus(status);
+            setTimeout(() => {
+                console.log('firing backend status', JSON.stringify(status, 2, false));
+                ipcServer!.getRPC()!.onBackendStatus(status);
+            }, 500);
+            
         }
     });
 

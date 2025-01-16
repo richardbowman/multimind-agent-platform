@@ -51,15 +51,10 @@ export interface DataContextMethods {
 
 export const DataProvider: React.FC<{ 
   children: React.ReactNode;
-  clientMethods: ClientMethods;
-}> = ({ children, clientMethods }) => {
-  const ipcService = useIPCService();
+}> = ({ children }) => {
 
-  useEffect(() => {
-    if (ipcService) {
-      ipcService.setupRPC(clientMethods);
-    }
-  }, [ipcService, clientMethods]);
+  const ipcService = useIPCService();
+  const { showSnackbar } = useSnackbar();
 
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ClientChannel[]>([]);
@@ -313,7 +308,14 @@ export const DataProvider: React.FC<{
     setTasks
   ]);
 
-  const { showSnackbar } = useSnackbar();
+  const clientMethods = useClientMethods(showSnackbar, contextMethods);
+
+  useEffect(() => {
+    if (ipcService && clientMethods) {
+      ipcService.setupRPC(clientMethods);
+    }
+  }, [ipcService, clientMethods]);
+
   
   return (
     <DataContext.Provider value={contextMethods}>

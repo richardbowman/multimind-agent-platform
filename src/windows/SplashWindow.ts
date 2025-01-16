@@ -40,11 +40,19 @@ export class SplashWindow {
     }
 
     setMessage(message: string) {
-        this.window.webContents.send('status', { message });
+        try {
+            this.window.webContents.send('status', { message });
+        } catch (e) {
+            Logger.error('failed trying to setmessage on splash', e);
+        }
     }
 
     onInfo(logEntry) {
-        this.window.webContents.send('status', logEntry);
+        try {
+            this.window.webContents.send('status', logEntry);
+        } catch (e) {
+            Logger.error('failed trying to onInfo on splash', e);
+        }
     }
 
     close() {

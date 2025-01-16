@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import WebSocketService from '../services/WebSocketService';
 import { ElectronIPCService } from '../services/ElectronIPCService';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
@@ -11,22 +11,14 @@ const IPCContext = createContext<BaseRPCService | null>(null);
 export const IPCProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
-  const [ipcService, setIpcService] = useState<BaseRPCService | null>(null);
+  const [ipcService, setIpcService] = useState<BaseRPCService>((window as any).electron
+  ? new ElectronIPCService()
+  : new WebSocketService());
   const { showSnackbar } = useSnackbar();
 
   // Initialize IPC service
   useEffect(() => {
-    const initializeService = async () => {
-      const service = (window as any).electron
-        ? new ElectronIPCService()
-        : new WebSocketService();
-      
-      // Setup RPC but don't connect yet
-      service.setupRPC();
-      setIpcService(service);
-    };
-
-    initializeService();
+    ipcService.setupRPC();
   }, []);
 
   if (!ipcService) {

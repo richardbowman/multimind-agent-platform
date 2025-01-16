@@ -34,6 +34,7 @@ export class CreateChannelExecutor implements StepExecutor {
         members: string[];
         goalTemplate: string;
         defaultResponderId: string;
+        artifactIds?: string[];
     }): Promise<string> {
         // Always include the RouterAgent in the channel members
         params.members = [...params.members, 'router-agent'];
@@ -63,7 +64,7 @@ export class CreateChannelExecutor implements StepExecutor {
             projectId,
             members: params.members,
             defaultResponderId: params.defaultResponderId,
-            artifactIds: artifactIds
+            artifactIds: params.artifactIds
         });
 
         return channelId;
@@ -71,7 +72,6 @@ export class CreateChannelExecutor implements StepExecutor {
 
     async execute(params: ExecuteParams & { executionMode: 'conversation' | 'task' }): Promise<StepResult> {
         const { goal, context } = params;
-        const artifactIds = context?.artifacts?.map(a => a.id) || [];
         
         // Extract channel creation requirements from the goal
         const channelPurpose = goal;
@@ -88,9 +88,9 @@ The name should:
 
 Return ONLY the channel name.`;
 
-        const nameResponse = await this.modelHelpers.model.sendLLMRequest({
-            messages: [{ role: 'user', content: namePrompt }],
-            parseJSON: false
+        const nameResponse = await this.modelHelpers.generate({
+            message: namePrompt,
+            instructions: ''
         });
         
         const channelName = nameResponse.message?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') || channelPurpose.toLowerCase().replace(/\s+/g, '-');
@@ -107,6 +107,14 @@ Return ONLY the channel name.`;
             };
         }
 
+        // get artifacts created/used in this channel to attach to new channel
+        const artifactIds = [
+            ...new Set([
+                ...context?.artifacts?.map(a => a.id) || [],
+                ...params.steps.filter(s => s.props.stepType === "create_revise_plan").map(s => s.props?.result?.response?.artifactId)
+            ].filter(s => s))
+        ]
+
         // Create the channel using the selected template
         const channelId = await this.createChannel({
             name: channelName,
@@ -114,7 +122,8 @@ Return ONLY the channel name.`;
             isPrivate: false,
             members: selectedTemplate.supportingAgents,
             goalTemplate: selectedTemplate.id,
-            defaultResponderId: selectedTemplate.supportingAgents[0] || 'router-agent'
+            defaultResponderId: selectedTemplate.supportingAgents[0] || 'router-agent',
+            artifactIds: artifactIds
         });
 
         // Generate a detailed explanation using the LLM
@@ -130,9 +139,9 @@ Please write a clear, friendly message to the user explaining:
 
 Write in a professional but approachable tone.`;
 
-        const explanationResponse = await this.modelHelpers.model.sendLLMRequest({
-            messages: [{ role: 'user', content: explanationPrompt }],
-            parseJSON: false
+        const explanationResponse = await this.modelHelpers.generate({
+            message: explanationPrompt,
+            instructions: ''
         });
 
         return {

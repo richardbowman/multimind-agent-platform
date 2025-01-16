@@ -39,7 +39,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
-            if (selectedTask.projectId) {
+            if (selectedTask?.projectId) {
                 try {
                     const project = await ipcService.getRPC().getProject(selectedTask.projectId);
                     setProjectDetails(project);

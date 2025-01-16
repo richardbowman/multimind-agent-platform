@@ -6,6 +6,7 @@ export interface CreateChannelParams {
     defaultResponderId?: string;
     projectId?: string;
     goalTemplate?: string;
+    artifactIds?: string[];
 }
 
 export interface ChannelData {

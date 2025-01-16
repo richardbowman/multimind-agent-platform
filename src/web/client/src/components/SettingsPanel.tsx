@@ -23,7 +23,8 @@ import {
   Slider
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useIPCService, useWebSocket } from '../contexts/DataContext';
+import { useWebSocket } from '../contexts/DataContext';
+import { useIPCService } from '../contexts/IPCContext';
 import { Settings } from '../../../../tools/settings';
 import { ModelInfo } from '../../../../llm/types';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';

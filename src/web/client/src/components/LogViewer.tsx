@@ -155,9 +155,8 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
             <AppBar position="relative" sx={{ zIndex: 1 }}>
                 <LogToolbar>
                     <Tabs value={currentLogTab} onChange={(_, newValue) => setCurrentLogTab(newValue)}>
-                        <Tab label="LLM Logs" value="llm" />
                         <Tab label="System Logs" value="system" />
-                        <Tab label="API Logs" value="api" />
+                        <Tab label="LLM Logs" value="llm" />
                     </Tabs>
                     <Box sx={{ flexGrow: 1 }} />
                     <FormControlLabel

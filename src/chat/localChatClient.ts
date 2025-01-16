@@ -84,7 +84,8 @@ export class LocalChatStorage extends EventEmitter {
             isPrivate: params.isPrivate,
             members: params.members,
             defaultResponderId: params.defaultResponderId || 'router-agent', // Fallback to router-agent if not specified
-            projectId: params.projectId
+            projectId: params.projectId,
+            artifactIds: params.artifactIds
         };
 
         await this.save();

@@ -16,7 +16,8 @@ import {
 import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
-import { useIPCService, useWebSocket } from '../contexts/DataContext';
+import { useWebSocket } from '../contexts/DataContext';
+import { useIPCService } from '../contexts/IPCContext';
 import remarkGfm from 'remark-gfm'
 import Link from '@mui/material/Link';
 import { TaskDialog } from './TaskDialog';

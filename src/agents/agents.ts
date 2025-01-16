@@ -133,22 +133,6 @@ export abstract class Agent {
         }
     }
 
-    protected getExecutorParams() {
-        // Create standardized params
-        const executorParams = {
-            llmService: this.llmService,
-            taskManager: this.projects,
-            artifactManager: this.artifactManager,
-            vectorDBService: this.vectorDBService,
-            userId: this.userId,
-            vectorDB: this.vectorDBService,
-            modelHelpers: new ModelHelpers(this.llmService, this.userId),
-            settings: this.settings
-        };
-        executorParams.modelHelpers.setPurpose(this.modelHelpers.getPurpose())
-        return executorParams;
-    }
-
     public abstract initialize?(): Promise<void>;
 
     protected async taskNotification(task: Task): Promise<void> {

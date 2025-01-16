@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { ClientLogger } from '../services/ClientLogger';
-import { useIPCService } from './DataContext';
+import { useIPCService } from './IPCContext';
 
 interface LogContextType {
     logger: ClientLogger;

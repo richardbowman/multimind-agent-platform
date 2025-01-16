@@ -33,6 +33,23 @@ export abstract class StepBasedAgent extends Agent {
         );
     }
 
+    protected getExecutorParams() {
+        // Create standardized params
+        const executorParams = {
+            llmService: this.llmService,
+            taskManager: this.projects,
+            artifactManager: this.artifactManager,
+            vectorDBService: this.vectorDBService,
+            userId: this.userId,
+            chatClient: this.chatClient,
+            vectorDB: this.vectorDBService,
+            modelHelpers: new ModelHelpers(this.llmService, this.userId),
+            settings: this.settings
+        };
+        executorParams.modelHelpers.setPurpose(this.modelHelpers.getPurpose())
+        return executorParams;
+    }
+
     protected async initializeFromConfig(config: AgentConfig): Promise<void> {
         // Set agent instructions
         this.modelHelpers.setPurpose(config.purpose);

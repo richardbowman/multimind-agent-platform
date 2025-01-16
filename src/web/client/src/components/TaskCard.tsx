@@ -30,7 +30,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 bgcolor: selected 
                     ? task.inProgress
                         ? 'primary.dark'
-                        : 'primary.light'
+                        : 'primary.dark'
                     : task.inProgress 
                         ? 'action.selected'
                         : task.complete
@@ -50,7 +50,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                 cursor: 'pointer',
                 '&:hover': {
                     bgcolor: selected 
-                        ? 'primary.light' 
+                        ? 'primary.disabledBackground' 
                         : task.inProgress
                             ? 'action.hover'
                             : task.complete

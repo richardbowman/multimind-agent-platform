@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import MinimizeIcon from '@mui/icons-material/Minimize';
@@ -6,7 +6,7 @@ import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
 import { useWebSocket, DataProvider } from './contexts/DataContext';
 import { IPCProvider, useIPCService } from './contexts/IPCContext';
-import { SnackbarProvider } from './contexts/SnackbarContext';
+import { SnackbarProvider, useSnackbar } from './contexts/SnackbarContext';
 import { LogProvider } from './contexts/LogContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
@@ -17,7 +17,6 @@ import { GlobalArtifactViewer } from './components/GlobalArtifactViewer';
 import { LogViewer } from './components/LogViewer';
 import { SettingsPanel } from './components/SettingsPanel';
 import './styles/App.css';
-import { ClientLogger } from './services/ClientLogger';
 
 const leftDrawerWidth = 250;
 const rightDrawerWidth = 300;
@@ -245,12 +244,11 @@ const AppContent: React.FC = () => {
 
 const App: React.FC = () => {
     const { showSnackbar } = useSnackbar();
-    const clientMethods = useClientMethods(showSnackbar);
 
     return (
         <IPCProvider>
             <SnackbarProvider>
-                <DataProvider clientMethods={clientMethods}>
+                <DataProvider>
                     <LogProvider>
                         <AppContent />
                     </LogProvider>

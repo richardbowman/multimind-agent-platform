@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -12,6 +12,7 @@ import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/ex
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { StepTask } from '../interfaces/ExecuteStepParams';
 
 export interface AnswerMetadata {
     questionId: string;
@@ -47,7 +48,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
 
         const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
-        const intakeQuestions = Object.values(project.tasks).filter(t => t.category === 'process-answers' && !t.complete);
+        const intakeQuestions = Object.values(project.tasks).filter(t => t.type === "step" && (t as StepTask).props.stepType === ExecutorType.ANSWER_QUESTIONS && !t.complete);
 
         if (intakeQuestions.length === 0) {
             return {
