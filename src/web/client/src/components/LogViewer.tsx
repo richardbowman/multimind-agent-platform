@@ -42,12 +42,19 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
             refreshLogs();
         };
 
-        // Subscribe to log updates
-        window.electron?.onSystemLogUpdate(handleLogUpdate);
+        // Subscribe to log updates through RPC
+        const rpc = window.electron?.rpc;
+        if (rpc) {
+            rpc.onLogUpdate((update) => {
+                if (update.type === 'system') {
+                    refreshLogs();
+                }
+            });
+        }
 
         return () => {
             console.log('LogViewer: Cleaning up log subscription for type:', currentLogTab);
-            window.electron?.offSystemLogUpdate(handleLogUpdate);
+            // No need to explicitly unsubscribe since RPC handles cleanup
         };
     }, [currentLogTab, refreshLogs]);
 
