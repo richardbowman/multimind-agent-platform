@@ -16,6 +16,7 @@ import { useWebSocket } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
+import { TaskCard } from './TaskCard';
 
 interface TaskDialogProps {
     open: boolean;
@@ -38,9 +39,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
-            if (tasks.length > 0 && tasks[0].projectId) {
+            if (selectedTask.projectId) {
                 try {
-                    const project = await ipcService.getRPC().getProject(tasks[0].projectId);
+                    const project = await ipcService.getRPC().getProject(selectedTask.projectId);
                     setProjectDetails(project);
                 } catch (error) {
                     console.error('Failed to fetch project details:', error);
@@ -49,12 +50,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         };
 
         fetchProjectDetails();
-    }, [tasks, ipcService]);
+    }, [tasks, ipcService, selectedTask]);
     
     // Filter tasks to only show unique tasks from the current project
     const projectTasks = React.useMemo(() => {
-        if (!tasks || tasks.length === 0) return [];
-        const projectId = tasks[0]?.projectId;
+        const projectId = selectedTask?.projectId;
         if (!projectId) return tasks;
         
         // Create a map to deduplicate tasks by ID
@@ -66,7 +66,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         });
         
         return Array.from(taskMap.values());
-    }, [tasks, allTasks]);
+    }, [selectedTask, allTasks]);
 
     return (
         <Dialog 
