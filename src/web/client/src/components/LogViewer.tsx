@@ -189,9 +189,9 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                     flexDirection: 'column-reverse' // Reverse order
                 }}
                 onScroll={(e) => {
-                    const { scrollTop, scrollHeight, clientHeight } = e.currentTarget;
-                    console.log(scrollHeight - (scrollTop + clientHeight), hasMore);
-                    if (scrollHeight - (scrollTop + clientHeight) < 100 && hasMore) {
+                    const { scrollTop } = e.currentTarget;
+                    console.log('ScrollTop:', scrollTop);
+                    if (scrollTop < 100 && hasMore) {
                         loadMoreLogs();
                     }
                 }}
