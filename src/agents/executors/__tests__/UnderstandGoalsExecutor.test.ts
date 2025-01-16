@@ -57,8 +57,7 @@ describe('UnderstandGoalsExecutor', () => {
             metadata: {
                 createdAt: new Date(),
                 updatedAt: new Date(),
-                status: 'active',
-                answers: []
+                status: 'active'
             },
             tasks: {}
         });
@@ -83,9 +82,9 @@ describe('UnderstandGoalsExecutor', () => {
         mockTaskManager.getProject.mockReturnValue({
             id: 'test-project',
             metadata: {
-                answers: [
-                    { question: 'Existing Q', answer: 'Existing A' }
-                ]
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'active'
             },
             tasks: {}
         });

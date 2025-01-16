@@ -23,7 +23,13 @@ describe('ComplexProjectExecutor', () => {
             updateProject: jest.fn(),
             getProject: jest.fn(),
             updateTask: jest.fn(),
-            getAllTasks: jest.fn()
+            getAllTasks: jest.fn(),
+            replaceProject: jest.fn(),
+            completeTask: jest.fn(),
+            addProject: jest.fn(),
+            newProjectId: jest.fn(),
+            save: jest.fn(),
+            load: jest.fn()
         } as unknown as jest.Mocked<TaskManager>;
 
         mockParams = {
@@ -94,7 +100,11 @@ describe('ComplexProjectExecutor', () => {
         mockTaskManager.createProject.mockResolvedValue({
             id: 'new-project',
             name: 'Test Project',
-            metadata: {},
+            metadata: {
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: 'active'
+            },
             tasks: {}
         });
 
