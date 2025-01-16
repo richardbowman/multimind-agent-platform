@@ -20,6 +20,12 @@ export class ElectronIPCService extends BaseRPCService {
         if (!(window as any).electron) {
             throw new Error('Electron IPC not available');
         }
+        
+        // Bind methods to ensure proper this context
+        this.setupRPC = this.setupRPC.bind(this);
+        this.connect = this.connect.bind(this);
+        this.disconnect = this.disconnect.bind(this);
+        
         this.setupRPC();
     }
 

@@ -320,10 +320,14 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const { showSnackbar } = useSnackbar();
   
   const ipcService = useMemo(() => {
-    return (window as any).electron
+    const service = (window as any).electron
       ? new ElectronIPCService(contextMethods, showSnackbar)
       : new WebSocketService(showSnackbar);
-  }, [showSnackbar]);
+      
+    // Ensure context methods are properly bound
+    service.setupRPC();
+    return service;
+  }, [showSnackbar, contextMethods]);
 
   return (
     <IPCContext.Provider value={ipcService}>

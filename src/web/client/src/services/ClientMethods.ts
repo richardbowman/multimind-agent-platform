@@ -50,7 +50,8 @@ export function createClientMethods(contextMethods: DataContextMethods, showSnac
                 message.props?.artifactIds?.length > 0
             );
 
-            if (hasArtifactLinks && contextMethods.currentChannelId) {
+            // Always refresh artifacts when new messages arrive in the current channel/thread
+            if (contextMethods.currentChannelId) {
                 await contextMethods.fetchArtifacts(
                     contextMethods.currentChannelId,
                     contextMethods.currentThreadId
