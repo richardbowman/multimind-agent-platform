@@ -22,7 +22,16 @@ describe('UnderstandGoalsExecutor', () => {
             getProject: jest.fn(),
             addTask: jest.fn(),
             updateTask: jest.fn(),
-            getAllTasks: jest.fn()
+            getAllTasks: jest.fn(),
+            createProject: jest.fn(),
+            assignTaskToAgent: jest.fn(),
+            updateProject: jest.fn(),
+            replaceProject: jest.fn(),
+            completeTask: jest.fn(),
+            addProject: jest.fn(),
+            newProjectId: jest.fn(),
+            save: jest.fn(),
+            load: jest.fn()
         } as unknown as jest.Mocked<TaskManager>;
 
         mockParams = {

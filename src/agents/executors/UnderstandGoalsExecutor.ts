@@ -3,7 +3,7 @@ import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResult, StepResultType } from '../interfaces/StepResult';
 import crypto from 'crypto';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { TaskManager, TaskType } from '../../tools/taskManager';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';

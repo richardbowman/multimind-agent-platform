@@ -32,7 +32,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams & { executionMode: 'conversation' | 'task' }): Promise<StepResult> {
-        const { goal, step, projectId, threadPosts } = params;
+        const { goal, step, projectId } = params;
         const schema = await getGeneratedSchema(SchemaType.GoalConfirmationResponse);
 
         let prompt = `As an AI assistant, your task is to:

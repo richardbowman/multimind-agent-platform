@@ -20,7 +20,7 @@ describe('ComplexProjectExecutor', () => {
             createProject: jest.fn(),
             addTask: jest.fn(),
             assignTaskToAgent: jest.fn(),
-            updateProject: jest.fn().mockImplementation((projectId, updates) => {
+            updateProject: jest.fn().mockImplementation((projectId: string, updates: any) => {
                 return Promise.resolve({
                     id: projectId,
                     name: 'Updated Project',
