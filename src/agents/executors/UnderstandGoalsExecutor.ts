@@ -46,7 +46,9 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         let message = `${goal}\n\n`;
 
         // Include relevant artifacts if available
-        message += this.modelHelpers.formatArtifacts(artifacts);
+        if (artifacts && artifacts.length > 0) {
+            message += this.modelHelpers.formatArtifacts(artifacts);
+        }
 
         // Include existing Q&A if available
         if (project.metadata?.answers?.length > 0) {
