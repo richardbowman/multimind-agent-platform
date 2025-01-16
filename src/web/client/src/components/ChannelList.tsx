@@ -36,6 +36,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     const { channels, currentChannelId, setCurrentChannelId } = useWebSocket();
     const [open, setOpen] = useState(false);
     const [channelName, setChannelName] = useState('');
+    const [channelNameError, setChannelNameError] = useState(false);
     const [description, setDescription] = useState('');
     const [isPrivate, setIsPrivate] = useState(false);
     const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
@@ -45,6 +46,11 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     const webSocket = useWebSocket();
 
     const handleCreateChannel = async () => {
+        if (!channelName.trim()) {
+            setChannelNameError(true);
+            return;
+        }
+        
         try {
             await webSocket.createChannel({
                 name: channelName,
@@ -137,7 +143,13 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                         label="Channel Name"
                         fullWidth
                         value={channelName}
-                        onChange={(e) => setChannelName(e.target.value)}
+                        onChange={(e) => {
+                            setChannelName(e.target.value);
+                            setChannelNameError(false);
+                        }}
+                        error={channelNameError}
+                        helperText={channelNameError ? "Channel name is required" : ""}
+                        required
                         sx={{ mb: 2 }}
                     />
                     <TextField
@@ -235,7 +247,11 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 </DialogContent>
                 <DialogActions>
                     <Button onClick={() => setOpen(false)}>Cancel</Button>
-                    <Button onClick={handleCreateChannel} color="primary">
+                    <Button 
+                        onClick={handleCreateChannel} 
+                        color="primary"
+                        disabled={!channelName.trim()}
+                    >
                         Create
                     </Button>
                 </DialogActions>
