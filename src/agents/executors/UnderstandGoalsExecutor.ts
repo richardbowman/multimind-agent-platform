@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResult, StepResultType } from '../interfaces/StepResult';
 import crypto from 'crypto';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { TaskManager, TaskType } from '../../tools/taskManager';
@@ -13,6 +13,7 @@ import { ExecutorType } from '../interfaces/ExecutorType';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { Artifact } from 'src/tools/artifact';
+import { StepTask } from '../interfaces/ExecuteStepParams';
 
 /**
  * Executor that generates targeted questions to understand user requirements.
@@ -134,12 +135,15 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             await this.taskManager.addTask(project, {
                 id: crypto.randomUUID(),
                 type: TaskType.Step,
+                props: {
+                    stepType: ExecutorType.ANSWER_QUESTIONS,
+                },
                 category: 'process-answers',
                 description: `Gather answer to Q: ${q.question}; Purpose: ${q.purpose}`,
                 creator: this.userId,
                 complete: false,
                 order: i + 1
-            });
+            } as StepTask);
         }
         
         // Update existing tasks to continue numbering after the new questions
