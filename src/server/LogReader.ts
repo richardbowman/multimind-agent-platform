@@ -68,7 +68,7 @@ export class LogReader extends EventEmitter {
                     
                     const match = line.match(/^\[(.*?)\] ([A-Z]+): (.*)/);
                     if (match) {
-                        this.logCache.unshift({
+                        this.logCache.push({
                             timestamp: match[1],
                             level: match[2],
                             message: match[3]
@@ -76,7 +76,7 @@ export class LogReader extends EventEmitter {
                         remainingLines--;
                         totalLinesProcessed++;
                     } else if (this.logCache.length > 0) {
-                        this.logCache[0].message = line + '\n' + this.logCache[0].message;
+                        this.logCache[this.logCache.length - 1].message = line + '\n' + this.logCache[this.logCache.length - 1].message;
                     }
                 }
 
@@ -185,7 +185,8 @@ export class LogReader extends EventEmitter {
         
         this.updateCache();
 
-        let filtered = this.logCache;
+        // Start with most recent logs first
+        let filtered = [...this.logCache].reverse();
         let filterTime = 0;
         let paginationTime = 0;
         
@@ -221,7 +222,9 @@ export class LogReader extends EventEmitter {
         const paginationStart = Date.now();
         const offset = params.offset || 0;
         const limit = params.limit || 100;
-        const paginated = filtered.slice(offset, offset + limit);
+        // Reverse the filtered logs to show most recent first
+        const reversed = filtered.reverse();
+        const paginated = reversed.slice(offset, offset + limit);
         paginationTime = Date.now() - paginationStart;
 
         Logger.verbose(`Processed getLogs in ${Date.now() - startTime}ms (Filter: ${filterTime}ms, Pagination: ${paginationTime}ms) - Returning ${paginated.length} of ${filtered.length} entries`);
