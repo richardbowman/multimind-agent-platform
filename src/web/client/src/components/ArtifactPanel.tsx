@@ -136,14 +136,8 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                                 <CloseIcon />
                             </IconButton>
                         </Box>
-                        <Box sx={{ mb: 2 }}>
-                            <ArtifactViewer
-                                artifact={selectedArtifact}
-                                onClose={() => setDrawerOpen(false)}
-                            />
-                        </Box>
                         {currentChannelId && (
-                            <Box sx={{ display: 'flex', gap: 1, justifyContent: 'flex-end' }}>
+                            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
                                 <Button
                                     variant="contained"
                                     color="primary"
@@ -170,6 +164,12 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                                 </Button>
                             </Box>
                         )}
+                        <Box sx={{ mb: 2 }}>
+                            <ArtifactViewer
+                                artifact={selectedArtifact}
+                                onClose={() => setDrawerOpen(false)}
+                            />
+                        </Box>
                     </Box>
                 )}
             </Drawer>
