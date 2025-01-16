@@ -4,6 +4,7 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { Settings } from 'src/tools/settings';
 import { TaskManager } from 'src/tools/taskManager';
+import { ChatClient } from 'src/chat/chatClient';
 
 
 export interface ExecutorConstructorParams {
@@ -14,5 +15,6 @@ export interface ExecutorConstructorParams {
     settings: Settings;
     userId?: string;
     config?: Record<string, any>;
-    modelHelpers: ModelHelpers
+    modelHelpers: ModelHelpers;
+    chatClient: ChatClient;
 }

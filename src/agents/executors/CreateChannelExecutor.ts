@@ -11,17 +11,61 @@ import { ILLMService } from '../../llm/ILLMService';
 import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { Settings } from '../../tools/settings';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { ChatClient } from 'src/chat/chatClient';
 
 @StepExecutorDecorator(ExecutorType.CREATE_CHANNEL, 'Create channels with appropriate templates and settings')
 export class CreateChannelExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private artifactManager: ArtifactManager;
+    private chatClient: ChatClient;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
         this.artifactManager = params.artifactManager!;
+        this.chatClient = params.chatClient;
+    }
+
+    private async createChannel(params: {
+        name: string;
+        description: string;
+        isPrivate: boolean;
+        members: string[];
+        goalTemplate: string;
+        defaultResponderId: string;
+    }): Promise<string> {
+        // Always include the RouterAgent in the channel members
+        params.members = [...params.members, 'router-agent'];
+        
+        // If a goal template is specified, create a project with its tasks
+        const template = GoalTemplates.find(t => t.id === params.goalTemplate);
+        let projectId: string | undefined;
+        
+        if (template) {
+            const project = await this.taskManager.createProject({
+                name: params.name,
+                tasks: template.initialTasks.map((task, i) => ({
+                    description: task.description,
+                    type: task.type
+                })),
+                metadata: {
+                    description: params.description || '',
+                    tags: template.tags
+                }
+            });
+            projectId = project.id;
+        }
+
+        // Create the actual channel
+        const channelId = await this.chatClient.createChannel({
+            ...params,
+            projectId,
+            members: params.members,
+            defaultResponderId: params.defaultResponderId
+        });
+
+        return channelId;
     }
 
     async execute(params: ExecuteParams & { executionMode: 'conversation' | 'task' }): Promise<StepResult> {
@@ -41,24 +85,23 @@ export class CreateChannelExecutor implements StepExecutor {
             };
         }
 
-        // Create channel creation task
-        const channelTask = await this.taskManager.addTask({
-            description: `Create channel for: ${channelPurpose}`,
-            type: 'channel-creation',
-            creator: params.agentId,
-            props: {
-                template: selectedTemplate,
-                purpose: channelPurpose
-            }
+        // Create the channel using the selected template
+        const channelId = await this.createChannel({
+            name: channelPurpose,
+            description: `Channel for: ${channelPurpose}`,
+            isPrivate: false,
+            members: selectedTemplate.supportingAgents,
+            goalTemplate: selectedTemplate.id,
+            defaultResponderId: selectedTemplate.supportingAgents[0] || 'router-agent'
         });
 
         return {
             finished: true,
             response: {
-                message: `Channel creation task created using template: ${selectedTemplate.name}`,
+                message: `Created new channel "${channelPurpose}" using template: ${selectedTemplate.name}`,
                 reasoning: `Selected template ${selectedTemplate.name} based on channel purpose: ${channelPurpose}`,
                 data: {
-                    taskId: channelTask.id,
+                    channelId,
                     template: selectedTemplate
                 }
             }
