@@ -1,6 +1,7 @@
 import { readFileSync, existsSync, statSync, openSync, readSync, closeSync } from 'node:original-fs';
 import { join } from 'path';
 import { getDataPath } from 'src/helpers/paths';
+import Logger from 'src/helpers/logger';
 
 export interface LogEntry {
     timestamp: string;
@@ -21,29 +22,39 @@ export class LogReader {
     }
 
     private initializeCache() {
+        const startTime = Date.now();
+        Logger.verbose(`Initializing log cache from ${this.logFilePath}`);
+        
         if (!existsSync(this.logFilePath)) {
+            Logger.verbose('Log file does not exist, skipping cache initialization');
             return;
         }
 
         try {
             const stats = statSync(this.logFilePath);
             this.lastModified = stats.mtimeMs;
+            Logger.verbose(`Log file size: ${stats.size} bytes, last modified: ${new Date(this.lastModified).toISOString()}`);
             
-            // Read file in reverse from end
             const fd = openSync(this.logFilePath, 'r');
             const chunkSize = 1024 * 1024; // 1MB chunks
             let position = stats.size;
             let buffer = Buffer.alloc(chunkSize);
             let remainingLines = this.cacheSize;
             let partialLine = '';
+            let totalLinesProcessed = 0;
+            let totalBytesRead = 0;
+            let chunkCount = 0;
 
             while (position > 0 && remainingLines > 0) {
+                const chunkStartTime = Date.now();
                 position = Math.max(0, position - chunkSize);
                 const bytesRead = readSync(fd, buffer, 0, chunkSize, position);
-                const chunk = buffer.toString('utf8', 0, bytesRead);
+                totalBytesRead += bytesRead;
+                chunkCount++;
                 
-                // Process lines in reverse order
+                const chunk = buffer.toString('utf8', 0, bytesRead);
                 const lines = chunk.split('\n').reverse();
+                
                 if (partialLine) {
                     lines[0] += partialLine;
                     partialLine = '';
@@ -60,21 +71,23 @@ export class LogReader {
                             message: match[3]
                         });
                         remainingLines--;
+                        totalLinesProcessed++;
                     } else if (this.logCache.length > 0) {
-                        // Continuation line
                         this.logCache[0].message = line + '\n' + this.logCache[0].message;
                     }
                 }
 
-                // Handle partial line at start of chunk
                 if (position > 0) {
                     partialLine = lines[lines.length - 1];
                 }
+
+                Logger.verbose(`Processed chunk ${chunkCount} in ${Date.now() - chunkStartTime}ms - Position: ${position}, Lines: ${totalLinesProcessed}, Bytes: ${totalBytesRead}`);
             }
 
             closeSync(fd);
+            Logger.verbose(`Cache initialized in ${Date.now() - startTime}ms - Total lines: ${totalLinesProcessed}, Total bytes: ${totalBytesRead}, Cache size: ${this.logCache.length}`);
         } catch (error) {
-            console.error('Error initializing log cache:', error);
+            Logger.error('Error initializing log cache:', error);
         }
     }
 
@@ -92,7 +105,13 @@ export class LogReader {
     }
 
     private updateCache() {
-        if (!this.checkForUpdates()) return;
+        const startTime = Date.now();
+        Logger.verbose('Checking for log updates...');
+        
+        if (!this.checkForUpdates()) {
+            Logger.verbose('No updates found');
+            return;
+        }
 
         try {
             const fd = openSync(this.logFilePath, 'r');
@@ -100,7 +119,12 @@ export class LogReader {
             const position = Math.max(0, stats.size - 1024); // Read last 1KB for new entries
             const buffer = Buffer.alloc(1024);
             const bytesRead = readSync(fd, buffer, 0, 1024, position);
+            
+            Logger.verbose(`Reading ${bytesRead} bytes from position ${position}`);
+            
             const newContent = buffer.toString('utf8', 0, bytesRead);
+            let newEntries = 0;
+            let continuationLines = 0;
 
             newContent.split('\n').forEach(line => {
                 if (!line.trim()) return;
@@ -112,20 +136,21 @@ export class LogReader {
                         level: match[2],
                         message: match[3]
                     });
+                    newEntries++;
                     
-                    // Maintain cache size
                     if (this.logCache.length > this.cacheSize) {
                         this.logCache.shift();
                     }
                 } else if (this.logCache.length > 0) {
-                    // Continuation line
                     this.logCache[this.logCache.length - 1].message += '\n' + line;
+                    continuationLines++;
                 }
             });
 
             closeSync(fd);
+            Logger.verbose(`Cache updated in ${Date.now() - startTime}ms - New entries: ${newEntries}, Continuations: ${continuationLines}, Cache size: ${this.logCache.length}`);
         } catch (error) {
-            console.error('Error updating log cache:', error);
+            Logger.error('Error updating log cache:', error);
         }
     }
 
@@ -139,12 +164,19 @@ export class LogReader {
             endTime?: number;
         };
     }): { logs: LogEntry[]; total: number } {
+        const startTime = Date.now();
+        Logger.verbose('Starting getLogs request');
+        
         this.updateCache();
 
         let filtered = this.logCache;
+        let filterTime = 0;
+        let paginationTime = 0;
         
         // Apply filters
         if (params.filter) {
+            const filterStart = Date.now();
+            
             if (params.filter.level?.length) {
                 filtered = filtered.filter(entry => 
                     params.filter!.level!.includes(entry.level)
@@ -164,12 +196,19 @@ export class LogReader {
                 const end = new Date(params.filter.endTime).toISOString();
                 filtered = filtered.filter(entry => entry.timestamp <= end);
             }
+            
+            filterTime = Date.now() - filterStart;
+            Logger.verbose(`Applied filters in ${filterTime}ms - Remaining entries: ${filtered.length}`);
         }
 
         // Apply pagination
+        const paginationStart = Date.now();
         const offset = params.offset || 0;
         const limit = params.limit || 100;
         const paginated = filtered.slice(offset, offset + limit);
+        paginationTime = Date.now() - paginationStart;
+
+        Logger.verbose(`Processed getLogs in ${Date.now() - startTime}ms (Filter: ${filterTime}ms, Pagination: ${paginationTime}ms) - Returning ${paginated.length} of ${filtered.length} entries`);
 
         return {
             logs: paginated,
