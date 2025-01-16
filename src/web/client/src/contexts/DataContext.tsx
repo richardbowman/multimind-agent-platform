@@ -62,12 +62,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [artifacts, setArtifacts] = useState<any[]>([]);
   const [logs, setLogs] = useState<{
     llm: Record<string, LLMLogEntry[]>;
-    system: any[];
-    api: any[];
+    system: {
+      logs: any[];
+      total: number;
+    };
+    api: {
+      logs: any[];
+      total: number;
+    };
   }>({
     llm: {},
-    system: [],
-    api: []
+    system: {
+      logs: [],
+      total: 0
+    },
+    api: {
+      logs: [],
+      total: 0
+    }
   });
   const [isLoading, setIsLoading] = useState(true);
   const [needsConfig, setNeedsConfig] = useState(true);
@@ -193,16 +205,24 @@ export const DataProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
   }) => {
     const newLogs = await ipcService.getRPC().getLogs(logType, params);
-    setLogs(prev => ({
-      ...prev,
-      [logType]: {
-        ...prev[logType],
-        logs: params?.offset 
-          ? [...(prev[logType]?.logs || []), ...newLogs.logs]
-          : newLogs.logs,
-        total: newLogs.total
-      }
-    }));
+    
+    if (logType === 'llm') {
+      setLogs(prev => ({
+        ...prev,
+        llm: newLogs
+      }));
+    } else {
+      setLogs(prev => ({
+        ...prev,
+        [logType]: {
+          logs: params?.offset 
+            ? [...(prev[logType]?.logs || []), ...newLogs.logs]
+            : newLogs.logs,
+          total: newLogs.total
+        }
+      }));
+    }
+    
     return newLogs;
   }, []);
 

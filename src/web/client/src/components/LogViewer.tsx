@@ -106,7 +106,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const renderLogs = () => {
         switch (currentLogTab) {
             case 'llm':
-                return Object.entries(logs?.llm || {}).flatMap(([service, entries]) => 
+                return Object.entries(logs.llm || {}).flatMap(([service, entries]) => 
                     (Array.isArray(entries) ? entries : [])
                         .filter(log => 
                             filterLog(JSON.stringify({
@@ -116,7 +116,6 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                                 error: log?.error
                             }))
                         )
-                        .slice(0, loadedLogs.length || undefined) // Apply pagination
                         .map((log, index) => (
                         <div key={`${service}-${index}`} className="log-entry info">
                             <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
