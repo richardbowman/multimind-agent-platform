@@ -68,16 +68,23 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
 
     const loadMoreLogs = useCallback(async () => {
         try {
-            const newLogs = await fetchLogs(currentLogTab, {
-                limit: pageSize,
-                offset: loadedLogs.length,
-                filter: {
-                    search: filterText
-                }
-            });
-            
-            setLoadedLogs(prev => [...prev, ...newLogs.logs]);
-            setHasMore(newLogs.total > loadedLogs.length + newLogs.logs.length);
+            let newLogs;
+            if (currentLogTab === 'llm') {
+                // LLM logs are already loaded in full
+                setHasMore(false);
+                return;
+            } else {
+                newLogs = await fetchLogs(currentLogTab, {
+                    limit: pageSize,
+                    offset: loadedLogs.length,
+                    filter: {
+                        search: filterText
+                    }
+                });
+                
+                setLoadedLogs(prev => [...prev, ...newLogs.logs]);
+                setHasMore(newLogs.total > loadedLogs.length + newLogs.logs.length);
+            }
         } catch (error) {
             console.error('Error loading logs:', error);
         }
@@ -87,7 +94,13 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         // Reset loaded logs when log type or filter changes
         setLoadedLogs([]);
         setHasMore(true);
-        loadMoreLogs();
+        
+        if (currentLogTab === 'llm') {
+            // LLM logs are already loaded in full
+            setHasMore(false);
+        } else {
+            loadMoreLogs();
+        }
     }, [currentLogTab, filterText]);
 
     const renderLogs = () => {
@@ -103,6 +116,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                                 error: log.error
                             }))
                         )
+                        .slice(0, loadedLogs.length || undefined) // Apply pagination
                         .map((log, index) => (
                         <div key={`${service}-${index}`} className="log-entry info">
                             <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
