@@ -30,7 +30,18 @@ export class ElectronIPCService extends BaseRPCService {
 
             this.rpc = createBirpc<ServerMethods, ClientMethods>(
                 {
-                    onBackendStatus: (arg) => this.wrapper.onBackendStatus.call(this, arg),
+                    onClientLogProcessed: (success, message) => 
+                        this.wrapper.onClientLogProcessed.call(this, success, message),
+                    onMessage: (messages) => 
+                        this.wrapper.onMessage.call(this, messages),
+                    onLogUpdate: (update) => 
+                        this.wrapper.onLogUpdate.call(this, update),
+                    onBackendStatus: (status) => 
+                        this.wrapper.onBackendStatus.call(this, status),
+                    onTaskUpdate: (task) => 
+                        this.wrapper.onTaskUpdate.call(this, task),
+                    onProjectUpdate: (project) => 
+                        this.wrapper.onProjectUpdate.call(this, project),
                 },
                 {
                     post: (data) => {
