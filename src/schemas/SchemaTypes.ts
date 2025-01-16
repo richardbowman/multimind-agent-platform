@@ -32,5 +32,6 @@ export enum SchemaType {
     ResearchUnderstandingResponse = 'ResearchUnderstandingResponse',
     CodeExecutionResponse = 'CodeExecutionResponse',
     BrainstormResponse = 'BrainstormResponse',
-    OutlineApprovalCheck = 'OutlineApprovalCheck'
+    OutlineApprovalCheck = 'OutlineApprovalCheck',
+    ArtifactGeneration = 'ArtifactGeneration'
 }

@@ -42,33 +42,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const schema = {
-            type: 'object',
-            properties: {
-                artifactId: { 
-                    type: 'string',
-                    description: 'ID of document to modify (only required for replace/append operations)'
-                },
-                operation: { 
-                    type: 'string',
-                    enum: ['create', 'replace', 'append'],
-                    description: 'Operation to perform: "create" for new documents, "replace" or "append" for existing ones'
-                },
-                title: { 
-                    type: 'string',
-                    description: 'Title for the document'
-                },
-                content: { 
-                    type: 'string',
-                    description: 'Content for the document'
-                },
-                confirmationMessage: { 
-                    type: 'string',
-                    description: 'Message describing what was done'
-                }
-            },
-            required: ['title', 'content', 'confirmationMessage', 'operation']
-        };
+        const schema = await getGeneratedSchema(SchemaType.ArtifactGeneration);
 
         // Get Q&A context from project metadata
         let qaContext;
