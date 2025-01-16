@@ -1,4 +1,4 @@
-import { readFileSync, existsSync } from 'fs';
+import { readFileSync, existsSync, statSync, openSync, readSync, closeSync } from 'node:original-fs';
 import { join } from 'path';
 import { getDataPath } from 'src/helpers/paths';
 
