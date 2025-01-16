@@ -185,8 +185,8 @@ export class LogReader extends EventEmitter {
         
         this.updateCache();
 
-        // Start with logs in chronological order
-        let filtered = [...this.logCache];
+        // Start with logs in reverse chronological order (newest first)
+        let filtered = [...this.logCache].reverse();
         let filterTime = 0;
         let paginationTime = 0;
         
@@ -222,7 +222,7 @@ export class LogReader extends EventEmitter {
         const paginationStart = Date.now();
         const offset = params.offset || 0;
         const limit = params.limit || 100;
-        // Get the requested page of logs
+        // Get the requested page of logs (already in reverse order)
         const paginated = filtered.slice(offset, offset + limit);
         paginationTime = Date.now() - paginationStart;
 
