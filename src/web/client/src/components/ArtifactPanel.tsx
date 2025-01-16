@@ -66,7 +66,10 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     return (
         <Box sx={{ p: 1, height: '100%', overflowY: 'auto' }}>
             
-            <Divider />
+            <Typography variant="h6" sx={{ mb: 2, color: 'text.primary' }}>
+                Artifacts
+            </Typography>
+            <Divider sx={{ mb: 2 }} />
             <List>
                 {(artifacts || []).map((artifact: Artifact) => (
                     <ArtifactCard
