@@ -90,7 +90,20 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     });
 
       if (!Object.values(chatStorage.channelNames).includes("#welcome")) {
-        await chatStorage.createChannel({
+        // Create RPC handler and use it to create channel
+        const rpcHandler = new ServerRPCHandler({
+            chatClient: userClient,
+            taskManager: tasks,
+            artifactManager,
+            settingsManager,
+            llmLogger: chatService.getLogger(),
+            logReader: new LogReader(),
+            llmService: chatService,
+            vectorDB,
+            cleanup: shutdown
+        });
+        
+        await rpcHandler.createChannel({
             name: "#welcome",
             description: "This is where we'll get started",
             members: [_s.agents["OnboardingConsultant"].userId],
