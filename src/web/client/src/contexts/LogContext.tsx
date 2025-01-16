@@ -15,10 +15,19 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const logger = new ClientLogger((level, message, details) => {
             return ipcService.getRPC().logClientEvent(level, message, details);
         });
+        return logger;
+    }, []);
+
+    useEffect(() => {
+        // Setup console interception and error handlers once
         logger.interceptConsole();
         logger.setupGlobalErrorHandlers();
-        return logger;
-    }, [ipcService]);
+        
+        // Cleanup on unmount
+        return () => {
+            logger.restoreConsole();
+        };
+    }, [logger]);
 
     return (
         <LogContext.Provider value={{ logger }}>
