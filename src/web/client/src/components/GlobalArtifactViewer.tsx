@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
-import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, ListItemButton, IconButton, List, ListItemText, ListItem, ListItemIcon, Drawer, Toolbar, Fab } from '@mui/material';
+import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, IconButton, List, Drawer, Toolbar, Fab } from '@mui/material';
+import { ArtifactCard } from './ArtifactCard';
 import Grid from '@mui/material/Grid2';
 import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -60,34 +61,12 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                         <AccordionDetails>
                             <List>
                                 {artifacts.map(artifact => (
-                                    <ListItem
+                                    <ArtifactCard
                                         key={artifact.id}
+                                        artifact={artifact}
                                         selected={selectedArtifact?.id === artifact.id}
                                         onClick={() => setSelectedArtifact(artifact)}
-                                        secondaryAction={
-                                            <IconButton edge="end" aria-label="delete" onClick={(e) => {
-                                                e.stopPropagation();
-                                                if (window.confirm('Are you sure you want to delete this artifact?')) {
-                                                    deleteArtifact(artifact.id);
-                                                }
-                                            }}>
-                                                <DeleteIcon />
-                                            </IconButton>
-                                        }
-                                    >
-                                        <ListItemIcon>
-                                            <FolderIcon />
-                                        </ListItemIcon>
-                                        <ListItemText 
-                                            primary={artifact.metadata?.title || artifact.id} 
-                                            secondary={
-                                                typeof artifact.content === 'string' 
-                                                    ? artifact.content.split('\n').slice(0, 2).join('\n')
-                                                    : ''
-                                            }
-                                        />
-
-                                    </ListItem>
+                                    />
                                 ))}
                             </List>
                         </AccordionDetails>
