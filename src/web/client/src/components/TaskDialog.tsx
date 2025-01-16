@@ -118,7 +118,17 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         borderRight: '1px solid',
                         borderColor: 'divider'
                     }}>
-                        <Typography variant="h6" sx={{ mb: 1, position: 'sticky', top: 0, bgcolor: 'background.paper', zIndex: 1 }}>
+                        <Typography 
+                            variant="h6" 
+                            sx={{ 
+                                mb: 1, 
+                                position: 'sticky', 
+                                top: 0, 
+                                bgcolor: 'background.default', 
+                                zIndex: 1,
+                                color: 'text.primary'
+                            }}
+                        >
                             Project Tasks
                         </Typography>
                         <List sx={{ overflowY: 'auto' }}>
