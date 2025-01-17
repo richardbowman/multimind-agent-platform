@@ -54,16 +54,16 @@ jobs:
         run: |
           cp defaults.json5 dist/defaults.json5
         
-      - name: Build Electron App
+      - name: Build and Publish Electron App
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            yarn electron:package --mac
+            yarn electron:package --mac --publish always
           elif [ "${{ matrix.os }}" = "windows-latest" ]; then
-            yarn electron:package --win
+            yarn electron:package --win --publish always
           else
-            yarn electron:package --linux
+            yarn electron:package --linux --publish always
           fi
         shell: bash
 

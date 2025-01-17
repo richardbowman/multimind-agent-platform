@@ -4,6 +4,7 @@
   "main": "dist/main.electron.js",
   "scripts": {
     "test": "jest",
+    "release": "electron-builder --publish always",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "schemas": "ts-json-schema-generator --path 'src/schemas/**/*.ts' --type '*' -o src/schemas/schema.json --no-type-check",
@@ -32,6 +33,12 @@
   "author": "",
   "license": "ISC",
   "description": "Multi-agent platform for AI assistants",
+  "build": {
+    "publish": {
+      "provider": "github",
+      "releaseType": "release"
+    }
+  },
   "resolutions": {
     "react": "19.0.0",
     "react-dom": "19.0.0"
