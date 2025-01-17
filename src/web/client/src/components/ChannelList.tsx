@@ -184,7 +184,12 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                     <CardActionArea 
                                         onClick={() => {
                                             setSelectedTemplate(template.id);
-                                            setSelectedAgents(template.supportingAgents);
+                                            // Convert @handles to IDs when selecting template
+                                            setSelectedAgents(template.supportingAgents.map(idOrHandle => 
+                                                idOrHandle.startsWith('@') 
+                                                    ? webSocket.handles.find(h => h.handle === idOrHandle.slice(1))?.id || idOrHandle
+                                                    : idOrHandle
+                                            ));
                                         }}
                                         sx={{ height: '100%' }}
                                     >
@@ -197,7 +202,11 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                             </Typography>
                                             <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
                                                 Supporting Agents: {template.supportingAgents
-                                                    .map(id => webSocket.handles.find(h => h.id === id)?.handle || 'Unknown')
+                                                    .map(idOrHandle => 
+                                                        idOrHandle.startsWith('@') 
+                                                            ? idOrHandle 
+                                                            : webSocket.handles.find(h => h.id === idOrHandle)?.handle || 'Unknown'
+                                                    )
                                                     .join(', ')}
                                             </Typography>
                                         </CardContent>
@@ -214,7 +223,11 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                             value={selectedAgents}
                             onChange={(e) => setSelectedAgents(e.target.value as string[])}
                             renderValue={(selected) => (selected as string[])
-                                .map(id => webSocket.handles.find(h => h.id === id)?.handle || 'Unknown')
+                                .map(idOrHandle => 
+                                    idOrHandle.startsWith('@') 
+                                        ? idOrHandle 
+                                        : webSocket.handles.find(h => h.id === idOrHandle)?.handle || 'Unknown'
+                                )
                                 .join(', ')}
                         >
                             {webSocket.handles.map((handle) => {
@@ -239,7 +252,9 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                             <MenuItem value="">None</MenuItem>
                             {selectedAgents.map((agentId) => (
                                 <MenuItem key={agentId} value={agentId}>
-                                    {webSocket.handles.find(h => h.id === agentId)?.handle || 'Unknown'}
+                                    {agentId.startsWith('@') 
+                                        ? agentId 
+                                        : webSocket.handles.find(h => h.id === agentId)?.handle || 'Unknown'}
                                 </MenuItem>
                             ))}
                         </Select>
