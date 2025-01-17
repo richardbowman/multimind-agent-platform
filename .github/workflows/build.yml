@@ -56,7 +56,7 @@ jobs:
         
       - name: Build and Publish Electron App
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           if [ "${{ matrix.os }}" = "macos-latest" ]; then
             yarn electron:package --mac --publish always
