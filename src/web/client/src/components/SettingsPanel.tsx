@@ -20,7 +20,12 @@ import {
   Toolbar,
   Chip,
   Autocomplete,
-  Slider
+  Slider,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  DialogContentText,
+  DialogActions
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useWebSocket } from '../contexts/DataContext';
@@ -29,6 +34,10 @@ import { Settings } from '../../../../tools/settings';
 import { ModelInfo } from '../../../../llm/types';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { DrawerPage } from './GlobalArtifactViewer';
+
+// Import package.json and LICENSE file contents
+import packageJson from '../../../../../package.json';
+import licenseText from '../../../../../LICENSE';
 
 export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
     const [settings, setSettings] = useState<Settings>({});
@@ -143,6 +152,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     };
 
     const [saveSuccess, setSaveSuccess] = useState(false);
+    const [aboutOpen, setAboutOpen] = useState(false);
 
     const handleSave = async () => {
         // Get all required fields from metadata
@@ -535,8 +545,16 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 <Box sx={{ 
                     display: 'flex', 
                     justifyContent: 'space-between', 
-                    mt: 2 
+                    mt: 2,
+                    gap: 2
                 }}>
+                    <Button
+                        variant="outlined"
+                        onClick={() => setAboutOpen(true)}
+                    >
+                        About
+                    </Button>
+                    
                     <Button
                         variant="outlined"
                         color="warning"
@@ -592,6 +610,41 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 )}
             </Box>
             </Box>
+
+            {/* About Dialog */}
+            <Dialog
+                open={aboutOpen}
+                onClose={() => setAboutOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>About MultiMind Agent Platform</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        <Typography variant="body1" gutterBottom>
+                            Version: {packageJson.version}
+                        </Typography>
+                        <Typography variant="body1" gutterBottom>
+                            Copyright © 2025 Rick Bowman
+                        </Typography>
+                        <Typography variant="body2" component="pre" sx={{ 
+                            whiteSpace: 'pre-wrap',
+                            wordWrap: 'break-word',
+                            mt: 2,
+                            p: 2,
+                            backgroundColor: 'background.paper',
+                            borderRadius: 1
+                        }}>
+                            {licenseText}
+                        </Typography>
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setAboutOpen(false)} color="primary">
+                        Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
