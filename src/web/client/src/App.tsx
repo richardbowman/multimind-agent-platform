@@ -120,7 +120,7 @@ const AppContent: React.FC = () => {
                         <Tab
                             label="Logs"
                             value="logs"
-                            disabled={needsConfig}
+                            disabled={false} // Always enabled, even in reduced functionality mode
                         />
                         <Tab
                             label="Settings"
