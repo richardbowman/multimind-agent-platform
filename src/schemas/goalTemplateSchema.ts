@@ -20,6 +20,11 @@ export interface GoalTemplate {
     supportingAgents: string[];
     
     /**
+     * Default responding agent ID or @handle for this goal template
+     */
+    defaultResponder?: string;
+    
+    /**
      * Initial tasks to create when this goal template is selected
      */
     initialTasks: InitialTask[];
@@ -59,6 +64,7 @@ export const GoalTemplates: GoalTemplate[] = [
             '@data', //data gatherer
             '@onboarding' // Onboarding agent
         ],
+        defaultResponder: '@onboarding',
         initialTasks: [
             {
                 description: 'Gather and analyze any existing documents using the data agent',
@@ -87,6 +93,7 @@ export const GoalTemplates: GoalTemplate[] = [
         name: 'Software Development Project',
         description: 'Template for managing a software development project',
         supportingAgents: ['2e330aba-4888-42b8-8685-ecdc7f4b1b43'], // ProjectManager
+        defaultResponder: '2e330aba-4888-42b8-8685-ecdc7f4b1b43',
         initialTasks: [
             {
                 description: 'Understand the product vision and product requirements to generate product requirements',
@@ -109,6 +116,7 @@ export const GoalTemplates: GoalTemplate[] = [
             'data-gather', //data gatherer
             'marketing-strategist' // marketing strategist
         ],
+        defaultResponder: '9d039c4e-f99d-4fb7-a160-452ac261569c',
         initialTasks: [
             {
                 description: 'Share existing website information with the agents',

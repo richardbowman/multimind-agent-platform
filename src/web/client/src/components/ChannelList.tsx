@@ -190,6 +190,14 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                                     ? webSocket.handles.find(h => h.handle === idOrHandle.slice(1))?.id || idOrHandle
                                                     : idOrHandle
                                             ));
+                                            // Set default responder if specified in template
+                                            if (template.defaultResponder) {
+                                                setDefaultResponderId(
+                                                    template.defaultResponder.startsWith('@')
+                                                        ? webSocket.handles.find(h => h.handle === template.defaultResponder?.slice(1))?.id || template.defaultResponder
+                                                        : template.defaultResponder
+                                                );
+                                            }
                                         }}
                                         sx={{ height: '100%' }}
                                     >
