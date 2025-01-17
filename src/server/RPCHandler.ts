@@ -260,6 +260,26 @@ export class ServerRPCHandler implements ServerMethods {
     }
     
     constructor(private services: BackendServicesConfigNeeded|BackendServicesWithWindows) {
+        // Set up auto-update event forwarding
+        autoUpdater.on('checking-for-update', () => {
+            this.services.rpc?.onUpdateStatus('Checking for updates...');
+        });
+
+        autoUpdater.on('update-available', () => {
+            this.services.rpc?.onUpdateStatus('Update available, downloading...');
+        });
+
+        autoUpdater.on('update-not-available', () => {
+            this.services.rpc?.onUpdateStatus('No updates available');
+        });
+
+        autoUpdater.on('download-progress', (progress) => {
+            this.services.rpc?.onUpdateProgress(progress.percent);
+        });
+
+        autoUpdater.on('update-downloaded', () => {
+            this.services.rpc?.onUpdateStatus('Update downloaded - Restart to install');
+        });
     }
 
     public setServices(services) {
@@ -600,6 +620,13 @@ export class ServerRPCHandler implements ServerMethods {
     async closeWindow(): Promise<void> {
         const mainWindow = this.services.mainWindow.getWindow();
         mainWindow.close();
+    },
+
+    async getUpdateStatus(): Promise<{status: string, progress: number}> {
+        return {
+            status: autoUpdater.status,
+            progress: autoUpdater.progress.percent || 0
+        };
     }
 
     async getWindowState(): Promise<'maximized' | 'normal'> {

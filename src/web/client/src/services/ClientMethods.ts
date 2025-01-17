@@ -125,6 +125,14 @@ export const useClientMethods = (showSnackbar: (options: any) => void, contextMe
                 const exists = prev.some(c => c.id === channel.id);
                 return exists ? prev : [...prev, channel];
             });
+        },
+
+        onUpdateStatus(status: string) {
+            contextMethods.setUpdateStatus(status);
+        },
+
+        onUpdateProgress(progress: number) {
+            contextMethods.setUpdateProgress(progress);
         }
     };
 };
