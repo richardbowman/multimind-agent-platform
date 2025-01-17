@@ -56,12 +56,6 @@ export class WebpageExecutor implements StepExecutor {
         const { step, projectId, message, context } = params;
         
         try {
-            // Extract URL from step or message
-            // Check context artifacts first for URLs
-            const contextUrls = context?.artifacts
-                ?.filter(a => a.metadata?.url)
-                .map(a => a.metadata.url) || [];
-            
             // Extract URLs from params with context URLs as fallback
             const urls = await this.extractUrls(params);
             const contextUrls = context?.artifacts
