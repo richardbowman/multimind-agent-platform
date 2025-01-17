@@ -7,7 +7,7 @@
     "directories": {
       "buildResources": "assets"
     },
-    "icon": "assets/icon.png",
+    "icon": "dist/icon.png",
     "mac": {
       "category": "public.app-category.developer-tools"
     },

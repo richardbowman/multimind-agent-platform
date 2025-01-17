@@ -36,7 +36,8 @@ async function generateIcon() {
     ctx.drawImage(logo, logoX, logoY, logoSize, logoSize);
 
     // Save the icon
-    const outPath = path.join(__dirname, '../assets/icon.png');
+    fs.mkdirSync(path.join(__dirname, '../dist'));
+    const outPath = path.join(__dirname, '../dist/icon.png');
     fs.writeFileSync(outPath, canvas.toBuffer('image/png'));
     console.log(`Icon generated at ${outPath}`);
 }

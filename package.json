@@ -18,7 +18,7 @@
     "build:app": "yarn build:electron build:web",
     "build:electron": "webpack --config webpack.backend.config.js --mode production && webpack --config webpack.preload.config.js --mode production",
     "build:web": "webpack --config webpack.config.js --mode production",
-    "build:clean": "npm run clean && npm run build:electron && npm run build:web",
+    "build:clean": "yarn clean && yarn generate-icon && yarn build:electron && yarn build:web",
     "watch": "concurrently \"yarn watch:app\" \"yarn watch:schemas\"",
     "watch:webmode": "concurrently \"npm run watch:server\" \"npm run start:web\"",
     "watch:web": "webpack --config webpack.config.js --mode development --watch",
@@ -29,8 +29,7 @@
     "electron:build": "electron-builder",
     "electron:package": "yarn build:clean && yarn electron:build",
     "electron:package:all": "electron-builder build --mac --win --linux",
-    "electron:deploy:linux": "electron-builder build --linux --publish always",
-    "release": "electron-builder --publish always"
+    "electron:deploy:linux": "electron-builder build --linux --publish always"
   },
   "keywords": [],
   "author": "",
@@ -91,7 +90,6 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
-      "canvas": "^2.11.2",
     "@babel/core": "^7.26.0",
     "@babel/preset-typescript": "^7.26.0",
     "@emotion/react": "^11.14.0",
@@ -111,6 +109,7 @@
     "@types/turndown": "^5.0.5",
     "@types/webpack-node-externals": "^3.0.4",
     "@types/ws": "^8.5.13",
+    "canvas": "^3.0.1",
     "chokidar-cli": "^3.0.0",
     "concurrently": "^9.1.2",
     "copy-webpack-plugin": "^12.0.2",
