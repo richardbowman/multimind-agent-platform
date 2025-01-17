@@ -49,6 +49,10 @@ module.exports = {
           }
         ],
         exclude: /node_modules/
+      },
+      {
+        test: /LICENSE$/,
+        type: 'asset/source'
       }
     ]
   },
