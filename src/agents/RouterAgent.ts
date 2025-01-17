@@ -82,15 +82,13 @@ export class RouterAgent extends Agent {
         switch (response.nextStep) {
             case 'start-goal':
                 if (context.project && context.projectTasks.some(t => !t.complete)) {
-                    const incompleteTasks = context.projectTasks
-                        .filter(t => !t.complete)
-                        .map((t, i) => `${i + 1}. ${t.description}`)
-                        .join('\n');
-                    
                     await this.reply(userPost, {
-                        message: `I see we have some outstanding tasks for this project:\n${incompleteTasks}\n\nWould you like to work on one of these?`
+                        message: response.response
                     }, {
-                        "project-tasks": incompleteTasks
+                        "project-tasks": context.projectTasks
+                            .filter(t => !t.complete)
+                            .map(t => t.description)
+                            .join('\n')
                     });
                     break;
                 }
