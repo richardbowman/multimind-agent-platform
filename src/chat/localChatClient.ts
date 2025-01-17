@@ -130,8 +130,6 @@ export class LocalChatStorage extends EventEmitter {
     public async save(): Promise<void> {
         return this.queue.enqueue(async () => {
             try {
-                if (this.saveQueued) return;
-                this.saveQueued = true;
                 const data = {
                     channelNames: this.channelNames,
                     channelData: this.channelData,
@@ -142,8 +140,6 @@ export class LocalChatStorage extends EventEmitter {
             } catch (error) {
                 Logger.error('Failed to save tasks:', error);
                 throw error;
-            } finally {
-                this.saveQueued = false;
             }
         });
     }
