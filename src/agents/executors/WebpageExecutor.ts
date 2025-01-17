@@ -138,27 +138,29 @@ export class WebpageExecutor implements StepExecutor {
                 .flatMap(r => r.data?.availableLinks || [])
                 .filter(Boolean);
 
-            const sources = [
-                params.message,
-                params.step,
-                ...(params.previousResult || []).map(r => r.message),
-                ...availableLinks
-            ].filter(Boolean).join('\n');
+            const previousMessages = (params.previousResult || [])
+                .map(r => r.message)
+                .filter(Boolean);
 
-            if (!sources) return [];
+            if (!params.message) return [];
 
             const schema = await getGeneratedSchema(SchemaType.UrlExtractionResponse);
             
-            const systemPrompt = `You are a URL extraction assistant. Analyze the following text and extract any URLs or website references that should be visited:
+            const systemPrompt = `You are a URL extraction assistant. Analyze the user's message and extract any URLs or website references that should be visited:
             - Include full URLs with https:// prefix
             - Convert domain names (test.com) to full URLs
             - Include any relevant paths
             - Preserve any URL parameters
-            - Return empty array if no URLs found`;
+            - Return empty array if no URLs found
+
+            Additional context:
+            - Step: ${params.step || 'none'}
+            - Available links from previous results: ${availableLinks.join(', ') || 'none'}
+            - Previous messages: ${previousMessages.join('\n') || 'none'}`;
 
             const instructions = new StructuredOutputPrompt(schema, systemPrompt);
             const response = await this.modelHelpers.generate<UrlExtractionResponse>({
-                message: sources,
+                message: params.message, // Just use the user's message as input
                 instructions
             });
 
