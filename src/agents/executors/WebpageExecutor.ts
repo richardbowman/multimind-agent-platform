@@ -5,6 +5,9 @@ import { StepResult } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import ScrapeHelper from '../../helpers/scrapeHelper';
 import { ILLMService } from "src/llm/ILLMService";
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
+import { SchemaType } from '../../schemas/SchemaTypes';
+import { StructuredOutputPrompt } from 'src/llm/ILLMService';
 import Logger from '../../helpers/logger';
 import crypto from 'crypto';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -126,43 +129,19 @@ export class WebpageExecutor implements StepExecutor {
 
             if (!sources) return [];
 
-            // Use structured output to extract URLs
-            const urlSchema = {
-                type: "object",
-                properties: {
-                    urls: {
-                        type: "array",
-                        items: {
-                            type: "string",
-                            format: "uri",
-                            pattern: "^https?://"
-                        }
-                    }
-                },
-                required: ["urls"]
-            };
+            const schema = await getGeneratedSchema(SchemaType.UrlExtractionResponse);
+            
+            const systemPrompt = `You are a URL extraction assistant. Analyze the following text and extract any URLs or website references that should be visited:
+            - Include full URLs with https:// prefix
+            - Convert domain names (test.com) to full URLs
+            - Include any relevant paths
+            - Preserve any URL parameters
+            - Return empty array if no URLs found`;
 
-            const response = await this.llmService.sendLLMRequest<{ urls: string[] }>({
-                messages: [{
-                    role: 'user',
-                    content: `Extract any URLs or website references from this text that should be visited:\n\n${sources}`
-                }],
-                opts: {
-                    tools: [{
-                        type: "function",
-                        function: {
-                            name: "extract_urls",
-                            description: "Extract URLs from text content",
-                            parameters: urlSchema
-                        }
-                    }],
-                    tool_choice: {
-                        type: "function",
-                        function: {
-                            name: "extract_urls"
-                        }
-                    }
-                }
+            const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+            const response = await this.modelHelpers.generate<{ urls: string[] }>({
+                message: sources,
+                instructions
             });
 
             // Validate and normalize URLs
@@ -242,43 +221,16 @@ export class WebpageExecutor implements StepExecutor {
     }
 
     async summarizeContent(task: string, content: string, llmService: ILLMService): Promise<ModelMessageResponse> {
-        const summarySchema = {
-            type: "object",
-            properties: {
-                summary: {
-                    type: "string",
-                    description: "Markdown formatted summary of relevant content"
-                },
-                relevance: {
-                    type: "string",
-                    enum: ["relevant", "not_relevant"],
-                    description: "Whether the content is relevant to the task"
-                }
-            },
-            required: ["summary", "relevance"]
-        };
+        const schema = await getGeneratedSchema(SchemaType.WebpageSummaryResponse);
+        
+        const systemPrompt = `You are a research assistant. The goal is to summarize a web page for the user's goal of: ${task}.
+        Create a report in Markdown of all of the specific information from the provided web page that is relevant to our goal.
+        If the page has no relevant information to the goal, respond with NOT RELEVANT.`;
 
-        const response = await llmService.sendLLMRequest<{ summary: string, relevance: string }>({
-            messages: [{
-                role: 'user',
-                content: `Summarize this web page content for the task: ${task}\n\n${content}`
-            }],
-            opts: {
-                tools: [{
-                    type: "function",
-                    function: {
-                        name: "summarize_content",
-                        description: "Summarize web page content and assess relevance",
-                        parameters: summarySchema
-                    }
-                }],
-                tool_choice: {
-                    type: "function",
-                    function: {
-                        name: "summarize_content"
-                    }
-                }
-            }
+        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        const response = await this.modelHelpers.generate<{ summary: string, relevance: string }>({
+            message: content,
+            instructions
         });
 
         return {
