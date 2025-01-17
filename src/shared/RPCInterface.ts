@@ -6,6 +6,7 @@ import { ClientThread } from "./types";
 import { ClientTask } from './types';
 import { EmbedderModelInfo } from 'src/llm/ILLMService';
 import { ModelInfo } from 'src/llm/types';
+import { UpdateStatus } from './UpdateStatus';
 
 export interface LogEntry {
     timestamp: string;
@@ -98,4 +99,6 @@ export interface ClientMethods {
      * @param message - Optional status message
      */
     onClientLogProcessed(success: boolean, message?: string): void;
+
+    onAutoUpdate(update: { status: UpdateStatus, progress?: number}): void;
 }

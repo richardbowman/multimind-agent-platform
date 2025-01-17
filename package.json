@@ -1,6 +1,6 @@
 {
   "name": "multimind-agent-platform",
-  "version": "1.0.0",
+  "version": "0.1.0",
   "main": "dist/main.electron.js",
   "scripts": {
     "test": "jest",

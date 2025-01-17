@@ -10,27 +10,26 @@ import { ILLMService } from "src/llm/ILLMService";
 import { IVectorDatabase } from "src/llm/IVectorDatabase";
 
 export interface BackendServicesWithWindows extends BackendServices {
+    type: "full",
     mainWindow: MainWindow;
 }
 
-export interface BackendServicesConfigNeeded extends Partial<BackendServices> {
+export interface BackendServicesConfigNeeded extends BackendServicesOnly {
+    type: "configNeeded",
     mainWindow: MainWindow;
 }
 
 export interface BackendServices extends BackendServicesOnly {
     cleanup(): Promise<void>;
-
     chatClient: ChatClient;
     taskManager: TaskManager;
     artifactManager: ArtifactManager;
-    llmLogger: LLMCallLogger;
-    logReader: LogReader;
     llmService: ILLMService;
     vectorDB: IVectorDatabase;
-
-    mainWindow: MainWindow;
+    llmLogger: LLMCallLogger;
 }
 
 export interface BackendServicesOnly {
     settingsManager: SettingsManager;
+    logReader: LogReader;
 }

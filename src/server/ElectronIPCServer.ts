@@ -4,9 +4,11 @@ import { BackendServices, BackendServicesConfigNeeded, BackendServicesWithWindow
 import { ServerRPCHandler } from './RPCHandler';
 import { createSafeServerRPCHandlers } from './rpcUtils';
 import { ClientMethods, ServerMethods } from '../shared/RPCInterface';
+import { LimitedRPCHandler } from './LimitedRPCHandler';
+import { AppUpdater } from 'electron-updater';
 
 export class ElectronIPCServer {
-    private handler: ServerRPCHandler;
+    private handler: LimitedRPCHandler|ServerRPCHandler;
     private rpc: ReturnType<typeof createBirpc<ClientMethods, ServerMethods>>|undefined;
 
     constructor(
@@ -15,7 +17,13 @@ export class ElectronIPCServer {
         hasConfigError: boolean,
         private autoUpdater: typeof import('electron-updater').autoUpdater
     ) {
-        this.handler = new ServerRPCHandler(services);
+        if (services.type === "configNeeded") {
+            this.handler = new LimitedRPCHandler(services);
+        } else if (services.type === 'full') {
+            this.handler = new ServerRPCHandler(services);
+        } else {
+            throw new Error("Cannot initialize, invalid handler type");
+        }
         this.setupRPC();
         this.handler.setupClientEvents(this.getRPC()!, autoUpdater);
     }
@@ -53,7 +61,7 @@ export class ElectronIPCServer {
         }
     }
 
-    async reinitialize(services: BackendServicesConfigNeeded|BackendServicesWithWindows) {
+    async reinitialize(services: BackendServicesConfigNeeded|BackendServicesWithWindows, autoUpdater: AppUpdater) {
         if (!this.getRPC()) {
             throw new Error("RPC has been terminated");
         }

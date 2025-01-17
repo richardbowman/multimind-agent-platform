@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import { Snackbar, IconButton, Button, LinearProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SnackbarCloseReason } from '@mui/material/Snackbar';
+import { UpdateStatus } from '../../../../shared/UpdateStatus';
 
 export interface SnackbarOptions {
   message: string;
@@ -13,7 +14,7 @@ export interface SnackbarOptions {
   updateStatus?: UpdateStatus;
 }
 
-interface SnackbarContextType {
+export interface SnackbarContextType {
   showSnackbar: (options: SnackbarOptions) => void;
 }
 
@@ -48,15 +49,6 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         ...prev,
         percentComplete: progress / 100
       }));
-    };
-
-    // Listen for update events
-    (window as any).electron?.onUpdateStatus(handleUpdateStatus);
-    (window as any).electron?.onUpdateProgress(handleUpdateProgress);
-
-    return () => {
-      (window as any).electron?.removeUpdateStatusListener(handleUpdateStatus);
-      (window as any).electron?.removeUpdateProgressListener(handleUpdateProgress);
     };
   }, []);
 

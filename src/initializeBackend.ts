@@ -66,8 +66,6 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     async function shutdown() : Promise<void> {
         console.log('Shutting down gracefully...');
         try {
-            await tasks.save();
-            await chatStorage.save();
             if (chatService.shutdown) await chatService.shutdown();
             process.exit(0);
         } catch (error) {

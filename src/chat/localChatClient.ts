@@ -4,6 +4,7 @@ import * as fs from "fs/promises";
 import { AsyncQueue } from "../helpers/asyncQueue";
 import { ChannelData, CreateChannelParams } from "src/shared/channelTypes";
 import { EventEmitter } from "stream";
+import { _getPathRecursive } from "@langchain/core/dist/utils/fast-json-patch/src/helpers";
 
 export class InMemoryPost implements ChatPost {
     static fromLoad(postData: any) : InMemoryPost {
@@ -128,19 +129,23 @@ export class LocalChatStorage extends EventEmitter {
 
     public async save(): Promise<void> {
         return this.queue.enqueue(async () => {
-            try {
-                const data = {
-                    channelNames: this.channelNames,
-                    channelData: this.channelData,
-                    posts: this.posts,
-                    userIdToHandleName: this.userIdToHandleName
-                };
-                await fs.writeFile(this.storagePath, JSON.stringify(data, null, 2), 'utf8');
-            } catch (error) {
-                Logger.error('Failed to save tasks:', error);
-                throw error;
-            }
+            await this._save();
         });
+    }
+
+    private async _save(): Promise<void> {
+        try {
+            const data = {
+                channelNames: this.channelNames,
+                channelData: this.channelData,
+                posts: this.posts,
+                userIdToHandleName: this.userIdToHandleName
+            };
+            await fs.writeFile(this.storagePath, JSON.stringify(data, null, 2), 'utf8');
+        } catch (error) {
+            Logger.error('Failed to save tasks:', error);
+            throw error;
+        }
     }
 
     public async load(): Promise<void> {
@@ -206,7 +211,7 @@ export class LocalChatStorage extends EventEmitter {
                 this.channelData = {};
                 this.posts = [];
                 this.userIdToHandleName = {};
-                await this.save();
+                await this._save();
             }
         });
     }
@@ -340,7 +345,7 @@ export class LocalTestClient implements ChatClient {
         return Promise.resolve(post);
     }
 
-    public postInChannel(channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost> {
+    public async postInChannel(channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost> {
         // Get the channel's project ID if it exists
         const channelData = this.storage.channelData[channelId];
         const projectId = channelData?.projectId;
@@ -360,8 +365,9 @@ export class LocalTestClient implements ChatClient {
             this.userId,
             postProps
         );
-        this.pushPost(post);
-        return Promise.resolve(post);
+        await this.pushPost(post);
+
+        return post;
     }
 
     public getWebSocketUrl(): string {
@@ -388,7 +394,7 @@ export class LocalTestClient implements ChatClient {
         return [rootPost, ...threadPosts];
     }
 
-    public postReply(rootId: string, channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost> {
+    public async postReply(rootId: string, channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost> {
         const replyProps = props||{};
         replyProps['root-id'] = rootId;
         
@@ -400,8 +406,8 @@ export class LocalTestClient implements ChatClient {
                 this.userId,
                 replyProps
             );
-            this.pushPost(replyPost);
-            return Promise.resolve(replyPost);
+            await this.pushPost(replyPost);
+            return replyPost;
         } else {
             throw new Error("Coudln't find post or post wasn't a root post to reply to.")
         }
@@ -427,7 +433,8 @@ export class LocalTestClient implements ChatClient {
         }    
     }
 
-    private pushPost(post: ChatPost): void {
+    private async pushPost(post: ChatPost): Promise<void> {
         this.storage.addPost(post);
+        await this.storage.save();
     }
 }

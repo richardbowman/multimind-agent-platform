@@ -20,7 +20,7 @@
     "publish": {
       "provider": "github",
       "owner": "richardbowman",
-      "repo": "multi-agent",
+      "repo": "multimind-agent-platform",
       "releaseType": "release",
       "private": false
     }

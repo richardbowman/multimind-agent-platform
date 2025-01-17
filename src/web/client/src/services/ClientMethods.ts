@@ -1,10 +1,12 @@
 import type { LogParam } from '../../../../llm/LLMLogger';
 import { useWebSocket, type DataContextMethods } from '../contexts/DataContext';
-import { ClientMessage, ClientTask } from '../../../../shared/types';
+import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/types';
 import { useMemo } from 'react';
-import { useSnackbar } from '../contexts/SnackbarContext';
+import { SnackbarContextType } from '../contexts/SnackbarContext';
+import { UpdateStatus } from '../../../../shared/UpdateStatus';
+import { ClientMethods } from '../../../../shared/RPCInterface';
 
-export const useClientMethods = (showSnackbar: (options: any) => void, contextMethods: DataContextMethods) => {
+export const useClientMethods = (snackbarContext: SnackbarContextType, contextMethods: DataContextMethods) => {
     return {
         onClientLogProcessed: async (success, message) => {
             return
@@ -127,12 +129,9 @@ export const useClientMethods = (showSnackbar: (options: any) => void, contextMe
             });
         },
 
-        onUpdateStatus(status: UpdateStatus) {
-            contextMethods.setUpdateStatus(status);
+        onAutoUpdate(update: { status: UpdateStatus, progress?: number}) {
+            snackbarContext.setUpdateStatus(update.status);
+            if (update.progress) snackbarContext.setUpdateProgress(progress);
         },
-
-        onUpdateProgress(progress: number) {
-            contextMethods.setUpdateProgress(progress);
-        }
-    };
+    } as ClientMethods;
 };

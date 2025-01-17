@@ -1,4 +1,4 @@
-import { BackendServices, BackendServicesConfigNeeded, BackendServicesWithWindows } from "../types/BackendServices";
+import { BackendServicesWithWindows } from "../types/BackendServices";
 import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
 import Logger from "../helpers/logger";
 import { ChatPost } from "../chat/chatClient";
@@ -10,53 +10,18 @@ import { reinitializeBackend } from "../main.electron";
 import { CreateChannelParams } from "src/shared/channelTypes";
 import { GoalTemplates } from "src/schemas/goalTemplateSchema";
 import { Settings } from "src/tools/settings";
-import { getClientSettingsMetadata } from "src/tools/settingsDecorators";
 import { LLMServiceFactory } from "src/llm/LLMServiceFactory";
 import { ModelInfo } from "src/llm/types";
 import { EmbedderModelInfo } from "src/llm/ILLMService";
 import { ClientProject } from "src/shared/types";
 import { TaskType } from "src/tools/taskManager";
 import { UpdateStatus } from "src/shared/UpdateStatus";
+import { LimitedRPCHandler } from "./LimitedRPCHandler";
+import { AppUpdater } from "electron-updater";
 
-export class ServerRPCHandler implements ServerMethods {
-    createWrapper(): ServerMethods {
-        const handler = this;
-        return new Proxy({} as ServerMethods, {
-            get(target, prop) {
-                if (typeof handler[prop as keyof ServerMethods] === 'function') {
-                    return async (...args: any[]) => {
-                        try {
-                            const result = await (handler[prop as keyof ServerMethods] as Function).apply(handler, args);
-                            return result;
-                        } catch (error) {
-                            Logger.error(`Error in wrapped handler method ${String(prop)}:`, error);
-                            throw error;
-                        }
-                    };
-                }
-                return undefined;
-            }
-        });
-    }
-
-    async getSettings(): Promise<Settings> {
-        const settings = this.services.settingsManager.getSettings();
-
-        // test getting defaults
-        // const defaults = new Settings();
-        // const clientSettings = getClientSettingsMetadata(defaults);
-
-        return settings;
-    }
-
-    async getAvailableModels(provider: string): Promise<ModelInfo[]> {
-        const service = LLMServiceFactory.createServiceByName(provider, this.services.settingsManager.getSettings());
-        return service.getAvailableModels();
-    }
-
-    async getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]> {
-        const service = LLMServiceFactory.createServiceByName(provider, this.services.settingsManager.getSettings());
-        return service.getAvailableEmbedders();
+export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods {
+    constructor(private services: BackendServicesWithWindows) {
+        super(services);
     }
 
     async markTaskComplete(taskId: string, complete: boolean): Promise<ClientTask> {
@@ -118,171 +83,121 @@ export class ServerRPCHandler implements ServerMethods {
         
         Logger.info('VectorDB rebuild complete');
     }
-    
-    async updateSettings(settings: Partial<Settings>): Promise<Settings> {
-        Logger.info('Update settings called');
-        
-        this.services.settingsManager.updateSettings(settings);
 
-        // Reinitialize backend services
-        try {
-            await reinitializeBackend();
-        } catch (err) {
-            console.log(err);
-        }
+    setupClientEvents(rpc: ClientMethods, autoUpdater: AppUpdater) {
+        super.setupClientEvents(rpc, autoUpdater);
 
-        return this.services.settingsManager.getSettings();
-    }
-
-    setupClientEvents(rpc: ClientMethods, autoUpdater: typeof import('electron-updater').autoUpdater) {
-        if (this.services?.taskManager) {
-            // Set up project update notifications
-            this.services.taskManager.on('projectUpdated', ({project : Project}) => {
-                const clientProject = {
-                    id: project.id,
-                    name: project.name,
-                    props: project.props,
-                    tasks: Object.values(project.tasks).map(task => ({
-                        id: task.id,
-                        description: task.description,
-                        projectId: task.projectId,
-                        type: task.type,
-                        assignee: task.assignee,
-                        inProgress: task.inProgress || false,
-                        complete: task.complete || false,
-                        threadId: task.props?.threadId || null,
-                        createdAt: task.props?.createdAt,
-                        updatedAt: task.props?.updatedAt,
-                        dependsOn: task.dependsOn,
-                        props: task.props
-                    })),
-                    metadata: project.metadata
-                };
-                rpc.onProjectUpdate(clientProject);
+        // Set up log update notifications
+        this.services.llmLogger.on("log", (logEntry) => {
+            rpc.onLogUpdate({
+                type: 'llm',
+                entry: logEntry
             });
+        })
 
-            // Set up task update notifications
-            this.services.taskManager.on('taskUpdated', ({task}) => {
-                rpc.onTaskUpdate({
+        // Set up project update notifications
+        this.services.taskManager.on('projectUpdated', ({project : Project}) => {
+            const clientProject = {
+                id: project.id,
+                name: project.name,
+                props: project.props,
+                tasks: Object.values(project.tasks).map(task => ({
                     id: task.id,
-                    projectId: task.projectId,
                     description: task.description,
+                    projectId: task.projectId,
                     type: task.type,
                     assignee: task.assignee,
                     inProgress: task.inProgress || false,
                     complete: task.complete || false,
-                    threadId: task.metadata?.threadId || null,
-                    createdAt: task.metadata?.createdAt,
-                    updatedAt: task.metadata?.updatedAt,
+                    threadId: task.props?.threadId || null,
+                    createdAt: task.props?.createdAt,
+                    updatedAt: task.props?.updatedAt,
                     dependsOn: task.dependsOn,
                     props: task.props
-                });
+                })),
+                metadata: project.metadata
+            };
+            rpc.onProjectUpdate(clientProject);
+        });
+
+        // Set up task update notifications
+        this.services.taskManager.on('taskUpdated', ({task}) => {
+            rpc.onTaskUpdate({
+                id: task.id,
+                projectId: task.projectId,
+                description: task.description,
+                type: task.type,
+                assignee: task.assignee,
+                inProgress: task.inProgress || false,
+                complete: task.complete || false,
+                threadId: task.metadata?.threadId || null,
+                createdAt: task.metadata?.createdAt,
+                updatedAt: task.metadata?.updatedAt,
+                dependsOn: task.dependsOn,
+                props: task.props
             });
-        }
+        });
 
         // Set up message receiving for the user client
-        if (this.services?.chatClient) {
-            // Set up channel creation notifications
-            this.services.chatClient.onAddedToChannel(async (channelId, params) => {
-                const channel = await this.services.chatClient.getChannelData(channelId);
-                rpc.onChannelCreated({
-                    id: channel.id,
-                    name: channel.name.replace('#', ''),
-                    description: channel.description,
-                    members: channel.members || [],
-                    projectId: channel.projectId
-                });
+        // Set up channel creation notifications
+        this.services.chatClient.onAddedToChannel(async (channelId, params) => {
+            const channel = await this.services.chatClient.getChannelData(channelId);
+            rpc.onChannelCreated({
+                id: channel.id,
+                name: channel.name.replace('#', ''),
+                description: channel.description,
+                members: channel.members || [],
+                projectId: channel.projectId
             });
+        });
 
-            // Set up message receiving
-            this.services.chatClient.receiveMessages(async (post: ChatPost) => {
-                // Get all messages to calculate reply count
-                const messages = await this.services.chatClient.fetchPreviousMessages(post.channel_id, 1000);
-                
-                // Create the new message
-                const rpcMessage = {
-                    id: post.id,
-                    channel_id: post.channel_id,
-                    message: post.message,
-                    user_id: post.user_id,
-                    create_at: post.create_at,
-                    directed_at: post.directed_at,
-                    props: post.props,
-                    thread_id: post.getRootId(),
-                    reply_count: 0 // New messages start with 0 replies
-                };
+        // Set up message receiving
+        this.services.chatClient.receiveMessages(async (post: ChatPost) => {
+            // Get all messages to calculate reply count
+            const messages = await this.services.chatClient.fetchPreviousMessages(post.channel_id, 1000);
+            
+            // Create the new message
+            const rpcMessage = {
+                id: post.id,
+                channel_id: post.channel_id,
+                message: post.message,
+                user_id: post.user_id,
+                create_at: post.create_at,
+                directed_at: post.directed_at,
+                props: post.props,
+                thread_id: post.getRootId(),
+                reply_count: 0 // New messages start with 0 replies
+            };
 
-                // If this is a reply, get and update the parent message
-                const parentId = post.getRootId();
-                if (parentId) {
-                    const parentMessage = messages.find(p => p.id === parentId);
-                    if (parentMessage) {
-                        const parentReplyCount = messages.filter(p => p.getRootId() === parentId).length;
-                        const parentRpcMessage = {
-                            id: parentMessage.id,
-                            channel_id: parentMessage.channel_id,
-                            message: parentMessage.message,
-                            user_id: parentMessage.user_id,
-                            create_at: parentMessage.create_at,
-                            directed_at: parentMessage.directed_at,
-                            props: parentMessage.props,
-                            thread_id: parentMessage.getRootId(),
-                            reply_count: parentReplyCount
-                        };
-                        // Send both the new message and updated parent
-                        rpc.onMessage([rpcMessage, parentRpcMessage]);
-                        return;
-                    }
+            // If this is a reply, get and update the parent message
+            const parentId = post.getRootId();
+            if (parentId) {
+                const parentMessage = messages.find(p => p.id === parentId);
+                if (parentMessage) {
+                    const parentReplyCount = messages.filter(p => p.getRootId() === parentId).length;
+                    const parentRpcMessage = {
+                        id: parentMessage.id,
+                        channel_id: parentMessage.channel_id,
+                        message: parentMessage.message,
+                        user_id: parentMessage.user_id,
+                        create_at: parentMessage.create_at,
+                        directed_at: parentMessage.directed_at,
+                        props: parentMessage.props,
+                        thread_id: parentMessage.getRootId(),
+                        reply_count: parentReplyCount
+                    };
+                    // Send both the new message and updated parent
+                    rpc.onMessage([rpcMessage, parentRpcMessage]);
+                    return;
                 }
-                
-                // If not a reply, just send the new message
-                rpc.onMessage([rpcMessage]);
-            });
-        }
-
-        if (this.services?.llmLogger) {
-            // Set up log update notifications
-            this.services.llmLogger.on("log", (logEntry) => {
-                rpc.onLogUpdate({
-                    type: 'llm',
-                    entry: logEntry
-                });
-            });
-        }
-
-        // Listen for configuration errors
-        // this.services.settings.on("configurationError", (error) => {
-        //     rpc.onBackendStatus({ 
-        //         configured: false, 
-        //         ready: false,
-        //         message: error.message 
-        //     });
-        // });
-
-        // Set up auto-update event forwarding
-        autoUpdater.on('checking-for-update', () => {
-            rpc?.onUpdateStatus(UpdateStatus.Checking);
+            }
+            
+            // If not a reply, just send the new message
+            rpc.onMessage([rpcMessage]);
         });
 
-        autoUpdater.on('update-available', () => {
-            this.services.rpc?.onUpdateStatus(UpdateStatus.Available);
-        });
-
-        autoUpdater.on('update-not-available', () => {
-            this.services.rpc?.onUpdateStatus(UpdateStatus.NotAvailable);
-        });
-
-        autoUpdater.on('download-progress', (progress) => {
-            this.services.rpc?.onUpdateProgress(progress.percent);
-        });
-
-        autoUpdater.on('update-downloaded', () => {
-            this.services.rpc?.onUpdateStatus(UpdateStatus.Downloaded);
-        });
     }
-    
-    constructor(private services: BackendServicesConfigNeeded|BackendServicesWithWindows) {
-    }
+
 
     public setServices(services) {
         this.services = services;
@@ -474,53 +389,6 @@ export class ServerRPCHandler implements ServerMethods {
         await this.services.chatClient.removeArtifactFromChannel(channelId, artifactId);
     }
 
-    async getSystemLogs(params: {
-        limit?: number;
-        offset?: number;
-        filter?: {
-            level?: string[];
-            search?: string;
-            startTime?: number;
-            endTime?: number;
-        };
-    }): Promise<{
-        logs: LogEntry[];
-        total: number;
-    }> {
-        return this.services.logReader.getLogs(params || {});
-    }
-
-    async getLogs(logType: 'llm' | 'system' | 'api', params?: {
-        limit?: number;
-        offset?: number;
-        filter?: {
-            level?: string[];
-            search?: string;
-            startTime?: number;
-            endTime?: number;
-        };
-    }): Promise<any> {
-        switch (logType) {
-            case 'llm':
-                return await LLMCallLogger.getAllLogs();
-            case 'system':
-                return this.getSystemLogs(params || {});
-            case 'api':
-                return { logs: [], total: 0 }; // TODO: Implement API logs
-            default:
-                return { logs: [], total: 0 };
-        }
-    }
-
-    async logClientEvent(level: string, message: string, details?: Record<string, any>): Promise<void> {
-        try {
-            // Log to both the main logger and LLM logger
-            Logger.log(level, `[CLIENT] ${message}`, details);
-        } catch (error) {
-            Logger.error('Failed to process client log event:', error);
-        }
-    }
-
     async getHandles(): Promise<Array<{id: string; handle: string}>> {
         const handleSet = await this.services.chatClient.getHandles();
         const handles = Object.entries(handleSet).map(([id, name]) => ({
@@ -622,18 +490,6 @@ export class ServerRPCHandler implements ServerMethods {
     async closeWindow(): Promise<void> {
         const mainWindow = this.services.mainWindow.getWindow();
         mainWindow.close();
-    }
-
-    async getUpdateStatus(): Promise<{status: UpdateStatus, progress: number}> {
-        return {
-            status: autoUpdater.status,
-            progress: autoUpdater.progress.percent || 0
-        };
-    }
-
-    async getWindowState(): Promise<'maximized' | 'normal'> {
-        const mainWindow = this.services.mainWindow.getWindow();
-        return mainWindow.isMaximized() ? 'maximized' : 'normal';
     }
 
     processArtifactContent(artifact: any) {
