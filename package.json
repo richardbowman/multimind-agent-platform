@@ -27,18 +27,13 @@
     "electron:start:dev": "nodemon --watch 'dist/main.electron.js' --inspect --exec \"electron . --dev-mode\"",
     "electron:build": "electron-builder",
     "electron:package": "yarn build:clean && yarn electron:build",
-    "electron:package:all": "electron-builder build --mac --win --linux"
+    "electron:package:all": "electron-builder build --mac --win --linux",
+    "electron:deploy:linux": "electron-builder build --linux --publish always"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "Multi-agent platform for AI assistants",
-  "build": {
-    "publish": {
-      "provider": "github",
-      "releaseType": "release"
-    }
-  },
   "resolutions": {
     "react": "19.0.0",
     "react-dom": "19.0.0"
