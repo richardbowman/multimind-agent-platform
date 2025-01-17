@@ -81,18 +81,15 @@ export class RouterAgent extends Agent {
 
         switch (response.nextStep) {
             case 'start-goal':
-                if (context.project && context.projectTasks.some(t => !t.complete)) {
-                    await this.reply(userPost, {
-                        message: response.response
-                    }, {
-                        "project-tasks": context.projectTasks
-                            .filter(t => !t.complete)
-                            .map(t => t.description)
-                            .join('\n')
-                    });
-                    break;
-                }
-                // If no incomplete tasks, fall through to next case
+                await this.reply(userPost, {
+                    message: response.response
+                }, {
+                    "project-tasks": context.projectTasks
+                        .filter(t => !t.complete)
+                        .map(t => t.description)
+                        .join('\n')
+                });
+                break;
                 
             case 'propose-transfer':
                 if (response.selectedAgent) {
@@ -164,7 +161,9 @@ export class RouterAgent extends Agent {
                 },
                 nextStep: {
                     type: "string",
-                    enum: ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information", "start-goal"],
+                    enum: context.project && context.projectTasks.some(t => !t.complete) 
+                        ? ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information", "start-goal"]
+                        : ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information"],
                     description: "The next step to take in the conversation"
                 }
             },
