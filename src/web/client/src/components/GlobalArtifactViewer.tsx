@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
-import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, IconButton, List, Drawer, Toolbar, Fab } from '@mui/material';
+import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, IconButton, List, Drawer, Toolbar, Fab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { ArtifactCard } from './ArtifactCard';
 import Grid from '@mui/material/Grid2';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -19,6 +19,16 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const { artifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+
+    const handleDelete = async () => {
+        if (selectedArtifact) {
+            await deleteArtifact(selectedArtifact.id);
+            setSelectedArtifact(null);
+            fetchAllArtifacts();
+            setDeleteConfirmOpen(false);
+        }
+    };
 
     useEffect(() => {
         fetchAllArtifacts();
@@ -86,12 +96,44 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 position: 'relative'
             }}>
                 {selectedArtifact ? (
-                    <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
+                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
+                            <Button 
+                                variant="contained" 
+                                color="error"
+                                startIcon={<DeleteIcon />}
+                                onClick={() => setDeleteConfirmOpen(true)}
+                            >
+                                Delete Artifact
+                            </Button>
+                        </Box>
+                        <Box sx={{ flex: 1, overflow: 'auto' }}>
+                            <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
+                        </Box>
+                    </Box>
                 ) : (
                     <Box sx={{ display: 'flex', alignItems: 'center', overflow: 'hidden', justifyContent: 'center', flex:1, color: '#666', fontStyle: 'italic' }}>
                         Select an artifact to view its details
                     </Box>
                 )}
+
+                <Dialog
+                    open={deleteConfirmOpen}
+                    onClose={() => setDeleteConfirmOpen(false)}
+                >
+                    <DialogTitle>Delete Artifact</DialogTitle>
+                    <DialogContent>
+                        <DialogContentText>
+                            Are you sure you want to delete this artifact? This action cannot be undone.
+                        </DialogContentText>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+                        <Button onClick={handleDelete} color="error" variant="contained">
+                            Delete
+                        </Button>
+                    </DialogActions>
+                </Dialog>
             </Box>
         </Box>
     );
