@@ -11,8 +11,8 @@ export class SplashWindow {
     constructor(initialZoom: number = 1.0) {
         this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
-            width: 400*initialZoom,
-            height: 300*initialZoom,
+            width: 500,
+            height: 400,
             frame: false,
             transparent: true,
             resizable: false,
@@ -34,9 +34,9 @@ export class SplashWindow {
 
     async show() {
         await this.window.loadFile(path.join(__dirname, './web/splash.html'));
-        this.window.show();
         this.window.webContents.setZoomFactor(this.zoomLevel);
         this.window.webContents.setZoomLevel(1);
+        this.window.show();
     }
 
     setMessage(message: string) {
