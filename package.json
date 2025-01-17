@@ -28,12 +28,16 @@
     "electron:build": "electron-builder",
     "electron:package": "yarn build:clean && yarn electron:build",
     "electron:package:all": "electron-builder build --mac --win --linux",
-    "electron:deploy:linux": "electron-builder build --linux --publish always"
+    "electron:deploy:linux": "electron-builder build --linux --publish always",
+    "release": "electron-builder --publish always"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "description": "Multi-agent platform for AI assistants",
+  "build": {
+    "extends": "./electron-builder.json"
+  },
   "resolutions": {
     "react": "19.0.0",
     "react-dom": "19.0.0"
