@@ -10,6 +10,7 @@ export interface SnackbarOptions {
   persist?: boolean;
   percentComplete?: number;
   onClick?: () => void;
+  updateStatus?: UpdateStatus;
 }
 
 interface SnackbarContextType {
@@ -26,17 +27,37 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     message: '',
     severity: 'info'
   });
+  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
+  const [updateProgress, setUpdateProgress] = useState(0);
   
   useEffect(() => {
-      // Assuming you have an electron or similar IPC service
-      (window as any).electron.status((logEntry) => {
-        setOptions({
-          message: logEntry.message,
-          severity: logEntry.type || 'progress',
-          percentComplete: logEntry.details?.percentComplete
-        });
-        setOpen(true);
+    const handleUpdateStatus = (status: UpdateStatus) => {
+      setUpdateStatus(status);
+      setOptions({
+        message: status,
+        severity: 'progress',
+        persist: status === UpdateStatus.Downloaded,
+        updateStatus: status
       });
+      setOpen(true);
+    };
+
+    const handleUpdateProgress = (progress: number) => {
+      setUpdateProgress(progress);
+      setOptions(prev => ({
+        ...prev,
+        percentComplete: progress / 100
+      }));
+    };
+
+    // Listen for update events
+    (window as any).electron?.onUpdateStatus(handleUpdateStatus);
+    (window as any).electron?.onUpdateProgress(handleUpdateProgress);
+
+    return () => {
+      (window as any).electron?.removeUpdateStatusListener(handleUpdateStatus);
+      (window as any).electron?.removeUpdateProgressListener(handleUpdateProgress);
+    };
   }, []);
 
   const showSnackbar = useCallback((newOptions: SnackbarOptions) => {
@@ -84,23 +105,32 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           </>
         }
         message={
-          options.severity === 'progress' ? (
-            <Box sx={{ width: '100%' }}>
-              <Box>{options.message}</Box>
+          <Box sx={{ width: '100%' }}>
+            <Box>{options.message}</Box>
+            {(options.severity === 'progress' || options.updateStatus) && (
               <LinearProgress
-                variant="determinate"
+                variant={options.updateStatus === UpdateStatus.Downloaded ? 'indeterminate' : 'determinate'}
                 value={(options.percentComplete || 0)*100}
                 sx={{ 
                   mt: 1,
                   width: '100%',
-                  minWidth: 300, // Set a minimum width
-                  maxWidth: 500  // Set a maximum width
+                  minWidth: 300,
+                  maxWidth: 500
                 }}
               />
-            </Box>
-          ) : (
-            options.message
-          )
+            )}
+            {options.updateStatus === UpdateStatus.Downloaded && (
+              <Button 
+                variant="contained" 
+                color="primary" 
+                size="small" 
+                onClick={() => (window as any).electron?.installUpdate()}
+                sx={{ mt: 1 }}
+              >
+                Restart to Update
+              </Button>
+            )}
+          </Box>
         }
         sx={{
           minWidth: 300, // Match the snackbar width to progress bar
