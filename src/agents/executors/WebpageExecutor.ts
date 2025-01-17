@@ -126,26 +126,47 @@ export class WebpageExecutor implements StepExecutor {
 
             if (!sources) return [];
 
-            // Use LLM to extract URLs with context
-            const systemPrompt = `You are a URL extraction assistant. Analyze the following text and extract any URLs or website references that should be visited.
-            Return a JSON array of URLs in this format: { "urls": ["https://example.com"] }
-            - Include full URLs with https:// prefix
-            - Convert domain names (test.com) to full URLs
-            - Include any relevant paths
-            - Preserve any URL parameters
-            - Return empty array if no URLs found`;
+            // Use structured output to extract URLs
+            const urlSchema = {
+                type: "object",
+                properties: {
+                    urls: {
+                        type: "array",
+                        items: {
+                            type: "string",
+                            format: "uri",
+                            pattern: "^https?://"
+                        }
+                    }
+                },
+                required: ["urls"]
+            };
 
             const response = await this.llmService.sendLLMRequest<{ urls: string[] }>({
                 messages: [{
                     role: 'user',
-                    content: sources
+                    content: `Extract any URLs or website references from this text that should be visited:\n\n${sources}`
                 }],
-                systemPrompt,
-                parseJSON: true
+                opts: {
+                    tools: [{
+                        type: "function",
+                        function: {
+                            name: "extract_urls",
+                            description: "Extract URLs from text content",
+                            parameters: urlSchema
+                        }
+                    }],
+                    tool_choice: {
+                        type: "function",
+                        function: {
+                            name: "extract_urls"
+                        }
+                    }
+                }
             });
 
             // Validate and normalize URLs
-            const validUrls = response.urls
+            const validUrls = (response.urls || [])
                 .filter(url => {
                     try {
                         new URL(url);
@@ -221,18 +242,48 @@ export class WebpageExecutor implements StepExecutor {
     }
 
     async summarizeContent(task: string, content: string, llmService: ILLMService): Promise<ModelMessageResponse> {
-        const systemPrompt = `You are a research assistant. The goal is to summarize a web page for the user's goal of: ${task}.
-        Create a report in Markdown of all of the specific information from the provided web page that is relevant to our goal.
-        If the page has no relevant information to the goal, respond with NOT RELEVANT.`;
+        const summarySchema = {
+            type: "object",
+            properties: {
+                summary: {
+                    type: "string",
+                    description: "Markdown formatted summary of relevant content"
+                },
+                relevance: {
+                    type: "string",
+                    enum: ["relevant", "not_relevant"],
+                    description: "Whether the content is relevant to the task"
+                }
+            },
+            required: ["summary", "relevance"]
+        };
 
-        const userPrompt = "Web Page Content:" + content;
-        const summary = await llmService.generate(systemPrompt, { message: userPrompt });
+        const response = await llmService.sendLLMRequest<{ summary: string, relevance: string }>({
+            messages: [{
+                role: 'user',
+                content: `Summarize this web page content for the task: ${task}\n\n${content}`
+            }],
+            opts: {
+                tools: [{
+                    type: "function",
+                    function: {
+                        name: "summarize_content",
+                        description: "Summarize web page content and assess relevance",
+                        parameters: summarySchema
+                    }
+                }],
+                tool_choice: {
+                    type: "function",
+                    function: {
+                        name: "summarize_content"
+                    }
+                }
+            }
+        });
 
-        // Strip markdown wrappers if present
-        if (summary.message && summary.message.startsWith('```') && summary.message.endsWith('```')) {
-            summary.message = summary.message.slice(3, -3);
-        }
-
-        return summary;
+        return {
+            message: response.relevance === "not_relevant" ? "NOT RELEVANT" : response.summary,
+            _usage: response._usage
+        };
     }
 }
