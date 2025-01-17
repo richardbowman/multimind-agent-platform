@@ -129,21 +129,7 @@ export class WebpageExecutor implements StepExecutor {
 
             if (!sources) return [];
 
-            const schema = {
-                type: "object",
-                properties: {
-                    urls: {
-                        type: "array",
-                        items: {
-                            type: "string",
-                            format: "uri",
-                            pattern: "^https?://"
-                        },
-                        description: "Array of URLs extracted from the text"
-                    }
-                },
-                required: ["urls"]
-            };
+            const schema = await getGeneratedSchema(SchemaType.UrlExtractionResponse);
             
             const systemPrompt = `You are a URL extraction assistant. Analyze the following text and extract any URLs or website references that should be visited:
             - Include full URLs with https:// prefix
@@ -235,21 +221,7 @@ export class WebpageExecutor implements StepExecutor {
     }
 
     async summarizeContent(task: string, content: string, llmService: ILLMService): Promise<ModelMessageResponse> {
-        const schema = {
-            type: "object",
-            properties: {
-                summary: {
-                    type: "string",
-                    description: "Markdown formatted summary of relevant content"
-                },
-                relevance: {
-                    type: "string",
-                    enum: ["relevant", "not_relevant"],
-                    description: "Whether the content is relevant to the task"
-                }
-            },
-            required: ["summary", "relevance"]
-        };
+        const schema = await getGeneratedSchema(SchemaType.WebpageSummaryResponse);
         
         const systemPrompt = `You are a research assistant. The goal is to summarize a web page for the user's goal of: ${task}.
         Create a report in Markdown of all of the specific information from the provided web page that is relevant to our goal.
