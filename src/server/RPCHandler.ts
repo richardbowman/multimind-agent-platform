@@ -181,6 +181,19 @@ export class ServerRPCHandler implements ServerMethods {
 
         // Set up message receiving for the user client
         if (this.services?.chatClient) {
+            // Set up channel creation notifications
+            this.services.chatClient.onAddedToChannel(async (channelId, params) => {
+                const channel = await this.services.chatClient.getChannelData(channelId);
+                rpc.onChannelCreated({
+                    id: channel.id,
+                    name: channel.name.replace('#', ''),
+                    description: channel.description,
+                    members: channel.members || [],
+                    projectId: channel.projectId
+                });
+            });
+
+            // Set up message receiving
             this.services.chatClient.receiveMessages(async (post: ChatPost) => {
                 // Get all messages to calculate reply count
                 const messages = await this.services.chatClient.fetchPreviousMessages(post.channel_id, 1000);

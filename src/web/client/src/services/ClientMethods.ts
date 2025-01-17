@@ -117,6 +117,14 @@ export const useClientMethods = (showSnackbar: (options: any) => void, contextMe
 
         onProjectUpdate(project) {
             console.log('project update not handled yet');
+        },
+
+        onChannelCreated(channel: ClientChannel) {
+            // Add the new channel to the list and refresh
+            contextMethods.setChannels(prev => {
+                const exists = prev.some(c => c.id === channel.id);
+                return exists ? prev : [...prev, channel];
+            });
         }
     };
 };

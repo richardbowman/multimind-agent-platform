@@ -87,6 +87,12 @@ export interface ClientMethods {
     onProjectUpdate(project: ClientProject): void;
     
     /**
+     * Callback when a channel is created
+     * @param channel - The newly created channel
+     */
+    onChannelCreated(channel: ClientChannel): void;
+    
+    /**
      * Callback when a client log event is successfully processed
      * @param success - Whether the log was successfully recorded
      * @param message - Optional status message
