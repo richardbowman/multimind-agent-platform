@@ -15,6 +15,7 @@ import { LLMServiceFactory } from "src/llm/LLMServiceFactory";
 import { ModelInfo } from "src/llm/types";
 import { EmbedderModelInfo } from "src/llm/ILLMService";
 import { ClientProject } from "src/shared/types";
+import { TaskType } from "src/tools/taskManager";
 
 export class ServerRPCHandler implements ServerMethods {
     createWrapper(): ServerMethods {
@@ -534,7 +535,8 @@ export class ServerRPCHandler implements ServerMethods {
                     name: params.name,
                     tasks: template.initialTasks.map((task, i) => ({
                         description: task.description,
-                        type: task.type,
+                        type: TaskType.Goal,
+                        category: task.type,
                         assignee: task.metadata?.agent ? resolvedAgents[i] : undefined
                     })),
                     metadata: {
