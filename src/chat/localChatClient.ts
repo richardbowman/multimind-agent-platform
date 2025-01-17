@@ -64,7 +64,6 @@ export class LocalChatStorage extends EventEmitter {
     userIdToHandleName: Record<string, string> = {}; // New mapping for user IDs to handle names
 
     private storagePath: string;
-    saveQueued: any;
     private queue: AsyncQueue;
 
     constructor(storagePath: string) {
