@@ -16,6 +16,7 @@ import { ModelInfo } from "src/llm/types";
 import { EmbedderModelInfo } from "src/llm/ILLMService";
 import { ClientProject } from "src/shared/types";
 import { TaskType } from "src/tools/taskManager";
+import { UpdateStatus } from "src/shared/UpdateStatus";
 
 export class ServerRPCHandler implements ServerMethods {
     createWrapper(): ServerMethods {
@@ -133,7 +134,7 @@ export class ServerRPCHandler implements ServerMethods {
         return this.services.settingsManager.getSettings();
     }
 
-    setupClientEvents(rpc: ClientMethods) {
+    setupClientEvents(rpc: ClientMethods, autoUpdater) {
         if (this.services?.taskManager) {
             // Set up project update notifications
             this.services.taskManager.on('projectUpdated', ({project : Project}) => {
@@ -257,12 +258,10 @@ export class ServerRPCHandler implements ServerMethods {
         //         message: error.message 
         //     });
         // });
-    }
-    
-    constructor(private services: BackendServicesConfigNeeded|BackendServicesWithWindows) {
+
         // Set up auto-update event forwarding
         autoUpdater.on('checking-for-update', () => {
-            this.services.rpc?.onUpdateStatus(UpdateStatus.Checking);
+            rpc?.onUpdateStatus(UpdateStatus.Checking);
         });
 
         autoUpdater.on('update-available', () => {
@@ -280,6 +279,9 @@ export class ServerRPCHandler implements ServerMethods {
         autoUpdater.on('update-downloaded', () => {
             this.services.rpc?.onUpdateStatus(UpdateStatus.Downloaded);
         });
+    }
+    
+    constructor(private services: BackendServicesConfigNeeded|BackendServicesWithWindows) {
     }
 
     public setServices(services) {
@@ -620,7 +622,7 @@ export class ServerRPCHandler implements ServerMethods {
     async closeWindow(): Promise<void> {
         const mainWindow = this.services.mainWindow.getWindow();
         mainWindow.close();
-    },
+    }
 
     async getUpdateStatus(): Promise<{status: UpdateStatus, progress: number}> {
         return {
