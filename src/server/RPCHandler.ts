@@ -134,7 +134,7 @@ export class ServerRPCHandler implements ServerMethods {
         return this.services.settingsManager.getSettings();
     }
 
-    setupClientEvents(rpc: ClientMethods, autoUpdater) {
+    setupClientEvents(rpc: ClientMethods, autoUpdater: typeof import('electron-updater').autoUpdater) {
         if (this.services?.taskManager) {
             // Set up project update notifications
             this.services.taskManager.on('projectUpdated', ({project : Project}) => {

@@ -95,8 +95,8 @@ app.whenReady().then(async () => {
         // Create main window
         splashWindow.setMessage('Loading main interface...');
 
-        // Set up IPC handlers
-        setupIpcHandlers();
+        // Set up IPC handlers with autoUpdater
+        setupIpcHandlers(autoUpdater);
         await mainWindow.show();
         mainWindow.getWindow().on("close", shutdown);
 
@@ -131,10 +131,10 @@ app.whenReady().then(async () => {
 let ipcServer: ElectronIPCServer;
 let configComplete = false;
 
-export async function setupIpcHandlers(hasConfigError: boolean = false) {
+export async function setupIpcHandlers(autoUpdater: typeof import('electron-updater').autoUpdater, hasConfigError: boolean = false) {
     if (ipcServer) ipcServer.cleanup();
 
-    ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow(), hasConfigError);
+    ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow(), hasConfigError, autoUpdater);
     configComplete = !hasConfigError;
 
     mainWindow.getWindow().webContents.on('dom-ready', () => {

@@ -9,10 +9,15 @@ export class ElectronIPCServer {
     private handler: ServerRPCHandler;
     private rpc: ReturnType<typeof createBirpc<ClientMethods, ServerMethods>>|undefined;
 
-    constructor(private services: BackendServicesConfigNeeded|BackendServicesWithWindows, private mainWindow: BrowserWindow, hasConfigError: boolean) {
+    constructor(
+        private services: BackendServicesConfigNeeded|BackendServicesWithWindows, 
+        private mainWindow: BrowserWindow, 
+        hasConfigError: boolean,
+        private autoUpdater: typeof import('electron-updater').autoUpdater
+    ) {
         this.handler = new ServerRPCHandler(services);
         this.setupRPC();
-        this.handler.setupClientEvents(this.getRPC()!);
+        this.handler.setupClientEvents(this.getRPC()!, autoUpdater);
     }
 
     private setupRPC() {
