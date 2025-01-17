@@ -14,6 +14,7 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { Artifact } from 'src/tools/artifact';
+import { UrlExtractionResponse } from 'src/schemas/UrlExtractionResponse';
 
 /**
  * WebpageExecutor - Processes a single provided URL to:
@@ -63,7 +64,7 @@ export class WebpageExecutor implements StepExecutor {
             const urls = await this.extractUrls(params);
             const contextUrls = context?.artifacts
                 ?.filter(a => a.metadata?.url)
-                .map(a => a.metadata.url) || [];
+                .map(a => a.metadata?.url) || [];
 
             const allUrls = [...new Set([...urls, ...contextUrls])];
             
@@ -139,7 +140,7 @@ export class WebpageExecutor implements StepExecutor {
             - Return empty array if no URLs found`;
 
             const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-            const response = await this.modelHelpers.generate<{ urls: string[] }>({
+            const response = await this.modelHelpers.generate<UrlExtractionResponse>({
                 message: sources,
                 instructions
             });
