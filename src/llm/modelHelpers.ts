@@ -1,5 +1,12 @@
 import { ChatPost } from "src/chat/chatClient";
 import { ILLMService } from "./ILLMService";
+
+export interface ModelHelpersParams {
+    model: ILLMService;
+    userId: string;
+    finalInstructions?: string;
+    agentHandle?: string;
+}
 import { ModelCache } from "./modelCache";
 import { ModelMessageResponse, ModelResponse, RequestArtifacts } from "src/schemas/ModelResponse";
 import Ajv from "ajv";
@@ -28,11 +35,13 @@ export class ModelHelpers {
     private threadSummaries: Map<string, ThreadSummary> = new Map();
     protected userId: string;
     protected finalInstructions?: string;
+    protected agentHandle?: string;
 
-    constructor(model: ILLMService, userId: string, finalInstructions?: string) {
-        this.userId = userId;
-        this.model = model;
-        this.finalInstructions = finalInstructions;
+    constructor(params: ModelHelpersParams) {
+        this.userId = params.userId;
+        this.model = params.model;
+        this.finalInstructions = params.finalInstructions;
+        this.agentHandle = params.agentHandle;
         this.modelCache = new ModelCache();
     }
 
@@ -40,7 +49,8 @@ export class ModelHelpers {
         const now = new Date();
         const date = now.toISOString().split('T')[0];
         const time = now.toTimeString().split(' ')[0];
-        return `Current date: ${date}\nCurrent time: ${time}\n\n${content}`;
+        const agentIdentity = this.agentHandle ? `Agent Handle: ${this.agentHandle}\n` : '';
+        return `${agentIdentity}Current date: ${date}\nCurrent time: ${time}\n\n${content}`;
     }
 
     public setPurpose(purpose: string) {
