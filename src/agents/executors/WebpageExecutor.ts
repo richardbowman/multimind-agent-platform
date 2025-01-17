@@ -62,33 +62,51 @@ export class WebpageExecutor implements StepExecutor {
                 ?.filter(a => a.metadata?.url)
                 .map(a => a.metadata.url) || [];
             
-            // Extract URL from params with context URLs as fallback
-            const url = this.extractUrl(params) || 
-                contextUrls.find(u => u.includes(step) || u.includes(message || ''));
-            if (!url) {
+            // Extract URLs from params with context URLs as fallback
+            const urls = await this.extractUrls(params);
+            const contextUrls = context?.artifacts
+                ?.filter(a => a.metadata?.url)
+                .map(a => a.metadata.url) || [];
+
+            const allUrls = [...new Set([...urls, ...contextUrls])];
+            
+            if (allUrls.length === 0) {
                 return {
                     type: 'invalid_url',
                     finished: true,
                     response: {
-                        message: `No valid URL found in step: ${step}`
+                        message: `No valid URLs found in step: ${step}`
                     }
                 };
             }
 
-            const artifact = await this.processPage(url, step || message || '', params.goal || params.overallGoal || '', projectId);
+            // Process all URLs and collect artifacts
+            const artifacts: Artifact[] = [];
+            for (const url of allUrls) {
+                try {
+                    const artifact = await this.processPage(url, step || message || '', params.goal || params.overallGoal || '', projectId);
+                    if (artifact) {
+                        artifacts.push(artifact);
+                    }
+                } catch (error) {
+                    Logger.error(`Error processing URL ${url}`, error);
+                }
+            }
 
             return {
                 finished: true,
                 type: 'webpage_summary',
                 response: {
-                    message: artifact?.content || "I couldn't download this webpage.",
+                    message: artifacts.length > 0 
+                        ? artifacts.map(a => a.content).join('\n\n---\n\n')
+                        : "I couldn't download any webpages.",
                     data: {
-                        url,
-                        artifactId: artifact?.id
+                        urls: allUrls,
+                        artifactIds: artifacts.map(a => a.id)
                     },
                     _usage: {
                         inputTokens: 0,
-                        outputTokens: artifact?.metadata?.tokenCount
+                        outputTokens: artifacts.reduce((sum, a) => sum + (a.metadata?.tokenCount || 0), 0)
                     }
                 }
             };
@@ -104,39 +122,55 @@ export class WebpageExecutor implements StepExecutor {
         }
     }
 
-    private extractUrl(params: ExecuteParams): string | null {
+    private async extractUrls(params: ExecuteParams): Promise<string[]> {
         try {
-            // First check message and step directly
             const sources = [
                 params.message,
                 params.step,
                 ...(params.previousResult || []).map(r => r.message)
-            ];
+            ].filter(Boolean).join('\n');
 
-            for (const source of sources) {
-                if (!source) continue;
-                
-                // If source is already a valid URL
-                if (source.startsWith('http://') || source.startsWith('https://')) {
-                    return source;
-                }
-                
-                // Try to extract URL from text
-                const urlPattern = /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?/;
-                const match = source.match(urlPattern);
-                if (match) {
-                    let url = match[0];
-                    // Add http:// prefix if missing
-                    if (!url.startsWith('http')) {
-                        url = `https://${url}`;
+            if (!sources) return [];
+
+            // Use LLM to extract URLs with context
+            const systemPrompt = `You are a URL extraction assistant. Analyze the following text and extract any URLs or website references that should be visited.
+            Return a JSON array of URLs in this format: { "urls": ["https://example.com"] }
+            - Include full URLs with https:// prefix
+            - Convert domain names (test.com) to full URLs
+            - Include any relevant paths
+            - Preserve any URL parameters
+            - Return empty array if no URLs found`;
+
+            const response = await this.llmService.sendLLMRequest<{ urls: string[] }>({
+                messages: [{
+                    role: 'user',
+                    content: sources
+                }],
+                systemPrompt,
+                parseJSON: true
+            });
+
+            // Validate and normalize URLs
+            const validUrls = response.urls
+                .filter(url => {
+                    try {
+                        new URL(url);
+                        return true;
+                    } catch {
+                        return false;
                     }
-                    return url;
-                }
-            }
-            return null;
+                })
+                .map(url => {
+                    const parsed = new URL(url);
+                    // Ensure https protocol
+                    parsed.protocol = 'https:';
+                    return parsed.toString();
+                });
+
+            return validUrls;
         } catch (error) {
-            Logger.error('Error extracting URL', error);
-            return null;
+            Logger.error('Error extracting URLs', error);
+            return [];
         }
     }
 
