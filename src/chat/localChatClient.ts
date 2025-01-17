@@ -147,22 +147,66 @@ export class LocalChatStorage extends EventEmitter {
         return this.queue.enqueue(async () => {
             try {
                 const data = await fs.readFile(this.storagePath, 'utf8');
+                
+                // Validate JSON structure before parsing
+                if (!data.trim()) {
+                    throw new Error('Empty file');
+                }
+
                 const parsedData = JSON.parse(data);
-                if (parsedData.channelNames) this.channelNames = parsedData.channelNames;
-                if (parsedData.channelData) this.channelData = parsedData.channelData;
-                if (parsedData.posts) this.posts = parsedData.posts.map((p: any) => InMemoryPost.fromLoad(p));
-                if (parsedData.userIdToHandleName) this.userIdToHandleName = parsedData.userIdToHandleName;
+                
+                // Validate basic structure
+                if (typeof parsedData !== 'object' || parsedData === null) {
+                    throw new Error('Invalid data format');
+                }
+
+                // Validate and load each component
+                if (parsedData.channelNames && typeof parsedData.channelNames === 'object') {
+                    this.channelNames = parsedData.channelNames;
+                }
+                
+                if (parsedData.channelData && typeof parsedData.channelData === 'object') {
+                    this.channelData = parsedData.channelData;
+                }
+                
+                if (Array.isArray(parsedData.posts)) {
+                    this.posts = parsedData.posts.map((p: any) => {
+                        try {
+                            return InMemoryPost.fromLoad(p);
+                        } catch (e) {
+                            Logger.warn('Failed to load post, skipping:', p);
+                            return null;
+                        }
+                    }).filter(Boolean);
+                }
+                
+                if (parsedData.userIdToHandleName && typeof parsedData.userIdToHandleName === 'object') {
+                    this.userIdToHandleName = parsedData.userIdToHandleName;
+                }
 
                 Logger.info(`Loaded ${this.posts.length} chat posts from disk`);
             } catch (error: unknown) {
                 // If the file doesn't exist or is invalid, initialize with default values
                 if (error instanceof Error && 'code' in error && error.code === 'ENOENT') {
                     Logger.info('No saved data found. Starting with a fresh storage.');
-                    return;
+                } else {
+                    Logger.error('Error loading chat storage, starting fresh:', error);
+                    // Backup corrupted file for debugging
+                    try {
+                        const backupPath = `${this.storagePath}.corrupted.${Date.now()}`;
+                        await fs.rename(this.storagePath, backupPath);
+                        Logger.info(`Backed up corrupted file to: ${backupPath}`);
+                    } catch (backupError) {
+                        Logger.error('Failed to backup corrupted file:', backupError);
+                    }
                 }
-
-                Logger.error('Error loading chat storage:', error);
-                throw error;
+                
+                // Initialize fresh storage
+                this.channelNames = {};
+                this.channelData = {};
+                this.posts = [];
+                this.userIdToHandleName = {};
+                await this.save();
             }
         });
     }
