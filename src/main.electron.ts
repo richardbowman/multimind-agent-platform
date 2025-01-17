@@ -3,7 +3,8 @@ import './register-paths';
 import 'reflect-metadata';
 
 import { initializeConfig } from './helpers/config';
-import { app, BrowserWindow } from 'electron';
+import { app, BrowserWindow, ipcMain } from 'electron';
+import { autoUpdater } from 'electron-updater';
 import { initializeBackend } from './initializeBackend';
 import Logger from './helpers/logger';
 import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
@@ -20,10 +21,58 @@ let settingsManager: SettingsManager;
 
 export let backendServices: BackendServicesWithWindows|BackendServicesConfigNeeded;
 
+// Configure autoUpdater
+autoUpdater.autoDownload = true;
+autoUpdater.autoInstallOnAppQuit = true;
+autoUpdater.allowPrerelease = false;
+
+// Set feed URL using your GitHub repository
+autoUpdater.setFeedURL({
+  provider: 'github',
+  owner: 'richardbowman',
+  repo: 'multi-agent'
+});
+
+// Check for updates
+function checkForUpdates() {
+  autoUpdater.checkForUpdates();
+}
+
+// Listen for update events
+autoUpdater.on('checking-for-update', () => {
+  mainWindow?.webContents.send('update-status', 'Checking for updates...');
+});
+
+autoUpdater.on('update-available', (info) => {
+  mainWindow?.webContents.send('update-status', 'Update available');
+});
+
+autoUpdater.on('update-not-available', () => {
+  mainWindow?.webContents.send('update-status', 'No updates available');
+});
+
+autoUpdater.on('download-progress', (progress) => {
+  mainWindow?.webContents.send('update-progress', progress);
+});
+
+autoUpdater.on('update-downloaded', () => {
+  mainWindow?.webContents.send('update-status', 'Update downloaded - Restart to install');
+});
+
+// IPC handlers
+ipcMain.handle('check-for-updates', checkForUpdates);
+ipcMain.handle('install-update', () => {
+  autoUpdater.quitAndInstall();
+});
+
 // Set up global error handling
 setupUnhandledRejectionHandler();
 
 app.whenReady().then(async () => {
+  // Check for updates after 5 seconds
+  setTimeout(() => {
+    checkForUpdates();
+  }, 5000);
     try {
 
         settingsManager = await initializeConfig();

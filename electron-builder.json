@@ -19,6 +19,9 @@
     },
     "publish": {
       "provider": "github",
-      "releaseType": "release"
+      "owner": "richardbowman",
+      "repo": "multi-agent",
+      "releaseType": "release",
+      "private": false
     }
 }
