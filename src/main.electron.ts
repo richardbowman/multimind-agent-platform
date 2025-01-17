@@ -40,15 +40,15 @@ function checkForUpdates() {
 
 // Listen for update events
 autoUpdater.on('checking-for-update', () => {
-  mainWindow?.webContents.send('update-status', 'Checking for updates...');
+  mainWindow?.webContents.send('update-status', UpdateStatus.Checking);
 });
 
 autoUpdater.on('update-available', (info) => {
-  mainWindow?.webContents.send('update-status', 'Update available');
+  mainWindow?.webContents.send('update-status', UpdateStatus.Available);
 });
 
 autoUpdater.on('update-not-available', () => {
-  mainWindow?.webContents.send('update-status', 'No updates available');
+  mainWindow?.webContents.send('update-status', UpdateStatus.NotAvailable);
 });
 
 autoUpdater.on('download-progress', (progress) => {
@@ -56,7 +56,7 @@ autoUpdater.on('download-progress', (progress) => {
 });
 
 autoUpdater.on('update-downloaded', () => {
-  mainWindow?.webContents.send('update-status', 'Update downloaded - Restart to install');
+  mainWindow?.webContents.send('update-status', UpdateStatus.Downloaded);
 });
 
 // IPC handlers

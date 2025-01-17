@@ -127,7 +127,7 @@ export const useClientMethods = (showSnackbar: (options: any) => void, contextMe
             });
         },
 
-        onUpdateStatus(status: string) {
+        onUpdateStatus(status: UpdateStatus) {
             contextMethods.setUpdateStatus(status);
         },
 

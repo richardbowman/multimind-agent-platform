@@ -262,15 +262,15 @@ export class ServerRPCHandler implements ServerMethods {
     constructor(private services: BackendServicesConfigNeeded|BackendServicesWithWindows) {
         // Set up auto-update event forwarding
         autoUpdater.on('checking-for-update', () => {
-            this.services.rpc?.onUpdateStatus('Checking for updates...');
+            this.services.rpc?.onUpdateStatus(UpdateStatus.Checking);
         });
 
         autoUpdater.on('update-available', () => {
-            this.services.rpc?.onUpdateStatus('Update available, downloading...');
+            this.services.rpc?.onUpdateStatus(UpdateStatus.Available);
         });
 
         autoUpdater.on('update-not-available', () => {
-            this.services.rpc?.onUpdateStatus('No updates available');
+            this.services.rpc?.onUpdateStatus(UpdateStatus.NotAvailable);
         });
 
         autoUpdater.on('download-progress', (progress) => {
@@ -278,7 +278,7 @@ export class ServerRPCHandler implements ServerMethods {
         });
 
         autoUpdater.on('update-downloaded', () => {
-            this.services.rpc?.onUpdateStatus('Update downloaded - Restart to install');
+            this.services.rpc?.onUpdateStatus(UpdateStatus.Downloaded);
         });
     }
 
@@ -622,7 +622,7 @@ export class ServerRPCHandler implements ServerMethods {
         mainWindow.close();
     },
 
-    async getUpdateStatus(): Promise<{status: string, progress: number}> {
+    async getUpdateStatus(): Promise<{status: UpdateStatus, progress: number}> {
         return {
             status: autoUpdater.status,
             progress: autoUpdater.progress.percent || 0
