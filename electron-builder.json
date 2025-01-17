@@ -1,5 +1,5 @@
 {
-    "appId": "com.yourapp.id",
+    "appId": "com.rick-bowman.multimind",
     "files": [
       "dist/**/*",
       "node_modules/**/*"
