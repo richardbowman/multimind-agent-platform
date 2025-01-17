@@ -246,8 +246,7 @@ export class WebpageExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.WebpageSummaryResponse);
         
         const systemPrompt = `You are a research assistant. The goal is to summarize a web page for the user's goal of: ${task}.
-        Create a report in Markdown of all of the specific information from the provided web page that is relevant to our goal.
-        If the page has no relevant information to the goal, respond with NOT RELEVANT.`;
+        Create a report in Markdown of all of the specific information from the provided web page.`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const response = await this.modelHelpers.generate<{ summary: string, relevance: string }>({
