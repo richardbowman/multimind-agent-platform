@@ -33,5 +33,7 @@ export enum SchemaType {
     CodeExecutionResponse = 'CodeExecutionResponse',
     BrainstormResponse = 'BrainstormResponse',
     OutlineApprovalCheck = 'OutlineApprovalCheck',
-    ArtifactGeneration = 'ArtifactGeneration'
+    ArtifactGeneration = 'ArtifactGeneration',
+    UrlExtractionResponse = 'UrlExtractionResponse',
+    WebpageSummaryResponse = 'WebpageSummaryResponse'
 }
