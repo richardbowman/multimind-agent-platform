@@ -23,5 +23,14 @@
       "repo": "multimind-agent-platform",
       "releaseType": "release",
       "private": false
-    }
+    },
+    "extraFiles": [
+      "LICENSE"
+    ],
+    "extraResources": [
+      {
+        "from": "LICENSE",
+        "to": "LICENSE"
+      }
+    ]
 }
