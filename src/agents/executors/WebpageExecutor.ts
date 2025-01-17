@@ -91,6 +91,16 @@ export class WebpageExecutor implements StepExecutor {
                 }
             }
 
+            // Get all unique links from scraped pages
+            const allLinks = new Set<string>();
+            for (const artifact of artifacts) {
+                if (artifact.metadata?.links) {
+                    for (const link of artifact.metadata.links) {
+                        allLinks.add(link);
+                    }
+                }
+            }
+
             return {
                 finished: true,
                 type: 'webpage_summary',
@@ -100,7 +110,8 @@ export class WebpageExecutor implements StepExecutor {
                         : "I couldn't download any webpages.",
                     data: {
                         urls: allUrls,
-                        artifactIds: artifacts.map(a => a.id)
+                        artifactIds: artifacts.map(a => a.id),
+                        availableLinks: Array.from(allLinks) // Add all found links to response
                     },
                     _usage: {
                         inputTokens: 0,
@@ -193,6 +204,9 @@ export class WebpageExecutor implements StepExecutor {
             projectId
         });
 
+        // Store links in metadata for later reference
+        const linkUrls = links.map(l => l.href);
+
         // Generate and save summary with token tracking
         const summaryResponse = await this.summarizeContent(
             step,
@@ -211,7 +225,8 @@ export class WebpageExecutor implements StepExecutor {
                     url,
                     task: step,
                     projectId,
-                    tokenUsage: summaryResponse._usage
+                    tokenUsage: summaryResponse._usage,
+                    links: linkUrls // Store all links found on this page
                 },
                 tokenCount: summaryResponse._usage?.outputTokens
             });
