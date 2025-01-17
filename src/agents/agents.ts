@@ -71,9 +71,9 @@ export interface ThreadSummary {
 }
 
 export abstract class Agent {
-    private readonly chatClient: ChatClient;
-    private readonly threadSummaries: Map<string, ThreadSummary> = new Map();
-    private readonly messagingHandle?: string;
+    protected readonly chatClient: ChatClient;
+    protected readonly threadSummaries: Map<string, ThreadSummary> = new Map();
+    protected readonly messagingHandle?: string;
 
     protected readonly llmService: ILLMService;
     protected readonly userId: string;
@@ -101,7 +101,12 @@ export abstract class Agent {
         this.messagingHandle = params.messagingHandle;
         this.settings = params.settings;
         
-        this.modelHelpers = new ModelHelpers(this.llmService, this.userId);
+        this.modelHelpers = new ModelHelpers({
+            llmService: params.llmService,
+            userId: params.userId,
+            messagingHandle: params.messagingHandle
+        });
+
         this.promptBuilder = new SystemPromptBuilder();
         this.artifactManager = params.artifactManager || new ArtifactManager(this.vectorDBService);
 
@@ -256,8 +261,8 @@ export abstract class Agent {
                     Logger.verbose(`Received thread message: ${post.message} in ${channelId} from ${userId}, with root id ${postRootId}`);
 
                     const posts = await this.chatClient.getThreadChain(post);
-                    // continue responding to chats i initally responded to
-                    if (posts.length > 1 && posts[1].user_id === this.userId) {
+                    // continue responding to chats i initally responded to, but don't respond to myself
+                    if (posts.length > 1 && posts[1].user_id === this.userId && post.id !== this.userId) {
                         // Get all available actions for this response type
                         const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
                         const projects : Project[] = [];

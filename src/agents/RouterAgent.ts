@@ -1,10 +1,19 @@
 import { Agent, HandlerParams } from './agents';
 import { Project, Task } from '../tools/taskManager';
-import { ModelMessageResponse } from '../schemas/ModelResponse';
+import { ModelMessageResponse, ModelResponse } from '../schemas/ModelResponse';
 import { StructuredOutputPrompt } from '../llm/ILLMService';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { ChatPost } from 'src/chat/chatClient';
+import { ChannelData } from 'src/shared/channelTypes';
+import { AgentDefinition } from 'src/tools/settings';
 
+export interface RoutingContext {
+    channelData: Partial<ChannelData>;
+    project: Project | null;
+    agentOptions: (AgentDefinition | undefined)[];
+    agentPromptOptions: string; projectTasks: Task[];
+    conversationContext: string;
+}
 
 export class RouterAgent extends Agent {
     protected async handlerThread(params: HandlerParams): Promise<void> {
@@ -28,9 +37,9 @@ export class RouterAgent extends Agent {
         // Router agent doesn't process tasks
     }
 
-    private async getRoutingContext(params: HandlerParams) {
+    private async getRoutingContext(params: HandlerParams) : Promise<RoutingContext> {
         const { userPost, threadPosts = [] } = params;
-        
+
         // Get channel data including any project goals
         const channelData = await this.chatClient.getChannelData(userPost.channel_id);
         const project = channelData?.projectId
@@ -69,10 +78,7 @@ export class RouterAgent extends Agent {
     }
 
     private async handleRoutingResponse(
-        userPost: ChatPost,
-        response: ModelMessageResponse,
-        threadPosts: ChatPost[] = []
-    ) {
+        userPost: ChatPost, response: ModelResponse, threadPosts: ChatPost[], context: RoutingContext) {
         // Handle different next steps based on LLM's decision
         if (!response.nextStep) {
             // Default to provide-information if no nextStep specified
@@ -90,7 +96,7 @@ export class RouterAgent extends Agent {
                         .join('\n')
                 });
                 break;
-                
+
             case 'propose-transfer':
                 if (response.selectedAgent) {
                     await this.reply(userPost, {
@@ -161,7 +167,7 @@ export class RouterAgent extends Agent {
                 },
                 nextStep: {
                     type: "string",
-                    enum: context.project && context.projectTasks.some(t => !t.complete) 
+                    enum: context.project && context.projectTasks.some(t => !t.complete)
                         ? ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information", "start-goal"]
                         : ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information"],
                     description: "The next step to take in the conversation"
@@ -176,7 +182,7 @@ export class RouterAgent extends Agent {
    - Explain why they're the best choice, and ask for user confirmation before transferring
 
 2. execute-transfer: When you're highly confident and should immediately transfer
-   - Develop a complete transfer note to the agent so they can successfully respond to the user.
+   - Develop a complete transfer note to the agent so they can successfully respond to the user. Make sure to repeat all pertinent information to the other agent, they will not see the original user's message.
    - Only use when confidence > 0.9
 
 3. ask-clarification: When you need more information
@@ -197,12 +203,11 @@ ${context.project ? `Channel Project Details:
 - Name: ${context.project.name}
 - Goal: ${context.project.metadata?.description || 'No specific goal'}
 - Status: ${context.project.metadata?.status || 'active'}
-${threadPosts.length > 0 ? `- Tasks:
+- Tasks:
 ${Object.values(context.project.tasks)
-  .sort((a, b) => (a.order || 0) - (b.order || 0))
-  .map((task, index) => `  ${index + 1}. ${task.description}${task.complete ? ' (completed)' : ''}`)
-  .join('\n')}` : ''}
-` : ''}
+                        .sort((a, b) => (a.order || 0) - (b.order || 0))
+                        .map((task, index) => `  ${index + 1}. ${task.description}${task.complete ? ' (completed)' : ''}`)
+                        .join('\n')}` : ''}
 
 Conversation context:
 ${context.conversationContext}
@@ -220,7 +225,7 @@ Respond with:
             512
         );
 
-        await this.handleRoutingResponse(userPost, response, threadPosts);
+        await this.handleRoutingResponse(userPost, response, threadPosts, context);
     }
 
     protected projectCompleted(project: Project): void {

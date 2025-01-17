@@ -43,7 +43,11 @@ export abstract class StepBasedAgent extends Agent {
             userId: this.userId,
             chatClient: this.chatClient,
             vectorDB: this.vectorDBService,
-            modelHelpers: new ModelHelpers(this.llmService, this.userId),
+            modelHelpers: new ModelHelpers({
+                llmService: this.llmService,
+                userId: this.userId,
+                messagingHandle: this.messagingHandle
+            }),
             settings: this.settings
         };
         executorParams.modelHelpers.setPurpose(this.modelHelpers.getPurpose())
@@ -71,7 +75,11 @@ export abstract class StepBasedAgent extends Agent {
                     userId: this.userId,
                     settings: this.settings,
                     vectorDB: this.vectorDBService,
-                    modelHelpers: new ModelHelpers(this.llmService, this.userId),
+                    modelHelpers: new ModelHelpers({
+                        llmService: this.llmService,
+                        userId: this.userId,
+                        messagingHandle: this.messagingHandle
+                    }),
                     ...executorConfig.config
                 });
 

@@ -396,6 +396,10 @@
     "GoalTemplate": {
       "additionalProperties": false,
       "properties": {
+        "defaultResponder": {
+          "description": "Default responding agent ID or",
+          "type": "string"
+        },
         "description": {
           "description": "Description of the goal type and what it's used for",
           "type": "string"
@@ -1140,7 +1144,9 @@
         "CodeExecutionResponse",
         "BrainstormResponse",
         "OutlineApprovalCheck",
-        "ArtifactGeneration"
+        "ArtifactGeneration",
+        "UrlExtractionResponse",
+        "WebpageSummaryResponse"
       ],
       "type": "string"
     },
@@ -1273,6 +1279,22 @@
       ],
       "type": "object"
     },
+    "UrlExtractionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "urls": {
+          "description": "Array of URLs extracted from the text",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "urls"
+      ],
+      "type": "object"
+    },
     "ValidationResult": {
       "additionalProperties": false,
       "properties": {
@@ -1312,6 +1334,28 @@
       },
       "required": [
         "urls"
+      ],
+      "type": "object"
+    },
+    "WebpageSummaryResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "relevance": {
+          "description": "Whether the content is relevant to the task",
+          "enum": [
+            "relevant",
+            "not_relevant"
+          ],
+          "type": "string"
+        },
+        "summary": {
+          "description": "Markdown formatted summary of relevant content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "summary",
+        "relevance"
       ],
       "type": "object"
     },

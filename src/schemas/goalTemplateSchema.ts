@@ -62,9 +62,10 @@ export const GoalTemplates: GoalTemplate[] = [
         description: 'Template for initializing a welcome channel and onboarding new users',
         supportingAgents: [
             '@data', //data gatherer
-            '@onboarding' // Onboarding agent
+            '@onboarding', // Onboarding agent
+            '@router'
         ],
-        defaultResponder: '@onboarding',
+        defaultResponder: '@router',
         initialTasks: [
             {
                 description: 'Gather and analyze any existing documents using the data agent',

@@ -1,12 +1,5 @@
 import { ChatPost } from "src/chat/chatClient";
 import { ILLMService } from "./ILLMService";
-
-export interface ModelHelpersParams {
-    model: ILLMService;
-    userId: string;
-    finalInstructions?: string;
-    agentHandle?: string;
-}
 import { ModelCache } from "./modelCache";
 import { ModelMessageResponse, ModelResponse, RequestArtifacts } from "src/schemas/ModelResponse";
 import Ajv from "ajv";
@@ -15,9 +8,16 @@ import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { GenerateInputParams, GenerateParams, HandlerParams, ProjectHandlerParams, ThreadSummary } from "src/agents/agents";
 import { Artifact } from "src/tools/artifact";
-import { SearchResult } from "./chromaService";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { StructuredOutputPrompt } from "./ILLMService";
+import { SearchResult } from "./IVectorDatabase";
+
+export interface ModelHelpersParams {
+    llmService: ILLMService;
+    userId: string;
+    finalInstructions?: string;
+    messagingHandle?: string;
+}
 
 export class ModelHelpers {
     getPurpose() {
@@ -28,20 +28,20 @@ export class ModelHelpers {
     }
     
 
-    protected model: ILLMService;
+    protected llmService: ILLMService;
     protected isMemoryEnabled: boolean = false;
     protected purpose: string = 'You are a helpful agent.';
     private modelCache: ModelCache;
     private threadSummaries: Map<string, ThreadSummary> = new Map();
     protected userId: string;
     protected finalInstructions?: string;
-    protected agentHandle?: string;
+    protected messagingHandle?: string;
 
     constructor(params: ModelHelpersParams) {
         this.userId = params.userId;
-        this.model = params.model;
+        this.llmService = params.llmService;
         this.finalInstructions = params.finalInstructions;
-        this.agentHandle = params.agentHandle;
+        this.messagingHandle = params.messagingHandle;
         this.modelCache = new ModelCache();
     }
 
@@ -49,7 +49,7 @@ export class ModelHelpers {
         const now = new Date();
         const date = now.toISOString().split('T')[0];
         const time = now.toTimeString().split(' ')[0];
-        const agentIdentity = this.agentHandle ? `Agent Handle: ${this.agentHandle}\n` : '';
+        const agentIdentity = this.messagingHandle ? `Agent Handle: ${this.messagingHandle}\n` : '';
         return `${agentIdentity}Current date: ${date}\nCurrent time: ${time}\n\n${content}`;
     }
 
@@ -116,7 +116,7 @@ export class ModelHelpers {
             });
         });
 
-        const updatedSummary = await this.model.sendMessageToLLM(
+        const updatedSummary = await this.llmService.sendMessageToLLM(
             "Please update/create the conversation summary.",
             llmMessages
         );
@@ -158,7 +158,7 @@ export class ModelHelpers {
         }
 
         // Get the LLM response
-        const rawResponse = await this.model.sendMessageToLLM(history[history.length - 1].message, llmMessages, undefined, 8192, 512, {
+        const rawResponse = await this.llmService.sendMessageToLLM(history[history.length - 1].message, llmMessages, undefined, 8192, 512, {
             type: "array",
             items: { type: "string" }
         });
@@ -226,7 +226,7 @@ export class ModelHelpers {
         while (attempts < maxAttempts) {
             try {
                 const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
-                response = await this.model.generateStructured<T>(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
+                response = await this.llmService.generateStructured<T>(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
 
                 // Validate response against schema
                 const isValid = validate(response);
@@ -371,7 +371,7 @@ export class ModelHelpers {
 
         // Augment instructions with context and generate a response
         const history = (params as HandlerParams).threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
-        const response = await this.model.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:params.message||params.content||""}, history);
+        const response = await this.llmService.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:params.message||params.content||""}, history);
 
         // Ensure response is an object with message property
         const formattedResponse: ModelMessageResponse = typeof response === "string" 

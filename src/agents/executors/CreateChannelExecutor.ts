@@ -4,7 +4,7 @@ import { StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { GoalTemplate, GoalTemplates } from '../../schemas/goalTemplateSchema';
-import { TaskManager } from '../../tools/taskManager';
+import { TaskManager, TaskType } from '../../tools/taskManager';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { ILLMService } from '../../llm/ILLMService';
@@ -48,7 +48,8 @@ export class CreateChannelExecutor implements StepExecutor {
                 name: params.name,
                 tasks: template.initialTasks.map((task, i) => ({
                     description: task.description,
-                    type: task.type
+                    type: TaskType.Goal,
+                    category: task.type
                 })),
                 metadata: {
                     description: params.description || '',
@@ -177,7 +178,7 @@ Please select the most appropriate template ID from the list above.
 Return ONLY the template ID as your response.`;
 
         try {
-            const response = await this.modelHelpers.model.sendLLMRequest({
+            const response = await this.modelHelpers.llmService.sendLLMRequest({
                 messages: [{ role: 'user', content: prompt }],
                 parseJSON: false
             });

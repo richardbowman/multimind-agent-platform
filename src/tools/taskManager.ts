@@ -11,7 +11,8 @@ export enum RecurrencePattern {
 export enum TaskType {
     Standard = "standard",
     Recurring = "recurring",
-    Step = "step"
+    Step = "step",
+    Goal = "goal"
 }
 
 export interface AddTaskParams {

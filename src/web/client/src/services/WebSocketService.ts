@@ -3,7 +3,6 @@ import { createBirpc } from 'birpc';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../../../../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../../../../shared/rpcUtils';
-import { createClientMethods } from './ClientMethods';
 import { Socket } from 'socket.io';
 
 export default class WebSocketService extends BaseRPCService {

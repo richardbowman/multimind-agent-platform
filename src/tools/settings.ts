@@ -209,7 +209,7 @@ export class ProviderConfig {
     api: APIConfig = new APIConfig();
 }
 
-interface AgentDefinition {
+export interface AgentDefinition {
     className: string;
     sourcePath: string;
     userId: string;
