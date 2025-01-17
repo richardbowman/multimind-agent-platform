@@ -32,7 +32,7 @@
     "electron:deploy:linux": "electron-builder build --linux --publish always"
   },
   "keywords": [],
-  "author": "",
+  "author": "Rick Bowman <your.email@example.com>",
   "license": "ISC",
   "description": "Multi-agent platform for AI assistants",
   "build": {
