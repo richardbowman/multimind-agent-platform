@@ -122,10 +122,15 @@ export class WebpageExecutor implements StepExecutor {
                 }
                 
                 // Try to extract URL from text
-                const urlPattern = /https?:\/\/[^\s]+/;
+                const urlPattern = /(?:https?:\/\/)?(?:www\.)?[a-zA-Z0-9-]+(?:\.[a-zA-Z]{2,})+(?:\/[^\s]*)?/;
                 const match = source.match(urlPattern);
                 if (match) {
-                    return match[0];
+                    let url = match[0];
+                    // Add http:// prefix if missing
+                    if (!url.startsWith('http')) {
+                        url = `https://${url}`;
+                    }
+                    return url;
                 }
             }
             return null;
