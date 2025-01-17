@@ -4,7 +4,7 @@ import 'reflect-metadata';
 
 import { initializeConfig } from './helpers/config';
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { autoUpdater } from 'electron-updater';
+import { AppUpdater, autoUpdater } from 'electron-updater';
 import { initializeBackend } from './initializeBackend';
 import Logger from './helpers/logger';
 import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
@@ -14,6 +14,7 @@ import { MainWindow } from './windows/MainWindow';
 import { BackendServices, BackendServicesConfigNeeded, BackendServicesWithWindows } from './types/BackendServices';
 import { ElectronIPCServer } from './server/ElectronIPCServer';
 import { SettingsManager } from './tools/settingsManager';
+import { LogReader } from './server/LogReader';
 
 let mainWindow: MainWindow;
 let splashWindow: SplashWindow;
@@ -26,6 +27,10 @@ autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 autoUpdater.allowPrerelease = false;
 
+ // Add this near your autoUpdater configuration
+ autoUpdater.forceDevUpdateConfig = true;
+ autoUpdater.allowDowngrade = true;
+
 // Set feed URL using your GitHub repository
 autoUpdater.setFeedURL({
   provider: 'github',
@@ -35,29 +40,9 @@ autoUpdater.setFeedURL({
 
 // Check for updates
 function checkForUpdates() {
-  autoUpdater.checkForUpdates();
+    Logger.info("Checking for updates...");
+    autoUpdater.checkForUpdates();
 }
-
-// Listen for update events
-autoUpdater.on('checking-for-update', () => {
-  mainWindow?.webContents.send('update-status', UpdateStatus.Checking);
-});
-
-autoUpdater.on('update-available', (info) => {
-  mainWindow?.webContents.send('update-status', UpdateStatus.Available);
-});
-
-autoUpdater.on('update-not-available', () => {
-  mainWindow?.webContents.send('update-status', UpdateStatus.NotAvailable);
-});
-
-autoUpdater.on('download-progress', (progress) => {
-  mainWindow?.webContents.send('update-progress', progress);
-});
-
-autoUpdater.on('update-downloaded', () => {
-  mainWindow?.webContents.send('update-status', UpdateStatus.Downloaded);
-});
 
 // IPC handlers
 ipcMain.handle('check-for-updates', checkForUpdates);
@@ -69,10 +54,6 @@ ipcMain.handle('install-update', () => {
 setupUnhandledRejectionHandler();
 
 app.whenReady().then(async () => {
-  // Check for updates after 5 seconds
-  setTimeout(() => {
-    checkForUpdates();
-  }, 5000);
     try {
 
         settingsManager = await initializeConfig();
@@ -88,26 +69,31 @@ app.whenReady().then(async () => {
         // Initialize backend services
         splashWindow.setMessage('Initializing backend services...');
         backendServices = {
+            type: "full",
             ...await initializeBackend(settingsManager),
             mainWindow
-        };
+        } as BackendServicesWithWindows;
 
         // Create main window
         splashWindow.setMessage('Loading main interface...');
 
         // Set up IPC handlers with autoUpdater
-        setupIpcHandlers(autoUpdater);
+        setupIpcHandlers(autoUpdater, false);
         await mainWindow.show();
         mainWindow.getWindow().on("close", shutdown);
 
         // Close splash screen
         splashWindow.close();
 
-    } catch (error) {
+        checkForUpdates();
+
+    } catch (error: unknown) {
         backendServices = {
+            type: "configNeeded",
             settingsManager,
-            mainWindow
-        };
+            mainWindow,
+            logReader: new LogReader()
+        } as BackendServicesConfigNeeded;
 
         Logger.error('Error in main:', error);
         if (error instanceof ConfigurationError) {
@@ -123,15 +109,17 @@ app.whenReady().then(async () => {
         }
 
         splashWindow.close();
-        setupIpcHandlers(true);
+        setupIpcHandlers(autoUpdater, true);
         await mainWindow.show();
+
+        checkForUpdates();        
     }
 });
 
 let ipcServer: ElectronIPCServer;
 let configComplete = false;
 
-export async function setupIpcHandlers(autoUpdater: typeof import('electron-updater').autoUpdater, hasConfigError: boolean = false) {
+export async function setupIpcHandlers(autoUpdater: AppUpdater, hasConfigError: boolean = false) {
     if (ipcServer) ipcServer.cleanup();
 
     ipcServer = new ElectronIPCServer(backendServices, mainWindow.getWindow(), hasConfigError, autoUpdater);
@@ -139,6 +127,8 @@ export async function setupIpcHandlers(autoUpdater: typeof import('electron-upda
 
     mainWindow.getWindow().webContents.on('dom-ready', () => {
         console.log('did finish load');
+        checkForUpdates();
+
         if (ipcServer.getRPC()) {
             const status = {
                 configured: configComplete,
@@ -165,7 +155,7 @@ export async function reinitializeBackend() {
         mainWindow: mainWindow
     } as BackendServicesWithWindows;
 
-    ipcServer.reinitialize(backendServices);
+    ipcServer.reinitialize(backendServices, autoUpdater);
     configComplete = true;
 
     await splashWindow.close();
