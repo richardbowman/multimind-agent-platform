@@ -80,6 +80,22 @@ export class RouterAgent extends Agent {
         }
 
         switch (response.nextStep) {
+            case 'start-goal':
+                if (context.project && context.projectTasks.some(t => !t.complete)) {
+                    const incompleteTasks = context.projectTasks
+                        .filter(t => !t.complete)
+                        .map((t, i) => `${i + 1}. ${t.description}`)
+                        .join('\n');
+                    
+                    await this.reply(userPost, {
+                        message: `I see we have some outstanding tasks for this project:\n${incompleteTasks}\n\nWould you like to work on one of these?`
+                    }, {
+                        "project-tasks": incompleteTasks
+                    });
+                    break;
+                }
+                // If no incomplete tasks, fall through to next case
+                
             case 'propose-transfer':
                 if (response.selectedAgent) {
                     await this.reply(userPost, {
@@ -150,7 +166,7 @@ export class RouterAgent extends Agent {
                 },
                 nextStep: {
                     type: "string",
-                    enum: ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information"],
+                    enum: ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information", "start-goal"],
                     description: "The next step to take in the conversation"
                 }
             },
@@ -171,6 +187,11 @@ export class RouterAgent extends Agent {
 
 4. provide-information: When you can answer directly
    - Provide the requested information, explain relevant context, suggest next steps
+
+5. start-goal: When there are outstanding project tasks and the user seems unsure what to do
+   - Suggest starting or continuing work on the project goals
+   - Only available when there are incomplete tasks in the project
+   - Use this especially when the user is greeting you or seems unsure what to do next
 
 Available agents:
 ${context.agentPromptOptions}
