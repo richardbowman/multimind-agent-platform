@@ -67,7 +67,7 @@ export class ElectronIPCServer {
         }
         this.services = services;
         this.handler.setServices(services);
-        this.handler.setupClientEvents(this.getRPC());
+        this.handler.setupClientEvents(this.getRPC(), autoUpdater);
         
         if (this.rpc) {
             this.rpc.onBackendStatus({

@@ -16,10 +16,12 @@ export interface SnackbarOptions {
 
 export interface SnackbarContextType {
   showSnackbar: (options: SnackbarOptions) => void;
+  setUpdateStatus: (status: UpdateStatus, percentComplete?: number) => void;
 }
 
 const SnackbarContext = createContext<SnackbarContextType>({
-  showSnackbar: () => {}
+  showSnackbar: () => {},
+  setUpdateStatus: () => {} 
 });
 
 export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -28,29 +30,17 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     message: '',
     severity: 'info'
   });
-  const [updateStatus, setUpdateStatus] = useState<UpdateStatus | null>(null);
-  const [updateProgress, setUpdateProgress] = useState(0);
   
-  useEffect(() => {
-    const handleUpdateStatus = (status: UpdateStatus) => {
-      setUpdateStatus(status);
-      setOptions({
-        message: status,
-        severity: 'progress',
-        persist: status === UpdateStatus.Downloaded,
-        updateStatus: status
-      });
-      setOpen(true);
-    };
-
-    const handleUpdateProgress = (progress: number) => {
-      setUpdateProgress(progress);
-      setOptions(prev => ({
-        ...prev,
-        percentComplete: progress / 100
-      }));
-    };
-  }, []);
+  function setUpdateStatus(status: UpdateStatus, percentComplete?: number) {
+    setOptions({
+      percentComplete,
+      updateStatus: status,
+      message: "Update: " + status.toString(),
+      severity: 'progress',
+      persist: status === UpdateStatus.Downloaded
+    });
+    setOpen(true);
+  }
 
   const showSnackbar = useCallback((newOptions: SnackbarOptions) => {
     setOptions(newOptions);
@@ -72,7 +62,7 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   }, [options.onClick]);
 
   return (
-    <SnackbarContext.Provider value={{ showSnackbar }}>
+    <SnackbarContext.Provider value={{ showSnackbar, setUpdateStatus }}>
       {children}
       <Snackbar
         open={open}

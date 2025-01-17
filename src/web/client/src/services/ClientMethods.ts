@@ -24,9 +24,8 @@ export const useClientMethods = (snackbarContext: SnackbarContextType, contextMe
                 .sort((a, b) => b.create_at - a.create_at)[0];
 
             if (latestMessage) {
-                console.log('message received', latestMessage);
                 const channelName = contextMethods.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
-                showSnackbar({
+                snackbarContext.showSnackbar({
                     message: `New message in #${channelName}`,
                     severity: 'info',
                     persist: true,
@@ -130,8 +129,7 @@ export const useClientMethods = (snackbarContext: SnackbarContextType, contextMe
         },
 
         onAutoUpdate(update: { status: UpdateStatus, progress?: number}) {
-            snackbarContext.setUpdateStatus(update.status);
-            if (update.progress) snackbarContext.setUpdateProgress(progress);
+            snackbarContext.setUpdateStatus(update.status, update.progress);
         },
     } as ClientMethods;
 };

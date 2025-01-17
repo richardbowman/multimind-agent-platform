@@ -2,6 +2,8 @@ import { createBirpc } from 'birpc';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../../../../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../../../../shared/rpcUtils';
+import { ClientChannel } from '../../../../shared/types';
+import { UpdateStatus } from '../../../../shared/UpdateStatus';
 
 export class ElectronIPCService extends BaseRPCService {
     private status: { configured: boolean; ready: boolean; message?: string; };
@@ -84,6 +86,24 @@ export class ElectronIPCService extends BaseRPCService {
                             throw error;
                         }
                     },
+                    onAutoUpdate: (update: { status: UpdateStatus, progress?: number}) => {
+                        console.log('[IPC] onAutoUpdate');
+                        try {
+                            return this.wrapper.onAutoUpdate.call(this, update);
+                        } catch (error) {
+                            console.error('[IPC] Error in onAutoUpdate:', error);
+                            throw error;
+                        }
+                    },
+                    onChannelCreated: (channel: ClientChannel) => {
+                        console.log('[IPC] onChannelCreated');
+                        try {
+                            return this.wrapper.onChannelCreated.call(this, channel);
+                        } catch (error) {
+                            console.error('[IPC] Error in onChannelCreated:', error);
+                            throw error;
+                        }
+                    }
                 },
                 {
                     post: (data) => {

@@ -9,11 +9,8 @@ export default class WebSocketService extends BaseRPCService {
   private socket: Socket | null = null;
   private isConnecting: boolean = false;
 
-  private showSnackbar: (options: any) => void;
-  
-  constructor(showSnackbar: (options: any) => void) {
+ constructor() {
     super();
-    this.showSnackbar = showSnackbar;
     // Initialize with a placeholder RPC instance
     this.setupPlaceholderRPC();
   }

@@ -35,7 +35,7 @@ autoUpdater.allowPrerelease = false;
 autoUpdater.setFeedURL({
   provider: 'github',
   owner: 'richardbowman',
-  repo: 'multi-agent'
+  repo: 'multimind-agent-platform'
 });
 
 // Check for updates
