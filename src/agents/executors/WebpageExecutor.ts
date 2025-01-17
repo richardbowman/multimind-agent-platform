@@ -133,10 +133,16 @@ export class WebpageExecutor implements StepExecutor {
 
     private async extractUrls(params: ExecuteParams): Promise<string[]> {
         try {
+            // Get available links from previous results
+            const availableLinks = (params.previousResult || [])
+                .flatMap(r => r.data?.availableLinks || [])
+                .filter(Boolean);
+
             const sources = [
                 params.message,
                 params.step,
-                ...(params.previousResult || []).map(r => r.message)
+                ...(params.previousResult || []).map(r => r.message),
+                ...availableLinks
             ].filter(Boolean).join('\n');
 
             if (!sources) return [];
