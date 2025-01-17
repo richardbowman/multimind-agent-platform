@@ -4,6 +4,7 @@
   "main": "dist/main.electron.js",
   "scripts": {
     "test": "jest",
+    "generate-icon": "node scripts/generate-icon.js",
     "release": "electron-builder --publish always",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -90,6 +91,7 @@
     "ws": "^8.18.0"
   },
   "devDependencies": {
+      "canvas": "^2.11.2",
     "@babel/core": "^7.26.0",
     "@babel/preset-typescript": "^7.26.0",
     "@emotion/react": "^11.14.0",
