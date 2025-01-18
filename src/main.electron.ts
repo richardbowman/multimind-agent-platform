@@ -111,8 +111,9 @@ app.whenReady().then(async () => {
         splashWindow.close();
         setupIpcHandlers(autoUpdater, true);
         await mainWindow.show();
+        mainWindow.getWindow().on("close", shutdown);
 
-        checkForUpdates();        
+        checkForUpdates();
     }
 });
 
@@ -162,11 +163,25 @@ export async function reinitializeBackend() {
 }
 
 async function shutdown() {
-    if (ipcServer) {
-        ipcServer.cleanup();
+    try {
+        if (ipcServer) {
+            ipcServer.cleanup();
+        }
+        
+        // Handle cleanup for both service types
+        if (backendServices.type === "full") {
+            await backendServices.cleanup();
+        } else {
+            // For config-needed mode, just ensure proper cleanup
+            if (backendServices.logReader) {
+                backendServices.logReader.removeAllListeners();
+            }
+        }
+    } catch (error) {
+        Logger.error('Error during shutdown:', error);
+    } finally {
+        app.quit();
     }
-    if (backendServices.cleanup) await backendServices.cleanup();
-    app.quit();
 }
 
 app.on('window-all-closed', shutdown);
