@@ -180,6 +180,27 @@ export abstract class StepBasedAgent extends Agent {
         }
     }
 
+    public getExecutorCapabilities(): Array<{ 
+        stepType: string;
+        description: string;
+        exampleInput?: string;
+        exampleOutput?: string;
+    }> {
+        const capabilities = [];
+        for (const [key, executor] of this.stepExecutors) {
+            const metadata = getExecutorMetadata(executor.constructor);
+            if (metadata) {
+                capabilities.push({
+                    stepType: key,
+                    description: metadata.description,
+                    exampleInput: metadata.exampleInput,
+                    exampleOutput: metadata.exampleOutput
+                });
+            }
+        }
+        return capabilities;
+    }
+
     protected async planSteps(projectId: string, posts: Message[]): Promise<PlanStepsResponse> {
         const project = await this.projects.getProject(projectId);
         const handlerParams: PlannerParams = {
