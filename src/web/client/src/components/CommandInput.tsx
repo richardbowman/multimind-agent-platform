@@ -62,7 +62,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         artifact.id.toLowerCase().includes(searchTerm) ||
                         artifact.metadata.title.toLowerCase().includes(searchTerm)
                     )
-                    .map(artifact => `${artifact.metadata.title}: ${artifact.id}`);
+                    .map(artifact => artifact.metadata.title);
                 setSuggestions(filtered);
                 setShowSuggestions(filtered.length > 0);
             } else {
@@ -110,15 +110,23 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     .map(id => id.trim())
                     .filter(id => id.length > 0);
                 
-                // Store the artifact IDs for the next message
-                setPendingArtifacts(artifactIds);
+                // Find full artifact info including titles
+                const artifacts = allArtifacts.filter(a => 
+                    artifactIds.includes(a.id)
+                ).map(a => ({
+                    id: a.id,
+                    title: a.metadata.title
+                }));
+                
+                // Store the artifacts for the next message
+                setPendingArtifacts(artifacts);
                 setInput('');
                 setShowSuggestions(false);
                 return;
             }
 
-            // Regular message - send with any pending artifacts
-            onSendMessage(input.trim(), pendingArtifacts);
+            // Regular message - send with any pending artifact IDs
+            onSendMessage(input.trim(), pendingArtifacts.map(a => a.id));
             setPendingArtifacts([]);
             setInput('');
             setShowSuggestions(false);
