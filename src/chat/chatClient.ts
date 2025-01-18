@@ -1,4 +1,6 @@
 import { ChannelData, CreateChannelParams } from "src/shared/channelTypes";
+import { ChatHandle } from "src/types/chatHandle";
+import { UUID } from "src/types/uuid";
 
 export interface ChatClient {
     onAddedToChannel(callback: (channelId: any, params: CreateChannelParams) => void): Promise<void>;
@@ -17,7 +19,7 @@ export interface ChatClient {
 
     registerHandle(handleName: string): void;
     getChannels(): Promise<ChannelData[]>;
-    getHandles(): Promise<Record<string, string>>;
+    getHandles(): Promise<Record<UUID, ChatHandle>>;
     
     /**
      * Get metadata about a specific channel

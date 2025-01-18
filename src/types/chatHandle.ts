@@ -3,7 +3,7 @@ export type ChatHandle = string & { readonly __chatHandleBrand: unique symbol };
 
 // Type guard function to validate chat handles
 export function isChatHandle(value: string): value is ChatHandle {
-    return value.startsWith('@') && value.length > 1;
+    return value?.startsWith('@') && value.length > 1;
 }
 
 // Utility function to create chat handles

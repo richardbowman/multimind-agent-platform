@@ -6,7 +6,7 @@
     "RouterAgent": {
       "className": "RouterAgent",
       "sourcePath": "RouterAgent.ts",
-      "userId": "router-agent",
+      "userId": "5bf64a57-9bdb-4c89-a647-3f12170e4ee5",
       "handle": "@router",
       "description": "Routes requests to appropriate specialized agents",
       "enabled": true,
@@ -17,7 +17,7 @@
     "SimpleAgent": {
       "className": "SimpleAgent",
       "sourcePath": "simpleAgent.ts",
-      "userId": "simple-agent",
+      "userId": "68a98a18-532a-449b-b15f-4e9a7ebfd4b5",
       "handle": "@ai",
       "description": "Just a generic AI agent",
       "enabled": true
@@ -25,7 +25,7 @@
     "ResearchAssistant": {
       "className": "ResearchAssistant",
       "sourcePath": "researchAssistant.ts",
-      "userId": "rg7fwbna43byucb174hm7nnuwr",
+      "userId": "90b9c45a-e79e-43e7-b4f5-3e852cd723a4",
       "handle": "@researchteam",
       "description": "Conducts web research and information gathering",
       "enabled": true,
@@ -37,7 +37,7 @@
     "ResearchManager": {
       "className": "ResearchManager",
       "sourcePath": "researchManager.ts",
-      "userId": "xi8rrsssmidwjnfwf4qx9qr33o",
+      "userId": "48d176a8-9f55-47c2-90ca-6dd2bba8e262",
       "handle": "@research",
       "description": "Manages and coordinates research activities",
       "enabled": true
@@ -164,7 +164,7 @@ My goal is to help you define, document and refine product specifications.",
      "DataGatherer": {
        "className": "ConfigurableAgent",
        "sourcePath": "configurableAgent.ts",
-       "userId": "data-gather",
+       "userId": "9d2c67c3-68e3-4f6c-b613-c8cb4c8d4f6a",
        "handle": "@data",
        "description": "Specializes in gathering and processing data from web sources",
        "enabled": true,
@@ -205,7 +205,7 @@ My goal is to help you define, document and refine product specifications.",
     "MarketingStrategist": {
       "className": "ConfigurableAgent",
       "sourcePath": "configurableAgent.ts",
-      "userId": "marketing-strategist",
+      "userId": "b02a16d1-d95b-4a39-bf88-aa1a44f69ef0",
       "handle": "@marketing",
       "description": "Develops marketing strategies and campaigns",
       "enabled": true,

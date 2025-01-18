@@ -1,3 +1,6 @@
+import { ChatHandle } from "src/types/chatHandle";
+import { UUID } from "src/types/uuid";
+
 export interface GoalTemplate {
     /**
      * Unique identifier for the goal template
@@ -17,12 +20,12 @@ export interface GoalTemplate {
     /**
      * List of agent IDs or types required to support this goal
      */
-    supportingAgents: string[];
+    supportingAgents: (UUID | ChatHandle)[];
     
     /**
      * Default responding agent ID or @handle for this goal template
      */
-    defaultResponder?: string;
+    defaultResponder?: UUID;
     
     /**
      * Initial tasks to create when this goal template is selected
@@ -112,10 +115,10 @@ export const GoalTemplates: GoalTemplate[] = [
         name: 'Marketing Campaign',
         description: 'Template for running a marketing campaign',
         supportingAgents: [
-            '66025743-45bc-4625-a27f-52aa09dde128', // ContentWriter
-            '9d039c4e-f99d-4fb7-a160-452ac261569c', // ContentManager
-            'data-gather', //data gatherer
-            'marketing-strategist' // marketing strategist
+            '@writer', // ContentWriter
+            '@content', // ContentManager
+            '@data', //data gatherer
+            '@marketing' // marketing strategist
         ],
         defaultResponder: '9d039c4e-f99d-4fb7-a160-452ac261569c',
         initialTasks: [

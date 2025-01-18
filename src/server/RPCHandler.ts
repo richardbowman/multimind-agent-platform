@@ -7,7 +7,7 @@ import { ClientChannel } from "src/shared/types";
 import { ClientThread } from "src/shared/types";
 import { LLMCallLogger } from "../llm/LLMLogger";
 import { reinitializeBackend } from "../main.electron";
-import { CreateChannelParams } from "src/shared/channelTypes";
+import { CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
 import { GoalTemplates } from "src/schemas/goalTemplateSchema";
 import { Settings } from "src/tools/settings";
 import { LLMServiceFactory } from "src/llm/LLMServiceFactory";
@@ -18,6 +18,8 @@ import { TaskType } from "src/tools/taskManager";
 import { UpdateStatus } from "src/shared/UpdateStatus";
 import { LimitedRPCHandler } from "./LimitedRPCHandler";
 import { AppUpdater } from "electron-updater";
+import { createUUID, UUID } from "src/types/uuid";
+import { ChatHandle, createChatHandle, isChatHandle } from "src/types/chatHandle";
 
 export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods {
     constructor(private services: BackendServicesWithWindows) {
@@ -398,40 +400,47 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return handles;
     }
 
-    async createChannel(params: CreateChannelParams): Promise<string> {
+    private async mapHandles(agentList: (UUID|ChatHandle)[]) : Promise<UUID[]> {
+        const ids : UUID[] = [];
+        const handles = await this.services.chatClient?.getHandles();
+        if (!handles) {
+            throw new Error(`Could not get handles map`);
+        }
+
+        for(const agentRef of agentList) {
+            if (isChatHandle(agentRef)) {
+                // Find the agent ID that matches this handle
+                const idx = Object.values(handles).findIndex((handle, index) => handle === agentRef);
+                if (idx == -1) {
+                    throw new Error(`Agent with handle @${handle} not found`);
+                }
+                ids.push(createUUID(Object.keys(handles)[idx]));
+            } else {
+                ids.push(agentRef)
+            }
+        } 
+        
+        return ids;
+    }
+
+    async createChannel(params: CreateChannelHandlerParams): Promise<string> {
         if (!this.services?.chatClient) {
             throw new Error('Chat client is not initialized');
         }
 
         // Always include the RouterAgent in the channel members
-        params.members = [...(params.members || []), 'router-agent'];
+        const router = createChatHandle('@router');
+
+        params.members = [...(params.members || []), router];
         // Use the selected default responder or fallback to router-agent
-        params.defaultResponderId = params.defaultResponderId || 'router-agent';
+        params.defaultResponderId = params.defaultResponderId || router;
 
         // If a goal template is specified, create a project with its tasks
         if (params.goalTemplate) {
             const template = GoalTemplates.find(t => t.id === params.goalTemplate);
             if (template) {
                 // Resolve agent handles to IDs
-                const resolvedAgents = await Promise.all(
-                    template.supportingAgents.map(async (agentRef) => {
-                        if (agentRef.startsWith('@')) {
-                            // Lookup agent by handle
-                            const handles = await this.services.chatClient?.getHandles();
-                            if (!handles) {
-                                throw new Error(`Could not get handles map`);
-                            }
-                            // Find the agent ID that matches this handle
-                            const agentEntry = Object.entries(handles).find(([id, name]) => name === agentRef);
-                            if (!agentEntry) {
-                                throw new Error(`Agent with handle @${handle} not found`);
-                            }
-                            return agentEntry[0]; // Return the ID
-                        }
-                        // Assume it's already an ID
-                        return agentRef;
-                    })
-                );
+                const resolvedAgents = await this.mapHandles(template.supportingAgents);
 
                 // Create project with resolved agent IDs
                 const project = await this.services.taskManager.createProject({
@@ -444,8 +453,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                     })),
                     metadata: {
                         description: params.description || '',
-                        tags: template.tags,
-                        supportingAgents: resolvedAgents
+                        tags: template.tags
                     }
                 });
                 const projectId = project.id;
@@ -463,7 +471,19 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             }
         }
 
-        return await this.services.chatClient.createChannel(params);
+        const defaultResponderId = (await this.mapHandles([params.defaultResponderId]))[0];
+        const memberIds = await this.mapHandles(params.members);
+
+        return await this.services.chatClient.createChannel({
+            name: params.name,
+            artifactIds: params.artifactIds,
+            defaultResponderId: defaultResponderId,
+            projectId: params.projectId,
+            description: params.description,
+            goalTemplate: params.goalTemplate,
+            isPrivate: params.isPrivate,
+            members: memberIds
+        });
     }
 
     async deleteChannel(channelId: string): Promise<void> {
