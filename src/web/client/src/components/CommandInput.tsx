@@ -91,7 +91,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const handleKeyPress = (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter' && input.trim()) {
             // Special handling for /artifacts, /tasks, and /add commands
-            if (input.trim() === '/artifacts' || input.trim() === '/tasks' || input.trim().startsWith('/add')) {
+            if (input.trim() === '/artifacts' || input.trim() === '/tasks') {
                 // These commands are handled by the UI through the WebSocket context
                 // So we just pass them through
                 onSendMessage(input.trim());
@@ -99,7 +99,28 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 setShowSuggestions(false);
                 return;
             }
+            
+            // Handle /add command with artifact IDs
+            if (input.trim().startsWith('/add')) {
+                const artifactIds = input
+                    .slice(5) // Remove '/add '
+                    .split(',') // Split multiple artifact IDs
+                    .map(id => id.trim())
+                    .filter(id => id.length > 0);
+                
+                // Send message with artifact IDs in props
+                onSendMessage({
+                    message: '', // Empty message since we're just attaching artifacts
+                    props: {
+                        'artifact-ids': artifactIds
+                    }
+                });
+                setInput('');
+                setShowSuggestions(false);
+                return;
+            }
 
+            // Regular message
             onSendMessage(input.trim());
             setInput('');
             setShowSuggestions(false);
