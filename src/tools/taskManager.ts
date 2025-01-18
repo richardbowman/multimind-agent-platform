@@ -27,7 +27,7 @@ export interface AddTaskParams {
     complete?: boolean;
     inProgress?: boolean;
     order?: number;
-    dependsOn?: string;
+    dependsOn?: UUID;
     props?: Record<string, any>;
 }
 
