@@ -18,6 +18,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [input, setInput] = useState('');
     const [suggestions, setSuggestions] = useState<string[]>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [pendingArtifacts, setPendingArtifacts] = useState<string[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { channels, handles, artifacts, allArtifacts } = useWebSocket();
@@ -110,15 +111,16 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     .map(id => id.trim())
                     .filter(id => id.length > 0);
                 
-                // Send message with artifact IDs in props
-                onSendMessage('', artifactIds);
+                // Store the artifact IDs for the next message
+                setPendingArtifacts(artifactIds);
                 setInput('');
                 setShowSuggestions(false);
                 return;
             }
 
-            // Regular message
-            onSendMessage(input.trim());
+            // Regular message - send with any pending artifacts
+            onSendMessage(input.trim(), pendingArtifacts);
+            setPendingArtifacts([]);
             setInput('');
             setShowSuggestions(false);
             // Reset textarea height
@@ -170,7 +172,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyPress}
-                placeholder="Type a message... (Use / for commands, @ for mentions)"
+                placeholder={pendingArtifacts.length > 0 
+                    ? `Artifacts ready to attach (${pendingArtifacts.length})... Type your message` 
+                    : "Type a message... (Use / for commands, @ for mentions)"}
                 rows={1}
                 style={{
                     width: '100%',
