@@ -62,7 +62,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         artifact.id.toLowerCase().includes(searchTerm) ||
                         artifact.metadata.title.toLowerCase().includes(searchTerm)
                     )
-                    .map(artifact => artifact.metadata.title);
+                    .map(artifact => `${artifact.metadata.title} [${artifact.id}]`);
                 setSuggestions(filtered);
                 setShowSuggestions(filtered.length > 0);
             } else {
@@ -122,6 +122,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 setPendingArtifacts(artifacts);
                 setInput('');
                 setShowSuggestions(false);
+                event.preventDefault();
+                event.stopPropagation();
+    
                 return;
             }
 
