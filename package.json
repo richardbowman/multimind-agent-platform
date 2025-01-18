@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "main": "dist/main.electron.js",
   "scripts": {
+    "uuid": "tsx src/cli/generate-uuid.ts",
     "test": "jest",
     "generate-icon": "node scripts/generate-icon.js",
     "release": "electron-builder --publish always",
