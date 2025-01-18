@@ -65,7 +65,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     .map(artifact => `${artifact.metadata.title}: ${artifact.id}`);
                 setSuggestions(filtered);
                 setShowSuggestions(filtered.length > 0);
-                console.log(searchTerm, filtered);
             } else {
                 const filtered = COMMANDS
                     .filter(cmd => cmd.command.toLowerCase().startsWith(value.toLowerCase()))
