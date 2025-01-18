@@ -2,7 +2,7 @@ import React, { useState, KeyboardEvent, useEffect, useRef } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
 
 interface CommandInputProps {
-    onSendMessage: (message: string) => void;
+    onSendMessage: (message: string, artifactIds?: string[]) => void;
     currentChannel: string|null;
 }
 
@@ -20,7 +20,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [showSuggestions, setShowSuggestions] = useState(false);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { channels, handles, artifacts } = useWebSocket();
+    const { channels, handles, artifacts, allArtifacts } = useWebSocket();
     
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {
@@ -55,14 +55,16 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
             if (value.startsWith('/add ')) {
                 // Show artifact suggestions
                 const searchTerm = value.slice(5).toLowerCase();
-                const filtered = artifacts
+                const filtered = allArtifacts
                     .filter(artifact => 
                         artifact.type.toLowerCase().includes(searchTerm) ||
-                        artifact.id.toLowerCase().includes(searchTerm)
+                        artifact.id.toLowerCase().includes(searchTerm) ||
+                        artifact.metadata.title.toLowerCase().includes(searchTerm)
                     )
-                    .map(artifact => `${artifact.type}: ${artifact.id}`);
+                    .map(artifact => `${artifact.metadata.title}: ${artifact.id}`);
                 setSuggestions(filtered);
                 setShowSuggestions(filtered.length > 0);
+                console.log(searchTerm, filtered);
             } else {
                 const filtered = COMMANDS
                     .filter(cmd => cmd.command.toLowerCase().startsWith(value.toLowerCase()))
@@ -109,12 +111,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     .filter(id => id.length > 0);
                 
                 // Send message with artifact IDs in props
-                onSendMessage({
-                    message: '', // Empty message since we're just attaching artifacts
-                    props: {
-                        'artifact-ids': artifactIds
-                    }
-                });
+                onSendMessage('', artifactIds);
                 setInput('');
                 setShowSuggestions(false);
                 return;
