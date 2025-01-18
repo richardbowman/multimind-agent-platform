@@ -54,10 +54,22 @@ export class RouterAgent extends Agent {
                 return agent
             });
 
+        // Get detailed capabilities for each agent that is a StepBasedAgent
         const agentPromptOptions = agentOptions
-            .map(agent => `- ${agent?.handle}: ${agent?.description}`)
+            .map(agent => {
+                if (!agent) return '';
+                
+                // Get capabilities if agent is a StepBasedAgent
+                const capabilities = (agent as any).getExecutorCapabilities?.() || [];
+                
+                return `- ${agent.handle}: ${agent.description}
+  Capabilities:
+${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
+      ${cap.exampleInput ? `Example Input: ${cap.exampleInput}` : ''}
+      ${cap.exampleOutput ? `Example Output: ${cap.exampleOutput}` : ''}`).join('\n')}`;
+            })
             .filter(Boolean)
-            .join('\n');
+            .join('\n\n');
 
         // Get project tasks if exists
         const projectTasks = project ? Object.values(project.tasks) : [];
@@ -196,8 +208,13 @@ export class RouterAgent extends Agent {
    - Only available when there are incomplete tasks in the project
    - Use this especially when the user is greeting you or seems unsure what to do next
 
-Available agents:
+Available Agents and Their Capabilities:
 ${context.agentPromptOptions}
+
+When selecting an agent, consider:
+- Which agent's capabilities best match the user's request
+- The complexity of the task and the agent's expertise
+- The current project context and goals
 
 ${context.project ? `Channel Project Details:
 - Name: ${context.project.name}
