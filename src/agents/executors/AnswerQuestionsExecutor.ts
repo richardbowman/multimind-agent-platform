@@ -48,9 +48,20 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
 
         const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
-        const intakeQuestions = Object.values(project.tasks).filter(t => t.type === "step" && (t as StepTask).props.stepType === ExecutorType.ANSWER_QUESTIONS && !t.complete);
+        
+        // Get both direct questions and template-based questions
+        const intakeQuestions = Object.values(project.tasks).filter(t => 
+            t.type === "step" && 
+            (t as StepTask).props.stepType === ExecutorType.ANSWER_QUESTIONS && 
+            !t.complete
+        );
 
-        if (intakeQuestions.length === 0) {
+        // Get template sections that need content
+        const templateSections = project.template?.sections.filter(s => 
+            s.status !== 'complete'
+        ) || [];
+
+        if (intakeQuestions.length === 0 && templateSections.length === 0) {
             return {
                 type: 'answer_analysis',
                 finished: true,
@@ -58,6 +69,11 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                     message: "No pending questions to analyze."
                 }
             };
+        }
+
+        // Initialize document draft if needed
+        if (project.template && !project.documentDraft) {
+            project.documentDraft = project.template.templateContent;
         }
 
         const modelResponse = await this.modelHelpers.generate<AnswerAnalysisResponse>({
@@ -74,6 +90,14 @@ export class AnswerQuestionsExecutor implements StepExecutor {
 
                 Pending Questions to Analyze:
                 ${intakeQuestions.map((q, i) => `${i+1}. ID ${q.id}: ${q.description}`).join('\n')}
+
+                ${templateSections.length > 0 ? `
+                Document Sections Needing Content:
+                ${templateSections.map((s, i) => 
+                    `${i+1}. ${s.title} - ${s.description}
+                    Questions needed: ${s.questions.join(', ')}`
+                ).join('\n')}
+                ` : ''}
                 
                 Use the "answers" key to provide a JSON array with an item for EACH of the ${intakeQuestions.length} pending questions that includes:
                 1. answered: If the question was answered completely and meaningfully
@@ -97,8 +121,42 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             if (task && answer.answered) {
                 await this.storeAnswer(project, task, answer);
                 await this.taskManager.completeTask(answer.questionId);
+                
+                // If this answer completes a template section, update the document
+                if (project.template && project.documentDraft) {
+                    const relatedSection = project.template.sections.find(s => 
+                        s.questions.includes(answer.questionId)
+                    );
+                    
+                    if (relatedSection) {
+                        project.documentDraft = project.documentDraft.replace(
+                            relatedSection.placeholder,
+                            answer.extractedAnswer
+                        );
+                        relatedSection.status = 'draft';
+                    }
+                }
             } else if (task) {
                 await this.markIncomplete(task, answer);
+            }
+        }
+
+        // Check if all required sections are complete
+        if (project.template) {
+            const allRequiredComplete = project.template.requiredSections.every(sectionId => {
+                const section = project.template!.sections.find(s => s.id === sectionId);
+                return section?.status === 'complete';
+            });
+
+            if (allRequiredComplete) {
+                return {
+                    type: 'answer_analysis',
+                    finished: true,
+                    response: {
+                        message: "All required sections are complete!",
+                        document: project.documentDraft
+                    }
+                };
             }
         }
 

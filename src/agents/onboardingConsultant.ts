@@ -21,12 +21,32 @@ export interface QuestionAnswer {
     answeredAt: string;
 }
 
+export interface DocumentTemplate {
+    id: string;
+    name: string;
+    description: string;
+    templateContent: string; // Markdown content with placeholders
+    sections: TemplateSection[];
+    requiredSections: string[];
+}
+
+export interface TemplateSection {
+    id: string;
+    title: string;
+    description: string;
+    placeholder: string; // The markdown placeholder text to replace
+    questions: string[]; // Questions needed to populate this section
+    status: 'empty' | 'draft' | 'complete';
+}
+
 export interface OnboardingProject extends Project {
     businessDescription?: string;
     businessGoals?: string[];
     serviceRequirements?: string;
     existingPlan?: Artifact;
     answers?: QuestionAnswer[];
+    template?: DocumentTemplate;
+    documentDraft?: string; // Current state of the document
 }
 
 export class OnboardingConsultant extends StepBasedAgent {
