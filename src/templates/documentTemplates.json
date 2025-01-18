@@ -1,0 +1,62 @@
+{
+    "templates": [
+        {
+            "id": "business-plan",
+            "name": "Business Plan Template",
+            "description": "Template for creating a comprehensive business plan",
+            "templateContent": "# Business Plan\n\n## Executive Summary\n{executive-summary}\n\n## Company Description\n{company-description}\n\n## Market Analysis\n{market-analysis}\n\n## Organization & Management\n{organization-management}\n\n## Service or Product Line\n{product-line}\n\n## Marketing & Sales\n{marketing-sales}\n\n## Financial Projections\n{financial-projections}",
+            "sections": [
+                {
+                    "id": "executive-summary",
+                    "title": "Executive Summary",
+                    "description": "Brief overview of the business",
+                    "placeholder": "{executive-summary}",
+                    "questions": ["business-name", "business-purpose", "target-market"],
+                    "status": "empty"
+                },
+                {
+                    "id": "company-description",
+                    "title": "Company Description",
+                    "description": "Detailed description of the company",
+                    "placeholder": "{company-description}",
+                    "questions": ["business-history", "business-structure", "mission-statement"],
+                    "status": "empty"
+                },
+                {
+                    "id": "market-analysis",
+                    "title": "Market Analysis",
+                    "description": "Analysis of target market and competition",
+                    "placeholder": "{market-analysis}",
+                    "questions": ["target-market", "competitors", "market-trends"],
+                    "status": "empty"
+                }
+            ],
+            "requiredSections": ["executive-summary", "company-description", "market-analysis"]
+        },
+        {
+            "id": "marketing-plan",
+            "name": "Marketing Plan Template",
+            "description": "Template for creating a marketing strategy",
+            "templateContent": "# Marketing Plan\n\n## Executive Summary\n{executive-summary}\n\n## Target Market\n{target-market}\n\n## Unique Value Proposition\n{value-proposition}\n\n## Marketing Channels\n{marketing-channels}\n\n## Budget & ROI\n{budget-roi}",
+            "sections": [
+                {
+                    "id": "executive-summary",
+                    "title": "Executive Summary",
+                    "description": "Overview of marketing strategy",
+                    "placeholder": "{executive-summary}",
+                    "questions": ["marketing-goals", "target-audience"],
+                    "status": "empty"
+                },
+                {
+                    "id": "target-market",
+                    "title": "Target Market",
+                    "description": "Detailed description of target audience",
+                    "placeholder": "{target-market}",
+                    "questions": ["target-demographics", "customer-needs"],
+                    "status": "empty"
+                }
+            ],
+            "requiredSections": ["executive-summary", "target-market"]
+        }
+    ]
+}

@@ -10,6 +10,8 @@ import { ReviewProgressExecutor } from './executors/ReviewProgressExecutor';
 import { UnderstandGoalsExecutor } from './executors/UnderstandGoalsExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { CreateChannelExecutor } from './executors/CreateChannelExecutor';
+import templates from '../../templates/documentTemplates.json';
+import path from 'path';
 
 
 
@@ -51,13 +53,24 @@ export interface OnboardingProject extends Project {
 
 export class OnboardingConsultant extends StepBasedAgent {
 
+    private templates: DocumentTemplate[];
+
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Onboarding Consultant`);
-
         
+        // Load templates from JSON file
+        this.templates = templates.templates as DocumentTemplate[];
         
         // asynchronously check for old tasks and keep working on them
         this.processTaskQueue();
+    }
+
+    public getTemplateById(templateId: string): DocumentTemplate | undefined {
+        return this.templates.find(t => t.id === templateId);
+    }
+
+    public getAvailableTemplates(): DocumentTemplate[] {
+        return this.templates;
     }
 
     public async setupChatMonitor(monitorChannelId: string, handle?: string, autoRespond?: boolean): Promise<void> {
