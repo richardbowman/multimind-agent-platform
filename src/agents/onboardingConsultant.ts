@@ -131,6 +131,7 @@ For an existing user who has answered sufficient questions, move on to create_re
         this.registerStepExecutor(new CreatePlanExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new ReviewProgressExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new CreateChannelExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new TemplateSelectorExecutor(this.getExecutorParams()));
         // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
 
 

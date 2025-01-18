@@ -35,5 +35,6 @@ export enum SchemaType {
     OutlineApprovalCheck = 'OutlineApprovalCheck',
     ArtifactGeneration = 'ArtifactGeneration',
     UrlExtractionResponse = 'UrlExtractionResponse',
-    WebpageSummaryResponse = 'WebpageSummaryResponse'
+    WebpageSummaryResponse = 'WebpageSummaryResponse',
+    TemplateSelectionResponse = 'TemplateSelectionResponse'
 }
