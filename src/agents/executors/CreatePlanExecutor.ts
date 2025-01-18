@@ -6,7 +6,7 @@ import { Project, TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { OnboardingProject, QuestionAnswer } from '../onboardingConsultant';
 import { CreateArtifact } from '../../schemas/ModelResponse';
-import { OperationalGuideResponse, QAItem } from '../../schemas/OperationalGuideResponse';
+import { DocumentPlanResponse, QAItem } from '../../schemas/DocumentPlanResponse';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResult } from '../interfaces/StepResult';
@@ -43,137 +43,109 @@ export class CreatePlanExecutor implements StepExecutor {
         this.artifactManager = params.artifactManager!;
     }
 
-    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
-        const project = await this.getProjectWithPlan(projectId);
-        const businessGoals = Object.values(project.tasks).filter(t => t.category === 'create-plan');
-
-        const answers = this.getAnswersForType(project, 'process-answers');
-
-        const formattedMessage = this.formatPromptMessage(
-            businessGoals,
-            project.existingPlan?.content.toString(),
-            project.props||{},
-            answers.map(a => ({
-                question: project.tasks[a.questionId]?.description || '',
-                answer: a.answer,
-                category: project.tasks[a.questionId]?.type
-            }))
-        );
-
-        const schema = await getGeneratedSchema(SchemaType.OperationalGuideResponse);
-        const response = await this.modelHelpers.generate<OperationalGuideResponse>({
-            message: formattedMessage,
-            instructions: new StructuredOutputPrompt(schema,
-                `Create an overview of the user's desired business goals so our project manager, researcher, and content writer agents know how to help.
-                Use the provided answers about the business and service requirements to inform the plan.`)
-        });
-
-        // Update the business plan with the operational guide
-        const agentsGuideId = await this.updateProjectBusinessPlan(project, response);
-
-        // mark all tasks we were able to incorporate as complete
-        for (const planTask of businessGoals) {
-            this.taskManager.completeTask(planTask.id);
+    async execute(params: ExecuteParams): Promise<StepResult> {
+        const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
+        
+        if (!project.template) {
+            return {
+                type: 'create_revise_plan',
+                finished: false,
+                response: {
+                    message: "No template selected. Please select a template first."
+                }
+            };
         }
 
-        // Format the response message to include the artifact reference
-        const responseMessage = `${response.summary}\n\n---\nI've created a detailed plan (${agentsGuideId}) that outlines the operational strategy. Let me know if you'd like any changes?`;
+        // Get all answers related to the template sections
+        const answers = this.getAnswersForTemplate(project);
+
+        const schema = await getGeneratedSchema(SchemaType.DocumentPlanResponse);
+        const response = await this.modelHelpers.generate<DocumentPlanResponse>({
+            message: params.message || params.stepGoal,
+            instructions: new StructuredOutputPrompt(schema,
+                `OVERALL GOAL: ${params.overallGoal}
+                
+                Template: ${project.template.name}
+                Description: ${project.template.description}
+
+                Available Sections:
+                ${project.template.sections.map(s => `
+                - ${s.title} (${s.id})
+                  ${s.description}
+                  Status: ${s.status}
+                  Questions: ${s.questions.join(', ')}
+                `).join('\n')}
+
+                Gathered Information:
+                ${answers.map(a => `
+                - ${a.question}
+                  ${a.answer}
+                `).join('\n')}
+
+                Create a comprehensive document based on the template and gathered information.
+                For each section:
+                1. Use the provided answers to populate the content
+                2. Maintain the template structure
+                3. Ensure all required sections are complete
+                4. Add any additional relevant information
+                `)
+        });
+
+        // Update the document draft with the generated content
+        let documentContent = project.template.templateContent;
+        for (const section of response.sections) {
+            documentContent = documentContent.replace(
+                `{${section.id}}`, 
+                section.content
+            );
+            
+            // Update section status
+            const templateSection = project.template.sections.find(s => s.id === section.id);
+            if (templateSection) {
+                templateSection.status = 'complete';
+            }
+        }
+
+        // Save the completed document as an artifact
+        const artifactId = await this.artifactManager.storeArtifact({
+            id: this.taskManager.newProjectId(),
+            type: 'document',
+            content: documentContent,
+            metadata: {
+                templateId: project.template.id,
+                completedAt: new Date().toISOString(),
+                sections: response.sections.map(s => ({
+                    id: s.id,
+                    status: 'complete'
+                }))
+            }
+        });
 
         return {
             type: 'create_revise_plan',
             finished: true,
-            needsUserInput: true,
             response: {
-                message: responseMessage,
-                artifactId: agentsGuideId,
-                artifactTitle: "Business Plan"
-            } as CreateArtifact
+                message: `Document created successfully using template: ${project.template.name}`,
+                artifactId,
+                artifactTitle: project.template.name,
+                documentContent
+            }
         };
     }
 
-    private async getProjectWithPlan(projectId: string): Promise<OnboardingProject> {
-        const project = this.taskManager.getProject(projectId) as OnboardingProject;
-        if (!project) {
-            throw new Error(`Project ${projectId} not found`);
-        }
-
-        if (project.props?.businessPlanId) {
-            project.existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
-        }
-
-        return project;
-    }
-
-    private getAnswersForType(project: Project, questionType: string): QuestionAnswer[] {
+    private getAnswersForTemplate(project: OnboardingProject): QAItem[] {
         if (!project.metadata.answers) return [];
         
-        return project.metadata.answers.filter((answer : AnswerMetadata) => {
+        // Get all answers related to template questions
+        return project.metadata.answers.filter(answer => {
             const task = project.tasks[answer.questionId];
-            return task?.category === questionType;
-        });
-    }
-
-    private formatPromptMessage(
-        businessGoals: any[],
-        currentPlan: string | undefined,
-        projectContext: any,
-        questionsAndAnswers: QAItem[]
-    ): string {
-        let message = "I need you to create a comprehensive operational guide based on the following information:\n\n";
-
-        // Add business goals section
-        message += "🎯 Business Goals:\n";
-        businessGoals.forEach(goal => {
-            message += `- ${goal.description}\n`;
-        });
-        message += "\n";
-
-        // Add Q&A section
-        if (questionsAndAnswers.length > 0) {
-            message += "📋 Gathered Information:\n";
-            questionsAndAnswers.forEach(qa => {
-                message += `Q: ${qa.question}\nA: ${qa.answer}\n`;
-                if (qa.category) {
-                    message += `Category: ${qa.category}\n`;
-                }
-                message += "\n";
-            });
-        }
-
-        // Add existing plan context if available
-        if (currentPlan) {
-            message += "📑 Current Plan Context:\n";
-            message += currentPlan + "\n\n";
-        }
-
-        // Add project context if relevant
-        if (Object.keys(projectContext).length > 0) {
-            message += "🔍 Additional Context:\n";
-            Object.entries(projectContext).forEach(([key, value]) => {
-                if (key !== 'businessPlanId') { // Skip technical fields
-                    message += `${key}: ${value}\n`;
-                }
-            });
-            message += "\n";
-        }
-
-        return message;
-    }
-
-    private async updateProjectBusinessPlan(project: OnboardingProject, response: any): Promise<string> {
-        const businessPlanId = await updateBusinessPlan(
-            project, 
-            this.modelHelpers, 
-            this.artifactManager, 
-            project.existingPlan,
-            response.operationalGuide
-        );
-        
-        project.props = {
-            ...project.props,
-            businessPlanId
-        };
-
-        return businessPlanId;
+            return task && project.template?.sections.some(s => 
+                s.questions.includes(answer.questionId)
+            );
+        }).map(answer => ({
+            question: project.tasks[answer.questionId]?.description || '',
+            answer: answer.answer,
+            category: project.tasks[answer.questionId]?.type
+        }));
     }
 }
