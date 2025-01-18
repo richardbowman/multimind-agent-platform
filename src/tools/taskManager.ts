@@ -42,7 +42,7 @@ export interface Task extends Readonly<AddTaskParams> {
     readonly complete?: boolean;
     readonly inProgress?: boolean;
     readonly order?: number;  // Lower numbers come first
-    readonly dependsOn?: string;  // ID of the task that must complete before this one can start
+    readonly dependsOn?: UUID;  // ID of the task that must complete before this one can start
     readonly props?: Readonly<Record<string, any>>;  // Flexible metadata field for storing step results etc
 }
 
