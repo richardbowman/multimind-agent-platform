@@ -15,8 +15,10 @@ export enum TaskType {
     Goal = "goal"
 }
 
+import { UUID } from 'src/types/uuid';
+
 export interface AddTaskParams {
-    id?: string;
+    id?: UUID;
     description: string;
     type: TaskType;
     category?: string;
@@ -30,8 +32,8 @@ export interface AddTaskParams {
 }
 
 export interface Task extends Readonly<AddTaskParams> {
-    readonly id: string;
-    readonly projectId: string;
+    readonly id: UUID;
+    readonly projectId: UUID;
     readonly description: string;
     readonly type: TaskType;
     readonly category: string;
@@ -64,7 +66,7 @@ export interface ProjectMetadata {
 }
 
 export interface Project {
-    id: string;
+    id: UUID;
     name: string;
     props?: Record<string, any>;
     tasks: Record<string, Task>;

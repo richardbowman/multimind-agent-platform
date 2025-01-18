@@ -1,7 +1,9 @@
 
+import { UUID } from 'src/types/uuid';
+
 export interface ClientTask {
-    id: string;
-    projectId: string;
+    id: UUID;
+    projectId: UUID;
     description: string;
     type: string;
     assignee?: string;
@@ -18,7 +20,7 @@ export interface ClientTask {
 }
 
 export interface ClientProject {
-    id: string;
+    id: UUID;
     name: string;
     props?: Record<string, any>;
     tasks: ClientTask[];
@@ -49,7 +51,7 @@ export interface ClientChannel {
 export interface ClientMessage {
     id: string;
     channel_id: string;
-    thread_id?: string;
+    thread_id?: UUID;
     message: string;
     user_id: string;
     create_at: number;

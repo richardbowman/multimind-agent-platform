@@ -1,3 +1,5 @@
+import { UUID } from 'src/types/uuid';
+
 export interface CreateChannelParams {
     name: string;
     description?: string;
@@ -10,7 +12,7 @@ export interface CreateChannelParams {
 }
 
 export interface ChannelData {
-    id: string;
+    id: UUID;
     name: string;
     projectId?: string;
     description?: string;
