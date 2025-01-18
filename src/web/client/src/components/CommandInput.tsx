@@ -16,7 +16,7 @@ const COMMANDS = [
 
 export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSendMessage }) => {
     const [input, setInput] = useState('');
-    const [suggestions, setSuggestions] = useState<string[]>([]);
+    const [suggestions, setSuggestions] = useState<Array<{title: string, type: string, id: string}>>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [pendingArtifacts, setPendingArtifacts] = useState<string[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
@@ -62,7 +62,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         artifact.id.toLowerCase().includes(searchTerm) ||
                         artifact.metadata.title.toLowerCase().includes(searchTerm)
                     )
-                    .map(artifact => `${artifact.metadata.title} [${artifact.id}]`);
+                    .map(artifact => ({
+                        title: artifact.metadata.title,
+                        type: artifact.type,
+                        id: artifact.id
+                    }));
                 setSuggestions(filtered);
                 setShowSuggestions(filtered.length > 0);
             } else {
@@ -224,11 +228,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         color: '#fff'
                     }}
                 >
-                    {suggestions.map((suggestion, index) => (
+                    {suggestions.map((artifact, index) => (
                         <div
                             key={index}
                             className="suggestion-item"
-                            onClick={() => handleSuggestionClick(suggestion)}
+                            onClick={() => handleSuggestionClick(`${artifact.title} [${artifact.id}]`)}
                             style={{
                                 padding: '8px 12px',
                                 cursor: 'pointer',
@@ -237,7 +241,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                                 transition: 'background-color 0.2s'
                             }}
                         >
-                            {suggestion}
+                            <div style={{ fontWeight: 'bold' }}>{artifact.title}</div>
+                            <div style={{ fontSize: '0.9em', color: '#aaa' }}>Type: {artifact.type}</div>
+                            <div style={{ fontSize: '0.8em', color: '#888' }}>ID: {artifact.id}</div>
                         </div>
                     ))}
                 </div>
