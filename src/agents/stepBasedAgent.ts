@@ -400,7 +400,8 @@ export abstract class StepBasedAgent extends Agent {
             if (userPost) {
                 if (stepResult.needsUserInput && stepResult.response) {
                     await this.reply(userPost, stepResult.response, {
-                        "project-id": stepResult.projectId || projectId
+                        "project-id": stepResult.projectId || projectId,
+                        "artifact-ids": [...stepResult.artifactIds||[], ...stepResult.response?.artifactIds||[], stepResult.response?.data?.artifactId]
                     });
                 } else {
                     const message = stepResult.response?.reasoning || stepResult.response?.message || "";
@@ -408,7 +409,7 @@ export abstract class StepBasedAgent extends Agent {
                         message: `${message} [Finished ${task.type}, still working...]`
                     }, {
                         "project-id": stepResult.projectId || projectId,
-                        "artifact-ids": [...stepResult.response?.artifactIds||[], stepResult.response?.data?.artifactId]
+                        "artifact-ids": [...stepResult.artifactIds||[], ...stepResult.response?.artifactIds||[], stepResult.response?.data?.artifactId]
                     });
                 }
             }
