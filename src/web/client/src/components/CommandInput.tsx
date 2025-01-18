@@ -165,8 +165,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
         }
     };
 
-    const handleSuggestionClick = (suggestion: string) => {
-        if (suggestion.includes(' - ')) {
+    const handleSuggestionClick = (suggestion: string, id: string) => {
+        if (id) {
+            // Command suggestion
+            setInput("/add "+id);
+        } else if (suggestion.includes(' - ')) {
             // Command suggestion
             setInput(suggestion.split(' - ')[0] + ' ');
         } else {
@@ -228,11 +231,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         color: '#fff'
                     }}
                 >
-                    {suggestions.map((artifact, index) => (
+                    {suggestions.map((suggest, index) => (
                         <div
                             key={index}
                             className="suggestion-item"
-                            onClick={() => handleSuggestionClick(`${artifact.title} [${artifact.id}]`)}
+                            onClick={() => handleSuggestionClick(suggest.title, suggest.id)}
                             style={{
                                 padding: '8px 12px',
                                 cursor: 'pointer',
@@ -241,9 +244,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                                 transition: 'background-color 0.2s'
                             }}
                         >
-                            <div style={{ fontWeight: 'bold' }}>{artifact.title}</div>
-                            <div style={{ fontSize: '0.9em', color: '#aaa' }}>Type: {artifact.type}</div>
-                            <div style={{ fontSize: '0.8em', color: '#888' }}>ID: {artifact.id}</div>
+                            <div style={{ fontWeight: 'bold' }}>{suggest.title}</div>
+                            <div style={{ fontSize: '0.9em', color: '#aaa' }}>Type: {suggest.type}</div>
+                            <div style={{ fontSize: '0.8em', color: '#888' }}>ID: {suggest.id}</div>
                         </div>
                     ))}
                 </div>

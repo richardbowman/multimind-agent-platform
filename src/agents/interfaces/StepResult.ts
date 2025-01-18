@@ -1,4 +1,5 @@
 import { ModelResponse } from 'src/schemas/ModelResponse';
+import { UUID } from 'src/types/uuid';
 
 export enum StepResultType {
     DecomposeResearch = "decompose-research",
@@ -9,8 +10,9 @@ export enum StepResultType {
 
 export interface StepResult {
     type?: StepResultType;
-    projectId?: string;
-    taskId?: string;
+    projectId?: UUID;
+    taskId?: UUID;
+    artifactIds?: UUID[],
     finished?: boolean;
     goal?: string;
     allowReplan?: boolean;

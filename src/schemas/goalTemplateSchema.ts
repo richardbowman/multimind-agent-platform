@@ -5,7 +5,7 @@ export interface GoalTemplate {
     /**
      * Unique identifier for the goal template
      */
-    id: string;
+    id: UUID;
     
     /**
      * Human-readable name of the goal template

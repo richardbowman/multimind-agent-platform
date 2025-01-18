@@ -49,7 +49,7 @@ export class LLMServiceFactory {
         }
     }
     static createService(settings: Settings, modelType: ModelType = ModelType.CONVERSATION): ILLMService {
-        return this.createServiceByName(settings.providers.chat, settings, modelType);
+        return this.createServiceByName(settings.providers?.chat, settings, modelType);
     }
 
     static createServiceByName(name: string, settings: Settings, modelType: ModelType = ModelType.CONVERSATION): ILLMService {
@@ -60,7 +60,7 @@ export class LLMServiceFactory {
             case LLMProvider.BEDROCK:
                 return new BedrockService(
                     settings.models.conversation.bedrock,
-                    settings.embeddingModel
+                    settings.models.embeddings.bedrock
                 );
             case LLMProvider.ANTHROPIC:
                 return new AnthropicService(
@@ -93,8 +93,8 @@ export class LLMServiceFactory {
                     throw new Error("DeepSeek API key is required");
                 }
                 return new OpenAIService(
-                    settings.deepseek.api.key,
-                    settings.models.conversation.deepseek || "deepseek-chat",
+                    settings.deepseek?.api.key,
+                    settings.models?.conversation?.deepseek || "deepseek-chat",
                     undefined,
                     "https://api.deepseek.com/v1"
                 );

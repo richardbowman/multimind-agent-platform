@@ -1,7 +1,7 @@
 import { BackendServicesWithWindows } from "../types/BackendServices";
 import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
 import Logger from "../helpers/logger";
-import { ChatPost } from "../chat/chatClient";
+import { ChatClient, ChatPost } from "../chat/chatClient";
 import { ClientMessage, ClientTask } from "src/shared/types";
 import { ClientChannel } from "src/shared/types";
 import { ClientThread } from "src/shared/types";
@@ -14,7 +14,7 @@ import { LLMServiceFactory } from "src/llm/LLMServiceFactory";
 import { ModelInfo } from "src/llm/types";
 import { EmbedderModelInfo } from "src/llm/ILLMService";
 import { ClientProject } from "src/shared/types";
-import { TaskType } from "src/tools/taskManager";
+import { TaskManager, TaskType } from "src/tools/taskManager";
 import { UpdateStatus } from "src/shared/UpdateStatus";
 import { LimitedRPCHandler } from "./LimitedRPCHandler";
 import { AppUpdater } from "electron-updater";
@@ -146,8 +146,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             const channel = await this.services.chatClient.getChannelData(channelId);
             rpc.onChannelCreated({
                 id: channel.id,
-                name: channel.name.replace('#', ''),
-                description: channel.description,
+                name: channel.name,
                 members: channel.members || [],
                 projectId: channel.projectId
             });
@@ -400,9 +399,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return handles;
     }
 
-    private async mapHandles(agentList: (UUID|ChatHandle)[]) : Promise<UUID[]> {
+    private static async mapHandles(chatClient: ChatClient, agentList: (UUID|ChatHandle)[]) : Promise<UUID[]> {
         const ids : UUID[] = [];
-        const handles = await this.services.chatClient?.getHandles();
+        const handles = await chatClient.getHandles();
         if (!handles) {
             throw new Error(`Could not get handles map`);
         }
@@ -423,27 +422,24 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return ids;
     }
 
-    async createChannel(params: CreateChannelHandlerParams): Promise<string> {
-        if (!this.services?.chatClient) {
-            throw new Error('Chat client is not initialized');
-        }
-
+    public static async createChannelHelper(chatClient: ChatClient, taskManager: TaskManager, params: CreateChannelHandlerParams) : Promise<CreateChannelParams> {
         // Always include the RouterAgent in the channel members
         const router = createChatHandle('@router');
 
-        params.members = [...(params.members || []), router];
+        let members = [...(params.members || []), router];
         // Use the selected default responder or fallback to router-agent
-        params.defaultResponderId = params.defaultResponderId || router;
+        const defaultResponder = params.defaultResponderId || router;
 
         // If a goal template is specified, create a project with its tasks
+        let projectId;
         if (params.goalTemplate) {
             const template = GoalTemplates.find(t => t.id === params.goalTemplate);
             if (template) {
                 // Resolve agent handles to IDs
-                const resolvedAgents = await this.mapHandles(template.supportingAgents);
+                const resolvedAgents = await this.mapHandles(chatClient, template.supportingAgents);
 
                 // Create project with resolved agent IDs
-                const project = await this.services.taskManager.createProject({
+                const project = await taskManager.createProject({
                     name: params.name,
                     tasks: template.initialTasks.map((task, i) => ({
                         description: task.description,
@@ -456,37 +452,39 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                         tags: template.tags
                     }
                 });
-                const projectId = project.id;
+                projectId = project.id;
 
-                // Associate the project with the channel
-                params.projectId = projectId;
-                
                 // Add supporting agents to channel members if not already present
                 const existingMembers = new Set(params.members || []);
                 resolvedAgents.forEach(agentId => {
                     if (!existingMembers.has(agentId)) {
-                        params.members = [...(params.members || []), agentId];
+                        members = [...(params.members || []), agentId];
                     }
                 });
             }
         }
 
-        const defaultResponderId = (await this.mapHandles([params.defaultResponderId]))[0];
-        const memberIds = await this.mapHandles(params.members);
+        const defaultResponderId = (await this.mapHandles(chatClient, [defaultResponder]))[0];
+        const memberIds = [...new Set(await this.mapHandles(chatClient, members))];
 
-        return await this.services.chatClient.createChannel({
+        return {
             name: params.name,
             artifactIds: params.artifactIds,
             defaultResponderId: defaultResponderId,
-            projectId: params.projectId,
+            projectId: projectId,
             description: params.description,
             goalTemplate: params.goalTemplate,
             isPrivate: params.isPrivate,
-            members: memberIds
-        });
+            members: memberIds,
+        }
     }
 
-    async deleteChannel(channelId: string): Promise<void> {
+    async createChannel(params: CreateChannelHandlerParams): Promise<string> {
+        const mappedParams = await ServerRPCHandler.createChannelHelper(this.services.chatClient, this.services.taskManager, params);
+        return await this.services.chatClient.createChannel(mappedParams);
+    }
+
+    async deleteChannel(channelId: UUID): Promise<void> {
         if (!this.services?.chatClient) {
             throw new Error('Chat client is not initialized');
         }

@@ -12,6 +12,8 @@ import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { Settings } from '../../tools/settings';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { ChatClient } from 'src/chat/chatClient';
+import { ServerRPCHandler } from 'src/server/RPCHandler';
+import { CreateChannelHandlerParams } from 'src/shared/channelTypes';
 
 @StepExecutorDecorator(ExecutorType.CREATE_CHANNEL, 'Create channels with appropriate templates and settings')
 export class CreateChannelExecutor implements StepExecutor {
@@ -27,48 +29,9 @@ export class CreateChannelExecutor implements StepExecutor {
         this.chatClient = params.chatClient;
     }
 
-    private async createChannel(params: {
-        name: string;
-        description: string;
-        isPrivate: boolean;
-        members: string[];
-        goalTemplate: string;
-        defaultResponderId: string;
-        artifactIds?: string[];
-    }): Promise<string> {
-        // Always include the RouterAgent in the channel members
-        params.members = [...params.members, 'router-agent'];
-        
-        // If a goal template is specified, create a project with its tasks
-        const template = GoalTemplates.find(t => t.id === params.goalTemplate);
-        let projectId: string | undefined;
-        
-        if (template) {
-            const project = await this.taskManager.createProject({
-                name: params.name,
-                tasks: template.initialTasks.map((task, i) => ({
-                    description: task.description,
-                    type: TaskType.Goal,
-                    category: task.type
-                })),
-                metadata: {
-                    description: params.description || '',
-                    tags: template.tags
-                }
-            });
-            projectId = project.id;
-        }
-
-        // Create the actual channel
-        const channelId = await this.chatClient.createChannel({
-            ...params,
-            projectId,
-            members: params.members,
-            defaultResponderId: params.defaultResponderId,
-            artifactIds: params.artifactIds
-        });
-
-        return channelId;
+    private async createChannel(params: CreateChannelHandlerParams): Promise<string> {
+        const mappedParams = await ServerRPCHandler.createChannelHelper(this.chatClient, this.taskManager, params);
+        return await this.chatClient.createChannel(mappedParams);
     }
 
     async execute(params: ExecuteParams & { executionMode: 'conversation' | 'task' }): Promise<StepResult> {
@@ -123,7 +86,7 @@ Return ONLY the channel name.`;
             isPrivate: false,
             members: selectedTemplate.supportingAgents,
             goalTemplate: selectedTemplate.id,
-            defaultResponderId: selectedTemplate.supportingAgents[0] || 'router-agent',
+            defaultResponderId: selectedTemplate.supportingAgents[0],
             artifactIds: artifactIds
         });
 
@@ -132,7 +95,7 @@ Return ONLY the channel name.`;
 The channel includes these supporting agents: ${selectedTemplate.supportingAgents.join(', ')}.
 The channel's purpose is: ${channelPurpose}
 
-Please write a clear, friendly message to the user explaining:
+Please write a clear, friendly chat response to the user explaining:
 1. What the channel is for
 2. Which agents are included and why
 3. What initial tasks have been set up

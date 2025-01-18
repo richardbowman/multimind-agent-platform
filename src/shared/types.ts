@@ -45,8 +45,8 @@ export interface ClientChannel {
     id: string;
     name: string;
     description?: string;
-    members: string[];
-    projectId: string;
+    members: UUID[];
+    projectId?: UUID;
 }
 import { ChatHandle } from 'src/types/chatHandle';
 

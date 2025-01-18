@@ -136,7 +136,6 @@ class ScrapeHelper {
                     Logger.warn(`DOM ready event timed out for ${url}:`, error);
                 });
                 await this.electronWindow.loadURL(url);
-                this.electronWindow.show();
 
                 actualUrl = webContents.getURL();
                 htmlContent = await webContents.executeJavaScript('document.body.innerHTML');

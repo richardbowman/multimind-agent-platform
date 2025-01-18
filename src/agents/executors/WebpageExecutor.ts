@@ -15,6 +15,7 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { Artifact } from 'src/tools/artifact';
 import { UrlExtractionResponse } from 'src/schemas/UrlExtractionResponse';
+import { createUUID } from 'src/types/uuid';
 
 /**
  * WebpageExecutor - Processes a single provided URL to:
@@ -104,13 +105,13 @@ export class WebpageExecutor implements StepExecutor {
             return {
                 finished: true,
                 type: 'webpage_summary',
+                artifactIds: artifacts.map(a => createUUID(a.id)),
                 response: {
                     message: artifacts.length > 0 
                         ? artifacts.map(a => a.content).join('\n\n---\n\n')
                         : "I couldn't download any webpages.",
                     data: {
                         urls: allUrls,
-                        artifactIds: artifacts.map(a => a.id),
                         availableLinks: Array.from(allLinks) // Add all found links to response
                     },
                     _usage: {

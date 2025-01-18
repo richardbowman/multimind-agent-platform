@@ -5,6 +5,8 @@ import { AsyncQueue } from "../helpers/asyncQueue";
 import { ChannelData, CreateChannelParams } from "src/shared/channelTypes";
 import { EventEmitter } from "stream";
 import { _getPathRecursive } from "@langchain/core/dist/utils/fast-json-patch/src/helpers";
+import { createUUID, UUID } from "src/types/uuid";
+import { ChatHandle } from "src/types/chatHandle";
 
 export class InMemoryPost implements ChatPost {
     static fromLoad(postData: any) : InMemoryPost {
@@ -74,8 +76,8 @@ export class LocalChatStorage extends EventEmitter {
         this.setMaxListeners(100);
     }
 
-    async createChannel(params: CreateChannelParams): Promise<string> {
-        const channelId = crypto.randomUUID();
+    async createChannel(params: CreateChannelParams): Promise<UUID> {
+        const channelId = createUUID();
         this.registerChannel(channelId, params.name);
         this.channelData[channelId] = {
             id: channelId,
@@ -83,7 +85,7 @@ export class LocalChatStorage extends EventEmitter {
             description: params.description,
             isPrivate: params.isPrivate,
             members: params.members,
-            defaultResponderId: params.defaultResponderId || 'router-agent', // Fallback to router-agent if not specified
+            defaultResponderId: params.defaultResponderId,
             projectId: params.projectId,
             artifactIds: params.artifactIds
         };
@@ -232,11 +234,11 @@ export class LocalChatStorage extends EventEmitter {
 
 export class LocalTestClient implements ChatClient {
     private webSocketUrl: string;
-    private userId: string;
+    private userId: UUID;
     private callback: (data: ChatPost) => void = () => {};
     storage: LocalChatStorage;
 
-    constructor(userId: string, webSocketUrl: string, storage: LocalChatStorage) {
+    constructor(userId: UUID, webSocketUrl: string, storage: LocalChatStorage) {
         this.userId = userId;
         this.webSocketUrl = webSocketUrl;
         this.storage = storage;
@@ -262,7 +264,7 @@ export class LocalTestClient implements ChatClient {
         );
     }
 
-    public getHandles(): Promise<Record<string, string>> {
+    public getHandles(): Promise<Record<UUID, ChatHandle>> {
         return Promise.resolve(this.storage.userIdToHandleName);
     }
 
@@ -274,15 +276,15 @@ export class LocalTestClient implements ChatClient {
         return channelData;
     }
 
-    public async createChannel(params: CreateChannelParams): Promise<string> {
+    public async createChannel(params: CreateChannelParams): Promise<UUID> {
         return this.storage.createChannel(params);
     }
 
     async onAddedToChannel(callback: (channelId: any, params: CreateChannelParams) => void): Promise<void> {
         this.storage.on("addChannel", (newChannelId: string, params: CreateChannelParams) => {
-            if (params.members?.includes(this.userId)) {
+            //if (params.members?.includes(this.userId)) {
                 callback(newChannelId, params);
-            }
+            //}
         });
         return;
     }

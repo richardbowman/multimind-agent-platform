@@ -6,7 +6,7 @@ import { Project, TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { OnboardingProject, QuestionAnswer } from '../onboardingConsultant';
 import { CreateArtifact } from '../../schemas/ModelResponse';
-import { DocumentPlanResponse, QAItem } from '../../schemas/DocumentPlanResponse';
+import { DocumentPlanResponse } from '../../schemas/DocumentPlanResponse';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResult } from '../interfaces/StepResult';
@@ -14,6 +14,7 @@ import { updateBusinessPlan } from '../../helpers/businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { AnswerMetadata } from './AnswerQuestionsExecutor';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
 
 /**
  * Executor that creates and revises operational business guides based on user requirements.
@@ -107,7 +108,7 @@ export class CreatePlanExecutor implements StepExecutor {
         }
 
         // Save the completed document as an artifact
-        const artifactId = await this.artifactManager.storeArtifact({
+        const artifactId = await this.artifactManager.saveArtifact({
             id: this.taskManager.newProjectId(),
             type: 'document',
             content: documentContent,

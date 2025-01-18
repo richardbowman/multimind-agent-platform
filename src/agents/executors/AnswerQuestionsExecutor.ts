@@ -76,10 +76,20 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             project.documentDraft = project.template.templateContent;
         }
 
+        // Add artifact context if available
+        let artifacts;
+        if (params.context?.artifacts) {
+            artifacts += '\n\n' + this.modelHelpers.formatArtifacts(params.context.artifacts);
+        }
+
         const modelResponse = await this.modelHelpers.generate<AnswerAnalysisResponse>({
             message: params.message||params.stepGoal,
             instructions: new StructuredOutputPrompt(schema,
                 `OVERALL GOAL: ${params.overallGoal}
+                
+                Artifacts Associated To This Conversation:
+                ${artifacts}
+
                 
                 Here is the current state of our questions and answers:
 

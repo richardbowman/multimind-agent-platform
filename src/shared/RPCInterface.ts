@@ -7,6 +7,7 @@ import { ClientTask } from './types';
 import { EmbedderModelInfo } from 'src/llm/ILLMService';
 import { ModelInfo } from 'src/llm/types';
 import { UpdateStatus } from './UpdateStatus';
+import { UUID } from 'src/types/uuid';
 
 export interface LogEntry {
     timestamp: string;
@@ -71,7 +72,7 @@ export interface ServerMethods {
      * @param channelId - ID of the channel to delete
      * @returns Promise resolving when deletion is complete
      */
-    deleteChannel(channelId: string): Promise<void>;
+    deleteChannel(channelId: UUID): Promise<void>;
 
     getAvailableModels(provider: string): Promise<ModelInfo[]>;
     getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]>;

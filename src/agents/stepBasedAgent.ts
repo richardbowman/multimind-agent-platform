@@ -425,7 +425,7 @@ export abstract class StepBasedAgent extends Agent {
                         "artifact-ids": [...stepResult.artifactIds||[], ...stepResult.response?.artifactIds||[], stepResult.response?.data?.artifactId]
                     });
                 } else {
-                    const message = stepResult.response?.reasoning || stepResult.response?.message || "";
+                    const message = stepResult.response?.message || stepResult.response?.reasoning || "";
                     await this.reply(userPost, {
                         message: `${message} [Finished ${task.type}, still working...]`
                     }, {

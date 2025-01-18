@@ -12,6 +12,7 @@ export interface DataContextMethods {
   messages: ClientMessage[];
   channels: ClientChannel[];
   tasks: ClientTask[];
+  allArtifacts: any[];
   artifacts: any[];
   logs: {
     llm: Record<string, LLMLogEntry[]>;
@@ -78,6 +79,7 @@ export const DataProvider: React.FC<{
   }, []);
   const [tasks, setTasks] = useState<ClientTask[]>([]);
   const [artifacts, setArtifacts] = useState<any[]>([]);
+  const [allArtifacts, setAllArtifacts] = useState<any[]>([]);
   const [logs, setLogs] = useState<{
     llm: Record<string, LLMLogEntry[]>;
     system: {
@@ -181,7 +183,7 @@ export const DataProvider: React.FC<{
 
   const fetchAllArtifacts = useCallback(async () => {
     const newArtifacts = await ipcService.getRPC().getAllArtifacts();
-    setArtifacts(newArtifacts);
+    setAllArtifacts(newArtifacts);
   }, []);
 
   const deleteArtifact = useCallback(async (artifactId: string) => {
@@ -236,6 +238,7 @@ export const DataProvider: React.FC<{
     channels,
     tasks,
     artifacts,
+    allArtifacts, 
     logs,
     handles,
     currentChannelId,
@@ -268,7 +271,7 @@ export const DataProvider: React.FC<{
           settings.protocol !== undefined) {
           ipcService.disconnect();
           await ipcService.connect();
-          await Promise.all([fetchChannels(), fetchHandles()]);
+          await Promise.all([fetchChannels(), fetchHandles(), fetchAllArtifacts()]);
         }
 
         return updatedSettings;

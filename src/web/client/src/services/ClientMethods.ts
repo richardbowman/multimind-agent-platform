@@ -97,7 +97,8 @@ export const useClientMethods = (snackbarContext: SnackbarContextType, contextMe
                 // Trigger initial data fetch when backend is ready
                 Promise.all([
                     contextMethods.fetchChannels(),
-                    contextMethods.fetchHandles()
+                    contextMethods.fetchHandles(),
+                    contextMethods.fetchAllArtifacts()
                 ]).catch(console.error);
             }
         },
@@ -122,10 +123,7 @@ export const useClientMethods = (snackbarContext: SnackbarContextType, contextMe
 
         onChannelCreated(channel: ClientChannel) {
             // Add the new channel to the list and refresh
-            contextMethods.setChannels(prev => {
-                const exists = prev.some(c => c.id === channel.id);
-                return exists ? prev : [...prev, channel];
-            });
+            contextMethods.fetchChannels();
         },
 
         onAutoUpdate(update: { status: UpdateStatus, progress?: number}) {

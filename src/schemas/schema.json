@@ -334,6 +334,71 @@
       ],
       "type": "object"
     },
+    "DocumentPlanResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "notes": {
+          "description": "Any additional notes about the document",
+          "type": "string"
+        },
+        "sections": {
+          "description": "Array of completed sections",
+          "items": {
+            "$ref": "#/definitions/DocumentSection"
+          },
+          "type": "array"
+        },
+        "status": {
+          "description": "Overall status of the document",
+          "enum": [
+            "complete",
+            "in-progress"
+          ],
+          "type": "string"
+        },
+        "summary": {
+          "description": "Summary of the document content",
+          "type": "string"
+        }
+      },
+      "required": [
+        "sections",
+        "status",
+        "summary"
+      ],
+      "type": "object"
+    },
+    "DocumentSection": {
+      "additionalProperties": false,
+      "properties": {
+        "content": {
+          "description": "Generated content for this section",
+          "type": "string"
+        },
+        "id": {
+          "description": "ID of the section matching the template",
+          "type": "string"
+        },
+        "notes": {
+          "description": "Any notes about the section content",
+          "type": "string"
+        },
+        "status": {
+          "description": "Status of the section completion",
+          "enum": [
+            "complete",
+            "incomplete"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "id",
+        "content",
+        "status"
+      ],
+      "type": "object"
+    },
     "EditingResponse": {
       "description": "Response containing content editing suggestions",
       "properties": {
@@ -397,16 +462,14 @@
       "additionalProperties": false,
       "properties": {
         "defaultResponder": {
-          "description": "Default responding agent ID or",
-          "type": "string"
+          "description": "Default responding agent ID or"
         },
         "description": {
           "description": "Description of the goal type and what it's used for",
           "type": "string"
         },
         "id": {
-          "description": "Unique identifier for the goal template",
-          "type": "string"
+          "description": "Unique identifier for the goal template"
         },
         "initialTasks": {
           "description": "Initial tasks to create when this goal template is selected",
@@ -421,9 +484,7 @@
         },
         "supportingAgents": {
           "description": "List of agent IDs or types required to support this goal",
-          "items": {
-            "type": "string"
-          },
+          "items": {},
           "type": "array"
         }
       },
@@ -1146,7 +1207,9 @@
         "OutlineApprovalCheck",
         "ArtifactGeneration",
         "UrlExtractionResponse",
-        "WebpageSummaryResponse"
+        "WebpageSummaryResponse",
+        "TemplateSelectionResponse",
+        "DocumentPlanResponse"
       ],
       "type": "string"
     },
@@ -1260,6 +1323,35 @@
         "Complete"
       ],
       "type": "string"
+    },
+    "TemplateSelectionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "notes": {
+          "description": "Any additional notes about the selection",
+          "type": "string"
+        },
+        "reasoning": {
+          "description": "Explanation of why this template was chosen",
+          "type": "string"
+        },
+        "selectedTemplateId": {
+          "description": "The ID of the selected template",
+          "type": "string"
+        },
+        "suggestedModifications": {
+          "description": "Suggested modifications to the template",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "selectedTemplateId",
+        "reasoning"
+      ],
+      "type": "object"
     },
     "ThinkingResponse": {
       "additionalProperties": false,

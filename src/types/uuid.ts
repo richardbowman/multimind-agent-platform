@@ -12,7 +12,10 @@ export function isUUID(value: string): value is UUID {
 }
 
 // Utility function to create UUIDs
-export function createUUID(value: string): UUID {
+export function createUUID(value?: string): UUID {
+    if (!value) {
+        return crypto.randomUUID() as UUID;
+    }
     if (!isUUID(value)) {
         throw new Error(`Invalid UUID format: ${value}`);
     }

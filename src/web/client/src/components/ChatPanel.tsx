@@ -165,7 +165,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
 
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
-    const handleSendMessage = async (content: string) => {
+    const handleSendMessage = async (content: string, artifactIds?: string) => {
         if (!currentChannelId) return;
 
         // Handle special commands
@@ -181,7 +181,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             message: lastMessage,
                             user_id: userId,
                             create_at: Date.now(),
-                            props: {}
+                            props: {
+                                ["artifact-ids"]: artifactIds
+                            }
                         });
                     }
                     return;
@@ -195,7 +197,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             message: channelMessage,
                             user_id: userId,
                             create_at: Date.now(),
-                            props: {}
+                            props: {
+                                ["artifact-ids"]: artifactIds
+                            }
                         });
                     }
                     return;
@@ -217,7 +221,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             user_id: userId,
             create_at: Date.now(),
             thread_id: currentThreadId || undefined,
-            props: currentThreadId ? { 'root-id': currentThreadId } : {}
+            props: {
+                ["artifact-ids"]: artifactIds,
+                ...(currentThreadId ? { 'root-id': currentThreadId } : {})
+            }
         };
 
         sendMessage(message);

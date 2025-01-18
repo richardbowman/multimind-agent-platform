@@ -31,7 +31,7 @@ export interface ChannelData {
     projectId?: UUID;
     description?: string;
     isPrivate?: boolean;
-    members?: (UUID | ChatHandle)[];
+    members?: UUID[];
     defaultResponderId?: string;
     artifactIds?: string[];
 }

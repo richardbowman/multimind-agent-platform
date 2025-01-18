@@ -14,6 +14,7 @@ import {
     ToggleButtonGroup,
     ToggleButton
 } from '@mui/material';
+import { useLogger } from '../contexts/LogContext';
 
 interface LogViewerProps {
     logType: 'llm' | 'system';
@@ -22,6 +23,7 @@ interface LogViewerProps {
 export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType }) => {
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system'>(initialLogType);
     const { logs, fetchLogs } = useWebSocket();
+    const logger = useLogger();
     const [filterText, setFilterText] = useState('');
     const [isLoading, setIsLoading] = useState(false);
     const [showVerbose, setShowVerbose] = useState(false);
@@ -38,7 +40,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     }, [currentLogTab, fetchLogs]);
 
     useEffect(() => {
-        console.log('LogViewer: Setting up log subscription for type:', currentLogTab);
+        logger.verbose('LogViewer: Setting up log subscription for type:', currentLogTab);
         
         // Initial fetch
         refreshLogs();
@@ -49,7 +51,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         };
 
         return () => {
-            console.log('LogViewer: Cleaning up log subscription for type:', currentLogTab);
+            logger.verbose('LogViewer: Cleaning up log subscription for type:', currentLogTab);
             // No need to explicitly unsubscribe since RPC handles cleanup
         };
     }, [currentLogTab, refreshLogs]);
@@ -151,8 +153,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                     return filterLog(log.message) && 
                            levelMatch && 
                            (showVerbose || log.level.toLowerCase() !== 'verbose');
-                })
-                ).map((log, index) => (
+                }).map((log, index) => (
                     <div key={index} className={`log-entry ${log.level?.toLowerCase()}`}>
                         <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                         <span className="log-level">{log.level}</span>

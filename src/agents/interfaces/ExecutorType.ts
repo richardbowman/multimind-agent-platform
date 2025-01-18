@@ -20,5 +20,6 @@ export enum ExecutorType {
     BRAINSTORM = "brainstorm",
     DOCUMENT_RETRIEVAL = "document-retrieval",
     WEB_RESEARCH = "web_search",
-    CREATE_CHANNEL = "create_channel"
+    CREATE_CHANNEL = "create_channel",
+    SELECT_TEMPLATE = "select-template"
 }

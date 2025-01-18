@@ -10,8 +10,10 @@ import { ReviewProgressExecutor } from './executors/ReviewProgressExecutor';
 import { UnderstandGoalsExecutor } from './executors/UnderstandGoalsExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { CreateChannelExecutor } from './executors/CreateChannelExecutor';
-import templates from '../../templates/documentTemplates.json';
+import templates from '../templates/documentTemplates.json';
 import path from 'path';
+import { TemplateSelectorExecutor } from './executors/TemplateSelectorExecutor';
+import { ExecutorType } from './interfaces/ExecutorType';
 
 
 
@@ -119,10 +121,11 @@ AI Service Integration:
 - What success would look like
 `);
 this.modelHelpers.setFinalInstructions(`To kickoff with a new user, create the following steps in this order:
-1. understand_goals
-2. create_revise_plan
+1. ${ExecutorType.UNDERSTAND_GOALS}
+2. ${ExecutorType.SELECT_TEMPLATE}
+3. ${ExecutorType.CREATE_PLAN}
 
-For an existing user who has answered sufficient questions, move on to create_revise_plan.
+For an existing user who has answered sufficient questions, move on to ${ExecutorType.SELECT_TEMPLATE}.
 `);
 
         // Register our specialized executors
@@ -131,7 +134,7 @@ For an existing user who has answered sufficient questions, move on to create_re
         this.registerStepExecutor(new CreatePlanExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new ReviewProgressExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new CreateChannelExecutor(this.getExecutorParams()));
-        this.registerStepExecutor(new TemplateSelectorExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new TemplateSelectorExecutor(this.getExecutorParams(), this));
         // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
 
 

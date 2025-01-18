@@ -3,18 +3,18 @@ import { ChatHandle } from "src/types/chatHandle";
 import { UUID } from "src/types/uuid";
 
 export interface ChatClient {
-    onAddedToChannel(callback: (channelId: any, params: CreateChannelParams) => void): Promise<void>;
+    onAddedToChannel(callback: (channelId: UUID, params: CreateChannelParams) => void): Promise<void>;
 
     getThreadChain(post: ChatPost): Promise<ChatPost[]>;
-    getPost(confirmationPostId: string): Promise<ChatPost>;
-    fetchPreviousMessages(channelId: string, limit?: number): Promise<ChatPost[]>;
-    postInChannel(channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost>;
+    getPost(confirmationPostId: UUID): Promise<ChatPost>;
+    fetchPreviousMessages(channelId: UUID, limit?: number): Promise<ChatPost[]>;
+    postInChannel(channelId: UUID, message: string, props?: Record<string, any>): Promise<ChatPost>;
     receiveMessages(callback: (data: ChatPost) => void): void;
     closeCallback(): void;
     /** 
      * deprecated Use replyThreaded instead
      */
-    postReply(rootId: string, channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost>;
+    postReply(rootId: UUID, channelId: UUID, message: string, props?: Record<string, any>): Promise<ChatPost>;
     replyThreaded(post: ChatPost, response: string, props?: ConversationContext): Promise<ChatPost>;
 
     registerHandle(handleName: string): void;
@@ -26,14 +26,7 @@ export interface ChatClient {
      * @param channelId - ID of the channel to get data for
      * @returns Promise resolving to channel metadata including projectId if exists
      */
-    getChannelData(channelId: string): Promise<{
-        projectId?: string;
-        description?: string;
-        isPrivate?: boolean;
-        members?: string[];
-        defaultResponderId?: string;
-        artifactIds?: string[];
-    }>;
+    getChannelData(channelId: string): Promise<ChannelData>;
     
     /**
      * Create a new chat channel
@@ -44,34 +37,34 @@ export interface ChatClient {
      *   - members: Array of user IDs to add to channel
      * @returns Promise resolving to the new channel ID
      */
-    createChannel(params: CreateChannelParams): Promise<string>;
+    createChannel(params: CreateChannelParams): Promise<UUID>;
 
     /**
      * Delete an existing chat channel
      * @param channelId - ID of channel to delete
      * @returns Promise resolving when deletion is complete
      */
-    deleteChannel(channelId: string): Promise<void>;
+    deleteChannel(channelId: UUID): Promise<void>;
     
     /**
      * Add an artifact ID to a channel's linked artifacts
      * @param channelId - ID of the channel
      * @param artifactId - ID of the artifact to add
      */
-    addArtifactToChannel(channelId: string, artifactId: string): Promise<void>;
+    addArtifactToChannel(channelId: UUID, artifactId: UUID): Promise<void>;
     
     /**
      * Remove an artifact ID from a channel's linked artifacts
      * @param channelId - ID of the channel
      * @param artifactId - ID of the artifact to remove
      */
-    removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void>;
+    removeArtifactFromChannel(channelId: UUID, artifactId: UUID): Promise<void>;
 }
 
 export interface ProjectChainResponse {
     activityType: any;
     posts : ChatPost[];
-    projectId: string;
+    projectId: UUID;
 }
 
 export interface ConversationContext extends Record<string, any> {

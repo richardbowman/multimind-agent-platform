@@ -28,9 +28,13 @@ class LogManager extends EventEmitter {
         };
 
         // Ensure directory exists and append to log file
-        this.ensureLogDirectoryExists();
-        appendFileSync(Logger.logFilePath, formattedMessage);
-        
+        try {
+            this.ensureLogDirectoryExists();
+            appendFileSync(Logger.logFilePath, formattedMessage);
+        } catch (e) {
+            //swallow errors, this can happen as process is exiting
+        }
+
         // Send to WebSocket if connected
         if (global.socket) {
             global.socket.emit('system_log', logEntry);

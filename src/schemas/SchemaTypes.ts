@@ -36,5 +36,6 @@ export enum SchemaType {
     ArtifactGeneration = 'ArtifactGeneration',
     UrlExtractionResponse = 'UrlExtractionResponse',
     WebpageSummaryResponse = 'WebpageSummaryResponse',
-    TemplateSelectionResponse = 'TemplateSelectionResponse'
+    TemplateSelectionResponse = 'TemplateSelectionResponse',
+    DocumentPlanResponse = "DocumentPlanResponse"
 }

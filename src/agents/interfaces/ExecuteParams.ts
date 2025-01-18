@@ -3,6 +3,8 @@ import { Artifact } from 'src/tools/artifact';
 import { Project } from 'src/tools/taskManager';
 import { StepTask } from './ExecuteStepParams';
 import { UUID } from 'src/types/uuid';
+import { ChatHandle } from 'src/types/chatHandle';
+import { ChatPost } from 'src/chat/chatClient';
 
 export interface ExecuteParams {
     readonly agentId: UUID;
@@ -19,8 +21,6 @@ export interface ExecuteParams {
     readonly executionMode: 'conversation' | 'task';
     readonly agents?: Array<{
         readonly id: string;
-import { ChatHandle } from 'src/types/chatHandle';
-
         readonly handle: ChatHandle;
         readonly type: string;
     }>;

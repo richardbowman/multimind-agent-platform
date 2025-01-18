@@ -52,7 +52,7 @@ export class RouterAgent extends Agent {
             .map(memberId => {
                 const agent = Object.values(this.settings.agents).find(a => a.userId === memberId);
                 return agent
-            });
+            });          
 
         // Get detailed capabilities for each agent that is a StepBasedAgent
         const agentPromptOptions = agentOptions
@@ -228,6 +228,8 @@ ${Object.values(context.project.tasks)
 
 Conversation context:
 ${context.conversationContext}
+
+${params.artifacts ? this.modelHelpers.formatArtifacts(params.artifacts) : ""}  
 
 Respond with:
 - selectedAgent: The best agent to handle this (optional if unclear)
