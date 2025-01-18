@@ -30,80 +30,22 @@ export class ElectronIPCService extends BaseRPCService {
             // Initialize birpc
             const safeHandlers = createSafeRPCHandlers();
 
-            const clientWrappers = {
-                onClientLogProcessed: (success, message) => {
-                    console.log('[IPC] onClientLogProcessed', { success, message });
-                    try {
-                        return this.wrapper.onClientLogProcessed.call(this, success, message);
-                    } catch (error) {
-                        console.error('[IPC] Error in onClientLogProcessed:', error);
-                        throw error;
-                    }
-                },
-                onMessage: (messages) => {
-                    console.log('[IPC] onMessage', { messageCount: messages.length });
-                    try {
-                        return this.wrapper.onMessage.call(this, messages);
-                    } catch (error) {
-                        console.error('[IPC] Error in onMessage:', error);
-                        throw error;
-                    }
-                },
-                onLogUpdate: (update) => {
-                    console.log('[IPC] onLogUpdate', { type: update.type });
-                    try {
-                        return this.wrapper.onLogUpdate.call(this, update);
-                    } catch (error) {
-                        console.error('[IPC] Error in onLogUpdate:', error);
-                        throw error;
-                    }
-                },
-                onBackendStatus: (status) => {
-                    console.log('[IPC] onBackendStatus', status);
-                    try {
-                        return this.wrapper.onBackendStatus.call(this, status);
-                    } catch (error) {
-                        console.error('[IPC] Error in onBackendStatus:', error);
-                        throw error;
-                    }
-                },
-                onTaskUpdate: (task) => {
-                    console.log('[IPC] onTaskUpdate', { taskId: task.id });
-                    try {
-                        return this.wrapper.onTaskUpdate.call(this, task);
-                    } catch (error) {
-                        console.error('[IPC] Error in onTaskUpdate:', error);
-                        throw error;
-                    }
-                },
-                onProjectUpdate: (project) => {
-                    console.log('[IPC] onProjectUpdate', { projectId: project.id });
-                    try {
-                        return this.wrapper.onProjectUpdate.call(this, project);
-                    } catch (error) {
-                        console.error('[IPC] Error in onProjectUpdate:', error);
-                        throw error;
-                    }
-                },
-                onAutoUpdate: (update: { status: UpdateStatus, progress?: number}) => {
-                    console.log('[IPC] onAutoUpdate');
-                    try {
-                        return this.wrapper.onAutoUpdate.call(this, update);
-                    } catch (error) {
-                        console.error('[IPC] Error in onAutoUpdate:', error);
-                        throw error;
-                    }
-                },
-                onChannelCreated: (channel: ClientChannel) => {
-                    console.log('[IPC] onChannelCreated');
-                    try {
-                        return this.wrapper.onChannelCreated.call(this, channel);
-                    } catch (error) {
-                        console.error('[IPC] Error in onChannelCreated:', error);
-                        throw error;
-                    }
+            const clientWrappers = new Proxy({} as ClientMethods, {
+                get: (target, prop: string) => {
+                    return (...args: any[]) => {
+                        console.log(`[IPC] ${prop}`, args);
+                        try {
+                            if (this.wrapper && typeof this.wrapper[prop] === 'function') {
+                                return this.wrapper[prop].call(this.wrapper, ...args);
+                            }
+                            throw new Error(`Method ${prop} not found on client wrapper`);
+                        } catch (error) {
+                            console.error(`[IPC] Error in ${prop}:`, error);
+                            throw error;
+                        }
+                    };
                 }
-            };
+            });
 
             this.rpc = createBirpc<ServerMethods, ClientMethods>(
                 clientWrappers,
