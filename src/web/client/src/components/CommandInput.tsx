@@ -10,7 +10,8 @@ const COMMANDS = [
     { command: '/retry', description: 'Retry last message' },
     { command: '/artifacts', description: 'List artifacts in current thread' },
     { command: '/tasks', description: 'List tasks in current thread' },
-    { command: '/channel', description: 'Send message to channel root' }
+    { command: '/channel', description: 'Send message to channel root' },
+    { command: '/add', description: 'Attach artifacts to message' }
 ];
 
 export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSendMessage }) => {
@@ -19,7 +20,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [showSuggestions, setShowSuggestions] = useState(false);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { channels, handles } = useWebSocket();
+    const { channels, handles, artifacts } = useWebSocket();
     
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {
@@ -51,11 +52,24 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
 
         // Handle command suggestions
         if (value.startsWith('/')) {
-            const filtered = COMMANDS
-                .filter(cmd => cmd.command.toLowerCase().startsWith(value.toLowerCase()))
-                .map(cmd => `${cmd.command} - ${cmd.description}`);
-            setSuggestions(filtered);
-            setShowSuggestions(filtered.length > 0);
+            if (value.startsWith('/add ')) {
+                // Show artifact suggestions
+                const searchTerm = value.slice(5).toLowerCase();
+                const filtered = artifacts
+                    .filter(artifact => 
+                        artifact.type.toLowerCase().includes(searchTerm) ||
+                        artifact.id.toLowerCase().includes(searchTerm)
+                    )
+                    .map(artifact => `${artifact.type}: ${artifact.id}`);
+                setSuggestions(filtered);
+                setShowSuggestions(filtered.length > 0);
+            } else {
+                const filtered = COMMANDS
+                    .filter(cmd => cmd.command.toLowerCase().startsWith(value.toLowerCase()))
+                    .map(cmd => `${cmd.command} - ${cmd.description}`);
+                setSuggestions(filtered);
+                setShowSuggestions(filtered.length > 0);
+            }
         }
         // Handle user handle suggestions
         else if (value.includes('@')) {
@@ -76,8 +90,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
 
     const handleKeyPress = (event: KeyboardEvent<HTMLInputElement>) => {
         if (event.key === 'Enter' && input.trim()) {
-            // Special handling for /artifacts and /tasks commands
-            if (input.trim() === '/artifacts' || input.trim() === '/tasks') {
+            // Special handling for /artifacts, /tasks, and /add commands
+            if (input.trim() === '/artifacts' || input.trim() === '/tasks' || input.trim().startsWith('/add')) {
                 // These commands are handled by the UI through the WebSocket context
                 // So we just pass them through
                 onSendMessage(input.trim());
