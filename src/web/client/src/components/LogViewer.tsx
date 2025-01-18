@@ -1,7 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
 import DOMPurify from 'dompurify';
-import { AppBar, Toolbar, Tabs, Tab, TextField, Box, styled, FormControlLabel, Switch } from '@mui/material';
+import { 
+    AppBar, 
+    Toolbar, 
+    Tabs, 
+    Tab, 
+    TextField, 
+    Box, 
+    styled, 
+    FormControlLabel, 
+    Switch,
+    ToggleButtonGroup,
+    ToggleButton
+} from '@mui/material';
 
 interface LogViewerProps {
     logType: 'llm' | 'system';
@@ -14,6 +26,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const [isLoading, setIsLoading] = useState(false);
     const [showVerbose, setShowVerbose] = useState(false);
     const [verboseToggleTimestamp, setVerboseToggleTimestamp] = useState(Date.now());
+    const [logLevelFilter, setLogLevelFilter] = useState<'all' | 'error' | 'warn' | 'info' | 'debug' | 'verbose'>('all');
 
     const refreshLogs = useCallback(async () => {
         setIsLoading(true);
@@ -131,9 +144,14 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 );
             
             case 'system':
-                return logs.system?.logs?.filter(log => 
-                    filterLog(log.message) && 
-                    (showVerbose || log.level.toLowerCase() !== 'verbose')
+                return logs.system?.logs?.filter(log => {
+                    const levelMatch = logLevelFilter === 'all' || 
+                                     log.level.toLowerCase() === logLevelFilter;
+                    
+                    return filterLog(log.message) && 
+                           levelMatch && 
+                           (showVerbose || log.level.toLowerCase() !== 'verbose');
+                })
                 ).map((log, index) => (
                     <div key={index} className={`log-entry ${log.level?.toLowerCase()}`}>
                         <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
@@ -159,22 +177,22 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                         <Tab label="LLM Logs" value="llm" />
                     </Tabs>
                     <Box sx={{ flexGrow: 1 }} />
-                    <FormControlLabel
-                        control={
-                            <Switch
-                                checked={showVerbose}
-                                onChange={(e) => {
-                                    setShowVerbose(e.target.checked);
-                                    setVerboseToggleTimestamp(Date.now());
-                                }}
-                                size="small"
-                                color="primary"
-                            />
-                        }
-                        label="Show Verbose"
-                        labelPlacement="start"
-                        sx={{ mr: 2 }}
-                    />
+                    {currentLogTab === 'system' && (
+                        <ToggleButtonGroup
+                            value={logLevelFilter}
+                            exclusive
+                            onChange={(_, newFilter) => setLogLevelFilter(newFilter)}
+                            size="small"
+                            sx={{ mr: 2 }}
+                        >
+                            <ToggleButton value="all">All</ToggleButton>
+                            <ToggleButton value="error">Error</ToggleButton>
+                            <ToggleButton value="warn">Warn</ToggleButton>
+                            <ToggleButton value="info">Info</ToggleButton>
+                            <ToggleButton value="debug">Debug</ToggleButton>
+                            <ToggleButton value="verbose">Verbose</ToggleButton>
+                        </ToggleButtonGroup>
+                    )}
                     <TextField
                         variant="outlined"
                         placeholder="Filter logs..."
