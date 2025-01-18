@@ -48,6 +48,8 @@ export interface ClientChannel {
     members: string[];
     projectId: string;
 }
+import { ChatHandle } from 'src/types/chatHandle';
+
 export interface ClientMessage {
     id: string;
     channel_id: string;
@@ -55,7 +57,7 @@ export interface ClientMessage {
     message: string;
     user_id: string;
     create_at: number;
-    directed_at?: string;
+    directed_at?: ChatHandle;
     props?: Record<string, any>;
     inProgress?: boolean;
     reply_count: number;

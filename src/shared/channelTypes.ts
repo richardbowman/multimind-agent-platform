@@ -4,8 +4,10 @@ export interface CreateChannelParams {
     name: string;
     description?: string;
     isPrivate?: boolean;
-    members?: string[];
-    defaultResponderId?: string;
+import { ChatHandle } from 'src/types/chatHandle';
+
+    members?: (string | ChatHandle)[];
+    defaultResponderId?: string | ChatHandle;
     projectId?: string;
     goalTemplate?: string;
     artifactIds?: string[];

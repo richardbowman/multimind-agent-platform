@@ -19,7 +19,9 @@ export interface ExecuteParams {
     readonly executionMode: 'conversation' | 'task';
     readonly agents?: Array<{
         readonly id: string;
-        readonly handle: string;
+import { ChatHandle } from 'src/types/chatHandle';
+
+        readonly handle: ChatHandle;
         readonly type: string;
     }>;
     readonly context?: {
