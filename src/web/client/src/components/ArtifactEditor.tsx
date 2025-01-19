@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { Button, TextField, Select, MenuItem, Box, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
 import { useWebSocket } from '../contexts/DataContext';
@@ -28,7 +28,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
     useEffect(() => {
         if (artifact) {
             setArtifactType(artifact.type);
-            setArtifactContent(artifact.content);
+            setArtifactContent(artifact.content?.toString());
             setTitle(artifact.metadata?.title || '');
             setMetadata(
                 JSON.stringify(
