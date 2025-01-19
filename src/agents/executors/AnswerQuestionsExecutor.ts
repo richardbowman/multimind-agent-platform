@@ -87,7 +87,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             instructions: new StructuredOutputPrompt(schema,
                 `OVERALL GOAL: ${params.overallGoal}
                 
-                Artifacts Associated To This Conversation:
+                Artifacts Attached To This Conversation:
                 ${artifacts}
 
                 

@@ -8,6 +8,7 @@ import { EmbedderModelInfo } from 'src/llm/ILLMService';
 import { ModelInfo } from 'src/llm/types';
 import { UpdateStatus } from './UpdateStatus';
 import { UUID } from 'src/types/uuid';
+import { Artifact } from 'src/tools/artifact';
 
 export interface LogEntry {
     timestamp: string;

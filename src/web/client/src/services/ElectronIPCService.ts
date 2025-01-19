@@ -2,8 +2,6 @@ import { createBirpc } from 'birpc';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import type { ClientMethods, ServerMethods } from '../../../../shared/RPCInterface';
 import { createSafeRPCHandlers } from '../../../../shared/rpcUtils';
-import { ClientChannel } from '../../../../shared/types';
-import { UpdateStatus } from '../../../../shared/UpdateStatus';
 
 export class ElectronIPCService extends BaseRPCService {
     private status: { configured: boolean; ready: boolean; message?: string; };

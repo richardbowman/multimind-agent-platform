@@ -91,7 +91,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         const response : IntakeQuestionsResponse = await this.modelHelpers.generate({
             message: formattedMessage,
             instructions: new StructuredOutputPrompt(schema,
-                `Generate focused questions to achieve the goal.
+                `Generate focused questions to achieve the goal: ${params.goal}
                 
                 IMPORTANT: 
                 - Review any previous answers carefully to avoid redundant questions
@@ -100,8 +100,8 @@ export class UnderstandGoalsExecutor implements StepExecutor {
                 - If a topic has been partially addressed, ask follow-up questions for deeper understanding
                 Each question should help gather specific information about:
 
-                Include 3-6 essential questions that will help us understand both their business goals and how we can best support them.
-                Keep questions focused and actionable.`)
+                Create as few questions as possible to help understand the goals.
+                Keep questions focused and actionable. If you have a good understanding, return no more questions.`)
         });
 
         Logger.info('UnderstandGoalsExecutor response:', JSON.stringify(response, null, 2));

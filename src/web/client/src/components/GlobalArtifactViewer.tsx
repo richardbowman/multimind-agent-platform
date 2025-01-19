@@ -23,10 +23,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const [editorOpen, setEditorOpen] = useState(false);
 
     const handleCreateArtifact = async (artifact: Artifact) => {
-        const savedArtifact = await saveArtifact(artifact);
-        setSelectedArtifact(savedArtifact);
-        await fetchAllArtifacts();
-        return savedArtifact;
+        console.log('Reloading:', artifact);
+        fetchAllArtifacts();
     };
 
     const handleDelete = async () => {
@@ -159,13 +157,21 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 <DescriptionIcon />
             </Fab>
 
-            <ArtifactEditor
-                open={editorOpen}
-                onClose={() => setEditorOpen(false)}
-                onCreate={handleCreateArtifact}
-                onUpdate={handleCreateArtifact}
-                artifact={selectedArtifact}
-            />
+            {selectedArtifact ? (
+                <ArtifactEditor
+                    open={editorOpen}
+                    onClose={() => setEditorOpen(false)}
+                    onCreate={handleCreateArtifact}
+                    onUpdate={handleCreateArtifact}
+                    artifact={selectedArtifact}
+                />
+            ) : (
+                <ArtifactEditor
+                    open={editorOpen}
+                    onClose={() => setEditorOpen(false)}
+                    onCreate={handleCreateArtifact}
+                />
+            )}
         </Box>
     );
 };

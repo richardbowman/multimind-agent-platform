@@ -50,44 +50,26 @@ export class CreatePlanExecutor implements StepExecutor {
         const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
         
         // Check for template ID in prior step responses and priorResults
-        if (!project.template) {
-            // First check priorResults
-            const templateResult = params.previousResult?.find(r => 
-                r.templateId
-            );
-            
-            if (templateResult?.templateId) {
-                const template = this.onboardingConsultant.getTemplateById(templateResult.templateId);
-                if (template) {
-                    project.template = template;
-                }
-            }
-            
-            // If not found in priorResults, check task props
-            if (!project.template) {
-                const templateStep = Object.values(project.tasks).find(t => 
-                    t.type === 'step' && t.props?.stepType === 'template_selection'
-                );
-                
-                if (templateStep?.props?.templateId) {
-                    const template = this.onboardingConsultant.getTemplateById(templateStep.props.templateId);
-                    if (template) {
-                        project.template = template;
-                    }
-                }
-            }
-
-            if (!project.template) {
-                return {
-                    type: 'create_revise_plan',
-                    finished: false,
-                    response: {
-                        message: "No template selected. Please select a template first."
-                    }
-                };
+        const templateResult = params.previousResult?.find(r => 
+            r.templateId
+        );
+        
+        if (templateResult?.templateId) {
+            const template = this.onboardingConsultant.getTemplateById(templateResult.templateId);
+            if (template) {
+                project.template = template;
             }
         }
-
+        if (!project.template) {
+            return {
+                type: 'create_revise_plan',
+                finished: false,
+                response: {
+                    message: "No template selected. Please select a template first."
+                }
+            };
+        }
+        
         // Get all answers related to the template sections
         const answers = this.getAnswersForTemplate(project);
 
@@ -146,6 +128,7 @@ export class CreatePlanExecutor implements StepExecutor {
             metadata: {
                 templateId: project.template.id,
                 completedAt: new Date().toISOString(),
+                title: project.template.name,
                 sections: response.sections.map(s => ({
                     id: s.id,
                     status: 'complete'
@@ -159,7 +142,6 @@ export class CreatePlanExecutor implements StepExecutor {
             response: {
                 message: `Document created successfully using template: ${project.template.name}`,
                 artifactId,
-                artifactTitle: project.template.name,
                 documentContent
             }
         };

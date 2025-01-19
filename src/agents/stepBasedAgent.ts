@@ -140,7 +140,8 @@ export abstract class StepBasedAgent extends Agent {
                 context: {
                     channelId: params.userPost?.channel_id,
                     threadId: params.userPost?.thread_id,
-                    projects: params.projects
+                    projects: params.projects,
+                    artifacts: params.artifacts
                 }
             });
             return;
@@ -161,7 +162,8 @@ export abstract class StepBasedAgent extends Agent {
             context: {
                 channelId: params.userPost?.channel_id,
                 threadId: params.userPost?.thread_id,
-                projects: params.projects
+                projects: params.projects,
+                artifacts: params.artifacts
             }
         });
     }

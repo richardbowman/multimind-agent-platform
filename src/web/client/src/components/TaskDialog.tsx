@@ -112,7 +112,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <Box sx={{ 
                         width: '30%',
-                        height: '70vh',
                         overflowY: 'auto',
                         p: 1,
                         borderRight: '1px solid',

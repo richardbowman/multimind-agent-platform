@@ -6,6 +6,8 @@ import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { ChatPost } from 'src/chat/chatClient';
 import { ChannelData } from 'src/shared/channelTypes';
 import { AgentDefinition } from 'src/tools/settings';
+import { createUUID, UUID } from 'src/types/uuid';
+import { Artifact } from 'src/tools/artifact';
 
 export interface RoutingContext {
     channelData: Partial<ChannelData>;
@@ -13,6 +15,7 @@ export interface RoutingContext {
     agentOptions: (AgentDefinition | undefined)[];
     agentPromptOptions: string; projectTasks: Task[];
     conversationContext: string;
+    artifacts?: Artifact[]
 }
 
 export class RouterAgent extends Agent {
@@ -85,7 +88,8 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
             agentOptions,
             agentPromptOptions,
             projectTasks,
-            conversationContext
+            conversationContext,
+            artifacts: params.artifacts
         };
     }
 
@@ -112,7 +116,7 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
             case 'propose-transfer':
                 if (response.selectedAgent) {
                     await this.reply(userPost, {
-                        message: `I think ${response.selectedAgent} would be best suited to help with this. Would you like me to transfer this to them?\n\n${response.response}`
+                        message: response.response
                     }, {
                         "routing-suggested": true,
                         "proposed-agent": response.selectedAgent
@@ -123,14 +127,14 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
             case 'execute-transfer':
                 if (response.selectedAgent && response.confidence > 0.9) {
                     await this.chatClient.postInChannel(
-                        userPost.channel_id,
+                        createUUID(userPost.channel_id),
                         `${response.selectedAgent} ${response.response}`,
                         {
                             "routed-from": userPost.user_id,
                             "routed-by": this.userId,
                             "routed-agent": response.selectedAgent,
-                            ...(params.artifacts && params.artifacts.length > 0 ? {
-                                "artifact-ids": params.artifacts.map(a => a.id)
+                            ...(context.artifacts && context.artifacts.length > 0 ? {
+                                "artifact-ids": context.artifacts.map(a => a.id)
                             } : {})
                         }
                     );

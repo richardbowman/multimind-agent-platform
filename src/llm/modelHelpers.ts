@@ -313,7 +313,7 @@ export class ModelHelpers {
     public formatArtifacts(artifacts?: Artifact[]): string {
         if (!artifacts || artifacts.length === 0) return '';
 
-        let message = "📁 Relevant Artifacts:\n\n";
+        let message = "📁 Attached Artifacts:\n\n";
         artifacts.forEach((artifact, index) => {
             message += `Artifact ${index + 1} (${artifact.type}):\n`;
             if (typeof artifact.content === 'string') {

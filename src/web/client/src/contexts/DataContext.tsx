@@ -5,6 +5,7 @@ import { CreateChannelParams } from '../../../../shared/channelTypes';
 import { useSnackbar } from './SnackbarContext';
 import { useIPCService } from './IPCContext';
 import { useClientMethods } from '../services/ClientMethods';
+import { Artifact } from '../../../../tools/artifact';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 
@@ -41,6 +42,7 @@ export interface DataContextMethods {
     api: any[];
   }>>;
   setNeedsConfig: React.Dispatch<React.SetStateAction<boolean>>;
+  saveArtifact: (artifact: Artifact) => Promise<any>
   setCurrentChannelId: React.Dispatch<React.SetStateAction<string | null>>;
   setCurrentThreadId: React.Dispatch<React.SetStateAction<string | null>>;
   getSettings: () => Promise<any>;
@@ -304,7 +306,7 @@ export const DataProvider: React.FC<{
           settings.port !== undefined ||
           settings.protocol !== undefined) {
           ipcService.disconnect();
-          await ipcService.connect();
+          ipcService.connect();
           await Promise.all([fetchChannels(), fetchHandles(), fetchAllArtifacts()]);
         }
 
@@ -325,7 +327,7 @@ export const DataProvider: React.FC<{
         t.id === updatedTask.id ? updatedTask : t
       ));
     }
-  }), [
+  } as DataContextMethods), [
     messages,
     channels,
     tasks,
@@ -343,6 +345,7 @@ export const DataProvider: React.FC<{
     fetchAllArtifacts,
     fetchLogs,
     fetchHandles,
+    saveArtifact,
     deleteArtifact,
     setCurrentChannelId,
     setCurrentThreadId,
