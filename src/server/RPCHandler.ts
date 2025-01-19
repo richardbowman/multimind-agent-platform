@@ -382,6 +382,16 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return this.getAllArtifacts();
     }
 
+    async saveArtifact(artifact: Artifact): Promise<any> {
+        // Convert base64 content back to Buffer if needed
+        if (artifact.metadata?.binary && typeof artifact.content === 'string') {
+            artifact.content = Buffer.from(artifact.content, 'base64');
+        }
+        
+        await this.services.artifactManager.saveArtifact(artifact);
+        return this.processArtifactContent(artifact);
+    }
+
     async addArtifactToChannel(channelId: string, artifactId: string): Promise<void> {
         await this.services.chatClient.addArtifactToChannel(channelId, artifactId);
     }

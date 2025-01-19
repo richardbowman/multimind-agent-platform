@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { Button, TextField, Select, MenuItem, Box, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
 import { useWebSocket } from '../contexts/DataContext';
+import { Artifact } from '../../../../tools/artifact';
 
 interface ArtifactEditorProps {
     open: boolean;
@@ -14,7 +15,9 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
     const [artifactContent, setArtifactContent] = useState('');
     const [metadata, setMetadata] = useState('{}');
 
-    const handleCreate = () => {
+    const { saveArtifact } = useWebSocket();
+
+    const handleCreate = async () => {
         try {
             const newArtifact: Artifact = {
                 id: crypto.randomUUID(),
@@ -22,6 +25,8 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
                 content: artifactContent,
                 metadata: JSON.parse(metadata)
             };
+            
+            await saveArtifact(newArtifact);
             onCreate(newArtifact);
             onClose();
             resetForm();
