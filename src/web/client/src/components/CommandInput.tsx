@@ -64,7 +64,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     )
                     .map(artifact => ({
                         title: artifact.metadata.title,
-                        type: artifact.type,
+                        type: 'artifact',
                         id: artifact.id
                     }));
                 setSuggestions(filtered);
@@ -81,9 +81,15 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
         else if (value.includes('@')) {
             const lastWord = value.split(' ').pop() || '';
             if (lastWord.startsWith('@')) {
-                const filtered = userHandles.filter(handle => 
-                    handle.toLowerCase().startsWith(lastWord.toLowerCase())
-                );
+                const filtered = userHandles
+                    .filter(handle => 
+                        handle.toLowerCase().startsWith(lastWord.toLowerCase())
+                    )
+                    .map(handle => ({
+                        title: handle,
+                        type: 'user',
+                        id: handle
+                    }));
                 setSuggestions(filtered);
                 setShowSuggestions(filtered.length > 0);
             } else {
@@ -174,7 +180,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     };
 
     const handleSuggestionClick = (suggestion: {title: string, type: string, id: string}) => {
-        if (suggestion.id) {
+        if (suggestion.type === 'artifact') {
             // Artifact suggestion - add to current input
             const currentInput = input.startsWith('/add') ? input : '/add ';
             const existingIds = currentInput.slice(5).split(',').map(id => id.trim());
@@ -186,6 +192,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     : `${currentInput}${suggestion.id}`;
                 setInput(newInput);
             }
+        } else if (suggestion.type === 'user') {
+            // Handle suggestion
+            const words = input.split(' ');
+            words[words.length - 1] = suggestion.title;
+            setInput(words.join(' ') + ' ');
         } else if (suggestion.includes(' - ')) {
             // Command suggestion
             setInput(suggestion.split(' - ')[0] + ' ');
