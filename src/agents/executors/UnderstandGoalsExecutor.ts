@@ -100,6 +100,10 @@ export class UnderstandGoalsExecutor implements StepExecutor {
                 - If a topic has been partially addressed, ask follow-up questions for deeper understanding
                 Each question should help gather specific information about:
 
+                Also include:
+                1. A concise restatement of the user's goal to confirm understanding
+                2. A friendly followup message to present the questions to the user
+                
                 Create as few questions as possible to help understand the goals.
                 Keep questions focused and actionable. If you have a good understanding, return no more questions.`)
         });
@@ -137,21 +141,12 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             });
         }
 
-        // Generate a restatement of the user's goal
-        const goalRestatement = await this.modelHelpers.generate({
-            message: formattedMessage,
-            instructions: `Please restate the user's goal in your own words to confirm understanding. 
-            Keep it concise but include all key elements.`
-        });
-
         return {
             finished: true,
             needsUserInput: true,
-            goal: goalRestatement.message, // Add the restated goal to the StepResult
+            goal: response.goalRestatement, // Add the restated goal to the StepResult
             response: {
-                message: `To help me better understand your goals, I have ${response.intakeQuestions.length} questions:\n\n${
-                    response.intakeQuestions.map((q, i) => `${i + 1}. ${q.question}`).join('\n\n')
-                }\n\nPlease respond to these questions so I can create a more tailored plan.\n\nHere's my understanding of your goal:\n${goalRestatement.message}`
+                message: response.followupMessage
             }
         };
     }

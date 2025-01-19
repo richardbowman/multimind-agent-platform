@@ -6,4 +6,6 @@ export interface IntakeQuestion {
 export interface IntakeQuestionsResponse {
     intakeQuestions: IntakeQuestion[];
     reasoning: string;
+    goalRestatement: string;
+    followupMessage: string;
 }
