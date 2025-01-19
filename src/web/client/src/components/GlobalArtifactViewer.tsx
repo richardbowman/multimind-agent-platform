@@ -85,6 +85,10 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                         artifact={artifact}
                                         selected={selectedArtifact?.id === artifact.id}
                                         onClick={() => setSelectedArtifact(artifact)}
+                                        onEdit={() => {
+                                            setEditorOpen(true);
+                                            setSelectedArtifact(artifact);
+                                        }}
                                     />
                                 ))}
                             </List>
@@ -109,7 +113,10 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 artifact={selectedArtifact} 
                                 showMetadata={true}
                                 onDelete={() => setDeleteConfirmOpen(true)}
-                                onEdit={() => setEditorOpen(true)}
+                                onEdit={() => {
+                                    setEditorOpen(true);
+                                    setSelectedArtifact(selectedArtifact);
+                                }}
                             />
                         </Box>
                     </Box>

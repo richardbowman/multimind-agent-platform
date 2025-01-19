@@ -16,7 +16,8 @@ interface ArtifactDisplayProps {
 export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     artifact,
     showMetadata = true,
-    onDelete
+    onDelete,
+    onEdit
 }) => {
     return (
         <Box component="main" sx={{ 
