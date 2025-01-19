@@ -109,6 +109,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 artifact={selectedArtifact} 
                                 showMetadata={true}
                                 onDelete={() => setDeleteConfirmOpen(true)}
+                                onEdit={() => setEditorOpen(true)}
                             />
                         </Box>
                     </Box>

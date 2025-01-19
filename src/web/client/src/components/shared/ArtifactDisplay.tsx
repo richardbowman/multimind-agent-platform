@@ -4,11 +4,13 @@ import { Artifact } from '../../../../../tools/artifact';
 import remarkGfm from 'remark-gfm'
 import { Box, Button, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import EditIcon from '@mui/icons-material/Edit';
 
 interface ArtifactDisplayProps {
     artifact: Artifact;
     showMetadata?: boolean;
     onDelete?: () => void;
+    onEdit?: () => void;
 }
 
 export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
@@ -31,16 +33,26 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     <span className="artifact-type-badge">{artifact.type}</span>
                     <span className="artifact-id">#{artifact.id}</span>
                 </div>
-                <Button 
-                    variant="outlined" 
-                    color="error" 
-                    size="small"
-                    startIcon={<DeleteIcon fontSize="small" />}
-                    onClick={() => onDelete && onDelete()}
-                    sx={{ ml: 2 }}
-                >
-                    Delete
-                </Button>
+                <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
+                    <Button 
+                        variant="outlined" 
+                        color="primary" 
+                        size="small"
+                        startIcon={<EditIcon fontSize="small" />}
+                        onClick={() => onEdit && onEdit()}
+                    >
+                        Edit
+                    </Button>
+                    <Button 
+                        variant="outlined" 
+                        color="error" 
+                        size="small"
+                        startIcon={<DeleteIcon fontSize="small" />}
+                        onClick={() => onDelete && onDelete()}
+                    >
+                        Delete
+                    </Button>
+                </Box>
             </div>
             <div className="artifact-content">
                 {showMetadata && (
