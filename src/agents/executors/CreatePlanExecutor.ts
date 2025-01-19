@@ -168,13 +168,8 @@ export class CreatePlanExecutor implements StepExecutor {
     private getAnswersForTemplate(project: OnboardingProject): QAItem[] {
         if (!project.metadata.answers) return [];
         
-        // Get all answers related to template questions
-        return project.metadata.answers.filter(answer => {
-            const task = project.tasks[answer.questionId];
-            return task && project.template?.sections.some(s => 
-                s.questions.includes(answer.questionId)
-            );
-        }).map(answer => ({
+        // Return all answers regardless of template association
+        return project.metadata.answers.map(answer => ({
             question: project.tasks[answer.questionId]?.description || '',
             answer: answer.answer,
             category: project.tasks[answer.questionId]?.type
