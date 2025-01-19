@@ -49,16 +49,31 @@ export class CreatePlanExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
         
-        // Check for template ID in prior step responses
+        // Check for template ID in prior step responses and priorResults
         if (!project.template) {
-            const templateStep = Object.values(project.tasks).find(t => 
-                t.type === 'step' && t.props?.stepType === 'template_selection'
+            // First check priorResults
+            const templateResult = params.previousResult?.find(r => 
+                r.type === 'template_selection' && r.response?.templateId
             );
             
-            if (templateStep?.props?.templateId) {
-                const template = this.onboardingConsultant.getTemplateById(templateStep.props.templateId);
+            if (templateResult?.response?.templateId) {
+                const template = this.onboardingConsultant.getTemplateById(templateResult.response.templateId);
                 if (template) {
                     project.template = template;
+                }
+            }
+            
+            // If not found in priorResults, check task props
+            if (!project.template) {
+                const templateStep = Object.values(project.tasks).find(t => 
+                    t.type === 'step' && t.props?.stepType === 'template_selection'
+                );
+                
+                if (templateStep?.props?.templateId) {
+                    const template = this.onboardingConsultant.getTemplateById(templateStep.props.templateId);
+                    if (template) {
+                        project.template = template;
+                    }
                 }
             }
 
