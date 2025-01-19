@@ -38,6 +38,7 @@ interface ChannelListProps {}
 export const ChannelList: React.FC<ChannelListProps> = () => {
     const { channels, currentChannelId, setCurrentChannelId } = useWebSocket();
     const [open, setOpen] = useState(false);
+    const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
     const [channelName, setChannelName] = useState('');
     const [channelNameError, setChannelNameError] = useState(false);
@@ -351,12 +352,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 <DialogActions>
                     {editingChannelId && (
                         <Button 
-                            onClick={async () => {
-                                if (window.confirm(`Are you sure you want to delete channel "${channelName}"?`)) {
-                                    await handleDeleteChannel(editingChannelId);
-                                    setOpen(false);
-                                }
-                            }}
+                            onClick={() => setDeleteConfirmOpen(true)}
                             color="error"
                             sx={{ mr: 'auto' }}
                         >
@@ -370,6 +366,32 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                         disabled={!channelName.trim()}
                     >
                         {editingChannelId ? 'Save' : 'Create'}
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Delete confirmation dialog */}
+            <Dialog
+                open={deleteConfirmOpen}
+                onClose={() => setDeleteConfirmOpen(false)}
+            >
+                <DialogTitle>Delete Channel</DialogTitle>
+                <DialogContent>
+                    <Typography>
+                        Are you sure you want to delete channel "{channelName}"?
+                    </Typography>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setDeleteConfirmOpen(false)}>Cancel</Button>
+                    <Button 
+                        color="error"
+                        onClick={async () => {
+                            await handleDeleteChannel(editingChannelId);
+                            setDeleteConfirmOpen(false);
+                            setOpen(false);
+                        }}
+                    >
+                        Delete
                     </Button>
                 </DialogActions>
             </Dialog>
