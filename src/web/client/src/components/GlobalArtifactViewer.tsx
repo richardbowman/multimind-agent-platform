@@ -6,7 +6,6 @@ import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionD
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
 import Grid from '@mui/material/Grid2';
-import DeleteIcon from '@mui/icons-material/Delete';
 import FolderIcon from '@mui/icons-material/Folder';
 import DescriptionIcon from '@mui/icons-material/Description';
 import MenuIcon from '@mui/icons-material/Menu';
