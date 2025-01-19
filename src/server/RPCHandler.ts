@@ -510,6 +510,13 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         mainWindow.close();
     }
 
+    async openDevTools(): Promise<void> {
+        if (process.env.NODE_ENV === 'development') {
+            const mainWindow = this.services.mainWindow.getWindow();
+            mainWindow.webContents.openDevTools();
+        }
+    }
+
     processArtifactContent(artifact: any) {
         const content = Buffer.isBuffer(artifact.content)
             ? artifact.metadata?.binary

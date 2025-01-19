@@ -84,12 +84,7 @@ export class MainWindow {
         // Save window size when resized with debounce
         this.window.on('resize', this.debounceResize);
 
-        if (process.env.NODE_ENV === 'development') {
-            await this.window.loadFile(path.join(__dirname, './web/index.html'));
-            this.window.webContents.openDevTools();
-        } else {
-            await this.window.loadFile(path.join(__dirname, './web/index.html'));
-        }
+        await this.window.loadFile(path.join(__dirname, './web/index.html'));
         this.window.show();
         this.window.webContents.setZoomFactor(1);
         this.window.webContents.setZoomLevel(this.zoomLevel);          

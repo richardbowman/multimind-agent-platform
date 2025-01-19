@@ -4,6 +4,7 @@ import MenuIcon from '@mui/icons-material/Menu';
 import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
+import DeveloperModeIcon from '@mui/icons-material/DeveloperMode';
 import { useWebSocket, DataProvider } from './contexts/DataContext';
 import { IPCProvider, useIPCService } from './contexts/IPCContext';
 import { SnackbarProvider, useSnackbar } from './contexts/SnackbarContext';
@@ -129,6 +130,16 @@ const AppContent: React.FC = () => {
                     </Tabs>
                     <Box sx={{ flexGrow: 1 }} /> {/* Spacer to push right icon to end */}
                     <Stack direction="row" spacing={1} sx={{ WebkitAppRegion: 'no-drag' }}>
+                        {process.env.NODE_ENV === 'development' && (
+                            <IconButton
+                                color="inherit"
+                                edge="end"
+                                onClick={() => ipcService.getRPC().openDevTools()}
+                                sx={{ ml: 2 }}
+                            >
+                                <DeveloperModeIcon />
+                            </IconButton>
+                        )}
                         <IconButton
                             color="inherit"
                             edge="end"
