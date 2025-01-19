@@ -15,7 +15,7 @@ export const ArtifactViewer: React.FC<ArtifactViewerProps> = ({ artifact, onClos
 
     const formatMetadata = (metadata: Record<string, any> | undefined) => {
         if (!metadata) return '*No metadata available*';
-        
+
         return Object.entries(metadata)
             .map(([key, value]) => `- **${key}**: ${value}`)
             .join('\n');
@@ -27,10 +27,10 @@ export const ArtifactViewer: React.FC<ArtifactViewerProps> = ({ artifact, onClos
 ${formatMetadata(artifact.metadata)}
 
 ## Content
-${artifact.content?.toString()||"(no content available)"}`;
+${artifact.content?.toString() || "(no content available)"}`;
 
     return (
-        <Box sx={{ 
+        <Box sx={{
             display: 'flex',
             flexDirection: 'column',
             flex: 1,
@@ -45,7 +45,7 @@ ${artifact.content?.toString()||"(no content available)"}`;
                 flex: 1,
                 position: 'relative'
             }}>
-                <Box sx={{ 
+                <Box sx={{
                     flex: 0,
                     mb: 2,
                     display: 'flex',
@@ -66,9 +66,9 @@ ${formatMetadata(artifact.metadata)}`}</ReactMarkdown>
                         flexDirection: 'column',
                         gap: 1
                     }}>
-                        <IconButton 
-                            size="small" 
-                            sx={{ 
+                        <IconButton
+                            size="small"
+                            sx={{
                                 backgroundColor: 'background.paper',
                                 boxShadow: 1,
                                 '&:hover': {
@@ -78,9 +78,9 @@ ${formatMetadata(artifact.metadata)}`}</ReactMarkdown>
                         >
                             <Edit fontSize="small" />
                         </IconButton>
-                        <IconButton 
-                            size="small" 
-                            sx={{ 
+                        <IconButton
+                            size="small"
+                            sx={{
                                 backgroundColor: 'background.paper',
                                 boxShadow: 1,
                                 '&:hover': {
@@ -92,19 +92,18 @@ ${formatMetadata(artifact.metadata)}`}</ReactMarkdown>
                         </IconButton>
                     </Box>
                 </Box>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{`# ${artifact.metadata?.title || artifact.id}
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{`# ${artifact.metadata?.title || artifact.id}
 
 ## Metadata
 ${formatMetadata(artifact.metadata)}`}</ReactMarkdown>
-                </Box>
-                <Box sx={{ 
-                    flex: 1,
-                    overflow: 'auto',
-                    mt: 2
-                }}>
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{`## Content
-${artifact.content?.toString()||"(no content available)"}`}</ReactMarkdown>
-                </Box>
+            </Box>
+            <Box sx={{
+                flex: 1,
+                overflow: 'auto',
+                mt: 2
+            }}>
+                <ReactMarkdown remarkPlugins={[remarkGfm]}>{`## Content
+${artifact.content?.toString() || "(no content available)"}`}</ReactMarkdown>
             </Box>
         </Box>
     );
