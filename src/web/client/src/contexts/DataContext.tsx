@@ -190,6 +190,23 @@ export const DataProvider: React.FC<{
   const deleteArtifact = useCallback(async (artifactId: string) => {
     const remainingArtifacts = await ipcService.getRPC().deleteArtifact(artifactId);
     setArtifacts(remainingArtifacts);
+    setAllArtifacts(remainingArtifacts);
+  }, []);
+
+  const saveArtifact = useCallback(async (artifact: any) => {
+    const savedArtifact = await ipcService.getRPC().saveArtifact(artifact);
+    setAllArtifacts(prev => {
+      const existingIndex = prev.findIndex(a => a.id === savedArtifact.id);
+      if (existingIndex >= 0) {
+        // Update existing artifact
+        const newArtifacts = [...prev];
+        newArtifacts[existingIndex] = savedArtifact;
+        return newArtifacts;
+      }
+      // Add new artifact
+      return [...prev, savedArtifact];
+    });
+    return savedArtifact;
   }, []);
 
   const addArtifactToChannel = useCallback(async (channelId: string, artifactId: string) => {
@@ -254,6 +271,7 @@ export const DataProvider: React.FC<{
     fetchLogs,
     fetchHandles,
     deleteArtifact,
+    saveArtifact,
     addArtifactToChannel,
     removeArtifactFromChannel,
     setMessages,

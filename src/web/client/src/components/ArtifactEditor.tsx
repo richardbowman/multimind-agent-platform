@@ -16,7 +16,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
     const [title, setTitle] = useState('');
     const [metadata, setMetadata] = useState('{}');
 
-    const ipcService = useIPCService();
+    const { saveArtifact } = useWebSocket();
 
     const handleCreate = async () => {
         try {
@@ -32,7 +32,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
                 metadata: metadataObj
             };
             
-            await ipcService.getRPC().saveArtifact(newArtifact);
+            await saveArtifact(newArtifact);
             onCreate(newArtifact);
             onClose();
             resetForm();
