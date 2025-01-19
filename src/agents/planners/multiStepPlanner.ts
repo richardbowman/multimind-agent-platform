@@ -82,9 +82,13 @@ export class MultiStepPlanner implements Planner {
             ? `CONTEXT: ${handlerParams.userPost.message}` 
             : '';
 
-        // Get the standard sequence if available
-        const sequence = this.modelHelpers.getStepSequence();
-        const sequenceSteps = sequence?.getAllSteps() || [];
+        // Get all available sequences
+        const sequences = this.modelHelpers.getStepSequences();
+        
+        const sequencesPrompt = sequences.map(seq => 
+            `### ${seq.getName()} Sequence (${seq.getDescription()}):
+${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description}`).join('\n')}`
+        ).join('\n\n');
 
         const systemPrompt =
             `${this.modelHelpers.getPurpose()}
@@ -92,8 +96,8 @@ export class MultiStepPlanner implements Planner {
 ## HIGH-LEVEL GOAL: ${project.name}
 ${userContext}
 
-## STANDARD SEQUENCE:
-${sequenceSteps.map((step, i) => `${i + 1}. [${step.type}]: ${step.description}`).join('\n')}
+## AVAILABLE SEQUENCES:
+${sequencesPrompt}
 
 ## AVAILABLE ACTION TYPES (and descriptions of when to use them):
 ${stepDescriptions}

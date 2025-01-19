@@ -22,11 +22,27 @@ export interface ModelHelpersParams {
 export class StepSequence {
     private steps: { type: string, description: string }[] = [];
     private currentStepIndex = 0;
+    private name: string;
+    private description: string;
 
-    constructor(private initialSteps?: { type: string, description: string }[]) {
+    constructor(
+        name: string,
+        description: string,
+        initialSteps?: { type: string, description: string }[]
+    ) {
+        this.name = name;
+        this.description = description;
         if (initialSteps) {
             this.steps = initialSteps;
         }
+    }
+
+    getName() {
+        return this.name;
+    }
+
+    getDescription() {
+        return this.description;
     }
 
     addStep(type: string, description: string) {
@@ -57,7 +73,7 @@ export class StepSequence {
 }
 
 export class ModelHelpers {
-    private stepSequence?: StepSequence;
+    private stepSequences: StepSequence[] = [];
 
     getPurpose() {
         return this.purpose;
@@ -66,12 +82,19 @@ export class ModelHelpers {
         return this.finalInstructions;
     }
 
-    setStepSequence(steps: { type: string, description: string }[]) {
-        this.stepSequence = new StepSequence(steps);
+    addStepSequence(name: string, description: string, steps: { type: string, description: string }[]) {
+        this.stepSequences.push(new StepSequence(name, description, steps));
     }
 
-    getStepSequence() {
-        return this.stepSequence;
+    getStepSequences() {
+        return this.stepSequences;
+    }
+
+    getStepSequence(name?: string) {
+        if (name) {
+            return this.stepSequences.find(s => s.getName() === name);
+        }
+        return this.stepSequences[0]; // Default to first sequence
     }
     
 
