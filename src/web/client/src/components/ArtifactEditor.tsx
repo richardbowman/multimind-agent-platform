@@ -57,19 +57,19 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
                 metadataObj.title = title;
             }
             
-            const artifact: Artifact = {
+            const newArtifact: Artifact = {
                 id: artifact?.id || crypto.randomUUID(),
                 type: artifactType,
                 content: artifactContent,
                 metadata: metadataObj
             };
             
-            await saveArtifact(artifact);
+            const savedArtifact = await saveArtifact(newArtifact);
             
             if (artifact) {
-                onUpdate?.(artifact);
+                onUpdate?.(savedArtifact);
             } else {
-                onCreate(artifact);
+                onCreate(savedArtifact);
             }
             onClose();
             resetForm();
@@ -140,7 +140,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
                     color="primary"
                     disabled={!artifactContent || !artifactType || !title}
                 >
-                    Create Artifact
+                    {artifact ? 'Save Changes' : 'Create Artifact'}
                 </Button>
             </DialogActions>
         </Dialog>
