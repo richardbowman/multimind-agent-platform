@@ -165,32 +165,48 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                 }
                             }}
                         >
-                            <Typography 
-                                variant="body1" 
-                                sx={{ 
-                                    color: currentChannelId === channel.id ? '#fff' : 'text.primary',
-                                    fontWeight: currentChannelId === channel.id ? 500 : 400,
-                                    flexGrow: 1
-                                }}
-                            >
-                                # {channel.name}
-                            </Typography>
-                            <ListItemIcon sx={{ color: currentChannelId === channel.id ? '#fff' : 'text.primary' }}>
-                                <IconButton 
-                                    size="small"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        handleOpenDialog(channel.id);
-                                    }}
-                                    sx={{
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
-                                        }
+                            <Box sx={{ 
+                                display: 'flex', 
+                                alignItems: 'center', 
+                                width: '100%',
+                                justifyContent: 'space-between'
+                            }}>
+                                <Typography 
+                                    variant="body1" 
+                                    sx={{ 
+                                        color: currentChannelId === channel.id ? '#fff' : 'text.primary',
+                                        fontWeight: currentChannelId === channel.id ? 500 : 400,
                                     }}
                                 >
-                                    <EditIcon fontSize="small" />
-                                </IconButton>
-                            </ListItemIcon>
+                                    # {channel.name}
+                                </Typography>
+                                <Box sx={{ 
+                                    opacity: 0,
+                                    transition: 'opacity 0.2s',
+                                    '&:hover': {
+                                        opacity: 1
+                                    },
+                                    '.MuiListItemButton:hover &': {
+                                        opacity: 1
+                                    }
+                                }}>
+                                    <IconButton 
+                                        size="small"
+                                        onClick={(e) => {
+                                            e.stopPropagation();
+                                            handleOpenDialog(channel.id);
+                                        }}
+                                        sx={{
+                                            color: currentChannelId === channel.id ? '#fff' : 'text.primary',
+                                            '&:hover': {
+                                                backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                                            }
+                                        }}
+                                    >
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                </Box>
+                            </Box>
                         </ListItemButton>
                     </ListItem>
                 ))}
