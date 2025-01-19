@@ -2,7 +2,8 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Artifact } from '../../../../../tools/artifact';
 import remarkGfm from 'remark-gfm'
-import { Box } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
+import DeleteIcon from '@mui/icons-material/Delete';
 
 interface ArtifactDisplayProps {
     artifact: Artifact;
@@ -12,7 +13,8 @@ interface ArtifactDisplayProps {
 
 export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     artifact,
-    showMetadata = true
+    showMetadata = true,
+    onDelete
 }) => {
     return (
         <Box component="main" sx={{ 
