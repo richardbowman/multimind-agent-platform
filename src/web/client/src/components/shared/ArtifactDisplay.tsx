@@ -31,23 +31,35 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
             </div>
             <div className="artifact-content">
                 {showMetadata && (
-                    <div className="artifact-metadata-card">
-                        <table className="metadata-table">
-                            <tbody>
-                                {artifact.metadata && Object.entries(artifact.metadata)
-                                    .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
-                                    .map(([key, value]) => (
-                                        <tr key={key} className="metadata-row">
-                                            <td className="metadata-label">{key}</td>
-                                            <td className="metadata-value">
-                                                {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
-                                            </td>
-                                        </tr>
-                                    ))
-                                }
-                            </tbody>
-                        </table>
-                    </div>
+                    <table style={{ 
+                        width: '100%',
+                        fontSize: '0.875rem',
+                        borderCollapse: 'collapse',
+                        marginBottom: '1rem'
+                    }}>
+                        <tbody>
+                            {artifact.metadata && Object.entries(artifact.metadata)
+                                .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
+                                .map(([key, value]) => (
+                                    <tr key={key} style={{ borderBottom: '1px solid #444' }}>
+                                        <td style={{ 
+                                            padding: '4px 8px',
+                                            fontWeight: 500,
+                                            color: '#aaa',
+                                            width: '30%'
+                                        }}>{key}</td>
+                                        <td style={{ 
+                                            padding: '4px 8px',
+                                            color: '#ddd',
+                                            wordBreak: 'break-word'
+                                        }}>
+                                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
+                                        </td>
+                                    </tr>
+                                ))
+                            }
+                        </tbody>
+                    </table>
                 )}
                 {artifact.type === 'binary' || artifact.metadata?.format === 'binary' ? (
                     <pre>{artifact.content as string}</pre>
