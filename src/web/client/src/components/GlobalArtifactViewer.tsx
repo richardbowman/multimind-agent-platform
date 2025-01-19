@@ -72,17 +72,6 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 }}
             >
                 <Toolbar /> {/* For spacing under app bar */}
-                <Box sx={{ p: 2 }}>
-                    <Button 
-                        variant="contained" 
-                        color="primary" 
-                        fullWidth
-                        onClick={() => setEditorOpen(true)}
-                        startIcon={<DescriptionIcon />}
-                    >
-                        Create New Artifact
-                    </Button>
-                </Box>
                 {Object.entries(artifactFolders).map(([type, artifacts]) => (
                     <Accordion key={type}>
                         <AccordionSummary>
@@ -161,6 +150,19 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                     </DialogActions>
                 </Dialog>
             </Box>
+
+            <Fab 
+                color="primary" 
+                aria-label="add"
+                sx={{
+                    position: 'fixed',
+                    bottom: 32,
+                    right: 32
+                }}
+                onClick={() => setEditorOpen(true)}
+            >
+                <DescriptionIcon />
+            </Fab>
 
             <ArtifactEditor 
                 open={editorOpen}
