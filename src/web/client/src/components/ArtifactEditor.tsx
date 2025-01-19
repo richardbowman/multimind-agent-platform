@@ -67,12 +67,16 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
             const savedArtifact = await saveArtifact(newArtifact);
             
             if (artifact) {
+                // Only call onUpdate if we're editing an existing artifact
                 onUpdate?.(savedArtifact);
             } else {
+                // Call onCreate for new artifacts
                 onCreate(savedArtifact);
             }
+            
             onClose();
             resetForm();
+            return savedArtifact;
         } catch (error) {
             console.error('Error creating artifact:', error);
         }
