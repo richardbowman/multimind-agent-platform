@@ -2,7 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
-import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, IconButton, List, Drawer, Toolbar, Fab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, IconButton, List, Drawer, Toolbar, Fab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Stack } from '@mui/material';
+import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
 import Grid from '@mui/material/Grid2';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -20,6 +21,13 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
+    const [editorOpen, setEditorOpen] = useState(false);
+
+    const handleCreateArtifact = async (artifact: Artifact) => {
+        // TODO: Implement create artifact API call
+        console.log('Creating new artifact:', artifact);
+        fetchAllArtifacts();
+    };
 
     const handleDelete = async () => {
         if (selectedArtifact) {
@@ -97,7 +105,14 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             }}>
                 {selectedArtifact ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1, gap: 1 }}>
+                            <Button 
+                                variant="contained" 
+                                color="primary"
+                                onClick={() => setEditorOpen(true)}
+                            >
+                                Create New Artifact
+                            </Button>
                             <Button 
                                 variant="contained" 
                                 color="error"
@@ -135,6 +150,12 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                     </DialogActions>
                 </Dialog>
             </Box>
+
+            <ArtifactEditor 
+                open={editorOpen}
+                onClose={() => setEditorOpen(false)}
+                onCreate={handleCreateArtifact}
+            />
         </Box>
     );
 };
