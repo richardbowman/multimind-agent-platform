@@ -175,7 +175,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                             >
                                 # {channel.name}
                             </Typography>
-                            <ListItemIcon sx={{ color: currentChannelId === channel.id ? '#fff' : 'text.primary', display: 'flex', gap: '4px' }}>
+                            <ListItemIcon sx={{ color: currentChannelId === channel.id ? '#fff' : 'text.primary' }}>
                                 <IconButton 
                                     size="small"
                                     onClick={(e) => {
@@ -190,22 +190,6 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                 >
                                     <EditIcon fontSize="small" />
                                 </IconButton>
-                                <IconButton 
-                                    size="small"
-                                    onClick={(e) => {
-                                        e.stopPropagation();
-                                        if (window.confirm(`Are you sure you want to delete channel "${channel.name}"?`)) {
-                                            webSocket.deleteChannel(channel.id);
-                                        }
-                                    }}
-                                    sx={{
-                                        '&:hover': {
-                                            backgroundColor: 'rgba(255, 0, 0, 0.1)'
-                                        }
-                                    }}
-                                >
-                                    <DeleteIcon fontSize="small" />
-                                </IconButton>
                             </ListItemIcon>
                         </ListItemButton>
                     </ListItem>
@@ -213,7 +197,9 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
             </List>
 
             <Dialog open={open} onClose={() => setOpen(false)}>
-                <DialogTitle>Create New Channel</DialogTitle>
+                <DialogTitle>
+                    {editingChannelId ? `Edit Channel "${channelName}"` : 'Create New Channel'}
+                </DialogTitle>
                 <DialogContent>
                     <TextField
                         autoFocus
@@ -347,13 +333,27 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                     </FormControl>
                 </DialogContent>
                 <DialogActions>
+                    {editingChannelId && (
+                        <Button 
+                            onClick={async () => {
+                                if (window.confirm(`Are you sure you want to delete channel "${channelName}"?`)) {
+                                    await handleDeleteChannel(editingChannelId);
+                                    setOpen(false);
+                                }
+                            }}
+                            color="error"
+                            sx={{ mr: 'auto' }}
+                        >
+                            Delete Channel
+                        </Button>
+                    )}
                     <Button onClick={() => setOpen(false)}>Cancel</Button>
                     <Button 
                         onClick={handleSaveChannel} 
                         color="primary"
                         disabled={!channelName.trim()}
                     >
-                        Create
+                        {editingChannelId ? 'Save' : 'Create'}
                     </Button>
                 </DialogActions>
             </Dialog>
