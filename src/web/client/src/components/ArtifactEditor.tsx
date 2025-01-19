@@ -13,17 +13,23 @@ interface ArtifactEditorProps {
 export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, onCreate }) => {
     const [artifactType, setArtifactType] = useState('text');
     const [artifactContent, setArtifactContent] = useState('');
+    const [title, setTitle] = useState('');
     const [metadata, setMetadata] = useState('{}');
 
     const ipcService = useIPCService();
 
     const handleCreate = async () => {
         try {
+            const metadataObj = JSON.parse(metadata);
+            if (title) {
+                metadataObj.title = title;
+            }
+            
             const newArtifact: Artifact = {
                 id: crypto.randomUUID(),
                 type: artifactType,
                 content: artifactContent,
-                metadata: JSON.parse(metadata)
+                metadata: metadataObj
             };
             
             await ipcService.getRPC().saveArtifact(newArtifact);
@@ -46,6 +52,14 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
             <DialogTitle>Create New Artifact</DialogTitle>
             <DialogContent>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
+                    <TextField
+                        label="Title"
+                        value={title}
+                        onChange={(e) => setTitle(e.target.value)}
+                        fullWidth
+                        variant="outlined"
+                        sx={{ mb: 2 }}
+                    />
                     <Select
                         value={artifactType}
                         onChange={(e) => setArtifactType(e.target.value as string)}
@@ -87,7 +101,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
                     onClick={handleCreate} 
                     variant="contained" 
                     color="primary"
-                    disabled={!artifactContent || !artifactType}
+                    disabled={!artifactContent || !artifactType || !title}
                 >
                     Create Artifact
                 </Button>
