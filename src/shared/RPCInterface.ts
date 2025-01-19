@@ -79,6 +79,11 @@ export interface ServerMethods {
     rebuildVectorDB(): Promise<void>;
     getProject(projectId: string): Promise<ClientProject>;
     markTaskComplete(taskId: string, complete: boolean): Promise<ClientTask>;
+    
+    /**
+     * Open developer tools (only available in development mode)
+     */
+    openDevTools(): Promise<void>;
 }
 
 export interface ClientMethods {
