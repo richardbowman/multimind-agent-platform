@@ -282,7 +282,10 @@ export const DataProvider: React.FC<{
       }
     },
     createChannel: (params: CreateChannelParams) => ipcService.getRPC().createChannel(params),
-    deleteChannel: (channelId: string) => ipcService.getRPC().deleteChannel(channelId),
+    deleteChannel: async (channelId: string) => {
+      await ipcService.getRPC().deleteChannel(channelId);
+      await fetchChannels();
+    },
     markTaskComplete: async (taskId: string, complete: boolean) => {
       const updatedTask = await ipcService.getRPC().markTaskComplete(taskId, complete);
       setTasks(prev => prev.map(t =>
