@@ -19,18 +19,34 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
     onUpdate, 
     artifact 
 }) => {
-    const [artifactType, setArtifactType] = useState(artifact?.type || 'text');
-    const [artifactContent, setArtifactContent] = useState(artifact?.content || '');
-    const [title, setTitle] = useState(artifact?.metadata?.title || '');
-    const [metadata, setMetadata] = useState(
-        JSON.stringify(
-            Object.fromEntries(
-                Object.entries(artifact?.metadata || {})
-                    .filter(([key]) => key !== 'title')
-            ), 
-            null, 2
-        )
-    );
+    const [artifactType, setArtifactType] = useState('text');
+    const [artifactContent, setArtifactContent] = useState('');
+    const [title, setTitle] = useState('');
+    const [metadata, setMetadata] = useState('{}');
+
+    // Initialize form when artifact prop changes
+    useEffect(() => {
+        if (artifact) {
+            setArtifactType(artifact.type);
+            setArtifactContent(artifact.content);
+            setTitle(artifact.metadata?.title || '');
+            setMetadata(
+                JSON.stringify(
+                    Object.fromEntries(
+                        Object.entries(artifact.metadata || {})
+                            .filter(([key]) => key !== 'title')
+                    ), 
+                    null, 2
+                )
+            );
+        } else {
+            // Reset form for new artifact
+            setArtifactType('text');
+            setArtifactContent('');
+            setTitle('');
+            setMetadata('{}');
+        }
+    }, [artifact]);
 
     const { saveArtifact } = useWebSocket();
 
