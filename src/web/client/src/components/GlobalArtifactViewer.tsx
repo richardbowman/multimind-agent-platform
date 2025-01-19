@@ -105,14 +105,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             }}>
                 {selectedArtifact ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1, gap: 1 }}>
-                            <Button 
-                                variant="contained" 
-                                color="primary"
-                                onClick={() => setEditorOpen(true)}
-                            >
-                                Create New Artifact
-                            </Button>
+                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
                             <Button 
                                 variant="contained" 
                                 color="error"
