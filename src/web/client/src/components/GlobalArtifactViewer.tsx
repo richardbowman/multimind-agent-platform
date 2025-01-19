@@ -150,11 +150,21 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 <DescriptionIcon />
             </Fab>
 
-            <ArtifactEditor 
-                open={editorOpen}
-                onClose={() => setEditorOpen(false)}
-                onCreate={handleCreateArtifact}
-            />
+            {selectedArtifact ? (
+                <ArtifactEditor
+                    open={editorOpen}
+                    onClose={() => setEditorOpen(false)}
+                    onCreate={handleCreateArtifact}
+                    onUpdate={handleCreateArtifact}
+                    artifact={selectedArtifact}
+                />
+            ) : (
+                <ArtifactEditor
+                    open={editorOpen}
+                    onClose={() => setEditorOpen(false)}
+                    onCreate={handleCreateArtifact}
+                />
+            )}
         </Box>
     );
 };

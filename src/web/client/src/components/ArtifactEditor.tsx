@@ -8,13 +8,23 @@ interface ArtifactEditorProps {
     open: boolean;
     onClose: () => void;
     onCreate: (artifact: Artifact) => void;
+    onUpdate?: (artifact: Artifact) => void;
+    artifact?: Artifact;
 }
 
 export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, onCreate }) => {
-    const [artifactType, setArtifactType] = useState('text');
-    const [artifactContent, setArtifactContent] = useState('');
-    const [title, setTitle] = useState('');
-    const [metadata, setMetadata] = useState('{}');
+    const [artifactType, setArtifactType] = useState(props.artifact?.type || 'text');
+    const [artifactContent, setArtifactContent] = useState(props.artifact?.content || '');
+    const [title, setTitle] = useState(props.artifact?.metadata?.title || '');
+    const [metadata, setMetadata] = useState(
+        JSON.stringify(
+            Object.fromEntries(
+                Object.entries(props.artifact?.metadata || {})
+                    .filter(([key]) => key !== 'title')
+            ), 
+            null, 2
+        )
+    );
 
     const { saveArtifact } = useWebSocket();
 
@@ -25,15 +35,20 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
                 metadataObj.title = title;
             }
             
-            const newArtifact: Artifact = {
-                id: crypto.randomUUID(),
+            const artifact: Artifact = {
+                id: props.artifact?.id || crypto.randomUUID(),
                 type: artifactType,
                 content: artifactContent,
                 metadata: metadataObj
             };
             
-            await saveArtifact(newArtifact);
-            onCreate(newArtifact);
+            await saveArtifact(artifact);
+            
+            if (props.artifact) {
+                props.onUpdate?.(artifact);
+            } else {
+                onCreate(artifact);
+            }
             onClose();
             resetForm();
         } catch (error) {
@@ -49,7 +64,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-            <DialogTitle>Create New Artifact</DialogTitle>
+            <DialogTitle>{props.artifact ? 'Edit Artifact' : 'Create New Artifact'}</DialogTitle>
             <DialogContent>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
                     <TextField
