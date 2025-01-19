@@ -12,14 +12,20 @@ interface ArtifactEditorProps {
     artifact?: Artifact;
 }
 
-export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, onCreate }) => {
-    const [artifactType, setArtifactType] = useState(props.artifact?.type || 'text');
-    const [artifactContent, setArtifactContent] = useState(props.artifact?.content || '');
-    const [title, setTitle] = useState(props.artifact?.metadata?.title || '');
+export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ 
+    open, 
+    onClose, 
+    onCreate, 
+    onUpdate, 
+    artifact 
+}) => {
+    const [artifactType, setArtifactType] = useState(artifact?.type || 'text');
+    const [artifactContent, setArtifactContent] = useState(artifact?.content || '');
+    const [title, setTitle] = useState(artifact?.metadata?.title || '');
     const [metadata, setMetadata] = useState(
         JSON.stringify(
             Object.fromEntries(
-                Object.entries(props.artifact?.metadata || {})
+                Object.entries(artifact?.metadata || {})
                     .filter(([key]) => key !== 'title')
             ), 
             null, 2
@@ -36,7 +42,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
             }
             
             const artifact: Artifact = {
-                id: props.artifact?.id || crypto.randomUUID(),
+                id: artifact?.id || crypto.randomUUID(),
                 type: artifactType,
                 content: artifactContent,
                 metadata: metadataObj
@@ -44,8 +50,8 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
             
             await saveArtifact(artifact);
             
-            if (props.artifact) {
-                props.onUpdate?.(artifact);
+            if (artifact) {
+                onUpdate?.(artifact);
             } else {
                 onCreate(artifact);
             }
@@ -64,7 +70,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
 
     return (
         <Dialog open={open} onClose={onClose} maxWidth="md" fullWidth>
-            <DialogTitle>{props.artifact ? 'Edit Artifact' : 'Create New Artifact'}</DialogTitle>
+            <DialogTitle>{artifact ? 'Edit Artifact' : 'Create New Artifact'}</DialogTitle>
             <DialogContent>
                 <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, mt: 2 }}>
                     <TextField
