@@ -17,7 +17,7 @@ export interface DrawerPage {
 }
 
 export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
-    const { artifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
+    const { allArtifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -43,8 +43,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     }, []);
 
     useEffect(() => {
-        if (artifacts) {
-            const folders = artifacts.reduce((acc, artifact) => {
+        if (allArtifacts) {
+            const folders = allArtifacts.reduce((acc, artifact) => {
                 const type = artifact.type;
                 if (!acc[type]) acc[type] = [];
                 acc[type].push(artifact);
@@ -52,7 +52,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             }, {} as Record<string, Artifact[]>);
             setArtifactFolders(folders);
         }
-    }, [artifacts]);
+    }, [allArtifacts]);
 
     return (
         <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
