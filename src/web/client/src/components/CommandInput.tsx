@@ -252,7 +252,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         <div
                             key={index}
                             className="suggestion-item"
-                            onClick={() => handleSuggestionClick(suggest.title, suggest.id)}
+                            onClick={() => handleSuggestionClick(suggest)}
                             style={{
                                 padding: '8px 12px',
                                 cursor: 'pointer',
