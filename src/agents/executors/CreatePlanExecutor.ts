@@ -36,25 +36,41 @@ export class CreatePlanExecutor implements StepExecutor {
     private userId: string;
     taskManager: TaskManager;
     artifactManager: ArtifactManager;
+    private onboardingConsultant: OnboardingConsultant;
 
-    constructor(params: ExecutorConstructorParams) {
+    constructor(params: ExecutorConstructorParams, onboardingConsultant: OnboardingConsultant) {
         this.userId = params.userId || 'executor';
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
         this.artifactManager = params.artifactManager!;
+        this.onboardingConsultant = onboardingConsultant;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
         const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
         
+        // Check for template ID in prior step responses
         if (!project.template) {
-            return {
-                type: 'create_revise_plan',
-                finished: false,
-                response: {
-                    message: "No template selected. Please select a template first."
+            const templateStep = Object.values(project.tasks).find(t => 
+                t.type === 'step' && t.props?.stepType === 'template_selection'
+            );
+            
+            if (templateStep?.props?.templateId) {
+                const template = this.onboardingConsultant.getTemplateById(templateStep.props.templateId);
+                if (template) {
+                    project.template = template;
                 }
-            };
+            }
+
+            if (!project.template) {
+                return {
+                    type: 'create_revise_plan',
+                    finished: false,
+                    response: {
+                        message: "No template selected. Please select a template first."
+                    }
+                };
+            }
         }
 
         // Get all answers related to the template sections
