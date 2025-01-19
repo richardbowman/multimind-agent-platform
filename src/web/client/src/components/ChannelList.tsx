@@ -29,6 +29,7 @@ import {
     ListItemIcon
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { GoalTemplates } from '../../../../schemas/goalTemplateSchema';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -72,6 +73,15 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
             setDefaultResponderId(null);
         }
         setOpen(true);
+    };
+
+    const handleDeleteChannel = async (channelId: string) => {
+        try {
+            await webSocket.deleteChannel(channelId);
+            webSocket.fetchChannels(); // Refresh channel list
+        } catch (error) {
+            console.error('Failed to delete channel:', error);
+        }
     };
 
     const handleSaveChannel = async () => {
@@ -165,7 +175,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                             >
                                 # {channel.name}
                             </Typography>
-                            <ListItemIcon sx={{ color: currentChannelId === channel.id ? '#fff' : 'text.primary' }}>
+                            <ListItemIcon sx={{ color: currentChannelId === channel.id ? '#fff' : 'text.primary', display: 'flex', gap: '4px' }}>
                                 <IconButton 
                                     size="small"
                                     onClick={(e) => {
@@ -179,6 +189,22 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                     }}
                                 >
                                     <EditIcon fontSize="small" />
+                                </IconButton>
+                                <IconButton 
+                                    size="small"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        if (window.confirm(`Are you sure you want to delete channel "${channel.name}"?`)) {
+                                            webSocket.deleteChannel(channel.id);
+                                        }
+                                    }}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(255, 0, 0, 0.1)'
+                                        }
+                                    }}
+                                >
+                                    <DeleteIcon fontSize="small" />
                                 </IconButton>
                             </ListItemIcon>
                         </ListItemButton>
