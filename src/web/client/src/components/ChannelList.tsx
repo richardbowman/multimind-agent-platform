@@ -25,8 +25,10 @@ import {
     Grid,
     Card,
     CardContent,
-    CardActionArea
+    CardActionArea,
+    ListItemIcon
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
 import { GoalTemplates } from '../../../../schemas/goalTemplateSchema';
 import AddIcon from '@mui/icons-material/Add';
 
@@ -35,6 +37,7 @@ interface ChannelListProps {}
 export const ChannelList: React.FC<ChannelListProps> = () => {
     const { channels, currentChannelId, setCurrentChannelId } = useWebSocket();
     const [open, setOpen] = useState(false);
+    const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
     const [channelName, setChannelName] = useState('');
     const [channelNameError, setChannelNameError] = useState(false);
     const [description, setDescription] = useState('');
@@ -45,28 +48,60 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
 
     const webSocket = useWebSocket();
 
-    const handleCreateChannel = async () => {
+    const handleOpenDialog = (channelId: string | null = null) => {
+        if (channelId) {
+            // Editing existing channel
+            const channel = channels.find(c => c.id === channelId);
+            if (channel) {
+                setEditingChannelId(channelId);
+                setChannelName(channel.name);
+                setDescription(channel.description || '');
+                setIsPrivate(channel.isPrivate || false);
+                setSelectedAgents(channel.members || []);
+                setSelectedTemplate(channel.goalTemplate || null);
+                setDefaultResponderId(channel.defaultResponderId || null);
+            }
+        } else {
+            // Creating new channel
+            setEditingChannelId(null);
+            setChannelName('');
+            setDescription('');
+            setIsPrivate(false);
+            setSelectedAgents([]);
+            setSelectedTemplate(null);
+            setDefaultResponderId(null);
+        }
+        setOpen(true);
+    };
+
+    const handleSaveChannel = async () => {
         if (!channelName.trim()) {
             setChannelNameError(true);
             return;
         }
         
         try {
-            await webSocket.createChannel({
+            const params = {
                 name: channelName,
                 description,
                 isPrivate,
                 members: selectedAgents,
                 goalTemplate: selectedTemplate,
                 defaultResponderId: defaultResponderId || undefined
-            });
+            };
+
+            if (editingChannelId) {
+                // Delete and recreate the channel to update it
+                await webSocket.deleteChannel(editingChannelId);
+                await webSocket.createChannel(params);
+            } else {
+                await webSocket.createChannel(params);
+            }
+
             setOpen(false);
-            setChannelName('');
-            setDescription('');
-            setIsPrivate(false);
             webSocket.fetchChannels(); // Refresh channel list
         } catch (error) {
-            console.error('Failed to create channel:', error);
+            console.error('Failed to save channel:', error);
         }
     };
 
@@ -78,7 +113,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 </Typography>
                 <IconButton 
                     color="primary"
-                    onClick={() => setOpen(true)}
+                    onClick={() => handleOpenDialog()}
                     sx={{ 
                         backgroundColor: 'primary.main',
                         color: 'white',
@@ -124,11 +159,28 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                 variant="body1" 
                                 sx={{ 
                                     color: currentChannelId === channel.id ? '#fff' : 'text.primary',
-                                    fontWeight: currentChannelId === channel.id ? 500 : 400
+                                    fontWeight: currentChannelId === channel.id ? 500 : 400,
+                                    flexGrow: 1
                                 }}
                             >
                                 # {channel.name}
                             </Typography>
+                            <ListItemIcon sx={{ color: currentChannelId === channel.id ? '#fff' : 'text.primary' }}>
+                                <IconButton 
+                                    size="small"
+                                    onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleOpenDialog(channel.id);
+                                    }}
+                                    sx={{
+                                        '&:hover': {
+                                            backgroundColor: 'rgba(255, 255, 255, 0.1)'
+                                        }
+                                    }}
+                                >
+                                    <EditIcon fontSize="small" />
+                                </IconButton>
+                            </ListItemIcon>
                         </ListItemButton>
                     </ListItem>
                 ))}
@@ -271,7 +323,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 <DialogActions>
                     <Button onClick={() => setOpen(false)}>Cancel</Button>
                     <Button 
-                        onClick={handleCreateChannel} 
+                        onClick={handleSaveChannel} 
                         color="primary"
                         disabled={!channelName.trim()}
                     >
