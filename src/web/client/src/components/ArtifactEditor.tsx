@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { Button, TextField, Select, MenuItem, Box, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
 import { useWebSocket } from '../contexts/DataContext';
-import { Artifact } from '../../../../tools/artifact';
+import { useIPCService } from '../contexts/IPCContext';
 
 interface ArtifactEditorProps {
     open: boolean;
@@ -15,7 +15,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
     const [artifactContent, setArtifactContent] = useState('');
     const [metadata, setMetadata] = useState('{}');
 
-    const { saveArtifact } = useWebSocket();
+    const ipcService = useIPCService();
 
     const handleCreate = async () => {
         try {
@@ -26,7 +26,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({ open, onClose, o
                 metadata: JSON.parse(metadata)
             };
             
-            await saveArtifact(newArtifact);
+            await ipcService.getRPC().saveArtifact(newArtifact);
             onCreate(newArtifact);
             onClose();
             resetForm();
