@@ -105,18 +105,12 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             }}>
                 {selectedArtifact ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end', p: 1 }}>
-                            <Button 
-                                variant="contained" 
-                                color="error"
-                                startIcon={<DeleteIcon />}
-                                onClick={() => setDeleteConfirmOpen(true)}
-                            >
-                                Delete Artifact
-                            </Button>
-                        </Box>
                         <Box sx={{ flex: 1, overflow: 'auto' }}>
-                            <ArtifactDisplay artifact={selectedArtifact} showMetadata={true} />
+                            <ArtifactDisplay 
+                                artifact={selectedArtifact} 
+                                showMetadata={true}
+                                onDelete={() => setDeleteConfirmOpen(true)}
+                            />
                         </Box>
                     </Box>
                 ) : (
