@@ -128,7 +128,10 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
                         {
                             "routed-from": userPost.user_id,
                             "routed-by": this.userId,
-                            "routed-agent": response.selectedAgent
+                            "routed-agent": response.selectedAgent,
+                            ...(params.artifacts && params.artifacts.length > 0 ? {
+                                "artifact-ids": params.artifacts.map(a => a.id)
+                            } : {})
                         }
                     );
                     break;
