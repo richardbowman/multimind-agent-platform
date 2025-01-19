@@ -115,15 +115,23 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     .filter(id => id.length > 0);
                 
                 // Find full artifact info including titles
-                const artifacts = allArtifacts.filter(a => 
+                const newArtifacts = allArtifacts.filter(a => 
                     artifactIds.includes(a.id)
                 ).map(a => ({
                     id: a.id,
                     title: a.metadata.title
                 }));
                 
+                // Add to existing pending artifacts if any
+                const updatedArtifacts = [
+                    ...pendingArtifacts,
+                    ...newArtifacts.filter(newArtifact => 
+                        !pendingArtifacts.some(existing => existing.id === newArtifact.id)
+                    )
+                ];
+                
                 // Store the artifacts for the next message
-                setPendingArtifacts(artifacts);
+                setPendingArtifacts(updatedArtifacts);
                 setInput('');
                 setShowSuggestions(false);
                 event.preventDefault();
@@ -165,10 +173,19 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
         }
     };
 
-    const handleSuggestionClick = (suggestion: string, id: string) => {
-        if (id) {
-            // Command suggestion
-            setInput("/add "+id);
+    const handleSuggestionClick = (suggestion: {title: string, type: string, id: string}) => {
+        if (suggestion.id) {
+            // Artifact suggestion - add to current input
+            const currentInput = input.startsWith('/add') ? input : '/add ';
+            const existingIds = currentInput.slice(5).split(',').map(id => id.trim());
+            
+            // Add new ID if not already present
+            if (!existingIds.includes(suggestion.id)) {
+                const newInput = existingIds[0] 
+                    ? `${currentInput},${suggestion.id}`
+                    : `${currentInput}${suggestion.id}`;
+                setInput(newInput);
+            }
         } else if (suggestion.includes(' - ')) {
             // Command suggestion
             setInput(suggestion.split(' - ')[0] + ' ');
