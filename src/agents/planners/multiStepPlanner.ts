@@ -82,11 +82,18 @@ export class MultiStepPlanner implements Planner {
             ? `CONTEXT: ${handlerParams.userPost.message}` 
             : '';
 
+        // Get the standard sequence if available
+        const sequence = this.modelHelpers.getStepSequence();
+        const sequenceSteps = sequence?.getAllSteps() || [];
+
         const systemPrompt =
             `${this.modelHelpers.getPurpose()}
 
 ## HIGH-LEVEL GOAL: ${project.name}
 ${userContext}
+
+## STANDARD SEQUENCE:
+${sequenceSteps.map((step, i) => `${i + 1}. [${step.type}]: ${step.description}`).join('\n')}
 
 ## AVAILABLE ACTION TYPES (and descriptions of when to use them):
 ${stepDescriptions}
@@ -95,11 +102,12 @@ ${stepDescriptions}
 - If the user's high-level goal is not solved, review the Current Plan and generate a new plan to solve the goal.
 - If the current step is in-progress, ensure this is the first step in the new plan.
 - Provide a complete plan of all steps including incomplete using actions from the available action types in the order to perform.
+- Prefer following the standard sequence when appropriate.
 
-## COMPLETED TA
+## COMPLETED TASKS:
 ${completedSteps}
 
-## CURRENT PLAN
+## CURRENT PLAN:
 ${currentSteps}`;
 
         const response = await this.modelHelpers.generate<PlanStepsResponse>({

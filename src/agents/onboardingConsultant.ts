@@ -109,13 +109,24 @@ When you gather a sufficient profile to understand how our other agents should s
 Goals Understanding:
 - How they hope to use MutliMind and how the agents can help them and their desired outcomes
 `);
-this.modelHelpers.setFinalInstructions(`To kickoff with a new user, create the following steps in this order:
-1. ${ExecutorType.UNDERSTAND_GOALS}
-2. ${ExecutorType.SELECT_TEMPLATE}
-3. ${ExecutorType.CREATE_PLAN}
+// Define the standard onboarding sequence
+const onboardingSequence = [
+    { 
+        type: ExecutorType.UNDERSTAND_GOALS,
+        description: "Understand the user's business goals and requirements"
+    },
+    {
+        type: ExecutorType.SELECT_TEMPLATE,
+        description: "Select appropriate document template based on user goals"
+    },
+    {
+        type: ExecutorType.CREATE_PLAN,
+        description: "Create a comprehensive guide for agents based on user goals"
+    }
+];
 
-For an existing user who has answered sufficient questions, move on to ${ExecutorType.SELECT_TEMPLATE}.
-`);
+this.modelHelpers.setStepSequence(onboardingSequence);
+this.modelHelpers.setFinalInstructions(`Follow the standard onboarding sequence to help users achieve their goals.`);
 
         // Register our specialized executors
         this.registerStepExecutor(new UnderstandGoalsExecutor(this.getExecutorParams()));

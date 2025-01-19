@@ -19,12 +19,59 @@ export interface ModelHelpersParams {
     messagingHandle?: string;
 }
 
+export class StepSequence {
+    private steps: { type: string, description: string }[] = [];
+    private currentStepIndex = 0;
+
+    constructor(private initialSteps?: { type: string, description: string }[]) {
+        if (initialSteps) {
+            this.steps = initialSteps;
+        }
+    }
+
+    addStep(type: string, description: string) {
+        this.steps.push({ type, description });
+    }
+
+    getNextStep() {
+        if (this.currentStepIndex >= this.steps.length) {
+            return null;
+        }
+        return this.steps[this.currentStepIndex++];
+    }
+
+    reset() {
+        this.currentStepIndex = 0;
+    }
+
+    getAllSteps() {
+        return this.steps;
+    }
+
+    getCurrentStep() {
+        if (this.currentStepIndex >= this.steps.length) {
+            return null;
+        }
+        return this.steps[this.currentStepIndex];
+    }
+}
+
 export class ModelHelpers {
+    private stepSequence?: StepSequence;
+
     getPurpose() {
         return this.purpose;
     }
     getFinalInstructions() {
         return this.finalInstructions;
+    }
+
+    setStepSequence(steps: { type: string, description: string }[]) {
+        this.stepSequence = new StepSequence(steps);
+    }
+
+    getStepSequence() {
+        return this.stepSequence;
     }
     
 
