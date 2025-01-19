@@ -137,13 +137,21 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             });
         }
 
+        // Generate a restatement of the user's goal
+        const goalRestatement = await this.modelHelpers.generate({
+            message: formattedMessage,
+            instructions: `Please restate the user's goal in your own words to confirm understanding. 
+            Keep it concise but include all key elements.`
+        });
+
         return {
             finished: true,
             needsUserInput: true,
+            goal: goalRestatement.message, // Add the restated goal to the StepResult
             response: {
                 message: `To help me better understand your goals, I have ${response.intakeQuestions.length} questions:\n\n${
                     response.intakeQuestions.map((q, i) => `${i + 1}. ${q.question}`).join('\n\n')
-                }\n\nPlease respond to these questions so I can create a more tailored plan.`
+                }\n\nPlease respond to these questions so I can create a more tailored plan.\n\nHere's my understanding of your goal:\n${goalRestatement.message}`
             }
         };
     }
