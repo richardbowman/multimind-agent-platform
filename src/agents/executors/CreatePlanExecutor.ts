@@ -53,11 +53,11 @@ export class CreatePlanExecutor implements StepExecutor {
         if (!project.template) {
             // First check priorResults
             const templateResult = params.previousResult?.find(r => 
-                r.type === 'template_selection' && r.response?.templateId
+                r.templateId
             );
             
-            if (templateResult?.response?.templateId) {
-                const template = this.onboardingConsultant.getTemplateById(templateResult.response.templateId);
+            if (templateResult?.templateId) {
+                const template = this.onboardingConsultant.getTemplateById(templateResult.templateId);
                 if (template) {
                     project.template = template;
                 }
