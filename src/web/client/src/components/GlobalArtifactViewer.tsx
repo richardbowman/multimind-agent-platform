@@ -23,8 +23,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const [editorOpen, setEditorOpen] = useState(false);
 
     const handleCreateArtifact = async (artifact: Artifact) => {
-        // TODO: Implement create artifact API call
-        console.log('Creating new artifact:', artifact);
+        const savedArtifact = await saveArtifact(artifact);
+        setSelectedArtifact(savedArtifact);
         fetchAllArtifacts();
     };
 

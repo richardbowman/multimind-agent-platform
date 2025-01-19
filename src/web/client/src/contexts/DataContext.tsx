@@ -195,6 +195,8 @@ export const DataProvider: React.FC<{
 
   const saveArtifact = useCallback(async (artifact: any) => {
     const savedArtifact = await ipcService.getRPC().saveArtifact(artifact);
+    
+    // Update all artifacts list
     setAllArtifacts(prev => {
       const existingIndex = prev.findIndex(a => a.id === savedArtifact.id);
       if (existingIndex >= 0) {
@@ -206,6 +208,19 @@ export const DataProvider: React.FC<{
       // Add new artifact
       return [...prev, savedArtifact];
     });
+
+    // Update channel artifacts if present
+    setArtifacts(prev => {
+      const existingIndex = prev.findIndex(a => a.id === savedArtifact.id);
+      if (existingIndex >= 0) {
+        // Update existing artifact
+        const newArtifacts = [...prev];
+        newArtifacts[existingIndex] = savedArtifact;
+        return newArtifacts;
+      }
+      return prev;
+    });
+
     return savedArtifact;
   }, []);
 
