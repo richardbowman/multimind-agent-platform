@@ -46,6 +46,7 @@ export interface DataContextMethods {
   getSettings: () => Promise<any>;
   updateSettings: (settings: any) => Promise<any>;
   createChannel: (params: CreateChannelParams) => Promise<string>;
+  deleteChannel: (channelId: string) => Promise<void>;
   setTasks: React.Dispatch<React.SetStateAction<ClientTask[]>>;
   markTaskComplete: (taskId: string, complete: boolean) => Promise<void>;
 }
@@ -281,6 +282,7 @@ export const DataProvider: React.FC<{
       }
     },
     createChannel: (params: CreateChannelParams) => ipcService.getRPC().createChannel(params),
+    deleteChannel: (channelId: string) => ipcService.getRPC().deleteChannel(channelId),
     markTaskComplete: async (taskId: string, complete: boolean) => {
       const updatedTask = await ipcService.getRPC().markTaskComplete(taskId, complete);
       setTasks(prev => prev.map(t =>
