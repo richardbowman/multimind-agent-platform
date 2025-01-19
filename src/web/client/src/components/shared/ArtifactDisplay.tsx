@@ -25,47 +25,23 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
             overflow: 'hidden',
             position: 'relative'
         }}>
-            <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'space-between',
-                alignItems: 'center',
-                mb: 2
-            }}>
-                <Box>
-                    <Typography variant="h5" component="h2">
-                        {artifact.metadata?.title || artifact.id}
-                    </Typography>
-                    <Box sx={{ 
-                        display: 'flex', 
-                        gap: 1, 
-                        mt: 0.5,
-                        alignItems: 'center'
-                    }}>
-                        <Box sx={{ 
-                            px: 1,
-                            py: 0.5,
-                            borderRadius: 1,
-                            backgroundColor: 'rgba(255, 255, 255, 0.1)',
-                            fontSize: '0.75rem',
-                            fontWeight: 500
-                        }}>
-                            {artifact.type}
-                        </Box>
-                        <Typography variant="caption" color="text.secondary">
-                            #{artifact.id}
-                        </Typography>
-                    </Box>
-                </Box>
+            <div className="artifact-detail-header">
+                <h2>{artifact.metadata?.title || artifact.id}</h2>
+                <div className="artifact-meta">
+                    <span className="artifact-type-badge">{artifact.type}</span>
+                    <span className="artifact-id">#{artifact.id}</span>
+                </div>
                 <Button 
                     variant="outlined" 
                     color="error" 
                     size="small"
                     startIcon={<DeleteIcon fontSize="small" />}
                     onClick={() => onDelete && onDelete()}
+                    sx={{ ml: 2 }}
                 >
                     Delete
                 </Button>
-            </Box>
+            </div>
             <div className="artifact-content">
                 {showMetadata && (
                     <table style={{ 
