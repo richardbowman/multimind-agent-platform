@@ -17,6 +17,8 @@ jobs:
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
 
       - name: Setup Node.js and Python
         uses: actions/setup-node@v4
@@ -49,7 +51,7 @@ jobs:
           yarn version patch --immediate
           git add package.json
           git commit -m "Bump version [skip ci] [skip actions]"
-          git push
+          git push https://${{ secrets.GH_PAT }}@github.com/${{ github.repository }}.git
           
       - name: Build Web
         env:
