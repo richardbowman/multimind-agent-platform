@@ -71,10 +71,10 @@ export const GoalTemplates: GoalTemplate[] = [
         defaultResponder: '@router',
         initialTasks: [
             {
-                description: 'Gather and analyze any existing documents using the data agent',
-                type: 'data-collection',
+                description: 'Select an on-boarding template based on high-level goal',
+                type: 'onboarding',
                 metadata: {
-                    agent: 'data'
+                    agent: 'onboarding'
                 }
             },
             {

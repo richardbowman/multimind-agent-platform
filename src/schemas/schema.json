@@ -585,6 +585,12 @@
     "IntakeQuestionsResponse": {
       "additionalProperties": false,
       "properties": {
+        "followupMessage": {
+          "type": "string"
+        },
+        "goalRestatement": {
+          "type": "string"
+        },
         "intakeQuestions": {
           "items": {
             "$ref": "#/definitions/IntakeQuestion"
@@ -597,7 +603,9 @@
       },
       "required": [
         "intakeQuestions",
-        "reasoning"
+        "reasoning",
+        "goalRestatement",
+        "followupMessage"
       ],
       "type": "object"
     },
