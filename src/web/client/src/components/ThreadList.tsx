@@ -111,20 +111,15 @@ export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
                                 primary={thread.rootMessage.message.substring(0, 50) + 
                                     (thread.rootMessage.message.length > 50 ? '...' : '')}
                                 secondary={
-                                    <Box component="span" sx={{ display: 'flex', gap: 1, mt: 0.5 }}>
-                                        <Chip
-                                            icon={<ChatBubbleOutlineIcon fontSize="small" />}
-                                            label={`${thread.replies.length} replies`}
-                                            size="small"
-                                            sx={{ 
-                                                bgcolor: 'background.default',
-                                                color: 'text.secondary'
-                                            }}
-                                        />
-                                        <Typography variant="caption" color="text.secondary">
+                                    <span style={{ display: 'inline-flex', gap: 4, alignItems: 'center' }}>
+                                        <ChatBubbleOutlineIcon fontSize="small" />
+                                        <span style={{ marginRight: 8 }}>
+                                            {thread.replies.length} replies
+                                        </span>
+                                        <span>
                                             {new Date(thread.last_message_at).toLocaleString()}
-                                        </Typography>
-                                    </Box>
+                                        </span>
+                                    </span>
                                 }
                                 primaryTypographyProps={{ 
                                     color: currentThreadId === thread.rootMessage.id ? '#fff' : 'text.primary',
