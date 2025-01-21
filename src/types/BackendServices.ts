@@ -27,6 +27,7 @@ export interface BackendServices extends BackendServicesOnly {
     llmService: ILLMService;
     vectorDB: IVectorDatabase;
     llmLogger: LLMCallLogger;
+    agentInfo: any;
 }
 
 export interface BackendServicesOnly {

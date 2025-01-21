@@ -520,7 +520,7 @@ export abstract class StepBasedAgent extends Agent {
         }
 
         // Get conversation history for this thread
-        const posts = await this.chatClient.getThreadPosts(params.userPost.getRootId() || params.userPost.id);
+        const posts = await this.chatClient.getThreadChain(params.userPost);
         const plan = await this.planSteps(project.id, posts);
         await this.executeNextStep({
             projectId: project.id,

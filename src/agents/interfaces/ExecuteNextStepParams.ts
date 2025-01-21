@@ -1,14 +1,15 @@
 import { ChatPost, Message } from 'src/chat/chatClient';
 import { Artifact } from 'src/tools/artifact';
 import { Project } from 'src/tools/taskManager';
+import { UUID } from 'src/types/uuid';
 
 
 export interface ExecuteNextStepParams {
-    projectId: string;
+    projectId: UUID;
     userPost?: Message;
     context?: {
-        channelId?: string;
-        threadId?: string;
+        channelId?: UUID;
+        threadId?: UUID;
         artifacts?: Artifact[];
         projects?: Project[];
     };

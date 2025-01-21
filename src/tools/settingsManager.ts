@@ -1,17 +1,13 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
 import JSON5 from 'json5';
-
-const isObject = (obj: any): boolean => {
-    return obj && typeof obj === 'object' && !Array.isArray(obj);
-};
 import { getDataPath } from '../helpers/paths';
 import Logger from '../helpers/logger';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { EventEmitter } from 'events';
 import { app } from 'electron';
 import { Settings } from './settings';
-
+import { isObject } from '../types/types';
 
 export class SettingsManager extends EventEmitter {
     private settings?: Settings;

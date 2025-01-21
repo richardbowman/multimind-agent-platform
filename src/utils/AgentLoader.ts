@@ -8,6 +8,8 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { ILLMService } from 'src/llm/ILLMService';
 import { SettingsManager } from '../tools/settingsManager';
 import path from "path";
+import { UUID } from 'src/types/uuid';
+import { parseAsync } from '@babel/core';
 
 export interface AgentLoaderParams {
     llmService: ILLMService;
@@ -17,11 +19,22 @@ export interface AgentLoaderParams {
     chatStorage: LocalChatStorage;
     defaultChannelId: string;
     settingsManager: SettingsManager;
+    agents: Agents;
+}
+
+export interface Agents {
+    agents: Record<UUID, AgentInformation>;
+}
+
+export interface AgentInformation {
+    handle?: string;
+    description: string;
+    capabilities: any;
 }
 
 export class AgentLoader {
-    static async loadAgents(params: AgentLoaderParams): Promise<Map<string, Agent<any, any>>> {
-        const agentsMap = new Map<string, Agent<any, any>>();
+    static async loadAgents(params: AgentLoaderParams): Promise<Map<string, Agent>> {
+        const agentsMap = new Map<string, Agent>();
         
         try {
             const _s = params.settingsManager.getSettings();
@@ -51,7 +64,8 @@ export class AgentLoader {
                         messagingHandle: definition.handle,
                         config: definition.config,
                         chatClient: new LocalTestClient(definition.userId, "", params.chatStorage),
-                        settings: _s
+                        settings: _s,
+                        agents: params.agents
                     } as AgentConstructorParams);
 
                     agentsMap.set(agentName, agent);

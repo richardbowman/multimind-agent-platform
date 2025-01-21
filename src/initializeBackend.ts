@@ -4,7 +4,7 @@ import SimpleTaskManager from "./test/simpleTaskManager";
 import { ArtifactManager } from "./tools/artifactManager";
 import { createVectorDatabase } from "./llm/vectorDatabaseFactory";
 import Logger from "./helpers/logger";
-import { AgentLoader } from "./utils/AgentLoader";
+import { AgentInformation, AgentLoader, Agents } from "./utils/AgentLoader";
 import { BackendServices } from "./types/BackendServices";
 import { LogReader } from "./server/LogReader";
 import { SettingsManager } from "./tools/settingsManager";
@@ -12,6 +12,7 @@ import { getDataPath } from "./helpers/paths";
 import path from "path";
 import { sleep } from "./utils/sleep";
 import { ServerRPCHandler } from "./server/RPCHandler";
+import { UUID } from "./types/uuid";
 
 export async function initializeBackend(settingsManager: SettingsManager, options: { 
     reindex?: boolean
@@ -76,23 +77,36 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
     process.on('SIGTERM', shutdown);
     process.on('SIGINT', shutdown);
+    
+    const agentInfo : Record<UUID, AgentInformation> = {};
+    const agents : Agents = {
+        agents: agentInfo
+    };
 
     // Load all agents dynamically
-    const agents = await AgentLoader.loadAgents({
+    const agentObjects = await AgentLoader.loadAgents({
         llmService: chatService,
         vectorDBService: vectorDB,
         taskManager: tasks,
         artifactManager,
         chatStorage,
         defaultChannelId: _s.defaultChannels["onboarding"],
-        settingsManager: settingsManager
+        settingsManager: settingsManager,
+        agents: agents
     });
 
     // Initialize all agents
-    for (const [name, agent] of agents.entries()) {
+    for (const [name, agent] of agentObjects.entries()) {
         if (agent.initialize) {
             await agent.initialize();
             Logger.info(`Initialized agent: ${name}`);
+        }
+        if (agent.getExecutorCapabilities) {
+            agentInfo[agent.userId] = {
+                handle: agent.messagingHandle,
+                description: agent.getPurpose(),
+                capabilities: agent.getExecutorCapabilities()
+            };
         }
     }
 
@@ -139,5 +153,6 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         llmService: chatService,
         vectorDB,
         cleanup: shutdown,
+        agentInfo
     };
 }

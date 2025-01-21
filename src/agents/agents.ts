@@ -13,6 +13,9 @@ import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Settings } from "src/tools/settings";
+import { UUID } from "src/types/uuid";
+import { Agents } from "src/utils/AgentLoader";
+import { TokenBias } from "node-llama-cpp";
 
 export interface ActionMetadata {
     activityType: string;
@@ -71,18 +74,20 @@ export interface ThreadSummary {
 }
 
 export abstract class Agent {
+    public readonly messagingHandle?: string;
+    public readonly userId: UUID;
+
     protected readonly chatClient: ChatClient;
     protected readonly threadSummaries: Map<string, ThreadSummary> = new Map();
-    protected readonly messagingHandle?: string;
 
     protected readonly llmService: ILLMService;
-    protected readonly userId: string;
     protected readonly vectorDBService: IVectorDatabase;
     protected readonly promptBuilder: SystemPromptBuilder;
     protected readonly projects: TaskManager;
     protected readonly artifactManager: ArtifactManager;
     protected readonly modelHelpers: ModelHelpers;
     protected readonly settings: Settings;
+    protected readonly agents: Agents;
 
     protected isWorking: boolean = false;
     protected isMemoryEnabled: boolean = false;
@@ -100,6 +105,7 @@ export abstract class Agent {
         this.projects = params.taskManager;
         this.messagingHandle = params.messagingHandle;
         this.settings = params.settings;
+        this.agents = params.agents;
         
         this.modelHelpers = new ModelHelpers({
             llmService: params.llmService,
@@ -182,6 +188,10 @@ export abstract class Agent {
         }
     }
 
+    public getPurpose() : string {
+        return this.modelHelpers.getPurpose();
+    }
+
     public setPurpose(purpose: string) {
         this.modelHelpers.setPurpose(purpose)
     }
@@ -254,7 +264,7 @@ export abstract class Agent {
                     const allArtifacts =    [...new Set([...requestedArtifacts, ...post.props["artifact-ids"]||[]].flat())];
                     const artifacts = await this.mapRequestedArtifacts(allArtifacts);
 
-                    await this.handleChannel({ userPost: post, artifacts: artifacts });
+                    await this.handleChannel({ userPost: post, artifacts: artifacts, agents: this.agents });
                 } else if (post.getRootId()) {
                     const postRootId: string = post.getRootId() || "";
 
@@ -282,7 +292,8 @@ export abstract class Agent {
                             artifacts,
                             projects,
                             threadPosts: posts.slice(1, -1),
-                            searchResults
+                            searchResults,
+                            agents: this.agents
                         });
                     }
                 }

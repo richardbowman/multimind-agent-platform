@@ -1,4 +1,6 @@
+import { UUID } from 'src/types/uuid';
 import { ClientSettings } from './settingsDecorators';
+import { ChatHandle } from 'src/types/chatHandle';
 
 export class BedrockConfig {
     @ClientSettings({
@@ -212,8 +214,8 @@ export class ProviderConfig {
 export interface AgentDefinition {
     className: string;
     sourcePath: string;
-    userId: string;
-    handle?: string;
+    userId: UUID;
+    handle?: ChatHandle;
     description?: string;
     enabled: boolean;
     config?: AgentConfig;

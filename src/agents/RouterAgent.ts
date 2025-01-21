@@ -1,19 +1,20 @@
 import { Agent, HandlerParams } from './agents';
 import { Project, Task } from '../tools/taskManager';
-import { ModelMessageResponse, ModelResponse } from '../schemas/ModelResponse';
+import { ModelResponse } from '../schemas/ModelResponse';
 import { StructuredOutputPrompt } from '../llm/ILLMService';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { ChatPost } from 'src/chat/chatClient';
 import { ChannelData } from 'src/shared/channelTypes';
-import { AgentDefinition } from 'src/tools/settings';
-import { createUUID, UUID } from 'src/types/uuid';
+import { createUUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
+import { AgentInformation } from 'src/utils/AgentLoader';
 
 export interface RoutingContext {
     channelData: Partial<ChannelData>;
     project: Project | null;
-    agentOptions: (AgentDefinition | undefined)[];
-    agentPromptOptions: string; projectTasks: Task[];
+    agentOptions: AgentInformation[]
+    agentPromptOptions: string; 
+    projectTasks: Task[];
     conversationContext: string;
     artifacts?: Artifact[]
 }
@@ -53,8 +54,7 @@ export class RouterAgent extends Agent {
         const agentOptions = (channelData.members || [])
             .filter(memberId => this.userId !== memberId)
             .map(memberId => {
-                const agent = Object.values(this.settings.agents).find(a => a.userId === memberId);
-                return agent
+                return this.agents.agents[memberId];
             });          
 
         // Get detailed capabilities for each agent that is a StepBasedAgent
@@ -204,7 +204,7 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
    - Develop a complete transfer note to the agent so they can successfully respond to the user. Make sure to repeat all pertinent information to the other agent, they will not see the original user's message.
    - Only use when confidence > 0.9
 
-3. ask-clarification: When you need more information
+3. ask-clarification: If you don't know how to route the user.
    - Politely ask specific clarifying questions, explain what information is missing
 
 4. provide-information: When you can answer directly
@@ -214,6 +214,7 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
    - Suggest starting or continuing work on the project goals
    - Only available when there are incomplete tasks in the project
    - Use this especially when the user is greeting you or seems unsure what to do next
+   - Make sure to share the first outstanding goal that you propose them starting
 
 Available Agents and Their Capabilities:
 ${context.agentPromptOptions}

@@ -79,16 +79,16 @@ export interface Message {
 }
 
 export interface ChatPost extends Message {
-    id: string;
-    channel_id: string;
+    id: UUID;
+    channel_id: UUID;
     message: string;
-    user_id: string;
+    user_id: UUID;
     props: ConversationContext;
     create_at: number;
     directed_at: string;
-    thread_id?: string;
+    thread_id?: UUID;
     
-    getRootId(): string | null;
+    getRootId(): UUID | null;
     isReply(): boolean;
     hasUUID(): boolean;
     getActivityType(): string | null;

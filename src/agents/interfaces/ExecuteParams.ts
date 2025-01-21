@@ -20,7 +20,7 @@ export interface ExecuteParams {
     readonly mode?: 'quick' | 'detailed';
     readonly executionMode: 'conversation' | 'task';
     readonly agents?: Array<{
-        readonly id: string;
+        readonly id: UUID;
         readonly handle: ChatHandle;
         readonly type: string;
     }>;
