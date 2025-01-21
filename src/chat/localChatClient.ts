@@ -420,7 +420,7 @@ export class LocalTestClient implements ChatClient {
         }
     }
 
-    public replyThreaded(post: ChatPost, response: string, props?: Record<string, any>): Promise<ChatPost> {
+    public replyThreaded(post: ChatPost, response: string, props?: Record<string, any>, attachments?: Attachment[]): Promise<ChatPost> {
         const rootId = post.getRootId()||post.id;
         const replyProps : Record<string, any>= props||{};
         replyProps['root-id'] = rootId;
@@ -433,6 +433,9 @@ export class LocalTestClient implements ChatClient {
                 this.userId,
                 replyProps
             );
+            if (attachments) {
+                replyPost.attachments = attachments;
+            }
             this.pushPost(replyPost);
             return Promise.resolve(replyPost);
         } else {
