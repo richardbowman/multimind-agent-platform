@@ -46,6 +46,43 @@
       ],
       "type": "object"
     },
+    "ArtifactGenerationResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactId": {
+          "description": "ID of document to modify (only required for replace/append operations)",
+          "type": "string"
+        },
+        "confirmationMessage": {
+          "description": "Message describing what was done",
+          "type": "string"
+        },
+        "content": {
+          "description": "Content for the document",
+          "type": "string"
+        },
+        "operation": {
+          "description": "Operation to perform: \"create\" for new documents, \"replace\" or \"append\" for existing ones",
+          "enum": [
+            "create",
+            "replace",
+            "append"
+          ],
+          "type": "string"
+        },
+        "title": {
+          "description": "Title for the document",
+          "type": "string"
+        }
+      },
+      "required": [
+        "operation",
+        "title",
+        "content",
+        "confirmationMessage"
+      ],
+      "type": "object"
+    },
     "ArtifactResponseSchema": {
       "properties": {
         "artifactContent": {
@@ -599,6 +636,9 @@
         },
         "reasoning": {
           "type": "string"
+        },
+        "shouldContinue": {
+          "type": "boolean"
         }
       },
       "required": [
@@ -1213,7 +1253,7 @@
         "CodeExecutionResponse",
         "BrainstormResponse",
         "OutlineApprovalCheck",
-        "ArtifactGeneration",
+        "ArtifactGenerationResponse",
         "UrlExtractionResponse",
         "WebpageSummaryResponse",
         "TemplateSelectionResponse",

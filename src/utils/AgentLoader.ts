@@ -17,7 +17,6 @@ export interface AgentLoaderParams {
     artifactManager: ArtifactManager
     taskManager: TaskManager;
     chatStorage: LocalChatStorage;
-    defaultChannelId: string;
     settingsManager: SettingsManager;
     agents: Agents;
 }

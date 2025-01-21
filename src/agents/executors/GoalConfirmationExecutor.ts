@@ -34,12 +34,12 @@ export class GoalConfirmationExecutor implements StepExecutor {
         const { goal, step, projectId } = params;
         const schema = await getGeneratedSchema(SchemaType.GoalConfirmationResponse);
 
-        let prompt = `As an AI assistant, your task is to:
+        let prompt = `Your goal is to:
 1. Restate the user's goal in your own words to demonstrate understanding
 2. Confirm whether you have enough information to proceed
 3. If anything is unclear, specify what additional information you need
 
-Goal to analyze: "${goal}"`;
+Message to analyze: "${goal}"`;
 
         // Add artifact context if available
         if (params.context?.artifacts) {

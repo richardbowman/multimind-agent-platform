@@ -76,11 +76,15 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             fullWidth
         >
             <DialogTitle>Task Details</DialogTitle>
-            <DialogContent>
+            <DialogContent sx={{
+                overflowY: 'hidden'
+            }}>
                 {projectDetails && (
                     <Box sx={{ 
-                        mb: 3,
                         p: 2,
+                        mb: 1,
+                        display: 'flex',
+                        flexDirection: 'column',
                         bgcolor: 'background.paper',
                         borderRadius: 1,
                         border: '1px solid',

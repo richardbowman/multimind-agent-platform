@@ -80,10 +80,6 @@ jobs:
       - name: Build TypeScript
         run: yarn build:electron
         
-      - name: Copy Environment Files
-        run: |
-          cp defaults.json5 dist/defaults.json5
-        
       - name: Build and Publish Electron App
         env:
           GH_TOKEN: ${{ secrets.GH_PAT }}

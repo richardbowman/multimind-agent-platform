@@ -1,5 +1,5 @@
 import Logger from "src/helpers/logger";
-import { Task } from "src/tools/taskManager";
+import { Task, TaskType } from "src/tools/taskManager";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { StepBasedAgent } from './stepBasedAgent';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -7,6 +7,9 @@ import { ResearchDecompositionExecutor } from './executors/ResearchDecomposition
 import { ResearchAggregationExecutor } from './executors/ResearchAggregationExecutor';
 import { ResearchGoalsExecutor } from "./executors/ResearchGoalsExecutor";
 import { TaskCategories } from "./interfaces/taskCategories";
+import { StepTask } from "./interfaces/ExecuteStepParams";
+import { StepResultType } from "./interfaces/StepResult";
+import { ExecutorType } from "./interfaces/ExecutorType";
 
 
 export class ResearchManager extends StepBasedAgent {
@@ -34,7 +37,7 @@ Step 3. 'aggregate-research' to compile findings`);
 
     protected async taskNotification(task: Task): Promise<void> {
         try {
-            if (task.category === TaskCategories.WebResearch) {
+            if (task.type === TaskType.Step && (task as StepTask).props.stepType === ExecutorType.RESEARCH_DECOMPOSITION) {
                 if (task.complete) {
                     this.planSteps(task.projectId, [{
                         message: "Researchers completed tasks."

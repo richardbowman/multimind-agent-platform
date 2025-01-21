@@ -230,6 +230,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         sendMessage(message);
     };
 
+    const uniqueTasks = Array.from(new Map((tasks || []).map(task => [task.id, task])).values()).filter(t => t.inProgress);
+
     return (
         <Box sx={{
             display: 'flex',
@@ -549,7 +551,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             </Box>
                         </Paper>
                     )))}
-                {tasks.filter(task => task.inProgress && !task.complete && (task.threadId === currentThreadId)).length > 0 && (
+                {uniqueTasks && uniqueTasks.length > 0 && (
                     <Paper
                         elevation={0}
                         sx={{
@@ -572,9 +574,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             In Progress Tasks
                         </Typography>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            {tasks
-                                .filter(task => task.inProgress && !task.complete && (task.threadId === currentThreadId))
-                                .map(task => (
+                            {uniqueTasks.map(task => (
                                     <Paper
                                         key={task.id}
                                         elevation={0}

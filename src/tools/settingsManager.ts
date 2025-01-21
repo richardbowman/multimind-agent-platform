@@ -27,9 +27,10 @@ export class SettingsManager extends EventEmitter {
         try {
             if (process.versions['electron']) {
                 if (app) {
-                    const isDev = !app.isPackaged;
-                    return isDev ? '.' : path.join(app.getAppPath(), "dist");
+                    return path.join(app.getAppPath(), "dist");
                 }
+            } else {
+                return path.join(__dirname, "../../.output")
             }
         } catch (error) {
             Logger.warn('Not running in Electron, using current directory for config');
@@ -55,9 +56,9 @@ export class SettingsManager extends EventEmitter {
         return output;
     }
 
-    private async loadDefaults(): Promise<any> {
+    private async loadAgents(): Promise<any> {
         try {
-            const defaultsPath = path.join(this.baseDir, 'defaults.json5');
+            const defaultsPath = path.join(this.baseDir, 'agents.json5');
             const data = await this.fileQueue.enqueue(() =>
                 fs.readFile(defaultsPath, 'utf-8')
             );
@@ -69,7 +70,7 @@ export class SettingsManager extends EventEmitter {
     }
 
     async load(): Promise<void> {
-        const defaults = await this.loadDefaults();
+        const agentsConfig = await this.loadAgents();
         
         try {
             const data = await this.fileQueue.enqueue(() =>
@@ -80,11 +81,11 @@ export class SettingsManager extends EventEmitter {
                 userSettings = JSON5.parse(data);
             } catch (err) {
             }
-            this.settings = this.deepMerge(new Settings(), defaults);
-            this.settings = this.deepMerge(this.settings, userSettings);
+            this.settings = this.deepMerge(new Settings(), userSettings);
+            this.settings = this.deepMerge(this.settings, agentsConfig);   // overwrite agents config with latest
         } catch (error: any) {
             if (error?.code === 'ENOENT') {
-                this.settings = defaults;
+                this.settings = agentsConfig;
                 await this.save();
             } else {
                 Logger.error('Error loading settings:', error);

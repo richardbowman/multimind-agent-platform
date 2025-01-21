@@ -57,10 +57,6 @@ module.exports = {
           globOptions: {
             ignore: ["**/index.html"]
           }
-        },
-        {
-          from: './defaults.json5',
-          to: 'defaults.json5'
         }
       ]
     }),

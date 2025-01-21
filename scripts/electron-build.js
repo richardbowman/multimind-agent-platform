@@ -9,10 +9,6 @@ try {
     console.log('Building...');
     execSync('yarn build:all', { stdio: 'inherit' });
 
-    // Copy env file
-    console.log('Copying env...');
-    fs.copyFileSync('defaults.json5', path.join('dist', 'defaults.json5'));
-
     // Run electron-builder
     console.log('Building Electron app...');
     execSync('electron-builder', { stdio: 'inherit' });

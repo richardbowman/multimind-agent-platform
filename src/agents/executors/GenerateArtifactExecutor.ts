@@ -14,6 +14,7 @@ import { ExecutorType } from '../interfaces/ExecutorType';
 import { TaskManager } from 'src/tools/taskManager';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
+import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationResponse';
 
 /**
  * Executor that generates and manages Markdown document artifacts.
@@ -44,7 +45,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const schema = await getGeneratedSchema(SchemaType.ArtifactGeneration);
+        const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);
 
         // Get Q&A context from project metadata
         let qaContext;
@@ -110,7 +111,7 @@ IMPORTANT RULES:
         const instructions = new StructuredOutputPrompt(schema, prompt);
         
         try {
-            const result = await this.modelHelpers.generate({
+            const result = await this.modelHelpers.generate<ArtifactGenerationResponse>({
                 message: params.message || params.stepGoal,
                 instructions
             });

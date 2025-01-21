@@ -40,19 +40,6 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     const prevChannelId = useRef<string | null>(null);
     const prevThreadId = useRef<string | null>(null);
 
-    useEffect(() => {
-        // Only fetch if channel/thread actually changed
-        if (channelId !== prevChannelId.current || 
-            threadId !== prevThreadId.current) {
-            prevChannelId.current = channelId;
-            prevThreadId.current = threadId;
-            
-            if (channelId) {
-                fetchArtifacts(channelId, threadId);
-            }
-        }
-    }, [channelId, threadId]);
-
     const handleArtifactClick = (artifact: Artifact) => {
         setSelectedArtifact(artifact);
         setDrawerOpen(true);

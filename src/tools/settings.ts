@@ -483,9 +483,6 @@ export class Settings {
     })
     brave: BraveConfig = new BraveConfig();
 
-    // Channel configuration
-    defaultChannels!: Record<string, string>;
-
     // Agent configuration
     agents!: {
         [key: string]: AgentDefinition

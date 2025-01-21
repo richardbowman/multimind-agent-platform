@@ -107,7 +107,6 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         taskManager: tasks,
         artifactManager,
         chatStorage,
-        defaultChannelId: _s.defaultChannels["onboarding"],
         settingsManager: settingsManager,
         agents: agents
     });

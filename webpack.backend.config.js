@@ -95,8 +95,8 @@ module.exports = {
     new CopyWebpackPlugin({
       patterns: [
         {
-          from: path.resolve(__dirname, 'defaults.json5'),
-          to: path.resolve(__dirname, 'dist/defaults.json5')
+          from: path.resolve(__dirname, 'src/config/agents.json5'),
+          to: path.resolve(__dirname, 'dist/agents.json5')
         }
       ]
     })
