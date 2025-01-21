@@ -1,31 +1,31 @@
 import React, { useState, useEffect } from 'react';
-import { 
-  Box, 
-  Paper, 
-  Typography, 
-  TextField, 
-  Select, 
-  MenuItem, 
-  FormControl, 
-  InputLabel, 
-  Button, 
-  Alert,
-  CircularProgress,
-  Drawer,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  IconButton,
-  Toolbar,
-  Chip,
-  Autocomplete,
-  Slider,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogContentText,
-  DialogActions
+import {
+    Box,
+    Paper,
+    Typography,
+    TextField,
+    Select,
+    MenuItem,
+    FormControl,
+    InputLabel,
+    Button,
+    Alert,
+    CircularProgress,
+    Drawer,
+    List,
+    ListItem,
+    ListItemButton,
+    ListItemText,
+    IconButton,
+    Toolbar,
+    Chip,
+    Autocomplete,
+    Slider,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogContentText,
+    DialogActions
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useWebSocket } from '../contexts/DataContext';
@@ -63,7 +63,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
     const [availableModels, setAvailableModels] = useState<Record<string, ModelInfo[]>>({});
     const [availableEmbedders, setAvailableEmbedders] = useState<Record<string, EmbedderModelInfo[]>>({});
-    
+
     useEffect(() => {
         const fetchModels = async () => {
             if (settings.providers?.chat) {
@@ -89,7 +89,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         }
         fetchModels();
     }, [settings.providers?.chat]);
-    
+
     useEffect(() => {
         const fetchEmbeddingModels = async () => {
             if (settings.providers?.embeddings) {
@@ -109,7 +109,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             }
 
         };
-        
+
         fetchEmbeddingModels();
     }, [settings.providers?.embeddings]);
 
@@ -117,13 +117,13 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         // Get metadata using reflection
         const fieldMeta = metadata[key];
         const processedValue = fieldMeta?.type === 'number' ? Number(value) : value;
-        
+
         // Handle nested keys (e.g. "providers.chat")
         const parts = key.split('.');
         setSettings(prev => {
             const newSettings = { ...prev };
             let current = newSettings;
-            
+
             // Navigate to the correct nesting level
             for (let i = 0; i < parts.length - 1; i++) {
                 if (!current[parts[i]]) {
@@ -131,7 +131,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 }
                 current = current[parts[i]];
             }
-            
+
             // Set the value at the final nesting level
             current[parts[parts.length - 1]] = processedValue;
             return newSettings;
@@ -192,7 +192,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             setSuccessMessage('Settings saved successfully');
             setValidationMessage('');
             setSaveSuccess(true);
-            
+
             // Reset success state after animation
             setTimeout(() => {
                 setSaveSuccess(false);
@@ -231,15 +231,15 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             case 'select':
                 // Special handling for model selection
                 if (metadata.key.startsWith('models.')) {
-                    const provider = metadata.key.includes('embedding') ? 
-                        settings.providers?.embeddings : 
+                    const provider = metadata.key.includes('embedding') ?
+                        settings.providers?.embeddings :
                         settings.providers?.chat;
-                    const models = provider ? 
-                        (metadata.key.includes('embedding') ? 
+                    const models = provider ?
+                        (metadata.key.includes('embedding') ?
                             availableEmbedders[provider] || [] :
-                            availableModels[provider] || []) : 
+                            availableModels[provider] || []) :
                         [];
-                    
+
                     return (
                         <Autocomplete
                             options={models}
@@ -247,8 +247,8 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             onChange={(_, newValue) => handleChange(metadata.key, newValue?.id || '')}
                             getOptionLabel={(option) => option.name || option.id}
                             renderInput={(params) => (
-                                <TextField 
-                                    {...params} 
+                                <TextField
+                                    {...params}
                                     label={metadata.label}
                                     variant="outlined"
                                 />
@@ -256,7 +256,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             filterOptions={(options, state) => {
                                 const inputValue = state.inputValue.toLowerCase();
                                 return options.filter(option =>
-                                    (option.name?.toLowerCase().includes(inputValue) || 
+                                (option.name?.toLowerCase().includes(inputValue) ||
                                     option.id.toLowerCase().includes(inputValue) ||
                                     option.pipelineTag?.toLowerCase().includes(inputValue) ||
                                     option.supportedTasks?.join(' ').toLowerCase().includes(inputValue) ||
@@ -266,79 +266,80 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             renderOption={(props, option) => {
                                 const { key, ...restProps } = props;
                                 return (
-                                    <Box 
-                                        component="li" 
+                                    <Box
+                                        component="li"
                                         key={key}
                                         {...restProps}
                                         sx={{
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        alignItems: 'flex-start',
-                                        gap: 0.5,
-                                        py: 1.5,
-                                        width: '100%'
-                                    }}
-                                >
-                                    <Box sx={{ 
-                                        display: 'flex', 
-                                        justifyContent: 'space-between',
-                                        width: '100%'
-                                    }}>
-                                        <Typography variant="body1" fontWeight={500}>
-                                            {option.name || option.id}
-                                        </Typography>
-                                        <Chip 
-                                            label={option.id.includes('/') ? 'Remote' : 'Local'} 
-                                            size="small"
-                                            color={option.id.includes('/') ? 'secondary' : 'primary'}
-                                            sx={{ ml: 1 }}
-                                        />
+                                            display: 'flex',
+                                            flexDirection: 'column',
+                                            alignItems: 'flex-start',
+                                            gap: 0.5,
+                                            py: 1.5,
+                                            width: '100%'
+                                        }}
+                                    >
+                                        <Box sx={{
+                                            display: 'flex',
+                                            justifyContent: 'space-between',
+                                            width: '100%'
+                                        }}>
+                                            <Typography variant="body1" fontWeight={500}>
+                                                {option.name || option.id}
+                                            </Typography>
+                                            <Chip
+                                                label={option.id.includes('/') ? 'Remote' : 'Local'}
+                                                size="small"
+                                                color={option.id.includes('/') ? 'secondary' : 'primary'}
+                                                sx={{ ml: 1 }}
+                                            />
+                                        </Box>
+                                        {'pipelineTag' in option && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                Pipeline: {option.pipelineTag}
+                                            </Typography>
+                                        )}
+                                        {'supportedTasks' in option && option.supportedTasks.length > 0 && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                Tasks: {option.supportedTasks.join(', ')}
+                                            </Typography>
+                                        )}
+                                        <Box sx={{
+                                            display: 'flex',
+                                            gap: 1,
+                                            fontSize: '0.875rem',
+                                            color: 'text.secondary'
+                                        }}>
+                                            {option.size && (
+                                                <Typography variant="caption">
+                                                    Size: {option.size}
+                                                </Typography>
+                                            )}
+                                            {option.author && (
+                                                <Typography variant="caption">
+                                                    By {option.author}
+                                                </Typography>
+                                            )}
+                                            {option.downloads && (
+                                                <Typography variant="caption">
+                                                    {option.downloads.toLocaleString()} downloads
+                                                </Typography>
+                                            )}
+                                        </Box>
+                                        {option.description && (
+                                            <Typography variant="caption" color="text.secondary">
+                                                {option.description}
+                                            </Typography>
+                                        )}
                                     </Box>
-                                    {'pipelineTag' in option && (
-                                        <Typography variant="caption" color="text.secondary">
-                                            Pipeline: {option.pipelineTag}
-                                        </Typography>
-                                    )}
-                                    {'supportedTasks' in option && option.supportedTasks.length > 0 && (
-                                        <Typography variant="caption" color="text.secondary">
-                                            Tasks: {option.supportedTasks.join(', ')}
-                                        </Typography>
-                                    )}
-                                    <Box sx={{ 
-                                        display: 'flex', 
-                                        gap: 1,
-                                        fontSize: '0.875rem',
-                                        color: 'text.secondary'
-                                    }}>
-                                        {option.size && (
-                                            <Typography variant="caption">
-                                                Size: {option.size}
-                                            </Typography>
-                                        )}
-                                        {option.author && (
-                                            <Typography variant="caption">
-                                                By {option.author}
-                                            </Typography>
-                                        )}
-                                        {option.downloads && (
-                                            <Typography variant="caption">
-                                                {option.downloads.toLocaleString()} downloads
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                    {option.description && (
-                                        <Typography variant="caption" color="text.secondary">
-                                            {option.description}
-                                        </Typography>
-                                    )}
-                                </Box>
-                            )}}
+                                )
+                            }}
                             sx={{ width: '100%' }}
                             isOptionEqualToValue={(option, value) => option.id === value.id}
                         />
                     );
                 }
-                
+
                 // Regular select
                 return (
                     <FormControl fullWidth variant="outlined">
@@ -402,7 +403,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 );
         }
     };
-    
+
     // Convert to array and group by category
     const categories = Object.entries(metadata).reduce((acc, [key, meta]) => {
         if (!acc[meta.category]) {
@@ -426,7 +427,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     }>>);
 
     return (
-        <Box sx={{ 
+        <Box sx={{
             display: 'flex',
             flex: 1,
             overflow: 'hidden'
@@ -465,93 +466,116 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 </List>
             </Drawer>
 
-            <Box component="main" sx={{ 
-                flexGrow: 1, 
-                p: 3,
-                marginLeft: drawerOpen ? 0: '-250px',
+            <Box component="main" sx={{
+                flexGrow: 1,
+                marginLeft: drawerOpen ? 0 : '-250px',
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
                 display: 'flex',
                 flexDirection: 'column',
-                height: '100vh'
+                height: '100%'
             }}>
-                <Box sx={{ 
+                <Box sx={{
+                    bottom: 0,
+                    left: drawerOpen ? 250 : 0,
+                    right: 0,
+                    borderBottom: '1px solid',
+                    borderColor: 'divider',
+                    p: 2,
+                    zIndex: 1,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 2,
+                    transition: 'left 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
+                }}>
+                    <Typography variant="h4" sx={{ mb: 3 }}>
+                        Settings
+                    </Typography>
+
+                    {validationMessage && (
+                        <Alert severity="error" sx={{ mt: 2 }}>
+                            {validationMessage}
+                        </Alert>
+                    )}
+
+                    {successMessage && (
+                        <Alert severity="success" sx={{ mt: 2 }}>
+                            {successMessage}
+                        </Alert>
+                    )}
+                </Box>
+                <Box sx={{
                     flex: 1,
                     overflowY: 'auto',
-                    pb: 8 // Add padding to prevent content from being hidden behind footer
+                    p: 3
                 }}>
-                <Typography variant="h4" sx={{ mb: 3 }}>
-                    Settings
-                </Typography>
-            
-            <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                flex: 1, 
-                gap: 3,
-                overflowY: 'auto'
-            }}
-            >
-                {Object.entries(categories).map(([category, metadataList]) => {
-                    // Filter model settings based on selected provider
-                    const filteredList = category === 'LLM Settings' || category === 'Embeddings'
-                        ? metadataList.filter(meta => {
-                            // Skip if not a model setting
-                            if (!meta.key.startsWith('models.')) return true;
-                            
-                            // Get the provider type from the key (e.g. models.conversation.lmstudio)
-                            const providerType = meta.key.split('.')[2];
-                            
-                            // For embedding models, check against embeddings provider
-                            if (meta.key.includes('embedding')) {
-                                return providerType === settings.providers?.embeddings;
-                            }
-                            
-                            // For chat models, check against chat provider
-                            return providerType === settings.providers?.chat;
-                        })
-                        : metadataList;
+                    <Box sx={{
+                        display: 'flex',
+                        flexDirection: 'column',
+                        flex: 1,
+                        gap: 3,
+                        overflowY: 'auto'
+                    }}
+                    >
+                        {Object.entries(categories).map(([category, metadataList]) => {
+                            // Filter model settings based on selected provider
+                            const filteredList = category === 'LLM Settings' || category === 'Embeddings'
+                                ? metadataList.filter(meta => {
+                                    // Skip if not a model setting
+                                    if (!meta.key.startsWith('models.')) return true;
 
-                    return (
-                        <Paper 
-                            key={category}
-                            id={category}
-                            sx={{ 
-                                p: 3, 
-                                bgcolor: 'background.paper',
-                                borderRadius: 2,
-                                boxShadow: 1,
-                                mb: 3
-                            }}
-                        >
-                            <Typography variant="h6" gutterBottom sx={{ 
-                                mb: 2, 
-                                pb: 1, 
-                                borderBottom: '1px solid',
-                                borderColor: 'divider'
-                            }}>
-                                {category}
-                            </Typography>
-                            
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                {filteredList.map(metadata => (
-                                    <FormControl key={metadata.key} fullWidth>
-                                        {renderInput(metadata)}
-                                        {metadata.description && (
-                                            <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                                                {metadata.description}
-                                            </Typography>
-                                        )}
-                                    </FormControl>
-                                ))}
-                            </Box>
-                        </Paper>
-                    );
-                })}
-                
-                </Box> {/* End of scrollable content */}
-                
-                <Box sx={{ 
-                    position: 'fixed',
+                                    // Get the provider type from the key (e.g. models.conversation.lmstudio)
+                                    const providerType = meta.key.split('.')[2];
+
+                                    // For embedding models, check against embeddings provider
+                                    if (meta.key.includes('embedding')) {
+                                        return providerType === settings.providers?.embeddings;
+                                    }
+
+                                    // For chat models, check against chat provider
+                                    return providerType === settings.providers?.chat;
+                                })
+                                : metadataList;
+
+                            return (
+                                <Paper
+                                    key={category}
+                                    id={category}
+                                    sx={{
+                                        p: 3,
+                                        bgcolor: 'background.paper',
+                                        borderRadius: 2,
+                                        boxShadow: 1,
+                                        mb: 3
+                                    }}
+                                >
+                                    <Typography variant="h6" gutterBottom sx={{
+                                        mb: 2,
+                                        pb: 1,
+                                        borderBottom: '1px solid',
+                                        borderColor: 'divider'
+                                    }}>
+                                        {category}
+                                    </Typography>
+
+                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                        {filteredList.map(metadata => (
+                                            <FormControl key={metadata.key} fullWidth>
+                                                {renderInput(metadata)}
+                                                {metadata.description && (
+                                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
+                                                        {metadata.description}
+                                                    </Typography>
+                                                )}
+                                            </FormControl>
+                                        ))}
+                                    </Box>
+                                </Paper>
+                            );
+                        })}
+
+                    </Box> {/* End of scrollable content */}
+                </Box>
+                <Box sx={{
                     bottom: 0,
                     left: drawerOpen ? 250 : 0,
                     right: 0,
@@ -571,7 +595,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     >
                         About
                     </Button>
-                    
+
                     <Button
                         variant="outlined"
                         color="warning"
@@ -613,19 +637,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         )}
                     </Button>
                 </Box>
-                
-                {validationMessage && (
-                    <Alert severity="error" sx={{ mt: 2 }}>
-                        {validationMessage}
-                    </Alert>
-                )}
-                
-                {successMessage && (
-                    <Alert severity="success" sx={{ mt: 2 }}>
-                        {successMessage}
-                    </Alert>
-                )}
-            </Box>
             </Box>
 
             {/* About Dialog */}
@@ -644,7 +655,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         <Typography variant="body1" gutterBottom>
                             Copyright © 2025 Rick Bowman
                         </Typography>
-                        <Typography variant="body2" component="pre" sx={{ 
+                        <Typography variant="body2" component="pre" sx={{
                             whiteSpace: 'pre-wrap',
                             wordWrap: 'break-word',
                             mt: 2,
