@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import Link from '@mui/material/Link';
 import { Artifact } from '../../../../tools/artifact';
 import { Typography, Box, IconButton } from '@mui/material';
 import { Edit, Delete } from '@mui/icons-material';
@@ -53,10 +54,17 @@ ${artifact.content?.toString() || "(no content available)"}`;
                     alignItems: 'flex-start'
                 }}>
                     <Box>
-                        <ReactMarkdown remarkPlugins={[remarkGfm]}>{`# ${artifact.metadata?.title || artifact.id}
+                        <ReactMarkdown 
+                            remarkPlugins={[remarkGfm]}
+                            components={{
+                                a: ({node, ...props}) => <Link {...props} target="_blank" rel="noopener noreferrer" />
+                            }}
+                        >
+                            {`# ${artifact.metadata?.title || artifact.id}
 
 ## Metadata
-${formatMetadata(artifact.metadata)}`}</ReactMarkdown>
+${formatMetadata(artifact.metadata)}`}
+                        </ReactMarkdown>
                     </Box>
                     <Box sx={{
                         position: 'absolute',
@@ -92,18 +100,32 @@ ${formatMetadata(artifact.metadata)}`}</ReactMarkdown>
                         </IconButton>
                     </Box>
                 </Box>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{`# ${artifact.metadata?.title || artifact.id}
+                <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                        a: ({node, ...props}) => <Link {...props} target="_blank" rel="noopener noreferrer" />
+                    }}
+                >
+                    {`# ${artifact.metadata?.title || artifact.id}
 
 ## Metadata
-${formatMetadata(artifact.metadata)}`}</ReactMarkdown>
+${formatMetadata(artifact.metadata)}`}
+                </ReactMarkdown>
             </Box>
             <Box sx={{
                 flex: 1,
                 overflow: 'auto',
                 mt: 2
             }}>
-                <ReactMarkdown remarkPlugins={[remarkGfm]}>{`## Content
-${artifact.content?.toString() || "(no content available)"}`}</ReactMarkdown>
+                <ReactMarkdown 
+                    remarkPlugins={[remarkGfm]}
+                    components={{
+                        a: ({node, ...props}) => <Link {...props} target="_blank" rel="noopener noreferrer" />
+                    }}
+                >
+                    {`## Content
+${artifact.content?.toString() || "(no content available)"}`}
+                </ReactMarkdown>
             </Box>
         </Box>
     );
