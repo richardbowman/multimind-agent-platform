@@ -4,6 +4,7 @@ import { ExecuteParams } from '../../interfaces/ExecuteParams';
 import { StepResult } from '../../interfaces/StepResult';
 import { StructuredOutputPrompt } from '../../../llm/ILLMService';
 import { GoalConfirmationResponse } from '../../../schemas/goalConfirmation';
+import { createUUID } from '../../../types/uuid';
 
 describe('GoalConfirmationExecutor', () => {
     let executor: GoalConfirmationExecutor;
