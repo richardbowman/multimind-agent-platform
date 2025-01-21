@@ -13,6 +13,7 @@ import path from "path";
 import { sleep } from "./utils/sleep";
 import { ServerRPCHandler } from "./server/RPCHandler";
 import { UUID } from "./types/uuid";
+import { ConfigurationError } from "./errors/ConfigurationError";
 
 export async function initializeBackend(settingsManager: SettingsManager, options: { 
     reindex?: boolean
@@ -27,9 +28,25 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
     // Initialize the models
     try {
+        if (!_s.providers.embeddings) {
+            throw new ConfigurationError("No embeddings model provider is selected");
+        }
+        if (!_s.models.embeddings[_s.providers.embeddings]) {
+            throw new ConfigurationError("No embeddings model is selected");
+        }
+
+        if (!_s.providers.embeddings) {
+            throw new ConfigurationError("No chat provider is selected");
+        }
+        if (!_s.models.embeddings[_s.providers.embeddings]) {
+            throw new ConfigurationError("No chat model is selected");
+        }
+
         Logger.progress('Initializing embedding model...', 0.2);
         await embeddingService.initializeEmbeddingModel(_s.models.embeddings[_s.providers.embeddings]);
         Logger.progress('Initializing chat model...', 0.3);
+
+
         await chatService.initializeChatModel(_s.models.conversation[_s.providers.chat]);
     } catch (error) {
         throw error;
@@ -117,23 +134,12 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
     if (!Object.values(chatStorage.channelNames).includes("#welcome")) {
         // Create RPC handler and use it to create channel
-        const rpcHandler = new ServerRPCHandler({
-            chatClient: userClient,
-            taskManager: tasks,
-            artifactManager,
-            settingsManager,
-            llmLogger: chatService.getLogger(),
-            logReader: new LogReader(),
-            llmService: chatService,
-            vectorDB,
-            cleanup: shutdown
-        });
-        
-        await rpcHandler.createChannel({
+        const mappedParams = await ServerRPCHandler.createChannelHelper(userClient, tasks, {
             name: "#welcome",
             description: "This is where we'll get started",
             goalTemplate: 'welcome-channel' // Use the template
         });
+        await userClient.createChannel(mappedParams);
     }
 
     // Handle reindex option

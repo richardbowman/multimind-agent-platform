@@ -92,7 +92,7 @@ export class EmbeddingsModelByProvider {
         type: 'select',
         description: 'Model path or identifier for LM Studio'
     })
-    lmstudio: string = 'qwen2.5-coder-14b-instruct';
+    lmstudio: string = 'text-embedding-nomic-embed-text-v1.5';
 }
 
 export class ModelByProvider {

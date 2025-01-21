@@ -461,7 +461,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 const existingMembers = new Set(params.members || []);
                 resolvedAgents.forEach(agentId => {
                     if (!existingMembers.has(agentId)) {
-                        members = [...(params.members || []), agentId];
+                        members.push(agentId);
                     }
                 });
             }
@@ -511,13 +511,6 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     async closeWindow(): Promise<void> {
         const mainWindow = this.services.mainWindow.getWindow();
         mainWindow.close();
-    }
-
-    async openDevTools(): Promise<void> {
-        if (process.env.NODE_ENV === 'development') {
-            const mainWindow = this.services.mainWindow.getWindow();
-            mainWindow.webContents.openDevTools();
-        }
     }
 
     processArtifactContent(artifact: any) {

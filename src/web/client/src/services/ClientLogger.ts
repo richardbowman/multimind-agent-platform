@@ -15,7 +15,7 @@ export class ClientLogger {
      */
     public setupGlobalErrorHandlers(): void {
         if (this.areErrorHandlersSetup) return;
-        
+
         // Handle uncaught exceptions
         const errorHandler = (event: ErrorEvent) => {
             this.error(`Uncaught error: ${event.message}`, {
@@ -30,9 +30,23 @@ export class ClientLogger {
 
         // Handle unhandled promise rejections
         const rejectionHandler = (event: PromiseRejectionEvent) => {
-            this.error(`Unhandled promise rejection: ${event.reason}`, {
-                reason: event.reason?.stack || event.reason
-            });
+            // Handle Error objects
+            if (event?.reason instanceof Error) {
+                this.error(`Unhandled Promise Rejection: ${event.reason.message}`, event.reason);
+
+                // Log additional context if available
+                const errorContext = (event.reason as any).context;
+                if (errorContext) {
+                    this.error('Error Context:', JSON.stringify(errorContext, null, 2));
+                }
+            }
+            // Handle non-Error rejection reasons
+            else {
+                this.error('Unhandled Promise Rejection:', {
+                    reason: JSON.stringify(event?.reason, null, 2),
+                    promise: event?.promise.toString()
+                });
+            }
         };
         window.addEventListener('unhandledrejection', rejectionHandler);
         this.errorHandlerCleanups.push(() => window.removeEventListener('unhandledrejection', rejectionHandler));
@@ -45,7 +59,7 @@ export class ClientLogger {
      */
     public interceptConsole(): void {
         if (this.isConsoleIntercepted) return;
-        
+
         console.log = (...args: any[]) => {
             this.info('[console.log] ' + args.join(' '));
             this.originalConsole.log(...args);
@@ -79,7 +93,7 @@ export class ClientLogger {
      */
     public restoreConsole(): void {
         if (!this.isConsoleIntercepted) return;
-        
+
         console.log = this.originalConsole.log;
         console.info = this.originalConsole.info;
         console.warn = this.originalConsole.warn;

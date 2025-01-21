@@ -92,7 +92,8 @@ app.whenReady().then(async () => {
             type: "configNeeded",
             settingsManager,
             mainWindow,
-            logReader: new LogReader()
+            logReader: new LogReader(),
+            error: ConfigurationError
         } as BackendServicesConfigNeeded;
 
         Logger.error('Error in main:', error);
@@ -147,19 +148,36 @@ export async function setupIpcHandlers(autoUpdater: AppUpdater, hasConfigError: 
     console.log('setup ipc complete');
 }
 
-export async function reinitializeBackend() {
+export async function reinitializeBackend() : Promise<BackendServicesConfigNeeded|BackendServicesWithWindows> {
     const _s = settingsManager.getSettings();
     splashWindow = new SplashWindow(_s.zoom);
 
-    backendServices = {
-        ...await initializeBackend(settingsManager),
-        mainWindow: mainWindow
-    } as BackendServicesWithWindows;
+    try {
+        backendServices = {
+            ...await initializeBackend(settingsManager),
+            mainWindow: mainWindow
+        } as BackendServicesWithWindows;
+        configComplete = true;
+    } catch (err) {
+        backendServices = {
+            type: "configNeeded",
+            settingsManager,
+            mainWindow,
+            logReader: new LogReader()
+        } as BackendServicesConfigNeeded;
+
+        if (err instanceof ConfigurationError) {
+            backendServices.error = err;
+        }
+        Logger.error("Error reinitializing", err);
+        configComplete = false;
+    }
 
     ipcServer.reinitialize(backendServices, autoUpdater);
-    configComplete = true;
-
+    
     await splashWindow.close();
+
+    return backendServices;
 }
 
 async function shutdown() {

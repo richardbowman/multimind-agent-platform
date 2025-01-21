@@ -14,6 +14,7 @@ import { pipeline } from 'stream/promises';
 import { getDataPath } from "src/helpers/paths";
 import axios from 'axios';
 import { ModelInfo } from "./types";
+import { ConfigurationError } from "src/errors/ConfigurationError";
 
 interface HFModel {
     id: string;
@@ -263,7 +264,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
         } catch (error) {
             Logger.error("Failed to initialize Llama.cpp embedding model:", error);
-            throw error;
+            throw new ConfigurationError("Failed to initialize Llama.cpp embedding model.");
         }
     }
 

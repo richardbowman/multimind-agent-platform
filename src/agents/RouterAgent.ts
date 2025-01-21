@@ -195,7 +195,28 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
             required: ["response", "confidence"],
         };
 
-        const prompt = `Analyze the ongoing conversation and determine the best agent to transfer the request to. You must explicitly choose one of these next steps:
+        const prompt = `YOU ARE THE ROUTER AGENT (@router). Your ONLY goal is to TRANSFER USERS to the best agent to solve their needs, not try and solve their needs.
+        
+        
+        AVAILABLE AGENTS:
+${context.agentPromptOptions}
+
+${context.project ? `CHANNEL PROJECT DETAILS:
+- Name: ${context.project.name}
+- Goal: ${context.project.metadata?.description || 'No specific goal'}
+- Status: ${context.project.metadata?.status || 'active'}
+- Tasks:
+${Object.values(context.project.tasks)
+                        .sort((a, b) => (a.order || 0) - (b.order || 0))
+                        .map((task, index) => `  ${index + 1}. ${task.description}${task.complete ? ' (completed)' : ''}`)
+                        .join('\n')}` : ''}
+
+PAST CONVERSATION CONTEXT:
+${context.conversationContext}
+
+        
+INSTRUCTIONS
+You must explicitly choose one of these next steps:
 
 1. propose-transfer: When you have a good candidate agent but want user confirmation
    - Explain why they're the best choice, and ask for user confirmation before transferring
@@ -204,7 +225,7 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
    - Develop a complete transfer note to the agent so they can successfully respond to the user. Make sure to repeat all pertinent information to the other agent, they will not see the original user's message.
    - Only use when confidence > 0.9
 
-3. ask-clarification: If you don't know how to route the user.
+3. ask-clarification: ONLY If you do NOT know how to route the user already.
    - Politely ask specific clarifying questions, explain what information is missing
 
 4. provide-information: When you can answer directly
@@ -216,32 +237,11 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
    - Use this especially when the user is greeting you or seems unsure what to do next
    - Make sure to share the first outstanding goal that you propose them starting
 
-Available Agents and Their Capabilities:
-${context.agentPromptOptions}
-
-When selecting an agent, consider:
-- Which agent's capabilities best match the user's request
-- The complexity of the task and the agent's expertise
-- The current project context and goals
-
-${context.project ? `Channel Project Details:
-- Name: ${context.project.name}
-- Goal: ${context.project.metadata?.description || 'No specific goal'}
-- Status: ${context.project.metadata?.status || 'active'}
-- Tasks:
-${Object.values(context.project.tasks)
-                        .sort((a, b) => (a.order || 0) - (b.order || 0))
-                        .map((task, index) => `  ${index + 1}. ${task.description}${task.complete ? ' (completed)' : ''}`)
-                        .join('\n')}` : ''}
-
-Conversation context:
-${context.conversationContext}
-
 ${params.artifacts ? this.modelHelpers.formatArtifacts(params.artifacts) : ""}  
 
 Respond with:
-- selectedAgent: The best agent to handle this (optional if unclear)
-- response: Your response to the user (or transfer message if your are executing transfer)
+- selectedAgent: The best agent to handle this (optional if not yet clear)
+- response: Your message to the user (or message to the transferring agent for execute-transfer)
 - confidence: Your confidence level (0-1) in this selection`;
 
         const response = await this.llmService.generateStructured(

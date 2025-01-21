@@ -5,6 +5,7 @@ import { AnthropicService } from "./AnthropicService";
 import { LlamaCppService } from "./LlamaCppService";
 import { Settings } from "../tools/settings";
 import { OpenAIService } from "./OpenAIService";
+import { ConfigurationError } from "src/errors/ConfigurationError";
 
 export enum LLMProvider {
     LMSTUDIO = "lmstudio",
@@ -71,7 +72,7 @@ export class LLMServiceFactory {
                 return new LlamaCppService(settings.llama_cpp_execution_mode);
             case LLMProvider.OPENAI:
                 if (!settings.openai?.api?.key) {
-                    throw new Error("OpenAI API key is required");
+                    throw new ConfigurationError("OpenAI API key is required");
                 }
                 return new OpenAIService(
                     settings.openai.api.key,
@@ -80,7 +81,7 @@ export class LLMServiceFactory {
                 );
             case LLMProvider.OPENROUTER:
                 if (!settings.openrouter?.api?.key) {
-                    throw new Error("OpenRouter API key is required");
+                    throw new ConfigurationError("OpenRouter API key is required");
                 }
                 return new OpenAIService(
                     settings.openrouter.api.key,
@@ -90,7 +91,7 @@ export class LLMServiceFactory {
                 );
             case LLMProvider.DEEPSEEK:
                 if (!settings.deepseek?.api?.key) {
-                    throw new Error("DeepSeek API key is required");
+                    throw new ConfigurationError("DeepSeek API key is required");
                 }
                 return new OpenAIService(
                     settings.deepseek?.api.key,
@@ -99,7 +100,7 @@ export class LLMServiceFactory {
                     "https://api.deepseek.com/v1"
                 );
             default:
-                throw new Error(`Unsupported chat provider: ${settings.providers.chat}`);
+                throw new ConfigurationError(`Unsupported chat provider: ${settings.providers.chat}`);
         }
     }
 }

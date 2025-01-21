@@ -185,10 +185,14 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
         try {
             console.log('Saving settings:', settings);
-            await updateSettings(settings);
-            const updatedSettings = await getSettings();
+            const { settings: updatedSettings, error } = await updateSettings(settings);
             console.log('Updated settings:', updatedSettings);
             setSettings(updatedSettings);
+
+            if (error) {
+                throw new Error(error);
+            }
+
             setSuccessMessage('Settings saved successfully');
             setValidationMessage('');
             setSaveSuccess(true);

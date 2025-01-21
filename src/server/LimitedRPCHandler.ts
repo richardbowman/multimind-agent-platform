@@ -9,6 +9,7 @@ import { ModelInfo } from "src/llm/types";
 import { EmbedderModelInfo } from "src/llm/ILLMService";
 import { UpdateStatus } from "src/shared/UpdateStatus";
 import { AppUpdater } from "electron-updater";
+import { ConfigurationError } from "src/errors/ConfigurationError";
 
 export class LimitedRPCHandler implements Partial<ServerMethods> {
     constructor(private partialServices: BackendServicesConfigNeeded) {
@@ -34,6 +35,14 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
         });
     }
 
+    async openDevTools(): Promise<void> {
+        if (process.env.NODE_ENV === 'development') {
+            const mainWindow = this.partialServices.mainWindow.getWindow();
+            mainWindow.webContents.openDevTools();
+        }
+    }
+
+
     async getSettings(): Promise<Settings> {
         const settings = this.partialServices.settingsManager.getSettings();
 
@@ -54,19 +63,24 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
         return service.getAvailableEmbedders();
     }
 
-    async updateSettings(settings: Partial<Settings>): Promise<Settings> {
+    async updateSettings(settings: Partial<Settings>): Promise<{ settings: Settings, error?: string}> {
         Logger.info('Update settings called');
         
         this.partialServices.settingsManager.updateSettings(settings);
 
         // Reinitialize backend services
+        let error;
         try {
-            await reinitializeBackend();
-        } catch (err) {
-            console.log(err);
+            const backendServices = await reinitializeBackend();
+            if (backendServices.error?.message) {
+                error = backendServices.error.message;
+            }
+        } catch (caughtError) {
+            Logger.error("Error updating settings", caughtError);
+            error = (caughtError instanceof Error) ? caughtError.message : caughtError;
         }
 
-        return this.partialServices.settingsManager.getSettings();
+        return { settings: this.partialServices.settingsManager.getSettings(), error };
     }
 
     setupClientEvents(rpc: ClientMethods, autoUpdater: AppUpdater) {

@@ -6,6 +6,8 @@ import { useSnackbar } from './SnackbarContext';
 import { useIPCService } from './IPCContext';
 import { useClientMethods } from '../services/ClientMethods';
 import { Artifact } from '../../../../tools/artifact';
+import { Settings } from '../../../../tools/settings';
+import { ConfigurationError } from '../../../../errors/ConfigurationError';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 
@@ -46,7 +48,7 @@ export interface DataContextMethods {
   setCurrentChannelId: React.Dispatch<React.SetStateAction<string | null>>;
   setCurrentThreadId: React.Dispatch<React.SetStateAction<string | null>>;
   getSettings: () => Promise<any>;
-  updateSettings: (settings: any) => Promise<any>;
+  updateSettings: (settings: any) => Promise<{settings: Settings, error: string}>;
   createChannel: (params: CreateChannelParams) => Promise<string>;
   deleteChannel: (channelId: string) => Promise<void>;
   setTasks: React.Dispatch<React.SetStateAction<ClientTask[]>>;
@@ -298,13 +300,11 @@ export const DataProvider: React.FC<{
     setCurrentThreadId,
     setTasks,
     getSettings: () => ipcService.getRPC().getSettings(),
-    updateSettings: async (settings: any) => {
+    updateSettings: async (settings: Settings) => {
       try {
         const updatedSettings = await ipcService.getRPC().updateSettings(settings);
 
-        if (settings.host !== undefined ||
-          settings.port !== undefined ||
-          settings.protocol !== undefined) {
+        if (updatedSettings.settings && !updatedSettings.error) {
           ipcService.disconnect();
           ipcService.connect();
           await Promise.all([fetchChannels(), fetchHandles(), fetchAllArtifacts()]);
