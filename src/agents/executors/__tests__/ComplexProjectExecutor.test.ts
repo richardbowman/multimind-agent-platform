@@ -47,10 +47,10 @@ describe('ComplexProjectExecutor', () => {
         mockParams = {
             goal: 'Test project goal',
             step: 'create',
-            projectId: 'test-project',
+            projectId: createUUID(),
             executionMode: 'task',
-            agentId: 'test-agent',
-            stepId: 'test-step',
+            agentId: createUUID(),
+            stepId: createUUID(),
             steps: []
         };
 

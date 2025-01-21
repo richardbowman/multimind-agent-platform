@@ -37,10 +37,10 @@ describe('UnderstandGoalsExecutor', () => {
         mockParams = {
             goal: 'Test goal',
             step: 'understand',
-            projectId: 'test-project',
+            projectId: createUUID(),
             executionMode: 'conversation',
-            agentId: 'test-agent',
-            stepId: 'test-step',
+            agentId: createUUID(),
+            stepId: createUUID(),
             steps: []
         };
 
@@ -86,7 +86,9 @@ describe('UnderstandGoalsExecutor', () => {
             intakeQuestions: [
                 { question: 'Q1', purpose: 'Purpose 1' }
             ],
-            reasoning: 'Test reasoning'
+            reasoning: 'Test reasoning',
+            goalRestatement: 'Restated goal',
+            followupMessage: 'Follow up message'
         };
 
         mockModelHelpers.generate.mockResolvedValue(mockResponse);

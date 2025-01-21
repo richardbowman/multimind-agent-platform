@@ -19,14 +19,14 @@ describe('GoalConfirmationExecutor', () => {
         mockParams = {
             goal: 'Test goal',
             step: 'confirm',
-            projectId: 'test-project',
+            projectId: createUUID(),
             context: {
                 channelId: 'test-channel',
                 threadId: 'test-thread'
             },
             executionMode: 'conversation',
-            agentId: 'test-agent',
-            stepId: 'test-step',
+            agentId: createUUID(),
+            stepId: createUUID(),
             steps: []
         };
 
