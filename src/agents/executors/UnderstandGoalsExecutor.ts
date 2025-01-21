@@ -88,7 +88,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         
         const formattedMessage = this.formatMessage(params.goal, project, params.context?.artifacts);
 
-        const response : IntakeQuestionsResponse = await this.modelHelpers.generate({
+        const response = await this.modelHelpers.generate<IntakeQuestionsResponse>({
             message: formattedMessage,
             instructions: new StructuredOutputPrompt(schema,
                 `Generate required questions to achieve the goal: ${params.goal}
