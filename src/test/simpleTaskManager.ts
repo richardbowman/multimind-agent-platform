@@ -289,6 +289,40 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         return null;
     }
 
+    async updateProject(projectId: string, updates: Partial<Project>): Promise<Project> {
+        if (!this.projects[projectId]) {
+            throw new Error(`Project with ID ${projectId} not found`);
+        }
+
+        // Create updated project object
+        const updatedProject = {
+            ...this.projects[projectId],
+            ...updates,
+            // Ensure these properties can't be changed
+            id: this.projects[projectId].id,
+            // Update metadata timestamp
+            metadata: {
+                ...this.projects[projectId].metadata,
+                ...updates.metadata,
+                updatedAt: new Date()
+            }
+        };
+
+        // Validate project properties
+        if (updatedProject.name && typeof updatedProject.name !== 'string') {
+            throw new Error('Project name must be a string');
+        }
+
+        // Update the project
+        this.projects[projectId] = updatedProject;
+
+        // Emit projectUpdated event
+        this.emit('projectUpdated', { project: updatedProject });
+
+        await this.save();
+        return updatedProject;
+    }
+
     async updateTask(taskId: string, updates: Partial<Task>): Promise<Task> {
         let taskFound = false;
         for (const projectId in this.projects) {
