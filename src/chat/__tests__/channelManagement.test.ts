@@ -21,7 +21,7 @@ describe('Channel Management', () => {
 
         storage = new LocalChatStorage(testStoragePath);
         await storage.load();
-        client = new LocalTestClient(testUserId, 'ws://test', storage);
+        client = new LocalTestClient(createUUID(), 'ws://test', storage);
     });
 
     afterEach(async () => {
@@ -36,7 +36,9 @@ describe('Channel Management', () => {
     describe('LocalTestClient', () => {
         it('should create a new channel with default properties', async () => {
             const channelName = 'test-channel';
-            const channelId = await client.createChannel(channelName);
+            const channelId = await client.createChannel({
+                name: channelName
+            });
             
             expect(channelId).toBeDefined();
             expect(typeof channelId).toBe('string');
@@ -50,7 +52,8 @@ describe('Channel Management', () => {
             const description = 'Test private channel';
             const members = ['user1', 'user2'];
             
-            const channelId = await client.createChannel(channelName, {
+            const channelId = await client.createChannel({
+                name: channelName,
                 description,
                 isPrivate: true,
                 members
@@ -68,7 +71,9 @@ describe('Channel Management', () => {
         });
 
         it('should delete a channel and its posts', async () => {
-            const channelId = await client.createChannel('test-channel');
+            const channelId = await client.createChannel({
+                name: 'test-channel'
+            });
             
             // Add some posts to the channel
             await client.postInChannel(channelId, 'Message 1');
@@ -88,7 +93,7 @@ describe('Channel Management', () => {
 
         it('should throw when deleting non-existent channel', async () => {
             const nonExistentChannel = uuidv4();
-            await expect(client.deleteChannel(nonExistentChannel))
+            await expect(client.deleteChannel(createUUID()))
                 .rejects
                 .toThrow(`Channel ${nonExistentChannel} not found`);
         });
@@ -115,7 +120,8 @@ describe('Channel Management', () => {
             const channelName = 'private-channel';
             const members = ['user1', 'user2'];
             
-            const channelId = await mattermostClient.createChannel(channelName, {
+            const channelId = await mattermostClient.createChannel({
+                name: channelName,
                 isPrivate: true,
                 members
             });
