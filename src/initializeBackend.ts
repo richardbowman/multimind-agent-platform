@@ -35,10 +35,10 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             throw new ConfigurationError("No embeddings model is selected");
         }
 
-        if (!_s.providers.embeddings) {
+        if (!_s.providers.chat) {
             throw new ConfigurationError("No chat provider is selected");
         }
-        if (!_s.models.embeddings[_s.providers.embeddings]) {
+        if (!_s.models.conversation[_s.providers.chat]) {
             throw new ConfigurationError("No chat model is selected");
         }
 
