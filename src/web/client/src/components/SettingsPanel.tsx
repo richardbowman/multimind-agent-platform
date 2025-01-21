@@ -470,9 +470,15 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 p: 3,
                 marginLeft: drawerOpen ? 0: '-250px',
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
-                flex: 1,
-                overflowY: 'auto'
+                display: 'flex',
+                flexDirection: 'column',
+                height: '100vh'
             }}>
+                <Box sx={{ 
+                    flex: 1,
+                    overflowY: 'auto',
+                    pb: 8 // Add padding to prevent content from being hidden behind footer
+                }}>
                 <Typography variant="h4" sx={{ mb: 3 }}>
                     Settings
                 </Typography>
@@ -542,11 +548,22 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     );
                 })}
                 
+                </Box> {/* End of scrollable content */}
+                
                 <Box sx={{ 
-                    display: 'flex', 
-                    justifyContent: 'space-between', 
-                    mt: 2,
-                    gap: 2
+                    position: 'fixed',
+                    bottom: 0,
+                    left: drawerOpen ? 250 : 0,
+                    right: 0,
+                    bgcolor: 'background.paper',
+                    borderTop: '1px solid',
+                    borderColor: 'divider',
+                    p: 2,
+                    zIndex: 1,
+                    display: 'flex',
+                    justifyContent: 'space-between',
+                    gap: 2,
+                    transition: 'left 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
                 }}>
                     <Button
                         variant="outlined"
