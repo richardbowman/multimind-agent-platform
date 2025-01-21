@@ -86,9 +86,9 @@ export const GoalTemplates: GoalTemplate[] = [
                 }
             },
             {
-                description: 'Create personalized welcome message and platform introduction',
+                description: 'Create necessary communication channels for usage based on the user goal',
                 type: 'communication',
-                dependsOn: ['generate-onboarding-plan']
+                dependsOn: ['generate-channel']
             }
         ]
     },

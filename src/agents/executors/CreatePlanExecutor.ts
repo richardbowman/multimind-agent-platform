@@ -121,7 +121,7 @@ export class CreatePlanExecutor implements StepExecutor {
         }
 
         // Save the completed document as an artifact
-        const artifactId = await this.artifactManager.saveArtifact({
+        const artifact = await this.artifactManager.saveArtifact({
             id: this.taskManager.newProjectId(),
             type: 'document',
             content: documentContent,
@@ -139,9 +139,9 @@ export class CreatePlanExecutor implements StepExecutor {
         return {
             type: 'create_revise_plan',
             finished: true,
+            artifactIds: [artifact.id],
             response: {
                 message: `Document created successfully using template: ${project.template.name}`,
-                artifactId,
                 documentContent
             }
         };

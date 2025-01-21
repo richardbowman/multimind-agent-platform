@@ -125,14 +125,11 @@ const newUserSequence = [
     }
 ];
 
-const followupSequence = [
-    {
-        type: ExecutorType.SELECT_TEMPLATE,
-        description: "Select appropriate document template based on user goals"
-    },
-    {
-        type: ExecutorType.CREATE_PLAN,
-        description: "Create a comprehensive guide for agents based on user goals"
+
+const createChannelSequence = [
+    { 
+        type: ExecutorType.CREATE_CHANNEL,
+        description: "Understand the user's business goals and requirements"
     }
 ];
 
@@ -143,10 +140,10 @@ this.modelHelpers.addStepSequence(
 );
 
 this.modelHelpers.addStepSequence(
-    'followup',
-    'Sequence for existing users who have answered sufficient questions',
-    followupSequence
-);
+    'create-channel',
+    'Once you have generated their plan, setup a channel for agents to begin working',
+    createChannelSequence
+)
 
 this.modelHelpers.setFinalInstructions(`Use the appropriate sequence based on user context:
 - For new users: Follow the new-user sequence to understand their goals
