@@ -145,6 +145,16 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         }
 
         const shouldContinue = response.shouldContinue || response.intakeQuestions.length === 0;
+
+        // If we're continuing, mark all pending question tasks as complete
+        if (shouldContinue) {
+            const pendingTasks = Object.values(project.tasks || {})
+                .filter((t: any) => t.type === 'process-answers' && !t.complete);
+            
+            for (const task of pendingTasks) {
+                await this.taskManager.completeTask(task.id);
+            }
+        }
         
         return {
             finished: true,
