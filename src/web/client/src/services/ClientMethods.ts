@@ -55,17 +55,24 @@ export const useClientMethods = (snackbarContext: SnackbarContextType, contextMe
                 message.props?.artifactIds?.length > 0
             );
 
-            // If we have new artifacts and are in the correct channel/thread
-            if (hasNewArtifacts && 
-                contextMethods.currentChannelId &&
-                messages.some(m => m.channel_id === contextMethods.currentChannelId && 
-                                 (m.thread_id === contextMethods.currentThreadId || 
-                                  (!m.thread_id && !contextMethods.currentThreadId)))) {
-                // Refresh artifacts
-                await contextMethods.fetchArtifacts(
-                    contextMethods.currentChannelId,
-                    contextMethods.currentThreadId
-                );
+            // If we have new artifacts, refresh artifacts for both current and message channels
+            if (hasNewArtifacts) {
+                // Refresh artifacts for current channel/thread
+                if (contextMethods.currentChannelId) {
+                    await contextMethods.fetchArtifacts(
+                        contextMethods.currentChannelId,
+                        contextMethods.currentThreadId
+                    );
+                }
+
+                // Refresh artifacts for any channels mentioned in messages
+                const uniqueChannels = new Set(messages.map(m => m.channel_id));
+                for (const channelId of uniqueChannels) {
+                    await contextMethods.fetchArtifacts(
+                        channelId,
+                        null // Refresh all threads for the channel
+                    );
+                }
             }
         },
 
