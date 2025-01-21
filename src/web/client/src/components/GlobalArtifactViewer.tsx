@@ -23,7 +23,23 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const [editorOpen, setEditorOpen] = useState(false);
 
     const handleCreateArtifact = async (artifact: Artifact) => {
-        console.log('Reloading:', artifact);
+        // Update the selected artifact
+        setSelectedArtifact(artifact);
+        
+        // Update the artifact in the folders list
+        setArtifactFolders(prevFolders => {
+            const updatedFolders = { ...prevFolders };
+            for (const [type, artifacts] of Object.entries(updatedFolders)) {
+                const index = artifacts.findIndex(a => a.id === artifact.id);
+                if (index !== -1) {
+                    updatedFolders[type][index] = artifact;
+                    break;
+                }
+            }
+            return updatedFolders;
+        });
+        
+        // Refresh from server
         fetchAllArtifacts();
     };
 
