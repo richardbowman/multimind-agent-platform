@@ -4,7 +4,6 @@ import 'reflect-metadata';
 
 import { initializeConfig } from './helpers/config';
 import { app, BrowserWindow, ipcMain } from 'electron';
-import { AppUpdater, autoUpdater } from 'electron-updater';
 import { initializeBackend } from './initializeBackend';
 import Logger from './helpers/logger';
 import { setupUnhandledRejectionHandler } from './helpers/errorHandler';
@@ -15,6 +14,7 @@ import { BackendServices, BackendServicesConfigNeeded, BackendServicesWithWindow
 import { ElectronIPCServer } from './server/ElectronIPCServer';
 import { SettingsManager } from './tools/settingsManager';
 import { LogReader } from './server/LogReader';
+import { AppUpdater, autoUpdater } from 'electron-updater';
 
 let mainWindow: MainWindow;
 let splashWindow: SplashWindow;
@@ -23,6 +23,8 @@ let settingsManager: SettingsManager;
 export let backendServices: BackendServicesWithWindows|BackendServicesConfigNeeded;
 
 // Configure autoUpdater
+autoUpdater.logger = Logger;
+
 autoUpdater.autoDownload = true;
 autoUpdater.autoInstallOnAppQuit = true;
 autoUpdater.allowPrerelease = false;
@@ -46,9 +48,7 @@ function checkForUpdates() {
 
 // IPC handlers
 ipcMain.handle('check-for-updates', checkForUpdates);
-ipcMain.handle('install-update', () => {
-  autoUpdater.quitAndInstall();
-});
+
 
 // Set up global error handling
 setupUnhandledRejectionHandler();
@@ -71,7 +71,8 @@ app.whenReady().then(async () => {
         backendServices = {
             type: "full",
             ...await initializeBackend(settingsManager),
-            mainWindow
+            mainWindow,
+            autoUpdater
         } as BackendServicesWithWindows;
 
         // Create main window
@@ -93,7 +94,8 @@ app.whenReady().then(async () => {
             settingsManager,
             mainWindow,
             logReader: new LogReader(),
-            error: ConfigurationError
+            error,
+            autoUpdater
         } as BackendServicesConfigNeeded;
 
         Logger.error('Error in main:', error);
@@ -155,7 +157,8 @@ export async function reinitializeBackend() : Promise<BackendServicesConfigNeede
     try {
         backendServices = {
             ...await initializeBackend(settingsManager),
-            mainWindow: mainWindow
+            mainWindow: mainWindow,
+            autoUpdater
         } as BackendServicesWithWindows;
         configComplete = true;
     } catch (err) {
@@ -163,7 +166,8 @@ export async function reinitializeBackend() : Promise<BackendServicesConfigNeede
             type: "configNeeded",
             settingsManager,
             mainWindow,
-            logReader: new LogReader()
+            logReader: new LogReader(),
+            autoUpdater
         } as BackendServicesConfigNeeded;
 
         if (err instanceof ConfigurationError) {

@@ -14,6 +14,7 @@ import templates from '../templates/documentTemplates.json';
 import path from 'path';
 import { TemplateSelectorExecutor } from './executors/TemplateSelectorExecutor';
 import { ExecutorType } from './interfaces/ExecutorType';
+import { UUID } from 'src/types/uuid';
 
 
 
@@ -55,7 +56,7 @@ export interface OnboardingProject extends Project {
 
 export class OnboardingConsultant extends StepBasedAgent {
 
-    private templates: DocumentTemplate[];
+    private templates: DocumentTemplate[] = [];
 
     public async initialize(): Promise<void> {
         Logger.info(`Initialized Onboarding Consultant`);
@@ -75,7 +76,7 @@ export class OnboardingConsultant extends StepBasedAgent {
         return this.templates;
     }
 
-    public async setupChatMonitor(monitorChannelId: string, handle?: string, autoRespond?: boolean): Promise<void> {
+    public async setupChatMonitor(monitorChannelId: UUID, handle?: string, autoRespond?: boolean): Promise<void> {
         super.setupChatMonitor(monitorChannelId, handle, autoRespond);
         // Check if welcome message exists in channel
         const channelMessages = await this.chatClient.fetchPreviousMessages(monitorChannelId, 50);

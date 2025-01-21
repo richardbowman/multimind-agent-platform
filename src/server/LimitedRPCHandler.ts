@@ -102,7 +102,7 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
 
         autoUpdater.on('download-progress', (progress) => {
             Logger.info("Downloading update...");
-            rpc.onAutoUpdate({status: UpdateStatus.Downloading, progress: progress.percent});
+            rpc.onAutoUpdate({status: UpdateStatus.Downloading, progress: progress.percent/100});
         });
 
         autoUpdater.on('update-downloaded', () => {
@@ -184,6 +184,10 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
     async getWindowState(): Promise<'maximized' | 'normal'> {
         const mainWindow = this.partialServices.mainWindow.getWindow();
         return mainWindow.isMaximized() ? 'maximized' : 'normal';
+    }
+
+    async quitAndInstall(): Promise<void> {
+        this.partialServices.autoUpdater.quitAndInstall();
     }
 
 }

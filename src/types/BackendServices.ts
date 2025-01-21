@@ -9,6 +9,7 @@ import { MainWindow } from "../windows/MainWindow";
 import { ILLMService } from "src/llm/ILLMService";
 import { IVectorDatabase } from "src/llm/IVectorDatabase";
 import { ConfigurationError } from "src/errors/ConfigurationError";
+import { AppUpdater } from "electron-updater";
 
 export interface BackendServicesWithWindows extends BackendServices {
     type: "full",
@@ -35,4 +36,5 @@ export interface BackendServices extends BackendServicesOnly {
 export interface BackendServicesOnly {
     settingsManager: SettingsManager;
     logReader: LogReader;
+    autoUpdater: AppUpdater;
 }

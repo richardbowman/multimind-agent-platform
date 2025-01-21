@@ -4,6 +4,7 @@ import { Snackbar, IconButton, Button, LinearProgress } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import { SnackbarCloseReason } from '@mui/material/Snackbar';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
+import { useIPCService } from '../contexts/IPCContext';
 
 export interface SnackbarOptions {
   message: string;
@@ -30,6 +31,8 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     message: '',
     severity: 'info'
   });
+
+  const ipcContext = useIPCService();
   
   function setUpdateStatus(status: UpdateStatus, percentComplete?: number) {
     setOptions({
@@ -106,7 +109,7 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
                 variant="contained" 
                 color="primary" 
                 size="small" 
-                onClick={() => (window as any).electron?.installUpdate()}
+                onClick={() => ipcContext.getRPC().quitAndInstall()}
                 sx={{ mt: 1 }}
               >
                 Restart to Update
