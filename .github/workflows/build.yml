@@ -48,6 +48,8 @@ jobs:
         run: |
           git config --global user.name "GitHub Actions"
           git config --global user.email "actions@github.com"
+          git fetch origin
+          git pull --rebase origin main
           yarn version patch --immediate
           git add package.json
           git commit -m "Bump version [skip ci] [skip actions]"
