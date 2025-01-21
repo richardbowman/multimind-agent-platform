@@ -9,5 +9,8 @@ module.exports = {
       warnOnly: true,
       ignoreCodes: [2416, 2345, 2322, 2353]
     }
+  },
+  moduleNameMapper: {
+    "^src/(.*)$": "<rootDir>/src/$1"
   }
 };
