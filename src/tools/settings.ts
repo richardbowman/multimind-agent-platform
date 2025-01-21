@@ -243,6 +243,7 @@ export class ProvidersConfig {
 }
 
 export class Settings {
+
     @ClientSettings({
         label: 'Providers',
         category: 'LLM Settings',
