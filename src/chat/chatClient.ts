@@ -73,9 +73,20 @@ export interface ConversationContext extends Record<string, any> {
     "artifact-ids"?: string[];
 }
 
+export interface Attachment {
+    id: string;
+    type: 'image' | 'file';
+    url: string;
+    name?: string;
+    size?: number;
+    width?: number;
+    height?: number;
+}
+
 export interface Message {
     message: string;
     props?: ConversationContext;
+    attachments?: Attachment[];
 }
 
 export interface ChatPost extends Message {
@@ -87,6 +98,7 @@ export interface ChatPost extends Message {
     create_at: number;
     directed_at: string;
     thread_id?: UUID;
+    attachments?: Attachment[];
     
     getRootId(): UUID | null;
     isReply(): boolean;

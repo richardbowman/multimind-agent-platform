@@ -19,6 +19,7 @@ export class InMemoryPost implements ChatPost {
         );
         // override back to original ID
         post.id = postData.id;
+        post.attachments = postData.attachments || [];
         return post;
     }
 
@@ -29,6 +30,7 @@ export class InMemoryPost implements ChatPost {
     public props: ConversationContext;
     public create_at: number;
     public directed_at: string;
+    public attachments?: Attachment[];
 
     constructor(channel_id: string, message: string, user_id: string, props?: Record<string, any>, create_at?: number) {
         this.id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
@@ -347,7 +349,7 @@ export class LocalTestClient implements ChatClient {
         return Promise.resolve(post);
     }
 
-    public async postInChannel(channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost> {
+    public async postInChannel(channelId: string, message: string, props?: Record<string, any>, attachments?: Attachment[]): Promise<ChatPost> {
         // Get the channel's project ID if it exists
         const channelData = this.storage.channelData[channelId];
         const projectId = channelData?.projectId;
@@ -367,6 +369,9 @@ export class LocalTestClient implements ChatClient {
             this.userId,
             postProps
         );
+        if (attachments) {
+            post.attachments = attachments;
+        }
         await this.pushPost(post);
 
         return post;
