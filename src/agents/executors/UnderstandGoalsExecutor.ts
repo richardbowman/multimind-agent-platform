@@ -91,20 +91,23 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         const response : IntakeQuestionsResponse = await this.modelHelpers.generate({
             message: formattedMessage,
             instructions: new StructuredOutputPrompt(schema,
-                `Generate focused questions to achieve the goal: ${params.goal}
+                `Generate required questions to achieve the goal: ${params.goal}
                 
                 IMPORTANT: 
                 - Review any previous answers carefully to avoid redundant questions
                 - Build upon partial answers to get more specific details
                 - Focus on areas not yet covered or needing clarification
-                - If a topic has been partially addressed, ask follow-up questions for deeper understanding
+                - Create as few questions as possible to succeed at the goal.
+                - If you've already stated you have enough information to proceed, do not create additional questions.
+                - If the user seems frustrated or asks you to move on, do not generate more questions
+
                 Each question should help gather specific information about:
 
                 Also include:
                 1. A concise restatement of the user's goal to confirm understanding
-                2. A friendly followup message to present the questions to the user
+                2. A friendly followup message to present the questions to the user (make sure to include the initial question you want them to answer)
                 
-                Create as few questions as possible to help understand the goals.
+                
                 Keep questions focused and actionable. If you have a good understanding, return no more questions.`)
         });
 
@@ -143,10 +146,11 @@ export class UnderstandGoalsExecutor implements StepExecutor {
 
         return {
             finished: true,
-            needsUserInput: true,
+            needsUserInput: response.intakeQuestions.length>0,
+            allowReplan: response.intakeQuestions.length==0,
             goal: response.goalRestatement, // Add the restated goal to the StepResult
             response: {
-                message: response.followupMessage
+                message: response.followupMessage + (response.intakeQuestions?.length > 0 ? " " + response.intakeQuestions[0].question : "")
             }
         };
     }
