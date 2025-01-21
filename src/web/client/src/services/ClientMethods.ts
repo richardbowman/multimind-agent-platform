@@ -50,14 +50,18 @@ export const useClientMethods = (snackbarContext: SnackbarContextType, contextMe
                 return [...filteredPrev, ...messages].sort((a, b) => a.create_at - b.create_at);
             });
 
-            // Check for artifact references
-            const hasArtifactLinks = messages.some(message =>
-                message.message?.includes('artifact:') ||
+            // Check for artifact references in new messages
+            const hasNewArtifacts = messages.some(message => 
                 message.props?.artifactIds?.length > 0
             );
 
-            // Only refresh artifacts if messages contain artifact references
-            if (hasArtifactLinks && contextMethods.currentChannelId) {
+            // If we have new artifacts and are in the correct channel/thread
+            if (hasNewArtifacts && 
+                contextMethods.currentChannelId &&
+                messages.some(m => m.channel_id === contextMethods.currentChannelId && 
+                                 (m.thread_id === contextMethods.currentThreadId || 
+                                  (!m.thread_id && !contextMethods.currentThreadId)))) {
+                // Refresh artifacts
                 await contextMethods.fetchArtifacts(
                     contextMethods.currentChannelId,
                     contextMethods.currentThreadId
