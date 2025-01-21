@@ -98,8 +98,8 @@ export class UnderstandGoalsExecutor implements StepExecutor {
                 - Build upon partial answers to get more specific details
                 - Focus on areas not yet covered or needing clarification
                 - Create as few questions as possible to succeed at the goal.
-                - If you've already stated you have enough information to proceed, do not create additional questions.
-                - If the user seems frustrated or asks you to move on, do not generate more questions
+                - If you have enough information to proceed, set shouldContinue: true and return no questions
+                - If the user seems frustrated or asks you to move on, set shouldContinue: true
 
                 Each question should help gather specific information about:
 
@@ -144,13 +144,17 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             });
         }
 
+        const shouldContinue = response.shouldContinue || response.intakeQuestions.length === 0;
+        
         return {
             finished: true,
-            needsUserInput: response.intakeQuestions.length>0,
-            allowReplan: response.intakeQuestions.length==0,
-            goal: response.goalRestatement, // Add the restated goal to the StepResult
+            needsUserInput: !shouldContinue && response.intakeQuestions.length > 0,
+            allowReplan: shouldContinue,
+            goal: response.goalRestatement,
             response: {
-                message: response.followupMessage + (response.intakeQuestions?.length > 0 ? " " + response.intakeQuestions[0].question : "")
+                message: response.followupMessage + 
+                    (response.intakeQuestions?.length > 0 ? " " + response.intakeQuestions[0].question : "") +
+                    (shouldContinue ? "\n\nI believe we have enough information to proceed." : "")
             }
         };
     }
