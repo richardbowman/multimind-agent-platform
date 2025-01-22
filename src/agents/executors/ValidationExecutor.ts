@@ -37,9 +37,13 @@ export class ValidationExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = generatedSchemaDef.ValidationResult;
 
-        // Get validation attempt count from latest result
-        const latestResult = params.previousResult?.[params.previousResult.length - 1];
-        const validationAttempts = (latestResult?.metadata?.validationAttempts || 0) + 1;
+        // Get validation attempt count from most recent validation result
+        const validationResults = params.previousResult?.filter(r => 
+            r.metadata?.validationAttempts !== undefined
+        ) || [];
+        
+        const latestValidationAttempt = validationResults[validationResults.length - 1];
+        const validationAttempts = (latestValidationAttempt?.metadata?.validationAttempts || 0) + 1;
         const maxAttempts = 3; // Maximum validation attempts before forcing completion
 
         const systemPrompt = `You are validating whether a proposed solution addresses the original goal. 
