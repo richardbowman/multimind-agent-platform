@@ -93,6 +93,7 @@ The full user manual is available in the [docs/manual](docs/manual) directory:
 - [Introduction](docs/manual/01-introduction.md) - Overview of the platform
 - [Core Concepts](docs/manual/02-core-concepts.md) - Key components and terminology
 - [Getting Started](docs/manual/03-getting-started.md) - Installation and initial setup
+- [Agent Capabilities](docs/manual/04-agent-capabilities.md) - Detailed guide to each agent's features
 
 ## Usage
 
