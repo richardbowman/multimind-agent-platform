@@ -14,17 +14,19 @@ import { ValidationResult } from '../src/schemas/validation';
 import { ModelResponse } from '../src/schemas/ModelResponse';
 
 // Mock the Logger
-jest.mock('../src/helpers/logger', () => ({
-    default: {
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn()
-    }
-}));
+jest.mock('../src/helpers/logger', () => {
+    return {
+        LogManager: jest.fn().mockImplementation(() => ({
+            info: jest.fn(),
+            warn: jest.fn(),
+            error: jest.fn(),
+            debug: jest.fn()
+        }))
+    };
+});
 
-import Logger from '../src/helpers/logger';
-const mockLogger = Logger.default as jest.Mocked<typeof Logger.default>;
+import { LogManager } from '../src/helpers/logger';
+const mockLogger = new LogManager() as jest.Mocked<LogManager>;
 
 describe('ValidationExecutor', () => {
     let executor: ValidationExecutor;
