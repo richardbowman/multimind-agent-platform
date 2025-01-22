@@ -71,23 +71,20 @@ If the solution is wrong, list the specific aspects that must be addressed.`;
         // Force completion if we've reached max validation attempts
         const forceCompletion = validationAttempts >= maxAttempts;
         
-        const result: StepResult & { 
-            missingAspects?: string[];
-            taskProps?: { validationAttempts: number };
-        } = {
+        const result: StepResult = {
             type: 'validation',
             finished: true,
             needsUserInput: params.executionMode === 'conversation' && !response.isComplete && !forceCompletion,
             allowReplan: params.executionMode === 'task' && !response.isComplete && !forceCompletion,
-            missingAspects: response.missingAspects || [],
             response: {
                 message: forceCompletion 
                     ? `Maximum validation attempts reached (${maxAttempts}). Marking as complete despite remaining issues:\n` +
                       `${response.missingAspects?.map(a => `- ${a}`).join('\n')}`
-                    : response.message
-            },
-            taskProps: {
-                validationAttempts
+                    : response.message,
+                metadata: {
+                    validationAttempts,
+                    missingAspects: response.missingAspects || []
+                }
             }
         };
 

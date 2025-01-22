@@ -86,7 +86,7 @@ describe('ValidationExecutor', () => {
             expect(result.finished).toBe(true);
             expect(result.needsUserInput).toBe(false);
             expect(result.response.message).toContain('Validation successful');
-            expect(result.taskProps?.validationAttempts).toBe(1);
+            expect(result.response.metadata?.validationAttempts).toBe(1);
             expect(Logger.info).toHaveBeenCalled();
         });
 
@@ -104,8 +104,8 @@ describe('ValidationExecutor', () => {
             // Assert
             expect(result.finished).toBe(true);
             expect(result.needsUserInput).toBe(true);
-            expect(result.missingAspects).toEqual(['Missing aspect 1', 'Missing aspect 2']);
-            expect(result.taskProps?.validationAttempts).toBe(1);
+            expect(result.response.metadata?.missingAspects).toEqual(['Missing aspect 1', 'Missing aspect 2']);
+            expect(result.response.metadata?.validationAttempts).toBe(1);
             expect(Logger.info).toHaveBeenCalled();
         });
 
@@ -135,7 +135,7 @@ describe('ValidationExecutor', () => {
             expect(result.finished).toBe(true);
             expect(result.needsUserInput).toBe(false);
             expect(result.response.message).toContain('Maximum validation attempts reached');
-            expect(result.taskProps?.validationAttempts).toBe(3);
+            expect(result.response.metadata?.validationAttempts).toBe(3);
             expect(Logger.warn).toHaveBeenCalled();
         });
 
