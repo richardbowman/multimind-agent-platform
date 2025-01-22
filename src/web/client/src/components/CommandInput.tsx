@@ -22,7 +22,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [pendingFiles, setPendingFiles] = useState<File[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { channels, handles, artifacts, allArtifacts } = useWebSocket();
+    const { channels, handles, artifacts, allArtifacts, showFileDialog } = useWebSocket();
     
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {
@@ -228,7 +228,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     }}
                 >
                     <div onClick={async () => {
-                        await contextMethods.showFileDialog();
+                        await showFileDialog();
                     }}>
                     📎</div>
                 </label>
