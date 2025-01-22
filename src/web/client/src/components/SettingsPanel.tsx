@@ -430,6 +430,25 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         required?: boolean;
     }>>);
 
+    // Define the explicit category order with API Keys first
+    const categoryOrder = [
+        'API Keys',
+        'LLM Settings', 
+        'Embeddings',
+        'Search Settings',
+        'Vector DB',
+        'Rate Limiting',
+        'Server Settings',
+        'UI Settings'
+    ];
+
+    // Sort categories according to our defined order
+    const sortedCategories = Object.entries(categories).sort(([a], [b]) => {
+        const aIndex = categoryOrder.indexOf(a);
+        const bIndex = categoryOrder.indexOf(b);
+        return aIndex - bIndex;
+    });
+
     return (
         <Box sx={{
             display: 'flex',
