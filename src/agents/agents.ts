@@ -119,12 +119,12 @@ export abstract class Agent {
         if (this.projects) {
             this.projects.on("taskAssigned", async (event) => {
                 if (event.assignee === this.userId) {
-                    await this.taskNotification(event.task);
+                    await this.taskNotification(event.task, TaskEventType.Assigned);
                 }
             });
             this.projects.on("taskCompleted", async (event) => {
                 if (event.assignee === this.userId) {
-                    await this.taskNotification(event.task);
+                    await this.taskNotification(event.task, TaskEventType.Completed);
                 }
             });
 
@@ -148,7 +148,12 @@ export abstract class Agent {
         this.processTaskQueue();
     }
 
-    protected async taskNotification(task: Task): Promise<void> {
+    export enum TaskEventType {
+        Assigned = "assigned",
+        Completed = "completed"
+    }
+
+    protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {
         await this.processTaskQueue();
     }
 
