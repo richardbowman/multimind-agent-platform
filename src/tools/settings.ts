@@ -400,7 +400,10 @@ export class Settings {
         type: 'select',
         options: ['Auto', 'CPU-only'],
         defaultValue: 'Auto',
-        description: 'Execution mode for Llama.cpp (Auto uses GPU if available, CPU-only forces CPU execution)'
+        description: 'Execution mode for Llama.cpp (Auto uses GPU if available, CPU-only forces CPU execution)',
+        visibleWhen: (settings: Settings) => 
+            settings.providers?.chat === 'llama_cpp' || 
+            settings.providers?.embeddings === 'llama_cpp'
     })
     llama_cpp_execution_mode: string = 'Auto';    
 
