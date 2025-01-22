@@ -21,6 +21,7 @@ interface LogViewerProps {
 }
 
 export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType }) => {
+    const pageSize = 50;
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system'>(initialLogType);
     const { logs, fetchLogs } = useWebSocket();
     const logger = useLogger();
@@ -80,7 +81,6 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
 
     const [loadedLogs, setLoadedLogs] = useState<any[]>([]);
     const [hasMore, setHasMore] = useState(true);
-    const pageSize = 50;
 
     const loadMoreLogs = useCallback(async () => {
         try {
