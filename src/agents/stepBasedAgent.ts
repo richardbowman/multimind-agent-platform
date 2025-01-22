@@ -293,7 +293,16 @@ export abstract class StepBasedAgent extends Agent {
                 projectName: `Task: ${task.description}`,
                 tasks: [],
                 metadata: {
-                    parentTaskId: task.id
+                    parentTaskId: task.id,
+                    parentProjectId: task.projectId
+                }
+            });
+
+            // Update parent task with child project reference
+            await this.projects.updateTask(task.id, {
+                props: {
+                    ...task.props,
+                    childProjectId: projectId
                 }
             });
 
@@ -309,6 +318,14 @@ export abstract class StepBasedAgent extends Agent {
                     projects: [parentProject]
                 }
             });
+
+            // Update parent project with child project reference
+            if (parentProject.metadata.childProjects) {
+                parentProject.metadata.childProjects.push(projectId);
+            } else {
+                parentProject.metadata.childProjects = [projectId];
+            }
+            await this.projects.replaceProject(parentProject);
 
         } catch (error) {
             Logger.error(`Error processing task ${task.id}`, error);
