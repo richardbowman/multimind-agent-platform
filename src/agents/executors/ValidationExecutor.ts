@@ -37,6 +37,10 @@ export class ValidationExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = generatedSchemaDef.ValidationResult;
 
+        // Get validation attempt count from task props
+        const validationAttempts = (params.context?.task?.props?.validationAttempts || 0) + 1;
+        const maxAttempts = 3; // Maximum validation attempts before forcing completion
+
         const systemPrompt = `You are validating whether a proposed solution addresses the original goal. 
 Analyze the previous steps and their results to determine if a reasonable effort has been made.
 
@@ -45,7 +49,11 @@ Original Goal: ${params.goal}
 Previous Results:
 ${params.previousResult?.map((r, i) => `Step ${i + 1}: ${r.message}`).join('\n\n') || 'No previous results'}
 
-Evaluate whether the solution addresses the original goal, and the reasoning is sound and well-supported.
+Evaluation Guidelines:
+1. Consider if the solution makes reasonable progress toward the goal
+2. Allow for iterative improvement rather than demanding perfection
+3. Focus on critical issues rather than minor imperfections
+4. If this is attempt ${validationAttempts} of ${maxAttempts}, be more lenient in validation
 
 If the solution is wrong, list the specific aspects that must be addressed.`;
 
@@ -60,15 +68,26 @@ If the solution is wrong, list the specific aspects that must be addressed.`;
             context: params.context
         });
 
+        // Force completion if we've reached max validation attempts
+        const forceCompletion = validationAttempts >= maxAttempts;
+        
         const result: StepResult = {
             type: 'validation',
             finished: true,
-            // Only request user input in conversation mode
-            needsUserInput: params.executionMode === 'conversation' && !response.isComplete,
-            allowReplan: params.executionMode === 'task' && !response.isComplete,
+            // Only request user input in conversation mode and if not forcing completion
+            needsUserInput: params.executionMode === 'conversation' && !response.isComplete && !forceCompletion,
+            // Allow replan only if not forcing completion
+            allowReplan: params.executionMode === 'task' && !response.isComplete && !forceCompletion,
             missingAspects: response.missingAspects || [],
             response: {
-                message: response.message
+                message: forceCompletion 
+                    ? `Maximum validation attempts reached (${maxAttempts}). Marking as complete despite remaining issues:\n` +
+                      `${response.missingAspects?.map(a => `- ${a}`).join('\n')}`
+                    : response.message
+            },
+            // Store validation attempt count in task props
+            taskProps: {
+                validationAttempts
             }
         };
 
