@@ -95,6 +95,7 @@ The full user manual is available in the [docs/manual](docs/manual) directory:
 - [Getting Started](docs/manual/03-getting-started.md) - Installation and initial setup
 - [Agent Capabilities](docs/manual/04-agent-capabilities.md) - Detailed guide to each agent's features
 - [Chat Usage](docs/manual/05-chat-usage.md) - How to effectively communicate with agents
+- [Artifacts](docs/manual/06-artifacts.md) - Managing generated content and outputs
 
 ## Usage
 
