@@ -329,7 +329,8 @@ export class Settings {
         label: 'LM Studio Base URL',
         category: 'LLM Settings',
         type: 'string',
-        defaultValue: 'ws://localhost:1234'
+        defaultValue: 'ws://localhost:1234',
+        visibleWhen: (settings: Settings) => settings.providers.chat === 'lmstudio'
     })
     lmStudioBaseUrl: string = 'ws://localhost:1234';
 
