@@ -53,6 +53,8 @@ export interface DataContextMethods {
   deleteChannel: (channelId: string) => Promise<void>;
   setTasks: React.Dispatch<React.SetStateAction<ClientTask[]>>;
   markTaskComplete: (taskId: string, complete: boolean) => Promise<void>;
+  setPendingFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  showFileDialog: () => Promise<void>;
 }
 
 export const DataProvider: React.FC<{ 
@@ -326,6 +328,10 @@ export const DataProvider: React.FC<{
       setTasks(prev => prev.map(t =>
         t.id === updatedTask.id ? updatedTask : t
       ));
+    },
+    setPendingFiles: setPendingFiles,
+    showFileDialog: async () => {
+      await ipcService.getRPC().showFileDialog();
     }
   } as DataContextMethods), [
     messages,

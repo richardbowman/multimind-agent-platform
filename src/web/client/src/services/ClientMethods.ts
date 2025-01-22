@@ -5,11 +5,16 @@ import { useMemo } from 'react';
 import { SnackbarContextType } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { ClientMethods } from '../../../../shared/RPCInterface';
+import { FileWithPath } from 'react-dropzone';
 
 export const useClientMethods = (snackbarContext: SnackbarContextType, contextMethods: DataContextMethods) => {
     return {
         onClientLogProcessed: async (success, message) => {
             return
+        },
+
+        onFilesSelected: async (files: FileWithPath[]) => {
+            contextMethods.setPendingFiles(files);
         },
 
         onMessage: async (messages: ClientMessage[]) => {

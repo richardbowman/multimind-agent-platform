@@ -227,19 +227,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         justifyContent: 'center'
                     }}
                 >
-                    <input
-                        id="file-upload"
-                        type="file"
-                        accept="image/*"
-                        multiple
-                        style={{ display: 'none' }}
-                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
-                            if (e.target.files) {
-                                const files = Array.from(e.target.files);
-                                setPendingFiles(prev => [...prev, ...files]);
-                            }
-                        }}
-                    />
+                    <div onClick={async () => {
+                        await contextMethods.showFileDialog();
+                    }}>
                     📎
                 </label>
                 <textarea
