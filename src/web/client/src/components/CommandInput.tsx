@@ -1,4 +1,4 @@
-import React, { useState, KeyboardEvent, useEffect, useRef } from 'react';
+import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
 
 interface CommandInputProps {
@@ -19,6 +19,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [suggestions, setSuggestions] = useState<Array<{title: string, type: string, id: string}>>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [pendingArtifacts, setPendingArtifacts] = useState<string[]>([]);
+    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { channels, handles, artifacts, allArtifacts } = useWebSocket();
@@ -147,8 +148,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
             }
 
             // Regular message - send with any pending artifact IDs
-            onSendMessage(input.trim(), pendingArtifacts.map(a => a.id));
+            onSendMessage(input.trim(), pendingArtifacts.map(a => a.id), pendingFiles);
             setPendingArtifacts([]);
+            setPendingFiles([]);
             setInput('');
             setShowSuggestions(false);
             // Reset textarea height
@@ -212,14 +214,44 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
 
     return (
         <div className="command-input">
-            <textarea
+            <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <label 
+                    htmlFor="file-upload"
+                    style={{
+                        cursor: 'pointer',
+                        padding: '8px',
+                        borderRadius: '4px',
+                        backgroundColor: '#444',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center'
+                    }}
+                >
+                    <input
+                        id="file-upload"
+                        type="file"
+                        accept="image/*"
+                        multiple
+                        style={{ display: 'none' }}
+                        onChange={(e: ChangeEvent<HTMLInputElement>) => {
+                            if (e.target.files) {
+                                const files = Array.from(e.target.files);
+                                setPendingFiles(prev => [...prev, ...files]);
+                            }
+                        }}
+                    />
+                    📎
+                </label>
+                <textarea
                 ref={inputRef}
                 value={input}
                 onChange={handleInputChange}
                 onKeyDown={handleKeyPress}
-                placeholder={pendingArtifacts.length > 0 
-                    ? `Artifacts ready to attach (${pendingArtifacts.length})... Type your message` 
-                    : "Type a message... (Use / for commands, @ for mentions)"}
+                placeholder={
+                    pendingArtifacts.length > 0 || pendingFiles.length > 0
+                        ? `Attachments ready (${pendingArtifacts.length} artifacts, ${pendingFiles.length} images)... Type your message`
+                        : "Type a message... (Use / for commands, @ for mentions)"
+                }
                 rows={1}
                 style={{
                     width: '100%',
@@ -275,6 +307,64 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                             <div style={{ fontWeight: 'bold' }}>{suggest.title}</div>
                             <div style={{ fontSize: '0.9em', color: '#aaa' }}>Type: {suggest.type}</div>
                             <div style={{ fontSize: '0.8em', color: '#888' }}>ID: {suggest.id}</div>
+                        </div>
+                    ))}
+                </div>
+            )}
+            </div>
+            {pendingFiles.length > 0 && (
+                <div style={{ 
+                    display: 'flex', 
+                    gap: '8px', 
+                    marginTop: '8px',
+                    overflowX: 'auto',
+                    padding: '8px 0'
+                }}>
+                    {pendingFiles.map((file, index) => (
+                        <div 
+                            key={index}
+                            style={{
+                                position: 'relative',
+                                width: '100px',
+                                height: '100px',
+                                borderRadius: '4px',
+                                overflow: 'hidden',
+                                flexShrink: 0
+                            }}
+                        >
+                            <img
+                                src={URL.createObjectURL(file)}
+                                alt={file.name}
+                                style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: 'cover'
+                                }}
+                            />
+                            <button
+                                onClick={() => {
+                                    setPendingFiles(prev => 
+                                        prev.filter((_, i) => i !== index)
+                                    );
+                                }}
+                                style={{
+                                    position: 'absolute',
+                                    top: '4px',
+                                    right: '4px',
+                                    background: 'rgba(0,0,0,0.7)',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '20px',
+                                    height: '20px',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                ×
+                            </button>
                         </div>
                     ))}
                 </div>

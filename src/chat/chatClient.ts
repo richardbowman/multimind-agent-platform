@@ -87,6 +87,7 @@ export interface Message {
     message: string;
     props?: ConversationContext;
     attachments?: Attachment[];
+    files?: File[];
 }
 
 export interface ChatPost extends Message {
