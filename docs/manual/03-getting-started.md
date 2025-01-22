@@ -22,16 +22,13 @@ npm start
 ```
 
 ## Initial Configuration
-Set up your `.env` file with required values:
-```env
-CHROMA_COLLECTION=webpage_scrapes
-MAX_SEARCHES=1
-MAX_FOLLOWS=0
-MAX_RESEARCH_REQUESTS=1
-EMBEDDING_MODEL=text-embedding-nomic-embed-text-v1.5
-CHAT_MODEL=qwen2.5-coder-14b-instruct
-CONTEXT_SIZE=16384
-```
+1. Open the Settings panel from the main interface
+2. Configure required settings:
+   - Select your LLM provider (e.g. LM Studio, OpenAI, Bedrock)
+   - Set up API keys if using cloud providers
+   - Configure vector database settings
+   - Adjust search and research limits
+3. Save settings - they will persist across sessions
 
 ## First Steps
 1. Start a new conversation with `/new`

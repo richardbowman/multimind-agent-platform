@@ -56,19 +56,16 @@ A sophisticated platform that combines web scraping, AI-powered research, and co
 - ChromaDB instance
 - Access to LLM API (supports multiple models)
 
-### Environment Configuration
+### Initial Configuration
 
-Create a `.env` file based on `env.defaults`:
-
-```env
-CHROMA_COLLECTION=webpage_scrapes
-MAX_SEARCHES=1
-MAX_FOLLOWS=0
-MAX_RESEARCH_REQUESTS=1
-EMBEDDING_MODEL=text-embedding-nomic-embed-text-v1.5
-CHAT_MODEL=qwen2.5-coder-14b-instruct
-CONTEXT_SIZE=16384
-```
+1. Start the application
+2. Open the Settings panel
+3. Configure your preferred:
+   - LLM provider and model
+   - Vector database settings
+   - Search and research limits
+   - API keys for cloud services
+4. Save settings - they will persist across sessions
 
 ### Installation
 

@@ -16,9 +16,10 @@ The AI Research Assistant is a sophisticated platform that combines:
 
 ## System Requirements
 - Node.js 18+
-- ChromaDB or Vectra vector database
-- Supported LLM provider (OpenAI, Bedrock, etc)
+- ChromaDB or Vectra vector database (optional)
+- Supported LLM provider (LM Studio, OpenAI, Bedrock, etc)
 - Mattermost server (optional for chat interface)
+- Settings configured through the Settings panel
 
 ## Getting Help
 For support, contact [your support email] or visit [your support site]
