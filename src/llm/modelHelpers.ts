@@ -178,8 +178,10 @@ export class PromptBuilder {
 export class ModelHelpers {
     private stepSequences: StepSequence[] = [];
     private promptRegistry: PromptRegistry = new PromptRegistry();
-    private promptBuilder: PromptBuilder = new PromptBuilder(this.promptRegistry);
 
+    createPrompt() {
+        return new PromptBuilder(this.promptRegistry);
+    }
     getPurpose() {
         return this.purpose;
     }
