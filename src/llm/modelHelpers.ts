@@ -79,7 +79,8 @@ export enum ContentType {
     CODE = 'code',
     DOCUMENTS = 'documents',
     TASKS = 'tasks',
-    GOALS = 'goals'
+    GOALS = 'goals',
+    STEP_RESULTS = 'step_results'
 }
 
 export interface ContentRenderer<T> {
@@ -93,6 +94,46 @@ export class PromptRegistry {
         // Register default renderers
         this.registerRenderer(ContentType.ARTIFACTS, this.renderArtifacts);
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation);
+        this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults);
+        
+        // Register type-specific step result renderers
+        this.registerStepResultRenderer(StepResultType.Validation, this.renderValidationStep);
+        this.registerStepResultRenderer(StepResultType.Question, this.renderQuestionStep);
+        // Add more type-specific renderers as needed
+    }
+
+    private stepResultRenderers = new Map<StepResultType, ContentRenderer<StepResult>>();
+
+    registerStepResultRenderer(type: StepResultType, renderer: ContentRenderer<StepResult>): void {
+        this.stepResultRenderers.set(type, renderer);
+    }
+
+    private renderStepResults(steps: StepResult[]): string {
+        if (!steps || steps.length === 0) return '';
+        
+        return "📝 Step History:\n\n" + steps.map((step, index) => {
+            const typeRenderer = this.stepResultRenderers.get(step.type);
+            if (typeRenderer) {
+                return typeRenderer(step);
+            }
+            // Default renderer for unknown types
+            return `Step ${index + 1} (${step.type}):\n${step.response.message}`;
+        }).join('\n\n');
+    }
+
+    private renderValidationStep(step: StepResult): string {
+        const metadata = step.response.metadata;
+        return `🔍 Validation Step:\n` +
+            `- Status: ${step.finished ? 'Complete' : 'In Progress'}\n` +
+            `- Attempts: ${metadata?.validationAttempts || 1}\n` +
+            `- Missing Aspects: ${metadata?.missingAspects?.join(', ') || 'None'}\n` +
+            `- Result: ${step.response.message}`;
+    }
+
+    private renderQuestionStep(step: StepResult): string {
+        return `❓ Question Step:\n` +
+            `- Question: ${step.response.message}\n` +
+            `- Status: ${step.finished ? 'Answered' : 'Pending'}`;
     }
 
     registerRenderer<T>(contentType: ContentType, renderer: ContentRenderer<T>): void {

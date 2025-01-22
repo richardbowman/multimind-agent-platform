@@ -57,14 +57,8 @@ Analyze the previous steps and their results to determine if a reasonable effort
         promptBuilder.addContext(`Original Goal: ${params.goal}`);
 
         // Add previous results if available
-        if (params.previousResult && params.previousResult.length > 0) {
-            promptBuilder.addContent(ContentType.CONVERSATION, {
-                title: 'Previous Results',
-                items: params.previousResult.map((r, i) => ({
-                    step: i + 1,
-                    message: r.message
-                }))
-            });
+        if (params.steps && params.steps.length > 0) {
+            promptBuilder.addContent(ContentType.STEP_RESULTS, params.steps);
         }
 
         // Add evaluation guidelines
