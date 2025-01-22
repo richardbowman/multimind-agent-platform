@@ -20,31 +20,92 @@ export class ComplexProjectExecutor implements StepExecutor {
         this.taskManager = params.taskManager!;
     }
 
+    private formatMessage(goal: string, artifacts?: Artifact[]): string {
+        let message = `Project Goal: ${goal}\n\n`;
+
+        // Include relevant artifacts if available
+        if (artifacts && artifacts.length > 0) {
+            message += "📋 Relevant Artifacts:\n";
+            artifacts.forEach((artifact, index) => {
+                message += `${index + 1}. ${artifact.type}: ${artifact.content.toString().slice(0, 200)}...\n`;
+            });
+            message += '\n';
+        }
+
+        return message;
+    }
+
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const structuredPrompt = new StructuredOutputPrompt(
-            {
-                type: 'object',
-                properties: {
-                    projectName: { type: 'string' },
-                    projectGoal: { type: 'string' },
-                    researchTask: { type: 'string' },
-                    contentTask: { type: 'string' },
-                    responseMessage: { type: 'string' }
+        const schema = {
+            type: 'object',
+            properties: {
+                projectName: { type: 'string' },
+                projectGoal: { type: 'string' },
+                researchTask: { type: 'string' },
+                contentTask: { type: 'string' },
+                responseMessage: { type: 'string' },
+                dependencies: {
+                    type: 'array',
+                    items: {
+                        type: 'string'
+                    }
+                },
+                risks: {
+                    type: 'array',
+                    items: {
+                        type: 'string'
+                    }
                 }
-            },
-            `Create a new project with multiple tasks for both research and content teams based on this goal. Make sure the tasks are
-            thoroughly described, independent, and complete.`
+            }
+        };
+
+        const formattedMessage = this.formatMessage(params.goal, params.context?.artifacts);
+
+        const structuredPrompt = new StructuredOutputPrompt(
+            schema,
+            `Create a comprehensive project plan with multiple tasks for both research and content teams based on this goal. 
+            Consider these guidelines:
+
+            1. Project Structure:
+            - Create a clear, descriptive project name
+            - Define measurable success criteria
+            - Break down into independent but complementary tasks
+            - Identify task dependencies and sequencing
+
+            2. Research Requirements:
+            - Specify required data sources
+            - Define analysis methods
+            - Include validation steps
+            - Set clear deliverables
+
+            3. Content Requirements:
+            - Define target audience
+            - Specify content format
+            - Include review/approval steps
+            - Set publishing requirements
+
+            4. Risk Management:
+            - Identify potential risks
+            - Suggest mitigation strategies
+            - Include contingency planning
+
+            Output should include:
+            - A clear project name and goal
+            - Detailed research and content tasks
+            - Any identified dependencies
+            - Potential risks
+            - A friendly response message to present the plan`
         );
 
         try {
             const responseJSON = await this.modelHelpers.generate({
-                message: params.message || params.stepGoal,
+                message: formattedMessage,
                 instructions: structuredPrompt
             });
 
-            const { projectName, projectGoal, researchTask, contentTask, responseMessage } = responseJSON;
+            const { projectName, projectGoal, researchTask, contentTask, responseMessage, dependencies, risks } = responseJSON;
 
-            // Create the project first
+            // Create the project with enhanced metadata
             const project = await this.taskManager.createProject({
                 name: projectName,
                 metadata: {
@@ -52,7 +113,10 @@ export class ComplexProjectExecutor implements StepExecutor {
                     status: 'active',
                     createdAt: new Date(),
                     updatedAt: new Date(),
-                    parentTaskId: params.stepId
+                    parentTaskId: params.stepId,
+                    dependencies: dependencies || [],
+                    risks: risks || [],
+                    artifacts: params.context?.artifacts?.map(a => a.id) || []
                 }
             });
 
