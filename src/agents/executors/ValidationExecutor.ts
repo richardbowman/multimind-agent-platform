@@ -46,30 +46,45 @@ export class ValidationExecutor implements StepExecutor {
         const validationAttempts = (latestValidationAttempt?.metadata?.validationAttempts || 0) + 1;
         const maxAttempts = 3; // Maximum validation attempts before forcing completion
 
-        const systemPrompt = `You are validating whether a proposed solution addresses the original goal. 
-Analyze the previous steps and their results to determine if a reasonable effort has been made.
+        // Create a new prompt builder
+        const promptBuilder = this.modelHelpers.promptBuilder;
 
-Original Goal: ${params.goal}
+        // Add core validation instructions
+        promptBuilder.addInstruction(`You are validating whether a proposed solution addresses the original goal. 
+Analyze the previous steps and their results to determine if a reasonable effort has been made.`);
 
-Previous Results:
-${params.previousResult?.map((r, i) => `Step ${i + 1}: ${r.message}`).join('\n\n') || 'No previous results'}
+        // Add goal context
+        promptBuilder.addContext(`Original Goal: ${params.goal}`);
 
-Evaluation Guidelines:
+        // Add previous results if available
+        if (params.previousResult && params.previousResult.length > 0) {
+            promptBuilder.addContent(ContentType.CONVERSATION, {
+                title: 'Previous Results',
+                items: params.previousResult.map((r, i) => ({
+                    step: i + 1,
+                    message: r.message
+                }))
+            });
+        }
+
+        // Add evaluation guidelines
+        promptBuilder.addInstruction(`Evaluation Guidelines:
 1. Consider if the solution makes reasonable progress toward the goal
 2. Allow for iterative improvement rather than demanding perfection
 3. Focus on critical issues rather than minor imperfections
 4. If this is attempt ${validationAttempts} of ${maxAttempts}, be more lenient in validation
 
-If the solution is wrong, list the specific aspects that must be addressed.`;
+If the solution is wrong, list the specific aspects that must be addressed.`);
 
-        // Adjust validation strictness based on execution mode
-        const validationPrompt = params.executionMode === 'task' 
-            ? `${systemPrompt}\n\nNote: This is running in task mode - be more lenient with validation since we can't request user input.`
-            : systemPrompt;
+        // Add execution mode context
+        if (params.executionMode === 'task') {
+            promptBuilder.addContext('Note: This is running in task mode - be more lenient with validation since we can\'t request user input.');
+        }
 
+        // Generate the validation response
         const response = await this.modelHelpers.generate<ValidationResult>({
             message: "Validate solution completeness",
-            instructions: new StructuredOutputPrompt(schema, validationPrompt)
+            instructions: new StructuredOutputPrompt(schema, promptBuilder.build())
         });
 
         // Force completion if we've reached max validation attempts
