@@ -65,7 +65,9 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         if (!filterText) return text;
         
         const sanitizedText = DOMPurify.sanitize(text);
-        const regex = new RegExp(`(${filterText})`, 'gi');
+        // Escape special regex characters in filterText
+        const escapedFilter = filterText.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        const regex = new RegExp(`(${escapedFilter})`, 'gi');
         return sanitizedText.replace(regex, '<mark>$1</mark>');
     };
 
