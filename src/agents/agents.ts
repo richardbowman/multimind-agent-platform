@@ -144,7 +144,9 @@ export abstract class Agent {
         }
     }
 
-    public abstract initialize?(): Promise<void>;
+    public async initialize(): Promise<void> {
+        this.processTaskQueue();
+    }
 
     protected async taskNotification(task: Task): Promise<void> {
         await this.processTaskQueue();
