@@ -72,27 +72,37 @@ export class StepSequence {
     }
 }
 
+export enum ContentType {
+    ARTIFACTS = 'artifacts',
+    CONVERSATION = 'conversation',
+    SEARCH_RESULTS = 'search_results',
+    CODE = 'code',
+    DOCUMENTS = 'documents',
+    TASKS = 'tasks',
+    GOALS = 'goals'
+}
+
 export interface ContentRenderer<T> {
     (content: T): string;
 }
 
 export class PromptBuilder {
-    private contentRenderers: Map<string, ContentRenderer<any>> = new Map();
-    private contentSections: Map<string, any> = new Map();
+    private contentRenderers: Map<ContentType, ContentRenderer<any>> = new Map();
+    private contentSections: Map<ContentType, any> = new Map();
     private instructions: string[] = [];
     private context: string[] = [];
 
     constructor() {
         // Register default renderers
-        this.registerRenderer('artifacts', this.renderArtifacts);
-        this.registerRenderer('conversation', this.renderConversation);
+        this.registerRenderer(ContentType.ARTIFACTS, this.renderArtifacts);
+        this.registerRenderer(ContentType.CONVERSATION, this.renderConversation);
     }
 
-    registerRenderer<T>(contentType: string, renderer: ContentRenderer<T>): void {
+    registerRenderer<T>(contentType: ContentType, renderer: ContentRenderer<T>): void {
         this.contentRenderers.set(contentType, renderer);
     }
 
-    addContent<T>(contentType: string, content: T): void {
+    addContent<T>(contentType: ContentType, content: T): void {
         this.contentSections.set(contentType, content);
     }
 
@@ -419,12 +429,12 @@ export class ModelHelpers {
 
         // Add any artifacts
         if (params.artifacts) {
-            this.promptBuilder.addContent('artifacts', params.artifacts);
+            this.promptBuilder.addContent(ContentType.ARTIFACTS, params.artifacts);
         }
 
         // Add conversation context if available
         if (params.threadPosts) {
-            this.promptBuilder.addContent('conversation', params.threadPosts);
+            this.promptBuilder.addContent(ContentType.CONVERSATION, params.threadPosts);
         }
 
         // Add main instructions
