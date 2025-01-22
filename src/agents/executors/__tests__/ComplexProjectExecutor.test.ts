@@ -4,7 +4,7 @@ import { ExecuteParams } from '../../interfaces/ExecuteParams';
 import { StepResult } from '../../interfaces/StepResult';
 import { TaskManager } from '../../../tools/taskManager';
 import { TaskType } from '../../../tools/taskManager';
-import { createUUID } from '../../../types/uuid';
+import { UUID, createUUID } from '../../../types/uuid';
 
 describe('ComplexProjectExecutor', () => {
     let executor: ComplexProjectExecutor;
@@ -72,7 +72,7 @@ describe('ComplexProjectExecutor', () => {
 
         mockModelHelpers.generate.mockResolvedValue(mockResponse);
         mockTaskManager.createProject.mockResolvedValue({
-            id: 'new-project',
+            id: createUUID(),
             name: 'Test Project',
             metadata: {
                 createdAt: new Date(),
@@ -111,7 +111,7 @@ describe('ComplexProjectExecutor', () => {
 
         mockModelHelpers.generate.mockResolvedValue(mockResponse);
         mockTaskManager.createProject.mockResolvedValue({
-            id: 'new-project',
+            id: createUUID(),
             name: 'Test Project',
             metadata: {
                 createdAt: new Date(),
