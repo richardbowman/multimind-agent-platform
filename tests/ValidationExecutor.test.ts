@@ -15,14 +15,16 @@ import { ModelResponse } from '../src/schemas/ModelResponse';
 
 // Mock the Logger
 jest.mock('../src/helpers/logger', () => ({
-    info: jest.fn(),
-    warn: jest.fn(),
-    error: jest.fn(),
-    debug: jest.fn()
+    default: {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn()
+    }
 }));
 
 import Logger from '../src/helpers/logger';
-const mockLogger = Logger as jest.Mocked<typeof Logger>;
+const mockLogger = Logger.default as jest.Mocked<typeof Logger.default>;
 
 describe('ValidationExecutor', () => {
     let executor: ValidationExecutor;
@@ -93,7 +95,10 @@ describe('ValidationExecutor', () => {
             expect(result.response.message).toContain('Validation successful');
             expect(result.response.metadata.validationAttempts).toBe(1);
             expect(result.response.metadata.missingAspects).toEqual([]);
-            // expect(Logger.info).toHaveBeenCalled();
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                'Validation completed successfully',
+                expect.any(Object)
+            );
         });
 
         it('should request user input when validation fails in conversation mode', async () => {
@@ -112,7 +117,10 @@ describe('ValidationExecutor', () => {
             expect(result.needsUserInput).toBe(true);
             expect(result.response.metadata.missingAspects).toEqual(['Missing aspect 1', 'Missing aspect 2']);
             expect(result.response.metadata.validationAttempts).toBe(1);
-            expect(Logger.info).toHaveBeenCalled();
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                'Validation completed with missing aspects',
+                expect.any(Object)
+            );
         });
 
         it('should force completion after max validation attempts', async () => {
@@ -141,7 +149,10 @@ describe('ValidationExecutor', () => {
             expect(result.needsUserInput).toBe(false);
             expect(result.response.message).toContain('Maximum validation attempts reached');
             expect(result.response.metadata?.validationAttempts).toBe(3);
-            expect(Logger.warn).toHaveBeenCalled();
+            expect(mockLogger.warn).toHaveBeenCalledWith(
+                'Maximum validation attempts reached',
+                expect.any(Object)
+            );
         });
 
         it('should handle task mode validation failures gracefully', async () => {
@@ -163,7 +174,10 @@ describe('ValidationExecutor', () => {
             expect(result.needsUserInput).toBe(false);
             expect(result.response.message).toContain('Validation completed in task mode');
             expect(result.allowReplan).toBe(true);
-            expect(Logger.info).toHaveBeenCalled();
+            expect(mockLogger.info).toHaveBeenCalledWith(
+                'Validation completed in task mode',
+                expect.any(Object)
+            );
         });
 
         it('should include relevant artifacts in validation context', async () => {
@@ -205,7 +219,7 @@ describe('ValidationExecutor', () => {
             // Assert
             expect(result.finished).toBe(true);
             expect(result.response.message).toContain('Validation completed');
-            expect(Logger.error).toHaveBeenCalledWith(
+            expect(mockLogger.error).toHaveBeenCalledWith(
                 'Error in ValidationExecutor:',
                 expect.any(Error)
             );
