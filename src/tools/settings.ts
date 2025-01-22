@@ -330,7 +330,7 @@ export class Settings {
         category: 'LLM Settings',
         type: 'string',
         defaultValue: 'ws://localhost:1234',
-        visibleWhen: (settings: Settings) => settings.providers.chat === 'lmstudio'
+        visibleWhen: (settings: Settings) => settings.providers?.chat === 'lmstudio'
     })
     lmStudioBaseUrl: string = 'ws://localhost:1234';
 
