@@ -14,22 +14,21 @@ import { ValidationResult } from '../src/schemas/validation';
 import { ModelResponse } from '../src/schemas/ModelResponse';
 
 // Mock the Logger
-jest.mock('../src/helpers/logger', () => ({
-    LogManager: jest.fn().mockImplementation(() => ({
+jest.mock('../src/helpers/logger', () => {
+    const mockLogger = {
         info: jest.fn(),
         warn: jest.fn(),
         error: jest.fn(),
-        debug: jest.fn()
-    })),
-    default: {
-        info: jest.fn(),
-        warn: jest.fn(),
-        error: jest.fn(),
-        debug: jest.fn()
-    }
-}));
+        debug: jest.fn(),
+        log: jest.fn()
+    };
+    return {
+        LogManager: jest.fn(() => mockLogger),
+        default: mockLogger
+    };
+});
 
-import Logger, { LogManager } from '../src/helpers/logger';
+import Logger from '../src/helpers/logger';
 const mockLogger = Logger as jest.Mocked<typeof Logger>;
 
 describe('ValidationExecutor', () => {
@@ -99,8 +98,8 @@ describe('ValidationExecutor', () => {
             expect(result.finished).toBe(true);
             expect(result.needsUserInput).toBe(false);
             expect(result.response.message).toContain('Validation successful');
-            expect(result.response.metadata.validationAttempts).toBe(1);
-            expect(result.response.metadata.missingAspects).toEqual([]);
+            expect(result.response.metadata?.validationAttempts).toBe(1);
+            expect(result.response.metadata?.missingAspects).toEqual([]);
             expect(mockLogger.info).toHaveBeenCalledWith(
                 'Validation completed successfully'
             );
@@ -120,8 +119,8 @@ describe('ValidationExecutor', () => {
             // Assert
             expect(result.finished).toBe(true);
             expect(result.needsUserInput).toBe(true);
-            expect(result.response.metadata.missingAspects).toEqual(['Missing aspect 1', 'Missing aspect 2']);
-            expect(result.response.metadata.validationAttempts).toBe(1);
+            expect(result.response.metadata?.missingAspects).toEqual(['Missing aspect 1', 'Missing aspect 2']);
+            expect(result.response.metadata?.validationAttempts).toBe(1);
             expect(mockLogger.info).toHaveBeenCalledWith(
                 'Validation completed with missing aspects'
             );
