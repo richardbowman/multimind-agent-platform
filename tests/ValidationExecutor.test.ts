@@ -39,7 +39,14 @@ describe('ValidationExecutor', () => {
 
         executor = new ValidationExecutor({
             modelHelpers: mockModelHelpers,
-            taskManager: mockTaskManager
+            taskManager: mockTaskManager,
+            vectorDB: {} as IVectorDatabase,
+            llmService: {} as ILLMService,
+            artifactManager: {} as ArtifactManager,
+            settings: {} as Settings,
+            chatClient: {} as ChatClient,
+            config: {},
+            modelHelpers: mockModelHelpers
         });
 
         // Clear all mocks before each test
@@ -53,7 +60,11 @@ describe('ValidationExecutor', () => {
             step: 'validation',
             stepId: createUUID(),
             projectId: createUUID(),
-            executionMode: 'conversation'
+            executionMode: 'conversation',
+            steps: [],
+            context: {
+                threadPosts: []
+            }
         };
 
         it('should validate successfully on first attempt', async () => {
