@@ -87,6 +87,7 @@ export const DataProvider: React.FC<{
   const [tasks, setTasks] = useState<ClientTask[]>([]);
   const [artifacts, setArtifacts] = useState<any[]>([]);
   const [allArtifacts, setAllArtifacts] = useState<any[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
   const [logs, setLogs] = useState<{
     llm: Record<string, LLMLogEntry[]>;
     system: {
@@ -329,7 +330,7 @@ export const DataProvider: React.FC<{
         t.id === updatedTask.id ? updatedTask : t
       ));
     },
-    setPendingFiles: setPendingFiles,
+    setPendingFiles,
     showFileDialog: async () => {
       await ipcService.getRPC().showFileDialog();
     }
