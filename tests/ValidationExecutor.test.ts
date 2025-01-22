@@ -48,7 +48,26 @@ describe('ValidationExecutor', () => {
             vectorDB: {} as IVectorDatabase,
             llmService: {} as ILLMService,
             artifactManager: {} as ArtifactManager,
-            settings: {} as Settings,
+            settings: {
+                providers: new ProvidersConfig(),
+                searchProvider: 'duckduckgo',
+                scrapingProvider: 'playwright',
+                searxngUrl: '',
+                searchSettings: new SearchSettings(),
+                scrapingSettings: new ScrapingSettings(),
+                llmSettings: new LLMSettings(),
+                embeddingSettings: new EmbeddingSettings(),
+                rateLimitingSettings: new RateLimitingSettings(),
+                apiKeys: new APIKeys(),
+                loggingSettings: new LoggingSettings(),
+                uiSettings: new UISettings(),
+                notificationSettings: new NotificationSettings(),
+                storageSettings: new StorageSettings(),
+                securitySettings: new SecuritySettings(),
+                experimentalSettings: new ExperimentalSettings(),
+                version: '1.0.0',
+                lastUpdated: new Date().toISOString()
+            } as Settings,
             chatClient: {} as ChatClient,
             config: {}
         });
@@ -117,9 +136,10 @@ describe('ValidationExecutor', () => {
                 missingAspects: ['Missing aspect']
             });
 
-            const paramsWithAttempts = {
+            const paramsWithAttempts: ExecuteParams = {
                 ...baseParams,
                 context: {
+                    ...baseParams.context,
                     task: {
                         props: {
                             validationAttempts: 2 // Already had 2 attempts
