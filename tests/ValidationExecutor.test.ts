@@ -87,6 +87,7 @@ describe('ValidationExecutor', () => {
             expect(result.needsUserInput).toBe(false);
             expect(result.response.message).toContain('Validation successful');
             expect(result.response.metadata?.validationAttempts).toBe(1);
+            expect(result.response.metadata?.missingAspects).toEqual([]);
             expect(Logger.info).toHaveBeenCalled();
         });
 
@@ -106,6 +107,7 @@ describe('ValidationExecutor', () => {
             expect(result.needsUserInput).toBe(true);
             expect(result.response.metadata?.missingAspects).toEqual(['Missing aspect 1', 'Missing aspect 2']);
             expect(result.response.metadata?.validationAttempts).toBe(1);
+            expect(result.needsUserInput).toBe(true);
             expect(Logger.info).toHaveBeenCalled();
         });
 
@@ -119,14 +121,12 @@ describe('ValidationExecutor', () => {
 
             const paramsWithAttempts: ExecuteParams = {
                 ...baseParams,
-                context: {
-                    ...baseParams.context,
-                    task: {
-                        props: {
-                            validationAttempts: 2 // Already had 2 attempts
-                        }
+                previousResult: [{
+                    message: 'Previous validation attempt',
+                    metadata: {
+                        validationAttempts: 2 // Already had 2 attempts
                     }
-                }
+                }]
             };
 
             // Act
