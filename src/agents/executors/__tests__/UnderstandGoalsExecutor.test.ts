@@ -5,6 +5,7 @@ import { StepResult } from '../../interfaces/StepResult';
 import { TaskManager } from '../../../tools/taskManager';
 import { TaskType } from '../../../tools/taskManager';
 import { IntakeQuestionsResponse } from '../../../schemas/IntakeQuestionsResponse';
+import { UUID, createUUID } from '../../../types/uuid';
 
 describe('UnderstandGoalsExecutor', () => {
     let executor: UnderstandGoalsExecutor;
@@ -57,12 +58,14 @@ describe('UnderstandGoalsExecutor', () => {
                 { question: 'Q1', purpose: 'Purpose 1' },
                 { question: 'Q2', purpose: 'Purpose 2' }
             ],
-            reasoning: 'Test reasoning'
+            reasoning: 'Test reasoning',
+            goalRestatement: 'Restated goal',
+            followupMessage: 'Follow up message'
         };
 
         mockModelHelpers.generate.mockResolvedValue(mockResponse);
         mockTaskManager.getProject.mockReturnValue({
-            id: 'test-project',
+            id: createUUID(),
             name: 'Test Project',
             metadata: {
                 createdAt: new Date(),
@@ -93,7 +96,7 @@ describe('UnderstandGoalsExecutor', () => {
 
         mockModelHelpers.generate.mockResolvedValue(mockResponse);
         mockTaskManager.getProject.mockReturnValue({
-            id: 'test-project',
+            id: createUUID(),
             name: 'Test Project',
             metadata: {
                 createdAt: new Date(),
