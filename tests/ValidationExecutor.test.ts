@@ -12,12 +12,17 @@ import { IVectorDatabase } from '../src/llm/IVectorDatabase';
 import { ArtifactManager } from '../src/tools/artifactManager';
 import { Settings } from '../src/tools/settings';
 
+import Logger from '../src/helpers/logger';
+
 // Mock the Logger
 jest.mock('../src/helpers/logger', () => ({
     info: jest.fn(),
     warn: jest.fn(),
-    error: jest.fn()
+    error: jest.fn(),
+    debug: jest.fn()
 }));
+
+const mockLogger = Logger as jest.Mocked<typeof Logger>;
 
 describe('ValidationExecutor', () => {
     let executor: ValidationExecutor;
@@ -74,9 +79,11 @@ describe('ValidationExecutor', () => {
         it('should validate successfully on first attempt', async () => {
             // Arrange
             mockModelHelpers.generate.mockResolvedValue({
-                isComplete: true,
                 message: 'Validation successful',
-                missingAspects: []
+                metadata: {
+                    isComplete: true,
+                    missingAspects: []
+                }
             });
 
             // Act
@@ -94,9 +101,11 @@ describe('ValidationExecutor', () => {
         it('should request user input when validation fails in conversation mode', async () => {
             // Arrange
             mockModelHelpers.generate.mockResolvedValue({
-                isComplete: false,
                 message: 'Validation failed',
-                missingAspects: ['Missing aspect 1', 'Missing aspect 2']
+                metadata: {
+                    isComplete: false,
+                    missingAspects: ['Missing aspect 1', 'Missing aspect 2']
+                }
             });
 
             // Act
@@ -114,9 +123,11 @@ describe('ValidationExecutor', () => {
         it('should force completion after max validation attempts', async () => {
             // Arrange
             mockModelHelpers.generate.mockResolvedValue({
-                isComplete: false,
                 message: 'Validation failed',
-                missingAspects: ['Missing aspect']
+                metadata: {
+                    isComplete: false,
+                    missingAspects: ['Missing aspect']
+                }
             });
 
             const paramsWithAttempts: ExecuteParams = {
@@ -143,9 +154,11 @@ describe('ValidationExecutor', () => {
         it('should handle task mode validation failures gracefully', async () => {
             // Arrange
             mockModelHelpers.generate.mockResolvedValue({
-                isComplete: false,
                 message: 'Validation failed',
-                missingAspects: ['Missing aspect']
+                metadata: {
+                    isComplete: false,
+                    missingAspects: ['Missing aspect']
+                }
             });
 
             // Act
@@ -193,6 +206,7 @@ describe('ValidationExecutor', () => {
         it('should handle validation errors gracefully', async () => {
             // Arrange
             mockModelHelpers.generate.mockRejectedValue(new Error('Validation error'));
+            mockLogger.error.mockImplementation(() => {});
 
             // Act
             const result = await executor.execute(baseParams);
