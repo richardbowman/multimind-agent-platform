@@ -230,7 +230,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     <div onClick={async () => {
                         await contextMethods.showFileDialog();
                     }}>
-                    📎
+                    📎</div>
                 </label>
                 <textarea
                 ref={inputRef}
