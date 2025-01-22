@@ -1,6 +1,10 @@
 import { BackendServicesWithWindows } from "../types/BackendServices";
 import crypto from 'crypto';
+import { dialog } from 'electron';
 import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
+import fs from 'fs';
+import path from 'path';
+import mime from 'mime';
 import Logger from "../helpers/logger";
 import { ChatClient, ChatPost } from "../chat/chatClient";
 import { ClientMessage, ClientTask } from "src/shared/types";
@@ -567,6 +571,38 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     async closeWindow(): Promise<void> {
         const mainWindow = this.services.mainWindow.getWindow();
         mainWindow.close();
+    }
+
+    async showFileDialog(): Promise<void> {
+        const mainWindow = this.services.mainWindow.getWindow();
+        
+        const result = await dialog.showOpenDialog(mainWindow, {
+            properties: ['openFile', 'multiSelections'],
+            filters: [
+                { name: 'Images', extensions: ['jpg', 'png', 'gif', 'webp'] },
+                { name: 'All Files', extensions: ['*'] }
+            ]
+        });
+
+        if (!result.canceled && result.filePaths.length > 0) {
+            // Convert file paths to File objects
+            const files = await Promise.all(result.filePaths.map(async (filePath) => {
+                const fileData = await fs.promises.readFile(filePath);
+                return new File([fileData], path.basename(filePath), {
+                    type: mime.getType(filePath) || 'application/octet-stream'
+                });
+            }));
+
+            // Send files back to client via callback
+            this.services.clientMethods?.onFilesSelected(files);
+        }
+    }
+
+    async openDevTools(): Promise<void> {
+        if (process.env.NODE_ENV === 'development') {
+            const mainWindow = this.services.mainWindow.getWindow();
+            mainWindow.webContents.openDevTools();
+        }
     }
 
     processArtifactContent(artifact: any) {
