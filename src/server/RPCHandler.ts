@@ -1,4 +1,5 @@
 import { BackendServicesWithWindows } from "../types/BackendServices";
+import crypto from 'crypto';
 import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
 import Logger from "../helpers/logger";
 import { ChatClient, ChatPost } from "../chat/chatClient";
@@ -158,7 +159,13 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 user_id: post.user_id,
                 create_at: post.create_at,
                 directed_at: post.directed_at,
-                props: post.props,
+                props: {
+                    ...post.props,
+                    attachments: post.attachments?.map(attachment => ({
+                        ...attachment,
+                        url: `/artifacts/${attachment.id}` // Ensure proper URL
+                    }))
+                },
                 thread_id: post.getRootId(),
                 reply_count: 0 // New messages start with 0 replies
             };
@@ -198,6 +205,55 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     async sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage> {
+        // Handle file uploads if present
+        if (message.files && message.files.length > 0) {
+            const uploadedAttachments: Attachment[] = [];
+            
+            for (const file of message.files) {
+                // Convert file to base64
+                const buffer = await file.arrayBuffer();
+                const base64 = Buffer.from(buffer).toString('base64');
+                
+                // Create artifact
+                const artifact = {
+                    id: crypto.randomUUID(),
+                    type: 'image',
+                    content: base64,
+                    metadata: {
+                        title: file.name,
+                        mimeType: file.type,
+                        size: file.size,
+                        binary: true
+                    }
+                };
+                
+                // Save artifact
+                const savedArtifact = await this.services.artifactManager.saveArtifact(artifact);
+                uploadedAttachments.push({
+                    id: savedArtifact.id,
+                    type: 'image',
+                    url: `/artifacts/${savedArtifact.id}`,
+                    name: file.name,
+                    size: file.size
+                });
+                
+                // Add to channel if needed
+                if (message.channel_id) {
+                    await this.services.chatClient.addArtifactToChannel(
+                        message.channel_id,
+                        savedArtifact.id
+                    );
+                }
+            }
+            
+            // Add attachments to message props
+            message.props = message.props || {};
+            message.props.attachments = [
+                ...(message.props.attachments || []),
+                ...uploadedAttachments
+            ];
+        }
+
         if (message.thread_id) {
             return await this.services.chatClient.postReply(
                 message.thread_id,
