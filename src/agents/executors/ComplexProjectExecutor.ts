@@ -6,8 +6,8 @@ import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { TaskManager, TaskType } from '../../tools/taskManager';
-import { randomUUID } from 'crypto';
 import Logger from '../../helpers/logger';
+import { createUUID } from 'src/types/uuid';
 
 @StepExecutorDecorator('complex_project', 'Kickoff a combined project involving both research and content development')
 export class ComplexProjectExecutor implements StepExecutor {
@@ -57,7 +57,7 @@ export class ComplexProjectExecutor implements StepExecutor {
             });
 
             // Create research task
-            const researchTaskId = randomUUID();
+            const researchTaskId = createUUID();
             await this.taskManager.addTask(project, {
                 id: researchTaskId,
                 description: researchTask,
@@ -69,7 +69,7 @@ export class ComplexProjectExecutor implements StepExecutor {
             });
 
             // Create content task with dependency
-            const contentTaskId = randomUUID();
+            const contentTaskId = createUUID();
             await this.taskManager.addTask(project, {
                 id: contentTaskId,
                 description: contentTask,
