@@ -86,11 +86,8 @@ export interface ContentRenderer<T> {
     (content: T): string;
 }
 
-export class PromptBuilder {
+export class PromptRegistry {
     private contentRenderers: Map<ContentType, ContentRenderer<any>> = new Map();
-    private contentSections: Map<ContentType, any> = new Map();
-    private instructions: string[] = [];
-    private context: string[] = [];
 
     constructor() {
         // Register default renderers
@@ -102,16 +99,8 @@ export class PromptBuilder {
         this.contentRenderers.set(contentType, renderer);
     }
 
-    addContent<T>(contentType: ContentType, content: T): void {
-        this.contentSections.set(contentType, content);
-    }
-
-    addInstruction(instruction: string): void {
-        this.instructions.push(instruction);
-    }
-
-    addContext(context: string): void {
-        this.context.push(context);
+    getRenderer(contentType: ContentType): ContentRenderer<any> | undefined {
+        return this.contentRenderers.get(contentType);
     }
 
     private renderArtifacts(artifacts: Artifact[]): string {
@@ -130,6 +119,33 @@ export class PromptBuilder {
             `${post.user_id}: ${post.message}`
         ).join('\n');
     }
+}
+
+export class PromptBuilder {
+    private contentSections: Map<ContentType, any> = new Map();
+    private instructions: string[] = [];
+    private context: string[] = [];
+    private registry: PromptRegistry;
+
+    constructor(registry?: PromptRegistry) {
+        this.registry = registry || new PromptRegistry();
+    }
+
+    registerRenderer<T>(contentType: ContentType, renderer: ContentRenderer<T>): void {
+        this.registry.registerRenderer(contentType, renderer);
+    }
+
+    addContent<T>(contentType: ContentType, content: T): void {
+        this.contentSections.set(contentType, content);
+    }
+
+    addInstruction(instruction: string): void {
+        this.instructions.push(instruction);
+    }
+
+    addContext(context: string): void {
+        this.context.push(context);
+    }
 
     build(): string {
         const sections: string[] = [];
@@ -146,7 +162,7 @@ export class PromptBuilder {
 
         // Render and add content sections
         for (const [contentType, content] of this.contentSections) {
-            const renderer = this.contentRenderers.get(contentType);
+            const renderer = this.registry.getRenderer(contentType);
             if (renderer) {
                 const rendered = renderer(content);
                 if (rendered) {
@@ -161,7 +177,8 @@ export class PromptBuilder {
 
 export class ModelHelpers {
     private stepSequences: StepSequence[] = [];
-    private promptBuilder: PromptBuilder = new PromptBuilder();
+    private promptRegistry: PromptRegistry = new PromptRegistry();
+    private promptBuilder: PromptBuilder = new PromptBuilder(this.promptRegistry);
 
     getPurpose() {
         return this.purpose;
