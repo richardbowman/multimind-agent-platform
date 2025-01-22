@@ -72,8 +72,86 @@ export class StepSequence {
     }
 }
 
+export interface ContentRenderer<T> {
+    (content: T): string;
+}
+
+export class PromptBuilder {
+    private contentRenderers: Map<string, ContentRenderer<any>> = new Map();
+    private contentSections: Map<string, any> = new Map();
+    private instructions: string[] = [];
+    private context: string[] = [];
+
+    constructor() {
+        // Register default renderers
+        this.registerRenderer('artifacts', this.renderArtifacts);
+        this.registerRenderer('conversation', this.renderConversation);
+    }
+
+    registerRenderer<T>(contentType: string, renderer: ContentRenderer<T>): void {
+        this.contentRenderers.set(contentType, renderer);
+    }
+
+    addContent<T>(contentType: string, content: T): void {
+        this.contentSections.set(contentType, content);
+    }
+
+    addInstruction(instruction: string): void {
+        this.instructions.push(instruction);
+    }
+
+    addContext(context: string): void {
+        this.context.push(context);
+    }
+
+    private renderArtifacts(artifacts: Artifact[]): string {
+        if (!artifacts || artifacts.length === 0) return '';
+        return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
+            const content = typeof artifact.content === 'string' 
+                ? artifact.content
+                : `[Binary data - ${artifact.content.length} bytes]`;
+            return `Artifact ${index + 1} (${artifact.type}):\n${content}`;
+        }).join('\n\n');
+    }
+
+    private renderConversation(posts: ChatPost[]): string {
+        if (!posts || posts.length === 0) return '';
+        return "💬 Conversation Context:\n\n" + posts.map(post => 
+            `${post.user_id}: ${post.message}`
+        ).join('\n');
+    }
+
+    build(): string {
+        const sections: string[] = [];
+
+        // Add instructions first
+        if (this.instructions.length > 0) {
+            sections.push("## Instructions\n" + this.instructions.join('\n\n'));
+        }
+
+        // Add context
+        if (this.context.length > 0) {
+            sections.push("## Context\n" + this.context.join('\n\n'));
+        }
+
+        // Render and add content sections
+        for (const [contentType, content] of this.contentSections) {
+            const renderer = this.contentRenderers.get(contentType);
+            if (renderer) {
+                const rendered = renderer(content);
+                if (rendered) {
+                    sections.push(`## ${contentType[0].toUpperCase()}${contentType.slice(1)}\n` + rendered);
+                }
+            }
+        }
+
+        return sections.join('\n\n');
+    }
+}
+
 export class ModelHelpers {
     private stepSequences: StepSequence[] = [];
+    private promptBuilder: PromptBuilder = new PromptBuilder();
 
     getPurpose() {
         return this.purpose;
@@ -336,11 +414,38 @@ export class ModelHelpers {
     }
 
     public async generate<T extends ModelResponse>(params: GenerateInputParams): Promise<T> {
-        if (params.instructions instanceof StructuredOutputPrompt) {
-            return this.generateStructured<T>(params.instructions, params);
-        } else {
-            return this.generateOld(params.instructions.toString(), params);
+        // Reset prompt builder for new generation
+        this.promptBuilder = new PromptBuilder();
+
+        // Add any artifacts
+        if (params.artifacts) {
+            this.promptBuilder.addContent('artifacts', params.artifacts);
         }
+
+        // Add conversation context if available
+        if (params.threadPosts) {
+            this.promptBuilder.addContent('conversation', params.threadPosts);
+        }
+
+        // Add main instructions
+        if (params.instructions) {
+            if (typeof params.instructions === 'string') {
+                this.promptBuilder.addInstruction(params.instructions);
+            } else if (params.instructions instanceof StructuredOutputPrompt) {
+                // For structured prompts, we'll use the existing flow
+                return this.generateStructured<T>(params.instructions, params);
+            }
+        }
+
+        // Add any additional context from params
+        if (params.context) {
+            this.promptBuilder.addContext(JSON.stringify(params.context));
+        }
+
+        // Build the final prompt
+        const prompt = this.promptBuilder.build();
+
+        return this.generateOld(prompt, params);
     }
 
     /**
