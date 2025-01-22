@@ -14,19 +14,23 @@ import { ValidationResult } from '../src/schemas/validation';
 import { ModelResponse } from '../src/schemas/ModelResponse';
 
 // Mock the Logger
-jest.mock('../src/helpers/logger', () => {
-    return {
-        LogManager: jest.fn().mockImplementation(() => ({
-            info: jest.fn(),
-            warn: jest.fn(),
-            error: jest.fn(),
-            debug: jest.fn()
-        }))
-    };
-});
+jest.mock('../src/helpers/logger', () => ({
+    LogManager: jest.fn().mockImplementation(() => ({
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn()
+    })),
+    default: {
+        info: jest.fn(),
+        warn: jest.fn(),
+        error: jest.fn(),
+        debug: jest.fn()
+    }
+}));
 
-import { LogManager } from '../src/helpers/logger';
-const mockLogger = new LogManager() as jest.Mocked<LogManager>;
+import Logger, { LogManager } from '../src/helpers/logger';
+const mockLogger = Logger as jest.Mocked<typeof Logger>;
 
 describe('ValidationExecutor', () => {
     let executor: ValidationExecutor;
@@ -98,8 +102,7 @@ describe('ValidationExecutor', () => {
             expect(result.response.metadata.validationAttempts).toBe(1);
             expect(result.response.metadata.missingAspects).toEqual([]);
             expect(mockLogger.info).toHaveBeenCalledWith(
-                'Validation completed successfully',
-                expect.any(Object)
+                'Validation completed successfully'
             );
         });
 
@@ -120,8 +123,7 @@ describe('ValidationExecutor', () => {
             expect(result.response.metadata.missingAspects).toEqual(['Missing aspect 1', 'Missing aspect 2']);
             expect(result.response.metadata.validationAttempts).toBe(1);
             expect(mockLogger.info).toHaveBeenCalledWith(
-                'Validation completed with missing aspects',
-                expect.any(Object)
+                'Validation completed with missing aspects'
             );
         });
 
@@ -152,8 +154,7 @@ describe('ValidationExecutor', () => {
             expect(result.response.message).toContain('Maximum validation attempts reached');
             expect(result.response.metadata?.validationAttempts).toBe(3);
             expect(mockLogger.warn).toHaveBeenCalledWith(
-                'Maximum validation attempts reached',
-                expect.any(Object)
+                'Maximum validation attempts reached'
             );
         });
 
@@ -177,8 +178,7 @@ describe('ValidationExecutor', () => {
             expect(result.response.message).toContain('Validation completed in task mode');
             expect(result.allowReplan).toBe(true);
             expect(mockLogger.info).toHaveBeenCalledWith(
-                'Validation completed in task mode',
-                expect.any(Object)
+                'Validation completed in task mode'
             );
         });
 
