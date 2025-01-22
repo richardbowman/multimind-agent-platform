@@ -12,8 +12,10 @@ import {
     FormControlLabel, 
     Switch,
     ToggleButtonGroup,
-    ToggleButton
+    ToggleButton,
+    IconButton
 } from '@mui/material';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import { useLogger } from '../contexts/LogContext';
 
 interface LogViewerProps {
@@ -219,7 +221,15 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                             autoFocus: true
                         }}
                     />
-                    {isLoading && <Box sx={{ ml: 2, color: '#999' }}>Loading...</Box>}
+                    <IconButton 
+                        onClick={refreshLogs}
+                        disabled={isLoading}
+                        sx={{ ml: 2 }}
+                        title="Refresh logs"
+                    >
+                        <RefreshIcon />
+                    </IconButton>
+                    {isLoading && <Box sx={{ ml: 1, color: '#999' }}>Loading...</Box>}
                 </LogToolbar>
             </AppBar>
             <Box 
