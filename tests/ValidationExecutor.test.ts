@@ -6,11 +6,11 @@ import { TaskManager } from '../src/tools/taskManager';
 import { Artifact } from '../src/tools/artifact';
 import { createUUID } from '../src/types/uuid';
 import Logger from '../src/helpers/logger';
-import { Settings } from 'http2';
 import { ChatClient } from '../src/chat/chatClient';
 import { ILLMService } from '../src/llm/ILLMService';
 import { IVectorDatabase } from '../src/llm/IVectorDatabase';
 import { ArtifactManager } from '../src/tools/artifactManager';
+import { Settings } from '../src/tools/settings';
 
 // Mock the Logger
 jest.mock('../src/helpers/logger', () => ({
@@ -48,26 +48,7 @@ describe('ValidationExecutor', () => {
             vectorDB: {} as IVectorDatabase,
             llmService: {} as ILLMService,
             artifactManager: {} as ArtifactManager,
-            settings: {
-                providers: new ProvidersConfig(),
-                searchProvider: 'duckduckgo',
-                scrapingProvider: 'playwright',
-                searxngUrl: '',
-                searchSettings: new SearchSettings(),
-                scrapingSettings: new ScrapingSettings(),
-                llmSettings: new LLMSettings(),
-                embeddingSettings: new EmbeddingSettings(),
-                rateLimitingSettings: new RateLimitingSettings(),
-                apiKeys: new APIKeys(),
-                loggingSettings: new LoggingSettings(),
-                uiSettings: new UISettings(),
-                notificationSettings: new NotificationSettings(),
-                storageSettings: new StorageSettings(),
-                securitySettings: new SecuritySettings(),
-                experimentalSettings: new ExperimentalSettings(),
-                version: '1.0.0',
-                lastUpdated: new Date().toISOString()
-            } as Settings,
+            settings: new Settings(),
             chatClient: {} as ChatClient,
             config: {}
         });
