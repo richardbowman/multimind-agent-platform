@@ -35,7 +35,8 @@ export class DuckDuckGoConfig {
         category: 'Search Settings',
         type: 'boolean',
         defaultValue: true,
-        description: 'Run DuckDuckGo searches in headless browser mode'
+        description: 'Run DuckDuckGo searches in headless browser mode',
+        visibleWhen: (settings: Settings) => settings.searchProvider === 'duckduckgo'
     })
     headless: boolean = true;
 
@@ -44,7 +45,8 @@ export class DuckDuckGoConfig {
         category: 'Search Settings',
         type: 'number',
         defaultValue: 30000,
-        description: 'Timeout for DuckDuckGo search operations'
+        description: 'Timeout for DuckDuckGo search operations',
+        visibleWhen: (settings: Settings) => settings.searchProvider === 'duckduckgo'
     })
     timeout: number = 30000;
 }
@@ -54,7 +56,8 @@ export class BraveConfig {
         category: 'Search Settings',
         type: 'string',
         sensitive: true,
-        description: 'API key for Brave Search'
+        description: 'API key for Brave Search',
+        visibleWhen: (settings: Settings) => settings.searchProvider === 'brave'
     })
     apiKey: string = '';
 
@@ -63,7 +66,8 @@ export class BraveConfig {
         category: 'Search Settings',
         type: 'string',
         defaultValue: 'https://api.search.brave.com/res/v1/web/search',
-        description: 'API endpoint for Brave Search'
+        description: 'API endpoint for Brave Search',
+        visibleWhen: (settings: Settings) => settings.searchProvider === 'brave'
     })
     endpoint: string = 'https://api.search.brave.com/res/v1/web/search';
 }
