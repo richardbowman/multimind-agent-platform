@@ -53,8 +53,8 @@ export class ValidationExecutor implements StepExecutor {
         promptBuilder.addInstruction(`You are validating whether a proposed solution addresses the original goal. 
 Analyze the previous steps and their results to determine if a reasonable effort has been made.`);
 
-        // Add goal context
-        promptBuilder.addContext(`Original Goal: ${params.goal}`);
+        // Add execute params including goal
+        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, params);
 
         // Add previous results if available
         if (params.steps && params.steps.length > 0) {

@@ -80,7 +80,8 @@ export enum ContentType {
     DOCUMENTS = 'documents',
     TASKS = 'tasks',
     GOALS = 'goals',
-    STEP_RESULTS = 'step_results'
+    STEP_RESULTS = 'step_results',
+    EXECUTE_PARAMS = 'execute_params'
 }
 
 export interface ContentRenderer<T> {
@@ -95,11 +96,30 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.ARTIFACTS, this.renderArtifacts);
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation);
         this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults);
+        this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams);
         
         // Register type-specific step result renderers
         this.registerStepResultRenderer(StepResultType.Validation, this.renderValidationStep);
         this.registerStepResultRenderer(StepResultType.Question, this.renderQuestionStep);
         // Add more type-specific renderers as needed
+    }
+
+    private renderExecuteParams(params: ExecuteParams): string {
+        let output = `🎯 Goal:\n${params.goal}\n\n`;
+        
+        if (params.step) {
+            output += `🔧 Current Step:\n${params.step}\n\n`;
+        }
+        
+        if (params.executionMode) {
+            output += `⚙️ Execution Mode:\n${params.executionMode}\n\n`;
+        }
+        
+        if (params.context) {
+            output += `📌 Context:\n${JSON.stringify(params.context, null, 2)}\n\n`;
+        }
+        
+        return output;
     }
 
     private stepResultRenderers = new Map<StepResultType, ContentRenderer<StepResult>>();
