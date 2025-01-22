@@ -6,6 +6,11 @@ import { TaskManager } from '../src/tools/taskManager';
 import { Artifact } from '../src/tools/artifact';
 import { createUUID } from '../src/types/uuid';
 import Logger from '../src/helpers/logger';
+import { Settings } from 'http2';
+import { ChatClient } from '../src/chat/chatClient';
+import { ILLMService } from '../src/llm/ILLMService';
+import { IVectorDatabase } from '../src/llm/IVectorDatabase';
+import { ArtifactManager } from '../src/tools/artifactManager';
 
 // Mock the Logger
 jest.mock('../src/helpers/logger', () => ({
@@ -45,8 +50,7 @@ describe('ValidationExecutor', () => {
             artifactManager: {} as ArtifactManager,
             settings: {} as Settings,
             chatClient: {} as ChatClient,
-            config: {},
-            modelHelpers: mockModelHelpers
+            config: {}
         });
 
         // Clear all mocks before each test
