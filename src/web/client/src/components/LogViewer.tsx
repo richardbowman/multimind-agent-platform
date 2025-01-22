@@ -33,11 +33,18 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const refreshLogs = useCallback(async () => {
         setIsLoading(true);
         try {
-            await fetchLogs(currentLogTab);
+            // Fetch logs with newest first
+            await fetchLogs(currentLogTab, {
+                sort: 'desc',
+                limit: pageSize
+            });
+            // Reset loaded logs since we're getting fresh data
+            setLoadedLogs([]);
+            setHasMore(true);
         } finally {
             setIsLoading(false);
         }
-    }, [currentLogTab, fetchLogs]);
+    }, [currentLogTab, fetchLogs, pageSize]);
 
     useEffect(() => {
         logger.verbose('LogViewer: Setting up log subscription for type:', currentLogTab);
@@ -118,6 +125,8 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
             case 'llm':
                 return Object.entries(logs.llm || {}).flatMap(([service, entries]) => 
                     (Array.isArray(entries) ? entries : [])
+                        .slice() // Create a copy before sorting
+                        .sort((a, b) => b.timestamp - a.timestamp) // Sort newest first
                         .filter(log => 
                             filterLog(JSON.stringify({
                                 method: log?.method,
@@ -148,7 +157,10 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 );
             
             case 'system':
-                return logs.system?.logs?.filter(log => {
+                return logs.system?.logs
+                    ?.slice() // Create a copy before sorting
+                    .sort((a, b) => b.timestamp - a.timestamp) // Sort newest first
+                    .filter(log => {
                     const levelMatch = logLevelFilter === 'all' || 
                                      log.level.toLowerCase() === logLevelFilter;
                     
