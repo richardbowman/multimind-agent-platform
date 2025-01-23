@@ -41,12 +41,4 @@ export interface ContentSectionResponse {
             content: string;
         }>;
     };
-    
-    /**
-     * Token usage metadata
-     */
-    _usage?: {
-        inputTokens: number;
-        outputTokens: number;
-    };
 }
