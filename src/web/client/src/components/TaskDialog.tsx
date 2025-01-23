@@ -203,6 +203,27 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 </Box>
             </DialogContent>
             <DialogActions>
+                {selectedTask && !selectedTask.complete && (
+                    <LoadingButton
+                        variant="contained"
+                        color="error"
+                        onClick={async () => {
+                            try {
+                                await ipcService.getRPC().cancelTask(selectedTask.id);
+                                setSelectedTask({
+                                    ...selectedTask,
+                                    status: 'cancelled',
+                                    complete: false,
+                                    inProgress: false
+                                });
+                            } catch (error) {
+                                console.error('Failed to cancel task:', error);
+                            }
+                        }}
+                    >
+                        Cancel Task
+                    </LoadingButton>
+                )}
                 {selectedTask && (
                     <LoadingButton
                         variant="contained"
