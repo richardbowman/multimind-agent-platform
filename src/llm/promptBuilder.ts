@@ -34,6 +34,7 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults.bind(this));
         this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
         this.registerRenderer(ContentType.AGENT_CAPABILITIES, this.renderAgentCapabilities.bind(this));
+        this.registerRenderer(ContentType.GOALS, this.renderGoals.bind(this));
         
         // Register type-specific step result renderers
         this.registerStepResultRenderer(StepResultType.Validation, this.renderValidationStep.bind(this));
@@ -133,6 +134,31 @@ export class PromptRegistry {
             
             return output;
         }).join('\n\n');
+    }
+
+    private renderGoals(goals: {
+        name: string;
+        description: string;
+        status: string;
+        tasks: {
+            description: string;
+            status: string;
+        }[];
+    }): string {
+        if (!goals) return '';
+        
+        let output = `🎯 Project: ${goals.name}\n`;
+        output += `📝 Description: ${goals.description}\n`;
+        output += `📊 Status: ${goals.status}\n\n`;
+        
+        if (goals.tasks && goals.tasks.length > 0) {
+            output += `📋 Tasks:\n` + 
+                goals.tasks.map((task, index) => 
+                    `${index + 1}. ${task.description} (${task.status})`
+                ).join('\n');
+        }
+        
+        return output;
     }
 
     private renderConversation(posts: ChatPost[]): string {
