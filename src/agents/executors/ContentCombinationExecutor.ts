@@ -52,29 +52,29 @@ export class ContentCombinationExecutor implements StepExecutor {
             const lastWritingStep = writingSteps[0];
             
             // Process subProjectResults from the last writing step
-            if (lastWritingStep.props.result?.subProjectResults) {
-                for (const subResult of lastWritingStep.props.result.subProjectResults) {
-                    if (subResult.response) {
+            if (lastWritingStep.props.result?.response.subProjectResults) {
+                for (const subResult of lastWritingStep.props.result.response.subProjectResults) {
+                    if (subResult.structure) {
                         // Add main section
                         sections.push({
-                            heading: subResult.response.structure?.heading || 'Untitled Section',
-                            content: subResult.response.message,
-                            citations: subResult.response.citations || []
+                            heading: subResult.structure?.heading || 'Untitled Section',
+                            content: subResult.message,
+                            citations: subResult.citations || []
                         });
 
                         // Add any subheadings
-                        if (subResult.response.structure?.subheadings) {
-                            sections.push(...subResult.response.structure.subheadings.map(sh => ({
+                        if (subResult.structure?.subheadings) {
+                            sections.push(...subResult.structure.subheadings.map(sh => ({
                                 heading: sh.title,
                                 content: sh.content,
-                                citations: subResult.response.citations || []
+                                citations: subResult.citations || []
                             })));
                         }
 
                         // Accumulate token usage
-                        if (subResult.response._usage) {
-                            totalTokenUsage.inputTokens += subResult.response._usage.inputTokens || 0;
-                            totalTokenUsage.outputTokens += subResult.response._usage.outputTokens || 0;
+                        if (subResult._usage) {
+                            totalTokenUsage.inputTokens += subResult._usage.inputTokens || 0;
+                            totalTokenUsage.outputTokens += subResult._usage.outputTokens || 0;
                         }
                     }
                 }
