@@ -32,11 +32,20 @@ export interface ExampleResponse {
 
 ## Schema Usage Pattern
 
-
 1. Get schema with `getGeneratedSchema()`:
 
 ```typescript
 const schema = await getGeneratedSchema(SchemaType.ExampleResponse);
+```
+
+2. For routing responses, use the RoutingResponse schema:
+
+```typescript
+const schema = await getGeneratedSchema(SchemaType.RoutingResponse);
+const response = await this.modelHelpers.generate<RoutingResponse>({
+    message: userInput,
+    instructions
+});
 ```
 
 

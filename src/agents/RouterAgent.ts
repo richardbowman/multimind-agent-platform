@@ -1,4 +1,6 @@
 import { Agent, HandlerParams } from './agents';
+import { RoutingResponse } from '../schemas/RoutingResponse';
+import { getGeneratedSchema, SchemaType } from '../schemas/SchemaTypes';
 import { ContentType } from 'src/llm/promptBuilder';
 import { Project, Task } from '../tools/taskManager';
 import { ModelResponse } from '../schemas/ModelResponse';
@@ -149,32 +151,7 @@ export class RouterAgent extends Agent {
         const { userPost, threadPosts = [] } = params;
         const context = await this.getRoutingContext(params);
 
-        const schema = {
-            type: "object",
-            properties: {
-                selectedAgent: {
-                    type: "string",
-                    enum: context.agentOptions.map(a => a?.messagingHandle) || []
-                },
-                confidence: {
-                    type: "number",
-                    minimum: 0,
-                    maximum: 1
-                },
-                response: {
-                    type: "string",
-                    description: "The message to send"
-                },
-                nextStep: {
-                    type: "string",
-                    enum: context.project && context.projectTasks.some(t => !t.complete)
-                        ? ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information", "start-goal"]
-                        : ["propose-transfer", "execute-transfer", "ask-clarification", "provide-information"],
-                    description: "The next step to take in the conversation"
-                }
-            },
-            required: ["response", "confidence"],
-        };
+        const schema = await getGeneratedSchema(SchemaType.RoutingResponse);
 
         const promptBuilder = this.modelHelpers.createPrompt();
 
