@@ -76,11 +76,20 @@ ${params.previousResult ? `Use these materials to inform the task planning:\n${J
                     creator: params.agentId,
                     type: TaskType.Standard,
                     category: TaskCategories.Writing,
-                    description: `Using the overall goal ${params.goal}, develop a section for the overall document. Section heaader: ${section.title}\n\n${section.description}\n\nKey Points:\n${
-                        section.keyPoints?.map(p => `- ${p}`).join('\n')||""
-                    }\n\nResearch Findings:\n${
-                        section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).join('\n')||""
-                    }`,
+                    description: `Using the overall goal ${params.goal}, develop a section for the overall document.
+
+Overall Outline:
+${result.sections.map(s => `- ${s.title}`).join('\n')}
+
+Your Section:
+Header: ${section.title}
+${section.description}
+
+Key Points:
+${section.keyPoints?.map(p => `- ${p}`).join('\n')||"None provided"}
+
+Research Findings:
+${section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).join('\n')||"None provided"}`,
                     order: result.sections.indexOf(section)
                 });
 
