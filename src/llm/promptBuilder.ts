@@ -1,6 +1,8 @@
+import { Agent } from "src/agents/agents";
 import { ExecuteParams } from "src/agents/interfaces/ExecuteParams";
 import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
 import { StepResult, StepResultType } from "src/agents/interfaces/StepResult";
+import { StepBasedAgent } from "src/agents/stepBasedAgent";
 import { ChatPost } from "src/chat/chatClient";
 import { Artifact } from "src/tools/artifact";
 
@@ -111,24 +113,18 @@ export class PromptRegistry {
         }).join('\n\n');
     }
 
-    private renderAgentCapabilities(agents: { 
-        name: string;
-        description: string;
-        capabilities?: {
-            stepType: string;
-            description: string;
-            exampleInput?: string;
-            exampleOutput?: string;
-        }[]
-    }[]): string {
+    private renderAgentCapabilities(agents: Agent[]): string {
         if (!agents || agents.length === 0) return '';
         
         return "🤖 Available Agents:\n\n" + agents.map(agent => {
-            let output = `- ${agent.name}: ${agent.description}`;
+            let output = `- ${agent.messagingHandle}: ${agent.description}`;
+
+            // Get detailed capabilities for each agent that is a StepBasedAgent
+            const capabilities = (agent as StepBasedAgent).getExecutorCapabilities?.() || []
             
-            if (agent.capabilities && agent.capabilities.length > 0) {
+            if (capabilities.length > 0) {
                 output += `\n  Capabilities:\n` + 
-                    agent.capabilities.map(cap => 
+                    capabilities.map(cap => 
                         `    * ${cap.stepType}: ${cap.description}\n` +
                         (cap.exampleInput ? `      Example Input: ${cap.exampleInput}\n` : '') +
                         (cap.exampleOutput ? `      Example Output: ${cap.exampleOutput}` : '')
