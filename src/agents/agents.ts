@@ -19,7 +19,8 @@ import { Agents } from "src/utils/AgentLoader";
 
 export enum TaskEventType {
     Assigned = "assigned",
-    Completed = "completed"
+    Completed = "completed",
+    Ready = "ready"
 }
 
 export interface ActionMetadata {
@@ -137,7 +138,13 @@ export abstract class Agent {
                 if (event.creator === this.userId) {
                     await this.projectCompleted(event.project);
                 }
-            })
+            });
+
+            this.projects.on("taskReady", async (event) => {
+                if (event.task.assignee === this.userId || event.task.creator === this.userId) {
+                    await this.taskNotification(event.task, TaskEventType.Ready);
+                }
+            });
 
             
             if (params.messagingHandle) this.chatClient.registerHandle(params.messagingHandle);
