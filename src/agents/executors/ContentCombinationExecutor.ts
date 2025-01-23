@@ -27,19 +27,82 @@ export class ContentCombinationExecutor implements StepExecutor {
             throw new Error('Project is required for content combination');
         }
 
-        // Combine all task content
-        const finalContent = Object.values(params.steps).find(step => step.props.stepType == ExecutorType.WRITING)?.props?.result?.response?.message;
-        const contentTitle = Object.values(params.steps).find(step => step.props.stepType == ExecutorType.OUTLINE)?.props?.result?.response?.data?.title;
+        // Collect all structured content from writing tasks
+        const sections: Array<{
+            heading: string;
+            content: string;
+            citations: Array<{
+                sourceId: string;
+                excerpt: string;
+                reference?: string;
+            }>;
+        }> = [];
+
+        let totalTokenUsage = {
+            inputTokens: 0,
+            outputTokens: 0
+        };
+
+        // Process each writing task
+        Object.values(params.steps).forEach(step => {
+            if (step.props.stepType === ExecutorType.WRITING && step.props.result?.response) {
+                const response = step.props.result.response;
+                
+                // Add main section
+                sections.push({
+                    heading: response.structure?.heading || 'Untitled Section',
+                    content: response.message,
+                    citations: response.citations || []
+                });
+
+                // Add any subheadings
+                if (response.structure?.subheadings) {
+                    sections.push(...response.structure.subheadings.map(sh => ({
+                        heading: sh.title,
+                        content: sh.content,
+                        citations: response.citations || []
+                    })));
+                }
+
+                // Accumulate token usage
+                if (response._usage) {
+                    totalTokenUsage.inputTokens += response._usage.inputTokens || 0;
+                    totalTokenUsage.outputTokens += response._usage.outputTokens || 0;
+                }
+            }
+        });
+
+        // Format final content with citations
+        const formattedContent = sections
+            .map(section => {
+                let content = `## ${section.heading}\n\n${section.content}\n\n`;
+                if (section.citations.length > 0) {
+                    content += '### References\n\n';
+                    content += section.citations
+                        .map((cite, i) => `${i + 1}. [Source ${cite.sourceId}] ${cite.excerpt}`)
+                        .join('\n');
+                    content += '\n\n';
+                }
+                return content;
+            })
+            .join('\n\n');
+
+        // Get title from outline task
+        const contentTitle = Object.values(params.steps)
+            .find(step => step.props.stepType === ExecutorType.OUTLINE)
+            ?.props?.result?.response?.data?.title || project.name;
 
         // Create artifact
         const content: Artifact = {
             id: createUUID(),
-            content: finalContent,
+            content: formattedContent,
             type: "content",
             metadata: {
                 goal: project.name,
                 projectId: project.id,
-                title: contentTitle
+                title: contentTitle,
+                sections: sections.map(s => s.heading),
+                tokenUsage: totalTokenUsage
             }
         };
 
