@@ -77,6 +77,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 projectId: task.projectId,
                 type: task.type,
                 assignee: task.assignee,
+                status: task.status,
                 inProgress: task.inProgress || false,
                 complete: task.complete || false,
                 threadId: task.props?.threadId || null,
