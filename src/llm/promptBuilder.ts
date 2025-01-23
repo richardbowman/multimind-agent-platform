@@ -136,26 +136,20 @@ export class PromptRegistry {
         }).join('\n\n');
     }
 
-    private renderGoals(goals: {
-        name: string;
-        description: string;
-        status: string;
-        tasks: {
-            description: string;
-            status: string;
-        }[];
-    }): string {
-        if (!goals) return '';
+    private renderGoals(project: Project): string {
+        if (!project) return '';
         
-        let output = `🎯 Project: ${goals.name}\n`;
-        output += `📝 Description: ${goals.description}\n`;
-        output += `📊 Status: ${goals.status}\n\n`;
+        let output = `🎯 Project: ${project.name}\n`;
+        output += `📝 Description: ${project.metadata?.description || 'No description'}\n`;
+        output += `📊 Status: ${project.metadata?.status || 'active'}\n\n`;
         
-        if (goals.tasks && goals.tasks.length > 0) {
+        if (project.tasks) {
             output += `📋 Tasks:\n` + 
-                goals.tasks.map((task, index) => 
-                    `${index + 1}. ${task.description} (${task.status})`
-                ).join('\n');
+                Object.values(project.tasks)
+                    .sort((a, b) => (a.order || 0) - (b.order || 0))
+                    .map((task, index) => 
+                        `${index + 1}. ${task.description} (${task.complete ? 'completed' : 'pending'})`
+                    ).join('\n');
         }
         
         return output;

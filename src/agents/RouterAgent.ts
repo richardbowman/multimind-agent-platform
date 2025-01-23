@@ -186,17 +186,7 @@ export class RouterAgent extends Agent {
 
         // Add project details if exists
         if (context.project) {
-            promptBuilder.addContent(ContentType.GOALS, {
-                name: context.project.name,
-                description: context.project.metadata?.description || 'No specific goal',
-                status: context.project.metadata?.status || 'active',
-                tasks: Object.values(context.project.tasks)
-                    .sort((a, b) => (a.order || 0) - (b.order || 0))
-                    .map((task, index) => ({
-                        description: task.description,
-                        status: task.complete ? 'completed' : 'pending'
-                    }))
-            });
+            promptBuilder.addContent(ContentType.GOALS, context.project);
         }
 
         // Add conversation context
