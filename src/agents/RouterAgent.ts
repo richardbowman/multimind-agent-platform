@@ -1,6 +1,5 @@
 import { Agent, HandlerParams } from './agents';
-import { RoutingResponse } from '../schemas/RoutingResponse';
-import { getGeneratedSchema, SchemaType } from '../schemas/SchemaTypes';
+import { SchemaType } from '../schemas/SchemaTypes';
 import { ContentType } from 'src/llm/promptBuilder';
 import { Project, Task } from '../tools/taskManager';
 import { ModelResponse } from '../schemas/ModelResponse';
@@ -10,6 +9,7 @@ import { ChatPost } from 'src/chat/chatClient';
 import { ChannelData } from 'src/shared/channelTypes';
 import { createUUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 
 export interface RoutingContext {
     channelData: Partial<ChannelData>;
