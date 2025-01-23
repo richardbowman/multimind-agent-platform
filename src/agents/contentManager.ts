@@ -8,6 +8,7 @@ import { AssignWritersExecutor } from './executors/WritingExecutor';
 import { EditingExecutor } from './executors/EditingExecutor';
 import { OutlineExecutor } from './executors/OutlineExecutor';
 import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
+import { ContentCombinationExecutor } from './executors/ContentCombinationExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -47,29 +48,24 @@ IMPORTANT: Always follow this pattern:
         this.registerStepExecutor(new AssignWritersExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new EditingExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new DocumentRetrievalExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new ContentCombinationExecutor(this.getExecutorParams()));
         // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
 
     }
 
     protected async projectCompleted(project: Project): Promise<void> {
-        const finalContent = Object.values(project.tasks).reduce((acc, task) => acc + task.props?.content, '\n\n');
-        const responseMessage = `The combined content has been shared:\n${finalContent}`;
-        const content : Artifact = {
-            id: randomUUID(),
-            content: finalContent,
-            type: "content",
-            metadata: {
-                goal: project.name,
-                projectId: project.id
-            }
-        }
-        await this.artifactManager.saveArtifact(content);
+        // Use the ContentCombinationExecutor to combine content
+        const combinationExecutor = new ContentCombinationExecutor(this.getExecutorParams());
+        const result = await combinationExecutor.execute({ project });
 
-        // Store the artifact ID in the project's metadata for editing tasks
-        project.metadata.contentArtifactId = content.id;
+        if (!result.success) {
+            throw new Error('Failed to combine content');
+        }
+
+        const responseMessage = `The combined content has been shared:\n${result.artifacts?.[0]?.content}`;
 
         if (project.metadata.parentTaskId) {
-            //TODO: hack for now, we don't assign workign steps to agent right now
+            //TODO: hack for now, we don't assign working steps to agent right now
             await this.projects.assignTaskToAgent(project.metadata.parentTaskId, this.userId);
 
             const parentTask = await this.projects.getTaskById(project.metadata.parentTaskId);
@@ -77,7 +73,7 @@ IMPORTANT: Always follow this pattern:
                 const parentProject = await this.projects.getProject(parentTask.projectId);
 
                 // Store the artifact ID in the project's metadata for editing tasks
-                parentProject.metadata.contentArtifactId = content.id;
+                parentProject.metadata.contentArtifactId = result.artifacts?.[0]?.id;
 
                 this.projects.completeTask(project.metadata.parentTaskId);
 
@@ -85,7 +81,7 @@ IMPORTANT: Always follow this pattern:
                     const post = await this.getMessage(parentProject.metadata.originalPostId);
                     if (post) {
                         this.reply(post, { message: responseMessage }, {
-                            "artifact-ids": [content.id]
+                            "artifact-ids": result.artifacts?.map(a => a.id)
                         });
                     } else {
                         Logger.error(`Couldn't find post ${parentProject.metadata.originalPostId}`);
