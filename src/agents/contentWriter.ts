@@ -152,9 +152,9 @@ export class ContentWriter extends Agent {
         for (const task of completedTasks) {
             const response = task.props?.result?.response;
             if (response) {
-                // Add main section
+                // Add main section using structured heading
                 mergedContent.sections.push({
-                    heading: task.title || 'Untitled Section',
+                    heading: response.structure?.heading || task.title || 'Untitled Section',
                     content: response.message,
                     citations: response.citations || []
                 });
