@@ -195,12 +195,25 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             complete: true,
             inProgress: false 
         });
-        // Emit the 'taskAssigned' event with the task and agent ID
+        // Emit the 'taskCompleted' event with the task
         this.emit('taskCompleted', task);
+
+        // Find any tasks that were dependent on this one
+        const project = this.getProject(task.projectId);
+        const dependentTasks = Object.values(project.tasks || {})
+            .filter(t => t.dependsOn === task.id && !t.complete);
+
+        // Emit 'ready' event for each dependent task
+        dependentTasks.forEach(dependentTask => {
+            this.emit('taskReady', {
+                task: dependentTask,
+                project,
+                dependency: task
+            });
+        });
 
         // Check if all tasks in the project are completed
         if (this.areAllTasksCompleted(task.projectId)) {
-            const project = this.getProject(task.projectId);
             this.emit('projectCompleted', { 
                 project, 
                 task, 
