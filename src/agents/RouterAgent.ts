@@ -14,7 +14,16 @@ export interface RoutingContext {
     channelData: Partial<ChannelData>;
     project: Project | null;
     agentOptions: AgentInformation[]
-    agentPromptOptions: string; 
+    agentCapabilities: {
+        name: string;
+        description: string;
+        capabilities?: {
+            stepType: string;
+            description: string;
+            exampleInput?: string;
+            exampleOutput?: string;
+        }[]
+    }[];
     projectTasks: Task[];
     conversationContext: string;
     artifacts?: Artifact[]
@@ -59,21 +68,13 @@ export class RouterAgent extends Agent {
             });          
 
         // Get detailed capabilities for each agent that is a StepBasedAgent
-        const agentPromptOptions = agentOptions
-            .map(agent => {
-                if (!agent) return '';
-                
-                // Get capabilities if agent is a StepBasedAgent
-                const capabilities = (agent as any).getExecutorCapabilities?.() || [];
-                
-                return `- ${agent.handle}: ${agent.description}
-  Capabilities:
-${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
-      ${cap.exampleInput ? `Example Input: ${cap.exampleInput}` : ''}
-      ${cap.exampleOutput ? `Example Output: ${cap.exampleOutput}` : ''}`).join('\n')}`;
-            })
-            .filter(Boolean)
-            .join('\n\n');
+        const agentCapabilities = agentOptions
+            .filter(agent => agent !== null)
+            .map(agent => ({
+                name: agent!.handle,
+                description: agent!.description,
+                capabilities: (agent as any).getExecutorCapabilities?.() || []
+            }));
 
         // Get project tasks if exists
         const projectTasks = project ? Object.values(project.tasks) : [];
@@ -201,14 +202,8 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
         // Add core instructions
         promptBuilder.addInstruction(`YOU ARE THE ROUTER AGENT (@router). Your ONLY goal is to TRANSFER USERS to the best agent to solve their needs, not try and solve their needs.`);
 
-        // Add available agents
-        promptBuilder.addContent(ContentType.TASKS, {
-            title: "Available Agents",
-            items: context.agentOptions.map(agent => ({
-                name: agent?.handle || '',
-                description: agent?.description || ''
-            }))
-        });
+        // Add available agents with their capabilities
+        promptBuilder.addContent(ContentType.AGENT_CAPABILITIES, context.agentCapabilities);
 
         // Add project details if exists
         if (context.project) {

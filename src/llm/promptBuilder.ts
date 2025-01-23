@@ -17,7 +17,8 @@ export enum ContentType {
     TASKS = 'tasks',
     GOALS = 'goals',
     STEP_RESULTS = 'step_results',
-    EXECUTE_PARAMS = 'execute_params'
+    EXECUTE_PARAMS = 'execute_params',
+    AGENT_CAPABILITIES = 'agent_capabilities'
 }
 
 
@@ -30,6 +31,7 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation.bind(this));
         this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults.bind(this));
         this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
+        this.registerRenderer(ContentType.AGENT_CAPABILITIES, this.renderAgentCapabilities.bind(this));
         
         // Register type-specific step result renderers
         this.registerStepResultRenderer(StepResultType.Validation, this.renderValidationStep.bind(this));
@@ -106,6 +108,34 @@ export class PromptRegistry {
                 ? artifact.content
                 : `[Binary data - ${artifact.content.length} bytes]`;
             return `Artifact ${index + 1} (${artifact.type}):\n${content}`;
+        }).join('\n\n');
+    }
+
+    private renderAgentCapabilities(agents: { 
+        name: string;
+        description: string;
+        capabilities?: {
+            stepType: string;
+            description: string;
+            exampleInput?: string;
+            exampleOutput?: string;
+        }[]
+    }[]): string {
+        if (!agents || agents.length === 0) return '';
+        
+        return "🤖 Available Agents:\n\n" + agents.map(agent => {
+            let output = `- ${agent.name}: ${agent.description}`;
+            
+            if (agent.capabilities && agent.capabilities.length > 0) {
+                output += `\n  Capabilities:\n` + 
+                    agent.capabilities.map(cap => 
+                        `    * ${cap.stepType}: ${cap.description}\n` +
+                        (cap.exampleInput ? `      Example Input: ${cap.exampleInput}\n` : '') +
+                        (cap.exampleOutput ? `      Example Output: ${cap.exampleOutput}` : '')
+                    ).join('\n');
+            }
+            
+            return output;
         }).join('\n\n');
     }
 
