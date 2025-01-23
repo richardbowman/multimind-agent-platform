@@ -81,20 +81,32 @@ export class ContentCombinationExecutor implements StepExecutor {
             }
         }
 
-        // Format final content with citations
-        const formattedContent = sections
+        // Collect all citations and deduplicate them
+        const allCitations = new Map<string, {
+            sourceId: string;
+            excerpt: string;
+            reference?: string;
+        }>();
+
+        // Format sections and collect citations
+        const formattedSections = sections
             .map(section => {
-                let content = `## ${section.heading}\n\n${section.content}\n\n`;
-                if (section.citations.length > 0) {
-                    content += '### References\n\n';
-                    content += section.citations
-                        .map((cite, i) => `${i + 1}. [Source ${cite.sourceId}] ${cite.excerpt}`)
-                        .join('\n');
-                    content += '\n\n';
-                }
-                return content;
+                // Add citations to the global map
+                section.citations.forEach(cite => {
+                    allCitations.set(cite.sourceId, cite);
+                });
+                
+                return `## ${section.heading}\n\n${section.content}\n\n`;
             })
             .join('\n\n');
+
+        // Format deduplicated references at the end
+        const formattedReferences = Array.from(allCitations.values())
+            .map((cite, i) => `${i + 1}. [Source ${cite.sourceId}] ${cite.excerpt}`)
+            .join('\n');
+
+        // Combine sections and references
+        const formattedContent = `${formattedSections}\n\n## References\n\n${formattedReferences}`;
 
         // Get title from outline task
         const contentTitle = Object.values(params.steps)
