@@ -43,34 +43,43 @@ export class ContentCombinationExecutor implements StepExecutor {
             outputTokens: 0
         };
 
-        // Process each writing task
-        Object.values(params.steps).forEach(step => {
-            if (step.props.stepType === ExecutorType.WRITING && step.props.result?.response) {
-                const response = step.props.result.response;
-                
-                // Add main section
-                sections.push({
-                    heading: response.structure?.heading || 'Untitled Section',
-                    content: response.message,
-                    citations: response.citations || []
-                });
+        // Find the last writing step
+        const writingSteps = Object.values(params.steps)
+            .filter(step => step.props.stepType === ExecutorType.WRITING)
+            .sort((a, b) => b.props.createdAt - a.props.createdAt);
 
-                // Add any subheadings
-                if (response.structure?.subheadings) {
-                    sections.push(...response.structure.subheadings.map(sh => ({
-                        heading: sh.title,
-                        content: sh.content,
-                        citations: response.citations || []
-                    })));
-                }
+        if (writingSteps.length > 0) {
+            const lastWritingStep = writingSteps[0];
+            
+            // Process subProjectResults from the last writing step
+            if (lastWritingStep.props.result?.subProjectResults) {
+                for (const subResult of lastWritingStep.props.result.subProjectResults) {
+                    if (subResult.response) {
+                        // Add main section
+                        sections.push({
+                            heading: subResult.response.structure?.heading || 'Untitled Section',
+                            content: subResult.response.message,
+                            citations: subResult.response.citations || []
+                        });
 
-                // Accumulate token usage
-                if (response._usage) {
-                    totalTokenUsage.inputTokens += response._usage.inputTokens || 0;
-                    totalTokenUsage.outputTokens += response._usage.outputTokens || 0;
+                        // Add any subheadings
+                        if (subResult.response.structure?.subheadings) {
+                            sections.push(...subResult.response.structure.subheadings.map(sh => ({
+                                heading: sh.title,
+                                content: sh.content,
+                                citations: subResult.response.citations || []
+                            })));
+                        }
+
+                        // Accumulate token usage
+                        if (subResult.response._usage) {
+                            totalTokenUsage.inputTokens += subResult.response._usage.inputTokens || 0;
+                            totalTokenUsage.outputTokens += subResult.response._usage.outputTokens || 0;
+                        }
+                    }
                 }
             }
-        });
+        }
 
         // Format final content with citations
         const formattedContent = sections
