@@ -1,44 +1,17 @@
-<<<<<<< HEAD
-import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
-import { Artifact } from 'src/tools/artifact';
-import { ArtifactManager } from 'src/tools/artifactManager';
-import { StepResult } from '../interfaces/StepResult';
-import { TaskManager } from 'src/tools/taskManager';
-import { createUUID } from 'src/types/uuid';
-import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ExecutorType } from '../interfaces/ExecutorType';
-=======
-import { StepExecutorDecorator } from '../decorators/stepExecutorDecorator';
-import { ExecutorType } from '../interfaces/executorTypes';
-import { ExecuteParams, StepResult } from '../interfaces/ExecuteParams';
-import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
-import { Artifact } from 'src/tools/artifact';
-import { ArtifactManager } from 'src/tools/artifactManager';
-import { StepResult } from '../interfaces/StepResult';
-import { TaskManager } from 'src/tools/taskManager';
-import { createUUID } from 'src/types/uuid';
-import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ExecutorType } from '../interfaces/ExecutorType';
+import { ArtifactManager } from "src/tools/artifactManager";
+import { TaskManager } from "src/tools/taskManager";
+import { StepExecutorDecorator } from "../decorators/executorDecorator";
+import { ExecuteParams } from "../interfaces/ExecuteParams";
+import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
+import { ExecutorType } from "../interfaces/ExecutorType";
+import { StepExecutor } from "../interfaces/StepExecutor";
+import { StepResult } from "../interfaces/StepResult";
+import { Artifact } from "src/tools/artifact";
+import { createUUID } from "src/types/uuid";
 
 @StepExecutorDecorator(ExecutorType.CONTENT_COMBINATION, 'Combine written sections into final content')
 export class ContentCombinationExecutor implements StepExecutor {
     private artifactManager: ArtifactManager;
-<<<<<<< HEAD
-    private taskManager: TaskManager;
-
-    constructor(params: ExecutorConstructorParams) {
-        this.artifactManager = params.artifactManager!;
-        this.taskManager = params.taskManager;
-    }
-
-    async execute(params: ExecuteParams): Promise<StepResult> {
-        const { projectId } = params;
-        const project = this.taskManager.getProject(projectId);
-=======
     private taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
@@ -55,7 +28,7 @@ export class ContentCombinationExecutor implements StepExecutor {
         }
 
         // Combine all task content
-        const finalContent = Object.values(params.steps).find(step => step.props.stepType == 'assign-writers')?.props?.result?.response?.subProjectResults?.join('\n\n');
+        const finalContent = Object.values(params.steps).find(step => step.props.stepType == 'assign-writers')?.props?.result?.response?.message;
 
         // Create artifact
         const content: Artifact = {

@@ -117,7 +117,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     };
 
     return (
-        <Box sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
+        <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
             <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
                 <Typography variant="h6" sx={{ color: '#fff' }}>
                     Channels ({channels.length})
@@ -143,7 +143,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 </Typography>
             )}
 
-            <List>
+            <List sx={{display: 'flex', flexDirection: 'column', overflowY: 'auto'}}>
                 {channels.map(channel => (
                     <ListItem 
                         key={channel.id}

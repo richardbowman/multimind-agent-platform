@@ -41,7 +41,7 @@ export class LogManager extends EventEmitter {
         }
         this.emit("_" + level.toLowerCase(), logEntry);
         
-        if (level !== "verbose") console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`)
+        if (level !== "verbose" && level !== "debug") console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`)
     }
 
     public info(message: string, error?: any): void {

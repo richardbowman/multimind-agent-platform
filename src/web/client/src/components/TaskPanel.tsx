@@ -50,11 +50,11 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
 
 
     return (
-        <Box sx={{ p: 2, height: '100%', overflowY: 'auto' }}>
+        <Box sx={{ p: 2, height: '100%', overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <Typography variant="h6" sx={{ mb: 2, color: '#fff' }}>
                 Tasks
             </Typography>
-            <List>
+            <List sx={{ display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                 {Array.from(new Map((tasks || []).map(task => [task.id, task])).values())
                     .sort((a, b) => {
                         // Sort in-progress to top, then not started, then completed
