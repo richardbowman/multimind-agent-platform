@@ -13,6 +13,7 @@ import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { DocumentRetrievalExecutor } from './executors/DocumentRetrievalExecutor';
 import { TaskCategories } from './interfaces/taskCategories';
+import { TaskEventType } from './agents';
 
 export interface ContentProject extends Project {
     goal: string;
@@ -47,36 +48,6 @@ IMPORTANT: Always follow this pattern:
         this.registerStepExecutor(new EditingExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new DocumentRetrievalExecutor(this.getExecutorParams()));
         // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
-
-    }
-
-    protected async taskNotification(task: Task): Promise<void> {
-        try {
-            if (task.category === TaskCategories.Writing) {
-                if (task.complete) {
-                    const project = this.projects.getProject(task.projectId);
-
-                    this.planSteps(task.projectId, [{ 
-                        message: "Writers completed tasks."
-                    }]);
-
-                    const post = project.metadata.originalPostId ? await this.getMessage(project.metadata.originalPostId) : undefined;
-
-                    await this.executeNextStep({
-                        projectId: project.id, 
-                        userPost: post
-                    });
-                }
-            } else {
-                super.taskNotification(task);
-            }
-        } catch (error) {
-            Logger.error('Error handling task:', error);
-            throw error;
-        }        
-    }
-
-    protected async processTask(task: Task): Promise<void> {
 
     }
 
