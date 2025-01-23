@@ -13,10 +13,8 @@ import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Settings } from "src/tools/settings";
-import { UUID } from "src/types/uuid";
-import { Agents } from "src/utils/AgentLoader";
-import { TokenBias } from "node-llama-cpp";
 import { StepTask } from "./interfaces/ExecuteStepParams";
+import { Agents } from "src/utils/AgentLoader";
 
 
 export enum TaskEventType {
@@ -159,12 +157,11 @@ export abstract class Agent {
         const isMine = task.assignee === this.userId;
         Logger.info(`Agent [${this.messagingHandle}]: Received task notification '${eventType}': ${task.description} [${isMine?"MINE":"CREATOR"}]}]`);
 
-        // when tasks are assigned to me, start working on them
-        if (isMine && eventType === TaskEventType.Assigned && task.type === TaskType.Standard) {
+        // when tasks are assigned to me, start working on them; also for completed async tasks we need to kickoff queue
+        if (isMine && task.type === TaskType.Standard) {
             await this.processTaskQueue();
         }
     }
-
     async processTaskQueue(): Promise<void> {
         if (this.isWorking) {
             Logger.info(`Agent [${this.messagingHandle}]: Task queue is already being processed`);
@@ -189,6 +186,12 @@ export abstract class Agent {
 
                     // Attempt to process the task
                     await this.processTask(task);
+
+                    const latestTask = this.projects.getTaskById(task.id);
+                    if (!latestTask?.complete) {
+                        Logger.info(`Agent [${this.messagingHandle}]: Current task is not yet complete. Processed ${processedCount} tasks, exiting processign queue.`);
+                        return;
+                    }
 
                     processedCount++;
                 } catch (error) {
