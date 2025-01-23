@@ -1,19 +1,15 @@
-import { randomUUID } from 'crypto';
 import { Agent, HandlerParams } from './agents';
-import { ModelMessageHistory } from 'src/llm/lmstudioService';
-import { getGeneratedSchema, SchemaType } from 'src/schemas/SchemaTypes';
 import { StructuredOutputPrompt } from 'src/llm/ILLMService';
-import { ContentSectionResponse } from 'src/schemas/ContentSectionResponse';
 import Logger from 'src/helpers/logger';
 import { ContentProject, ContentTask } from './contentManager';
-import { ModelRole } from 'src/llm/ILLMService';
 import { CreateProjectParams, TaskType } from 'src/tools/taskManager';
 import { TaskCategories } from './interfaces/taskCategories';
 import { createUUID } from 'src/types/uuid';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
+import { ContentSectionResponse } from 'src/schemas/ContentSectionResponse';
 
 export class ContentWriter extends Agent {
-    async initialize?(): Promise<void> { }
-    
     protected handlerThread(params: HandlerParams): Promise<void> {
         return this.handleChannel(params);
     }
