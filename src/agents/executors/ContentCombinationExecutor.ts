@@ -28,7 +28,8 @@ export class ContentCombinationExecutor implements StepExecutor {
         }
 
         // Combine all task content
-        const finalContent = Object.values(params.steps).find(step => step.props.stepType == 'assign-writers')?.props?.result?.response?.message;
+        const finalContent = Object.values(params.steps).find(step => step.props.stepType == ExecutorType.WRITING)?.props?.result?.response?.message;
+        const contentTitle = Object.values(params.steps).find(step => step.props.stepType == ExecutorType.OUTLINE)?.props?.result?.response?.data?.title;
 
         // Create artifact
         const content: Artifact = {
@@ -37,7 +38,8 @@ export class ContentCombinationExecutor implements StepExecutor {
             type: "content",
             metadata: {
                 goal: project.name,
-                projectId: project.id
+                projectId: project.id,
+                title: contentTitle
             }
         };
 
