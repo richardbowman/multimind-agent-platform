@@ -143,11 +143,11 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             if (project.tasks?.hasOwnProperty(taskId)) {
                 const task = project.tasks[taskId];
                 taskFound = true;
-                await this.updateTask(task.id, {
+                const updatedTask = await this.updateTask(task.id, {
                     assignee
                 })
                 // Emit the 'taskAssigned' event with the task and agent ID
-                this.emit('taskAssigned', { task, assignee: assignee });
+                this.emit('taskAssigned', updatedTask);
                 break;
             }
         }
@@ -182,7 +182,6 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 return userTasks[0];
             }
         }
-        Logger.info(`No available tasks for user ${userId} found.`);
         return null;
     }
 
@@ -196,6 +195,8 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             complete: true,
             inProgress: false 
         });
+        // Emit the 'taskAssigned' event with the task and agent ID
+        this.emit('taskCompleted', task);
 
         // Check if all tasks in the project are completed
         if (this.areAllTasksCompleted(task.projectId)) {

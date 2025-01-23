@@ -11,6 +11,9 @@ import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { StructuredOutputPrompt } from "./ILLMService";
 import { SearchResult } from "./IVectorDatabase";
+import { StepResult, StepResultType } from "src/agents/interfaces/StepResult";
+import { ExecuteParams } from "src/agents/interfaces/ExecuteParams";
+import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
 
 export interface ModelHelpersParams {
     llmService: ILLMService;
@@ -93,14 +96,14 @@ export class PromptRegistry {
 
     constructor() {
         // Register default renderers
-        this.registerRenderer(ContentType.ARTIFACTS, this.renderArtifacts);
-        this.registerRenderer(ContentType.CONVERSATION, this.renderConversation);
-        this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults);
-        this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams);
+        this.registerRenderer(ContentType.ARTIFACTS, this.renderArtifacts.bind(this));
+        this.registerRenderer(ContentType.CONVERSATION, this.renderConversation.bind(this));
+        this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults.bind(this));
+        this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
         
         // Register type-specific step result renderers
-        this.registerStepResultRenderer(StepResultType.Validation, this.renderValidationStep);
-        this.registerStepResultRenderer(StepResultType.Question, this.renderQuestionStep);
+        this.registerStepResultRenderer(StepResultType.Validation, this.renderValidationStep.bind(this));
+        this.registerStepResultRenderer(StepResultType.Question, this.renderQuestionStep.bind(this));
         // Add more type-specific renderers as needed
     }
 
@@ -128,16 +131,18 @@ export class PromptRegistry {
         this.stepResultRenderers.set(type, renderer);
     }
 
-    private renderStepResults(steps: StepResult[]): string {
-        if (!steps || steps.length === 0) return '';
+    private renderStepResults(steps: StepTask[]): string {
+        const stepsWithResults = steps?.filter(s => s.props?.result?.type && s.props.result != undefined);
+        if (!stepsWithResults || stepsWithResults.length === 0) return '';
         
-        return "📝 Step History:\n\n" + steps.map((step, index) => {
-            const typeRenderer = this.stepResultRenderers.get(step.type);
+        return "📝 Step History:\n\n" + stepsWithResults.map((step, index) => {
+            const stepResult = step.props.result!;
+            const typeRenderer = this.stepResultRenderers.get(stepResult.type!);
             if (typeRenderer) {
-                return typeRenderer(step);
+                return typeRenderer(stepResult);
             }
             // Default renderer for unknown types
-            return `Step ${index + 1} (${step.type}):\n${step.response.message}`;
+            return `Step ${index + 1} (${stepResult.type}):\n${stepResult.response?.message}`;
         }).join('\n\n');
     }
 
@@ -504,38 +509,11 @@ export class ModelHelpers {
     }
 
     public async generate<T extends ModelResponse>(params: GenerateInputParams): Promise<T> {
-        // Reset prompt builder for new generation
-        this.promptBuilder = new PromptBuilder();
-
-        // Add any artifacts
-        if (params.artifacts) {
-            this.promptBuilder.addContent(ContentType.ARTIFACTS, params.artifacts);
+        if (params.instructions instanceof StructuredOutputPrompt) {
+            return this.generateStructured<T>(params.instructions, params);
+        } else {
+            return this.generateOld(params.instructions.toString(), params);
         }
-
-        // Add conversation context if available
-        if (params.threadPosts) {
-            this.promptBuilder.addContent(ContentType.CONVERSATION, params.threadPosts);
-        }
-
-        // Add main instructions
-        if (params.instructions) {
-            if (typeof params.instructions === 'string') {
-                this.promptBuilder.addInstruction(params.instructions);
-            } else if (params.instructions instanceof StructuredOutputPrompt) {
-                // For structured prompts, we'll use the existing flow
-                return this.generateStructured<T>(params.instructions, params);
-            }
-        }
-
-        // Add any additional context from params
-        if (params.context) {
-            this.promptBuilder.addContext(JSON.stringify(params.context));
-        }
-
-        // Build the final prompt
-        const prompt = this.promptBuilder.build();
-
-        return this.generateOld(prompt, params);
     }
 
     /**

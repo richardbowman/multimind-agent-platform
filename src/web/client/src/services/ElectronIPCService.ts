@@ -31,7 +31,7 @@ export class ElectronIPCService extends BaseRPCService {
             const clientWrappers = new Proxy({} as ClientMethods, {
                 get: (target, prop: string) => {
                     return (...args: any[]) => {
-                        console.log(`[IPC] ${prop}`, args);
+                        console.debug(`[IPC] ${prop}`, args);
                         try {
                             if (this.wrapper && typeof this.wrapper[prop] === 'function') {
                                 return this.wrapper[prop].call(this.wrapper, ...args);

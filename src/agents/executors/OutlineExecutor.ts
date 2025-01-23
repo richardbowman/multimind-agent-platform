@@ -106,8 +106,8 @@ ${params.previousResult ? `Use these research findings to inform the outline:\n$
 
         return {
             type: "outline",
-            finished: false,
-            needsUserInput: true,
+            finished: params.executionMode === "conversation" ? false : true,
+            needsUserInput: params.executionMode === "conversation" ? true : false,
             response: {
                 message: `**Draft Content Outline**\n\n# ${result.title}\n\n${result.sections.map(s => 
                     `## ${s.heading}\n${s.description}\n\nKey Points:\n${s.keyPoints.map(p => `- ${p}`).join('\n')}`

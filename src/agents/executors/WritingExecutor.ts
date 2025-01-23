@@ -13,6 +13,7 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import { WritingResponse } from '../../schemas/writing';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { TaskCategories } from '../interfaces/taskCategories';
+import { createUUID } from 'src/types/uuid';
 
 /**
  * Executor that manages content writing task assignments and coordination.
@@ -67,7 +68,8 @@ ${params.previousResult ? `Use these materials to inform the task planning:\n${J
                     status: 'active',
                     owner: params.agentId,
                     description: params.goal,
-                    priority: 'medium'
+                    priority: 'medium',
+                    parentTaskId: params.stepId
                 }
             };
             
@@ -75,7 +77,7 @@ ${params.previousResult ? `Use these materials to inform the task planning:\n${J
 
             for (const section of result.sections) {
                 const task = await this.taskManager.addTask(writingProject, {
-                    id: crypto.randomUUID(),
+                    id: createUUID(),
                     creator: params.agentId,
                     type: TaskType.Standard,
                     category: TaskCategories.Writing,
@@ -94,7 +96,7 @@ ${params.previousResult ? `Use these materials to inform the task planning:\n${J
             return {
                 type: "writing",
                 finished: false,
-                needsUserInput: true,
+                async: true,
                 response: {
                     message: `Created ${result.sections.length} writing tasks:\n\n${
                         result.sections.map(s => `- ${s.title}`).join('\n')

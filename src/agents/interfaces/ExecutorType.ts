@@ -21,5 +21,6 @@ export enum ExecutorType {
     DOCUMENT_RETRIEVAL = "document-retrieval",
     WEB_RESEARCH = "web_search",
     CREATE_CHANNEL = "create_channel",
-    SELECT_TEMPLATE = "select-template"
+    SELECT_TEMPLATE = "select-template",
+    CONTENT_COMBINATION = "content-combination"
 }

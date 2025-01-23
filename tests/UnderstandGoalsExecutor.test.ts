@@ -1,11 +1,11 @@
-import { UnderstandGoalsExecutor } from '../UnderstandGoalsExecutor';
-import { ModelHelpers } from '../../../llm/modelHelpers';
-import { ExecuteParams } from '../../interfaces/ExecuteParams';
-import { StepResult } from '../../interfaces/StepResult';
-import { TaskManager } from '../../../tools/taskManager';
-import { TaskType } from '../../../tools/taskManager';
-import { IntakeQuestionsResponse } from '../../../schemas/IntakeQuestionsResponse';
-import { UUID, createUUID } from '../../../types/uuid';
+import { UnderstandGoalsExecutor } from '../src/agents/executors/UnderstandGoalsExecutor';
+import { ModelHelpers } from '../src/llm/modelHelpers';
+import { ExecuteParams } from '../src/agents/interfaces/ExecuteParams';
+import { StepResult } from '../src/agents/interfaces/StepResult';
+import { TaskManager } from '../src/tools/taskManager';
+import { TaskType } from '../src/tools/taskManager';
+import { IntakeQuestionsResponse } from '../src/schemas/IntakeQuestionsResponse';
+import { UUID, createUUID } from '../src/types/uuid';
 
 describe('UnderstandGoalsExecutor', () => {
     let executor: UnderstandGoalsExecutor;

@@ -55,6 +55,7 @@ Message to analyze: "${goal}"`;
         return {
             finished: result.understanding,
             needsUserInput: !result.understanding,
+            allowReplan: true,
             goal: result.message,
             response: {
                 message: result.message

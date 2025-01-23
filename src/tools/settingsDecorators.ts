@@ -1,4 +1,5 @@
 import 'reflect-metadata';
+import { Settings } from './settings';
 
 export function ClientSettings(metadata: {
     label: string;
@@ -12,7 +13,7 @@ export function ClientSettings(metadata: {
     step?: number;
     sensitive?: boolean;
     required?: boolean;
-    visibleWhen?: (settings: any) => boolean;
+    visibleWhen?: (settings: Settings) => boolean;
 }) {
     return function (target: any, propertyKey: string) {
         Reflect.defineMetadata('clientSettings', metadata, target, propertyKey);

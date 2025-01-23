@@ -1,4 +1,6 @@
-export interface ValidationResult {
+import { ModelResponse } from "./ModelResponse";
+
+export interface ValidationResult extends ModelResponse {
     /**
      * Whether the solution fully addresses the original goal
      */

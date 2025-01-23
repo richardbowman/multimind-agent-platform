@@ -15,6 +15,7 @@ import { TaskManager } from 'src/tools/taskManager';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationResponse';
+import { createUUID } from 'src/types/uuid';
 
 /**
  * Executor that generates and manages Markdown document artifacts.
@@ -124,7 +125,7 @@ IMPORTANT RULES:
             }
 
             const artifact: Artifact = {
-                id: result.artifactId?.length > 0 ? result.artifactId : randomUUID(),
+                id: result.artifactId?.length > 0 ? result.artifactId : createUUID(),
                 type: 'markdown',
                 content: finalContent,
                 metadata: {
@@ -141,9 +142,9 @@ IMPORTANT RULES:
             return {
                 type: "generate-artifact",
                 finished: true,
+                artifactIds: [artifact.id],
                 response: {
                     message: `${result.confirmationMessage} Your artifact titled "${result.title}" has been generated and saved. You can find it under ID: ${artifact.id}`,
-                    artifactIds: [artifact.id]
                 } as RequestArtifacts
             };
 

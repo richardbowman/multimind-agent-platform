@@ -75,6 +75,7 @@ In your response, provide a fully restated goal incorporating your proposed deta
         return {
             type: "understand-research-goals",
             finished: true,
+            allowReplan: true,
             response: {
                 message: `I understand your research goals:\n\n${result.goal}\n\nProceeding with research plan creation.`
             },

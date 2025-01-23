@@ -6,6 +6,7 @@ import { ContentProject, ContentTask } from './contentManager';
 import { ModelRole } from 'src/llm/ILLMService';
 import { CreateProjectParams, TaskType } from 'src/tools/taskManager';
 import { TaskCategories } from './interfaces/taskCategories';
+import { createUUID } from 'src/types/uuid';
 
 export class ContentWriter extends Agent {
     async initialize?(): Promise<void> { }
@@ -67,8 +68,13 @@ export class ContentWriter extends Agent {
             this.projects.updateTask(task.id, {
                 props: {
                     ...task.props,
-                    contentBlockId: randomUUID(),
-                    content: sectionContent
+                    result: {
+                        ...task.props?.result,
+                        response: {
+                            message: sectionContent,
+                            contentBlockId: createUUID(),
+                        }
+                    } 
                 }
             });
         } catch (error) {

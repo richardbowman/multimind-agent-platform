@@ -9,7 +9,7 @@ declare global {
     var socket: Socket | undefined;
 }
 
-class LogManager extends EventEmitter {
+export class LogManager extends EventEmitter {
     private logFilePath = path.join(getDataPath(), `output-${new Date().toISOString().split('T')[0]}.log`);
 
     private ensureLogDirectoryExists(): void {

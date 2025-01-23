@@ -27,11 +27,11 @@ class VectraService extends EventEmitter implements IVectorDatabase {
             this.collectionName = name;
             const indexPath = path.join(getDataPath(), name);
             this.index = new LocalIndex(indexPath);
-            
+
             if (!(await this.index.isIndexCreated())) {
                 await this.index.createIndex();
             }
-            
+
             Logger.info(`Vectra index initialized for collection: ${name} at ${indexPath}`);
         });
     }
@@ -41,12 +41,12 @@ class VectraService extends EventEmitter implements IVectorDatabase {
 
         const embedder = this.embeddingService.getEmbeddingModel();
         const embeddings = await embedder.generate(collection.documents);
-        
-        await this.index.beginUpdate();
 
-        // Process inserts sequentially through the queue
-        for (let i = 0; i < collection.documents.length; i++) {
-            await syncQueue.enqueue(async () => {
+        await syncQueue.enqueue(async () => {
+            await this.index!.beginUpdate();
+
+            // Process inserts sequentially through the queue
+            for (let i = 0; i < collection.documents.length; i++) {
                 try {
                     await this.index!.insertItem({
                         id: collection.ids[i],
@@ -64,10 +64,10 @@ class VectraService extends EventEmitter implements IVectorDatabase {
                         throw error; // Re-throw other errors
                     }
                 }
-            });
-        }
+            }
 
-        await this.index.endUpdate();
+            await this.index!.endUpdate();
+        });
     }
 
     async query(queryTexts: string[], where: any, nResults: number): Promise<SearchResult[]> {

@@ -1,10 +1,10 @@
-import { ComplexProjectExecutor } from '../ComplexProjectExecutor';
-import { ModelHelpers } from '../../../llm/modelHelpers';
-import { ExecuteParams } from '../../interfaces/ExecuteParams';
-import { StepResult } from '../../interfaces/StepResult';
-import { TaskManager } from '../../../tools/taskManager';
-import { TaskType } from '../../../tools/taskManager';
-import { UUID, createUUID } from '../../../types/uuid';
+import { ComplexProjectExecutor } from '../src/agents/executors/ComplexProjectExecutor';
+import { ModelHelpers } from '../src/llm/modelHelpers';
+import { ExecuteParams } from '../src/agents/interfaces/ExecuteParams';
+import { StepResult } from '../src/agents/interfaces/StepResult';
+import { TaskManager } from '../src/tools/taskManager';
+import { TaskType } from '../src/tools/taskManager';
+import { UUID, createUUID } from '../src/types/uuid';
 
 describe('ComplexProjectExecutor', () => {
     let executor: ComplexProjectExecutor;
@@ -70,9 +70,10 @@ describe('ComplexProjectExecutor', () => {
             responseMessage: 'Project created'
         };
 
+        const projectId = createUUID();
         mockModelHelpers.generate.mockResolvedValue(mockResponse);
         mockTaskManager.createProject.mockResolvedValue({
-            id: createUUID(),
+            id: projectId,
             name: 'Test Project',
             metadata: {
                 createdAt: new Date(),
@@ -85,7 +86,7 @@ describe('ComplexProjectExecutor', () => {
         const result = await executor.execute(mockParams);
 
         expect(result.finished).toBe(true);
-        expect(result.projectId).toBe('new-project');
+        expect(result.projectId).toBe(projectId);
         expect(mockTaskManager.createProject).toHaveBeenCalled();
         expect(mockTaskManager.addTask).toHaveBeenCalledTimes(2);
         expect(mockTaskManager.updateProject).toHaveBeenCalled();

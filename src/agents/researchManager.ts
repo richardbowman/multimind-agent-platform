@@ -1,5 +1,6 @@
 import Logger from "src/helpers/logger";
 import { Task, TaskType } from "src/tools/taskManager";
+import { Task, TaskType } from "src/tools/taskManager";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { StepBasedAgent } from './stepBasedAgent';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -10,13 +11,13 @@ import { TaskCategories } from "./interfaces/taskCategories";
 import { StepTask } from "./interfaces/ExecuteStepParams";
 import { StepResultType } from "./interfaces/StepResult";
 import { ExecutorType } from "./interfaces/ExecutorType";
+import { TaskEventType } from "./agents";
+import { StepTask } from "./interfaces/ExecuteStepParams";
+import { StepResultType } from "./interfaces/StepResult";
+import { ExecutorType } from "./interfaces/ExecutorType";
 
 
 export class ResearchManager extends StepBasedAgent {
-    protected processTask(task: Task): Promise<void> {
-        throw new Error("Method not implemented.");
-    }
-
     constructor(params: AgentConstructorParams) {
         super(params);
 
@@ -35,31 +36,27 @@ Step 3. 'aggregate-research' to compile findings`);
         this.registerStepExecutor(new ResearchAggregationExecutor(this.getExecutorParams()));
     }
 
-    protected async taskNotification(task: Task): Promise<void> {
+    protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {
         try {
-            if (task.type === TaskType.Step && (task as StepTask).props.stepType === ExecutorType.RESEARCH_DECOMPOSITION) {
-                if (task.complete) {
-                    this.planSteps(task.projectId, [{
-                        message: "Researchers completed tasks."
-                    }]);
+            if (task.category === TaskCategories.WebResearch && task.complete) {
+                // const project = await this.projects.getProject(task.projectId);
 
-                    const project = await this.projects.getProject(task.projectId);
-                    await this.executeNextStep({
-                        projectId: project.id
-                    });
-                }
+                // this.planSteps(task.projectId, [{
+                //     message: "Researchers completed tasks."
+                // }]);
+
+                // await this.executeNextStep({
+                //     projectId: task.projectId
+                // });
+            } else if (eventType === TaskEventType.Completed && task.type === TaskType.Step && (task as StepTask).props?.stepType == ExecutorType.RESEARCH_DECOMPOSITION) {
+                super.taskNotification(task, eventType);
             } else {
-                super.taskNotification(task);
+                super.taskNotification(task, eventType);
             }
         } catch (error) {
             Logger.error('Error handling task:', error);
             throw error;
         }
     }
-
-    public async initialize(): Promise<void> {
-        this.processTaskQueue();
-    }
-
 
 }

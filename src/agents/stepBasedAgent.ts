@@ -1,7 +1,7 @@
-import { Agent, PlannerParams } from './agents';
+import { Agent, PlannerParams, TaskEventType } from './agents';
 import { getExecutorMetadata } from './decorators/executorDecorator';
 import 'reflect-metadata';
-import { isValidChatPost, Message } from '../chat/chatClient';
+import { ChatPost, isValidChatPost, Message } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Project, Task, TaskType } from '../tools/taskManager';
@@ -90,6 +90,29 @@ export abstract class StepBasedAgent extends Agent {
                 Logger.error(`Failed to initialize executor ${executorConfig.className}:`, error);
             }
         }
+    }
+
+    protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {
+        const isMine = task.assignee === this.userId;
+        // if (isMine && eventType == TaskEventType.Assigned && task.type == TaskType.Standard) {
+        //     const project = await this.projects.getProject(task.projectId);
+        //     this.planSteps(task.projectId, [{
+        //         message: "Researchers completed tasks."
+        //     }]);
+        //     await this.executeNextStep({
+        //         projectId: task.projectId
+        //     });
+        // }
+
+
+        // jump-start the step execution if an async step finishes
+        if (isMine && eventType === TaskEventType.Completed && task.type === TaskType.Step && (task as StepTask).props?.result?.async) {
+            await this.executeNextStep({
+                projectId: task.projectId
+            });
+        }
+
+        super.taskNotification(task, eventType);
     }
 
     protected async handleChannel(params: HandlerParams): Promise<void> {
@@ -260,7 +283,7 @@ export abstract class StepBasedAgent extends Agent {
             const tasks = Object.values(project.tasks);
             const completedResults = tasks
                 .filter(t => t.complete)
-                .map(t => t.props?.result)
+                .map(t => t.props?.result?.response)
                 .filter(r => r);
 
             // Combine all results into one
@@ -273,6 +296,7 @@ export abstract class StepBasedAgent extends Agent {
                 props: {
                     ...parentTask.props,
                     result: {
+                        ...parentTask.props?.result,
                         response: {
                             message: combinedResult,
                             subProjectResults: completedResults
@@ -436,16 +460,23 @@ export abstract class StepBasedAgent extends Agent {
                 //TODO need a way to update project to disk
             }
 
+            let replyTo: ChatPost|undefined;
+            if (userPost && isValidChatPost(userPost)) {
+                replyTo = userPost;
+            } else if (project.metadata.originalPostId) {
+                replyTo = await this.chatClient.getPost(project.metadata.originalPostId);
+            }
+
             // Only send replies if we have a userPost to reply to
-            if (userPost) {
+            if (replyTo) {
                 if (stepResult.needsUserInput && stepResult.response) {
-                    await this.reply(userPost, stepResult.response, {
+                    await this.reply(replyTo, stepResult.response, {
                         "project-id": stepResult.projectId || projectId,
                         "artifact-ids": [...stepResult.artifactIds||[], ...stepResult.response?.artifactIds||[], stepResult.response?.data?.artifactId]
                     });
                 } else {
                     const message = stepResult.response?.message || stepResult.response?.reasoning || "";
-                    await this.reply(userPost, {
+                    await this.reply(replyTo, {
                         message: `${message} [Finished ${task.type}, still working...]`
                     }, {
                         "project-id": stepResult.projectId || projectId,

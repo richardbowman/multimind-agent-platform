@@ -1,5 +1,5 @@
 import Logger from "../helpers/logger";
-import { ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "../chat/chatClient";
+import { Attachment, ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "../chat/chatClient";
 import * as fs from "fs/promises";
 import { AsyncQueue } from "../helpers/asyncQueue";
 import { ChannelData, CreateChannelParams } from "src/shared/channelTypes";
@@ -62,11 +62,11 @@ export class InMemoryPost implements ChatPost {
 
 export class LocalChatStorage extends EventEmitter {
     
-    channelNames: Record<string, string> = {};
-    channelData: Record<string, ChannelData> = {};
+    channelNames: Record<UUID, string> = {};
+    channelData: Record<UUID, ChannelData> = {};
     posts: ChatPost[] = [];
     callbacks: Function[] = [];
-    userIdToHandleName: Record<string, string> = {}; // New mapping for user IDs to handle names
+    userIdToHandleName: Record<UUID, ChatHandle> = {}; // New mapping for user IDs to handle names
 
     private storagePath: string;
     private queue: AsyncQueue;
@@ -253,9 +253,9 @@ export class LocalTestClient implements ChatClient {
     public getChannels(): Promise<ChannelData[]> {
         return Promise.resolve(
             Object.entries(this.storage.channelNames).map(([id, name]) => {
-                const channelData = this.storage.channelData[id];
+                const channelData = this.storage.channelData[id as UUID];
                 return {
-                    id,
+                    id: id as UUID,
                     name,
                     description: channelData.description,
                     members: channelData?.members,
@@ -291,7 +291,7 @@ export class LocalTestClient implements ChatClient {
         return;
     }
 
-    public async addArtifactToChannel(channelId: string, artifactId: string): Promise<void> {
+    public async addArtifactToChannel(channelId: UUID, artifactId: UUID): Promise<void> {
         const channelData = await this.getChannelData(channelId);
         if (!channelData) {
             throw new Error(`Channel ${channelId} not found`);

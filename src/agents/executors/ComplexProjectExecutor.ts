@@ -5,9 +5,10 @@ import { StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { TaskManager, TaskType } from '../../tools/taskManager';
+import { Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { createUUID } from 'src/types/uuid';
+import { TaskCategories } from '../interfaces/taskCategories';
 
 @StepExecutorDecorator('complex_project', 'Kickoff a combined project involving both research and content development')
 export class ComplexProjectExecutor implements StepExecutor {
@@ -164,7 +165,7 @@ export class ComplexProjectExecutor implements StepExecutor {
             return {
                 type: StepResultType.ComplexProjectKickoff,
                 projectId: project.id,
-                finished: true,
+                finished: false,
                 response: {
                     message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
                         `1. Research: ${researchTask} [${researchTaskId}]\n` +
@@ -181,6 +182,26 @@ export class ComplexProjectExecutor implements StepExecutor {
                     message: 'Failed to create the complex project. Please try again later.'
                 }
             };
+        }
+    }
+
+    protected async taskNotification(task: Task): Promise<void> {
+        try {
+            if (task.category === TaskCategories.WebResearch && task.complete) {
+                this.planSteps(task.projectId, [{
+                    message: "Researchers completed tasks."
+                }]);
+
+                const project = await this.projects.getProject(task.projectId);
+                await this.executeNextStep({
+                    projectId: project.id
+                });
+            } else {
+                super.taskNotification(task);
+            }
+        } catch (error) {
+            Logger.error('Error handling task:', error);
+            throw error;
         }
     }
 }

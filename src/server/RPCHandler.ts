@@ -576,26 +576,26 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     async showFileDialog(): Promise<void> {
         const mainWindow = this.services.mainWindow.getWindow();
         
-        const result = await dialog.showOpenDialog(mainWindow, {
+        dialog.showOpenDialog(mainWindow, {
             properties: ['openFile', 'multiSelections'],
             filters: [
                 { name: 'Images', extensions: ['jpg', 'png', 'gif', 'webp'] },
                 { name: 'All Files', extensions: ['*'] }
             ]
+        }).then(async (result) => {
+            if (!result.canceled && result.filePaths.length > 0) {
+                // Convert file paths to File objects
+                const files = await Promise.all(result.filePaths.map(async (filePath) => {
+                    const fileData = await fs.promises.readFile(filePath);
+                    return new File([fileData], path.basename(filePath), {
+                        type: mime.getType(filePath) || 'application/octet-stream'
+                    });
+                }));
+    
+                // Send files back to client via callback
+                this.services.clientMethods?.onFilesSelected(files);
+            }
         });
-
-        if (!result.canceled && result.filePaths.length > 0) {
-            // Convert file paths to File objects
-            const files = await Promise.all(result.filePaths.map(async (filePath) => {
-                const fileData = await fs.promises.readFile(filePath);
-                return new File([fileData], path.basename(filePath), {
-                    type: mime.getType(filePath) || 'application/octet-stream'
-                });
-            }));
-
-            // Send files back to client via callback
-            this.services.clientMethods?.onFilesSelected(files);
-        }
     }
 
     async openDevTools(): Promise<void> {

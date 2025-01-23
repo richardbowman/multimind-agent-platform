@@ -33,5 +33,5 @@ export interface ChannelData {
     isPrivate?: boolean;
     members?: UUID[];
     defaultResponderId?: string;
-    artifactIds?: string[];
+    artifactIds?: UUID[];
 }

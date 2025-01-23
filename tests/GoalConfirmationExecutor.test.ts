@@ -1,10 +1,10 @@
-import { GoalConfirmationExecutor } from '../GoalConfirmationExecutor';
-import { ModelHelpers } from '../../../llm/modelHelpers';
-import { ExecuteParams } from '../../interfaces/ExecuteParams';
-import { StepResult } from '../../interfaces/StepResult';
-import { StructuredOutputPrompt } from '../../../llm/ILLMService';
-import { GoalConfirmationResponse } from '../../../schemas/goalConfirmation';
-import { createUUID } from '../../../types/uuid';
+import { GoalConfirmationExecutor } from '../src/agents/executors/GoalConfirmationExecutor';
+import { ModelHelpers } from '../src/llm/modelHelpers';
+import { ExecuteParams } from '../src/agents/interfaces/ExecuteParams';
+import { StepResult } from '../src/agents/interfaces/StepResult';
+import { StructuredOutputPrompt } from '../src/llm/ILLMService';
+import { GoalConfirmationResponse } from '../src/schemas/goalConfirmation';
+import { createUUID } from '../src/types/uuid';
 
 describe('GoalConfirmationExecutor', () => {
     let executor: GoalConfirmationExecutor;

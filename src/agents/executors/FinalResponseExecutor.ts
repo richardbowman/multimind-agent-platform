@@ -47,8 +47,7 @@ You will respond inside of the message key in Markdown format.`;
 
         const response = await this.modelHelpers.generate<FinalResponse>({
             message: context,
-            instructions,
-            maxTokens: 16384
+            instructions
         });
 
         return {

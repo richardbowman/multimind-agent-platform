@@ -124,6 +124,7 @@ ${previousContext}`;
         return {
             type: StepResultType.DecomposeResearch,
             finished: false, // Don't mark as finished until researchers complete their work
+            async: true,
             response: {
                 message: `Research plan created:\n\n${result.strategy}\n\nTasks:\n${result.researchRequested.map(t => `- ${t}`).join('\n')}\n\nWaiting for researchers to complete their tasks...`,
                 data: {

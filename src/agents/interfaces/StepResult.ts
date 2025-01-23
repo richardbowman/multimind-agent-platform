@@ -5,7 +5,8 @@ export enum StepResultType {
     DecomposeResearch = "decompose-research",
     Question = "Question",
     AnswerQuestion = "AnswerQuestion",
-    ComplexProjectKickoff = "ComplexProjectKickoff"
+    ComplexProjectKickoff = "ComplexProjectKickoff",
+    Validation = "Validation"
 }
 
 export interface StepResult {
@@ -15,6 +16,7 @@ export interface StepResult {
     artifactIds?: UUID[],
     finished?: boolean;
     goal?: string;
+    async?: boolean;
     allowReplan?: boolean;
     needsUserInput?: boolean;
     response: ModelResponse;

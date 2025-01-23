@@ -2,7 +2,7 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResult, StepResultType } from '../interfaces/StepResult';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ModelHelpers } from 'src/llm/modelHelpers';
+import { ContentType, ModelHelpers } from 'src/llm/modelHelpers';
 import { ValidationResult } from '../../schemas/validation';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
@@ -47,7 +47,7 @@ export class ValidationExecutor implements StepExecutor {
         const maxAttempts = 3; // Maximum validation attempts before forcing completion
 
         // Create a new prompt builder
-        const promptBuilder = this.modelHelpers.promptBuilder;
+        const promptBuilder = this.modelHelpers.createPrompt();
 
         // Add core validation instructions
         promptBuilder.addInstruction(`You are validating whether a proposed solution addresses the original goal. 
@@ -57,9 +57,10 @@ Analyze the previous steps and their results to determine if a reasonable effort
         promptBuilder.addContent(ContentType.EXECUTE_PARAMS, params);
 
         // Add previous results if available
-        if (params.steps && params.steps.length > 0) {
-            promptBuilder.addContent(ContentType.STEP_RESULTS, params.steps);
-        }
+        promptBuilder.addContent(ContentType.STEP_RESULTS, params.steps);
+
+        // Add previous results if available
+        promptBuilder.addContent(ContentType.ARTIFACTS, params.context?.artifacts);
 
         // Add evaluation guidelines
         promptBuilder.addInstruction(`Evaluation Guidelines:
@@ -77,7 +78,7 @@ If the solution is wrong, list the specific aspects that must be addressed.`);
 
         // Generate the validation response
         const response = await this.modelHelpers.generate<ValidationResult>({
-            message: "Validate solution completeness",
+            message: "Validate solution meets user goal.",
             instructions: new StructuredOutputPrompt(schema, promptBuilder.build())
         });
 

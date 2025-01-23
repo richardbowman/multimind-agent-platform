@@ -264,7 +264,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
         } catch (error) {
             Logger.error("Failed to initialize Llama.cpp embedding model:", error);
-            throw new ConfigurationError("Failed to initialize Llama.cpp embedding model.");
+            throw new ConfigurationError("Failed to initialize Llama.cpp embedding model. See logs.");
         }
     }
 

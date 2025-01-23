@@ -6,7 +6,7 @@ import { ModelMessageResponse } from "src/schemas/ModelResponse";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
-import { Project, ProjectMetadata, Task, TaskManager } from "src/tools/taskManager";
+import { Project, ProjectMetadata, Task, TaskManager, TaskType } from "src/tools/taskManager";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
 import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
@@ -16,6 +16,13 @@ import { Settings } from "src/tools/settings";
 import { UUID } from "src/types/uuid";
 import { Agents } from "src/utils/AgentLoader";
 import { TokenBias } from "node-llama-cpp";
+import { StepTask } from "./interfaces/ExecuteStepParams";
+
+
+export enum TaskEventType {
+    Assigned = "assigned",
+    Completed = "completed"
+}
 
 export interface ActionMetadata {
     activityType: string;
@@ -117,14 +124,14 @@ export abstract class Agent {
         this.artifactManager = params.artifactManager || new ArtifactManager(this.vectorDBService);
 
         if (this.projects) {
-            this.projects.on("taskAssigned", async (event) => {
-                if (event.assignee === this.userId) {
-                    await this.taskNotification(event.task, TaskEventType.Assigned);
+            this.projects.on("taskAssigned", async (task: Task) => {
+                if (task.assignee === this.userId || task.creator === this.userId) {
+                    await this.taskNotification(task, TaskEventType.Assigned);
                 }
             });
-            this.projects.on("taskCompleted", async (event) => {
-                if (event.assignee === this.userId) {
-                    await this.taskNotification(event.task, TaskEventType.Completed);
+            this.projects.on("taskCompleted", async (task: Task) => {
+                if (task.assignee === this.userId || task.creator === this.userId) {
+                    await this.taskNotification(task, TaskEventType.Completed);
                 }
             });
 
@@ -148,18 +155,19 @@ export abstract class Agent {
         this.processTaskQueue();
     }
 
-    export enum TaskEventType {
-        Assigned = "assigned",
-        Completed = "completed"
-    }
-
     protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {
-        await this.processTaskQueue();
+        const isMine = task.assignee === this.userId;
+        Logger.info(`Agent [${this.messagingHandle}]: Received task notification '${eventType}': ${task.description} [${isMine?"MINE":"CREATOR"}]}]`);
+
+        // when tasks are assigned to me, start working on them
+        if (isMine && eventType === TaskEventType.Assigned && task.type === TaskType.Standard) {
+            await this.processTaskQueue();
+        }
     }
 
     async processTaskQueue(): Promise<void> {
         if (this.isWorking) {
-            Logger.info('Task queue is already being processed');
+            Logger.info(`Agent [${this.messagingHandle}]: Task queue is already being processed`);
             return;
         }
 
@@ -170,11 +178,11 @@ export abstract class Agent {
             while (true) {
                 const task = await this.projects.getNextTaskForUser(this.userId);
                 if (!task) {
-                    Logger.info(`Task queue processing complete. Processed ${processedCount} tasks.`);
+                    Logger.info(`Agent [${this.messagingHandle}]: Task queue processing complete. Processed ${processedCount} tasks.`);
                     return;
                 }
 
-                Logger.info(`Processing task ${task.id}: ${task.description}`);
+                Logger.info(`Agent [${this.messagingHandle}]: Processing task ${task.id}: ${task.description}`);
                 try {
                     // Mark task as in progress before starting
                     await this.projects.markTaskInProgress(task);
@@ -185,7 +193,7 @@ export abstract class Agent {
                     processedCount++;
                 } catch (error) {
                     // If task fails, leave it in progress but log the error
-                    Logger.error(`Failed to process task ${task.id}:`, error);
+                    Logger.error(`Agent [${this.messagingHandle}]: Failed to process task ${task.id}:`, error);
                     // Re-throw to stop processing queue on error
                     throw error;
                 }
@@ -212,9 +220,9 @@ export abstract class Agent {
         try {
             // Assuming you have a chatClient or similar service to send messages to the channel
             await this.chatClient.postInChannel(channelId, post.message, post.props);
-            Logger.info(`Message sent to channel ${channelId}: ${post.message}`);
+            Logger.info(`Agent [${this.messagingHandle}]: Message sent to channel ${channelId}: ${post.message}`);
         } catch (error) {
-            Logger.error(`Failed to send message to channel ${channelId}:`, error);
+            Logger.error(`Agent [${this.messagingHandle}]: Failed to send message to channel ${channelId}:`, error);
         }
     }
 
