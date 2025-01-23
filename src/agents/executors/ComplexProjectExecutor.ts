@@ -37,6 +37,7 @@ export class ComplexProjectExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
+        //TODO: convert to automated typescript schema
         const schema = {
             type: 'object',
             properties: {
@@ -62,40 +63,15 @@ export class ComplexProjectExecutor implements StepExecutor {
 
         const formattedMessage = this.formatMessage(params.goal, params.context?.artifacts);
 
+        // include capabilities of the agents
         const structuredPrompt = new StructuredOutputPrompt(
             schema,
-            `Create a comprehensive project plan with multiple tasks for both research and content teams based on this goal. 
-            Consider these guidelines:
-
-            1. Project Structure:
-            - Create a clear, descriptive project name
-            - Define measurable success criteria
-            - Break down into independent but complementary tasks
-            - Identify task dependencies and sequencing
-
-            2. Research Requirements:
-            - Specify required data sources
-            - Define analysis methods
-            - Include validation steps
-            - Set clear deliverables
-
-            3. Content Requirements:
-            - Define target audience
-            - Specify content format
-            - Include review/approval steps
-            - Set publishing requirements
-
-            4. Risk Management:
-            - Identify potential risks
-            - Suggest mitigation strategies
-            - Include contingency planning
-
+            `Describe the necessary research and content requirments based on the user's goal. 
+            
             Output should include:
             - A clear project name and goal
-            - Detailed research and content tasks
-            - Any identified dependencies
-            - Potential risks
-            - A friendly response message to present the plan`
+            - Detailed request for Web-based Research and Content Development tasks
+            - A response message to explain the plan to the user`
         );
 
         try {
@@ -182,26 +158,6 @@ export class ComplexProjectExecutor implements StepExecutor {
                     message: 'Failed to create the complex project. Please try again later.'
                 }
             };
-        }
-    }
-
-    protected async taskNotification(task: Task): Promise<void> {
-        try {
-            if (task.category === TaskCategories.WebResearch && task.complete) {
-                this.planSteps(task.projectId, [{
-                    message: "Researchers completed tasks."
-                }]);
-
-                const project = await this.projects.getProject(task.projectId);
-                await this.executeNextStep({
-                    projectId: project.id
-                });
-            } else {
-                super.taskNotification(task);
-            }
-        } catch (error) {
-            Logger.error('Error handling task:', error);
-            throw error;
         }
     }
 }

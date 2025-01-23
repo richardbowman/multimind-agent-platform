@@ -22,14 +22,10 @@ export interface AgentLoaderParams {
 }
 
 export interface Agents {
-    agents: Record<UUID, AgentInformation>;
+    agents: Record<UUID, Agent>;
 }
 
-export interface AgentInformation {
-    handle?: string;
-    description: string;
-    capabilities: any;
-}
+type AgentType<T extends Agent> = new (...args: any[]) => T;
 
 export class AgentLoader {
     static async loadAgents(params: AgentLoaderParams): Promise<Map<string, Agent>> {
@@ -49,7 +45,7 @@ export class AgentLoader {
                     // Use require.context to dynamically load agents
                     const agentContext = require.context('../agents', true, /\.ts$/);
                     const module = agentContext("./" + definition.sourcePath);
-                    const AgentClass = module[definition.className] || module.default;
+                    const AgentClass : AgentType<Agent> = module[definition.className] || module.default;
 
                     if (!AgentClass) {
                         throw new Error(`Agent class ${definition.className} not found in module`);
@@ -61,6 +57,7 @@ export class AgentLoader {
                         agentName: agentName,
                         userId: definition.userId,
                         messagingHandle: definition.handle,
+                        description: definition.description,
                         config: definition.config,
                         chatClient: new LocalTestClient(definition.userId, "", params.chatStorage),
                         settings: _s,

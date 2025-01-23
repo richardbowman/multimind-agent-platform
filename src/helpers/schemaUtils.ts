@@ -1,6 +1,7 @@
 import { SchemaInliner } from './schemaInliner';
 import { SchemaType } from '../schemas/SchemaTypes';
 import schemas from '../schemas/schemasImport';
+import { JSONSchema } from 'src/llm/ILLMService';
 
 /**
  * Gets an inlined schema from a JSON schema file
@@ -8,7 +9,7 @@ import schemas from '../schemas/schemasImport';
  * @param type Optional specific type to extract from definitions
  * @returns The inlined schema
  */
-export function getInlinedSchema(schemaJson: any, type?: string): any {
+export function getInlinedSchema(schemaJson: any, type?: string): JSONSchema {
     const inliner = new SchemaInliner(schemaJson);
     const inlined = inliner.inlineReferences(schemaJson.definitions);
     return type ? inlined[type] : inlined;
@@ -19,6 +20,6 @@ export function getInlinedSchema(schemaJson: any, type?: string): any {
  * @param type The schema type to extract
  * @returns The inlined schema for the specified type
  */
-export async function getGeneratedSchema(type: SchemaType): Promise<any> {
+export async function getGeneratedSchema(type: SchemaType): Promise<JSONSchema> {
     return getInlinedSchema(schemas, type);
 }

@@ -3,12 +3,13 @@ import { ChatClient } from "../../chat/chatClient";
 import { ILLMService } from "../../llm/ILLMService";
 import { TaskManager } from "../../tools/taskManager";
 import { IVectorDatabase } from "src/llm/IVectorDatabase";
-import { Settings } from "src/tools/settingsManager";
 import { UUID } from "src/types/uuid";
 import { Agents } from "src/utils/AgentLoader";
+import { Settings } from "src/tools/settings";
 
 export interface AgentConstructorParams {
     agentName?: string;
+    description?: string;
     chatClient: ChatClient;
     llmService: ILLMService;
     vectorDBService: IVectorDatabase;
@@ -16,6 +17,6 @@ export interface AgentConstructorParams {
     taskManager: TaskManager;
     userId: UUID;
     messagingHandle?: string;
-    settings: Settings
+    settings: Settings;
     agents: Agents
 }

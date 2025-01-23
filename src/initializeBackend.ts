@@ -14,6 +14,7 @@ import { sleep } from "./utils/sleep";
 import { ServerRPCHandler } from "./server/RPCHandler";
 import { UUID } from "./types/uuid";
 import { ConfigurationError } from "./errors/ConfigurationError";
+import { Agent } from "./agents/agents";
 
 export async function initializeBackend(settingsManager: SettingsManager, options: { 
     reindex?: boolean
@@ -95,10 +96,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     process.on('SIGTERM', shutdown);
     process.on('SIGINT', shutdown);
     
-    const agentInfo : Record<UUID, AgentInformation> = {};
-    const agents : Agents = {
-        agents: agentInfo
-    };
+    const agents : Agents = {agents: {}};
 
     // Load all agents dynamically
     const agentObjects = await AgentLoader.loadAgents({
@@ -117,13 +115,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             await agent.initialize();
             Logger.info(`Initialized agent: ${name}`);
         }
-        if (agent.getExecutorCapabilities) {
-            agentInfo[agent.userId] = {
-                handle: agent.messagingHandle,
-                description: agent.getPurpose(),
-                capabilities: agent.getExecutorCapabilities()
-            };
-        }
+        agents.agents[agent.userId] = agent;
     }
 
     chatStorage.announceChannels();
@@ -158,6 +150,6 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         llmService: chatService,
         vectorDB,
         cleanup: shutdown,
-        agentInfo
+        agents
     };
 }

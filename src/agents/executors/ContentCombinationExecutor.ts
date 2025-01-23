@@ -31,6 +31,7 @@ export class ContentCombinationExecutor implements StepExecutor {
         const sections: Array<{
             heading: string;
             content: string;
+            level: number;
             citations: Array<{
                 sourceId: string;
                 excerpt: string;
@@ -59,6 +60,7 @@ export class ContentCombinationExecutor implements StepExecutor {
                         sections.push({
                             heading: subResult.structure?.heading || 'Untitled Section',
                             content: subResult.message,
+                            level: 1,
                             citations: subResult.citations || []
                         });
 
@@ -67,6 +69,7 @@ export class ContentCombinationExecutor implements StepExecutor {
                             sections.push(...subResult.structure.subheadings.map(sh => ({
                                 heading: sh.title,
                                 content: sh.content,
+                                level: 2,
                                 citations: subResult.citations || []
                             })));
                         }
@@ -96,7 +99,7 @@ export class ContentCombinationExecutor implements StepExecutor {
                     allCitations.set(cite.sourceId, cite);
                 });
                 
-                return `## ${section.heading}\n\n${section.content}\n\n`;
+                return `${section.level==1?"##":"###"} ${section.heading}\n\n${section.content}\n\n`;
             })
             .join('\n\n');
 

@@ -15,6 +15,7 @@ import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Settings } from "src/tools/settings";
 import { StepTask } from "./interfaces/ExecuteStepParams";
 import { Agents } from "src/utils/AgentLoader";
+import { UUID } from "src/types/uuid";
 
 
 export enum TaskEventType {
@@ -83,6 +84,7 @@ export interface ThreadSummary {
 export abstract class Agent {
     public readonly messagingHandle?: string;
     public readonly userId: UUID;
+    public readonly description?: string;
 
     protected readonly chatClient: ChatClient;
     protected readonly threadSummaries: Map<string, ThreadSummary> = new Map();
@@ -113,6 +115,7 @@ export abstract class Agent {
         this.messagingHandle = params.messagingHandle;
         this.settings = params.settings;
         this.agents = params.agents;
+        this.description = params.description;
         
         this.modelHelpers = new ModelHelpers({
             llmService: params.llmService,

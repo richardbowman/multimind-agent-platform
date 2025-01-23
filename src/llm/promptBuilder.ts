@@ -4,6 +4,7 @@ import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
 import { StepResult, StepResultType } from "src/agents/interfaces/StepResult";
 import { StepBasedAgent } from "src/agents/stepBasedAgent";
 import { ChatPost } from "src/chat/chatClient";
+import Logger from "src/helpers/logger";
 import { Artifact } from "src/tools/artifact";
 
 export interface ContentRenderer<T> {
@@ -210,6 +211,8 @@ export class PromptBuilder {
                 if (rendered) {
                     sections.push(`## ${contentType[0].toUpperCase()}${contentType.slice(1)}\n` + rendered);
                 }
+            } else {
+                Logger.error(`PromptBuilder renderer for content type ${contentType} not found`);
             }
         }
 

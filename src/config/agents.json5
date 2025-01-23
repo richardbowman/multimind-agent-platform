@@ -69,13 +69,8 @@
           "purpose": "My name is Mesa. \
   My goal is to help develop standardized processes for your business.",
           "finalInstructions": "When planning steps for a project: \
-  1. Start with goal confirmation to ensure clear understanding \
-  2. Break down complex tasks into smaller, manageable steps \
-  3. Consider dependencies between tasks \
-  4. Include validation steps to ensure quality \
-  5. Add brainstorming steps for creative solutions \
-  6. Generate artifacts to document decisions and plans \
-  7. Always end with a clear summary of accomplishments",
+1. Start with 'goal_confirmation' to ensure clear understanding \
+2. Kickoff the 'complex_project' to start appropriate research and content projects",
           "executors": [
             {
               "className": "BrainstormExecutor"

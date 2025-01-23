@@ -13,7 +13,7 @@ import { ClientThread } from "src/shared/types";
 import { CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
 import { GoalTemplates } from "src/schemas/goalTemplateSchema";
 import { ClientProject } from "src/shared/types";
-import { TaskManager, TaskType } from "src/tools/taskManager";
+import { Project, Task, TaskManager, TaskType } from "src/tools/taskManager";
 import { LimitedRPCHandler } from "./LimitedRPCHandler";
 import { AppUpdater } from "electron-updater";
 import { createUUID, UUID } from "src/types/uuid";
@@ -115,16 +115,17 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         })
 
         // Set up project update notifications
-        this.services.taskManager.on('projectUpdated', ({project : Project}) => {
+        this.services.taskManager.on('projectUpdated', ({project} : {project: Project}) => {
             const clientProject = {
                 id: project.id,
                 name: project.name,
                 props: project.props,
-                tasks: Object.values(project.tasks).map(task => ({
+                tasks: Object.values<Task>(project.tasks).map(task => ({
                     id: task.id,
                     description: task.description,
                     projectId: task.projectId,
                     type: task.type,
+                    status: task.status,
                     assignee: task.assignee,
                     inProgress: task.inProgress || false,
                     complete: task.complete || false,
@@ -147,6 +148,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 description: task.description,
                 type: task.type,
                 assignee: task.assignee,
+                status: task.status,
                 inProgress: task.inProgress || false,
                 complete: task.complete || false,
                 threadId: task.metadata?.threadId || null,
@@ -401,7 +403,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             const project = this.services.taskManager.getProject(projectId);
             if (!project) return [];
             
-            return Object.values(project.tasks).map(task => ({
+            return Object.values<Task>(project.tasks).map(task => ({
                 id: task.id,
                 description: task.description,
                 projectId: task.projectId,
@@ -413,8 +415,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 createdAt: task.props?.createdAt,
                 updatedAt: task.props?.updatedAt,
                 dependsOn: task.dependsOn,
-                props: task.props
-            }));
+                props: task.props,
+                status: task.status
+            } as ClientTask));
         });
 
         return tasks;

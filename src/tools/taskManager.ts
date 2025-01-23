@@ -41,6 +41,10 @@ export interface AddTaskParams {
     props?: Record<string, any>;
 }
 
+export interface TaskMetadata extends Readonly<Record<string, any>> {
+    readonly clientProjectId?: UUID;
+}
+
 export interface Task extends Readonly<AddTaskParams> {
     readonly id: UUID;
     readonly projectId: UUID;
@@ -56,7 +60,7 @@ export interface Task extends Readonly<AddTaskParams> {
     readonly inProgress?: boolean;
     readonly order?: number;  // Lower numbers come first
     readonly dependsOn?: UUID;  // ID of the task that must complete before this one can start
-    readonly props?: Readonly<Record<string, any>>;  // Flexible metadata field for storing step results etc
+    readonly props?: TaskMetadata;  // Flexible metadata field for storing step results etc
 }
 
 export interface RecurringTask extends Task {
@@ -88,7 +92,7 @@ export interface Project {
 
 export interface CreateProjectParams {
     name: string;
-    tasks?: { description: string; type: string }[];
+    tasks?: { description: string; type: TaskType }[];
     metadata?: Partial<ProjectMetadata>;
 }
 
@@ -96,11 +100,11 @@ export interface TaskManager extends EventEmitter {
     replaceProject(project: Project): unknown;
     completeTask(id: string): Promise<Task>;
     cancelTask(id: string): Promise<Task>;
-    addProject(project: Project): Promise<void>;
+    addProject(project: Partial<Project>): Promise<Project>;
     createProject(params: CreateProjectParams): Promise<Project>;
     addTask(project: Project, params: AddTaskParams): Promise<Task>;
     getProject(projectId: string): Project;
-    newProjectId(): string;
+    newProjectId(): UUID;
     save(): Promise<void>;
     load(): Promise<void>;
     assignTaskToAgent(taskId: string, agentId: string): Promise<void>;

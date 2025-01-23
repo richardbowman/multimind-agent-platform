@@ -10,6 +10,7 @@ import { ChannelData } from 'src/shared/channelTypes';
 import { createUUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { RoutingResponse } from 'src/schemas/RoutingResponse';
 
 export interface RoutingContext {
     channelData: Partial<ChannelData>;

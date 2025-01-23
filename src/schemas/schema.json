@@ -317,6 +317,99 @@
       ],
       "type": "object"
     },
+    "ContentSectionResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "_usage": {
+          "additionalProperties": false,
+          "description": "Token usage metadata",
+          "properties": {
+            "inputTokens": {
+              "type": "number"
+            },
+            "outputTokens": {
+              "type": "number"
+            }
+          },
+          "required": [
+            "inputTokens",
+            "outputTokens"
+          ],
+          "type": "object"
+        },
+        "citations": {
+          "description": "Citations from search results used in the content",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "excerpt": {
+                "description": "Excerpt used from the source",
+                "type": "string"
+              },
+              "reference": {
+                "description": "Page or section reference if available",
+                "type": "string"
+              },
+              "sourceId": {
+                "description": "ID of the source artifact",
+                "type": "string"
+              }
+            },
+            "required": [
+              "sourceId",
+              "excerpt"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "responseMessage": {
+          "description": "Message summarizing the generated content",
+          "type": "string"
+        },
+        "structure": {
+          "additionalProperties": false,
+          "description": "Structure of the generated content",
+          "properties": {
+            "heading": {
+              "description": "Main heading of the section",
+              "type": "string"
+            },
+            "subheadings": {
+              "description": "Subheadings and their content",
+              "items": {
+                "additionalProperties": false,
+                "properties": {
+                  "content": {
+                    "type": "string"
+                  },
+                  "title": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "title",
+                  "content"
+                ],
+                "type": "object"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "heading",
+            "subheadings"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "responseMessage",
+        "citations",
+        "structure"
+      ],
+      "type": "object"
+    },
     "ContentSuggestion": {
       "additionalProperties": false,
       "description": "Represents a content improvement suggestion",
@@ -1219,6 +1312,65 @@
       ],
       "type": "object"
     },
+    "RoutingResponse": {
+      "description": "Response from the RouterAgent when determining how to route a message",
+      "properties": {
+        "confidence": {
+          "description": "Confidence level in the selection (0-1)",
+          "type": "number"
+        },
+        "metadata": {
+          "additionalProperties": false,
+          "description": "Metadata about the routing decision",
+          "properties": {
+            "alternatives": {
+              "description": "Alternative agents considered",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "selectionReasons": {
+              "description": "Reasons for selecting this agent",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "timestamp": {
+              "description": "Timestamp of routing decision",
+              "type": "number"
+            }
+          },
+          "type": "object"
+        },
+        "nextStep": {
+          "description": "The next step to take in the conversation",
+          "enum": [
+            "propose-transfer",
+            "execute-transfer",
+            "ask-clarification",
+            "provide-information",
+            "start-goal"
+          ],
+          "type": "string"
+        },
+        "response": {
+          "description": "The message to send to the user or transferring agent",
+          "type": "string"
+        },
+        "selectedAgent": {
+          "description": "The selected agent to handle the request",
+          "type": "string"
+        }
+      },
+      "required": [
+        "confidence",
+        "response",
+        "nextStep"
+      ],
+      "type": "object"
+    },
     "SchemaType": {
       "description": "Enum representing all available generated schema types",
       "enum": [
@@ -1257,7 +1409,9 @@
         "UrlExtractionResponse",
         "WebpageSummaryResponse",
         "TemplateSelectionResponse",
-        "DocumentPlanResponse"
+        "DocumentPlanResponse",
+        "ContentSectionResponse",
+        "RoutingResponse"
       ],
       "type": "string"
     },
