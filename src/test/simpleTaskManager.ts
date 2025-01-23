@@ -363,6 +363,21 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         
         // Emit the 'taskCancelled' event with the task
         this.emit('taskCancelled', task);
+
+        // Check if this task has child projects and cancel their tasks
+        if (task.props?.childProjectIds) {
+            for (const childProjectId of task.props.childProjectIds) {
+                const childProject = this.getProject(childProjectId);
+                if (childProject) {
+                    // Cancel all tasks in the child project
+                    for (const childTask of Object.values(childProject.tasks)) {
+                        if (childTask.status !== TaskStatus.Cancelled) {
+                            await this.cancelTask(childTask.id);
+                        }
+                    }
+                }
+            }
+        }
         
         return task;
     }
