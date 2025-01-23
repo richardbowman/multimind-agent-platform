@@ -20,7 +20,8 @@ import { Agents } from "src/utils/AgentLoader";
 export enum TaskEventType {
     Assigned = "assigned",
     Completed = "completed",
-    Ready = "ready"
+    Ready = "ready",
+    Cancelled = "cancelled"
 }
 
 export interface ActionMetadata {
@@ -143,6 +144,12 @@ export abstract class Agent {
             this.projects.on("taskReady", async (event) => {
                 if (event.task.assignee === this.userId || event.task.creator === this.userId) {
                     await this.taskNotification(event.task, TaskEventType.Ready);
+                }
+            });
+
+            this.projects.on("taskCancelled", async (task: Task) => {
+                if (task.assignee === this.userId || task.creator === this.userId) {
+                    await this.taskNotification(task, TaskEventType.Cancelled);
                 }
             });
 
