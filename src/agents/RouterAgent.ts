@@ -1,4 +1,5 @@
 import { Agent, HandlerParams } from './agents';
+import { ContentType } from 'src/llm/promptBuilder';
 import { Project, Task } from '../tools/taskManager';
 import { ModelResponse } from '../schemas/ModelResponse';
 import { StructuredOutputPrompt } from '../llm/ILLMService';
@@ -195,28 +196,40 @@ ${capabilities.map(cap => `    * ${cap.stepType}: ${cap.description}
             required: ["response", "confidence"],
         };
 
-        const prompt = `YOU ARE THE ROUTER AGENT (@router). Your ONLY goal is to TRANSFER USERS to the best agent to solve their needs, not try and solve their needs.
-        
-        
-        AVAILABLE AGENTS:
-${context.agentPromptOptions}
+        const promptBuilder = this.modelHelpers.createPrompt();
 
-${context.project ? `CHANNEL PROJECT DETAILS:
-- Name: ${context.project.name}
-- Goal: ${context.project.metadata?.description || 'No specific goal'}
-- Status: ${context.project.metadata?.status || 'active'}
-- Tasks:
-${Object.values(context.project.tasks)
-                        .sort((a, b) => (a.order || 0) - (b.order || 0))
-                        .map((task, index) => `  ${index + 1}. ${task.description}${task.complete ? ' (completed)' : ''}`)
-                        .join('\n')}` : ''}
+        // Add core instructions
+        promptBuilder.addInstruction(`YOU ARE THE ROUTER AGENT (@router). Your ONLY goal is to TRANSFER USERS to the best agent to solve their needs, not try and solve their needs.`);
 
-PAST CONVERSATION CONTEXT:
-${context.conversationContext}
+        // Add available agents
+        promptBuilder.addContent(ContentType.TASKS, {
+            title: "Available Agents",
+            items: context.agentOptions.map(agent => ({
+                name: agent?.handle || '',
+                description: agent?.description || ''
+            }))
+        });
 
-        
-INSTRUCTIONS
-You must explicitly choose one of these next steps:
+        // Add project details if exists
+        if (context.project) {
+            promptBuilder.addContent(ContentType.GOALS, {
+                name: context.project.name,
+                description: context.project.metadata?.description || 'No specific goal',
+                status: context.project.metadata?.status || 'active',
+                tasks: Object.values(context.project.tasks)
+                    .sort((a, b) => (a.order || 0) - (b.order || 0))
+                    .map((task, index) => ({
+                        description: task.description,
+                        status: task.complete ? 'completed' : 'pending'
+                    }))
+            });
+        }
+
+        // Add conversation context
+        promptBuilder.addContent(ContentType.CONVERSATION, threadPosts);
+
+        // Add routing instructions
+        promptBuilder.addInstruction(`You must explicitly choose one of these next steps:
 
 1. propose-transfer: When you have a good candidate agent but want user confirmation
    - Explain why they're the best choice, and ask for user confirmation before transferring
@@ -235,14 +248,18 @@ You must explicitly choose one of these next steps:
    - Suggest starting or continuing work on the project goals
    - Only available when there are incomplete tasks in the project
    - Use this especially when the user is greeting you or seems unsure what to do next
-   - Make sure to share the first outstanding goal that you propose them starting
+   - Make sure to share the first outstanding goal that you propose them starting`);
 
-${params.artifacts ? this.modelHelpers.formatArtifacts(params.artifacts) : ""}  
+        // Add artifacts if present
+        if (params.artifacts) {
+            promptBuilder.addContent(ContentType.ARTIFACTS, params.artifacts);
+        }
 
-Respond with:
+        // Add response format
+        promptBuilder.addInstruction(`Respond with:
 - selectedAgent: The best agent to handle this (optional if not yet clear)
 - response: Your message to the user (or message to the transferring agent for execute-transfer)
-- confidence: Your confidence level (0-1) in this selection`;
+- confidence: Your confidence level (0-1) in this selection`);
 
         const response = await this.llmService.generateStructured(
             userPost,
