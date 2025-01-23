@@ -8,6 +8,13 @@ export enum RecurrencePattern {
     Monthly,
 }
 
+export enum TaskStatus {
+    Pending = "pending",
+    InProgress = "inProgress",
+    Completed = "completed",
+    Cancelled = "cancelled"
+}
+
 export enum TaskType {
     Standard = "standard",
     Recurring = "recurring",
@@ -24,7 +31,10 @@ export interface AddTaskParams {
     category?: string;
     creator: string;
     assignee?: string;
+    status?: TaskStatus;
+    /** @deprecated Use status field instead */
     complete?: boolean;
+    /** @deprecated Use status field instead */
     inProgress?: boolean;
     order?: number;
     dependsOn?: UUID;
@@ -39,7 +49,10 @@ export interface Task extends Readonly<AddTaskParams> {
     readonly category: string;
     readonly creator: string;
     readonly assignee?: string;
+    readonly status: TaskStatus;
+    /** @deprecated Use status field instead */
     readonly complete?: boolean;
+    /** @deprecated Use status field instead */
     readonly inProgress?: boolean;
     readonly order?: number;  // Lower numbers come first
     readonly dependsOn?: UUID;  // ID of the task that must complete before this one can start
@@ -82,6 +95,7 @@ export interface CreateProjectParams {
 export interface TaskManager extends EventEmitter {
     replaceProject(project: Project): unknown;
     completeTask(id: string): Promise<Task>;
+    cancelTask(id: string): Promise<Task>;
     addProject(project: Project): Promise<void>;
     createProject(params: CreateProjectParams): Promise<Project>;
     addTask(project: Project, params: AddTaskParams): Promise<Task>;

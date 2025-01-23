@@ -161,15 +161,15 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             const project = this.projects[projectId];
             const userTasks = Object.values(project.tasks || [])
                 .filter(t => {
-                    // Task must be assigned to user and not complete
-                    if (t.assignee !== userId || t.complete || t.inProgress) {
+                    // Task must be assigned to user and pending
+                    if (t.assignee !== userId || t.status !== TaskStatus.Pending) {
                         return false;
                     }
 
-                    // If task depends on another task, check if dependency is complete
+                    // If task depends on another task, check if dependency is completed
                     if (t.dependsOn) {
                         const dependentTask = project.tasks[t.dependsOn];
-                        if (!dependentTask?.complete) {
+                        if (dependentTask?.status !== TaskStatus.Completed) {
                             return false;
                         }
                     }
@@ -187,13 +187,17 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
     async markTaskInProgress(task: Task | string): Promise<Task> {
         const taskId = typeof (task) === 'string' ? task : task.id;
-        return this.updateTask(taskId, { inProgress: true });
+        return this.updateTask(taskId, { 
+            status: TaskStatus.InProgress,
+            inProgress: true // Maintain backwards compatibility
+        });
     }
 
     async completeTask(id: string): Promise<Task> {
         const task = await this.updateTask(id, { 
-            complete: true,
-            inProgress: false 
+            status: TaskStatus.Completed,
+            complete: true, // Maintain backwards compatibility
+            inProgress: false // Maintain backwards compatibility
         });
         // Emit the 'taskCompleted' event with the task
         this.emit('taskCompleted', task);
@@ -335,6 +339,14 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
         await this.save();
         return updatedProject;
+    }
+
+    async cancelTask(taskId: string): Promise<Task> {
+        return this.updateTask(taskId, { 
+            status: TaskStatus.Cancelled,
+            complete: false, // Maintain backwards compatibility
+            inProgress: false // Maintain backwards compatibility
+        });
     }
 
     async updateTask(taskId: string, updates: Partial<Task>): Promise<Task> {
