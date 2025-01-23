@@ -1,14 +1,14 @@
 import cron from 'node-cron';
 import fs from 'fs/promises';
 import * as Events from 'events';
-import { AddTaskParams, CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager, TaskType } from '../tools/taskManager';
+import { AddTaskParams, CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager, TaskStatus, TaskType } from '../tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { ContentProject } from 'src/agents/contentManager';
 import { AsyncQueue } from '../helpers/asyncQueue';
-import { randomUUID } from 'crypto';
+import { createUUID, UUID } from 'src/types/uuid';
 
 class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
-    private projects: { [projectId: string]: Project } = {};
+    private projects: Record<UUID, Project> = {};
     private filePath: string;
     private savePending: boolean = false;
     private fileQueue: AsyncQueue = new AsyncQueue();
@@ -23,7 +23,9 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
     async addTask(project: Project, addTask: AddTaskParams): Promise<Task> {
         const task = {
-            id: randomUUID(),
+            id: createUUID(),
+            category: "",
+            status: TaskStatus.Pending,
             ...addTask,
             projectId: project.id
         }
@@ -55,13 +57,16 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         return task;
     }
 
-    newProjectId(): string {
-        return `project_${Date.now()}`;
+    newProjectId(): UUID {
+        return createUUID();
     }
 
-    async addProject(project: Partial<Project>): Promise<void> {
+    async addProject(project: Partial<Project>): Promise<Project> {
         // Merge provided metadata with defaults
         const addProject: Project = {
+            id: createUUID(),
+            name: `Project created ${new Date()}`,
+            tasks: {},
             ...project,
             metadata: {
                 createdAt: new Date(),
@@ -72,38 +77,38 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             }
         };
 
-        if (!project.id) {
-            throw new Error("Project ID required to add project");
-        } else {
-            this.projects[project.id] = addProject;
-            await this.save();
-        }
+        this.projects[addProject.id] = addProject;
+        await this.save();
+        return addProject;
     }
 
     async createProject(params: CreateProjectParams): Promise<Project> {
-        const projectId = this.newProjectId();
         const project = {
-            id: projectId,
             name: params.name,
             tasks: {},
-            metadata: params.metadata
+            metadata: {
+                createdAt: new Date(),
+                updatedAt: new Date(),
+                status: "active",
+                priority: "medium",
+                ...params.metadata
+            } as ProjectMetadata
         };
 
-        await this.addProject(project as Project);
+        const newProject = await this.addProject(project);
 
         if (params.tasks) {
             for (const task of params.tasks) {
-                await this.addTask(project as Project, {
-                    id: crypto.randomUUID(),
+                await this.addTask(newProject, {
+                    id: createUUID(),
                     description: task.description,
                     type: task.type,
-                    creator: 'system',
-                    projectId: projectId
+                    creator: 'system'
                 });
             }
         }
 
-        return project;
+        return newProject;
     }
 
     getProject(projectId: string): Project {
@@ -158,8 +163,8 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
     async getNextTaskForUser(userId: string): Promise<Task | null> {
         for (const projectId in this.projects) {
-            const project = this.projects[projectId];
-            const userTasks = Object.values(project.tasks || [])
+            const project : Project = this.projects[projectId];
+            const userTasks = Object.values<Task>(project.tasks || [])
                 .filter(t => {
                     // Task must be assigned to user and pending
                     if (t.assignee !== userId || t.status !== TaskStatus.Pending) {
@@ -273,7 +278,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         }
 
         // Get all tasks for the project
-        const tasks = Object.values(project.tasks || {});
+        const tasks : Task[] = Object.values(project.tasks || {});
 
         // Filter for not started tasks and sort by order
         const availableTasks = tasks
@@ -291,7 +296,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         }
 
         // Get all tasks and sort by order
-        return Object.values(project.tasks || {})
+        return Object.values<Task>(project.tasks || {})
             .filter(t => type ? t.type === type : true)
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
     }
@@ -391,9 +396,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             }
         }
 
-        if (!taskFound) {
-            throw new Error(`Task with ID ${taskId} not found`);
-        }
+        throw new Error(`Task with ID ${taskId} not found`);
     }
 
     // Method to handle recurring tasks
