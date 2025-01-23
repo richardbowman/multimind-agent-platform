@@ -132,26 +132,85 @@ export class ContentWriter extends Agent {
 
         // Get all completed tasks for this project
         const tasks = await this.projects.getAllTasks(project.id);
-        const completedTasks = tasks.filter(task => task.complete);
+        const completedTasks = tasks.filter(task => task.complete && task.props?.result?.response);
 
-        // Compile content from all tasks
-        const content = completedTasks
-            .map(task => task.props?.content)
-            .filter(Boolean)
+        // Merge all sections while preserving structure and citations
+        const mergedContent = {
+            title: project.name,
+            sections: [] as Array<{
+                heading: string;
+                content: string;
+                citations: Array<{
+                    sourceId: string;
+                    excerpt: string;
+                    reference?: string;
+                }>;
+            }>,
+            totalTokenUsage: {
+                inputTokens: 0,
+                outputTokens: 0
+            }
+        };
+
+        // Process each task's response
+        for (const task of completedTasks) {
+            const response = task.props?.result?.response;
+            if (response) {
+                // Add main section
+                mergedContent.sections.push({
+                    heading: task.title || 'Untitled Section',
+                    content: response.message,
+                    citations: response.citations || []
+                });
+
+                // Add any subheadings from structure
+                if (response.structure?.subheadings) {
+                    mergedContent.sections.push(...response.structure.subheadings.map(sh => ({
+                        heading: sh.title,
+                        content: sh.content,
+                        citations: response.citations || []
+                    })));
+                }
+
+                // Accumulate token usage
+                if (response._usage) {
+                    mergedContent.totalTokenUsage.inputTokens += response._usage.inputTokens || 0;
+                    mergedContent.totalTokenUsage.outputTokens += response._usage.outputTokens || 0;
+                }
+            }
+        }
+
+        // Format final content with citations
+        const formattedContent = mergedContent.sections
+            .map(section => {
+                let content = `## ${section.heading}\n\n${section.content}\n\n`;
+                if (section.citations.length > 0) {
+                    content += '### References\n\n';
+                    content += section.citations
+                        .map((cite, i) => `${i + 1}. [Source ${cite.sourceId}] ${cite.excerpt}`)
+                        .join('\n');
+                    content += '\n\n';
+                }
+                return content;
+            })
             .join('\n\n');
 
-
-        const replyTo = await this.getMessage(sourceMessage)
+        const replyTo = await this.getMessage(sourceMessage);
 
         // Reply to the original message
         if (replyTo) {
             await this.reply(
                 replyTo,
                 {
-                    message: `Content generation completed!\n\n${content}`
+                    message: `Content generation completed!\n\n${formattedContent}\n\n` +
+                        `Total token usage: ${mergedContent.totalTokenUsage.inputTokens} input, ` +
+                        `${mergedContent.totalTokenUsage.outputTokens} output`
                 },
                 {
-                    "project-id": project.id
+                    "project-id": project.id,
+                    "artifact-ids": completedTasks
+                        .map(t => t.props?.result?.response?.contentBlockId)
+                        .filter(Boolean)
                 }
             );
         } else {
