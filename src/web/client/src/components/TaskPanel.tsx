@@ -4,10 +4,10 @@ import {
     Box, 
     Typography, 
     List, 
-    ListItem, 
-    ListItemText, 
-    Checkbox
+    IconButton,
+    Tooltip
 } from '@mui/material';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { TaskDialog } from './TaskDialog';
 import { TaskCard } from './TaskCard';
 
@@ -51,9 +51,31 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
 
     return (
         <Box sx={{ p: 2, height: '100%', overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
-            <Typography variant="h6" sx={{ mb: 2, color: '#fff' }}>
-                Tasks
-            </Typography>
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
+                <Typography variant="h6" sx={{ color: '#fff' }}>
+                    Tasks
+                </Typography>
+                <Tooltip title="Cancel all outstanding tasks">
+                    <IconButton
+                        size="small"
+                        color="error"
+                        onClick={async () => {
+                            const outstandingTasks = tasks.filter(t => 
+                                !t.complete && t.status !== 'cancelled'
+                            );
+                            for (const task of outstandingTasks) {
+                                try {
+                                    await ipcService.getRPC().cancelTask(task.id);
+                                } catch (error) {
+                                    console.error('Failed to cancel task:', error);
+                                }
+                            }
+                        }}
+                    >
+                        <CancelIcon fontSize="small" />
+                    </IconButton>
+                </Tooltip>
+            </Box>
             <List sx={{ display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                 {Array.from(new Map((tasks || []).map(task => [task.id, task])).values())
                     .sort((a, b) => {
