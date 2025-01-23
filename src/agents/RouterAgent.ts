@@ -8,22 +8,11 @@ import { ChatPost } from 'src/chat/chatClient';
 import { ChannelData } from 'src/shared/channelTypes';
 import { createUUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
-import { AgentInformation } from 'src/utils/AgentLoader';
 
 export interface RoutingContext {
     channelData: Partial<ChannelData>;
     project: Project | null;
-    agentOptions: AgentInformation[]
-    agentCapabilities: {
-        name: string;
-        description: string;
-        capabilities?: {
-            stepType: string;
-            description: string;
-            exampleInput?: string;
-            exampleOutput?: string;
-        }[]
-    }[];
+    agentOptions: Agent[];
     projectTasks: Task[];
     conversationContext: string;
     artifacts?: Artifact[]
@@ -67,15 +56,6 @@ export class RouterAgent extends Agent {
                 return this.agents.agents[memberId];
             });          
 
-        // Get detailed capabilities for each agent that is a StepBasedAgent
-        const agentCapabilities = agentOptions
-            .filter(agent => agent !== null)
-            .map(agent => ({
-                name: agent!.handle,
-                description: agent!.description,
-                capabilities: (agent as any).getExecutorCapabilities?.() || []
-            }));
-
         // Get project tasks if exists
         const projectTasks = project ? Object.values(project.tasks) : [];
 
@@ -88,7 +68,6 @@ export class RouterAgent extends Agent {
             channelData,
             project,
             agentOptions,
-            agentPromptOptions,
             projectTasks,
             conversationContext,
             artifacts: params.artifacts
@@ -175,7 +154,7 @@ export class RouterAgent extends Agent {
             properties: {
                 selectedAgent: {
                     type: "string",
-                    enum: context.agentOptions.map(a => a?.handle) || []
+                    enum: context.agentOptions.map(a => a?.messagingHandle) || []
                 },
                 confidence: {
                     type: "number",
@@ -203,7 +182,7 @@ export class RouterAgent extends Agent {
         promptBuilder.addInstruction(`YOU ARE THE ROUTER AGENT (@router). Your ONLY goal is to TRANSFER USERS to the best agent to solve their needs, not try and solve their needs.`);
 
         // Add available agents with their capabilities
-        promptBuilder.addContent(ContentType.AGENT_CAPABILITIES, context.agentCapabilities);
+        promptBuilder.addContent<Agent[]>(ContentType.AGENT_CAPABILITIES, context.agentOptions);
 
         // Add project details if exists
         if (context.project) {
@@ -258,7 +237,7 @@ export class RouterAgent extends Agent {
 
         const response = await this.llmService.generateStructured(
             userPost,
-            new StructuredOutputPrompt(schema, prompt),
+            new StructuredOutputPrompt(schema, promptBuilder.build()),
             [],
             1024,
             512
