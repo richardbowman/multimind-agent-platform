@@ -1,6 +1,9 @@
 import { randomUUID } from 'crypto';
 import { Agent, HandlerParams } from './agents';
 import { ModelMessageHistory } from 'src/llm/lmstudioService';
+import { getGeneratedSchema, SchemaType } from 'src/schemas/SchemaTypes';
+import { StructuredOutputPrompt } from 'src/llm/ILLMService';
+import { ContentSectionResponse } from 'src/schemas/ContentSectionResponse';
 import Logger from 'src/helpers/logger';
 import { ContentProject, ContentTask } from './contentManager';
 import { ModelRole } from 'src/llm/ILLMService';
@@ -53,36 +56,70 @@ export class ContentWriter extends Agent {
 
     async processTask(task: ContentTask) {
         try {
+            // Get relevant search results
             const searchResults = await this.vectorDBService.query([task.description], undefined, 10);
-            const history : ModelMessageHistory[] = [
-                {
-                    "role": ModelRole.SYSTEM,
-                    "content": `Search results from knowledge base:\n
-                    ${searchResults.map(s => `Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}\n\n`)}`
-                }
-            ];
+            
+            // Create structured prompt
+            const schema = await getGeneratedSchema(SchemaType.ContentSectionResponse);
+            const systemPrompt = `You are a professional content writer. Use the provided search results to write a high-quality section on "${task.title}". 
+            Follow these guidelines:
+            - Use clear, professional language
+            - Cite relevant information from search results
+            - Structure content with proper headings and paragraphs
+            - Maintain consistent tone and style`;
 
-            //todo: need to make this be able to pull in search queries
-            const sectionContent = await this.llmService.sendMessageToLLM(`Write a section on ${task.title}: ${task.description}`, history);
+            const instructions = new StructuredOutputPrompt(schema, systemPrompt);
 
+            // Generate structured response
+            const response = await this.modelHelpers.generate<ContentSectionResponse>({
+                message: task.description,
+                instructions,
+                artifacts: searchResults.map(s => ({
+                    id: s.id,
+                    type: 'search-result',
+                    content: `Title: ${s.metadata.title}\nContent: ${s.text}`,
+                    metadata: s.metadata
+                }))
+            });
+
+            // Update task with structured results
             this.projects.updateTask(task.id, {
                 props: {
                     ...task.props,
                     result: {
                         ...task.props?.result,
                         response: {
-                            message: sectionContent,
+                            message: response.content,
                             contentBlockId: createUUID(),
+                            citations: response.citations,
+                            structure: response.structure,
+                            _usage: response._usage
                         }
                     } 
                 }
             });
         } catch (error) {
-            //todo: remove failed tasks or mark completed, causes infinite loop right now
             Logger.error(`Error processing task "${task.title} ${task.description}"`, error);
+            
+            // Mark task as failed with error details
+            await this.projects.updateTask(task.id, {
+                props: {
+                    ...task.props,
+                    status: 'failed',
+                    error: {
+                        message: error.message,
+                        stack: error.stack,
+                        timestamp: Date.now()
+                    }
+                }
+            });
         } finally {
-            //todo: remove failed tasks or mark completed, causes infinite loop right now
-            await this.projects.completeTask(task.id);
+            try {
+                // Ensure task is marked complete even if error occurred
+                await this.projects.completeTask(task.id);
+            } catch (finalError) {
+                Logger.error('Error completing task', finalError);
+            }
         }
     }
 
