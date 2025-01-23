@@ -57,12 +57,17 @@ export class ContentWriter extends Agent {
             
             // Create structured prompt
             const schema = await getGeneratedSchema(SchemaType.ContentSectionResponse);
-            const systemPrompt = `You are a professional content writer. Use the provided search results to write a high-quality section on "${task.title}". 
+            const systemPrompt = `You are a professional content writer. Use the provided search results to:
+            1. Write a response message summarizing your findings
+            2. Create a structured content outline with headings and subheadings
+            3. Include citations for all referenced material
+
             Follow these guidelines:
-            - Use clear, professional language
-            - Cite relevant information from search results
-            - Structure content with proper headings and paragraphs
-            - Maintain consistent tone and style`;
+            - Response message should be 2-3 sentences summarizing the key points
+            - Structure content with clear, descriptive headings
+            - Use bullet points for key information in subheadings
+            - Cite sources using the provided search results
+            - Maintain professional tone and style`;
 
             const instructions = new StructuredOutputPrompt(schema, systemPrompt);
 
@@ -85,7 +90,7 @@ export class ContentWriter extends Agent {
                     result: {
                         ...task.props?.result,
                         response: {
-                            message: response.content,
+                            message: response.responseMessage,
                             contentBlockId: createUUID(),
                             citations: response.citations,
                             structure: response.structure,

@@ -1,8 +1,8 @@
 export interface ContentSectionResponse {
     /**
-     * The generated content section
+     * Message summarizing the generated content
      */
-    content: string;
+    responseMessage: string;
     
     /**
      * Citations from search results used in the content
@@ -40,5 +40,13 @@ export interface ContentSectionResponse {
             title: string;
             content: string;
         }>;
+    };
+    
+    /**
+     * Token usage metadata
+     */
+    _usage?: {
+        inputTokens: number;
+        outputTokens: number;
     };
 }
