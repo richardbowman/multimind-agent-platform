@@ -157,7 +157,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                     <strong>Description:</strong> {selectedTask.description}
                                 </Typography>
                                 <Typography variant="body1">
-                                    <strong>Status:</strong> {selectedTask.complete ? 'Complete' : (selectedTask.inProgress ? 'In Progress' : 'Not Started')}
+                                    <strong>Status:</strong> {selectedTask.status === 'cancelled' ? 'Cancelled' : 
+                                        selectedTask.status === 'completed' ? 'Complete' : 
+                                        selectedTask.status === 'inProgress' ? 'In Progress' : 
+                                        'Not Started'}
                                 </Typography>
                                 <Typography variant="body1">
                                     <strong>Created At:</strong> {new Date(selectedTask.createdAt).toLocaleString()}
