@@ -1,5 +1,6 @@
 
 import { UUID } from 'src/types/uuid';
+import { TaskStatus } from 'src/tools/taskManager';
 
 export interface ClientTask {
     id: UUID;
@@ -7,6 +8,7 @@ export interface ClientTask {
     description: string;
     type: string;
     assignee?: string;
+    status: TaskStatus;
     inProgress?: boolean;
     complete?: boolean;
     threadId?: string;
