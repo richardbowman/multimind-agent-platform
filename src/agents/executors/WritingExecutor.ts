@@ -6,7 +6,7 @@ import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { Project, Task, TaskManager, TaskType } from 'src/tools/taskManager';
+import { Project, ProjectMetadata, Task, TaskManager, TaskType } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
@@ -58,22 +58,17 @@ ${params.previousResult ? `Use these materials to inform the task planning:\n${J
         // Create a new project and writing tasks for each section
         try {
             const newProjectId = this.taskManager.newProjectId();
-            const writingProject : Project = {
+            
+            const writingProject = await this.taskManager.addProject({
                 id: newProjectId,
                 name: `Writing project: ${params.goal}`,
                 tasks: {},
                 metadata: {
-                    createdAt: new Date(),
-                    updatedAt: new Date(),
-                    status: 'active',
                     owner: params.agentId,
                     description: params.goal,
-                    priority: 'medium',
                     parentTaskId: params.stepId
                 }
-            };
-            
-            await this.taskManager.addProject(writingProject);
+            });
 
             for (const section of result.sections) {
                 const task = await this.taskManager.addTask(writingProject, {
@@ -81,9 +76,9 @@ ${params.previousResult ? `Use these materials to inform the task planning:\n${J
                     creator: params.agentId,
                     type: TaskType.Standard,
                     category: TaskCategories.Writing,
-                    description: `# ${section.title}\n\n${section.description}\n\n## Key Points:\n${
+                    description: `Using the overall goal ${params.goal}, develop a section for the overall document. Section heaader: ${section.title}\n\n${section.description}\n\nKey Points:\n${
                         section.keyPoints?.map(p => `- ${p}`).join('\n')||""
-                    }\n\n## Research Findings:\n${
+                    }\n\nResearch Findings:\n${
                         section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).join('\n')||""
                     }`,
                     order: result.sections.indexOf(section)
