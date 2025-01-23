@@ -166,6 +166,11 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             const project : Project = this.projects[projectId];
             const userTasks = Object.values<Task>(project.tasks || [])
                 .filter(t => {
+                    // Skip cancelled tasks
+                    if (t.status === TaskStatus.Cancelled) {
+                        return false;
+                    }
+                    
                     // Task must be assigned to user and pending
                     if (t.assignee !== userId || t.status !== TaskStatus.Pending) {
                         return false;
@@ -282,7 +287,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
         // Filter for not started tasks and sort by order
         const availableTasks = tasks
-            .filter(t => !t.complete)
+            .filter(t => !t.complete && t.status !== TaskStatus.Cancelled)
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
 
         // Return the first task or null if none found
