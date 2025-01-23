@@ -33,9 +33,11 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                         : 'primary.dark'
                     : task.inProgress 
                         ? 'action.selected'
-                        : task.complete
-                            ? 'action.disabledBackground'
-                            : 'background.paper',
+                        : task.status === 'cancelled'
+                            ? 'error.light'
+                            : task.complete
+                                ? 'action.disabledBackground'
+                                : 'background.paper',
                 borderRadius: 1,
                 border: '1px solid',
                 borderColor: selected 
@@ -44,21 +46,25 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                         : 'primary.main'
                     : task.inProgress
                         ? 'primary.main'
-                        : task.complete
-                            ? 'divider'
-                            : 'divider',
+                        : task.status === 'cancelled'
+                            ? 'error.main'
+                            : task.complete
+                                ? 'divider'
+                                : 'divider',
                 cursor: 'pointer',
                 '&:hover': {
                     bgcolor: selected 
                         ? 'primary.disabledBackground' 
                         : task.inProgress
                             ? 'action.hover'
-                            : task.complete
-                                ? 'action.disabledBackground'
-                                : 'action.hover'
+                            : task.status === 'cancelled'
+                                ? 'error.light'
+                                : task.complete
+                                    ? 'action.disabledBackground'
+                                    : 'action.hover'
                 },
-                textDecoration: task.complete ? 'line-through' : 'none',
-                opacity: task.complete ? 0.7 : 1
+                textDecoration: task.complete || task.status === 'cancelled' ? 'line-through' : 'none',
+                opacity: task.complete || task.status === 'cancelled' ? 0.7 : 1
             }}
             onClick={onClick}
         >
