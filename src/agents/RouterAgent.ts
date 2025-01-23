@@ -202,13 +202,10 @@ export class RouterAgent extends Agent {
 - response: Your message to the user (or message to the transferring agent for execute-transfer)
 - confidence: Your confidence level (0-1) in this selection`);
 
-        const response = await this.llmService.generateStructured(
-            userPost,
-            new StructuredOutputPrompt(schema, promptBuilder.build()),
-            [],
-            1024,
-            512
-        );
+        const response = await this.modelHelpers.generate<RoutingResponse>({
+            message: userPost.message,
+            instructions: new StructuredOutputPrompt(schema, promptBuilder.build())
+        });
 
         await this.handleRoutingResponse(userPost, response, threadPosts, context);
     }
