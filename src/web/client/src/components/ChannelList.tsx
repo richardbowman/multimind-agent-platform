@@ -117,33 +117,36 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     };
 
     return (
-        <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-            <Stack direction="row" justifyContent="space-between" alignItems="center" sx={{ mb: 2 }}>
-                <Typography variant="h6" sx={{ color: '#fff' }}>
-                    Channels ({channels.length})
-                </Typography>
-                <IconButton 
-                    color="primary"
-                    onClick={() => handleOpenDialog()}
-                    sx={{ 
-                        backgroundColor: 'primary.main',
-                        color: 'white',
-                        '&:hover': {
-                            backgroundColor: 'primary.dark'
-                        }
-                    }}
-                >
-                    <AddIcon />
-                </IconButton>
-            </Stack>
+        <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'hidden' }}>
+            <Box sx={{ mb: 2 }}>
+                <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Typography variant="h6" sx={{ color: '#fff' }}>
+                        Channels ({channels.length})
+                    </Typography>
+                    <IconButton 
+                        color="primary"
+                        onClick={() => handleOpenDialog()}
+                        sx={{ 
+                            backgroundColor: 'primary.main',
+                            color: 'white',
+                            '&:hover': {
+                                backgroundColor: 'primary.dark'
+                            }
+                        }}
+                    >
+                        <AddIcon />
+                    </IconButton>
+                </Stack>
+            </Box>
 
-            {channels.length === 0 && (
-                <Typography variant="body1" sx={{ color: '#666', textAlign: 'center' }}>
-                    Loading channels...
-                </Typography>
-            )}
+            <Box sx={{ flex: 1, overflowY: 'auto' }}>
+                {channels.length === 0 && (
+                    <Typography variant="body1" sx={{ color: '#666', textAlign: 'center', mt: 2 }}>
+                        Loading channels...
+                    </Typography>
+                )}
 
-            <List sx={{display: 'flex', flexDirection: 'column', overflowY: 'auto'}}>
+                <List sx={{ display: 'flex', flexDirection: 'column' }}>
                 {channels.map(channel => (
                     <ListItem 
                         key={channel.id}
@@ -211,7 +214,8 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                         </ListItemButton>
                     </ListItem>
                 ))}
-            </List>
+                </List>
+            </Box>
 
             <Dialog open={open} onClose={() => setOpen(false)}>
                 <DialogTitle>
