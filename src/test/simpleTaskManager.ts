@@ -199,7 +199,8 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         const taskId = typeof (task) === 'string' ? task : task.id;
         return this.updateTask(taskId, { 
             status: TaskStatus.InProgress,
-            inProgress: true // Maintain backwards compatibility
+            inProgress: true, // Maintain backwards compatibility
+            complete: false // Maintain backwards compatibility
         });
     }
 
@@ -242,7 +243,8 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     private areAllTasksCompleted(projectId: string): boolean {
         const project = this.projects[projectId];
         for (const taskId in project.tasks) {
-            if (!project.tasks[taskId].complete) {
+            const task = project.tasks[taskId];
+            if (task.status !== TaskStatus.Completed && !task.complete) {
                 return false;
             }
         }
@@ -287,7 +289,8 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
         // Filter for not started tasks and sort by order
         const availableTasks = tasks
-            .filter(t => !t.complete && t.status !== TaskStatus.Cancelled)
+            .filter(t => (t.status === TaskStatus.Pending || t.status === TaskStatus.InProgress || !t.complete) && 
+                        t.status !== TaskStatus.Cancelled)
             .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
 
         // Return the first task or null if none found
