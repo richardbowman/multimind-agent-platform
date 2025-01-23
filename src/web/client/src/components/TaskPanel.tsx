@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
+import { useIPCService } from '../contexts/IPCContext';
 import { 
     Box, 
     Typography, 
@@ -29,6 +30,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
     setDialogOpen
 }) => {
     const { tasks, fetchTasks, handles } = useWebSocket();
+    const ipcService = useIPCService();
     const [localSelectedTask, setLocalSelectedTask] = useState<any>(null);
     const [localDialogOpen, setLocalDialogOpen] = useState(false);
 
