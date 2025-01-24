@@ -72,6 +72,11 @@ export class GoalConfirmationExecutor implements StepExecutor {
             promptBuilder.addContent(ContentType.CONVERSATION, params.context.threadPosts);
         }
 
+        // Add project goals if available
+        if (project) {
+            promptBuilder.addContent(ContentType.GOALS, project);
+        }
+
         // Build and execute prompt
         const prompt = promptBuilder.build();
         const result = await this.modelHelpers.generate<GoalConfirmationResponse>({
