@@ -78,18 +78,44 @@ export class GoalProgressExecutor implements StepExecutor {
         // Update task statuses based on the analysis
         if (result.goalsInProgress?.length) {
             await Promise.all(result.goalsInProgress.map(async goalId => {
-                const task = this.taskManager.getTask(goalId);
-                if (task && task.status !== TaskStatus.InProgress) {
-                    await this.taskManager.updateTaskStatus(goalId, TaskStatus.InProgress);
+                try {
+                    const task = this.taskManager.getTaskById(goalId);
+                    if (task && task.status !== TaskStatus.InProgress) {
+                        await this.taskManager.markTaskInProgress(goalId);
+                        // Update project status if needed
+                        const project = this.taskManager.getProject(task.projectId);
+                        if (project && project.metadata.status !== 'active') {
+                            await this.taskManager.updateProject(task.projectId, {
+                                metadata: { ...project.metadata, status: 'active' }
+                            });
+                        }
+                    }
+                } catch (error) {
+                    Logger.error(`Failed to mark task ${goalId} as in-progress: ${error}`);
                 }
             }));
         }
 
         if (result.goalsCompleted?.length) {
             await Promise.all(result.goalsCompleted.map(async goalId => {
-                const task = this.taskManager.getTask(goalId);
-                if (task && task.status !== TaskStatus.Completed) {
-                    await this.taskManager.completeTask(goalId);
+                try {
+                    const task = this.taskManager.getTaskById(goalId);
+                    if (task && task.status !== TaskStatus.Completed) {
+                        await this.taskManager.completeTask(goalId);
+                        // Check if all tasks in project are complete
+                        const project = this.taskManager.getProject(task.projectId);
+                        if (project) {
+                            const allTasksComplete = Object.values(project.tasks)
+                                .every(t => t.status === TaskStatus.Completed);
+                            if (allTasksComplete) {
+                                await this.taskManager.updateProject(task.projectId, {
+                                    metadata: { ...project.metadata, status: 'completed' }
+                                });
+                            }
+                        }
+                    }
+                } catch (error) {
+                    Logger.error(`Failed to mark task ${goalId} as complete: ${error}`);
                 }
             }));
         }
