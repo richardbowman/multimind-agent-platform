@@ -75,6 +75,25 @@ export class GoalProgressExecutor implements StepExecutor {
             threadPosts: context?.threadPosts || []
         });
 
+        // Update task statuses based on the analysis
+        if (result.goalsInProgress?.length) {
+            await Promise.all(result.goalsInProgress.map(async goalId => {
+                const task = this.taskManager.getTask(goalId);
+                if (task && task.status !== TaskStatus.InProgress) {
+                    await this.taskManager.updateTaskStatus(goalId, TaskStatus.InProgress);
+                }
+            }));
+        }
+
+        if (result.goalsCompleted?.length) {
+            await Promise.all(result.goalsCompleted.map(async goalId => {
+                const task = this.taskManager.getTask(goalId);
+                if (task && task.status !== TaskStatus.Completed) {
+                    await this.taskManager.completeTask(goalId);
+                }
+            }));
+        }
+
         return {
             finished: true,
             needsUserInput: false,
