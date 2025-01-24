@@ -47,22 +47,33 @@ export class GoalConfirmationExecutor implements StepExecutor {
             : null;
 
             
-        let prompt = `
-        Overall agent instructions:
-        ${this.modelHelpers.getFinalInstructions()}
+        // Create prompt using PromptBuilder
+        const promptBuilder = this.modelHelpers.createPrompt();
         
-        Your goal is to:
+        // Add core instructions
+        promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
+        promptBuilder.addInstruction(`Your goal is to:
 1. Restate the user's goal in your own words
 2. Decide if you have enough information to proceed, and if so, respond with understanding=true
-3. If the goal is not actionable, respond with the additional information you need and understanding=false
+3. If the goal is not actionable, respond with the additional information you need and understanding=false`);
 
-Message to analyze: "${goal}"`;
+        // Add content sections
+        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
+            goal,
+            step,
+            projectId
+        });
 
-        // Add artifact context if available
         if (params.context?.artifacts) {
-            prompt += '\n\n' + this.modelHelpers.formatArtifacts(params.context.artifacts);
+            promptBuilder.addContent(ContentType.ARTIFACTS, params.context.artifacts);
         }
 
+        if (params.context?.threadPosts) {
+            promptBuilder.addContent(ContentType.CONVERSATION, params.context.threadPosts);
+        }
+
+        // Build and execute prompt
+        const prompt = promptBuilder.build();
         const result = await this.modelHelpers.generate<GoalConfirmationResponse>({
             message: goal,
             instructions: new StructuredOutputPrompt(schema, prompt),
