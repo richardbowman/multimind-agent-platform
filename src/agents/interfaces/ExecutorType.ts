@@ -23,5 +23,6 @@ export enum ExecutorType {
     CREATE_CHANNEL = "create_channel",
     SELECT_TEMPLATE = "select-template",
     CONTENT_COMBINATION = "content-combination",
-    DOWNLOAD_WEBPAGE = "download-webpage"
+    DOWNLOAD_WEBPAGE = "download-webpage",
+    GOAL_PROGRESS = "goal-progress"
 }
