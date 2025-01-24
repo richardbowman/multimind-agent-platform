@@ -63,8 +63,8 @@ export class GoalProgressExecutor implements StepExecutor {
             promptBuilder.addContent(ContentType.CONVERSATION, context.threadPosts);
         }
 
-        if (context?.channelGoals) {
-            promptBuilder.addContent(ContentType.GOALS, context.channelGoals);
+        if (params.channelGoals) {
+            promptBuilder.addContent(ContentType.GOALS, params.channelGoals);
         }
 
         // Build and execute prompt
