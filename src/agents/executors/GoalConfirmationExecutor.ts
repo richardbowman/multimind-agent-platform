@@ -9,6 +9,8 @@ import { SchemaType } from "../../schemas/SchemaTypes";
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResult } from '../interfaces/StepResult';
+import { TaskManager } from 'src/tools/taskManager';
+import { ChatClient } from 'src/chat/chatClient';
 
 /**
  * Executor that validates and confirms user goals before proceeding.
@@ -25,19 +27,34 @@ import { StepResult } from '../interfaces/StepResult';
 @StepExecutorDecorator(ExecutorType.GOAL_CONFIRMATION, 'Confirm the goals of the user.')
 export class GoalConfirmationExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    private taskManager: TaskManager;
+    private chatClient: ChatClient;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
+        this.taskManager = params.taskManager;
+        this.chatClient = params.chatClient;
     }
 
-    async execute(params: ExecuteParams & { executionMode: 'conversation' | 'task' }): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         const { goal, step, projectId } = params;
         const schema = await getGeneratedSchema(SchemaType.GoalConfirmationResponse);
 
-        let prompt = `Your goal is to:
-1. Restate the user's goal in your own words to demonstrate understanding
-2. Confirm whether you have enough information to proceed
-3. If anything is unclear, specify what additional information you need
+        // Get channel data including any project goals
+        const channelData = await this.chatClient.getChannelData(userPost.channel_id);
+        const project = channelData?.projectId
+            ? this.taskManager.getProject(channelData.projectId)
+            : null;
+
+            
+        let prompt = `
+        Overall agent instructions:
+        ${this.modelHelpers.getFinalInstructions()}
+        
+        Your goal is to:
+1. Restate the user's goal in your own words
+2. Decide if you have enough information to proceed, and if so, respond with understanding=true
+3. If the goal is not actionable, respond with the additional information you need and understanding=false
 
 Message to analyze: "${goal}"`;
 
