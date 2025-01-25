@@ -51,7 +51,7 @@ export class SolverAgent extends StepBasedAgent {
         this.registerStepExecutor(new RefutingExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new KnowledgeCheckExecutor(this.getExecutorParams()));
-        this.registerStepExecutor(new CodeExecutorExecutor(this.getExecutorParams()));
+        // this.registerStepExecutor(new CodeExecutorExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new NodeExecutorExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new FinalResponseExecutor(this.getExecutorParams()));
 
