@@ -108,9 +108,15 @@ export class PromptRegistry {
     private renderArtifacts(artifacts: Artifact[]): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
-            const content = typeof artifact.content === 'string' 
+            let content = typeof artifact.content === 'string' 
                 ? artifact.content
                 : `[Binary data - ${artifact.content.length} bytes]`;
+            
+            // Truncate string content to 1000 chars
+            if (typeof content === 'string' && content.length > 1000) {
+                content = content.substring(0, 1000) + '... [truncated]';
+            }
+            
             return `Artifact ${index + 1} (${artifact.type}):\n${content}`;
         }).join('\n\n');
     }
