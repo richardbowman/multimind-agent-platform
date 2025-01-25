@@ -33,7 +33,10 @@ export class NodeExecutorExecutor implements StepExecutor {
     private async executeInWorker(code: string): Promise<{returnValue: any, consoleOutput: string}> {
         return new Promise((resolve, reject) => {
             const worker = new Worker(path.join(__dirname, 'nodeWorker.js'), {
-                workerData: { code }
+                workerData: { 
+                    code,
+                    artifacts: params.artifacts || [] 
+                }
             });
 
             const timeout = setTimeout(() => {
@@ -78,7 +81,22 @@ Provide clear explanations of what the code does.
 You can use any core Node.js modules and npm packages that are already installed.
 The return value of the last line of your script will be shared as the answer.
 
-Example:
+You have access to project artifacts through the ARTIFACTS global variable.
+Artifacts are available as an array of objects with these properties:
+- id: Unique identifier
+- name: Human-readable name
+- type: Type of artifact (e.g. 'file', 'data', 'image')
+- content: The actual content (string, JSON, etc)
+- metadata: Additional information about the artifact
+
+Example artifact access:
+// Get first artifact
+const artifact = ARTIFACTS[0];
+console.log(\`Processing artifact: \${artifact.name}\`);
+// Use artifact content
+const data = JSON.parse(artifact.content);
+
+Example file operations:
 const fs = require('fs');
 const files = fs.readdirSync('.');
 console.log(\`Found \${files.length} files\`);
