@@ -107,8 +107,7 @@ ${params.previousResult ? `Consider this previous result:\n${JSON.stringify(para
         const instructions = new StructuredOutputPrompt(schema, prompt);
         let result = await this.modelHelpers.generate<CodeExecutionResponse>({
             message: params.message || params.stepGoal,
-            instructions,
-            model: "qwen2.5-coder-14b-instruct"
+            instructions
         });
 
         let executionResult;
@@ -120,8 +119,7 @@ ${params.previousResult ? `Consider this previous result:\n${JSON.stringify(para
             const retryInstructions = new StructuredOutputPrompt(schema, errorPrompt);
             let retryResult = await this.modelHelpers.generate<CodeExecutionResponse>({
                 message: params.message || params.stepGoal,
-                instructions: retryInstructions,
-                model: "qwen2.5-coder-14b-instruct"
+                instructions: retryInstructions
             });
 
             try {
@@ -150,10 +148,3 @@ ${params.previousResult ? `Consider this previous result:\n${JSON.stringify(para
         };
     }
 }
-```
-
-2. Now let's create the worker file:
-
-src/agents/executors/nodeWorker.js
-```typescript
-<<<<<<< SEARCH
