@@ -30,12 +30,12 @@ export class NodeExecutorExecutor implements StepExecutor {
         this.modelHelpers = params.modelHelpers;
     }
 
-    private async executeInWorker(code: string): Promise<{returnValue: any, consoleOutput: string}> {
+    private async executeInWorker(code: string, artifacts: any[] = []): Promise<{returnValue: any, consoleOutput: string}> {
         return new Promise((resolve, reject) => {
             const worker = new Worker(path.join(__dirname, 'nodeWorker.js'), {
                 workerData: { 
                     code,
-                    artifacts: params.artifacts || [] 
+                    artifacts 
                 }
             });
 
@@ -112,7 +112,7 @@ ${params.previousResult ? `Consider this previous result:\n${JSON.stringify(para
 
         let executionResult;
         try {
-            executionResult = await this.executeInWorker(result.code);
+            executionResult = await this.executeInWorker(result.code, params.artifacts);
         } catch (error) {
             // If there's an error, try again with error feedback
             const errorPrompt = `${prompt}\n\nThe previous attempt resulted in this error:\n${error.message}\n\nPlease fix the code and try again.`;
@@ -123,7 +123,7 @@ ${params.previousResult ? `Consider this previous result:\n${JSON.stringify(para
             });
 
             try {
-                executionResult = await this.executeInWorker(retryResult.code);
+                executionResult = await this.executeInWorker(retryResult.code, params.artifacts);
                 result = retryResult;
             } catch (retryError) {
                 executionResult = {
