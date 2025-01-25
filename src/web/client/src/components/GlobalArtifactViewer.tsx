@@ -29,13 +29,29 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         // Update the artifact in the folders list
         setArtifactFolders(prevFolders => {
             const updatedFolders = { ...prevFolders };
-            for (const [type, artifacts] of Object.entries(updatedFolders)) {
-                const index = artifacts.findIndex(a => a.id === artifact.id);
-                if (index !== -1) {
-                    updatedFolders[type][index] = artifact;
-                    break;
+            
+            // Check if this is an existing artifact
+            const existing = Object.values(updatedFolders)
+                .flat()
+                .find(a => a.id === artifact.id);
+                
+            if (existing) {
+                // Update existing artifact
+                for (const [type, artifacts] of Object.entries(updatedFolders)) {
+                    const index = artifacts.findIndex(a => a.id === artifact.id);
+                    if (index !== -1) {
+                        updatedFolders[type][index] = artifact;
+                        break;
+                    }
                 }
+            } else {
+                // Add new artifact
+                if (!updatedFolders[artifact.type]) {
+                    updatedFolders[artifact.type] = [];
+                }
+                updatedFolders[artifact.type].push(artifact);
             }
+            
             return updatedFolders;
         });
         
