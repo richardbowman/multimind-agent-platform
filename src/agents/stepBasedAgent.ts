@@ -46,7 +46,9 @@ export abstract class StepBasedAgent extends Agent {
             modelHelpers: new ModelHelpers({
                 llmService: this.llmService,
                 userId: this.userId,
-                messagingHandle: this.messagingHandle
+                messagingHandle: this.messagingHandle,
+                purpose: this.modelHelpers.getPurpose(),
+                finalInstructions: this.modelHelpers.getFinalInstructions()
             }),
             settings: this.settings
         };
@@ -69,22 +71,10 @@ export abstract class StepBasedAgent extends Agent {
                 
                 // Create instance with config
                 const executor = new ExecutorClass({
-                    llmService: this.llmService,
-                    taskManager: this.projects,
-                    artifactManager: this.artifactManager,
-                    userId: this.userId,
-                    settings: this.settings,
-                    vectorDB: this.vectorDBService,
-                    modelHelpers: new ModelHelpers({
-                        llmService: this.llmService,
-                        userId: this.userId,
-                        messagingHandle: this.messagingHandle
-                    }),
+                    ...this.getExecutorParams(),
                     ...executorConfig.config
                 });
 
-                executor.modelHelpers.setPurpose(config.purpose);
-                
                 this.registerStepExecutor(executor);
             } catch (error) {
                 Logger.error(`Failed to initialize executor ${executorConfig.className}:`, error);
@@ -372,6 +362,19 @@ export abstract class StepBasedAgent extends Agent {
                 throw new Error(`Project ${projectId} not found`);
             }
 
+            // get overall goals
+            let channelGoals: Task[] = []; 
+            if (context?.channelId) {
+                const channelData = await this.chatClient.getChannelData(context?.channelId);
+                const channelProject = channelData?.projectId
+                    ? this.projects.getProject(channelData.projectId)
+                    : null;
+                channelGoals = [
+                    ...channelGoals,
+                    ...Object.values(channelProject?.tasks||{})
+                ]
+            }
+
             // Get all prior completed tasks' results
             const tasks = this.projects.getAllTasks(projectId);
             const priorSteps = tasks
@@ -399,6 +402,7 @@ export abstract class StepBasedAgent extends Agent {
                     goal: `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message}`,
                     step: task.props.stepType,
                     stepId: task.id,
+                    channelGoals,
                     projectId: projectId,
                     previousResult: priorResults,
                     steps: priorSteps,

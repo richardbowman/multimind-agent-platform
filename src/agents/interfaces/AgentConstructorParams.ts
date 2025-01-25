@@ -5,7 +5,7 @@ import { TaskManager } from "../../tools/taskManager";
 import { IVectorDatabase } from "src/llm/IVectorDatabase";
 import { UUID } from "src/types/uuid";
 import { Agents } from "src/utils/AgentLoader";
-import { Settings } from "src/tools/settings";
+import { AgentConfig, Settings } from "src/tools/settings";
 
 export interface AgentConstructorParams {
     agentName?: string;
@@ -16,6 +16,7 @@ export interface AgentConstructorParams {
     artifactManager?: ArtifactManager
     taskManager: TaskManager;
     userId: UUID;
+    config?: AgentConfig;
     messagingHandle?: string;
     settings: Settings;
     agents: Agents

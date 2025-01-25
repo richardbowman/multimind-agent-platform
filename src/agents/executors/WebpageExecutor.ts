@@ -16,6 +16,7 @@ import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { Artifact } from 'src/tools/artifact';
 import { UrlExtractionResponse } from 'src/schemas/UrlExtractionResponse';
 import { createUUID } from 'src/types/uuid';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
 /**
  * WebpageExecutor - Processes a single provided URL to:
@@ -32,7 +33,7 @@ import { createUUID } from 'src/types/uuid';
  * - Token usage tracking and optimization
  * - Artifact management for persistence
  */
-@StepExecutorDecorator('webpage', 'Processes and summarizes a single webpage')
+@StepExecutorDecorator(ExecutorType.DOWNLOAD_WEBPAGE, 'Processes and summarizes a single webpage')
 export class WebpageExecutor implements StepExecutor {
     private scrapeHelper: ScrapeHelper;
     private llmService: ILLMService;

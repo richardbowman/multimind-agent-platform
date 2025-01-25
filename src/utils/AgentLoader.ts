@@ -52,7 +52,7 @@ export class AgentLoader {
                     }
 
                     // Create agent instance with merged params
-                    const agent = new AgentClass({
+                    const constructorParams: AgentConstructorParams = {
                         ...params,
                         agentName: agentName,
                         userId: definition.userId,
@@ -62,7 +62,8 @@ export class AgentLoader {
                         chatClient: new LocalTestClient(definition.userId, "", params.chatStorage),
                         settings: _s,
                         agents: params.agents
-                    } as AgentConstructorParams);
+                    };
+                    const agent = new AgentClass(constructorParams);
 
                     agentsMap.set(agentName, agent);
                     Logger.info(`Loaded agent: ${agentName} with handle ${definition.handle}`);

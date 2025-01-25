@@ -8,10 +8,11 @@ import { SchemaType } from "../../schemas/SchemaTypes";
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResult } from '../interfaces/StepResult';
-import { TaskManager } from 'src/tools/taskManager';
+import { TaskManager, TaskStatus } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType } from 'src/llm/promptBuilder';
-import { GoalProgressResponse } from "../../schemas/goalProgress";
+import { GoalProgressResponse } from 'src/schemas/goalProgress';
+import Logger from 'src/helpers/logger';
 
 /**
  * Executor that analyzes thread progress against channel goals.

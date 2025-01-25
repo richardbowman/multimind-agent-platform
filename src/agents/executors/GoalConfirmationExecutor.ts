@@ -11,6 +11,7 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResult } from '../interfaces/StepResult';
 import { TaskManager } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
+import { ContentType } from 'src/llm/promptBuilder';
 
 /**
  * Executor that validates and confirms user goals before proceeding.
@@ -40,13 +41,6 @@ export class GoalConfirmationExecutor implements StepExecutor {
         const { goal, step, projectId } = params;
         const schema = await getGeneratedSchema(SchemaType.GoalConfirmationResponse);
 
-        // Get channel data including any project goals
-        const channelData = await this.chatClient.getChannelData(userPost.channel_id);
-        const project = channelData?.projectId
-            ? this.taskManager.getProject(channelData.projectId)
-            : null;
-
-            
         // Create prompt using PromptBuilder
         const promptBuilder = this.modelHelpers.createPrompt();
         
@@ -64,18 +58,9 @@ export class GoalConfirmationExecutor implements StepExecutor {
             projectId
         });
 
-        if (params.context?.artifacts) {
-            promptBuilder.addContent(ContentType.ARTIFACTS, params.context.artifacts);
-        }
-
-        if (params.context?.threadPosts) {
-            promptBuilder.addContent(ContentType.CONVERSATION, params.context.threadPosts);
-        }
-
-        // Add project goals if available
-        if (project) {
-            promptBuilder.addContent(ContentType.GOALS, project);
-        }
+        promptBuilder.addContent(ContentType.ARTIFACTS, params.context?.artifacts);
+        promptBuilder.addContent(ContentType.CONVERSATION, params.context?.threadPosts);
+        promptBuilder.addContent(ContentType.GOALS, params.channelGoals);
 
         // Build and execute prompt
         const prompt = promptBuilder.build();

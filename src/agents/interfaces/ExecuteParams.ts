@@ -5,6 +5,7 @@ import { StepTask } from './ExecuteStepParams';
 import { UUID } from 'src/types/uuid';
 import { ChatHandle } from 'src/types/chatHandle';
 import { ChatPost } from 'src/chat/chatClient';
+import { Task } from 'electron';
 
 export interface ExecuteParams {
     readonly agentId: UUID;
@@ -16,6 +17,7 @@ export interface ExecuteParams {
     readonly stepId: UUID;
     readonly projectId: UUID;
     readonly previousResult?: ModelResponse[];
+    readonly channelGoals: Task[];
     readonly steps: StepTask[],
     readonly mode?: 'quick' | 'detailed';
     readonly executionMode: 'conversation' | 'task';

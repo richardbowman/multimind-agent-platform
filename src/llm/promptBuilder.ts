@@ -182,8 +182,8 @@ export class PromptBuilder {
         this.contentSections.set(contentType, content);
     }
 
-    addInstruction(instruction: string): void {
-        this.instructions.push(instruction);
+    addInstruction(instruction: string|undefined): void {
+        if (instruction) this.instructions.push(instruction);
     }
 
     addContext(context: string): void {

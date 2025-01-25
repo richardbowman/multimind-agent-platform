@@ -16,6 +16,7 @@ import { PromptBuilder, PromptRegistry } from "./promptBuilder";
 export interface ModelHelpersParams {
     llmService: ILLMService;
     userId: string;
+    purpose?: string;
     finalInstructions?: string;
     messagingHandle?: string;
 }
@@ -118,6 +119,8 @@ export class ModelHelpers {
         this.finalInstructions = params.finalInstructions;
         this.messagingHandle = params.messagingHandle;
         this.modelCache = new ModelCache();
+        if (params.purpose) this.purpose = params.purpose;
+        this.finalInstructions = params.finalInstructions;
     }
 
     protected addDateToSystemPrompt(content: string): string {

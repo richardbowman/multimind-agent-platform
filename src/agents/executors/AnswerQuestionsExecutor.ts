@@ -162,6 +162,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 return {
                     type: 'answer_analysis',
                     finished: true,
+                    allowReplan: true,
                     response: {
                         message: "All required sections are complete!",
                         document: project.documentDraft

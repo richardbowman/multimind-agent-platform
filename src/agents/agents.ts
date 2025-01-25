@@ -227,8 +227,9 @@ export abstract class Agent {
         return this.modelHelpers.getPurpose();
     }
 
-    public setPurpose(purpose: string) {
+    public setPurpose(purpose: string, finalInstructions?: string) {
         this.modelHelpers.setPurpose(purpose)
+        if (finalInstructions) this.modelHelpers.setFinalInstructions(finalInstructions);
     }
 
     protected enableMemory(): void {

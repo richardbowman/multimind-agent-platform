@@ -588,6 +588,83 @@
       ],
       "type": "object"
     },
+    "GoalProgressResponse": {
+      "description": "Response from analyzing goal progress",
+      "properties": {
+        "goalAnalysis": {
+          "description": "Detailed analysis of each goal's progress",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "goalId": {
+                "type": "string"
+              },
+              "nextSteps": {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              "progress": {
+                "type": "number"
+              },
+              "reasoning": {
+                "type": "string"
+              },
+              "status": {
+                "enum": [
+                  "pending",
+                  "in-progress",
+                  "complete"
+                ],
+                "type": "string"
+              }
+            },
+            "required": [
+              "goalId",
+              "progress",
+              "status",
+              "reasoning"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "goalsCompleted": {
+          "description": "List of goal IDs that should be marked complete",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "goalsInProgress": {
+          "description": "List of goal IDs that should be marked in-progress",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "goalsUpdated": {
+          "description": "List of goal IDs that were updated",
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "summary": {
+          "description": "Summary of goal progress analysis",
+          "type": "string"
+        }
+      },
+      "required": [
+        "summary",
+        "goalsUpdated",
+        "goalsInProgress",
+        "goalsCompleted",
+        "goalAnalysis"
+      ],
+      "type": "object"
+    },
     "GoalTemplate": {
       "additionalProperties": false,
       "properties": {
@@ -1411,7 +1488,8 @@
         "TemplateSelectionResponse",
         "DocumentPlanResponse",
         "ContentSectionResponse",
-        "RoutingResponse"
+        "RoutingResponse",
+        "GoalProgressResponse"
       ],
       "type": "string"
     },
