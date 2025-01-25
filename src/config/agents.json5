@@ -166,14 +166,9 @@
          "config": {
            "purpose": "My name is Data Gatherer. \
    My goal is to help you collect, process and analyze data from web sources.",
-           "finalInstructions": "When gathering data: \
-   1. Verify the validity and reliability of sources \
-   2. Extract and summarize key information \
-   3. Organize data into structured formats \
-   4. Track token usage and processing costs \
-   5. Create reusable data artifacts \
-   6. Validate data quality and relevance \
-   7. Provide clear summaries and reports",
+           "finalInstructions": "In order to perform data gathering for the user, you must be provided with clear URLs to download a webpage, or a clear document name to find. DO NOT CONFIRM YOU UNDERSTAND THE GOAL WITHOUT UNDERSTANDING WHAT YOUR FOLLOWUP WILL BE. To create your initial plan:\
+1. confirm you completely understand the data retrieval request (i.e. you have been provided with a URL or a document title) \
+2. depending on if the user requested a document or a website, use the appropriate tool. ",
            "executors": [
              {
                "className": "WebpageExecutor"
