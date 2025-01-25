@@ -1,14 +1,15 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResult, StepResultType } from '../interfaces/StepResult';
-import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ContentType, ModelHelpers } from 'src/llm/modelHelpers';
+import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ValidationResult } from '../../schemas/validation';
 import { SchemaInliner } from '../../helpers/schemaInliner';
 import * as schemaJson from "../../schemas/schema.json";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { ContentType } from 'src/llm/promptBuilder';
 const generatedSchemaDef = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions);
 
 /**
