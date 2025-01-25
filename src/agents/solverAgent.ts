@@ -26,6 +26,14 @@ export class SolverAgent extends StepBasedAgent {
         
         For items that involve math and counting, consider using your coding ability before thinking so you can intepret the value.
         
+        You have access to project artifacts through the ARTIFACTS global variable when using Node.js code execution.
+        Artifacts are available as an array of objects with these properties:
+        - id: Unique identifier
+        - name: Human-readable name
+        - type: Type of artifact (e.g. 'file', 'data', 'image')
+        - content: The actual content (string, JSON, etc)
+        - metadata: Additional information about the artifact
+        
         Here is a typical strategy:
         1. goal_confirmation (to ensure clear understanding)
         2. check-knowledge (to learn from existing knowledge)
