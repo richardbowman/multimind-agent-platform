@@ -20,11 +20,80 @@ export class SolverAgent extends StepBasedAgent {
 
         // Set purpose and instructions
         this.modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning who can write code.`);
+        // Define standard sequences for different scenarios
+        const standardProblemSolvingSequence = [
+            { 
+                type: ExecutorType.GOAL_CONFIRMATION,
+                description: "Confirm understanding of the problem and goals"
+            },
+            {
+                type: ExecutorType.CHECK_KNOWLEDGE,
+                description: "Check existing knowledgebase for relevant information"
+            },
+            {
+                type: ExecutorType.THINKING,
+                description: "Develop initial approach to solving the problem"
+            },
+            {
+                type: ExecutorType.REFUTING,
+                description: "Challenge assumptions and identify potential flaws"
+            },
+            {
+                type: ExecutorType.THINKING,
+                description: "Refine approach based on challenges identified"
+            },
+            {
+                type: ExecutorType.VALIDATION,
+                description: "Verify the proposed solution"
+            },
+            {
+                type: ExecutorType.FINAL_RESPONSE,
+                description: "Provide final answer to the user"
+            }
+        ];
+
+        const codeFocusedSequence = [
+            { 
+                type: ExecutorType.GOAL_CONFIRMATION,
+                description: "Confirm understanding of the coding problem"
+            },
+            {
+                type: ExecutorType.NODE_EXECUTION,
+                description: "Execute code to analyze or prototype solution"
+            },
+            {
+                type: ExecutorType.THINKING,
+                description: "Analyze code results and develop approach"
+            },
+            {
+                type: ExecutorType.VALIDATION,
+                description: "Verify code correctness and results"
+            },
+            {
+                type: ExecutorType.FINAL_RESPONSE,
+                description: "Provide final code solution and explanation"
+            }
+        ];
+
+        // Add sequences to modelHelpers
+        this.modelHelpers.addStepSequence(
+            'standard-problem-solving',
+            'Standard sequence for solving complex problems',
+            standardProblemSolvingSequence
+        );
+
+        this.modelHelpers.addStepSequence(
+            'code-focused',
+            'Sequence for problems requiring code execution',
+            codeFocusedSequence
+        );
+
         this.modelHelpers.setFinalInstructions(`SOLVING INSTRUCTIONS
-        Use steps of constructive thinking, critical refutation, and validation to develop robust solutions. 
-        In the reasoning field, explain the complexity you see in this goal.
+        Use the appropriate sequence based on problem context:
+        - For complex problems: Use the standard-problem-solving sequence
+        - For coding problems: Use the code-focused sequence
         
-        For items that involve math and counting, consider using your coding ability before thinking so you can intepret the value.
+        Adapt your approach to the complexity of each problem, using more cycles as needed.
         
         You have access to project artifacts through the ARTIFACTS global variable when using Node.js code execution.
         Artifacts are available as an array of objects with these properties:
@@ -32,18 +101,7 @@ export class SolverAgent extends StepBasedAgent {
         - name: Human-readable name
         - type: Type of artifact (e.g. 'file', 'data', 'image')
         - content: The actual content (string, JSON, etc)
-        - metadata: Additional information about the artifact
-        
-        Here is a typical strategy:
-        1. goal_confirmation (to ensure clear understanding)
-        2. check-knowledge (to learn from existing knowledge)
-        3. thinking (to develop initial approach)
-        4. refuting (to challenge assumptions)
-        5. thinking (to refine based on challenges)
-        6. validation (to verify the solution)
-        7. final_response (to give the user your answer)
-        
-        Adapt your approach to the complexity of each problem, using more cycles as needed.`);
+        - metadata: Additional information about the artifact`);
 
         // Register executors using getExecutorParams
         this.registerStepExecutor(new GoalConfirmationExecutor(this.getExecutorParams()));
