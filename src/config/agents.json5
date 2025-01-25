@@ -188,6 +188,9 @@
              },
              {
                "className": "AnswerQuestionsExecutor"
+             },
+             {
+               "className": "GoalProgressExecutor"
              }
            ]
          }
