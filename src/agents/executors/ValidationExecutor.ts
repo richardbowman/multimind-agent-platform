@@ -90,7 +90,8 @@ If the solution is wrong, list the specific aspects that must be addressed.`);
             type: StepResultType.Validation,
             finished: true,
             needsUserInput: params.executionMode === 'conversation' && !response.isComplete && !forceCompletion,
-            allowReplan: params.executionMode === 'task' && !response.isComplete && !forceCompletion,
+            replan: forceCompletion ? ReplanType.None : 
+                (!response.isComplete ? ReplanType.Force : ReplanType.None),
             response: {
                 message: forceCompletion 
                     ? `Maximum validation attempts reached (${maxAttempts}). Marking as complete despite remaining issues:\n` +

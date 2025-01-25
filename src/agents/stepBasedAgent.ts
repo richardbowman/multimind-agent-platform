@@ -495,7 +495,8 @@ export abstract class StepBasedAgent extends Agent {
 
                 // If this was the last planned task, add a validation step
                 const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete && t.type === "step");
-                if (stepResult.allowReplan && remainingTasks.length === 0) {
+                if ((stepResult.replan === ReplanType.Allow || stepResult.replan === ReplanType.Force) && 
+                    remainingTasks.length === 0) {
                     // const validationTask: Task = {
                     //     id: crypto.randomUUID(),
                     //     type: 'validation',

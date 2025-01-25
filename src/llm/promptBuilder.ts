@@ -88,6 +88,7 @@ export class PromptRegistry {
             `- Status: ${step.finished ? 'Complete' : 'In Progress'}\n` +
             `- Attempts: ${metadata?.validationAttempts || 1}\n` +
             `- Missing Aspects: ${metadata?.missingAspects?.join(', ') || 'None'}\n` +
+            `- Replan: ${step.replan || ReplanType.None}\n` +
             `- Result: ${step.response.message}`;
     }
 

@@ -9,6 +9,12 @@ export enum StepResultType {
     Validation = "Validation"
 }
 
+export enum ReplanType {
+    None = "none",
+    Allow = "allow", 
+    Force = "force"
+}
+
 export interface StepResult {
     type?: StepResultType;
     projectId?: UUID;
@@ -17,7 +23,9 @@ export interface StepResult {
     finished?: boolean;
     goal?: string;
     async?: boolean;
+    /** @deprecated Use replan instead */
     allowReplan?: boolean;
+    replan?: ReplanType;
     needsUserInput?: boolean;
     response: ModelResponse;
 }
