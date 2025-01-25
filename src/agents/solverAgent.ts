@@ -2,6 +2,7 @@ import { StepBasedAgent } from './stepBasedAgent';
 import { ThinkingExecutor } from './executors/ThinkingExecutor';
 import { RefutingExecutor } from './executors/RefutingExecutor';
 import { CodeExecutorExecutor } from './executors/CodeExecutorExecutor';
+import { NodeExecutorExecutor } from './executors/NodeExecutorExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
 import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
@@ -43,6 +44,7 @@ export class SolverAgent extends StepBasedAgent {
         this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new KnowledgeCheckExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new CodeExecutorExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new NodeExecutorExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new FinalResponseExecutor(this.getExecutorParams()));
 
     }
