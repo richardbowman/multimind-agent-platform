@@ -110,9 +110,32 @@ try {
         });
     };
 
-    // Execute the code using import() with data URI
-    const encodedJs = encodeURIComponent(`
-        export default (async () => {
+    // Execute the code using vm module for better compatibility
+    const vm = require('vm');
+    const context = vm.createContext({
+        ...global,
+        console: global.console,
+        ARTIFACTS: global.ARTIFACTS,
+        generate: global.generate,
+        provideResult: global.provideResult,
+        require: (module) => {
+            // Whitelist allowed modules
+            const allowedModules = [
+                'csv-parse/sync',
+                'csv-stringify/sync',
+                'stream-transform',
+                'csv-generate'
+            ];
+            
+            if (!allowedModules.includes(module)) {
+                throw new Error(`Module ${module} is not allowed`);
+            }
+            return require(module);
+        }
+    });
+
+    const script = new vm.Script(`
+        (async () => {
             try {
                 ${workerData.code}
             } catch (error) {
@@ -129,14 +152,11 @@ try {
                     stack: error.stack
                 });
             }
-        })();
+        })()
     `);
-    
-    const dataUri = 'data:text/javascript;charset=utf-8,' + encodedJs;
-    
+
     let result;
-    const module = await import(dataUri);
-    result = await module.default();
+    result = await script.runInContext(context);
     if (result) {
         await global.provideResult(result);
     }
