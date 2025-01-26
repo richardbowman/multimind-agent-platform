@@ -148,7 +148,9 @@ ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResu
             } catch (retryError) {
                 executionResult = {
                     returnValue: `Error: ${retryError.message}`,
-                    consoleOutput: ''
+                    consoleOutput: retryError.message.includes('Console Output:') 
+                        ? retryError.message.split('Console Output:')[1].trim()
+                        : ''
                 };
             }
         }

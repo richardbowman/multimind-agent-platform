@@ -33,9 +33,16 @@ try {
         }
     });
 } catch (error) {
+    // Send console output before error
+    parentPort.postMessage({
+        type: 'console',
+        data: capturedOutput.trim()
+    });
+    
+    // Send error with console output
     parentPort.postMessage({
         type: 'error',
-        data: error.message
+        data: `${error.message}\n\nConsole Output:\n${capturedOutput.trim()}`
     });
     process.exit(1);
 }
