@@ -1,7 +1,7 @@
-import { Worker, isMainThread, parentPort, workerData } from 'worker_threads';
+import { Worker } from 'worker_threads';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -11,6 +11,17 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import path from 'path';
+import { StringUtils } from 'src/utils/StringUtils';
+import { ArtifactManager } from 'src/tools/artifactManager';
+
+export class ConsoleError extends Error {
+    public consoleOutput?: string;
+
+    constructor(message?: string, consoleOutput?: string) {
+        super(message);
+        this.consoleOutput = consoleOutput;
+    }
+}
 
 /**
  * Executor that runs Node.js code in a worker thread with limited permissions
@@ -25,9 +36,11 @@ import path from 'path';
 @StepExecutorDecorator(ExecutorType.NODE_EXECUTION, 'Execute Node.js code in a worker thread using provided packages (you may not install)')
 export class NodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    private artifactManager: ArtifactManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
+        this.artifactManager = params.artifactManager;
     }
 
     private async executeInWorker(code: string, artifacts: any[] = []): Promise<{returnValue: any, consoleOutput: string, artifacts: any[]}> {
@@ -50,8 +63,9 @@ export class NodeExecutorExecutor implements StepExecutor {
                 if (message.type === 'console') {
                     consoleOutput += message.data + '\n';
                 } else if (message.type === 'error') {
+                    const error = new ConsoleError(message.data, consoleOutput);
                     clearTimeout(timeout);
-                    reject(new Error(message.data));
+                    reject(error);
                 } else if (message.type === 'result') {
                     clearTimeout(timeout);
                     resolve({
@@ -64,10 +78,7 @@ export class NodeExecutorExecutor implements StepExecutor {
 
             worker.on('error', (error) => {
                 clearTimeout(timeout);
-                reject({
-                    message: error.message,
-                    consoleOutput: consoleOutput.trim()
-                });
+                reject(new ConsoleError(error.message, consoleOutput));
             });
 
             worker.on('exit', (code) => {
@@ -82,8 +93,8 @@ export class NodeExecutorExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.CodeExecutionResponse);
 
-        const prompt = `You are a Node.js programming expert.
-Generate Node.js code to solve the given problem.
+        const prompt = `You are a Node.js programming step running as part of a broader agent.
+Generate Node.js code to solve the provided step goal.
 Provide clear explanations of what the code does. Include frequent logging so you can 
 debug and understand the execution steps.
 
@@ -93,7 +104,6 @@ IMPORTANT RULES FOR CODE:
 - node-csv: csv-parse, csv-generate, csv-stringify, stream-transform
 
 2. You are running in a web worker thread. The main execution code cannot use a 'return' statement.
-
 
 3. You do not have real file-system access. The only "files" you can access are artifacts.
 You have access to project artifacts through the ARTIFACTS global variable. You can also CREATE NEW ARTIFACTS by pushing to this array.
@@ -118,18 +128,18 @@ The ARTIFACTS array contains objects with these properties:
 Example artifact/files access:
 // Get first artifact
 const artifact = ARTIFACTS[0];
-console.log(\`Processing artifact: \${artifact.name}\`);
+console.log(\`Processing artifact: \${artifact.id}\`);
 // Use artifact content
 const data = JSON.parse(artifact.content);
 
-4. Your code is running as an eval statement, so return value of the last line of your script will be shared as the answer.
+4. Your code is running as an eval statement, so return value of the last line of your script will be shared as the answer. Do not return large data sets. If you have large data sets, store them as an artifact and return information to confirm like the count. 
 
 
 ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         let result = await this.modelHelpers.generate<CodeExecutionResponse>({
-            message: params.message || params.stepGoal,
+            message: `STEP GOAL: ${params.stepGoal}\n\nMESSAGE: ${params.message}`,
             instructions
         });
 
@@ -138,7 +148,14 @@ ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResu
             executionResult = await this.executeInWorker(result.code, params.context?.artifacts);
         } catch (error) {
             // If there's an error, try again with error feedback
-            const errorPrompt = `${prompt}\n\nThe previous attempt resulted in this error:\n${error.message}\n\nPlease fix the code and try again.`;
+            const errorPrompt = `${prompt}
+The previous attempt resulted in this error:
+${typeof error === "object" ? (error as any)?.message || "[Not provided]" : "[Not an error message]"}
+
+The previous attempt output the following console logs:
+${StringUtils.truncate((error as ConsoleError)?.consoleOutput||"[Not provided]", 500)}
+
+Please fix the code and try again.`;
             const retryInstructions = new StructuredOutputPrompt(schema, errorPrompt);
             let retryResult = await this.modelHelpers.generate<CodeExecutionResponse>({
                 message: params.message || params.stepGoal,
@@ -150,8 +167,8 @@ ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResu
                 result = retryResult;
             } catch (retryError) {
                 executionResult = {
-                    returnValue: `Error: ${retryError.message}`,
-                    consoleOutput: capturedOutput.trim()
+                    returnValue: `Error: ${typeof error === "object" ? (error as any)?.message || "[Not provided]" : "[Not an error message]"}`,
+                    consoleOutput: (retryError as ConsoleError).consoleOutput?.trim()
                 };
             }
         }
@@ -160,7 +177,11 @@ ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResu
         const originalArtifactCount = params.context?.artifacts?.length || 0;
         
         // Find any new artifacts that were created
-        const newArtifacts = executionResult.returnValue?.artifacts?.slice(originalArtifactCount) || [];
+        const newArtifacts = executionResult.artifacts?.slice(originalArtifactCount) || [];
+
+        for(const artifact of newArtifacts) {
+            await this.artifactManager.saveArtifact(artifact);
+        }
 
         const responseData = {
             ...result,
@@ -172,11 +193,11 @@ ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResu
         };
 
         return {
-            type: "node-execution",
+            type: StepResultType.CodeGenerationStep,
             finished: true,
             artifactIds: newArtifacts.map(a => a.id),
             response: {
-                message: `**Code:**\n\`\`\`javascript\n${result.code}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${JSON.stringify(executionResult.returnValue, null, 2)}\n\`\`\`${executionResult.consoleOutput ? `\n\n**Console Output:**\n\`\`\`\n${executionResult.consoleOutput}\n\`\`\`\n` : ''}`,
+                message: `**Code:**\n\`\`\`javascript\n${result.code}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${StringUtils.truncate(JSON.stringify(executionResult.returnValue, null, 2), 1000)}\n\`\`\`${executionResult.consoleOutput ? `\n\n**Console Output:**\n\`\`\`\n${StringUtils.truncate(executionResult.consoleOutput, 1000)}\n\`\`\`\n` : ''}`,
                 data: responseData
             }
         };
