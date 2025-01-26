@@ -111,30 +111,33 @@ try {
         });
     };
 
-    // Execute the code using vm module for better compatibility
-    const context = vm.createContext({
-        ...global,
+    // Execute the code using eval with proper error handling
+    const requireWrapper = (module) => {
+        // Whitelist allowed modules
+        const allowedModules = [
+            'csv-parse/sync',
+            'csv-stringify/sync',
+            'stream-transform',
+            'csv-generate'
+        ];
+        
+        if (!allowedModules.includes(module)) {
+            throw new Error(`Module ${module} is not allowed`);
+        }
+        return require(module);
+    };
+
+    // Create a safe context for eval
+    const context = {
+        require: requireWrapper,
         console: global.console,
         ARTIFACTS: global.ARTIFACTS,
         generate: global.generate,
-        provideResult: global.provideResult,
-        require: (module) => {
-            // Whitelist allowed modules
-            const allowedModules = [
-                'csv-parse/sync',
-                'csv-stringify/sync',
-                'stream-transform',
-                'csv-generate'
-            ];
-            
-            if (!allowedModules.includes(module)) {
-                throw new Error(`Module ${module} is not allowed`);
-            }
-            return require(module);
-        }
-    });
+        provideResult: global.provideResult
+    };
 
-    const script = new vm.Script(`
+    // Wrap the code in an async function
+    const codeToRun = `
         (async () => {
             try {
                 ${workerData.code}
@@ -153,10 +156,16 @@ try {
                 });
             }
         })()
-    `);
+    `;
 
     let result;
-    result = await script.runInContext(context);
+    // Use Function constructor to limit scope
+    const fn = new Function('context', `
+        with(context) {
+            return ${codeToRun}
+        }
+    `);
+    result = await fn(context);
     if (result) {
         await global.provideResult(result);
     }
