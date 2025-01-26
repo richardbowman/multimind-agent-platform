@@ -55,9 +55,9 @@ export class NodeExecutorExecutor implements StepExecutor {
                 } else if (message.type === 'result') {
                     clearTimeout(timeout);
                     resolve({
-                        returnValue: message.data,
+                        returnValue: message.data.returnValue,
                         consoleOutput: consoleOutput.trim(),
-                        artifacts: workerData.artifacts
+                        artifacts: message.data.artifacts
                     });
                 }
             });

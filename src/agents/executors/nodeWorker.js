@@ -24,10 +24,13 @@ try {
         data: capturedOutput.trim()
     });
 
-    // Send final result
+    // Send final result with updated artifacts
     parentPort.postMessage({
         type: 'result',
-        data: result
+        data: {
+            returnValue: result,
+            artifacts: global.ARTIFACTS
+        }
     });
 } catch (error) {
     parentPort.postMessage({
