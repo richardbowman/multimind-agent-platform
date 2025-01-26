@@ -110,27 +110,47 @@ try {
         });
     };
 
-    // Execute the code
-    // Wrap eval in a function to handle return values
-    const codeToRun = `(async () => {
-        try {
-            ${workerData.code}
-        } catch (error) {
-            // Send console output before error
-            parentPort.postMessage({
-                type: 'console',
-                data: capturedOutput.trim()
-            });
-            
-            // Send error with console output
-            parentPort.postMessage({
-                type: 'error',
-                data: \`\$\{error.message\}\n\$\{error.stack\}\`
-            });
-        } 
-    })()`;
+    // Execute the code using import() with data URI
+    const encodedJs = encodeURIComponent(`
+        ${workerData.code}
+        export default (async () => {
+            try {
+                ${workerData.code}
+            } catch (error) {
+                // Send console output before error
+                parentPort.postMessage({
+                    type: 'console',
+                    data: capturedOutput.trim()
+                });
+                
+                // Send error with console output
+                parentPort.postMessage({
+                    type: 'error',
+                    data: \`\$\{error.message\}\n\$\{error.stack\}\`
+                });
+            }
+        })();
+    `);
     
-    let result = eval(codeToRun);
+    const dataUri = 'data:text/javascript;charset=utf-8,' + encodedJs;
+    
+    let result;
+    try {
+        const module = await import(dataUri);
+        result = await module.default();
+    } catch (error) {
+        // Send console output before error
+        parentPort.postMessage({
+            type: 'console',
+            data: capturedOutput.trim()
+        });
+        
+        // Send error with console output
+        parentPort.postMessage({
+            type: 'error',
+            data: \`\$\{error.message\}\n\$\{error.stack\}\`
+        });
+    }
 
     // if (result && typeof result.then === 'function') {
     //     result = result.then((result) => {
