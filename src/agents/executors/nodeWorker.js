@@ -134,7 +134,8 @@ try {
         console: global.console,
         ARTIFACTS: global.ARTIFACTS,
         generate: global.generate,
-        provideResult: global.provideResult
+        provideResult: global.provideResult,
+        jsonUtils: workerData.jsonUtils
     };
 
     // Wrap the code in an async function

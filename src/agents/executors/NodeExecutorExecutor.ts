@@ -51,7 +51,10 @@ export class NodeExecutorExecutor implements StepExecutor {
             const worker = new Worker(path.join(__dirname, 'nodeWorker.js'), {
                 workerData: { 
                     code,
-                    artifacts
+                    artifacts,
+                    jsonUtils: {
+                        extractAndParseJsonBlocks: StringUtils.extractAndParseJsonBlocks
+                    }
                 }
             });
 
@@ -151,7 +154,13 @@ const data = JSON.parse(artifact.content);
 
 4. You have access to a global function "generate(message: string, instructions: string): Promise<string>" that allows you to call an LLM to do things like perform content generation, sentiment analysis, and categorization.
 
-5. When the code is finished, it should call the global method "provideResult(...)" with the final result it wants to share. This must be cloneable across web-worker boundary. Do not return large data sets. If you have large data sets, store them as an artifact and return information to confirm like the count. 
+5. When the code is finished, it should call the global method "provideResult(...)" with the final result it wants to share. This must be cloneable across web-worker boundary. Do not return large data sets. If you have large data sets, store them as an artifact and return information to confirm like the count.
+
+6. You have access to JSON utilities through the global jsonUtils object:
+   - jsonUtils.extractAndParseJsonBlocks(text): Extracts and parses JSON code blocks from text
+     Example:
+     const jsonData = jsonUtils.extractAndParseJsonBlocks(someText);
+     // Returns array of parsed JSON objects from ```json blocks
 
 
 ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResult, null, 2)}

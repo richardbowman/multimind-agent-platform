@@ -44,4 +44,28 @@ export namespace StringUtils {
 
         return matches;
     }
+
+    /**
+     * Extracts JSON from code blocks and parses it
+     * @param text Input text containing JSON code blocks
+     * @returns Array of parsed JSON objects
+     * @throws SyntaxError if JSON parsing fails
+     */
+    export function extractAndParseJsonBlocks(text: string): any[] {
+        const jsonBlockRegex = /```json[\s\S]*?\n([\s\S]*?)```/g;
+        const matches: any[] = [];
+        let match: RegExpExecArray|null;
+
+        while ((match = jsonBlockRegex.exec(text)) !== null) {
+            try {
+                const jsonString = match[1].trim();
+                const parsed = JSON.parse(jsonString);
+                matches.push(parsed);
+            } catch (error) {
+                throw new SyntaxError(`Failed to parse JSON block: ${error.message}`);
+            }
+        }
+
+        return matches;
+    }
 }
