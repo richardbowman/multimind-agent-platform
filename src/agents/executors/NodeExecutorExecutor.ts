@@ -51,7 +51,13 @@ export class NodeExecutorExecutor implements StepExecutor {
                 workerData: { 
                     code,
                     artifacts,
-                    llmService: this.llmService 
+                    llmService: this.llmService,
+                    modelHelpers: this.modelHelpers,
+                    artifactManager: this.artifactManager,
+                    vectorDB: this.vectorDB,
+                    taskManager: this.taskManager,
+                    settings: this.settings,
+                    chatClient: this.chatClient
                 }
             });
 
