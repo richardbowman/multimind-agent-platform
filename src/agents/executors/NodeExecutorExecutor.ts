@@ -30,7 +30,7 @@ export class NodeExecutorExecutor implements StepExecutor {
         this.modelHelpers = params.modelHelpers;
     }
 
-    private async executeInWorker(code: string, artifacts: any[] = []): Promise<{returnValue: any, consoleOutput: string}> {
+    private async executeInWorker(code: string, artifacts: any[] = []): Promise<{returnValue: any, consoleOutput: string, artifacts: any[]}> {
         return new Promise((resolve, reject) => {
             const worker = new Worker(path.join(__dirname, 'nodeWorker.js'), {
                 workerData: { 
@@ -56,7 +56,8 @@ export class NodeExecutorExecutor implements StepExecutor {
                     clearTimeout(timeout);
                     resolve({
                         returnValue: message.data,
-                        consoleOutput: consoleOutput.trim()
+                        consoleOutput: consoleOutput.trim(),
+                        artifacts: workerData.artifacts
                     });
                 }
             });
@@ -92,8 +93,20 @@ IMPORTANT RULES FOR CODE:
 
 
 3. You do not have real file-system access. The only "files" you can access are artifacts.
-You have access to project artifacts ("files") through the ARTIFACTS global variable.
-Do not overwrite this variable. The ARTIFACTS global variable is an array of objects with these properties:
+You have access to project artifacts through the ARTIFACTS global variable. You can also CREATE NEW ARTIFACTS by pushing to this array.
+
+To create a new artifact:
+ARTIFACTS.push({
+    id: 'unique-id', // Will be auto-generated if omitted
+    type: 'data',    // Type of artifact (e.g. 'data', 'report', 'analysis')
+    content: '...',  // The actual content (string, JSON, etc)
+    metadata: {      // Optional metadata
+        title: 'My Artifact',
+        description: 'Generated from analysis'
+    }
+});
+
+The ARTIFACTS array contains objects with these properties:
 - id: Unique identifier
 - type: Type of artifact (e.g. 'file', 'data', 'image')
 - content: The actual content (string, JSON, etc)
@@ -140,14 +153,22 @@ ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResu
             }
         }
 
+        // Get original artifact count
+        const originalArtifactCount = params.context?.artifacts?.length || 0;
+        
+        // Find any new artifacts that were created
+        const newArtifacts = executionResult.returnValue?.artifacts?.slice(originalArtifactCount) || [];
+
         const responseData = {
             ...result,
-            executionResult
+            executionResult,
+            newArtifacts
         };
 
         return {
             type: "node-execution",
             finished: true,
+            artifactIds: newArtifacts.map(a => a.id),
             response: {
                 message: `**Code:**\n\`\`\`javascript\n${result.code}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${JSON.stringify(executionResult.returnValue, null, 2)}\n\`\`\`${executionResult.consoleOutput ? `\n\n**Console Output:**\n\`\`\`\n${executionResult.consoleOutput}\n\`\`\`\n` : ''}`,
                 data: responseData
