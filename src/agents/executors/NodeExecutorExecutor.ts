@@ -37,10 +37,12 @@ export class ConsoleError extends Error {
 export class NodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
+    private llmService: ILLMService;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
         this.artifactManager = params.artifactManager;
+        this.llmService = params.llmService;
     }
 
     private async executeInWorker(code: string, artifacts: any[] = []): Promise<{returnValue: any, consoleOutput: string, artifacts: any[]}> {
@@ -48,7 +50,8 @@ export class NodeExecutorExecutor implements StepExecutor {
             const worker = new Worker(path.join(__dirname, 'nodeWorker.js'), {
                 workerData: { 
                     code,
-                    artifacts 
+                    artifacts,
+                    llmService: this.llmService 
                 }
             });
 

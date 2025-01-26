@@ -1,4 +1,10 @@
 const { parentPort, workerData } = require('worker_threads');
+const { ILLMService } = require('src/llm/ILLMService');
+
+// Make LLM service available globally
+if (workerData.llmService) {
+    global.LLM = workerData.llmService;
+}
 
 // Make artifacts available globally
 global.ARTIFACTS = workerData.artifacts || [];
@@ -23,9 +29,14 @@ let capturedOutput = '';
 
 try {
     // Execute the code
-    let result = eval(workerData.code);
+    // Wrap eval in a function to handle return values
+    const codeToRun = `(async () => {
+        ${workerData.code}
+    })()`;
+    
+    let result = eval(codeToRun);
 
-    if (result instanceof Promise) {
+    if (result && typeof result.then === 'function') {
         result = result.then((result) => {
             // Send console output
             parentPort.postMessage({
