@@ -101,6 +101,8 @@ Generate Node.js code to solve the provided step goal.
 Provide clear explanations of what the code does. Include frequent logging so you can 
 debug and understand the execution steps.
 
+OVERALL GOAL: ${params.overallGoal}
+
 IMPORTANT RULES FOR CODE:
 
 1. You can use core Node.js modules as well as ONLY THE FOLLOWING SPECIFIC packages:
@@ -142,7 +144,7 @@ ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResu
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         let result = await this.modelHelpers.generate<CodeExecutionResponse>({
-            message: `STEP GOAL: ${params.stepGoal}\n\nMESSAGE: ${params.message}`,
+            message: params.stepGoal||params.message,
             instructions
         });
 
@@ -161,7 +163,7 @@ ${StringUtils.truncate((error as ConsoleError)?.consoleOutput||"[Not provided]",
 Please fix the code and try again.`;
             const retryInstructions = new StructuredOutputPrompt(schema, errorPrompt);
             let retryResult = await this.modelHelpers.generate<CodeExecutionResponse>({
-                message: params.message || params.stepGoal,
+                message: params.stepGoal || params.message,
                 instructions: retryInstructions
             });
 
