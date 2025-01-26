@@ -1,20 +1,5 @@
 const { parentPort, workerData } = require('worker_threads');
-const { ILLMService } = require('src/llm/ILLMService');
-const { ModelHelpers } = require('src/llm/modelHelpers');
-
-// Make LLM service and ModelHelpers available globally
-if (workerData.llmService && workerData.modelHelpers) {
-    global.LLM = workerData.llmService;
-    global.ModelHelpers = new ModelHelpers({
-        llmService: workerData.llmService,
-        // Other required params
-        artifactManager: workerData.artifactManager,
-        vectorDB: workerData.vectorDB,
-        taskManager: workerData.taskManager,
-        settings: workerData.settings,
-        chatClient: workerData.chatClient
-    });
-}
+const vm = require('vm');
 
 // Make artifacts available globally
 global.ARTIFACTS = workerData.artifacts || [];
@@ -31,8 +16,9 @@ const response = await ModelHelpers.generate<CodeExecutionResponse>({
 const originalConsole = { ...console };
 let capturedOutput = '';
 
+global.console = {};
 ['log', 'warn', 'error', 'info', 'debug'].forEach(method => {
-    console[method] = (...args) => {
+    global.console[method] = (...args) => {
         originalConsole[method](...args);
         try {
             const formattedArgs = args.map(arg => 
@@ -40,68 +26,155 @@ let capturedOutput = '';
             ).join(' ');
             capturedOutput += formattedArgs + '\n';
         } catch (e) {
-            originalConsole.error(e);
+            originalConsole.error("Error processing logging statement in worker", e);
         }
     };
 });
 
+
+class AsyncQueue {
+    queue = Promise.resolve();
+    locked = false;
+    waitingOperations = [];
+
+    async enqueue(operation) {
+        const stack = new Error().stack || 'No stack trace available';
+        
+        if (this.locked) {
+            this.waitingOperations.push({ stack });
+            originalConsole.log(`AsyncQueue: ${this.waitingOperations.length} operations waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
+        }
+
+        while (this.locked) {
+            await new Promise(resolve => setTimeout(resolve, 10));
+        }
+        
+        this.locked = true;
+        if (this.waitingOperations.length > 0) {
+            this.waitingOperations = this.waitingOperations.filter(op => op.stack !== stack);
+        }
+
+        originalConsole.log(`AsyncQueue executing operation from:\n${stack}`);
+        
+        try {
+            const result = await this.queue.then(operation);
+            return result;
+        } catch (error) {
+            originalConsole.log(`AsyncQueue operation failed from:\n${stack}\nError:`, error);
+            throw error;
+        } finally {
+            this.queue = Promise.resolve();
+            this.locked = false;
+            if (this.waitingOperations.length > 0) {
+                originalConsole.log(`AsyncQueue: ${this.waitingOperations.length} operations still waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
+            }
+        }
+    }
+}
+
 try {
-    // Execute the code
-    // Wrap eval in a function to handle return values
-    const codeToRun = `(async () => {
-        ${workerData.code}
-    })()`;
+    const generateQueue = new AsyncQueue();
     
-    let result = eval(codeToRun);
-
-    if (result && typeof result.then === 'function') {
-        result = result.then((result) => {
-            // Send console output
-            parentPort.postMessage({
-                type: 'console',
-                data: capturedOutput.trim()
+    
+    global.generate = (chatMessage, instructions) => {
+        originalConsole.log("generate request", chatMessage, instructions);
+        return generateQueue.enqueue(() => {
+            originalConsole.log("starting queued generator", chatMessage, instructions);
+            const response = new Promise((resolve, reject) => {
+                parentPort.once("message", (workerMessage) => {
+                    originalConsole.log("generate response", workerMessage);
+                    if (workerMessage.type === "generateResponse") {
+                        originalConsole.log("sending response message", typeof workerMessage.message, workerMessage.message);
+                        resolve(workerMessage.message);
+                    } else {
+                        reject("Unexpected type:" + workerMessage.type);
+                    }
+                    
+                });
             });
-
-            // Send final result with updated artifacts
             parentPort.postMessage({
-                type: 'result',
-                data: {
-                    returnValue: result,
-                    artifacts: global.ARTIFACTS
-                }
+                type: "generate", 
+                message: chatMessage,
+                instructions
             });
-
-        }, (err) => {
-            // Send console output before error
-            parentPort.postMessage({
-                type: 'console',
-                data: capturedOutput.trim()
-            });
-            
-            // Send error with console output
-            parentPort.postMessage({
-                type: 'error',
-                data: error.message
-            });
+            return response;
         })
-    } else {
-    
-        // Send console output
-        parentPort.postMessage({
-            type: 'console',
-            data: capturedOutput.trim()
-        });
+    };
 
-        // Send final result with updated artifacts
+    global.provideResult = (result) => {
+        originalConsole.log("provide result called", result);
         parentPort.postMessage({
-            type: 'result',
+            type: "result",
             data: {
                 returnValue: result,
-                artifacts: global.ARTIFACTS
+                artifacts: ARTIFACTS
             }
         });
-        process.exit(1);
-    }
+    };
+
+    // Execute the code using eval with proper error handling
+    const requireWrapper = (module) => {
+        // Whitelist allowed modules
+        const allowedModules = [
+            'csv-parse/sync',
+            'csv-stringify/sync',
+            'stream-transform',
+            'csv-generate'
+        ];
+        
+        if (!allowedModules.includes(module)) {
+            throw new Error(`Module ${module} is not allowed`);
+        }
+        return require(module);
+    };
+
+    // Create a safe context for eval
+    const context = {
+        require: requireWrapper,
+        console: global.console,
+        ARTIFACTS: global.ARTIFACTS,
+        generate: global.generate,
+        provideResult: global.provideResult
+    };
+
+    // Wrap the code in an async function
+    const codeToRun = `
+        (async () => {
+            try {
+                ${workerData.code}
+            } catch (error) {
+                // Send console output before error
+                parentPort.postMessage({
+                    type: 'console',
+                    data: capturedOutput.trim()
+                });
+                
+                // Send error with console output
+                parentPort.postMessage({
+                    type: 'error',
+                    data: error.message,
+                    stack: error.stack
+                });
+            }
+        })()
+    `;
+
+    // let result;
+    // // Use Function constructor to limit scope
+    // const fn = new Function('context', `
+    //     with(context) {
+    //         return ${codeToRun}
+    //     }
+    // `);
+    // result = await fn(context);
+
+    global.safeRequire = requireWrapper;
+
+    const result = eval(codeToRun);
+
+    // if (result) {
+    //     global.provideResult(result);
+    // }
 } catch (error) {
     // Send console output before error
     parentPort.postMessage({
@@ -112,7 +185,7 @@ try {
     // Send error with console output
     parentPort.postMessage({
         type: 'error',
-        data: error.message
+        data: `${error.message}\n${error.stack}`
     });
     process.exit(1);
 }

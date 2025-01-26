@@ -2,7 +2,7 @@ import { Worker } from 'worker_threads';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResult, StepResultType } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { CodeExecutionResponse } from 'src/schemas/CodeExecutionResponse';
@@ -46,35 +46,38 @@ export class NodeExecutorExecutor implements StepExecutor {
     }
 
     private async executeInWorker(code: string, artifacts: any[] = []): Promise<{returnValue: any, consoleOutput: string, artifacts: any[]}> {
+        const _this = this;
         return new Promise((resolve, reject) => {
             const worker = new Worker(path.join(__dirname, 'nodeWorker.js'), {
                 workerData: { 
                     code,
-                    artifacts,
-                    llmService: this.llmService,
-                    modelHelpers: this.modelHelpers,
-                    artifactManager: this.artifactManager,
-                    vectorDB: this.vectorDB,
-                    taskManager: this.taskManager,
-                    settings: this.settings,
-                    chatClient: this.chatClient
+                    artifacts
                 }
             });
 
             const timeout = setTimeout(() => {
                 worker.terminate();
-                reject(new Error('Execution timed out after 5 seconds'));
-            }, 5000);
+                reject(new Error('Execution timed out after 90 seconds'));
+            }, 90000);
 
             let consoleOutput = '';
 
-            worker.on('message', (message) => {
+            worker.on('message', async (message) => {
                 if (message.type === 'console') {
                     consoleOutput += message.data + '\n';
                 } else if (message.type === 'error') {
                     const error = new ConsoleError(message.data, consoleOutput);
                     clearTimeout(timeout);
                     reject(error);
+                } else if (message.type == 'generate') {
+                     const response = await _this.modelHelpers.generate({
+                        instructions: message.instructions,
+                        message: message.message
+                    })
+                    worker.postMessage({
+                        type: 'generateResponse', 
+                        message: response.message
+                    });
                 } else if (message.type === 'result') {
                     clearTimeout(timeout);
                     resolve({
@@ -86,8 +89,10 @@ export class NodeExecutorExecutor implements StepExecutor {
             });
 
             worker.on('error', (error) => {
+                const consoleError = new ConsoleError(error.message, consoleOutput);
+                consoleError.stack = error.stack;
                 clearTimeout(timeout);
-                reject(new ConsoleError(error.message, consoleOutput));
+                reject(consoleError);
             });
 
             worker.on('exit', (code) => {
@@ -103,7 +108,7 @@ export class NodeExecutorExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.CodeExecutionResponse);
 
         const prompt = `You are a Node.js programming step running as part of a broader agent.
-Generate Node.js code to solve the provided step goal.
+Generate JavaScript code to solve the provided step goal.
 Provide clear explanations of what the code does. Include frequent logging so you can 
 debug and understand the execution steps.
 
@@ -111,8 +116,9 @@ OVERALL GOAL: ${params.overallGoal}
 
 IMPORTANT RULES FOR CODE:
 
-1. You can use core Node.js modules as well as ONLY THE FOLLOWING SPECIFIC packages:
-- node-csv: csv-parse, csv-generate, csv-stringify, stream-transform
+1. You can use core Node.js modules as well as ONLY THE FOLLOWING SPECIFIC packages using a globally provided 'safeRequire' function:
+- node-csv: csv-parse/sync, csv-generate, csv-stringify/sync, stream-transform
+- for example "const { parse } = safeRequire('csv-parse/sync');" or "const { stringify } = safeRequire('csv-stringify/sync');"
 
 2. You are running in a web worker thread. The main execution code cannot use a 'return' statement.
 
@@ -143,20 +149,25 @@ console.log(\`Processing artifact: \${artifact.id}\`);
 // Use artifact content
 const data = JSON.parse(artifact.content);
 
-4. Your code is running as an eval statement, so return value of the last line of your script will be shared as the answer. Do not return large data sets. If you have large data sets, store them as an artifact and return information to confirm like the count. 
+4. You have access to a global function "generate(message: string, instructions: string): Promise<string>" that allows you to call an LLM to do things like perform content generation, sentiment analysis, and categorization.
+
+5. When the code is finished, it should call the global method "provideResult(...)" with the final result it wants to share. This must be cloneable across web-worker boundary. Do not return large data sets. If you have large data sets, store them as an artifact and return information to confirm like the count. 
 
 
-${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
+${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResult, null, 2)}
+    
+    
+RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE \`\`\`javascript BLOCK.` : ''}`;
 
-        const instructions = new StructuredOutputPrompt(schema, prompt);
-        let result = await this.modelHelpers.generate<CodeExecutionResponse>({
+        let result = await this.modelHelpers.generate({
             message: params.stepGoal||params.message,
-            instructions
+            instructions: prompt
         });
-
-        let executionResult;
+        
+        let executionResult, originalCode, correctedCode;
         try {
-            executionResult = await this.executeInWorker(result.code, params.context?.artifacts);
+            originalCode = StringUtils.extractCodeBlocks(result.message)[0];
+            executionResult = await this.executeInWorker(originalCode, params.context?.artifacts);
         } catch (error) {
             // If there's an error, try again with error feedback
             const errorPrompt = `${prompt}
@@ -167,14 +178,14 @@ The previous attempt output the following console logs:
 ${StringUtils.truncate((error as ConsoleError)?.consoleOutput||"[Not provided]", 500)}
 
 Please fix the code and try again.`;
-            const retryInstructions = new StructuredOutputPrompt(schema, errorPrompt);
-            let retryResult = await this.modelHelpers.generate<CodeExecutionResponse>({
+            let retryResult = await this.modelHelpers.generate({
                 message: params.stepGoal || params.message,
-                instructions: retryInstructions
+                instructions: errorPrompt
             });
 
             try {
-                executionResult = await this.executeInWorker(retryResult.code, params.context?.artifacts);
+                correctedCode = StringUtils.extractCodeBlocks(result.message)[0];
+                executionResult = await this.executeInWorker(correctedCode, params.context?.artifacts);
                 result = retryResult;
             } catch (retryError) {
                 executionResult = {
@@ -208,7 +219,7 @@ Please fix the code and try again.`;
             finished: true,
             artifactIds: newArtifacts.map(a => a.id),
             response: {
-                message: `**Code:**\n\`\`\`javascript\n${result.code}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${StringUtils.truncate(JSON.stringify(executionResult.returnValue, null, 2), 1000)}\n\`\`\`${executionResult.consoleOutput ? `\n\n**Console Output:**\n\`\`\`\n${StringUtils.truncate(executionResult.consoleOutput, 1000)}\n\`\`\`\n` : ''}`,
+                message: `**Code:**\n\`\`\`javascript\n${originalCode}\n\`\`\`\n\nCorrected code:\n\`\`\`javascript\n${correctedCode}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${StringUtils.truncate(JSON.stringify(executionResult.returnValue, null, 2), 1000)}\n\`\`\`${executionResult.consoleOutput ? `\n\n**Console Output:**\n\`\`\`\n${StringUtils.truncate(executionResult.consoleOutput, 1000)}\n\`\`\`\n` : ''}`,
                 data: responseData
             }
         };
