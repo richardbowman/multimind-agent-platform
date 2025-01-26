@@ -64,7 +64,10 @@ export class NodeExecutorExecutor implements StepExecutor {
 
             worker.on('error', (error) => {
                 clearTimeout(timeout);
-                reject(error);
+                reject({
+                    message: error.message,
+                    consoleOutput: consoleOutput.trim()
+                });
             });
 
             worker.on('exit', (code) => {
@@ -148,9 +151,7 @@ ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResu
             } catch (retryError) {
                 executionResult = {
                     returnValue: `Error: ${retryError.message}`,
-                    consoleOutput: retryError.message.includes('Console Output:') 
-                        ? retryError.message.split('Console Output:')[1].trim()
-                        : ''
+                    consoleOutput: capturedOutput.trim()
                 };
             }
         }
