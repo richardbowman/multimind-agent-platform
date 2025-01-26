@@ -9,7 +9,10 @@ let capturedOutput = '';
 
 ['log', 'warn', 'error', 'info', 'debug'].forEach(method => {
     console[method] = (...args) => {
-        capturedOutput += args.join(' ') + '\n';
+        const formattedArgs = args.map(arg => 
+            typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg.toString()
+        ).join(' ');
+        capturedOutput += formattedArgs + '\n';
         originalConsole[method](...args);
     };
 });
