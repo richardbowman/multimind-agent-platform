@@ -1,4 +1,5 @@
 import { parentPort, workerData } from 'worker_threads';
+import vm from 'vm';
 
 // Make artifacts available globally
 global.ARTIFACTS = workerData.artifacts || [];
@@ -111,7 +112,6 @@ try {
     };
 
     // Execute the code using vm module for better compatibility
-    const vm = require('vm');
     const context = vm.createContext({
         ...global,
         console: global.console,
