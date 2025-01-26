@@ -161,8 +161,11 @@ ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResu
 
         const responseData = {
             ...result,
-            executionResult,
-            newArtifacts
+            executionResult: {
+                ...executionResult,
+                artifacts: executionResult.artifacts?.map(a => a.id)
+            },
+            newArtifacts: newArtifacts.map(a => a.id)
         };
 
         return {
