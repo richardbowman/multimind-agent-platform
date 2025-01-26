@@ -22,7 +22,7 @@ import path from 'path';
  * - Provides automatic error recovery and retry with AI-generated fixes
  * - Supports console.log capture for debugging
  */
-@StepExecutorDecorator(ExecutorType.NODE_EXECUTION, 'Execute Node.js code in a worker thread')
+@StepExecutorDecorator(ExecutorType.NODE_EXECUTION, 'Execute Node.js code in a worker thread using provided packages (you may not install)')
 export class NodeExecutorExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
@@ -49,6 +49,9 @@ export class NodeExecutorExecutor implements StepExecutor {
             worker.on('message', (message) => {
                 if (message.type === 'console') {
                     consoleOutput += message.data + '\n';
+                } else if (message.type === 'error') {
+                    clearTimeout(timeout);
+                    reject(new Error(message.data));
                 } else if (message.type === 'result') {
                     clearTimeout(timeout);
                     resolve({
@@ -77,32 +80,36 @@ export class NodeExecutorExecutor implements StepExecutor {
 
         const prompt = `You are a Node.js programming expert.
 Generate Node.js code to solve the given problem.
-Provide clear explanations of what the code does.
-You can use any core Node.js modules and npm packages that are already installed.
-The return value of the last line of your script will be shared as the answer.
+Provide clear explanations of what the code does. Include frequent logging so you can 
+debug and understand the execution steps.
 
-You have access to project artifacts through the ARTIFACTS global variable.
-Artifacts are available as an array of objects with these properties:
+IMPORTANT RULES FOR CODE:
+
+1. You can use core Node.js modules as well as ONLY THE FOLLOWING SPECIFIC packages:
+- node-csv: csv-parse, csv-generate, csv-stringify, stream-transform
+
+2. You are running in a web worker thread. The main execution code cannot use a 'return' statement.
+
+
+3. You do not have real file-system access. The only "files" you can access are artifacts.
+You have access to project artifacts ("files") through the ARTIFACTS global variable.
+Do not overwrite this variable. The ARTIFACTS global variable is an array of objects with these properties:
 - id: Unique identifier
-- name: Human-readable name
 - type: Type of artifact (e.g. 'file', 'data', 'image')
 - content: The actual content (string, JSON, etc)
-- metadata: Additional information about the artifact
+- metadata: Additional information about the artifact (sometimes contains a title)
 
-Example artifact access:
+Example artifact/files access:
 // Get first artifact
 const artifact = ARTIFACTS[0];
 console.log(\`Processing artifact: \${artifact.name}\`);
 // Use artifact content
 const data = JSON.parse(artifact.content);
 
-Example file operations:
-const fs = require('fs');
-const files = fs.readdirSync('.');
-console.log(\`Found \${files.length} files\`);
-files;  // send array of files back as the answer
+4. Your code is running as an eval statement, so return value of the last line of your script will be shared as the answer.
 
-${params.previousResult ? `Consider this previous result:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
+
+${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         let result = await this.modelHelpers.generate<CodeExecutionResponse>({
@@ -112,7 +119,7 @@ ${params.previousResult ? `Consider this previous result:\n${JSON.stringify(para
 
         let executionResult;
         try {
-            executionResult = await this.executeInWorker(result.code, params.artifacts);
+            executionResult = await this.executeInWorker(result.code, params.context?.artifacts);
         } catch (error) {
             // If there's an error, try again with error feedback
             const errorPrompt = `${prompt}\n\nThe previous attempt resulted in this error:\n${error.message}\n\nPlease fix the code and try again.`;
@@ -123,7 +130,7 @@ ${params.previousResult ? `Consider this previous result:\n${JSON.stringify(para
             });
 
             try {
-                executionResult = await this.executeInWorker(retryResult.code, params.artifacts);
+                executionResult = await this.executeInWorker(retryResult.code, params.context?.artifacts);
                 result = retryResult;
             } catch (retryError) {
                 executionResult = {
