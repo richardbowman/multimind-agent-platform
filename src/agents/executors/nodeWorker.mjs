@@ -112,7 +112,6 @@ try {
 
     // Execute the code using import() with data URI
     const encodedJs = encodeURIComponent(`
-        ${workerData.code}
         export default (async () => {
             try {
                 ${workerData.code}
@@ -126,7 +125,8 @@ try {
                 // Send error with console output
                 parentPort.postMessage({
                     type: 'error',
-                    data: \`\$\{error.message\}\n\$\{error.stack\}\`
+                    data: error.message,
+                    stack: error.stack
                 });
             }
         })();
@@ -135,73 +135,11 @@ try {
     const dataUri = 'data:text/javascript;charset=utf-8,' + encodedJs;
     
     let result;
-    try {
-        const module = await import(dataUri);
-        result = await module.default();
-    } catch (error) {
-        // Send console output before error
-        parentPort.postMessage({
-            type: 'console',
-            data: capturedOutput.trim()
-        });
-        
-        // Send error with console output
-        parentPort.postMessage({
-            type: 'error',
-            data: \`\$\{error.message\}\n\$\{error.stack\}\`
-        });
+    const module = await import(dataUri);
+    result = await module.default();
+    if (result) {
+        await global.provideResult(result);
     }
-
-    // if (result && typeof result.then === 'function') {
-    //     result = result.then((result) => {
-    //         originalConsole.log("Node worker promise resulted", result);
-
-    //         // Send console output
-    //         parentPort.postMessage({
-    //             type: 'console',
-    //             data: capturedOutput.trim()
-    //         });
-
-    //         // Send final result with updated artifacts
-    //         parentPort.postMessage({
-    //             type: 'result',
-    //             data: {
-    //                 returnValue: result,
-    //                 artifacts: global.ARTIFACTS
-    //             }
-    //         });
-
-    //     }, (error) => {
-    //         // Send console output before error
-    //         parentPort.postMessage({
-    //             type: 'console',
-    //             data: capturedOutput.trim()
-    //         });
-            
-    //         // Send error with console output
-    //         parentPort.postMessage({
-    //             type: 'error',
-    //             data: error.message
-    //         });
-    //     })
-    // } else {
-    
-    //     // Send console output
-    //     parentPort.postMessage({
-    //         type: 'console',
-    //         data: capturedOutput.trim()
-    //     });
-
-    //     // Send final result with updated artifacts
-    //     parentPort.postMessage({
-    //         type: 'result',
-    //         data: {
-    //             returnValue: result,
-    //             artifacts: global.ARTIFACTS
-    //         }
-    //     });
-    //     process.exit(1);
-    // }
 } catch (error) {
     // Send console output before error
     parentPort.postMessage({
