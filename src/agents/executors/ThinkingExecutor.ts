@@ -36,16 +36,22 @@ export class ThinkingExecutor implements StepExecutor {
     async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.ThinkingResponse);
 
-        const prompt = `You are a careful analytical thinker.
+        const promptBuilder = this.modelHelpers.createPrompt();
+        promptBuilder.addInstruction(`You are a careful analytical thinker.
 Given a problem, break it down into logical steps and reason through it carefully.
-Consider multiple angles and potential implications.
+Consider multiple angles and potential implications.`);
 
-${previousResult ? `Consider this previous result in your thinking:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
+        if (previousResult) {
+            promptBuilder.addContent(ContentType.STEP_RESULTS, [{
+                props: {
+                    result: previousResult
+                }
+            }]);
+        }
 
-        const instructions = new StructuredOutputPrompt(schema, prompt);
         const result = await this.modelHelpers.generate<ThinkingResponse>({
             message: goal,
-            instructions
+            instructions: new StructuredOutputPrompt(schema, promptBuilder.build())
         });
 
         return {
