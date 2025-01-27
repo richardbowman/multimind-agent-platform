@@ -107,20 +107,20 @@ try {
     };
 
     // Whitelist allowed modules
-    const ALLOWED_MODULE_NAMES = [
-        'csv-parse/sync',
-        'csv-stringify/sync', 
-        'stream-transform',
-        'csv-generate'
-    ] as const;
+    // Import modules statically
+    const csvParse = await import('csv-parse/sync');
+    const csvStringify = await import('csv-stringify/sync');
+    const streamTransform = await import('stream-transform');
+    const csvGenerate = await import('csv-generate');
 
-    Promise.all(
-        ALLOWED_MODULE_NAMES.map(async name => [
-            name,
-            await import(name)
-        ])
-    ).then((modules) => {
-        const allowedModules = Object.fromEntries(modules);
+    const allowedModules = {
+        'csv-parse/sync': csvParse,
+        'csv-stringify/sync': csvStringify,
+        'stream-transform': streamTransform,
+        'csv-generate': csvGenerate
+    };
+
+    const ALLOWED_MODULE_NAMES = Object.keys(allowedModules) as readonly string[];
         const requireWrapper = async (module: string) => {
             if (!ALLOWED_MODULE_NAMES.includes(module as any)) {
                 throw new Error(`Module ${module} is not allowed`);
