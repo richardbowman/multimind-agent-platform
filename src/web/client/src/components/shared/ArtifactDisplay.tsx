@@ -95,11 +95,11 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     }
                     
                     // Handle image content
-                    if (artifact.mimeType?.startsWith('image/')) {
+                    if (artifact.metadata?.mimeType?.startsWith('image/')) {
                         const base64Content = Buffer.isBuffer(artifact.content)
                             ? artifact.content.toString('base64')
                             : Buffer.from(artifact.content as string).toString('base64');
-                        const dataUrl = `data:${artifact.mimeType};base64,${base64Content}`;
+                        const dataUrl = `data:${artifact.metadata?.mimeType};base64,${base64Content}`;
                         
                         return (
                             <Box sx={{ 
