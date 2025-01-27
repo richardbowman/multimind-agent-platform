@@ -33,7 +33,14 @@ module.exports = {
       'src': path.resolve(__dirname, 'src')
     }
   },
-  externals: [nodeExternals()],
+  externals: [nodeExternals({
+    allowlist: [
+      'csv-parse/sync',
+      'csv-stringify/sync',
+      'stream-transform',
+      'csv-generate'
+    ]
+  })],
   externalsPresets: {
     node: true
   }
