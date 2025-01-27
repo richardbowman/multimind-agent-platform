@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
 import DOMPurify from 'dompurify';
 import { 
@@ -83,8 +83,30 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
 
     const [loadedLogs, setLoadedLogs] = useState<any[]>([]);
     const [hasMore, setHasMore] = useState(true);
+    const loadMoreRef = useRef<HTMLDivElement>(null);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+
+    // Set up intersection observer for infinite scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+                    loadMoreLogs();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMore, isLoadingMore, loadMoreLogs]);
 
     const loadMoreLogs = useCallback(async () => {
+        if (isLoadingMore) return;
+        setIsLoadingMore(true);
         try {
             let newLogs;
             if (currentLogTab === 'llm') {
@@ -106,6 +128,8 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
             }
         } catch (error) {
             console.error('Error loading logs:', error);
+        } finally {
+            setIsLoadingMore(false);
         }
     }, [currentLogTab, filterText, fetchLogs, loadedLogs.length, showVerbose]);
 
@@ -239,25 +263,17 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
             >
                 {renderLogs()}
                 {hasMore && (
-                    <Box sx={{ 
-                        display: 'flex', 
-                        justifyContent: 'center', 
-                        py: 2
-                    }}>
-                        <button 
-                            onClick={loadMoreLogs}
-                            style={{ 
-                                padding: '8px 16px',
-                                backgroundColor: '#1976d2',
-                                color: 'white',
-                                border: 'none',
-                                borderRadius: '4px',
-                                cursor: 'pointer',
-                                fontSize: '14px'
-                            }}
-                        >
-                            Load More
-                        </button>
+                    <Box 
+                        ref={loadMoreRef}
+                        sx={{ 
+                            height: '20px',
+                            display: 'flex',
+                            justifyContent: 'center',
+                            alignItems: 'center',
+                            py: 2
+                        }}
+                    >
+                        <Box sx={{ color: '#666' }}>Loading more...</Box>
                     </Box>
                 )}
             </Box>
