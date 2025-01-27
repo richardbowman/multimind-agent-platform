@@ -71,14 +71,11 @@ jobs:
         run: |
           yarn install --immutable
           
-      - name: Build Web
+      - name: Build All App Components
         env:
           CI: ""
         run: |
-          yarn build:web
-        
-      - name: Build TypeScript
-        run: yarn build:electron
+          yarn build:app
         
       - name: Build and Publish Electron App
         env:

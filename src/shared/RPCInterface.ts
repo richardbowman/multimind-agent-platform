@@ -96,6 +96,7 @@ export interface ClientMethods {
     onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }): void;
     onTaskUpdate(task: ClientTask): void;
     onProjectUpdate(project: ClientProject): void;
+    onFilesAttached(artifacts: Artifact[]): void;
     
     /**
      * Callback when a channel is created

@@ -15,12 +15,15 @@ import { ElectronIPCServer } from './server/ElectronIPCServer';
 import { SettingsManager } from './tools/settingsManager';
 import { LogReader } from './server/LogReader';
 import { AppUpdater, autoUpdater } from 'electron-updater';
+import { AsyncQueue } from './helpers/asyncQueue';
 
 let mainWindow: MainWindow;
 let splashWindow: SplashWindow;
 let settingsManager: SettingsManager;
 
 export let backendServices: BackendServicesWithWindows|BackendServicesConfigNeeded;
+
+AsyncQueue.Logger = Logger;
 
 // Configure autoUpdater
 autoUpdater.logger = Logger;

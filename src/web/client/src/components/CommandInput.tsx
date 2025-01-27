@@ -22,7 +22,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [pendingArtifacts, setPendingArtifacts] = useState<Artifact[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { channels, handles, artifacts, pendingFiles, setPendingFiles, allArtifacts, showFileDialog } = useWebSocket();
+    const { channels, handles, artifacts, pendingFiles, resetPendingFiles, allArtifacts, showFileDialog } = useWebSocket();
     
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {
@@ -150,7 +150,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 ...pendingFiles.map(a => a.id)
             ]);
             setPendingArtifacts([]);
-            setPendingFiles([]);
+            resetPendingFiles();
             setInput('');
             setShowSuggestions(false);
             // Reset textarea height

@@ -15,8 +15,9 @@ export interface DataContextMethods {
   messages: ClientMessage[];
   channels: ClientChannel[];
   tasks: ClientTask[];
-  allArtifacts: any[];
-  artifacts: any[];
+  allArtifacts: Artifact[];
+  artifacts: Artifact[];
+  pendingFiles: Artifact[];
   logs: {
     llm: Record<string, LLMLogEntry[]>;
     system: any[];
@@ -53,7 +54,8 @@ export interface DataContextMethods {
   deleteChannel: (channelId: string) => Promise<void>;
   setTasks: React.Dispatch<React.SetStateAction<ClientTask[]>>;
   markTaskComplete: (taskId: string, complete: boolean) => Promise<void>;
-  setPendingFiles: React.Dispatch<React.SetStateAction<File[]>>;
+  addPendingFiles: (artifacts: Artifact[]) => Promise<void>;
+  resetPendingFiles: () => void;
   showFileDialog: () => Promise<void>;
 }
 
@@ -87,7 +89,7 @@ export const DataProvider: React.FC<{
   const [tasks, setTasks] = useState<ClientTask[]>([]);
   const [artifacts, setArtifacts] = useState<any[]>([]);
   const [allArtifacts, setAllArtifacts] = useState<any[]>([]);
-  const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+  const [pendingFiles, setPendingFiles] = useState<Artifact[]>([]);
   const [logs, setLogs] = useState<{
     llm: Record<string, LLMLogEntry[]>;
     system: {
@@ -279,6 +281,7 @@ export const DataProvider: React.FC<{
     tasks,
     artifacts,
     allArtifacts, 
+    pendingFiles,
     logs,
     handles,
     currentChannelId,
@@ -330,7 +333,15 @@ export const DataProvider: React.FC<{
         t.id === updatedTask.id ? updatedTask : t
       ));
     },
-    setPendingFiles,
+    addPendingFiles: (artifacts: Artifact[]) => {
+      setPendingFiles([
+        ...pendingFiles,
+        ...artifacts
+      ]);
+    },
+    resetPendingFiles: () => {
+      setPendingFiles([]);
+    },
     showFileDialog: async () => {
       await ipcService.getRPC().showFileDialog();
     }
@@ -339,12 +350,14 @@ export const DataProvider: React.FC<{
     channels,
     tasks,
     artifacts,
+    allArtifacts,
     logs,
     handles,
     currentChannelId,
     currentThreadId,
     isLoading,
     needsConfig,
+    pendingFiles,
     sendMessage,
     fetchChannels,
     fetchTasks,

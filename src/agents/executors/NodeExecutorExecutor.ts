@@ -13,6 +13,7 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
 import path from 'path';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ArtifactManager } from 'src/tools/artifactManager';
+import { app } from 'electron';
 
 export class ConsoleError extends Error {
     public consoleOutput?: string;
@@ -45,10 +46,19 @@ export class NodeExecutorExecutor implements StepExecutor {
         this.llmService = params.llmService;
     }
 
+    private getWorker() : string {
+        if (process.versions['electron']) {
+            if (app) {
+                return path.join(app.getAppPath(), "dist", "nodeWorker.js");
+            }
+        }
+        return path.join(__dirname, "nodeWorker");
+    }
+
     private async executeInWorker(code: string, artifacts: any[] = []): Promise<{returnValue: any, consoleOutput: string, artifacts: any[]}> {
         const _this = this;
         return new Promise((resolve, reject) => {
-            const worker = new Worker(path.join(__dirname, 'nodeWorker'), {
+            const worker = new Worker(this.getWorker(), {
                 workerData: { 
                     code,
                     artifacts
@@ -130,8 +140,8 @@ ARTIFACTS.push({
     id: 'unique-id', // Will be auto-generated if omitted
     type: 'data',    // Type of artifact (e.g. 'data', 'report', 'analysis')
     content: '...',  // The actual content (string, JSON, etc)
-    mimeType: '...', // Optional MIME type (e.g. 'text/plain', 'application/json')
     metadata: {      // Optional metadata
+        mimeType: '...', // Optional MIME type (e.g. 'text/plain', 'application/json')
         title: 'My Artifact',
         description: 'Generated from analysis'
     }

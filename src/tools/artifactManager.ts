@@ -63,7 +63,7 @@ export class ArtifactManager {
     const artifact = {
       id: createUUID(),
       ...artifactParam,
-    }
+    } as Artifact;
     const artifactDir = path.join(this.storageDir, artifact.id);
 
     // Load existing metadata
@@ -134,7 +134,7 @@ export class ArtifactManager {
       }
     };
 
-    const extension = getFileExtension(artifact.mimeType);
+    const extension = getFileExtension(artifact.metadata?.mimeType);
     const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${extension}`);
     await this.fileQueue.enqueue(() =>
       fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
@@ -147,7 +147,7 @@ export class ArtifactManager {
       type: artifact.type,
       version,
       tokenCount: artifact.tokenCount,
-      mimeType: artifact.mimeType
+      mimeType: artifact.metadata?.mimeType
     };
 
     // Save updated metadata

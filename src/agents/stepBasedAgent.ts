@@ -483,7 +483,7 @@ export abstract class StepBasedAgent extends Agent {
                 } else {
                     const message = stepResult.response?.message || stepResult.response?.reasoning || "";
                     await this.reply(replyTo, {
-                        message: `${message} [Finished ${task.type}, still working...]`
+                        message: message
                     }, {
                         "project-id": stepResult.projectId || projectId,
                         "artifact-ids": artifactList

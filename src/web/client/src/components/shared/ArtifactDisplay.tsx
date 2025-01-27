@@ -90,7 +90,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                 )}
                 {(() => {
                     // Handle CSV content
-                    if (artifact.metadata?.format === 'csv' || artifact.type === 'csv') {
+                    if (artifact.metadata?.mimeType === 'text/csv' || artifact.type === 'csv') {
                         return <CSVRenderer content={artifact.content as string} />;
                     }
                     

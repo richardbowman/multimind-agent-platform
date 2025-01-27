@@ -97,10 +97,6 @@ module.exports = {
         {
           from: path.resolve(__dirname, 'src/config/agents.json5'),
           to: path.resolve(__dirname, 'dist/agents.json5')
-        },
-        {
-          from: path.resolve(__dirname, 'src/agents/executors/nodeWorker.js'),
-          to: path.resolve(__dirname, 'dist/nodeWorker.js')
         }
       ]
     })

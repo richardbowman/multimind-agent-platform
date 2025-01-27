@@ -4,145 +4,149 @@ import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/typ
 import { SnackbarContextType } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { ClientMethods } from '../../../../shared/RPCInterface';
-import { FileWithPath } from 'react-dropzone';
+import { Artifact } from '../../../../tools/artifact';
+
+class ClientMethodsImplementation implements ClientMethods {
+    constructor(private snackbarContext: SnackbarContextType, private contextMethods: DataContextMethods) { };
+
+    async onClientLogProcessed(success, message) {
+        return;
+    }
+
+    async onFilesAttached(files: Artifact[]) {
+        this.contextMethods.addPendingFiles(files);
+    }
+
+    async onMessage(messages: ClientMessage[]) {
+        // Find the latest message from a different channel/thread or not the current thread root
+        const latestMessage = messages
+            .filter(message =>
+                message.channel_id !== this.contextMethods.currentChannelId ||
+                (message.channel_id === this.contextMethods.currentChannelId &&
+                    message.thread_id !== this.contextMethods.currentThreadId &&
+                    message.id !== this.contextMethods.currentThreadId)
+            )
+            .sort((a, b) => b.create_at - a.create_at)[0];
+
+        if (latestMessage) {
+            const channelName = this.contextMethods.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
+            this.snackbarContext.showSnackbar({
+                message: `New message in #${channelName}`,
+                severity: 'info',
+                persist: true,
+                onClick: () => {
+                    // Set both channel and thread first
+                    this.contextMethods.setCurrentChannelId(latestMessage.channel_id);
+                    this.contextMethods.setCurrentThreadId(latestMessage.thread_id || null);
+
+                    // Fetch related tasks and artifacts
+                    this.contextMethods.fetchChannels();
+                    this.contextMethods.fetchTasks(latestMessage.channel_id, latestMessage.thread_id || null);
+                    this.contextMethods.fetchArtifacts(latestMessage.channel_id, latestMessage.thread_id || null);
+                }
+            });
+        };
+
+        // Update messages directly in context
+        this.contextMethods.setMessages(prev => {
+            const filteredPrev = prev.filter(prevMessage =>
+                !messages.some(newMessage => newMessage.id === prevMessage.id)
+            );
+            return [...filteredPrev, ...messages].sort((a, b) => a.create_at - b.create_at);
+        });
+
+        // Check for artifact references in new messages
+        const hasNewArtifacts = messages.some(message =>
+            message.props?.artifactIds?.length > 0
+        );
+
+        // If we have new artifacts, refresh artifacts for both current and message channels
+        if (hasNewArtifacts) {
+            // Refresh artifacts for current channel/thread
+            if (this.contextMethods.currentChannelId) {
+                await this.contextMethods.fetchArtifacts(
+                    this.contextMethods.currentChannelId,
+                    this.contextMethods.currentThreadId
+                );
+            }
+
+            // Refresh artifacts for any channels mentioned in messages
+            const uniqueChannels = new Set(messages.map(m => m.channel_id));
+            for (const channelId of uniqueChannels) {
+                await this.contextMethods.fetchArtifacts(
+                    channelId,
+                    null // Refresh all threads for the channel
+                );
+            }
+        }
+    }
+
+    onLogUpdate(update: LogParam) {
+        if (update.type === 'llm') {
+            this.contextMethods.setLogs(prev => ({
+                ...prev,
+                llm: {
+                    ...prev.llm,
+                    [update.entry.service]: [
+                        ...(prev.llm[update.entry.service] || []),
+                        update.entry
+                    ]
+                }
+            }));
+        } else if (update.type === 'system') {
+            this.contextMethods.setLogs(prev => ({
+                ...prev,
+                system: {
+                    logs: [
+                        ...(prev.system.logs || []),
+                        update.entry
+                    ],
+                    total: (prev.system.total || 0) + 1
+                }
+            }));
+        }
+    }
+
+    onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }) {
+        this.contextMethods.setNeedsConfig(!status.configured);
+        if (status.configured) {
+            // Trigger initial data fetch when backend is ready
+            Promise.all([
+                this.contextMethods.fetchChannels(),
+                this.contextMethods.fetchHandles(),
+                this.contextMethods.fetchAllArtifacts()
+            ]).catch(console.error);
+        }
+    }
+
+    onTaskUpdate(task: ClientTask) {
+        this.contextMethods.setTasks(prevTasks => {
+            // Find and replace the updated task
+            const existingIndex = prevTasks.findIndex(t => t.id === task.id);
+            if (existingIndex >= 0) {
+                const newTasks = [...prevTasks];
+                newTasks[existingIndex] = task;
+                return newTasks;
+            }
+            // If it's a new task, add it to the list
+            return [...prevTasks, task];
+        });
+    }
+
+    onProjectUpdate(project) {
+        console.log('project update not handled yet');
+    }
+
+    onChannelCreated(channel: ClientChannel) {
+        // Add the new channel to the list and refresh
+        this.contextMethods.fetchChannels();
+    }
+
+    onAutoUpdate(update: { status: UpdateStatus, progress?: number }) {
+        this.snackbarContext.setUpdateStatus(update.status, update.progress);
+    }
+}
 
 export const useClientMethods = (snackbarContext: SnackbarContextType, contextMethods: DataContextMethods) => {
-    return {
-        onClientLogProcessed: async (success, message) => {
-            return
-        },
-
-        onFilesSelected: async (files: FileWithPath[]) => {
-            contextMethods.setPendingFiles(files);
-        },
-
-        onMessage: async (messages: ClientMessage[]) => {
-            // Find the latest message from a different channel/thread or not the current thread root
-            const latestMessage = messages
-                .filter(message => 
-                    message.channel_id !== contextMethods.currentChannelId || 
-                    (message.channel_id === contextMethods.currentChannelId && 
-                     message.thread_id !== contextMethods.currentThreadId &&
-                     message.id !== contextMethods.currentThreadId)
-                )
-                .sort((a, b) => b.create_at - a.create_at)[0];
-
-            if (latestMessage) {
-                const channelName = contextMethods.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
-                snackbarContext.showSnackbar({
-                    message: `New message in #${channelName}`,
-                    severity: 'info',
-                    persist: true,
-                    onClick: () => {
-                        // Set both channel and thread first
-                        contextMethods.setCurrentChannelId(latestMessage.channel_id);
-                        contextMethods.setCurrentThreadId(latestMessage.thread_id || null);
-
-                        // Fetch related tasks and artifacts
-                        contextMethods.fetchChannels();
-                        contextMethods.fetchTasks(latestMessage.channel_id, latestMessage.thread_id || null);
-                        contextMethods.fetchArtifacts(latestMessage.channel_id, latestMessage.thread_id || null);
-                    }
-                });
-            };
-
-            // Update messages directly in context
-            contextMethods.setMessages(prev => {
-                const filteredPrev = prev.filter(prevMessage =>
-                    !messages.some(newMessage => newMessage.id === prevMessage.id)
-                );
-                return [...filteredPrev, ...messages].sort((a, b) => a.create_at - b.create_at);
-            });
-
-            // Check for artifact references in new messages
-            const hasNewArtifacts = messages.some(message => 
-                message.props?.artifactIds?.length > 0
-            );
-
-            // If we have new artifacts, refresh artifacts for both current and message channels
-            if (hasNewArtifacts) {
-                // Refresh artifacts for current channel/thread
-                if (contextMethods.currentChannelId) {
-                    await contextMethods.fetchArtifacts(
-                        contextMethods.currentChannelId,
-                        contextMethods.currentThreadId
-                    );
-                }
-
-                // Refresh artifacts for any channels mentioned in messages
-                const uniqueChannels = new Set(messages.map(m => m.channel_id));
-                for (const channelId of uniqueChannels) {
-                    await contextMethods.fetchArtifacts(
-                        channelId,
-                        null // Refresh all threads for the channel
-                    );
-                }
-            }
-        },
-
-        onLogUpdate: (update: LogParam) => {
-            if (update.type === 'llm') {
-                contextMethods.setLogs(prev => ({
-                    ...prev,
-                    llm: {
-                        ...prev.llm,
-                        [update.entry.service]: [
-                            ...(prev.llm[update.entry.service] || []),
-                            update.entry
-                        ]
-                    }
-                }));
-            } else if (update.type === 'system') {
-                contextMethods.setLogs(prev => ({
-                    ...prev,
-                    system: {
-                        logs: [
-                            ...(prev.system.logs || []),
-                            update.entry
-                        ],
-                        total: (prev.system.total || 0) + 1
-                    }
-                }));
-            }
-        },
-
-        onBackendStatus: (status: { configured: boolean; ready: boolean; message?: string }) => {
-            contextMethods.setNeedsConfig(!status.configured);
-            if (status.configured) {
-                // Trigger initial data fetch when backend is ready
-                Promise.all([
-                    contextMethods.fetchChannels(),
-                    contextMethods.fetchHandles(),
-                    contextMethods.fetchAllArtifacts()
-                ]).catch(console.error);
-            }
-        },
-
-        onTaskUpdate: (task: ClientTask) => {
-            contextMethods.setTasks(prevTasks => {
-                // Find and replace the updated task
-                const existingIndex = prevTasks.findIndex(t => t.id === task.id);
-                if (existingIndex >= 0) {
-                    const newTasks = [...prevTasks];
-                    newTasks[existingIndex] = task;
-                    return newTasks;
-                }
-                // If it's a new task, add it to the list
-                return [...prevTasks, task];
-            });
-        },
-
-        onProjectUpdate(project) {
-            console.log('project update not handled yet');
-        },
-
-        onChannelCreated(channel: ClientChannel) {
-            // Add the new channel to the list and refresh
-            contextMethods.fetchChannels();
-        },
-
-        onAutoUpdate(update: { status: UpdateStatus, progress?: number}) {
-            snackbarContext.setUpdateStatus(update.status, update.progress);
-        },
-    } as ClientMethods;
+    return new ClientMethodsImplementation(snackbarContext, contextMethods);
 };
