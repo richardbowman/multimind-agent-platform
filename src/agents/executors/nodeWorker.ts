@@ -1,7 +1,10 @@
 import { AsyncQueue } from 'src/helpers/asyncQueue';
 import { parentPort, workerData } from 'worker_threads';
 
-// import { parse } from 'csv-parse/sync';
+import csvParse from 'csv-parse/sync';
+import csvStringify from 'csv-stringify/sync';
+import streamTransform from 'stream-transform';
+import csvGenerate from 'csv-generate';
 
 interface WorkerMessage {
     type: string;
@@ -108,11 +111,6 @@ try {
 
     // Whitelist allowed modules
     // Import modules statically
-    const csvParse = await import('csv-parse/sync');
-    const csvStringify = await import('csv-stringify/sync');
-    const streamTransform = await import('stream-transform');
-    const csvGenerate = await import('csv-generate');
-
     const allowedModules = {
         'csv-parse/sync': csvParse,
         'csv-stringify/sync': csvStringify,
@@ -121,46 +119,45 @@ try {
     };
 
     const ALLOWED_MODULE_NAMES = Object.keys(allowedModules) as readonly string[];
-        const requireWrapper = async (module: string) => {
-            if (!ALLOWED_MODULE_NAMES.includes(module as any)) {
-                throw new Error(`Module ${module} is not allowed`);
+    const requireWrapper = async (module: string) => {
+        if (!ALLOWED_MODULE_NAMES.includes(module as any)) {
+            throw new Error(`Module ${module} is not allowed`);
+        }
+        return allowedModules[module];
+    };
+
+    (global as any).safeRequire = requireWrapper;
+    (global as any).parentPort = {
+        postMessage(arg) {
+            originalConsole.log("trying postmessage", arg);
+            parentPort?.postMessage(arg);
+        }
+    };
+
+    // Execute the code
+    const codeToRun = `
+        (async () => {
+            try {
+                ${(workerData as any).code}
+            } catch (error) {
+                originalConsole.log(error);
+                // Send console output before error
+                parentPort?.postMessage({
+                    type: 'console',
+                    data: capturedOutput.trim()
+                });
+                
+                // Send error with console output
+                parentPort?.postMessage({
+                    type: 'error',
+                    data: error.message,
+                    stack: error.stack
+                });
             }
-            return allowedModules[module];
-        };
-    
-        (global as any).safeRequire = requireWrapper;
-        (global as any).parentPort = {
-            postMessage(arg) {
-                originalConsole.log("trying postmessage", arg);
-                parentPort?.postMessage(arg);
-            }
-        };
-    
-        // Execute the code
-        const codeToRun = `
-            (async () => {
-                try {
-                    ${(workerData as any).code}
-                } catch (error) {
-                    originalConsole.log(error);
-                    // Send console output before error
-                    parentPort?.postMessage({
-                        type: 'console',
-                        data: capturedOutput.trim()
-                    });
-                    
-                    // Send error with console output
-                    parentPort?.postMessage({
-                        type: 'error',
-                        data: error.message,
-                        stack: error.stack
-                    });
-                }
-            })()
-        `;
-    
-        eval(codeToRun);        
-    });
+        })()
+    `;
+
+    eval(codeToRun);        
 } catch (error) {
     // Send console output before error
     parentPort?.postMessage({
