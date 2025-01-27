@@ -48,7 +48,7 @@ export class NodeExecutorExecutor implements StepExecutor {
     private async executeInWorker(code: string, artifacts: any[] = []): Promise<{returnValue: any, consoleOutput: string, artifacts: any[]}> {
         const _this = this;
         return new Promise((resolve, reject) => {
-            const worker = new Worker(path.join(__dirname, 'nodeWorker.js'), {
+            const worker = new Worker(path.join(__dirname, 'nodeWorker'), {
                 workerData: { 
                     code,
                     artifacts
