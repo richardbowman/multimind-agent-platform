@@ -130,11 +130,19 @@ ARTIFACTS.push({
     id: 'unique-id', // Will be auto-generated if omitted
     type: 'data',    // Type of artifact (e.g. 'data', 'report', 'analysis')
     content: '...',  // The actual content (string, JSON, etc)
+    mimeType: '...', // Optional MIME type (e.g. 'text/plain', 'application/json')
     metadata: {      // Optional metadata
         title: 'My Artifact',
         description: 'Generated from analysis'
     }
 });
+
+Common MIME types:
+- JSON data: 'application/json'
+- Plain text: 'text/plain'
+- Markdown: 'text/markdown'
+- CSV: 'text/csv'
+- HTML: 'text/html'
 
 The ARTIFACTS array contains objects with these properties:
 - id: Unique identifier
