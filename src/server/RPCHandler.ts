@@ -617,18 +617,25 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 // Process each selected file into an artifact
                 const artifacts : Artifact[] = [];
                 for (const filePath of result.filePaths) {
-                    const fileData = await fs.promises.readFile(filePath);
                     const fileName = path.basename(filePath);
                     const mimeType = mime.getType(filePath) || 'application/octet-stream';
+                    const fileData = await fs.promises.readFile(filePath);
                     
+                    // Determine if content should be treated as binary
+                    const isBinary = mimeType.startsWith('image/') || 
+                                   mimeType.startsWith('audio/') ||
+                                   mimeType.startsWith('video/') ||
+                                   mimeType.startsWith('application/') ||
+                                   mimeType === 'application/octet-stream';
+
                     const artifact = {
-                        type: mimeType.split('/')[0], // e.g. 'image' from 'image/png'
-                        content: fileData,
+                        type: mimeType.split('/')[0],
+                        content: isBinary ? fileData : fileData.toString('utf8'),
                         metadata: {
                             title: fileName,
                             mimeType: mimeType,
                             size: fileData.length,
-                            binary: true
+                            binary: isBinary
                         }
                     };
                     
