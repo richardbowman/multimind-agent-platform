@@ -96,9 +96,11 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     
                     // Handle image content
                     if (artifact.metadata?.mimeType?.startsWith('image/')) {
-                        const base64Content = Buffer.isBuffer(artifact.content)
-                            ? artifact.content.toString('base64')
-                            : Buffer.from(artifact.content as string).toString('base64');
+                        // Handle base64 content directly if it's already in that format
+                        const base64Content = typeof artifact.content === 'string' 
+                            ? artifact.content.replace(/^data:image\/\w+;base64,/, '') // Strip existing data URL prefix if present
+                            : btoa(String.fromCharCode(...new Uint8Array(artifact.content as ArrayBuffer))); // Convert binary to base64
+                        
                         const dataUrl = `data:${artifact.metadata?.mimeType};base64,${base64Content}`;
                         
                         return (
