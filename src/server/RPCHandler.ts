@@ -613,12 +613,26 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         }).then(async (result) => {
             if (!result.canceled && result.filePaths.length > 0) {
                 // Convert file paths to File objects
-                const files = await Promise.all(result.filePaths.map(async (filePath) => {
+                // Process each selected file into an artifact
+                for (const filePath of result.filePaths) {
                     const fileData = await fs.promises.readFile(filePath);
-                    return new File([fileData], path.basename(filePath), {
-                        type: mime.getType(filePath) || 'application/octet-stream'
-                    });
-                }));
+                    const fileName = path.basename(filePath);
+                    const mimeType = mime.getType(filePath) || 'application/octet-stream';
+                    
+                    const artifact = {
+                        id: crypto.randomUUID(),
+                        type: mimeType.split('/')[0], // e.g. 'image' from 'image/png'
+                        content: fileData,
+                        metadata: {
+                            title: fileName,
+                            mimeType: mimeType,
+                            size: fileData.length,
+                            binary: true
+                        }
+                    };
+                    
+                    await this.services.artifactManager.saveArtifact(artifact);
+                }
 
             }
         });
