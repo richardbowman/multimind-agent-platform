@@ -1,5 +1,6 @@
 import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
+import { Artifact } from '../../../../tools/artifact';
 
 interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: string[]) => void;
@@ -18,11 +19,10 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [input, setInput] = useState('');
     const [suggestions, setSuggestions] = useState<Array<{title: string, type: string, id: string}>>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
-    const [pendingArtifacts, setPendingArtifacts] = useState<string[]>([]);
-    const [pendingFiles, setPendingFiles] = useState<File[]>([]);
+    const [pendingArtifacts, setPendingArtifacts] = useState<Artifact[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { channels, handles, artifacts, allArtifacts, showFileDialog } = useWebSocket();
+    const { channels, handles, artifacts, pendingFiles, setPendingFiles, allArtifacts, showFileDialog } = useWebSocket();
     
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {
@@ -61,10 +61,10 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     .filter(artifact => 
                         artifact.type.toLowerCase().includes(searchTerm) ||
                         artifact.id.toLowerCase().includes(searchTerm) ||
-                        artifact.metadata.title.toLowerCase().includes(searchTerm)
+                        artifact.metadata?.title.toLowerCase().includes(searchTerm)
                     )
                     .map(artifact => ({
-                        title: artifact.metadata.title,
+                        title: artifact.metadata?.title,
                         type: 'artifact',
                         id: artifact.id
                     }));
@@ -124,10 +124,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 // Find full artifact info including titles
                 const newArtifacts = allArtifacts.filter(a => 
                     artifactIds.includes(a.id)
-                ).map(a => ({
-                    id: a.id,
-                    title: a.metadata.title
-                }));
+                );
                 
                 // Add to existing pending artifacts if any
                 const updatedArtifacts = [
@@ -148,7 +145,10 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
             }
 
             // Regular message - send with any pending artifact IDs
-            onSendMessage(input.trim(), pendingArtifacts.map(a => a.id), pendingFiles);
+            onSendMessage(input.trim(), [
+                ...pendingArtifacts.map(a => a.id),
+                ...pendingFiles.map(a => a.id)
+            ]);
             setPendingArtifacts([]);
             setPendingFiles([]);
             setInput('');
@@ -239,7 +239,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 onKeyDown={handleKeyPress}
                 placeholder={
                     pendingArtifacts.length > 0 || pendingFiles.length > 0
-                        ? `Attachments ready (${pendingArtifacts.length} artifacts, ${pendingFiles.length} images)... Type your message`
+                        ? `Attachments ready (${pendingArtifacts.length} artifacts, ${pendingFiles.length} file attachments)... Type your message`
                         : "Type a message... (Use / for commands, @ for mentions)"
                 }
                 rows={1}
@@ -323,8 +323,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                             }}
                         >
                             <img
-                                src={URL.createObjectURL(file)}
-                                alt={file.name}
+                                src={URL.createObjectURL(file.content)}
+                                alt={file.metadata?.title}
                                 style={{
                                     width: '100%',
                                     height: '100%',
