@@ -127,8 +127,6 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
             case 'llm':
                 return Object.entries(logs.llm || {}).flatMap(([service, entries]) => 
                     (Array.isArray(entries) ? entries : [])
-                        .slice() // Create a copy before sorting
-                        .sort((a, b) => b.timestamp - a.timestamp) // Sort newest first
                         .filter(log => 
                             filterLog(JSON.stringify({
                                 method: log?.method,
@@ -160,8 +158,6 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
             
             case 'system':
                 return logs.system?.logs
-                    ?.slice() // Create a copy before sorting
-                    .sort((a, b) => b.timestamp - a.timestamp) // Sort newest first
                     .filter(log => {
                     const levelMatch = logLevelFilter === 'all' || 
                                      log.level.toLowerCase() === logLevelFilter;

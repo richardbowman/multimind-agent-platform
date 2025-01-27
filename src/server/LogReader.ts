@@ -185,8 +185,8 @@ export class LogReader extends EventEmitter {
         
         this.updateCache();
 
-        // Start with logs in reverse chronological order (newest first)
-        let filtered = [...this.logCache].reverse();
+        // The cache is already in reverse chronological order (newest first)
+        let filtered = [...this.logCache];
         let filterTime = 0;
         let paginationTime = 0;
         
