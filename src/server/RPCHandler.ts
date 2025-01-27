@@ -18,6 +18,7 @@ import { LimitedRPCHandler } from "./LimitedRPCHandler";
 import { AppUpdater } from "electron-updater";
 import { createUUID, UUID } from "src/types/uuid";
 import { ChatHandle, createChatHandle, isChatHandle } from "src/types/chatHandle";
+import { Artifact } from "src/tools/artifact";
 
 export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods {
     constructor(private services: BackendServicesWithWindows) {
@@ -614,13 +615,13 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             if (!result.canceled && result.filePaths.length > 0) {
                 // Convert file paths to File objects
                 // Process each selected file into an artifact
+                const artifacts : Artifact[] = [];
                 for (const filePath of result.filePaths) {
                     const fileData = await fs.promises.readFile(filePath);
                     const fileName = path.basename(filePath);
                     const mimeType = mime.getType(filePath) || 'application/octet-stream';
                     
                     const artifact = {
-                        id: crypto.randomUUID(),
                         type: mimeType.split('/')[0], // e.g. 'image' from 'image/png'
                         content: fileData,
                         metadata: {
@@ -631,9 +632,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                         }
                     };
                     
-                    await this.services.artifactManager.saveArtifact(artifact);
+                    artifacts.push(await this.services.artifactManager.saveArtifact(artifact));
                 }
-
+                this.clientRpc?.onFilesAttached(artifacts);
             }
         });
     }
