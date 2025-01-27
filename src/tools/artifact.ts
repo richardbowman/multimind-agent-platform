@@ -7,4 +7,5 @@ export interface Artifact {
   content: string | Buffer; // The actual data, could be text or binary
   metadata?: Record<string, any>; // Optional additional information about the artifact
   tokenCount?: number; // Optional token count for the content
+  mimeType?: string; // MIME type of the content (e.g. 'text/plain', 'application/json')
 }

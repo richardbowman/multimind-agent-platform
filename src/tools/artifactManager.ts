@@ -94,7 +94,13 @@ export class ArtifactManager {
         artifact.content :
         JSON.stringify(artifact.content);
 
-    const filePath = path.join(artifactDir, `${artifact.type}_v${version}.md`);
+    // Use appropriate file extension based on MIME type
+    const extension = artifact.mimeType ? 
+      (artifact.mimeType === 'application/json' ? 'json' :
+       artifact.mimeType.startsWith('text/') ? 'txt' :
+       'md') : 'md';
+       
+    const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${extension}`);
     await this.fileQueue.enqueue(() =>
       fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
     );
@@ -105,6 +111,7 @@ export class ArtifactManager {
       type: artifact.type,
       version,
       tokenCount: artifact.tokenCount,
+      mimeType: artifact.mimeType,
       ...artifact.metadata // Include additional metadata attributes if any
     };
 
