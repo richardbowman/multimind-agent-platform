@@ -85,7 +85,7 @@ jobs:
           GH_TOKEN: ${{ secrets.GH_PAT }}
         run: |
           if [ "${{ matrix.os }}" = "macos-latest" ]; then
-            yarn electron:package --mac --universal --publish always
+            yarn electron:package --mac --publish always
           elif [ "${{ matrix.os }}" = "windows-latest" ]; then
             yarn electron:package --win --publish always
           else
