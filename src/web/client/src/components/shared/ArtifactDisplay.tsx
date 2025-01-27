@@ -2,7 +2,7 @@ import React from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Artifact } from '../../../../../tools/artifact';
 import remarkGfm from 'remark-gfm'
-import { Box, Button, Typography } from '@mui/material';
+import { Box, Button, Typography, Paper } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { CSVRenderer } from './CSVRenderer';
@@ -92,6 +92,35 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     // Handle CSV content
                     if (artifact.metadata?.format === 'csv' || artifact.type === 'csv') {
                         return <CSVRenderer content={artifact.content as string} />;
+                    }
+                    
+                    // Handle image content
+                    if (artifact.mimeType?.startsWith('image/')) {
+                        const base64Content = Buffer.isBuffer(artifact.content)
+                            ? artifact.content.toString('base64')
+                            : Buffer.from(artifact.content as string).toString('base64');
+                        const dataUrl = `data:${artifact.mimeType};base64,${base64Content}`;
+                        
+                        return (
+                            <Box sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'center', 
+                                alignItems: 'center',
+                                p: 2 
+                            }}>
+                                <Paper elevation={3} sx={{ p: 1, maxWidth: '100%', maxHeight: '70vh' }}>
+                                    <img 
+                                        src={dataUrl} 
+                                        alt={artifact.metadata?.title || 'Image artifact'} 
+                                        style={{ 
+                                            maxWidth: '100%', 
+                                            maxHeight: '70vh',
+                                            objectFit: 'contain'
+                                        }}
+                                    />
+                                </Paper>
+                            </Box>
+                        );
                     }
                     
                     // Handle binary content
