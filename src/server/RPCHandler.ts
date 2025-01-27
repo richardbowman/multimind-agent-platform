@@ -523,15 +523,21 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 // Resolve agent handles to IDs
                 const resolvedAgents = await this.mapHandles(chatClient, template.supportingAgents);
 
+                // use provided goals if given, or fallback to template goal tasks
+                const goalTasks = params.goalDescriptions ? params.goalDescriptions.map(goal => ({
+                    description: goal,
+                    type: TaskType.Goal,
+                }))  : template.initialTasks.map((task, i) => ({
+                    description: task.description,
+                    type: TaskType.Goal,
+                    category: task.type,
+                    assignee: task.metadata?.agent ? resolvedAgents[i] : undefined
+                }))
+
                 // Create project with resolved agent IDs
                 const project = await taskManager.createProject({
                     name: params.name,
-                    tasks: template.initialTasks.map((task, i) => ({
-                        description: task.description,
-                        type: TaskType.Goal,
-                        category: task.type,
-                        assignee: task.metadata?.agent ? resolvedAgents[i] : undefined
-                    })),
+                    tasks: goalTasks,
                     metadata: {
                         description: params.description || '',
                         tags: template.tags
@@ -613,9 +619,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                         type: mime.getType(filePath) || 'application/octet-stream'
                     });
                 }));
-    
-                // Send files back to client via callback
-                this.services.clientMethods?.onFilesSelected(files);
+
             }
         });
     }
