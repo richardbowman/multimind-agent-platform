@@ -1,6 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResult, StepResultType } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { FinalResponse } from '../../schemas/finalResponse';
@@ -51,9 +51,8 @@ You will respond inside of the message key in Markdown format.`;
         });
 
         return {
-            type: 'final_response',
+            type: StepResultType.FinalResponse,
             finished: true,
-            needsUserInput: true,
             response
         };
     }

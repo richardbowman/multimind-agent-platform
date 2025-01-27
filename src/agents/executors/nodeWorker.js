@@ -4,6 +4,27 @@ const vm = require('vm');
 // Make artifacts available globally
 global.ARTIFACTS = workerData.artifacts || [];
 
+global.jsonUtils = {
+    extractAndParseJsonBlocks: (text) => {
+        const jsonBlockRegex = /```json[\s\S]*?\n([\s\S]*?)```/g;
+        const matches = [];
+        let match;
+
+        while ((match = jsonBlockRegex.exec(text)) !== null) {
+            try {
+                const jsonString = match[1].trim();
+                const parsed = JSON.parse(jsonString);
+                matches.push(parsed);
+            } catch (error) {
+                throw new SyntaxError(`Failed to parse JSON block: ${error.message}`);
+            }
+        }
+
+        return matches;
+    }
+};
+
+
 // Example ModelHelpers.generate() usage:
 /*
 const response = await ModelHelpers.generate<CodeExecutionResponse>({
@@ -21,8 +42,8 @@ global.console = {};
     global.console[method] = (...args) => {
         originalConsole[method](...args);
         try {
-            const formattedArgs = args.map(arg => 
-                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg.toString()
+            const formattedArgs = args.map(arg =>
+                typeof arg === 'object' ? JSON.stringify(arg, null, 2) : arg?.toString()
             ).join(' ');
             capturedOutput += formattedArgs + '\n';
         } catch (e) {
@@ -39,7 +60,7 @@ class AsyncQueue {
 
     async enqueue(operation) {
         const stack = new Error().stack || 'No stack trace available';
-        
+
         if (this.locked) {
             this.waitingOperations.push({ stack });
             originalConsole.log(`AsyncQueue: ${this.waitingOperations.length} operations waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
@@ -48,14 +69,14 @@ class AsyncQueue {
         while (this.locked) {
             await new Promise(resolve => setTimeout(resolve, 10));
         }
-        
+
         this.locked = true;
         if (this.waitingOperations.length > 0) {
             this.waitingOperations = this.waitingOperations.filter(op => op.stack !== stack);
         }
 
         originalConsole.log(`AsyncQueue executing operation from:\n${stack}`);
-        
+
         try {
             const result = await this.queue.then(operation);
             return result;
@@ -74,8 +95,8 @@ class AsyncQueue {
 
 try {
     const generateQueue = new AsyncQueue();
-    
-    
+
+
     global.generate = (chatMessage, instructions) => {
         originalConsole.log("generate request", chatMessage, instructions);
         return generateQueue.enqueue(() => {
@@ -89,11 +110,11 @@ try {
                     } else {
                         reject("Unexpected type:" + workerMessage.type);
                     }
-                    
+
                 });
             });
             parentPort.postMessage({
-                type: "generate", 
+                type: "generate",
                 message: chatMessage,
                 instructions
             });
@@ -121,7 +142,7 @@ try {
             'stream-transform',
             'csv-generate'
         ];
-        
+
         if (!allowedModules.includes(module)) {
             throw new Error(`Module ${module} is not allowed`);
         }
@@ -134,8 +155,7 @@ try {
         console: global.console,
         ARTIFACTS: global.ARTIFACTS,
         generate: global.generate,
-        provideResult: global.provideResult,
-        jsonUtils: workerData.jsonUtils
+        provideResult: global.provideResult
     };
 
     // Wrap the code in an async function
@@ -182,7 +202,7 @@ try {
         type: 'console',
         data: capturedOutput.trim()
     });
-    
+
     // Send error with console output
     parentPort.postMessage({
         type: 'error',

@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -75,7 +75,7 @@ In your response, provide a fully restated goal incorporating your proposed deta
         return {
             type: "understand-research-goals",
             finished: true,
-            allowReplan: true,
+            replan: ReplanType.Allow,
             response: {
                 message: `I understand your research goals:\n\n${result.goal}\n\nProceeding with research plan creation.`
             },

@@ -1,6 +1,6 @@
 import { ValidationExecutor } from '../src/agents/executors/ValidationExecutor';
 import { ExecuteParams } from '../src/agents/interfaces/ExecuteParams';
-import { StepResult } from '../src/agents/interfaces/StepResult';
+import { ReplanType, StepResult } from '../src/agents/interfaces/StepResult';
 import { ModelHelpers } from '../src/llm/modelHelpers';
 import { TaskManager } from '../src/tools/taskManager';
 import { Artifact } from '../src/tools/artifact';
@@ -176,7 +176,7 @@ describe('ValidationExecutor', () => {
             expect(result.finished).toBe(true);
             expect(result.needsUserInput).toBe(false);
             expect(result.response.message).toContain('Validation completed in task mode');
-            expect(result.allowReplan).toBe(true);
+            expect(result.replan).toBe(ReplanType.Allow);
             expect(mockLogger.info).toHaveBeenCalledWith(
                 'Validation completed in task mode',
                 expect.any(Object)

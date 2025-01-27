@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -162,7 +162,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 return {
                     type: 'answer_analysis',
                     finished: true,
-                    allowReplan: true,
+                    replan: ReplanType.Allow,
                     response: {
                         message: "All required sections are complete!",
                         document: project.documentDraft
@@ -175,7 +175,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             type: 'answer_analysis',
             finished: modelResponse.shouldContinue,
             needsUserInput: !modelResponse.shouldContinue,
-            allowReplan: modelResponse.shouldContinue,
+            replan: modelResponse.shouldContinue ? ReplanType.Allow : ReplanType.None,
             response: {
                 message: modelResponse.message
             }

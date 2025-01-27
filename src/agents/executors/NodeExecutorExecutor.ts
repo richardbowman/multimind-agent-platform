@@ -27,7 +27,7 @@ export class ConsoleError extends Error {
  * Executor that runs Node.js code in a worker thread with limited permissions
  * Key capabilities:
  * - Executes Node.js code in an isolated worker thread
- * - Provides 5 second timeout
+ * - Provides 5 minute timeout
  * - Captures console output and return values
  * - Handles both primitive and complex return types
  * - Provides automatic error recovery and retry with AI-generated fixes
@@ -51,17 +51,14 @@ export class NodeExecutorExecutor implements StepExecutor {
             const worker = new Worker(path.join(__dirname, 'nodeWorker.js'), {
                 workerData: { 
                     code,
-                    artifacts,
-                    jsonUtils: {
-                        extractAndParseJsonBlocks: StringUtils.extractAndParseJsonBlocks
-                    }
+                    artifacts
                 }
             });
 
             const timeout = setTimeout(() => {
                 worker.terminate();
-                reject(new Error('Execution timed out after 90 seconds'));
-            }, 90000);
+                reject(new Error('Execution timed out after 5 minutes'));
+            }, 5*60*1000);
 
             let consoleOutput = '';
 
@@ -160,7 +157,7 @@ const data = JSON.parse(artifact.content);
    - jsonUtils.extractAndParseJsonBlocks(text): Extracts and parses JSON code blocks from text
      Example:
      const jsonData = jsonUtils.extractAndParseJsonBlocks(someText);
-     // Returns array of parsed JSON objects from ```json blocks
+     // Returns array of parsed JSON objects from \`\`\`json blocks
 
 
 ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResult, null, 2)}
@@ -228,7 +225,28 @@ Please fix the code and try again.`;
             finished: true,
             artifactIds: newArtifacts.map(a => a.id),
             response: {
-                message: `**Code:**\n\`\`\`javascript\n${originalCode}\n\`\`\`\n\nCorrected code:\n\`\`\`javascript\n${correctedCode}\n\`\`\`\n\n**Explanation:**\n${result.explanation}\n\n**Execution Result:**\n\`\`\`\n${StringUtils.truncate(JSON.stringify(executionResult.returnValue, null, 2), 1000)}\n\`\`\`${executionResult.consoleOutput ? `\n\n**Console Output:**\n\`\`\`\n${StringUtils.truncate(executionResult.consoleOutput, 1000)}\n\`\`\`\n` : ''}`,
+                message: `**Code:**
+\`\`\`javascript
+${originalCode}
+\`\`\`
+
+Corrected code:
+\`\`\`javascript
+${correctedCode}
+\`\`\`
+
+**Explanation:**
+${result.explanation}
+
+**Execution Result:**
+\`\`\`
+${StringUtils.truncate(JSON.stringify(executionResult.returnValue, null, 2), 1000)}
+\`\`\`
+
+${executionResult.consoleOutput ? `**Console Output:**
+\`\`\`
+${StringUtils.truncate(executionResult.consoleOutput, 1000)}
+\`\`\`` : ''}`,
                 data: responseData
             }
         };

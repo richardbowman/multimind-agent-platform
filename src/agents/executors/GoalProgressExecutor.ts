@@ -7,7 +7,7 @@ import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { TaskManager, TaskStatus } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType } from 'src/llm/promptBuilder';
@@ -124,7 +124,7 @@ export class GoalProgressExecutor implements StepExecutor {
         return {
             finished: true,
             needsUserInput: false,
-            allowReplan: false,
+            replan: ReplanType.Allow,
             goal: result.summary,
             response: {
                 message: result.summary,

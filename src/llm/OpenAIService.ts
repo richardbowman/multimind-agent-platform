@@ -2,7 +2,7 @@ import { ClientOptions, OpenAI } from "openai";
 import { ModelInfo } from "./types";
 import { IEmbeddingFunction } from "chromadb";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { LLMCallLogger } from "./LLMLogger";
+import JSON5 from 'json5';
 import { BaseLLMService } from "./BaseLLMService";
 import { LLMRequestParams } from "./ILLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
@@ -141,7 +141,7 @@ export class OpenAIService extends BaseLLMService {
 
             const result = {
                 response: params.parseJSON ?
-                    JSON.parse(response?.choices?.[0].message?.tool_calls?.[0]?.function?.arguments || '{}') :
+                    JSON5.parse(response?.choices?.[0].message?.tool_calls?.[0]?.function?.arguments || '{}') :
                     { message: response.choices[0].message?.content || '' },
                 metadata: {
                     _usage: {

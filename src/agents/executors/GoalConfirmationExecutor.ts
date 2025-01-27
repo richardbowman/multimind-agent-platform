@@ -8,7 +8,7 @@ import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { TaskManager } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType } from 'src/llm/promptBuilder';
@@ -73,7 +73,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
         return {
             finished: result.understanding,
             needsUserInput: !result.understanding,
-            allowReplan: true,
+            replan: ReplanType.Allow,
             goal: result.message,
             response: {
                 message: result.message

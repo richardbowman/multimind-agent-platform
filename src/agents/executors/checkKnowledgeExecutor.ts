@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -87,7 +87,7 @@ export class KnowledgeCheckExecutor implements StepExecutor {
 Attached Artifacts:
 ${artifacts?.map(a => `ID: ${a.id}
 Title: ${a.metadata?.title}
-Content: ${a.content}
+Content: ${a.content.slice(0, 1000)} ${a.content.length > 1000 ? `[truncated, full size is available ${a.content.length}]` : ''}
 Date Created: ${a.metadata?.dateCreated}
 Date Created: ${a.metadata?.version}
 ---
@@ -101,7 +101,7 @@ Content: ${r.text}
 ---`).join('\n')}
 
 Analyze relevant results (skipping irrelevant results):
-1. Extract key findings and their sources
+1. Extract key findings and their sources only from what's provided (do not make up information)
 2. Identify any information gaps`;
 
         const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
@@ -128,7 +128,7 @@ ${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
         return {
             type: "research",
             finished: true,
-            allowReplan: true,
+            replan: ReplanType.Allow,
             response: {
                 message: responseMessage,
                 data: {

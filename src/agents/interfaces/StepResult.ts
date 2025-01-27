@@ -6,7 +6,10 @@ export enum StepResultType {
     Question = "Question",
     AnswerQuestion = "AnswerQuestion",
     ComplexProjectKickoff = "ComplexProjectKickoff",
-    Validation = "Validation"
+    Validation = "Validation",
+    Thinking = "Thinking",
+    CodeGenerationStep = "CodeGenerationStep",
+    FinalResponse = "FinalResponse"
 }
 
 export enum ReplanType {
@@ -23,8 +26,6 @@ export interface StepResult {
     finished?: boolean;
     goal?: string;
     async?: boolean;
-    /** @deprecated Use replan instead */
-    allowReplan?: boolean;
     replan?: ReplanType;
     needsUserInput?: boolean;
     response: ModelResponse;

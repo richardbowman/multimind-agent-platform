@@ -54,9 +54,9 @@ export class PromptRegistry {
             output += `⚙️ Execution Mode:\n${params.executionMode}\n\n`;
         }
         
-        if (params.context) {
-            output += `📌 Context:\n${JSON.stringify(params.context, null, 2)}\n\n`;
-        }
+        // if (params.context) {
+        //     output += `📌 Context:\n${JSON.stringify(params.context, null, 2)}\n\n`;
+        // }
         
         return output;
     }

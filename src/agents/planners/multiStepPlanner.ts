@@ -91,9 +91,14 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
         ).join('\n\n');
 
         const systemPrompt =
-            `${this.modelHelpers.getPurpose()}
+            `## YOUR GOAL
+You are a step that is a part of a multi-step agent workflow. Your task is to generate a proposed plan of upcoming steps that will best achieve
+the goal from the available list of steps this agent has access to perform.
 
-## HIGH-LEVEL GOAL: ${project.name}
+## OVERALL AGENT PURPOSE:
+${this.modelHelpers.getPurpose()}
+
+## HIGH-LEVEL USER GOAL: ${project.name}
 ${userContext}
 
 ## AVAILABLE SEQUENCES:

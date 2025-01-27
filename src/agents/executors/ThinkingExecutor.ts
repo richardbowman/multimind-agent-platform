@@ -1,6 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ThinkingResponse } from '../../schemas/thinking';
@@ -9,6 +9,7 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { ContentType } from 'src/llm/promptBuilder';
 
 /**
  * Executor that performs deep analytical thinking and reasoning.
@@ -55,7 +56,7 @@ Consider multiple angles and potential implications.`);
         });
 
         return {
-            type: "thinking",
+            type: StepResultType.Thinking,
             finished: true,
             response: {
                 message: `**Reasoning Process:**\n\n${result.reasoning}\n\n**Conclusion:**\n\n${result.conclusion}`

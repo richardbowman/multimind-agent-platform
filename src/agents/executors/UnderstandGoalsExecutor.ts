@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
 import crypto from 'crypto';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { TaskManager, TaskType } from '../../tools/taskManager';
@@ -159,7 +159,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         return {
             finished: true,
             needsUserInput: !shouldContinue && response.intakeQuestions.length > 0,
-            allowReplan: shouldContinue,
+            replan: shouldContinue ? ReplanType.Allow : ReplanType.None,
             goal: response.goalRestatement,
             response: {
                 message: response.followupMessage + 

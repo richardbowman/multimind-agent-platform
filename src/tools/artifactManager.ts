@@ -5,6 +5,7 @@ import Logger from '../helpers/logger';
 import { IVectorDatabase } from '../llm/IVectorDatabase';
 import { Artifact } from './artifact';
 import { AsyncQueue } from '../helpers/asyncQueue';
+import { createUUID } from 'src/types/uuid';
 
 export class ArtifactManager {
   private storageDir: string;
@@ -58,7 +59,11 @@ export class ArtifactManager {
     );
   }
 
-  async saveArtifact(artifact: Artifact): Promise<Artifact> {
+  async saveArtifact(artifactParam: Partial<Artifact>): Promise<Artifact> {
+    const artifact = {
+      id: createUUID(),
+      ...artifactParam,
+    }
     const artifactDir = path.join(this.storageDir, artifact.id);
 
     // Load existing metadata
@@ -91,7 +96,7 @@ export class ArtifactManager {
 
     const filePath = path.join(artifactDir, `${artifact.type}_v${version}.md`);
     await this.fileQueue.enqueue(() =>
-      fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content))
+      fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
     );
 
     // Update or add the artifact metadata

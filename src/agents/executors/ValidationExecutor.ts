@@ -1,6 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ValidationResult } from '../../schemas/validation';
@@ -90,8 +90,7 @@ If the solution is wrong, list the specific aspects that must be addressed.`);
             type: StepResultType.Validation,
             finished: true,
             needsUserInput: params.executionMode === 'conversation' && !response.isComplete && !forceCompletion,
-            replan: forceCompletion ? ReplanType.None : 
-                (!response.isComplete ? ReplanType.Force : ReplanType.None),
+            replan: response.isComplete ? ReplanType.None : ReplanType.Force,
             response: {
                 message: forceCompletion 
                     ? `Maximum validation attempts reached (${maxAttempts}). Marking as complete despite remaining issues:\n` +

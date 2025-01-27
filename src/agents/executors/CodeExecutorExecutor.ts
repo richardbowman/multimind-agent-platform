@@ -109,8 +109,7 @@ ${params.previousResult ? `Consider this previous result:\n${JSON.stringify(para
             const retryInstructions = new StructuredOutputPrompt(schema, errorPrompt);
             let retryResult = await this.modelHelpers.generate<CodeExecutionResponse>({
                 message: params.message || params.stepGoal,
-                instructions: retryInstructions,
-                model: "qwen2.5-coder-14b-instruct"
+                instructions: retryInstructions
             });
 
             try {

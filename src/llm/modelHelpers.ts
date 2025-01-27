@@ -414,10 +414,10 @@ export class ModelHelpers {
     private async generateOld(instructions: string, params: GenerateParams): Promise<ModelMessageResponse> {
         // Check cache first
         const cacheContext = { params };
-        const cachedResponse = this.modelCache.get(instructions, cacheContext);
-        if (cachedResponse) {
-            return cachedResponse;
-        }
+        // const cachedResponse = this.modelCache.get(instructions, cacheContext);
+        // if (cachedResponse) {
+        //     return cachedResponse;
+        // }
 
         // Fetch the latest memory artifact for the channel
         let augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`);

@@ -10,6 +10,7 @@ import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
+import { ExecutorType } from './interfaces/ExecutorType';
 
 export class SolverAgent extends StepBasedAgent {
     protected processTask(task: any): Promise<void> {
@@ -59,11 +60,15 @@ export class SolverAgent extends StepBasedAgent {
             },
             {
                 type: ExecutorType.NODE_EXECUTION,
-                description: "Execute code to analyze or prototype solution"
+                description: "Write and execute code to analyze or prototype solution"
             },
             {
                 type: ExecutorType.THINKING,
-                description: "Analyze code results and develop approach"
+                description: "Analyze code results and develop follow-up approach"
+            },
+            {
+                type: ExecutorType.NODE_EXECUTION,
+                description: "Write and execute code based on the results of the first code execution"
             },
             {
                 type: ExecutorType.VALIDATION,

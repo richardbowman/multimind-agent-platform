@@ -4095,12 +4095,12 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/node@npm:^22.10.7":
-  version: 22.10.7
-  resolution: "@types/node@npm:22.10.7"
+"@types/node@npm:^22.10.10":
+  version: 22.10.10
+  resolution: "@types/node@npm:22.10.10"
   dependencies:
     undici-types: "npm:~6.20.0"
-  checksum: 10c0/c941b4689dfc4044b64a5f601306cbcb0c7210be853ba378a5dd44137898c45accedd796ee002ad9407024cac7ecaf5049304951cb1d80ce3d7cebbbae56f20e
+  checksum: 10c0/3425772d4513cd5dbdd87c00acda088113c03a97445f84f6a89744c60a66990b56c9d3a7213d09d57b6b944ae8ff45f985565e0c1846726112588e33a22dd12b
   languageName: node
   linkType: hard
 
@@ -6622,6 +6622,39 @@ __metadata:
   version: 3.1.3
   resolution: "csstype@npm:3.1.3"
   checksum: 10c0/80c089d6f7e0c5b2bd83cf0539ab41474198579584fa10d86d0cafe0642202343cbc119e076a0b1aece191989477081415d66c9fefbf3c957fc2fc4b7009f248
+  languageName: node
+  linkType: hard
+
+"csv-generate@npm:^4.4.2":
+  version: 4.4.2
+  resolution: "csv-generate@npm:4.4.2"
+  checksum: 10c0/6345b11e8a3fdc485896206cbabd0064046c0fa1ac66c280498abe66c35d8f3e14aa6a58d948261e1c477cb3afcbe82fa98a940910ce63c868af9261d07c5f01
+  languageName: node
+  linkType: hard
+
+"csv-parse@npm:^5.6.0":
+  version: 5.6.0
+  resolution: "csv-parse@npm:5.6.0"
+  checksum: 10c0/52f5e6c45359902e0c8e57fc2eeed41366dc6b6d283b495b538dd50c8e8510413d6f924096ea056319cbbb8ed26e111c3a3485d7985c021bcf5abaa9e92425c7
+  languageName: node
+  linkType: hard
+
+"csv-stringify@npm:^6.5.2":
+  version: 6.5.2
+  resolution: "csv-stringify@npm:6.5.2"
+  checksum: 10c0/8d2c601ce99c4baf5009abb16a9021cfd8d91a7be660f54343cba566ee5057d0ef517e0afde91e7e8803aeafb81268f6f04e47cb272462553b12f8e65c9c0674
+  languageName: node
+  linkType: hard
+
+"csv@npm:^6.3.11":
+  version: 6.3.11
+  resolution: "csv@npm:6.3.11"
+  dependencies:
+    csv-generate: "npm:^4.4.2"
+    csv-parse: "npm:^5.6.0"
+    csv-stringify: "npm:^6.5.2"
+    stream-transform: "npm:^3.3.3"
+  checksum: 10c0/984f529928c4eb55a0b93f9d88ea4e866103c579f27a182dc08a378bc02e46fabe065a0fe1249e80b9180ce78912df46f5885824468629312dec7bdf49f55d98
   languageName: node
   linkType: hard
 
@@ -11868,7 +11901,7 @@ __metadata:
     "@types/fs-extra": "npm:^11.0.4"
     "@types/jest": "npm:^29.5.14"
     "@types/mime-types": "npm:^2"
-    "@types/node": "npm:^22.10.7"
+    "@types/node": "npm:^22.10.10"
     "@types/node-cron": "npm:^3.0.11"
     "@types/react": "npm:19.0.7"
     "@types/react-dom": "npm:19.0.3"
@@ -11891,6 +11924,7 @@ __metadata:
     concurrently: "npm:^9.1.2"
     copy-webpack-plugin: "npm:^12.0.2"
     css-loader: "npm:^7.1.2"
+    csv: "npm:^6.3.11"
     dompurify: "npm:^3.2.3"
     dotenv: "npm:^16.4.7"
     electron: "npm:^34.0.0"
@@ -14866,6 +14900,13 @@ __metadata:
   version: 4.0.2
   resolution: "steno@npm:4.0.2"
   checksum: 10c0/fda6bb192bb73ce9453586080aae3fc75506e1c10c9285df49849a016bb9378c6146610f27976708437a6c5492619ec09efb9def6d5397624ae0ad70e57ccaf1
+  languageName: node
+  linkType: hard
+
+"stream-transform@npm:^3.3.3":
+  version: 3.3.3
+  resolution: "stream-transform@npm:3.3.3"
+  checksum: 10c0/bb9f304dcd16b2ff4ced81c61f9d22f6932a45b043229172d247bc6685c713dc6892a3cebd56fa2680e21b0bd1628114469641cd2a710a5ce888838ca00ee109
   languageName: node
   linkType: hard
 

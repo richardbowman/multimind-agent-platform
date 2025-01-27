@@ -11,7 +11,7 @@ import Logger from '../helpers/logger';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/localChatClient';
 import { AgentConfig } from 'src/tools/settings';
-import { StepResult } from './interfaces/StepResult';
+import { ReplanType, StepResult } from './interfaces/StepResult';
 import { StepExecutor } from './interfaces/StepExecutor';
 import { ExecuteNextStepParams } from './interfaces/ExecuteNextStepParams';
 import { ExecuteStepParams, StepTask } from './interfaces/ExecuteStepParams';
@@ -471,12 +471,14 @@ export abstract class StepBasedAgent extends Agent {
                 replyTo = await this.chatClient.getPost(project.metadata.originalPostId);
             }
 
+            const artifactList = [...stepResult.artifactIds||[], ...stepResult.response?.artifactIds||[], stepResult.response?.data?.artifactId];
+
             // Only send replies if we have a userPost to reply to
             if (replyTo) {
                 if (stepResult.needsUserInput && stepResult.response) {
                     await this.reply(replyTo, stepResult.response, {
                         "project-id": stepResult.projectId || projectId,
-                        "artifact-ids": [...stepResult.artifactIds||[], ...stepResult.response?.artifactIds||[], stepResult.response?.data?.artifactId]
+                        "artifact-ids": artifactList
                     });
                 } else {
                     const message = stepResult.response?.message || stepResult.response?.reasoning || "";
@@ -484,29 +486,18 @@ export abstract class StepBasedAgent extends Agent {
                         message: `${message} [Finished ${task.type}, still working...]`
                     }, {
                         "project-id": stepResult.projectId || projectId,
-                        "artifact-ids": [...stepResult.artifactIds||[], ...stepResult.response?.artifactIds||[], stepResult.response?.data?.artifactId]
+                        "artifact-ids": artifactList
                     });
                 }
             }
 
             if (stepResult.finished) {
                 this.projects.completeTask(task.id);
-                Logger.info(`Completed step "${task.stepType}" for project "${projectId}"`);
+                Logger.info(`Completed step "${task.props.stepType}" for project "${projectId}"`);
 
                 // If this was the last planned task, add a validation step
                 const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete && t.type === "step");
-                if ((stepResult.replan === ReplanType.Allow || stepResult.replan === ReplanType.Force) && 
-                    remainingTasks.length === 0) {
-                    // const validationTask: Task = {
-                    //     id: crypto.randomUUID(),
-                    //     type: 'validation',
-                    //     description: 'Validate solution completeness',
-                    //     creator: this.userId,
-                    //     complete: false,
-                    //     order: (task.order || 0) + 1
-                    // };
-                    // this.projects.addTask(project, validationTask);
-
+                if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
                     //TODO: hacky, we don't really post this message
                     await this.planSteps(project.id, [InMemoryPost.fromLoad({
                         ...userPost,
@@ -515,9 +506,17 @@ export abstract class StepBasedAgent extends Agent {
                 }
 
                 if (!stepResult.needsUserInput) {
+                    const stepArtifacts = await this.mapRequestedArtifacts(artifactList);
+                    const fullArtifactList = [...stepArtifacts, ...params.context?.artifacts||[]];
+
+
                     await this.executeNextStep({
                         projectId, 
-                        userPost
+                        userPost,
+                        context: {
+                            ...params.context,
+                            artifacts: fullArtifactList
+                        }
                     });
                 }
 
