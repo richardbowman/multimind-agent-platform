@@ -323,8 +323,16 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                             }}
                         >
                             <img
-                                src={URL.createObjectURL(file.content)}
-                                alt={file.metadata?.title}
+                                src={
+                                    file.metadata?.mimeType?.startsWith('image/')
+                                        ? `data:${file.metadata?.mimeType};base64,${
+                                            typeof file.content === 'string'
+                                                ? file.content.replace(/^data:image\/\w+;base64,/, '')
+                                                : btoa(String.fromCharCode(...new Uint8Array(file.content as ArrayBuffer)))
+                                          }`
+                                        : ''
+                                }
+                                alt={file.metadata?.title || 'Image preview'}
                                 style={{
                                     width: '100%',
                                     height: '100%',
