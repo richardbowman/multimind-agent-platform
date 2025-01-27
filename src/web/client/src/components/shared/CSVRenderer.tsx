@@ -30,7 +30,7 @@ export const CSVRenderer: React.FC<CSVRendererProps> = ({ content }) => {
         : [];
 
     return (
-        <Box sx={{ height: 400, width: '100%' }}>
+        <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
             <DataGrid
                 rows={rows}
                 columns={columns}

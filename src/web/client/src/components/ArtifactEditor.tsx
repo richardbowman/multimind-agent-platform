@@ -108,6 +108,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
                         fullWidth
                     >
                         <MenuItem value="text">Text</MenuItem>
+                        <MenuItem value="csv">CSS Spreadsheet</MenuItem>
                         <MenuItem value="code">Code</MenuItem>
                         <MenuItem value="report">Report</MenuItem>
                         <MenuItem value="document">Document</MenuItem>

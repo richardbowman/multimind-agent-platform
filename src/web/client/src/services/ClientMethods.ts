@@ -1,7 +1,6 @@
 import type { LogParam } from '../../../../llm/LLMLogger';
-import { useWebSocket, type DataContextMethods } from '../contexts/DataContext';
+import { type DataContextMethods } from '../contexts/DataContext';
 import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/types';
-import { useMemo } from 'react';
 import { SnackbarContextType } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { ClientMethods } from '../../../../shared/RPCInterface';

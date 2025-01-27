@@ -86,7 +86,8 @@ Return ONLY the channel name.`;
             isPrivate: false,
             members: selectedTemplate.supportingAgents,
             goalTemplate: selectedTemplate.id,
-            defaultResponderId: selectedTemplate.supportingAgents[0],
+            goalDescriptions: selectedTemplate.initialTasks.map(t => t.description),
+            defaultResponderId: selectedTemplate.defaultResponder,
             artifactIds: artifactIds
         });
 

@@ -26,8 +26,8 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
             display: 'flex',
             flexDirection: "column",
             flex: 1,
-            overflow: 'hidden',
-            position: 'relative'
+            position: 'relative',
+            height: (artifact.metadata?.format === 'csv' || artifact.type === 'csv') ? '100%': undefined
         }}>
             <div className="artifact-detail-header">
                 <h2>{artifact.metadata?.title || artifact.id}</h2>
@@ -56,7 +56,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     </Button>
                 </Box>
             </div>
-            <div className="artifact-content">
+            <div className="artifact-content" style={{display: "flex", flexDirection:"column", overflow: "hidden"}}>
                 {showMetadata && (
                     <table style={{ 
                         width: '100%',

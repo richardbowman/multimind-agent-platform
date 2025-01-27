@@ -1,5 +1,6 @@
 import { UUID } from 'src/types/uuid';
 import { ChatHandle } from 'src/types/chatHandle';
+import { Task } from 'src/tools/taskManager';
 
 
 export interface CreateChannelHandlerParams {
@@ -10,6 +11,7 @@ export interface CreateChannelHandlerParams {
     defaultResponderId?: UUID | ChatHandle;
     projectId?: UUID;
     goalTemplate?: UUID;
+    goalDescriptions?: String[];
     artifactIds?: UUID[];
 }
 

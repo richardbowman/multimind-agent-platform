@@ -107,12 +107,12 @@ export class ArtifactManager {
 
     // Update or add the artifact metadata
     metadata[artifact.id] = {
+      ...artifact.metadata, // Include additional metadata attributes if any
       contentPath: filePath,
       type: artifact.type,
       version,
       tokenCount: artifact.tokenCount,
-      mimeType: artifact.mimeType,
-      ...artifact.metadata // Include additional metadata attributes if any
+      mimeType: artifact.mimeType
     };
 
     // Save updated metadata

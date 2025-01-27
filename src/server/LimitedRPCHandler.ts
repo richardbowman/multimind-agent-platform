@@ -12,6 +12,8 @@ import { AppUpdater } from "electron-updater";
 import { ConfigurationError } from "src/errors/ConfigurationError";
 
 export class LimitedRPCHandler implements Partial<ServerMethods> {
+    protected clientRpc?: ClientMethods;
+
     constructor(private partialServices: BackendServicesConfigNeeded) {
     }
 
@@ -84,6 +86,8 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
     }
 
     setupClientEvents(rpc: ClientMethods, autoUpdater: AppUpdater) {
+        this.clientRpc = rpc;
+        
         // Set up auto-update event forwarding
         autoUpdater.on('checking-for-update', () => {
             Logger.info("Checking for updates...");
