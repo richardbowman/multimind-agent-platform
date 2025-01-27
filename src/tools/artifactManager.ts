@@ -94,12 +94,47 @@ export class ArtifactManager {
         artifact.content :
         JSON.stringify(artifact.content);
 
-    // Use appropriate file extension based on MIME type
-    const extension = artifact.mimeType ? 
-      (artifact.mimeType === 'application/json' ? 'json' :
-       artifact.mimeType.startsWith('text/') ? 'txt' :
-       'md') : 'md';
-       
+    // Get appropriate file extension based on MIME type
+    const getFileExtension = (mimeType?: string): string => {
+      if (!mimeType) return 'md';
+      
+      const mimeToExt: Record<string, string> = {
+        'application/json': 'json',
+        'text/plain': 'txt',
+        'text/markdown': 'md',
+        'text/html': 'html',
+        'text/css': 'css',
+        'text/javascript': 'js',
+        'text/csv': 'csv',
+        'image/jpeg': 'jpg',
+        'image/png': 'png',
+        'image/gif': 'gif',
+        'image/svg+xml': 'svg',
+        'image/webp': 'webp',
+        'application/pdf': 'pdf',
+        'application/xml': 'xml',
+        'application/yaml': 'yaml',
+        'application/x-yaml': 'yaml'
+      };
+
+      // Check for exact MIME type match
+      if (mimeToExt[mimeType]) {
+        return mimeToExt[mimeType];
+      }
+
+      // Check for MIME type category match
+      const category = mimeType.split('/')[0];
+      switch (category) {
+        case 'text':
+          return 'txt';
+        case 'image':
+          return mimeType.split('/')[1] || 'bin';
+        default:
+          return 'bin';
+      }
+    };
+
+    const extension = getFileExtension(artifact.mimeType);
     const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${extension}`);
     await this.fileQueue.enqueue(() =>
       fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
