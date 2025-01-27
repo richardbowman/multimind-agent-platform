@@ -1,4 +1,7 @@
+import { AsyncQueue } from 'src/helpers/asyncQueue';
 import { parentPort, workerData } from 'worker_threads';
+
+// import { parse } from 'csv-parse/sync';
 
 interface WorkerMessage {
     type: string;
@@ -56,43 +59,12 @@ let capturedOutput = '';
     };
 });
 
-class AsyncQueue {
-    private queue: Promise<any> = Promise.resolve();
-    private locked = false;
-    private waitingOperations: { stack: string }[] = [];
-
-    async enqueue<T>(operation: () => Promise<T>): Promise<T> {
-        const stack = new Error().stack || 'No stack trace available';
-
-        if (this.locked) {
-            this.waitingOperations.push({ stack });
-            originalConsole.log(`AsyncQueue: ${this.waitingOperations.length} operations waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
-        }
-
-        while (this.locked) {
-            await new Promise(resolve => setTimeout(resolve, 10));
-        }
-
-        this.locked = true;
-        if (this.waitingOperations.length > 0) {
-            this.waitingOperations = this.waitingOperations.filter(op => op.stack !== stack);
-        }
-
-        originalConsole.log(`AsyncQueue executing operation from:\n${stack}`);
-
-        try {
-            const result = await this.queue.then(() => operation());
-            return result;
-        } catch (error) {
-            originalConsole.log(`AsyncQueue operation failed from:\n${stack}\nError:`, error);
-            throw error;
-        } finally {
-            this.queue = Promise.resolve();
-            this.locked = false;
-            if (this.waitingOperations.length > 0) {
-                originalConsole.log(`AsyncQueue: ${this.waitingOperations.length} operations still waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
-            }
-        }
+AsyncQueue.Logger = {
+    verbose: (...args) => {
+        console.log(args);
+    },
+    error: (...args) => {
+        console.error(args);
     }
 }
 
@@ -135,21 +107,27 @@ try {
     };
 
     // Whitelist allowed modules
-    const allowedModules = [
-        'csv-parse/sync',
-        'csv-stringify/sync',
-        'stream-transform',
-        'csv-generate'
-    ];
+    const allowedModules = {
+        'csv-parse/sync': import('csv-parse/sync'),
+        'csv-stringify/sync': import('csv-stringify/sync'),
+        'stream-transform': import('stream-transform'),
+        'csv-generate': import('csv-generate')
+    };
 
-    const requireWrapper = (module: string) => {
-        if (!allowedModules.includes(module)) {
+    const requireWrapper = async (module: string) => {
+        if (!Object.keys(allowedModules).includes(module)) {
             throw new Error(`Module ${module} is not allowed`);
         }
-        return require(module);
+        return allowedModules[module];
     };
 
     (global as any).safeRequire = requireWrapper;
+    (global as any).parentPort = {
+        postMessage(arg) {
+            originalConsole.log("trying postmessage", arg);
+            parentPort?.postMessage(arg);
+        }
+    };
 
     // Execute the code
     const codeToRun = `
@@ -157,6 +135,7 @@ try {
             try {
                 ${(workerData as any).code}
             } catch (error) {
+                originalConsole.log(error);
                 // Send console output before error
                 parentPort?.postMessage({
                     type: 'console',
