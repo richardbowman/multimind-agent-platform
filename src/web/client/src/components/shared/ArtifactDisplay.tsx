@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { Box, Button, Typography } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import { CSVRenderer } from './CSVRenderer';
 
 interface ArtifactDisplayProps {
     artifact: Artifact;
@@ -87,11 +88,20 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                         </tbody>
                     </table>
                 )}
-                {artifact.type === 'binary' || artifact.metadata?.format === 'binary' ? (
-                    <pre>{artifact.content as string}</pre>
-                ) : (
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>{artifact.content as string}</ReactMarkdown>
-                )}
+                {(() => {
+                    // Handle CSV content
+                    if (artifact.metadata?.format === 'csv' || artifact.type === 'csv') {
+                        return <CSVRenderer content={artifact.content as string} />;
+                    }
+                    
+                    // Handle binary content
+                    if (artifact.type === 'binary' || artifact.metadata?.format === 'binary') {
+                        return <pre>{artifact.content as string}</pre>;
+                    }
+                    
+                    // Default to Markdown rendering
+                    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{artifact.content as string}</ReactMarkdown>;
+                })()}
             </div>
         </Box>
     );
