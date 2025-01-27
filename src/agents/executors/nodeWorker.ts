@@ -119,7 +119,7 @@ try {
     };
 
     const ALLOWED_MODULE_NAMES = Object.keys(allowedModules) as readonly string[];
-    const requireWrapper = async (module: string) => {
+    const requireWrapper = (module: string) => {
         if (!ALLOWED_MODULE_NAMES.includes(module as any)) {
             throw new Error(`Module ${module} is not allowed`);
         }
