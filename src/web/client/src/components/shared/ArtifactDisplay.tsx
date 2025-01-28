@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { Artifact } from '../../../../../tools/artifact';
 import remarkGfm from 'remark-gfm'
@@ -6,6 +6,10 @@ import { Box, Button, Typography, Paper } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { CSVRenderer } from './CSVRenderer';
+import { Calendar, momentLocalizer } from 'react-big-calendar';
+import moment from 'moment';
+import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { parse } from 'ical-parser';
 
 interface ArtifactDisplayProps {
     artifact: Artifact;
@@ -125,6 +129,42 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                         );
                     }
                     
+                    // Handle calendar content
+                    if (artifact.mimeType === 'text/calendar' || artifact.type === 'calendar') {
+                        const [events, setEvents] = useState([]);
+                        const localizer = momentLocalizer(moment);
+
+                        useEffect(() => {
+                            try {
+                                const parsed = parse(artifact.content as string);
+                                const calendarEvents = parsed.events.map(event => ({
+                                    title: event.summary,
+                                    start: new Date(event.start),
+                                    end: new Date(event.end),
+                                    description: event.description,
+                                    location: event.location
+                                }));
+                                setEvents(calendarEvents);
+                            } catch (error) {
+                                console.error('Error parsing calendar:', error);
+                            }
+                        }, [artifact.content]);
+
+                        return (
+                            <Box sx={{ height: '70vh', mt: 2 }}>
+                                <Calendar
+                                    localizer={localizer}
+                                    events={events}
+                                    startAccessor="start"
+                                    endAccessor="end"
+                                    defaultView="month"
+                                    views={['month', 'week', 'day']}
+                                    style={{ height: '100%' }}
+                                />
+                            </Box>
+                        );
+                    }
+
                     // Handle binary content
                     if (artifact.type === 'binary' || artifact.metadata?.format === 'binary') {
                         return <pre>Binary content</pre>;
