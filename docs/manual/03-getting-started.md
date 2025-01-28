@@ -66,6 +66,10 @@ The welcome channel helps you:
 - Set up initial tasks
 - Configure your preferences
 
+#### Welcome Channel Screenshot
+
+![Welcome Channel](./01-welcome.png)
+
 ## Onboarding Process
 The Onboarding Consultant will guide you through these steps:
 
