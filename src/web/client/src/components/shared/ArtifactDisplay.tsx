@@ -17,12 +17,34 @@ interface ArtifactDisplayProps {
     onEdit?: () => void;
 }
 
-export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
+export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActions?: (actions: Array<{
+    icon: React.ReactNode;
+    label: string;
+    onClick: () => void;
+    disabled?: boolean;
+}>) => void }> = ({
     artifact,
     showMetadata = true,
     onDelete,
-    onEdit
+    onEdit,
+    onAddToolbarActions
 }) => {
+    useEffect(() => {
+        if (onAddToolbarActions) {
+            onAddToolbarActions([
+                {
+                    icon: <EditIcon fontSize="small" />,
+                    label: 'Edit Artifact',
+                    onClick: () => onEdit && onEdit()
+                },
+                {
+                    icon: <DeleteIcon fontSize="small" />,
+                    label: 'Delete Artifact',
+                    onClick: () => onDelete && onDelete()
+                }
+            ]);
+        }
+    }, [onAddToolbarActions, onEdit, onDelete]);
     return (
         <Box component="main" sx={{ 
             flexGrow: 1, 

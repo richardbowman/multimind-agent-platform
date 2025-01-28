@@ -176,18 +176,13 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 </Dialog>
             </Box>
 
-            <Fab 
-                color="primary" 
-                aria-label="add"
-                sx={{
-                    position: 'fixed',
-                    bottom: 32,
-                    right: 32
-                }}
-                onClick={() => setEditorOpen(true)}
-            >
-                <DescriptionIcon />
-            </Fab>
+            <ActionToolbar actions={[
+                {
+                    icon: <DescriptionIcon />,
+                    label: 'Create New Artifact',
+                    onClick: () => setEditorOpen(true)
+                }
+            ]} />
 
             {selectedArtifact ? (
                 <ArtifactEditor
