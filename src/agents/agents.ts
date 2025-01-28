@@ -13,7 +13,6 @@ import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Settings } from "src/tools/settings";
-import { StepTask } from "./interfaces/ExecuteStepParams";
 import { Agents } from "src/utils/AgentLoader";
 import { UUID } from "src/types/uuid";
 

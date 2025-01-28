@@ -6,6 +6,7 @@ import { ExecutorType } from './ExecutorType';
 export interface StepTaskProps {
     result?: StepResult;
     stepType: ExecutorType;
+    awaitingResponse?: boolean
 }
 
 export interface StepTask extends Task {

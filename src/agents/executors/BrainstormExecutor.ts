@@ -6,18 +6,19 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
+import { BrainstormResponse } from 'src/schemas/BrainstormResponse';
+import { StructuredInputPrompt } from 'src/prompts/structuredInputPrompt';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
+import { StructuredOutputPrompt } from 'src/llm/ILLMService';
 
-@StepExecutorDecorator(ExecutorType.BRAINSTORM, 'Generate creative ideas and possibilities through brainstorming', false)
+@StepExecutorDecorator(ExecutorType.BRAINSTORM, 'Generate creative ideas and possibilities through brainstorming', true)
 export class BrainstormExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
 
-    }
-    
-    private getCreativeDirectorAgent(params: ExecuteParams) {
-        return params.agents?.find(a => a.type === 'creative-director');
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
@@ -42,6 +43,11 @@ export class BrainstormExecutor implements StepExecutor {
             promptBuilder.addContent(ContentType.STEP_RESULTS, params.previousResult);
         }
 
+        // Add artifacts if available
+        if (params.previousResult) {
+            promptBuilder.addContent(ContentType.ARTIFACTS, params.context?.artifacts);
+        }
+
         // Add execution parameters
         promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
             goal: params.goal,
@@ -49,9 +55,11 @@ export class BrainstormExecutor implements StepExecutor {
         });
 
         const prompt = promptBuilder.build();
-        const response = await this.modelHelpers.generate({
+        
+        const schema = await getGeneratedSchema(SchemaType.BrainstormResponse);
+        const response = await this.modelHelpers.generate<BrainstormResponse>({
             message: params.message || params.stepGoal,
-            systemPrompt: prompt
+            instructions: new StructuredOutputPrompt(schema, prompt)
         });
 
         // Parse and format the response

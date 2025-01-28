@@ -69,6 +69,8 @@ export abstract class StepBasedAgent extends Agent {
                 const module = executorContext(`./${executorConfig.className}.ts`);
                 const ExecutorClass = module[executorConfig.className] || module.default;
                 
+                Logger.info(`Initializing ${executorConfig.className} executor `)
+
                 // Create instance with config
                 const executor = new ExecutorClass({
                     ...this.getExecutorParams(),
@@ -437,6 +439,7 @@ export abstract class StepBasedAgent extends Agent {
                 props: {
                     ...task.props,
                     result: stepResult,
+                    awaitingResponse: stepResult.needsUserInput
                 }
             } as Partial<StepTask>);
 

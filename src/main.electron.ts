@@ -27,14 +27,8 @@ AsyncQueue.Logger = Logger;
 
 // Configure autoUpdater
 autoUpdater.logger = Logger;
-
 autoUpdater.autoDownload = true;
-autoUpdater.autoInstallOnAppQuit = true;
 autoUpdater.allowPrerelease = false;
-
- // Add this near your autoUpdater configuration
- autoUpdater.forceDevUpdateConfig = true;
- autoUpdater.allowDowngrade = true;
 
 // Set feed URL using your GitHub repository
 autoUpdater.setFeedURL({
