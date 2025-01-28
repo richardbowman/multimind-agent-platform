@@ -163,4 +163,17 @@ export const GoalTemplates: GoalTemplate[] = [
                 dependsOn: ['gather-initial-research-data']
             }
         ]
+    },
+    {
+        id: 'chat-channel',
+        name: 'Chat Channel',
+        description: 'Template for setting up a chat channel with an AI assistant',
+        supportingAgents: ['@ai'],
+        defaultResponder: '@ai',
+        initialTasks: [
+            {
+                description: 'Initial setup for chat channel',
+                type: 'setup'
+            }
+        ]
     }];
