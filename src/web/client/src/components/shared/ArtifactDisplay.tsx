@@ -37,7 +37,30 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
 
         // Handle different content types
         if (artifact.metadata?.mimeType?.startsWith('image/')) {
-            fileContent = artifact.content as string;
+            let binaryData;
+            if (typeof artifact.content === 'string') {
+                if (artifact.content.startsWith('data:')) {
+                    // Extract base64 data from data URL
+                    binaryData = atob(artifact.content.split(',')[1]);
+                } else {
+                    // Assume it's already base64
+                    binaryData = atob(artifact.content);
+                }
+            } else if (artifact.content instanceof ArrayBuffer) {
+                binaryData = String.fromCharCode(...new Uint8Array(artifact.content));
+            } else if (artifact.content instanceof Uint8Array) {
+                binaryData = String.fromCharCode(...artifact.content);
+            } else {
+                throw new Error('Unsupported image content type');
+            }
+            
+            // Convert binary string to Uint8Array
+            const bytes = new Uint8Array(binaryData.length);
+            for (let i = 0; i < binaryData.length; i++) {
+                bytes[i] = binaryData.charCodeAt(i);
+            }
+            
+            fileContent = bytes;
             mimeType = artifact.metadata.mimeType;
             fileName += `.${mimeType.split('/')[1]}`;
         } else if (artifact.type === 'csv' || artifact.metadata?.mimeType === 'text/csv') {
@@ -139,12 +162,30 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                     
                     // Handle image content
                     if (artifact.metadata?.mimeType?.startsWith('image/')) {
-                        // Handle base64 content directly if it's already in that format
-                        const base64Content = typeof artifact.content === 'string' 
-                            ? artifact.content.replace(/^data:image\/\w+;base64,/, '') // Strip existing data URL prefix if present
-                            : btoa(String.fromCharCode(...new Uint8Array(artifact.content as ArrayBuffer))); // Convert binary to base64
-                        
-                        const dataUrl = `data:${artifact.metadata?.mimeType};base64,${base64Content}`;
+                        let dataUrl;
+                        if (typeof artifact.content === 'string') {
+                            // If it's already a data URL, use it directly
+                            if (artifact.content.startsWith('data:')) {
+                                dataUrl = artifact.content;
+                            } else {
+                                // If it's base64 without prefix, add it
+                                dataUrl = `data:${artifact.metadata.mimeType};base64,${artifact.content}`;
+                            }
+                        } else if (artifact.content instanceof ArrayBuffer) {
+                            // Convert ArrayBuffer to base64
+                            const bytes = new Uint8Array(artifact.content);
+                            const binary = bytes.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+                            const base64 = btoa(binary);
+                            dataUrl = `data:${artifact.metadata.mimeType};base64,${base64}`;
+                        } else if (artifact.content instanceof Uint8Array) {
+                            // Convert Uint8Array to base64
+                            const binary = artifact.content.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
+                            const base64 = btoa(binary);
+                            dataUrl = `data:${artifact.metadata.mimeType};base64,${base64}`;
+                        } else {
+                            console.error('Unsupported image content type:', typeof artifact.content);
+                            return <Typography color="error">Unsupported image format</Typography>;
+                        }
                         
                         return (
                             <Box sx={{ 
