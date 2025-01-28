@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { Artifact } from '../../../../../tools/artifact';
+import { Artifact, CalendarEvent } from '../../../../../tools/artifact';
 import remarkGfm from 'remark-gfm'
 import { Box, Button, Typography, Paper } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -152,7 +152,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                     
                     // Handle calendar content
                     if (artifact.mimeType === 'text/calendar' || artifact.type === 'calendar') {
-                        const [events, setEvents] = useState([]);
+                        const [events, setEvents] = useState<CalendarEvent[]>([]);
                         const [currentDate, setCurrentDate] = useState(new Date());
                         const localizer = momentLocalizer(moment);
 
