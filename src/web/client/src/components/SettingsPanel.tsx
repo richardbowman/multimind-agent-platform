@@ -470,6 +470,10 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const sortedCategories = Object.entries(categories).sort(([a], [b]) => {
         const aIndex = categoryOrder.indexOf(a);
         const bIndex = categoryOrder.indexOf(b);
+        // If category is not in order list, put it at the end
+        if (aIndex === -1) return 1;
+        if (bIndex === -1) return -1;
+        // Sort by the defined order
         return aIndex - bIndex;
     });
 
