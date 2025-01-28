@@ -5,6 +5,7 @@ import remarkGfm from 'remark-gfm'
 import { Box, Button, Typography, Paper } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
+import DownloadIcon from '@mui/icons-material/Download';
 import { CSVRenderer } from './CSVRenderer';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
@@ -29,6 +30,37 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
     onEdit,
     onAddToolbarActions
 }) => {
+    const handleExport = () => {
+        let fileContent = '';
+        let fileName = artifact.metadata?.title || 'artifact';
+        let mimeType = 'text/plain';
+
+        // Handle different content types
+        if (artifact.metadata?.mimeType?.startsWith('image/')) {
+            fileContent = artifact.content as string;
+            mimeType = artifact.metadata.mimeType;
+            fileName += `.${mimeType.split('/')[1]}`;
+        } else if (artifact.type === 'csv' || artifact.metadata?.mimeType === 'text/csv') {
+            fileContent = artifact.content as string;
+            fileName += '.csv';
+            mimeType = 'text/csv';
+        } else {
+            fileContent = artifact.content as string;
+            fileName += '.md';
+        }
+
+        // Create blob and download
+        const blob = new Blob([fileContent], { type: mimeType });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    };
+
     useEffect(() => {
         if (onAddToolbarActions && artifact) {
             const actions = [
@@ -41,6 +73,11 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                     icon: <DeleteIcon fontSize="small" />,
                     label: 'Delete Artifact',
                     onClick: () => onDelete && onDelete()
+                },
+                {
+                    icon: <DownloadIcon fontSize="small" />,
+                    label: 'Export Artifact',
+                    onClick: handleExport
                 }
             ];
             onAddToolbarActions(actions);
