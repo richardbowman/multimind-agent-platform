@@ -14,6 +14,10 @@ To get started with MultiMind, follow these steps:
 pip install your-package
 ```
 
+### Usage
+
+MultiMind is free to use for non-commercial purposes. For more details on license restrictions, please see the [LICENSE](LICENSE) file.
+
 ## Contributing
 
 We welcome contributions! Please see our [GitHub repository](https://github.com/yourusername/your-public-repo) for more information.
