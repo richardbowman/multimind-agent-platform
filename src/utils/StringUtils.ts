@@ -8,9 +8,10 @@ export namespace StringUtils {
         }
     }
 
-    export function extractCodeBlocks(text: string): string[] {
-        const codeBlockRegex =
-            /```(?:javascript|typescript|python|java|bash|json|html|css|markdown|yaml|xml)[\s\S]*?\n([\s\S]*?)```/g;
+    export function extractCodeBlocks(text: string, type?: string): string[] {
+        const codeBlockRegex = type 
+            ? new RegExp(`\`\`\`${type}[\\s\\S]*?\\n([\\s\\S]*?)\`\`\``, 'g') 
+            : /```(?:javascript|typescript|python|java|bash|json|html|css|markdown|yaml|xml)[\\s\\S]*?\\n([\\s\\S]*?)```/g;
         const matches: string[] = [];
         let match: RegExpExecArray | null;
 
