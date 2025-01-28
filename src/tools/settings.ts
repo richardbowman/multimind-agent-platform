@@ -231,17 +231,15 @@ export class ProvidersConfig {
         label: 'Chat Provider',
         category: 'LLM Settings',
         type: 'select',
-        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp', 'deepseek'],
-        defaultValue: 'lmstudio'
+        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp', 'deepseek']
     })
-    chat: string = 'lmstudio';
+    chat: string = 'llama_cpp';
 
     @ClientSettings({
         label: 'Embeddings Provider',
         category: 'Embeddings',
         type: 'select',
-        options: ['openai', 'llama_cpp', 'lmstudio'],
-        defaultValue: 'llama_cpp'
+        options: ['openai', 'llama_cpp', 'lmstudio']
     })
     embeddings: string = 'llama_cpp';
 }
