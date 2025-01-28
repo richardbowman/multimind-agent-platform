@@ -24,9 +24,6 @@ Before you start using the welcome channel, you need to configure access to the 
 ### Chat Provider Configuration
 We recommend using OpenAI, Claude, or DeepSeek as your main chat provider. A very easy way to be able to switch and try those models is to sign up for OpenRouter, which lets you use all of these models with one account and one set of credits.
 
-### Embedding Configuration
-For embeddings, we recommend running those locally by using the Llama CPP setting, and selecting one of the provided embedding models (we typically use nomic).
-
 1. Open the Settings panel from the main interface.
 2. Configure required settings:
    - Select your LLM provider (e.g., LM Studio, OpenAI, Bedrock)
@@ -34,6 +31,23 @@ For embeddings, we recommend running those locally by using the Llama CPP settin
    - Configure vector database settings
    - Adjust search and research limits
 3. Save settings—they will persist across sessions.
+
+#### Chat Configuration Screenshot
+
+![Chat Provider Configuration](./02-settings.png)
+
+### Embedding Configuration
+For embeddings, we recommend running those locally by using the Llama CPP setting, and selecting one of the provided embedding models (we typically use nomic).
+
+1. Open the Settings panel from the main interface.
+2. Configure required settings:
+   - Select the Llama CPP setting for embeddings
+   - Choose one of the provided embedding models (e.g., nomic)
+3. Save settings—they will persist across sessions.
+
+#### Embeddings Configuration Screenshot
+
+![Embedding Configuration](./03-embeddings.png)
 
 ## Welcome Channel
 When the application starts, it automatically creates a `#welcome` channel where you'll be guided through the onboarding process by the Onboarding Consultant agent.
