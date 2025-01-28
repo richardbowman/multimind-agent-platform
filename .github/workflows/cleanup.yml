@@ -17,5 +17,5 @@ jobs:
         with:
           token: ${{ secrets.GH_PAT }}
           repository: ${{ github.repository }}
-          retain_days: 14        # Keep runs from last 14 days
+          retain_days: 7        # Keep runs from last 7 days
           keep_minimum_runs: 6   # Always keep at least 6 recent runs
