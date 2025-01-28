@@ -1,0 +1,26 @@
+name: Cleanup Workflow Runs
+
+on:
+  schedule:
+    - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
+  workflow_dispatch:      # Allow manual triggering
+
+jobs:
+  cleanup:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Delete old workflow runs
+        uses: Mattraks/delete-workflow-runs@v2
+        with:
+          token: ${{ github.token }}
+          repository: ${{ github.repository }}
+          retain_days: 14        # Keep runs from last 14 days
+          keep_minimum_runs: 6   # Always keep at least 6 recent runs
+
+      - name: Delete old releases
+        uses: dev-drprasad/delete-older-releases@v0.3.2
+        with:
+          keep_latest: 5         # Keep 5 most recent releases
+          delete_tags: true      # Also delete associated tags
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
