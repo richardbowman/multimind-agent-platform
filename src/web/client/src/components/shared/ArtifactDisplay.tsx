@@ -61,26 +61,6 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                     <span className="artifact-type-badge">{artifact.type}</span>
                     <span className="artifact-id">#{artifact.id}</span>
                 </div>
-                <Box sx={{ display: 'flex', gap: 1, ml: 2 }}>
-                    <Button 
-                        variant="outlined" 
-                        color="primary" 
-                        size="small"
-                        startIcon={<EditIcon fontSize="small" />}
-                        onClick={() => onEdit && onEdit()}
-                    >
-                        Edit
-                    </Button>
-                    <Button 
-                        variant="outlined" 
-                        color="error" 
-                        size="small"
-                        startIcon={<DeleteIcon fontSize="small" />}
-                        onClick={() => onDelete && onDelete()}
-                    >
-                        Delete
-                    </Button>
-                </Box>
             </div>
             <div className="artifact-content" style={{display: "flex", flexDirection:"column", overflow: "hidden"}}>
                 {showMetadata && (
