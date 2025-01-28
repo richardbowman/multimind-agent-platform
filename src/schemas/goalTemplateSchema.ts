@@ -60,6 +60,19 @@ export interface InitialTask {
  */
 export const GoalTemplates: GoalTemplate[] = [
     {
+        id: 'chat-channel',
+        name: 'Chat Channel',
+        description: 'Template for setting up a chat channel with an AI assistant',
+        supportingAgents: ['@ai'],
+        defaultResponder: '@ai',
+        initialTasks: [
+            {
+                description: 'Initial setup for chat channel',
+                type: 'setup'
+            }
+        ]
+    },
+    {
         id: 'welcome-channel',
         name: 'Welcome Channel Setup',
         description: 'Template for initializing a welcome channel and onboarding new users',
