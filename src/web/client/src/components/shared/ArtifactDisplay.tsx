@@ -131,7 +131,12 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     // Handle calendar content
                     if (artifact.mimeType === 'text/calendar' || artifact.type === 'calendar') {
                         const [events, setEvents] = useState([]);
+                        const [currentDate, setCurrentDate] = useState(new Date());
                         const localizer = momentLocalizer(moment);
+
+                        const handleNavigate = (newDate: Date) => {
+                            setCurrentDate(newDate);
+                        };
 
                         useEffect(() => {
                             try {
@@ -158,6 +163,8 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                                     events={events}
                                     startAccessor="start"
                                     endAccessor="end"
+                                    date={currentDate}
+                                    onNavigate={handleNavigate}
                                     defaultView="month"
                                     views={['month', 'week', 'day']}
                                     style={{ height: '100%' }}
