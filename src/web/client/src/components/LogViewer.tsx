@@ -150,7 +150,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         switch (currentLogTab) {
             case 'llm':
                 return Object.entries(logs.llm || {}).flatMap(([service, entries]) => 
-                    (Array.isArray(entries) ? entries : [])
+                    (Array.isArray(entries) ? [...entries].reverse() : [])
                         .filter(log => 
                             filterLog(JSON.stringify({
                                 method: log?.method,
@@ -181,7 +181,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 );
             
             case 'system':
-                return logs.system?.logs
+                return [...(logs.system?.logs || [])]
                     .filter(log => {
                     const levelMatch = logLevelFilter === 'all' || 
                                      log.level.toLowerCase() === logLevelFilter;
