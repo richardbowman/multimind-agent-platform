@@ -148,6 +148,16 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     setEditorOpen(true);
                                     setSelectedArtifact(selectedArtifact);
                                 }}
+                                onAddToolbarActions={(actions) => {
+                                    setToolbarActions([
+                                        {
+                                            icon: <DescriptionIcon />,
+                                            label: 'Create New Artifact',
+                                            onClick: () => setEditorOpen(true)
+                                        },
+                                        ...actions
+                                    ]);
+                                }}
                             />
                         </Box>
                     </Box>
