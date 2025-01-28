@@ -143,6 +143,14 @@ const AppContent: React.FC = () => {
                         <IconButton
                             color="inherit"
                             edge="end"
+                            onClick={() => setRightDrawerOpen(!rightDrawerOpen)}
+                            sx={{ ml: 2, display: currentTab === 'chat' ? 'inline-flex' : 'none' }}
+                        >
+                            <MenuIcon />
+                        </IconButton>
+                        <IconButton
+                            color="inherit"
+                            edge="end"
                             onClick={() => ipcService.getRPC().minimizeWindow()}
                             sx={{ ml: 2 }}
                         >
