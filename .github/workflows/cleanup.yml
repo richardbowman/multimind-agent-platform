@@ -5,6 +5,9 @@ on:
     - cron: '0 0 * * 0'  # Run weekly on Sunday at midnight
   workflow_dispatch:      # Allow manual triggering
 
+permissions:
+  actions: write    # Required to delete workflow runs
+
 jobs:
   cleanup:
     runs-on: ubuntu-latest
