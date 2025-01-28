@@ -24,3 +24,8 @@ The AI Research Assistant is a sophisticated platform that combines:
 
 ## Getting Help
 For support, contact [your support email] or visit [your support site]
+
+## Screenshot
+Here is a screenshot of the welcome screen:
+
+![Welcome Screen](./01-welcome.png)
