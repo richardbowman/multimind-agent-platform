@@ -30,8 +30,8 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
     onAddToolbarActions
 }) => {
     useEffect(() => {
-        if (onAddToolbarActions) {
-            onAddToolbarActions([
+        if (onAddToolbarActions && artifact) {
+            const actions = [
                 {
                     icon: <EditIcon fontSize="small" />,
                     label: 'Edit Artifact',
@@ -42,9 +42,10 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                     label: 'Delete Artifact',
                     onClick: () => onDelete && onDelete()
                 }
-            ]);
+            ];
+            onAddToolbarActions(actions);
         }
-    }, [onAddToolbarActions, onEdit, onDelete]);
+    }, [artifact.id]); // Only update when artifact ID changes
     return (
         <Box component="main" sx={{ 
             flexGrow: 1, 
