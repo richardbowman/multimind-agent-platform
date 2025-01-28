@@ -18,6 +18,23 @@ To install MultiMind, follow these steps:
    - **Mac OS X**: Open the MultiMind application from your Applications folder.
    - **Linux**: Ensure the `.AppImage` file has executable permissions and run it as shown above.
 
+## Initial Configuration
+Before you start using the welcome channel, you need to configure access to the models you will use for chat as well as embeddings. Some providers do not provide embedding capabilities.
+
+### Chat Provider Configuration
+We recommend using OpenAI, Claude, or DeepSeek as your main chat provider. A very easy way to be able to switch and try those models is to sign up for OpenRouter, which lets you use all of these models with one account and one set of credits.
+
+### Embedding Configuration
+For embeddings, we recommend running those locally by using the Llama CPP setting, and selecting one of the provided embedding models (we typically use nomic).
+
+1. Open the Settings panel from the main interface.
+2. Configure required settings:
+   - Select your LLM provider (e.g., LM Studio, OpenAI, Bedrock)
+   - Set up API keys if using cloud providers
+   - Configure vector database settings
+   - Adjust search and research limits
+3. Save settings—they will persist across sessions.
+
 ## Welcome Channel
 When the application starts, it automatically creates a `#welcome` channel where you'll be guided through the onboarding process by the Onboarding Consultant agent.
 
@@ -27,15 +44,6 @@ The welcome channel helps you:
 - Create your first project
 - Set up initial tasks
 - Configure your preferences
-
-## Initial Configuration
-1. Open the Settings panel from the main interface.
-2. Configure required settings:
-   - Select your LLM provider (e.g., LM Studio, OpenAI, Bedrock)
-   - Set up API keys if using cloud providers
-   - Configure vector database settings
-   - Adjust search and research limits
-3. Save settings—they will persist across sessions.
 
 ## Onboarding Process
 The Onboarding Consultant will guide you through these steps:
