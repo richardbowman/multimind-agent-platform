@@ -56,6 +56,19 @@ For embeddings, we recommend running those locally by using the Llama CPP settin
 
 ![Embedding Configuration](./03-embeddings.png)
 
+## Quickstart
+To quickly test your configuration, create a channel called the **Chat Channel**. This channel will have access to a simple non-agentic agent that responds to your requests using the selected model. This is a good way to ensure that all your configuration is working correctly.
+
+1. **Create a new channel**:
+   - Click on the `+` icon to create a new channel.
+   - Name the channel **Chat Channel**.
+
+2. **Select the agent**:
+   - In the channel settings, select the simple non-agentic agent.
+
+3. **Start chatting**:
+   - Type your messages in the chat box and see responses from the agent.
+
 ## Welcome Channel
 When the application starts, it automatically creates a `#welcome` channel where you'll be guided through the onboarding process by the Onboarding Consultant agent.
 
