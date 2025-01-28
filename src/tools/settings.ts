@@ -250,8 +250,7 @@ export class Settings {
         label: 'Search Provider',
         category: 'Search Settings',
         type: 'select',
-        options: ['duckduckgo', 'searxng', 'google', 'brave'],
-        defaultValue: 'duckduckgo'
+        options: ['duckduckgo', 'searxng', 'google', 'brave']
     })
     searchProvider: string = 'duckduckgo';
 
@@ -259,64 +258,56 @@ export class Settings {
         label: 'Scraping Provider',
         category: 'Search Settings',
         type: 'select',
-        options: ['puppeteer', 'electron'],
-        defaultValue: 'electron'
+        options: ['puppeteer', 'electron']
     })
     scrapingProvider: string = 'electron';
 
     @ClientSettings({
         label: 'SearXNG URL',
         category: 'Search Settings',
-        type: 'string',
-        defaultValue: 'http://localhost:8080/'
+        type: 'string'
     })
     searxngUrl: string = 'http://localhost:8080/';
 
     @ClientSettings({
         label: 'ChromaDB URL',
         category: 'Vector DB',
-        type: 'string',
-        defaultValue: 'http://localhost:8001'
+        type: 'string'
     })
     chromadbUrl: string = 'http://localhost:8001';
 
     @ClientSettings({
         label: 'Chroma Collection',
         category: 'Vector DB',
-        type: 'string',
-        defaultValue: 'webpage_scrapes'
+        type: 'string'
     })
     chromaCollection: string = 'webpage_scrapes';
 
     @ClientSettings({
         label: 'Max Searches',
         category: 'Search Settings',
-        type: 'number',
-        defaultValue: 3
+        type: 'number'
     })
     maxSearches: number = 3;
 
     @ClientSettings({
         label: 'Max Follows',
         category: 'Search Settings',
-        type: 'number',
-        defaultValue: 3
+        type: 'number'
     })
     maxFollows: number = 3;
 
     @ClientSettings({
         label: 'Max Research Requests',
         category: 'Search Settings',
-        type: 'number',
-        defaultValue: 3
+        type: 'number'
     })
     maxResearchRequests: number = 3;
 
     @ClientSettings({
         label: 'Context Size',
         category: 'LLM Settings',
-        type: 'number',
-        defaultValue: 16384
+        type: 'number'
     })
     contextSize: number = 16384;
 
@@ -324,7 +315,6 @@ export class Settings {
         label: 'LM Studio Base URL',
         category: 'LLM Settings',
         type: 'string',
-        defaultValue: 'ws://localhost:1234',
         visibleWhen: (settings: Settings) => settings.providers?.chat === 'lmstudio'
     })
     lmStudioBaseUrl: string = 'ws://localhost:1234';
@@ -333,7 +323,6 @@ export class Settings {
         label: 'UI Zoom Level',
         category: 'UI Settings',
         type: 'slider',
-        defaultValue: 1.0,
         min: 0.5,
         max: 2.0,
         step: 0.1,
@@ -345,7 +334,6 @@ export class Settings {
         label: 'Window Width',
         category: 'UI Settings',
         type: 'slider',
-        defaultValue: 1200,
         min: 800,
         max: 2560,
         step: 10,
@@ -357,7 +345,6 @@ export class Settings {
         label: 'Window Height',
         category: 'UI Settings',
         type: 'slider',
-        defaultValue: 800,
         min: 600,
         max: 1440,
         step: 10,
@@ -369,7 +356,6 @@ export class Settings {
         label: 'Server Host',
         category: 'Server Settings',
         type: 'string',
-        defaultValue: 'localhost',
         description: 'The host address for the server'
     })
     host: string = 'localhost';
@@ -390,7 +376,6 @@ export class Settings {
         category: 'LLM Settings',
         type: 'select',
         options: ['Auto', 'CPU-only'],
-        defaultValue: 'Auto',
         description: 'Execution mode for Llama.cpp (Auto uses GPU if available, CPU-only forces CPU execution)',
         visibleWhen: (settings: Settings) => 
             settings.providers?.chat === 'llama_cpp' || 
@@ -403,7 +388,6 @@ export class Settings {
         category: 'LLM Settings',
         type: 'select',
         options: ['auto', 'required', 'none'],
-        defaultValue: 'auto',
         description: 'Controls how the LLM handles tool calls (auto=LLM decides, required=must use tools, none=no tools)'
     })
     tool_choice: string = 'auto';
@@ -445,24 +429,21 @@ export class Settings {
     @ClientSettings({
         label: 'Anthropic Max Tokens/Min',
         category: 'Rate Limiting',
-        type: 'number',
-        defaultValue: 50000
+        type: 'number'
     })
     anthropicMaxTokensPerMinute!: number;
 
     @ClientSettings({
         label: 'Anthropic Default Delay (ms)',
         category: 'Rate Limiting',
-        type: 'number',
-        defaultValue: 1000
+        type: 'number'
     })
     anthropicDefaultDelayMs!: number;
 
     @ClientSettings({
         label: 'Anthropic Window Size (ms)',
         category: 'Rate Limiting',
-        type: 'number',
-        defaultValue: 60000
+        type: 'number'
     })
     anthropicWindowSizeMs!: number;
 
@@ -472,8 +453,7 @@ export class Settings {
         label: 'Vector Database Type',
         category: 'Vector DB',
         type: 'select',
-        options: ['vectra', 'chroma'],
-        defaultValue: 'vectra'
+        options: ['vectra', 'chroma']
     })
     vectorDatabaseType!: string;
 
