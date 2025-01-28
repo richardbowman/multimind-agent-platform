@@ -35,6 +35,12 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     } = useWebSocket();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
+    const [toolbarActions, setToolbarActions] = useState<Array<{
+        icon: React.ReactNode;
+        label: string;
+        onClick: () => void;
+        disabled?: boolean;
+    }>>([]);
     const theme = useTheme();
     
     const prevChannelId = useRef<string | null>(null);
@@ -92,7 +98,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                 <DrawerHeader/>
                 {selectedArtifact && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <ActionToolbar actions={[
+                        <ActionToolbar actions={toolbarActions || [
                             {
                                 icon: <ChevronLeftIcon />,
                                 label: 'Previous Artifact',
@@ -142,12 +148,65 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                             }
                         ]} />
                         <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-                        <Box sx={{ mb: 2 }}>
                             <ArtifactDisplay
                                 artifact={selectedArtifact}
                                 onDelete={() => setDrawerOpen(false)}
+                                onEdit={() => {
+                                    // Handle edit action
+                                }}
+                                onAddToolbarActions={(actions) => {
+                                    setToolbarActions([
+                                        {
+                                            icon: <ChevronLeftIcon />,
+                                            label: 'Previous Artifact',
+                                            onClick: () => {
+                                                const currentIndex = artifacts.findIndex(a => a.id === selectedArtifact.id);
+                                                const prevArtifact = artifacts[currentIndex - 1];
+                                                if (prevArtifact) {
+                                                    setSelectedArtifact(prevArtifact);
+                                                }
+                                            },
+                                            disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === 0
+                                        },
+                                        {
+                                            icon: <AddIcon />,
+                                            label: 'Add to Channel',
+                                            onClick: () => {
+                                                if (currentChannelId && selectedArtifact) {
+                                                    addArtifactToChannel(currentChannelId, selectedArtifact.id);
+                                                }
+                                            }
+                                        },
+                                        {
+                                            icon: <RemoveIcon />,
+                                            label: 'Remove from Channel',
+                                            onClick: () => {
+                                                if (currentChannelId && selectedArtifact) {
+                                                    removeArtifactFromChannel(currentChannelId, selectedArtifact.id);
+                                                }
+                                            }
+                                        },
+                                        {
+                                            icon: <ChevronRightIcon />,
+                                            label: 'Next Artifact',
+                                            onClick: () => {
+                                                const currentIndex = artifacts.findIndex(a => a.id === selectedArtifact.id);
+                                                const nextArtifact = artifacts[currentIndex + 1];
+                                                if (nextArtifact) {
+                                                    setSelectedArtifact(nextArtifact);
+                                                }
+                                            },
+                                            disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === artifacts.length - 1
+                                        },
+                                        {
+                                            icon: <CloseIcon />,
+                                            label: 'Close',
+                                            onClick: () => setDrawerOpen(false)
+                                        },
+                                        ...actions
+                                    ]);
+                                }}
                             />
-                        </Box>
                     </Box>
                 )}
             </Drawer>
