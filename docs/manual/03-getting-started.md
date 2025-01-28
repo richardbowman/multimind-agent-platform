@@ -24,6 +24,13 @@ Before you start using the welcome channel, you need to configure access to the 
 ### Chat Provider Configuration
 We recommend using OpenAI, Claude, or DeepSeek as your main chat provider. A very easy way to be able to switch and try those models is to sign up for OpenRouter, which lets you use all of these models with one account and one set of credits.
 
+Supported LLM providers are:
+- LM Studio
+- Llama CPP (Embedded)
+- Open AI
+- DeepSeek
+- Anthropic (Claude)
+
 1. Open the Settings panel from the main interface.
 2. Configure required settings:
    - Select your LLM provider (e.g., LM Studio, OpenAI, Bedrock)
