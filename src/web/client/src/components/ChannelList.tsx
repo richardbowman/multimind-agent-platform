@@ -90,7 +90,17 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
             setChannelNameError(true);
             return;
         }
-        
+
+        // Check for duplicate channel names
+        const channelExists = channels.some(channel => 
+            channel.id !== editingChannelId && channel.name.toLowerCase() === channelName.toLowerCase()
+        );
+
+        if (channelExists) {
+            alert('A channel with this name already exists.');
+            return;
+        }
+
         try {
             const params = {
                 name: channelName,
