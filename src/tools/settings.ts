@@ -405,7 +405,17 @@ export class Settings {
             settings.providers?.chat === 'llama_cpp' || 
             settings.providers?.embeddings === 'llama_cpp'
     })
-    llama_cpp_execution_mode: string = 'Auto';    
+    llama_cpp_execution_mode: string = 'Auto';
+
+    @ClientSettings({
+        label: 'Tool Choice Behavior',
+        category: 'LLM Settings',
+        type: 'select',
+        options: ['auto', 'required', 'none'],
+        defaultValue: 'auto',
+        description: 'Controls how the LLM handles tool calls (auto=LLM decides, required=must use tools, none=no tools)'
+    })
+    tool_choice: string = 'auto';
 
     // API Keys
     @ClientSettings({
