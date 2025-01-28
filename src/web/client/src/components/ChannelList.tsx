@@ -86,7 +86,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     };
 
     const handleSaveChannel = async () => {
-        if (!channelName.trim()) {
+        if (!channelName.trim() || !channelName.startsWith('#')) {
             setChannelNameError(true);
             return;
         }
@@ -182,7 +182,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                         fontWeight: currentChannelId === channel.id ? 500 : 400,
                                     }}
                                 >
-                                    # {channel.name}
+                                    {channel.name}
                                 </Typography>
                                 <Box sx={{ 
                                     opacity: 0,
@@ -229,11 +229,14 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                         fullWidth
                         value={channelName}
                         onChange={(e) => {
-                            setChannelName(e.target.value);
+                            const value = e.target.value;
+                            // Ensure name starts with # if user didn't type it
+                            const newName = value.startsWith('#') ? value : `#${value}`;
+                            setChannelName(newName);
                             setChannelNameError(false);
                         }}
                         error={channelNameError}
-                        helperText={channelNameError ? "Channel name is required" : ""}
+                        helperText={channelNameError ? "Channel name must start with # and not be empty" : "Channel names must start with #"}
                         required
                         sx={{ mb: 2 }}
                     />
