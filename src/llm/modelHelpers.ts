@@ -249,8 +249,18 @@ export class ModelHelpers {
     }
 
     private async generateStructured<T extends ModelResponse>(structure: StructuredOutputPrompt, params: GenerateParams): Promise<T> {
-        // Initialize JSON schema validator
-        const ajv = new Ajv({ allErrors: true, strict: false });
+        // Initialize JSON schema validator with custom date-time format
+        const ajv = new Ajv({ 
+            allErrors: true, 
+            strict: false,
+            formats: {
+                'date-time': (dateTimeStr: string) => {
+                    // Try parsing as ISO date string
+                    const date = new Date(dateTimeStr);
+                    return !isNaN(date.getTime());
+                }
+            }
+        });
         addFormats(ajv);
         const validate = ajv.compile(structure.getSchema());
         // Check cache first
