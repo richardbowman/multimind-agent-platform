@@ -138,4 +138,29 @@ export const GoalTemplates: GoalTemplate[] = [
             }
         ]
     }
-];
+],
+    {
+        id: 'web-research-channel',
+        name: 'Web Research Channel',
+        description: 'Template for setting up a web research channel with a research manager',
+        supportingAgents: [
+            '@research-manager'
+        ],
+        defaultResponder: '@research-manager',
+        initialTasks: [
+            {
+                description: 'Define research goals and objectives',
+                type: 'planning',
+            },
+            {
+                description: 'Gather initial research data from web sources',
+                type: 'data-gathering',
+                dependsOn: ['define-research-goals']
+            },
+            {
+                description: 'Analyze gathered data and generate insights',
+                type: 'analysis',
+                dependsOn: ['gather-initial-research-data']
+            }
+        ]
+    }
