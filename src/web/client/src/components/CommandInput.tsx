@@ -1,4 +1,4 @@
-import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent } from 'react';
+import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent, useLayoutEffect } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
 import { Artifact } from '../../../../tools/artifact';
 
@@ -48,56 +48,69 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    const simulateTyping = (text: string, index: number = 0) => {
+        if (index < text.length) {
+            setInput((prev) => prev + text[index]);
+            setTimeout(() => simulateTyping(text, index + 1), 50); // Adjust the delay as needed
+        }
+    };
+
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        setInput(value);
 
-        // Handle command suggestions
-        if (value.startsWith('/')) {
-            if (value.startsWith('/add ')) {
-                // Show artifact suggestions
-                const searchTerm = value.slice(5).toLowerCase();
-                const filtered = allArtifacts
-                    .filter(artifact => 
-                        artifact.type?.toLowerCase().includes(searchTerm) ||
-                        artifact.id?.toLowerCase().includes(searchTerm) ||
-                        artifact.metadata?.title?.toLowerCase().includes(searchTerm)
-                    )
-                    .map(artifact => ({
-                        title: artifact.metadata?.title,
-                        type: 'artifact',
-                        id: artifact.id
-                    }));
-                setSuggestions(filtered);
-                setShowSuggestions(filtered.length > 0);
-            } else {
-                const filtered = COMMANDS
-                    .filter(cmd => cmd.command.toLowerCase().startsWith(value.toLowerCase()))
-                    .map(cmd => `${cmd.command} - ${cmd.description}`);
-                setSuggestions(filtered);
-                setShowSuggestions(filtered.length > 0);
+        if (e.nativeEvent.inputType === 'insertFromPaste') {
+            setInput(''); // Clear the input first
+            simulateTyping(value);
+        } else {
+            setInput(value);
+
+            // Handle command suggestions
+            if (value.startsWith('/')) {
+                if (value.startsWith('/add ')) {
+                    // Show artifact suggestions
+                    const searchTerm = value.slice(5).toLowerCase();
+                    const filtered = allArtifacts
+                        .filter(artifact => 
+                            artifact.type?.toLowerCase().includes(searchTerm) ||
+                            artifact.id?.toLowerCase().includes(searchTerm) ||
+                            artifact.metadata?.title?.toLowerCase().includes(searchTerm)
+                        )
+                        .map(artifact => ({
+                            title: artifact.metadata?.title,
+                            type: 'artifact',
+                            id: artifact.id
+                        }));
+                    setSuggestions(filtered);
+                    setShowSuggestions(filtered.length > 0);
+                } else {
+                    const filtered = COMMANDS
+                        .filter(cmd => cmd.command.toLowerCase().startsWith(value.toLowerCase()))
+                        .map(cmd => `${cmd.command} - ${cmd.description}`);
+                    setSuggestions(filtered);
+                    setShowSuggestions(filtered.length > 0);
+                }
             }
-        }
-        // Handle user handle suggestions
-        else if (value.includes('@')) {
-            const lastWord = value.split(' ').pop() || '';
-            if (lastWord.startsWith('@')) {
-                const filtered = userHandles
-                    .filter(handle => 
-                        handle.toLowerCase().startsWith(lastWord.toLowerCase())
-                    )
-                    .map(handle => ({
-                        title: handle,
-                        type: 'user',
-                        id: handle
-                    }));
-                setSuggestions(filtered);
-                setShowSuggestions(filtered.length > 0);
+            // Handle user handle suggestions
+            else if (value.includes('@')) {
+                const lastWord = value.split(' ').pop() || '';
+                if (lastWord.startsWith('@')) {
+                    const filtered = userHandles
+                        .filter(handle => 
+                            handle.toLowerCase().startsWith(lastWord.toLowerCase())
+                        )
+                        .map(handle => ({
+                            title: handle,
+                            type: 'user',
+                            id: handle
+                        }));
+                    setSuggestions(filtered);
+                    setShowSuggestions(filtered.length > 0);
+                } else {
+                    setShowSuggestions(false);
+                }
             } else {
                 setShowSuggestions(false);
             }
-        } else {
-            setShowSuggestions(false);
         }
     };
 
