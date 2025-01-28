@@ -86,24 +86,6 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const loadMoreRef = useRef<HTMLDivElement>(null);
     const [isLoadingMore, setIsLoadingMore] = useState(false);
 
-    // Set up intersection observer for infinite scroll
-    useEffect(() => {
-        const observer = new IntersectionObserver(
-            (entries) => {
-                if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
-                    loadMoreLogs();
-                }
-            },
-            { threshold: 0.1 }
-        );
-
-        if (loadMoreRef.current) {
-            observer.observe(loadMoreRef.current);
-        }
-
-        return () => observer.disconnect();
-    }, [hasMore, isLoadingMore, loadMoreLogs]);
-
     const loadMoreLogs = useCallback(async () => {
         if (isLoadingMore) return;
         setIsLoadingMore(true);
@@ -132,6 +114,24 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
             setIsLoadingMore(false);
         }
     }, [currentLogTab, filterText, fetchLogs, loadedLogs.length, showVerbose]);
+
+    // Set up intersection observer for infinite scroll
+    useEffect(() => {
+        const observer = new IntersectionObserver(
+            (entries) => {
+                if (entries[0].isIntersecting && hasMore && !isLoadingMore) {
+                    loadMoreLogs();
+                }
+            },
+            { threshold: 0.1 }
+        );
+
+        if (loadMoreRef.current) {
+            observer.observe(loadMoreRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [hasMore, isLoadingMore, loadMoreLogs]);
 
     useEffect(() => {
         // Reset loaded logs when log type, filter, or verbose toggle changes
