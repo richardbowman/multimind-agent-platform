@@ -1,0 +1,118 @@
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StepExecutor } from '../interfaces/StepExecutor';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { StructuredOutputPrompt } from "../../llm/ILLMService";
+import { ModelHelpers } from '../../llm/modelHelpers';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
+import { Task, TaskManager, TaskType } from '../../tools/taskManager';
+import Logger from '../../helpers/logger';
+import { createUUID } from 'src/types/uuid';
+import { Agent } from '../agents';
+
+@StepExecutorDecorator('delegation', 'Create projects with tasks delegated to all agents in the channel')
+export class DelegationExecutor implements StepExecutor {
+    private modelHelpers: ModelHelpers;
+    private taskManager: TaskManager;
+
+    constructor(params: ExecutorConstructorParams) {
+        this.modelHelpers = params.modelHelpers;
+        this.taskManager = params.taskManager!;
+    }
+
+    async execute(params: ExecuteParams): Promise<StepResult> {
+        const schema = {
+            type: 'object',
+            properties: {
+                projectName: { type: 'string' },
+                projectGoal: { type: 'string' },
+                tasks: {
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            description: { type: 'string' },
+                            assignee: { type: 'string' } // Agent handle
+                        }
+                    }
+                },
+                responseMessage: { type: 'string' }
+            }
+        };
+
+        const structuredPrompt = new StructuredOutputPrompt(
+            schema,
+            `Create a project with tasks that should be delegated to all agents in the channel. 
+            For each task, specify which agent should handle it based on their capabilities.
+            Output should include:
+            - A clear project name and goal
+            - A list of tasks with descriptions and assigned agents
+            - A response message to explain the delegation plan to the user`
+        );
+
+        try {
+            const responseJSON = await this.modelHelpers.generate({
+                message: params.stepGoal,
+                instructions: structuredPrompt
+            });
+
+            const { projectName, projectGoal, tasks, responseMessage } = responseJSON;
+
+            // Create the project
+            const project = await this.taskManager.createProject({
+                name: projectName,
+                metadata: {
+                    description: projectGoal,
+                    status: 'active',
+                    createdAt: new Date(),
+                    updatedAt: new Date(),
+                    parentTaskId: params.stepId,
+                    artifacts: params.context?.artifacts?.map(a => a.id) || []
+                }
+            });
+
+            // Create tasks and assign to agents
+            const taskDetails = [];
+            for (const task of tasks) {
+                const taskId = createUUID();
+                await this.taskManager.addTask(project, {
+                    id: taskId,
+                    description: task.description,
+                    creator: params.agentId,
+                    type: TaskType.Standard,
+                    props: {
+                        goal: projectGoal
+                    }
+                });
+
+                // Find and assign to agent
+                const agent = params.agents?.find(a => a.handle === task.assignee);
+                if (agent) {
+                    await this.taskManager.assignTaskToAgent(taskId, agent.id);
+                }
+
+                taskDetails.push(`${task.description} [${taskId}] -> ${task.assignee}`);
+            }
+
+            return {
+                type: StepResultType.Delegation,
+                projectId: project.id,
+                finished: false,
+                response: {
+                    message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
+                        taskDetails.join('\n')
+                }
+            };
+
+        } catch (error) {
+            Logger.error('Error in DelegationExecutor:', error);
+            return {
+                type: StepResultType.Delegation,
+                finished: true,
+                response: {
+                    message: 'Failed to create the delegated project. Please try again later.'
+                }
+            };
+        }
+    }
+}

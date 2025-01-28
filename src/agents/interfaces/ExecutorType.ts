@@ -27,5 +27,6 @@ export enum ExecutorType {
     GOAL_PROGRESS = "goal-progress",
     NODE_EXECUTION = "nodejs-code-execution",
     DEBUG = "debug",
-    CALENDAR_MANAGEMENT = "calendar-management"
+    CALENDAR_MANAGEMENT = "calendar-management",
+    DELEGATION = "delegation"
 }
