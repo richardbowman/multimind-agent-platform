@@ -32,7 +32,8 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
 }) => {
     const handleExport = () => {
         let fileContent = '';
-        let fileName = artifact.metadata?.title || 'artifact';
+        // Clean the filename by removing any existing extensions
+        let fileName = (artifact.metadata?.title || 'artifact').replace(/\.[^/.]+$/, "");
         let mimeType = 'text/plain';
 
         // Handle different content types
@@ -62,7 +63,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
             
             fileContent = bytes;
             mimeType = artifact.metadata.mimeType;
-            fileName += `.${mimeType.split('/')[1]}`;
+            fileName = `${fileName}.${mimeType.split('/')[1]}`;
         } else if (artifact.type === 'csv' || artifact.metadata?.mimeType === 'text/csv') {
             fileContent = artifact.content as string;
             fileName += '.csv';
