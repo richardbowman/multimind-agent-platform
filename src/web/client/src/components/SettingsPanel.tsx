@@ -156,6 +156,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [aboutOpen, setAboutOpen] = useState(false);
+    const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
 
     const handleSave = async () => {
         // Get all required fields from metadata
@@ -651,15 +652,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     <Button
                         variant="outlined"
                         color="warning"
-                        onClick={async () => {
-                            if (window.confirm('Are you sure you want to rebuild the VectorDB? This may take some time.')) {
-                                ipcService.getRPC().rebuildVectorDB().then(() => {
-                                    setSuccessMessage('VectorDB rebuild started successfully');
-                                }).catch((error) => {
-                                    setValidationMessage(`Failed to rebuild VectorDB: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                                });
-                            }
-                        }}
+                        onClick={() => setRebuildDialogOpen(true)}
                         sx={{ mr: 2 }}
                     >
                         Rebuild VectorDB
@@ -721,6 +714,40 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 <DialogActions>
                     <Button onClick={() => setAboutOpen(false)} color="primary">
                         Close
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Rebuild VectorDB Dialog */}
+            <Dialog
+                open={rebuildDialogOpen}
+                onClose={() => setRebuildDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Rebuild VectorDB</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to rebuild the VectorDB? This operation may take some time.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setRebuildDialogOpen(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={async () => {
+                            setRebuildDialogOpen(false);
+                            try {
+                                await ipcService.getRPC().rebuildVectorDB();
+                                setSuccessMessage('VectorDB rebuild started successfully');
+                            } catch (error) {
+                                setValidationMessage(`Failed to rebuild VectorDB: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                            }
+                        }}
+                        color="warning"
+                    >
+                        Rebuild
                     </Button>
                 </DialogActions>
             </Dialog>
