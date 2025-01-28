@@ -653,12 +653,11 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         color="warning"
                         onClick={async () => {
                             if (window.confirm('Are you sure you want to rebuild the VectorDB? This may take some time.')) {
-                                try {
-                                    await ipcService.getRPC().rebuildVectorDB();
+                                ipcService.getRPC().rebuildVectorDB().then(() => {
                                     setSuccessMessage('VectorDB rebuild started successfully');
-                                } catch (error) {
+                                }).catch((error) => {
                                     setValidationMessage(`Failed to rebuild VectorDB: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                                }
+                                });
                             }
                         }}
                         sx={{ mr: 2 }}
