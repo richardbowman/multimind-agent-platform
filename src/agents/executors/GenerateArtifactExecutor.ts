@@ -3,7 +3,6 @@ import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResult } from '../interfaces/StepResult';
 import { RequestArtifacts } from '../../schemas/ModelResponse';
-import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { randomUUID } from 'crypto';
@@ -12,9 +11,7 @@ import { Artifact } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { TaskManager } from 'src/tools/taskManager';
-import { getGeneratedSchema } from 'src/helpers/schemaUtils';
-import { SchemaType } from 'src/schemas/SchemaTypes';
-import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationResponse';
+import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
 import { createUUID } from 'src/types/uuid';
 
 /**
@@ -46,70 +43,71 @@ export class GenerateArtifactExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);
+        const promptBuilder = this.modelHelpers.createPrompt();
 
-        // Get Q&A context from project metadata
-        let qaContext;
+        // Add core instructions
+        promptBuilder.addInstruction("Generate or modify a Markdown document based on the goal.");
+        promptBuilder.addInstruction(`You have these options:
+1. Create a NEW document (leave artifactId blank and set operation to "create")
+2. Replace an EXISTING document (specify artifactId and set operation to "replace")
+3. Append to an EXISTING document (specify artifactId and set operation to "append")`);
+
+        promptBuilder.addInstruction(`Provide:
+- artifactId: ID of document to modify (only required for replace/append operations)
+- operation: Must be "create" for new documents, "replace" or "append" for existing ones
+- title: Document title
+- content: New or additional content
+- confirmationMessage: Message describing what was done`);
+
+        promptBuilder.addInstruction(`IMPORTANT RULES:
+- For NEW documents: Use operation="create" and omit artifactId
+- For EXISTING documents: Use operation="replace" or "append" and provide artifactId`);
+
+        // Add Q&A context from project metadata
         try {
             const project = this.taskManager?.getProject(params.projectId);
             if (project?.metadata?.answers) {
-                qaContext = `Relevant Q&A Context:\n${
-                    project.metadata.answers.map((a: any) => 
-                        `Q: ${a.question}\nA: ${a.answer}\n`
-                    ).join('\n')
-                }\n\n`;
+                promptBuilder.addContent(ContentType.DOCUMENTS, {
+                    title: "Q&A Context",
+                    content: project.metadata.answers.map((a: any) => 
+                        `Q: ${a.question}\nA: ${a.answer}`
+                    ).join('\n\n')
+                });
             }
         } catch (error) {
             Logger.warn('Failed to fetch Q&A context:', error);
         }
 
-        // Get existing artifacts from previous results
-        let existingContent = '';
+        // Add existing artifacts from previous results
         const artifactIds = [...new Set(params.previousResult?.flatMap(r => r.artifactIds || []) || [])];
-        
         if (artifactIds.length > 0) {
             try {
                 const artifacts = await Promise.all(
                     artifactIds.map(id => this.artifactManager.loadArtifact(id))
                 );
                 
-                existingContent = `Existing artifacts:\n${
-                    artifacts.map((a, i) => 
-                        `- Artifact ID: ${artifactIds[i]}\n` +
-                        `  Title: ${a.metadata?.title || 'Untitled'}\n` +
-                        `  Content:\n${a.content}\n`
-                    ).join('\n')
-                }\n\n`;
+                promptBuilder.addContent(ContentType.ARTIFACTS, artifacts.map((a, i) => ({
+                    id: artifactIds[i],
+                    title: a.metadata?.title || 'Untitled',
+                    content: a.content
+                })));
             } catch (error) {
                 Logger.warn('Failed to fetch existing artifacts:', error);
             }
         }
 
-        const prompt = `Goal: ${params.goal}
+        // Add execution parameters
+        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
+            goal: params.goal,
+            stepGoal: params.stepGoal
+        });
 
-${qaContext ? qaContext : `Past Results:
-${params.previousResult ? `Build upon these previous ideas:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`}
-        
-Generate or modify a Markdown document based on the goal.
-You have these options:
-1. Create a NEW document (leave artifactId blank and set operation to "create")
-2. Replace an EXISTING document (specify artifactId and set operation to "replace")
-3. Append to an EXISTING document (specify artifactId and set operation to "append")
+        // Add previous results if available
+        if (params.previousResult) {
+            promptBuilder.addContent(ContentType.STEP_RESULTS, params.previousResult);
+        }
 
-${existingContent}
-
-Provide:
-- artifactId: ID of document to modify (only required for replace/append operations)
-- operation: Must be "create" for new documents, "replace" or "append" for existing ones
-- title: Document title
-- content: New or additional content
-- confirmationMessage: Message describing what was done
-
-IMPORTANT RULES:
-- For NEW documents: Use operation="create" and omit artifactId
-- For EXISTING documents: Use operation="replace" or "append" and provide artifactId`;
-
-        const instructions = new StructuredOutputPrompt(schema, prompt);
+        const prompt = promptBuilder.build();
         
         try {
             const result = await this.modelHelpers.generate<ArtifactGenerationResponse>({
