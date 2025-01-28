@@ -19,6 +19,7 @@ import { AppUpdater } from "electron-updater";
 import { createUUID, UUID } from "src/types/uuid";
 import { ChatHandle, createChatHandle, isChatHandle } from "src/types/chatHandle";
 import { Artifact } from "src/tools/artifact";
+import ical from "ical";
 
 export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods {
     constructor(private services: BackendServicesWithWindows) {

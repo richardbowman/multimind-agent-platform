@@ -9,6 +9,7 @@ import { Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { createUUID } from 'src/types/uuid';
 import { Agent } from '../agents';
+import { ContentType } from 'src/llm/promptBuilder';
 
 @StepExecutorDecorator('delegation', 'Create projects with tasks delegated to all agents in the channel')
 export class DelegationExecutor implements StepExecutor {
@@ -39,15 +40,19 @@ export class DelegationExecutor implements StepExecutor {
                 responseMessage: { type: 'string' }
             }
         };
-
-        const structuredPrompt = new StructuredOutputPrompt(
-            schema,
-            `Create a project with tasks that should be delegated to all agents in the channel. 
+        
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addInstruction( `Create a project with tasks that should be delegated to all agents in the channel. 
             For each task, specify which agent should handle it based on their capabilities.
             Output should include:
             - A clear project name and goal
             - A list of tasks with descriptions and assigned agents
-            - A response message to explain the delegation plan to the user`
+            - A response message to explain the delegation plan to the user`);
+        prompt.addContent(ContentType.AGENT_CAPABILITIES, params.agents);
+
+        const structuredPrompt = new StructuredOutputPrompt(
+            schema,
+           prompt.build()
         );
 
         try {
@@ -66,13 +71,12 @@ export class DelegationExecutor implements StepExecutor {
                     status: 'active',
                     createdAt: new Date(),
                     updatedAt: new Date(),
-                    parentTaskId: params.stepId,
-                    artifacts: params.context?.artifacts?.map(a => a.id) || []
+                    parentTaskId: params.stepId
                 }
             });
 
             // Create tasks and assign to agents
-            const taskDetails = [];
+            const taskDetails : string[] = [];
             for (const task of tasks) {
                 const taskId = createUUID();
                 await this.taskManager.addTask(project, {
@@ -81,14 +85,15 @@ export class DelegationExecutor implements StepExecutor {
                     creator: params.agentId,
                     type: TaskType.Standard,
                     props: {
-                        goal: projectGoal
+                        goal: projectGoal,
+                        attachedArtifactIds: params.context?.artifacts?.map(a => a.id) || []
                     }
                 });
 
                 // Find and assign to agent
-                const agent = params.agents?.find(a => a.handle === task.assignee);
+                const agent = params.agents?.find(a => a.messagingHandle === task.assignee);
                 if (agent) {
-                    await this.taskManager.assignTaskToAgent(taskId, agent.id);
+                    await this.taskManager.assignTaskToAgent(taskId, agent.userId);
                 }
 
                 taskDetails.push(`${task.description} [${taskId}] -> ${task.assignee}`);
@@ -97,7 +102,8 @@ export class DelegationExecutor implements StepExecutor {
             return {
                 type: StepResultType.Delegation,
                 projectId: project.id,
-                finished: false,
+                finished: true,
+                async: true,
                 response: {
                     message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
                         taskDetails.join('\n')

@@ -30,11 +30,6 @@ export class CodeExecutorExecutor implements StepExecutor {
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
-
-    }
-    
-    private getCodeReviewerAgent(params: ExecuteParams) {
-        return params.agents?.find(a => a.type === 'code-reviewer');
     }
 
     private async executeCodeInSandbox(code: string): Promise<{returnValue: any, consoleOutput?: string}> {

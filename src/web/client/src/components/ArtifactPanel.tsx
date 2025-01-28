@@ -27,8 +27,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 
 export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
     const { 
-        artifacts, 
-        fetchArtifacts, 
+        currentThreadArtifacts: artifacts, 
         currentChannelId,
         addArtifactToChannel,
         removeArtifactFromChannel 

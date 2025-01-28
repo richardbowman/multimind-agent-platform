@@ -16,7 +16,7 @@ export interface DataContextMethods {
   channels: ClientChannel[];
   tasks: ClientTask[];
   allArtifacts: Artifact[];
-  artifacts: Artifact[];
+  currentThreadArtifacts: Artifact[];
   pendingFiles: Artifact[];
   logs: {
     llm: Record<string, LLMLogEntry[]>;
@@ -87,7 +87,7 @@ export const DataProvider: React.FC<{
     _setCurrentChannelId(channelId);
   }, []);
   const [tasks, setTasks] = useState<ClientTask[]>([]);
-  const [artifacts, setArtifacts] = useState<any[]>([]);
+  const [currentThreadArtifacts, setCurrentThreadArtifacts] = useState<any[]>([]);
   const [allArtifacts, setAllArtifacts] = useState<any[]>([]);
   const [pendingFiles, setPendingFiles] = useState<Artifact[]>([]);
   const [logs, setLogs] = useState<{
@@ -177,7 +177,7 @@ export const DataProvider: React.FC<{
     const newArtifacts = await ipcService.getRPC().getArtifacts({ channelId, threadId });
     
     // Only update state if artifacts have actually changed
-    setArtifacts(prev => {
+    setCurrentThreadArtifacts(prev => {
       const prevIds = new Set(prev.map(a => a.id));
       const newIds = new Set(newArtifacts.map(a => a.id));
       
@@ -198,7 +198,7 @@ export const DataProvider: React.FC<{
 
   const deleteArtifact = useCallback(async (artifactId: string) => {
     const remainingArtifacts = await ipcService.getRPC().deleteArtifact(artifactId);
-    setArtifacts(remainingArtifacts);
+    setCurrentThreadArtifacts(remainingArtifacts);
     setAllArtifacts(remainingArtifacts);
   }, []);
 
@@ -219,7 +219,7 @@ export const DataProvider: React.FC<{
     });
 
     // Update channel artifacts if present
-    setArtifacts(prev => {
+    setCurrentThreadArtifacts(prev => {
       const existingIndex = prev.findIndex(a => a.id === savedArtifact.id);
       if (existingIndex >= 0) {
         // Update existing artifact
@@ -279,7 +279,7 @@ export const DataProvider: React.FC<{
     messages,
     channels,
     tasks,
-    artifacts,
+    currentThreadArtifacts,
     allArtifacts, 
     pendingFiles,
     logs,
@@ -349,7 +349,7 @@ export const DataProvider: React.FC<{
     messages,
     channels,
     tasks,
-    artifacts,
+    currentThreadArtifacts,
     allArtifacts,
     logs,
     handles,

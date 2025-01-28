@@ -21,8 +21,8 @@ export interface SnackbarContextType {
 }
 
 const SnackbarContext = createContext<SnackbarContextType>({
-  showSnackbar: () => {},
-  setUpdateStatus: () => {} 
+  showSnackbar: () => { },
+  setUpdateStatus: () => { }
 });
 
 export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
@@ -33,7 +33,24 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   });
 
   const ipcContext = useIPCService();
-  
+
+  (window as any).electron.status((log) => {
+    // Update progress bar based on message
+    if (log.details.percentComplete > 0) {
+      setOptions({
+        percentComplete: log.details.percentComplete,
+        message: log.message,
+        severity: 'progress',
+      });
+    } else {
+      setOptions({
+        message: log.message,
+        severity: 'info'
+      });
+    }
+    setOpen(true);
+  });
+
   function setUpdateStatus(status: UpdateStatus, percentComplete?: number) {
     setOptions({
       percentComplete,
@@ -95,8 +112,8 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             {(options.severity === 'progress' || options.updateStatus) && (
               <LinearProgress
                 variant={options.updateStatus === UpdateStatus.Downloaded ? 'indeterminate' : 'determinate'}
-                value={(options.percentComplete || 0)*100}
-                sx={{ 
+                value={(options.percentComplete || 0) * 100}
+                sx={{
                   mt: 1,
                   width: '100%',
                   minWidth: 300,
@@ -105,10 +122,10 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
               />
             )}
             {options.updateStatus === UpdateStatus.Downloaded && (
-              <Button 
-                variant="contained" 
-                color="primary" 
-                size="small" 
+              <Button
+                variant="contained"
+                color="primary"
+                size="small"
                 onClick={() => ipcContext.getRPC().quitAndInstall()}
                 sx={{ mt: 1 }}
               >

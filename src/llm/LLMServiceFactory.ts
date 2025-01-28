@@ -91,7 +91,8 @@ export class LLMServiceFactory {
                     settings.openrouter.api.key,
                     settings.models.conversation.openrouter || "gpt-3.5-turbo",
                     undefined,
-                    "https://openrouter.ai/api/v1"
+                    "https://openrouter.ai/api/v1",
+                    settings
                 );
             case LLMProvider.DEEPSEEK:
                 if (!settings.deepseek?.api?.key) {
@@ -101,7 +102,8 @@ export class LLMServiceFactory {
                     settings.deepseek?.api.key,
                     settings.models?.conversation?.deepseek || "deepseek-chat",
                     undefined,
-                    "https://api.deepseek.com/v1"
+                    "https://api.deepseek.com/v1",
+                    settings
                 );
             default:
                 throw new ConfigurationError(`Unsupported chat provider: ${settings.providers.chat}`);

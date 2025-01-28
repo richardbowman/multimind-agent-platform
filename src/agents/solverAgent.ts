@@ -13,9 +13,7 @@ import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { ExecutorType } from './interfaces/ExecutorType';
 
 export class SolverAgent extends StepBasedAgent {
-    protected processTask(task: any): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
+
     constructor(params: AgentConstructorParams) {
         super(params);
 

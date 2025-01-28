@@ -88,7 +88,7 @@
               "className": "AnswerQuestionsExecutor"
             },
             {
-              "className": "ComplexProjectExecutor"
+              "className": "DelegationExecutor"
             },
             {
               "className": "ScheduleTaskExecutor"
@@ -216,6 +216,9 @@
           "executors": [
             {
               "className": "BrainstormExecutor"
+            },
+            {
+              "className": "CalendarExecutor"
             },
             {
               "className": "GenerateArtifactExecutor",

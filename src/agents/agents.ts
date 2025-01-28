@@ -350,7 +350,7 @@ export abstract class Agent {
         return this.modelHelpers.generate(params);
     }
 
-    protected async mapRequestedArtifacts(requestedArtifacts: string[]): Promise<Artifact[]> {
+    protected async mapRequestedArtifacts(requestedArtifacts: UUID[]): Promise<Artifact[]> {
         const artifacts: Artifact[] = [];
         for (const artifactId of requestedArtifacts) {
             try {

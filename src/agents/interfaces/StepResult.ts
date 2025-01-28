@@ -9,7 +9,10 @@ export enum StepResultType {
     Validation = "Validation",
     Thinking = "Thinking",
     CodeGenerationStep = "CodeGenerationStep",
-    FinalResponse = "FinalResponse"
+    FinalResponse = "FinalResponse",
+    Debug = "Debug",
+    Delegation = "Delegation",
+    Calendar = "Calendar"
 }
 
 export enum ReplanType {

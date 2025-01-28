@@ -123,17 +123,17 @@ export class ComplexProjectExecutor implements StepExecutor {
             });
 
             // Assign tasks to appropriate agents
-            const researchManager = params.agents?.find(a => a.handle === '@research');
-            const contentManager = params.agents?.find(a => a.handle === '@content');
+            const researchManager = params.agents?.find(a => a.messagingHandle === '@research');
+            const contentManager = params.agents?.find(a => a.messagingHandle === '@content');
             
             if (researchManager) {
-                await this.taskManager.assignTaskToAgent(researchTaskId, researchManager.id);
+                await this.taskManager.assignTaskToAgent(researchTaskId, researchManager.userId);
             } else {
                 Logger.warn('No research manager agent found');
             }
             
             if (contentManager) {
-                await this.taskManager.assignTaskToAgent(contentTaskId, contentManager.id);
+                await this.taskManager.assignTaskToAgent(contentTaskId, contentManager.userId);
             } else {
                 Logger.warn('No content manager agent found');
             }

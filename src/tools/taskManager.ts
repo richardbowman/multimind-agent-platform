@@ -38,11 +38,12 @@ export interface AddTaskParams {
     inProgress?: boolean;
     order?: number;
     dependsOn?: UUID;
-    props?: Record<string, any>;
+    props?: TaskMetadata;
 }
 
 export interface TaskMetadata extends Readonly<Record<string, any>> {
     readonly clientProjectId?: UUID;
+    readonly attachedArtifactIds?: UUID[];
 }
 
 export interface Task extends Readonly<AddTaskParams> {

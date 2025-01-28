@@ -102,7 +102,7 @@ export class ModelHelpers {
         }
         return this.stepSequences[0]; // Default to first sequence
     }
-    
+
 
     protected llmService: ILLMService;
     protected isMemoryEnabled: boolean = false;
@@ -151,7 +151,7 @@ export class ModelHelpers {
 
         const threadId = posts[0].getRootId() || posts[0].id;
         const existingSummary = this.threadSummaries.get(threadId);
-        
+
         // Find index of last processed message
         let startIndex = 0;
         if (existingSummary) {
@@ -172,7 +172,7 @@ export class ModelHelpers {
 
         const llmMessages = [{
             role: "system",
-            content: this.addDateToSystemPrompt(existingSummary 
+            content: this.addDateToSystemPrompt(existingSummary
                 ? `Given this existing conversation summary:
                    "${existingSummary.summary}"
                    
@@ -250,18 +250,27 @@ export class ModelHelpers {
 
     private async generateStructured<T extends ModelResponse>(structure: StructuredOutputPrompt, params: GenerateParams): Promise<T> {
         // Initialize JSON schema validator with custom date-time format
-        const ajv = new Ajv({ 
-            allErrors: true, 
+        const ajv = new Ajv({
+            allErrors: true,
             strict: false,
             formats: {
-                'date-time': (dateTimeStr: string) => {
-                    // Try parsing as ISO date string
-                    const date = new Date(dateTimeStr);
-                    return !isNaN(date.getTime());
+                'date-time': {
+                    validate: (dateTimeStr: string) => {
+                        // Try parsing as ISO date string
+                        const date = new Date(dateTimeStr);
+                        return !isNaN(date.getTime());
+                    }
                 }
             }
         });
         addFormats(ajv);
+        ajv.addFormat("date-time", {
+            validate: (dateTimeStr: string) => {
+                // Try parsing as ISO date string
+                const date = new Date(dateTimeStr);
+                return !isNaN(date.getTime());
+            } 
+        });
         const validate = ajv.compile(structure.getSchema());
         // Check cache first
         const cacheContext = {
@@ -314,15 +323,15 @@ export class ModelHelpers {
         while (attempts < maxAttempts) {
             try {
                 const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
-                response = await this.llmService.generateStructured<T>(params.userPost?params.userPost:params.message?  params:{ message: ""}, augmentedStructuredInstructions, history, contextWindow, maxTokens);
+                response = await this.llmService.generateStructured<T>(params.userPost ? params.userPost : params.message ? params : { message: "" }, augmentedStructuredInstructions, history, contextWindow, maxTokens);
 
                 // Validate response against schema
                 const isValid = validate(response);
                 if (!isValid) {
-                    const errors = validate.errors?.map(err => 
+                    const errors = validate.errors?.map(err =>
                         `Schema validation error at ${err.instancePath}: ${err.message}`
                     ).join('\n');
-                    
+
                     if (attempts < maxAttempts - 1) {
                         // Add error feedback to instructions for retry
                         augmentedInstructions += `\n\nPrevious attempt failed validation. Please ensure your response includes all required properties:\n${errors}`;
@@ -336,10 +345,10 @@ export class ModelHelpers {
                 // if (params.artifacts) {
                 //     response.artifactIds = params.artifacts?.map(a => a.id);
                 // }
-                
+
                 // Cache the response
                 //this.modelCache.set(structure.getPrompt(), cacheContext, response);
-                
+
                 return response;
             } catch (error) {
                 Logger.error("Error generating", error);
@@ -459,10 +468,10 @@ export class ModelHelpers {
 
         // Augment instructions with context and generate a response
         const history = (params as HandlerParams).threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
-        const response = await this.llmService.generate(augmentedInstructions, (params as HandlerParams).userPost||{message:params.message||params.content||""}, history);
+        const response = await this.llmService.generate(augmentedInstructions, (params as HandlerParams).userPost || { message: params.message || params.content || "" }, history);
 
         // Ensure response is an object with message property
-        const formattedResponse: ModelMessageResponse = typeof response === "string" 
+        const formattedResponse: ModelMessageResponse = typeof response === "string"
             ? { message: response }
             : response;
 
@@ -473,7 +482,7 @@ export class ModelHelpers {
 
         // Cache the response
         this.modelCache.set(instructions, cacheContext, formattedResponse);
-        
+
         return formattedResponse;
     }
 }

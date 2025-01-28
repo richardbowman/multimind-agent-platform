@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResult, StepResultType } from '../interfaces/StepResult';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
@@ -59,7 +59,7 @@ import { ContentType } from 'src/llm/promptBuilder';
          });
 
          return {
-             type: "debug",
+             type: StepResultType.Debug,
              finished: true,
              response: {
                  message: response.message || "No debug information available"

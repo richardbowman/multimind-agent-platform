@@ -36,7 +36,7 @@ export class BrainstormExecutor implements StepExecutor {
 2. We've covered all major aspects of the problem space
 3. New ideas are becoming repetitive or less valuable`);
 
-        promptBuilder.addInstruction("Based on this analysis, set isComplete to true if brainstorming should conclude, or false if more ideas are needed.");
+        promptBuilder.addInstruction("Based on this analysis, set isComplete to true if brainstorming should conclude, or false if more ideas are needed. Make sure your message to the user communicates if you want want additional feedback");
 
         // Add previous results if available
         if (params.previousResult) {
@@ -44,7 +44,7 @@ export class BrainstormExecutor implements StepExecutor {
         }
 
         // Add artifacts if available
-        if (params.previousResult) {
+        if (params.context?.artifacts) {
             promptBuilder.addContent(ContentType.ARTIFACTS, params.context?.artifacts);
         }
 

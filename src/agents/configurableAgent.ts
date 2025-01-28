@@ -25,12 +25,4 @@ export class ConfigurableAgent extends StepBasedAgent {
 
         await this.initializeFromConfig(agentConfig);
     }
-
-    protected processTask(task: Task): Promise<void> {
-        throw new Error('Method not implemented.');
-    }
-    
-    protected async projectCompleted(project: Project): Promise<void> {
-        await super.projectCompleted(project);
-    }
 }

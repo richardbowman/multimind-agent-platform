@@ -41,6 +41,7 @@ export class RouterAgent extends Agent {
     // Required abstract method implementations
     protected async processTask(task: Task): Promise<void> {
         // Router agent doesn't process tasks
+        throw new Error("Router is not configured to handle task assignment");
     }
 
     private async getRoutingContext(params: HandlerParams) : Promise<RoutingContext> {

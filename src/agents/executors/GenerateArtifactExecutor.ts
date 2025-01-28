@@ -13,6 +13,11 @@ import { ExecutorType } from '../interfaces/ExecutorType';
 import { TaskManager } from 'src/tools/taskManager';
 import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
 import { createUUID } from 'src/types/uuid';
+import { contentType } from 'mime-types';
+import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationResponse';
+import { StructuredOutputPrompt } from 'src/llm/ILLMService';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
 
 /**
  * Executor that generates and manages Markdown document artifacts.
@@ -79,22 +84,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
         }
 
         // Add existing artifacts from previous results
-        const artifactIds = [...new Set(params.previousResult?.flatMap(r => r.artifactIds || []) || [])];
-        if (artifactIds.length > 0) {
-            try {
-                const artifacts = await Promise.all(
-                    artifactIds.map(id => this.artifactManager.loadArtifact(id))
-                );
-                
-                promptBuilder.addContent(ContentType.ARTIFACTS, artifacts.map((a, i) => ({
-                    id: artifactIds[i],
-                    title: a.metadata?.title || 'Untitled',
-                    content: a.content
-                })));
-            } catch (error) {
-                Logger.warn('Failed to fetch existing artifacts:', error);
-            }
-        }
+        promptBuilder.addContent(ContentType.ARTIFACTS, params.context?.artifacts);
 
         // Add execution parameters
         promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
@@ -110,9 +100,10 @@ export class GenerateArtifactExecutor implements StepExecutor {
         const prompt = promptBuilder.build();
         
         try {
+            const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);
             const result = await this.modelHelpers.generate<ArtifactGenerationResponse>({
                 message: params.message || params.stepGoal,
-                instructions
+                instructions: new StructuredOutputPrompt(schema, prompt)
             });
 
             // Prepare the artifact
@@ -123,7 +114,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
             }
 
             const artifact: Artifact = {
-                id: result.artifactId?.length > 0 ? result.artifactId : createUUID(),
+                id: result.artifactId?.length||0 > 0 ? createUUID(result.artifactId) : createUUID(),
                 type: 'markdown',
                 content: finalContent,
                 metadata: {
@@ -142,7 +133,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
                 finished: true,
                 artifactIds: [artifact.id],
                 response: {
-                    message: `${result.confirmationMessage} Your artifact titled "${result.title}" has been generated and saved. You can find it under ID: ${artifact.id}`,
+                    message: result.confirmationMessage,
                 } as RequestArtifacts
             };
 

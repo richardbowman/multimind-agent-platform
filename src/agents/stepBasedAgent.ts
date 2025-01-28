@@ -68,7 +68,7 @@ export abstract class StepBasedAgent extends Agent {
                 const executorContext = require.context('./executors', true, /\.ts$/);
                 const module = executorContext(`./${executorConfig.className}.ts`);
                 const ExecutorClass = module[executorConfig.className] || module.default;
-                
+
                 Logger.info(`Initializing ${executorConfig.className} executor `)
 
                 // Create instance with config
@@ -135,7 +135,7 @@ export abstract class StepBasedAgent extends Agent {
     }
 
     protected async handlerThread(params: HandlerParams): Promise<void> {
-        const { id: projectId } = params.projects?.filter(p => p.metadata.tags?.includes("agent-internal-steps"))[0]||{id: undefined};
+        const { id: projectId } = params.projects?.filter(p => p.metadata.tags?.includes("agent-internal-steps"))[0] || { id: undefined };
 
         // If no active project, treat it as a new conversation
         if (!projectId) {
@@ -148,7 +148,7 @@ export abstract class StepBasedAgent extends Agent {
                 }
             });
 
-            const plan = await this.planSteps(projectId, [params.rootPost||{message: "(missing root post)"}, ...params.threadPosts||[], params.userPost]);
+            const plan = await this.planSteps(projectId, [params.rootPost || { message: "(missing root post)" }, ...params.threadPosts || [], params.userPost]);
             await this.executeNextStep({
                 projectId,
                 userPost: params.userPost,
@@ -167,7 +167,7 @@ export abstract class StepBasedAgent extends Agent {
 
         if (!task) {
             Logger.info("No remaining tasks, planning new steps");
-            const plan = await this.planSteps(projectId, [params.rootPost||{message: "(missing root post)"},...params.threadPosts||[], params.userPost]);
+            const plan = await this.planSteps(projectId, [params.rootPost || { message: "(missing root post)" }, ...params.threadPosts || [], params.userPost]);
         }
 
         // Continue with existing tasks without replanning
@@ -197,7 +197,7 @@ export abstract class StepBasedAgent extends Agent {
         }
     }
 
-    public getExecutorCapabilities(): Array<{ 
+    public getExecutorCapabilities(): Array<{
         stepType: string;
         description: string;
         exampleInput?: string;
@@ -222,7 +222,7 @@ export abstract class StepBasedAgent extends Agent {
         const project = await this.projects.getProject(projectId);
         const handlerParams: PlannerParams = {
             projects: [project],
-            threadPosts: posts?.slice(0,-1),
+            threadPosts: posts?.slice(0, -1),
             userPost: posts?.[posts?.length - 1]
         };
         const steps = await this.planner.planSteps(handlerParams);
@@ -245,7 +245,7 @@ export abstract class StepBasedAgent extends Agent {
 
     protected async executeNextStep(params: ExecuteNextStepParams): Promise<void> {
         const { projectId } = params;
-        
+
         const task = this.projects.getNextTask(projectId, TaskType.Step) as StepTask;
 
         if (!task) {
@@ -328,10 +328,13 @@ export abstract class StepBasedAgent extends Agent {
                 message: task.description
             }]);
 
+            const artifacts = task.props?.attachedArtifactIds?.length || 0 > 0 ? await this.mapRequestedArtifacts(task.props?.attachedArtifactIds!) : [];
+
             await this.executeNextStep({
                 projectId,
                 context: {
-                    projects: [parentProject]
+                    projects: [parentProject],
+                    artifacts
                 }
             });
 
@@ -365,7 +368,8 @@ export abstract class StepBasedAgent extends Agent {
             }
 
             // get overall goals
-            let channelGoals: Task[] = []; 
+            let channelGoals: Task[] = [];
+            let agentsOptions: Agent[] = [];
             if (context?.channelId) {
                 const channelData = await this.chatClient.getChannelData(context?.channelId);
                 const channelProject = channelData?.projectId
@@ -373,8 +377,19 @@ export abstract class StepBasedAgent extends Agent {
                     : null;
                 channelGoals = [
                     ...channelGoals,
-                    ...Object.values(channelProject?.tasks||{})
+                    ...Object.values(channelProject?.tasks || {})
                 ]
+
+                // Get agent descriptions from settings for channel members
+                agentsOptions = (channelData.members || [])
+                    .filter(memberId => this.userId !== memberId)
+                    .map(memberId => {
+                        return this.agents.agents[memberId];
+                    });
+            } else {
+                agentsOptions = Object.values(this.settings.agents).filter(a => a.userId).map(id => {
+                    return this.agents.agents[id.userId];
+                });
             }
 
             // Get all prior completed tasks' results
@@ -412,7 +427,7 @@ export abstract class StepBasedAgent extends Agent {
                     stepGoal: task.description,
                     overallGoal: project.name,
                     executionMode: userPost ? 'conversation' : 'task',
-                    agents: agents,    
+                    agents: agentsOptions,
                     context: {
                         channelId: userPost?.channel_id,
                         threadId: userPost?.thread_id,
@@ -454,9 +469,9 @@ export abstract class StepBasedAgent extends Agent {
 
                     //TODO: hacky, we don't really post this message
                     await this.planSteps(project.id, [InMemoryPost.fromLoad({
-                            ...userPost,
-                            message: planningPrompt
-                        })]
+                        ...userPost,
+                        message: planningPrompt
+                    })]
                     );
                 }
             }
@@ -467,14 +482,14 @@ export abstract class StepBasedAgent extends Agent {
                 //TODO need a way to update project to disk
             }
 
-            let replyTo: ChatPost|undefined;
+            let replyTo: ChatPost | undefined;
             if (userPost && isValidChatPost(userPost)) {
                 replyTo = userPost;
             } else if (project.metadata.originalPostId) {
                 replyTo = await this.chatClient.getPost(project.metadata.originalPostId);
             }
 
-            const artifactList = [...stepResult.artifactIds||[], ...stepResult.response?.artifactIds||[], stepResult.response?.data?.artifactId];
+            const artifactList = [...stepResult.artifactIds || [], ...stepResult.response?.artifactIds || [], stepResult.response?.data?.artifactId];
 
             // Only send replies if we have a userPost to reply to
             if (replyTo) {
@@ -510,11 +525,11 @@ export abstract class StepBasedAgent extends Agent {
 
                 if (!stepResult.needsUserInput) {
                     const stepArtifacts = await this.mapRequestedArtifacts(artifactList);
-                    const fullArtifactList = [...stepArtifacts, ...params.context?.artifacts||[]];
+                    const fullArtifactList = [...stepArtifacts, ...params.context?.artifacts || []];
 
 
                     await this.executeNextStep({
-                        projectId, 
+                        projectId,
                         userPost,
                         context: {
                             ...params.context,
@@ -551,7 +566,7 @@ export abstract class StepBasedAgent extends Agent {
         const { userPost } = params;
         const plan = await this.planSteps(projectId, posts);
         await this.executeNextStep({
-            projectId, 
+            projectId,
             userPost
         });
     }

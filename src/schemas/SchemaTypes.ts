@@ -40,5 +40,6 @@ export enum SchemaType {
     DocumentPlanResponse = "DocumentPlanResponse",
     ContentSectionResponse = 'ContentSectionResponse',
     RoutingResponse = "RoutingResponse",
-    GoalProgressResponse = "GoalProgressResponse"
+    GoalProgressResponse = "GoalProgressResponse",
+    CalendarResponse = "CalendarResponse"
 }

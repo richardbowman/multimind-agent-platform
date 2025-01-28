@@ -10,7 +10,7 @@ import { ChatPost } from "../../chat/chatClient";
 import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { CalendarResponse } from "src/schemas/CalendarResponse";
-import { StepResult } from "../interfaces/StepResult";
+import { StepResult, StepResultType } from "../interfaces/StepResult";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { StepExecutor } from "../interfaces/StepExecutor";
 import { ArtifactManager } from "src/tools/artifactManager";
@@ -84,6 +84,8 @@ export class CalendarExecutor implements StepExecutor {
 
       // Return both the confirmation message and the artifact
       return {
+        type: StepResultType.Calendar,
+        finished: true,
         response: {
           message: response.confirmationMessage,
         },

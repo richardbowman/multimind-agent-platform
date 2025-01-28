@@ -8,6 +8,7 @@ import { LLMRequestParams } from "./ILLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
 import Logger from "src/helpers/logger";
 import { error } from "console";
+import { Settings } from "src/tools/settings";
 
 export class OpenAIService extends BaseLLMService {
     private client: OpenAI;
@@ -25,6 +26,7 @@ export class OpenAIService extends BaseLLMService {
         this.client = new OpenAI(configuration);
         this.model = model;
         this.embeddingModel = embeddingModel;
+        this.settings = settings;
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
@@ -112,12 +114,12 @@ export class OpenAIService extends BaseLLMService {
                     }
                 }));
 
-                toolChoice = settings.tool_choice === 'required' ? {
+                toolChoice = this.settings?.tool_choice === 'required' ? {
                     type: "function",
                     function: {
                         name: "generate_structured_output"
                     }
-                } : settings.tool_choice === 'none' ? 'none' : 'auto'
+                } : this.settings?.tool_choice === 'none' ? 'none' : 'auto'
             }
 
             // const model = params.modelType ? 

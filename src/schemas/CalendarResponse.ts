@@ -1,4 +1,4 @@
-import { CalendarEvent } from "../../tools/artifact";
+import { CalendarEvent } from "../tools/artifact";
 
 export interface CalendarResponse {
   /**
