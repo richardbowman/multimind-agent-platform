@@ -31,6 +31,7 @@ jobs:
         if: github.ref == 'refs/heads/main'
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          deploy_key: ${{ secrets.DOCS_DEPLOY_KEY }}
+          external_repository: yourusername/multimind-agent-platform
           publish_dir: ./public
           force_orphan: true

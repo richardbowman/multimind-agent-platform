@@ -1,6 +1,6 @@
 site_name: MultiMind
-repo_url: https://github.com/yourusername/your-public-repo
-site_url: https://yourusername.github.io/your-public-repo
+repo_url: https://github.com/yourusername/multimind-agent-platform
+site_url: https://yourusername.github.io/multimind-agent-platform
 
 theme:
   name: material
