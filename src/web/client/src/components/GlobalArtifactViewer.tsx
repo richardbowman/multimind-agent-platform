@@ -7,6 +7,7 @@ import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
 import FolderIcon from '@mui/icons-material/Folder';
 import DescriptionIcon from '@mui/icons-material/Description';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { ActionToolbar } from './shared/ActionToolbar';
 
 export interface DrawerPage {
@@ -15,7 +16,7 @@ export interface DrawerPage {
 }
 
 export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
-    const { allArtifacts, fetchAllArtifacts, deleteArtifact } = useWebSocket();
+    const { allArtifacts, fetchAllArtifacts, deleteArtifact, showFileDialog } = useWebSocket();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -25,11 +26,22 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         label: string;
         onClick: () => void;
         disabled?: boolean;
-    }>>([{
-        icon: <DescriptionIcon />,
-        label: 'Create New Artifact',
-        onClick: () => setEditorOpen(true)
-    }]);
+    }>>([
+        {
+            icon: <DescriptionIcon />,
+            label: 'Create New Artifact',
+            onClick: () => setEditorOpen(true)
+        },
+        {
+            icon: <AttachFileIcon />,
+            label: 'Upload File',
+            onClick: async () => {
+                await showFileDialog();
+                // The file will be handled by the WebSocket context
+                // and added to the artifacts list automatically
+            }
+        }
+    ]);
 
     const handleCreateArtifact = async (artifact: Artifact) => {
         // Update the selected artifact
@@ -160,8 +172,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 }}
                                 onAddToolbarActions={(actions) => {
                                     setToolbarActions(prev => {
-                                        const baseAction = prev[0]; // Keep the create new action
-                                        return [baseAction, ...actions];
+                                        const baseActions = prev.slice(0, 2); // Keep create new and upload actions
+                                        return [...baseActions, ...actions];
                                     });
                                 }}
                             />
