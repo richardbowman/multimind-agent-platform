@@ -159,7 +159,24 @@ export class ArtifactManager {
   }
 
   protected async indexArtifact(artifact: Artifact): Promise<void> {
-    // Index the artifact into Chroma
+    // Skip indexing binary content
+    if (Buffer.isBuffer(artifact.content)) {
+      Logger.info(`Skipping indexing of binary artifact: ${artifact.id}`);
+      return;
+    }
+
+    // Skip if mime type indicates non-text content
+    const mimeType = artifact.metadata?.mimeType || '';
+    if (mimeType.startsWith('image/') || 
+        mimeType.startsWith('audio/') || 
+        mimeType.startsWith('video/') ||
+        mimeType === 'application/pdf' ||
+        mimeType === 'application/octet-stream') {
+      Logger.info(`Skipping indexing of non-text artifact: ${artifact.id} (${mimeType})`);
+      return;
+    }
+
+    // Index text content into vector DB
     await this.vectorDb.handleContentChunks(
       artifact.content.toString(),
       artifact.metadata?.url,
