@@ -21,6 +21,12 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [editorOpen, setEditorOpen] = useState(false);
+    const [toolbarActions, setToolbarActions] = useState<Array<{
+        icon: React.ReactNode;
+        label: string;
+        onClick: () => void;
+        disabled?: boolean;
+    }>>([]);
 
     const handleCreateArtifact = async (artifact: Artifact) => {
         // Update the selected artifact
@@ -186,13 +192,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 </Dialog>
             </Box>
 
-            <ActionToolbar actions={[
-                {
-                    icon: <DescriptionIcon />,
-                    label: 'Create New Artifact',
-                    onClick: () => setEditorOpen(true)
-                }
-            ]} />
+            <ActionToolbar actions={toolbarActions} />
 
             {selectedArtifact ? (
                 <ArtifactEditor
