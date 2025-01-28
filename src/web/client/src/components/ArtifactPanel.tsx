@@ -4,6 +4,7 @@ import { useWebSocket } from '../contexts/DataContext';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
+import { ActionToolbar } from './shared/ActionToolbar';
 import { Box, Typography, List, Drawer, styled, useTheme, Divider, IconButton, Button } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -90,69 +91,57 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
             >
                 <DrawerHeader/>
                 {selectedArtifact && (
-                    <Box sx={{ p: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <IconButton 
-                                onClick={() => {
+                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                        <ActionToolbar actions={[
+                            {
+                                icon: <ChevronLeftIcon />,
+                                label: 'Previous Artifact',
+                                onClick: () => {
                                     const currentIndex = artifacts.findIndex(a => a.id === selectedArtifact.id);
                                     const prevArtifact = artifacts[currentIndex - 1];
                                     if (prevArtifact) {
                                         setSelectedArtifact(prevArtifact);
                                     }
-                                }}
-                                disabled={artifacts.findIndex(a => a.id === selectedArtifact.id) === 0}
-                                sx={{ color: '#999' }}
-                            >
-                                <ChevronLeftIcon />
-                            </IconButton>
-                            <Typography variant="h6" noWrap sx={{ flexGrow: 1, textAlign: 'center' }} component="div">
-                                {artifacts.findIndex(a => a.id === selectedArtifact.id) + 1} of {artifacts.length}
-                            </Typography>
-                            <IconButton 
-                                onClick={() => {
+                                },
+                                disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === 0
+                            },
+                            {
+                                icon: <AddIcon />,
+                                label: 'Add to Channel',
+                                onClick: () => {
+                                    if (currentChannelId && selectedArtifact) {
+                                        addArtifactToChannel(currentChannelId, selectedArtifact.id);
+                                    }
+                                }
+                            },
+                            {
+                                icon: <RemoveIcon />,
+                                label: 'Remove from Channel',
+                                onClick: () => {
+                                    if (currentChannelId && selectedArtifact) {
+                                        removeArtifactFromChannel(currentChannelId, selectedArtifact.id);
+                                    }
+                                }
+                            },
+                            {
+                                icon: <ChevronRightIcon />,
+                                label: 'Next Artifact',
+                                onClick: () => {
                                     const currentIndex = artifacts.findIndex(a => a.id === selectedArtifact.id);
                                     const nextArtifact = artifacts[currentIndex + 1];
                                     if (nextArtifact) {
                                         setSelectedArtifact(nextArtifact);
                                     }
-                                }}
-                                disabled={artifacts.findIndex(a => a.id === selectedArtifact.id) === artifacts.length - 1}
-                                sx={{ color: '#999' }}
-                            >
-                                <ChevronRightIcon />
-                            </IconButton>
-                            <IconButton onClick={() => setDrawerOpen(false)} sx={{ color: '#999' }}>
-                                <CloseIcon />
-                            </IconButton>
-                        </Box>
-                        {currentChannelId && (
-                            <Box sx={{ display: 'flex', gap: 1, mb: 2 }}>
-                                <Button
-                                    variant="contained"
-                                    color="primary"
-                                    startIcon={<AddIcon />}
-                                    onClick={() => {
-                                        if (currentChannelId && selectedArtifact) {
-                                            addArtifactToChannel(currentChannelId, selectedArtifact.id);
-                                        }
-                                    }}
-                                >
-                                    Add to Channel
-                                </Button>
-                                <Button
-                                    variant="outlined"
-                                    color="error"
-                                    startIcon={<RemoveIcon />}
-                                    onClick={() => {
-                                        if (currentChannelId && selectedArtifact) {
-                                            removeArtifactFromChannel(currentChannelId, selectedArtifact.id);
-                                        }
-                                    }}
-                                >
-                                    Remove from Channel
-                                </Button>
-                            </Box>
-                        )}
+                                },
+                                disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === artifacts.length - 1
+                            },
+                            {
+                                icon: <CloseIcon />,
+                                label: 'Close',
+                                onClick: () => setDrawerOpen(false)
+                            }
+                        ]} />
+                        <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
                         <Box sx={{ mb: 2 }}>
                             <ArtifactDisplay
                                 artifact={selectedArtifact}
