@@ -654,11 +654,36 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     processArtifactContent(artifact: any) {
-        const content = Buffer.isBuffer(artifact.content)
+        let content = Buffer.isBuffer(artifact.content)
             ? artifact.metadata?.binary
                 ? artifact.content.toString('base64')
                 : artifact.content.toString('utf8')
             : artifact.content.toString();
+
+        // Parse iCalendar content into CalendarEvent[]
+        if (artifact.mimeType === 'text/calendar' || artifact.type === 'calendar') {
+            try {
+                const parsed = ical.parseICS(content);
+                const events = Object.values(parsed)
+                    .filter(event => event.type === 'VEVENT')
+                    .map(event => ({
+                        title: event.summary,
+                        start: event.start,
+                        end: event.end,
+                        description: event.description,
+                        location: event.location,
+                        attendees: event.attendees?.map(attendee => attendee.params?.CN || attendee.val),
+                        reminders: event.alarms?.map(alarm => ({
+                            minutesBefore: Math.floor(alarm.trigger / 60),
+                            method: alarm.action === 'EMAIL' ? 'email' : 'display'
+                        }))
+                    }));
+                content = events;
+            } catch (error) {
+                console.error('Error parsing iCalendar content:', error);
+            }
+        }
+
         return { ...artifact, content };
     }
 }
