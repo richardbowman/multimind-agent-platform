@@ -23,7 +23,7 @@ The AI Research Assistant is a sophisticated platform that combines:
 - Settings configured through the Settings panel
 
 ## Getting Help
-For support, contact [your support email] or visit [your support site]
+For support, you can open issues on the [GitHub public issues tracker](https://github.com/richardbowman/multimind-agent-platform/issues).
 
 ## Screenshot
 Here is a screenshot of the welcome screen:
