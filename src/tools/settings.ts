@@ -131,14 +131,13 @@ export class ModelByProvider {
         type: 'select',
         description: 'Model identifier for OpenRouter'
     })
-    openrouter: string = 'anthropic/claude-3-opus';
+    openrouter: string = 'anthropic/claude-3.5-haiku';
 
     @ClientSettings({
         label: 'DeepSeek Model',
         category: 'LLM Settings',
         type: 'select',
         description: 'Model identifier for DeepSeek',
-        defaultValue: 'deepseek-chat'
     })
     deepseek: string = 'deepseek-chat';
 
@@ -148,7 +147,7 @@ export class ModelByProvider {
         type: 'select',
         description: 'Model path for Llama.cpp'
     })
-    llama_cpp: string = 'codellama-13b-instruct.Q4_K_M.gguf';
+    llama_cpp: string = '';
 }
 
 export interface AgentConfig {
