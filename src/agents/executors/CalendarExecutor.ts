@@ -1,5 +1,7 @@
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { Artifact, CalendarArtifact, CalendarEvent } from "../../tools/artifact";
+import ical from 'ical-generator';
+import { parse } from 'ical-parser';
 import { HandlerParams } from "../agents";
 import { ModelHelpers } from "../../llm/modelHelpers";
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
@@ -52,11 +54,32 @@ export class CalendarExecutor implements StepExecutor {
         artifacts: params.context?.artifacts,
       });
 
+      // Create iCalendar content
+      const calendar = ical({
+        name: 'Generated Calendar',
+        timezone: 'UTC'
+      });
+
+      response.events.forEach(event => {
+        calendar.createEvent({
+          start: event.start,
+          end: event.end,
+          summary: event.title,
+          description: event.description,
+          location: event.location,
+          attendees: event.attendees?.map(email => ({ email })),
+          alarms: event.reminders?.map(reminder => ({
+            type: reminder.method === 'email' ? 'email' : 'display',
+            trigger: reminder.minutesBefore * 60
+          }))
+        });
+      });
+
       // Create the calendar artifact
       const calendarArtifact = await this.artifactManager.saveArtifact({
         type: 'calendar',
-        content: JSON.stringify(response.events, null, 2),
-        mimeType: 'application/json',
+        content: calendar.toString(),
+        mimeType: 'text/calendar',
       });
 
       // Return both the confirmation message and the artifact

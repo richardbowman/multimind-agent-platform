@@ -10,8 +10,12 @@ export interface CalendarEvent {
   attendees?: string[];
   reminders?: {
     minutesBefore: number;
-    method: 'email' | 'popup' | 'sms';
+    method: 'email' | 'display' | 'audio';
   }[];
+  uid?: string;
+  url?: string;
+  status?: 'confirmed' | 'tentative' | 'cancelled';
+  transparency?: 'opaque' | 'transparent';
 }
 
 export interface CalendarArtifact extends Artifact {
