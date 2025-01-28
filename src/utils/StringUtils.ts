@@ -44,4 +44,15 @@ export namespace StringUtils {
 
         return matches;
     }
+
+    /**
+     * Extracts text content that is not within code blocks
+     * @param text Input text containing code blocks
+     * @returns String with all content outside of code blocks
+     */
+    export function extractNonCodeContent(text: string): string {
+        // Replace all code blocks (with any language specifier) with empty strings
+        const withoutCodeBlocks = text.replace(/```[\s\S]*?```/g, '');
+        return withoutCodeBlocks.trim();
+    }
 }
