@@ -11,7 +11,7 @@ on:
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/PULL_REQUEST_TEMPLATE/**'
       - 'mkdocs.yml'
-      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
   pull_request:
     branches: [ main ]
     paths-ignore:
@@ -21,6 +21,8 @@ on:
       - '.github/*.md'
       - '.github/ISSUE_TEMPLATE/**'
       - '.github/PULL_REQUEST_TEMPLATE/**'
+      - 'mkdocs.yml'
+      - 'requirements-docs.txt'
   workflow_dispatch:
 
 jobs:
