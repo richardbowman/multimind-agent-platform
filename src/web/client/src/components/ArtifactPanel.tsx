@@ -3,7 +3,7 @@ import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
-import { ArtifactViewer } from './ArtifactViewer';
+import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Box, Typography, List, Drawer, styled, useTheme, Divider, IconButton, Button } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
@@ -154,9 +154,9 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                             </Box>
                         )}
                         <Box sx={{ mb: 2 }}>
-                            <ArtifactViewer
+                            <ArtifactDisplay
                                 artifact={selectedArtifact}
-                                onClose={() => setDrawerOpen(false)}
+                                onDelete={() => setDrawerOpen(false)}
                             />
                         </Box>
                     </Box>
