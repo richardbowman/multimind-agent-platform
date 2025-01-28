@@ -47,8 +47,15 @@ export class DelegationExecutor implements StepExecutor {
             Output should include:
             - A clear project name and goal
             - A list of tasks with descriptions and assigned agents
-            - A response message to explain the delegation plan to the user`);
+            - A response message to explain the delegation plan to the user.
+            - Create as few delegation steps as possible to achieve the goal.
+            - If you delegate to managers, don't also delegate to their team.`);
         prompt.addContent(ContentType.AGENT_CAPABILITIES, params.agents);
+        prompt.addInstruction( `IMPORTANT DELEGATION RULES:
+            - Create THE FEWEST delegation steps as possible to achieve the goal.
+            - If you delegate to managers, do not also delegate to their team. (i.e. don't delegate to the reserch manager AND the research assistant)
+            - Instead of making multiple tasks for the same agent, combine them into one complete task.
+            - Make sure the task description has ALL of the information needed. The agent will not receive other context.`);
 
         const structuredPrompt = new StructuredOutputPrompt(
             schema,
@@ -102,7 +109,7 @@ export class DelegationExecutor implements StepExecutor {
             return {
                 type: StepResultType.Delegation,
                 projectId: project.id,
-                finished: true,
+                finished: false,
                 async: true,
                 response: {
                     message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +

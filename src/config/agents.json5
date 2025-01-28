@@ -27,7 +27,7 @@
         "sourcePath": "researchAssistant.ts",
         "userId": "90b9c45a-e79e-43e7-b4f5-3e852cd723a4",
         "handle": "@researchteam",
-        "description": "Conducts web research and information gathering",
+        "description": "Conducts simple web research and information gathering. Part of the research manager's team (who can help breakdown and review more complex research tasks).",
         "enabled": true,
         "config": {
           "maxSearches": 3,
@@ -39,7 +39,7 @@
         "sourcePath": "researchManager.ts",
         "userId": "48d176a8-9f55-47c2-90ca-6dd2bba8e262",
         "handle": "@research",
-        "description": "Manages and coordinates research activities",
+        "description": "Manages and coordinates complex research activities that require multiple Web searches (the research assistant is part of their team).",
         "enabled": true
       },
       "ContentManager": {
@@ -47,7 +47,7 @@
         "sourcePath": "contentManager.ts",
         "userId": "9d039c4e-f99d-4fb7-a160-452ac261569c",
         "handle": "@content",
-        "description": "Manages content creation and organization",
+        "description": "Manages content creation and organization for larger writing assignments that need multiple sections (the writer is part of their team).",
         "enabled": true
       },
       "ContentWriter": {
@@ -55,7 +55,7 @@
         "sourcePath": "contentWriter.ts",
         "userId": "66025743-45bc-4625-a27f-52aa09dde128",
         "handle": "@writer",
-        "description": "Writes and generates content",
+        "description": "The content writer can write content blocks, short articles. They are part of the @content content manager's team. The manager can break down and segreate multiple writing tasks for larger projects.",
         "enabled": true
       },
       "ProjectManager": {
@@ -70,7 +70,7 @@
   My goal is to help develop standardized processes for your business.",
           "finalInstructions": "When planning steps for a project: \
 1. Start with 'goal_confirmation' to ensure clear understanding \
-2. Kickoff the 'complex_project' to start appropriate research and content projects",
+2. Kickoff the 'delegation' to delegate to expert agent",
           "executors": [
             {
               "className": "BrainstormExecutor"

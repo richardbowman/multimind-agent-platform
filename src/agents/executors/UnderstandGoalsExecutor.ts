@@ -144,7 +144,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             });
         }
 
-        const shouldContinue = response.shouldContinue || response.intakeQuestions.length === 0;
+        const shouldContinue = params.executionMode === 'task' ? true : response.shouldContinue || response.intakeQuestions.length === 0;
 
         // If we're continuing, mark all pending question tasks as complete
         if (shouldContinue) {
