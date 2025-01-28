@@ -9,7 +9,6 @@ import { CSVRenderer } from './CSVRenderer';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
-import { parse } from 'ical-parser';
 
 interface ArtifactDisplayProps {
     artifact: Artifact;
@@ -136,17 +135,19 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
 
                         useEffect(() => {
                             try {
-                                const parsed = parse(artifact.content as string);
-                                const calendarEvents = parsed.events.map(event => ({
-                                    title: event.summary,
-                                    start: new Date(event.start),
-                                    end: new Date(event.end),
-                                    description: event.description,
-                                    location: event.location
-                                }));
-                                setEvents(calendarEvents);
+                                // Expecting artifact.content to be already parsed into CalendarEvent[]
+                                if (Array.isArray(artifact.content)) {
+                                    const calendarEvents = (artifact.content as CalendarEvent[]).map(event => ({
+                                        title: event.title,
+                                        start: new Date(event.start),
+                                        end: new Date(event.end),
+                                        description: event.description,
+                                        location: event.location
+                                    }));
+                                    setEvents(calendarEvents);
+                                }
                             } catch (error) {
-                                console.error('Error parsing calendar:', error);
+                                console.error('Error processing calendar events:', error);
                             }
                         }, [artifact.content]);
 
