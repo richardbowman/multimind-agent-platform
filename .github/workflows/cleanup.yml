@@ -16,11 +16,3 @@ jobs:
           repository: ${{ github.repository }}
           retain_days: 14        # Keep runs from last 14 days
           keep_minimum_runs: 6   # Always keep at least 6 recent runs
-
-      - name: Delete old releases
-        uses: dev-drprasad/delete-older-releases@v0.3.2
-        with:
-          keep_latest: 5         # Keep 5 most recent releases
-          delete_tags: true      # Also delete associated tags
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
