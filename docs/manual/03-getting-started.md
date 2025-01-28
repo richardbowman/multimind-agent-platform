@@ -1,20 +1,22 @@
 # Getting Started
 
 ## Installation
-1. Clone the repository:
-```bash
-git clone [repository-url]
-```
+To install MultiMind, follow these steps:
 
-2. Install dependencies:
-```bash
-npm install
-```
+1. **Download the latest release**: You can download the latest release from [GitHub releases](https://github.com/richardbowman/multimind-agent-platform/releases/).
 
-3. Start the service:
-```bash
-npm start
-```
+2. **Install the package**:
+   - **Windows**: Run the downloaded `.exe` installer.
+   - **Mac OS X**: Open the downloaded `.dmg` file and drag MultiMind to your Applications folder.
+   - **Linux**: Run the downloaded `.AppImage` file with the following command:
+     ```bash
+     ./path/to/multimind.AppImage
+     ```
+
+3. **Launch the application**:
+   - **Windows**: Double-click the MultiMind application in your Applications folder.
+   - **Mac OS X**: Open the MultiMind application from your Applications folder.
+   - **Linux**: Ensure the `.AppImage` file has executable permissions and run it as shown above.
 
 ## Welcome Channel
 When the application starts, it automatically creates a `#welcome` channel where you'll be guided through the onboarding process by the Onboarding Consultant agent.
@@ -27,13 +29,13 @@ The welcome channel helps you:
 - Configure your preferences
 
 ## Initial Configuration
-1. Open the Settings panel from the main interface
+1. Open the Settings panel from the main interface.
 2. Configure required settings:
-   - Select your LLM provider (e.g. LM Studio, OpenAI, Bedrock)
+   - Select your LLM provider (e.g., LM Studio, OpenAI, Bedrock)
    - Set up API keys if using cloud providers
    - Configure vector database settings
    - Adjust search and research limits
-3. Save settings - they will persist across sessions
+3. Save settings—they will persist across sessions.
 
 ## Onboarding Process
 The Onboarding Consultant will guide you through these steps:
@@ -59,10 +61,10 @@ The Onboarding Consultant will guide you through these steps:
    - Set up monitoring and reporting
 
 ## First Steps in Welcome Channel
-1. Respond to the Onboarding Consultant's questions about your goals
-2. Review and approve the generated project plan
-3. Monitor task progress through the chat interface
-4. Provide feedback to refine the onboarding process
+1. Respond to the Onboarding Consultant's questions about your goals.
+2. Review and approve the generated project plan.
+3. Monitor task progress through the chat interface.
+4. Provide feedback to refine the onboarding process.
 
 Example conversation flow:
 ```
@@ -75,7 +77,7 @@ Example conversation flow:
 
 ## Next Steps
 After completing onboarding:
-- Explore other channels created for your projects
-- Use `/new` to start additional projects
-- Monitor progress through the task manager
-- Review generated artifacts and documents
+- Explore other channels created for your projects.
+- Use `/new` to start additional projects.
+- Monitor progress through the task manager.
+- Review generated artifacts and documents.
