@@ -88,16 +88,20 @@ Keep it concise but warm and engaging.`);
         if (!existingWelcome) {
             // Get channel data to find available agents
             const channelData = await this.chatClient.getChannelData(monitorChannelId);
-            const agentOptions = (channelData.members || [])
-                .filter(memberId => this.userId !== memberId)
-                .map(memberId => this.agents.agents[memberId]);
+            
+            // Only send welcome if we're the default responder
+            if (channelData.defaultResponderId === this.userId) {
+                const agentOptions = (channelData.members || [])
+                    .filter(memberId => this.userId !== memberId)
+                    .map(memberId => this.agents.agents[memberId]);
 
-            const welcomeMessage = {
-                message: `@user ${await this.generateWelcomeMessage(agentOptions)}`,
-                props: { messageType: 'welcome' }
-            };
+                const welcomeMessage = {
+                    message: `@user ${await this.generateWelcomeMessage(agentOptions)}`,
+                    props: { messageType: 'welcome' }
+                };
 
-            await this.send(welcomeMessage, monitorChannelId);
+                await this.send(welcomeMessage, monitorChannelId);
+            }
         }
     }    
 
