@@ -81,7 +81,7 @@ export class EmbeddingsModelByProvider {
         type: 'select',
         description: 'Model path for Llama.cpp embeddings'
     })
-    llama_cpp: string = '';
+    llama_cpp: string = 'nomic-embed-text-v1.5.Q4_K_M.gguf';
 
     @ClientSettings({
         label: 'LM Studio Model',
@@ -226,7 +226,7 @@ export class ProvidersConfig {
         type: 'select',
         options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp', 'deepseek']
     })
-    chat: string = 'llama_cpp';
+    chat: string = 'openrouter';
 
     @ClientSettings({
         label: 'Embeddings Provider',

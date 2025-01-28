@@ -107,16 +107,8 @@ class ClientMethodsImplementation implements ClientMethods {
         }
     }
 
-    onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }) {
+    async onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }) {
         this.contextMethods.setNeedsConfig(!status.configured);
-        if (status.configured) {
-            // Trigger initial data fetch when backend is ready
-            Promise.all([
-                this.contextMethods.fetchChannels(),
-                this.contextMethods.fetchHandles(),
-                this.contextMethods.fetchAllArtifacts()
-            ]).catch(console.error);
-        }
     }
 
     onTaskUpdate(task: ClientTask) {

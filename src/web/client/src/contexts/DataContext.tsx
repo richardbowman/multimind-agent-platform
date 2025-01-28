@@ -135,6 +135,19 @@ export const DataProvider: React.FC<{
     loadChannelData();
   }, [currentChannelId, currentThreadId]);
 
+  useEffect(() => {
+    if (needsConfig === false) {
+        // Trigger initial data fetch when backend is ready
+        try {
+            fetchChannels();
+            fetchHandles();
+            fetchAllArtifacts();
+        } catch (error) {
+            console.error(error);
+        };
+    }
+  }, [needsConfig]);
+
   // Update loading state when messages are received
   useEffect(() => {
     setIsLoading(false);
@@ -155,8 +168,12 @@ export const DataProvider: React.FC<{
   }, []);
 
   const fetchChannels = useCallback(async () => {
-    const newChannels = await ipcService.getRPC().getChannels();
-    setChannels(newChannels);
+    try {
+      const newChannels = await ipcService.getRPC().getChannels();
+      setChannels(newChannels);
+    } catch (error) {
+      console.error(error);
+    }
   }, []);
 
   const fetchHandles = useCallback(async () => {
@@ -372,7 +389,10 @@ export const DataProvider: React.FC<{
     setTasks
   ]);
 
+  console.log("Recreating client methods");
   const clientMethods = useClientMethods(useSnackbar(), contextMethods);
+
+  
 
   useEffect(() => {
     if (ipcService && clientMethods) {

@@ -17,26 +17,6 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
     constructor(private partialServices: BackendServicesConfigNeeded) {
     }
 
-    createWrapper(): ServerMethods {
-        const handler = this;
-        return new Proxy({} as ServerMethods, {
-            get(target, prop) {
-                if (typeof handler[prop as keyof ServerMethods] === 'function') {
-                    return async (...args: any[]) => {
-                        try {
-                            const result = await (handler[prop as keyof ServerMethods] as Function).apply(handler, args);
-                            return result;
-                        } catch (error) {
-                            Logger.error(`Error in wrapped handler method ${String(prop)}:`, error);
-                            throw error;
-                        }
-                    };
-                }
-                return undefined;
-            }
-        });
-    }
-
     async openDevTools(): Promise<void> {
         if (process.env.NODE_ENV === 'development') {
             const mainWindow = this.partialServices.mainWindow.getWindow();

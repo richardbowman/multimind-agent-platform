@@ -6,6 +6,7 @@ import { createSafeServerRPCHandlers } from './rpcUtils';
 import { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 import { LimitedRPCHandler } from './LimitedRPCHandler';
 import { AppUpdater } from 'electron-updater';
+import Logger from 'src/helpers/logger';
 
 export class ElectronIPCServer {
     private handler: LimitedRPCHandler|ServerRPCHandler;
@@ -28,13 +29,33 @@ export class ElectronIPCServer {
         this.handler.setupClientEvents(this.getRPC()!, autoUpdater);
     }
 
+    createWrapper(): ServerMethods {
+        const _this = this;
+        return new Proxy({} as ServerMethods, {
+            get(target, prop) {
+                if (typeof _this.handler[prop as keyof ServerMethods] === 'function') {
+                    return async (...args: any[]) => {
+                        try {
+                            const result = await (_this.handler[prop as keyof ServerMethods] as Function).apply(_this.handler, args);
+                            return result;
+                        } catch (error) {
+                            Logger.error(`Error in wrapped handler method ${String(prop)}:`, error);
+                            throw error;
+                        }
+                    };
+                }
+                return undefined;
+            }
+        });
+    }
+
     private setupRPC() {
         const safeHandlers = createSafeServerRPCHandlers();
 
         const cleanupFns : Function[] = [];
 
         const rpc = createBirpc<ClientMethods, ServerMethods>(
-            this.handler.createWrapper(),
+            this.createWrapper(),
             {
                 ...safeHandlers,
                 post: (data) => this.mainWindow.webContents.send('birpc', data),
@@ -66,6 +87,9 @@ export class ElectronIPCServer {
             throw new Error("RPC has been terminated");
         }
         this.services = services;
+        this.handler = services.type === 'configNeeded' ? 
+            new LimitedRPCHandler(services) : 
+            new ServerRPCHandler(services);
         this.handler.setServices(services);
         this.handler.setupClientEvents(this.getRPC(), autoUpdater);
         

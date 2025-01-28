@@ -85,7 +85,7 @@ export class SettingsManager extends EventEmitter {
             this.settings = this.deepMerge(this.settings, agentsConfig);   // overwrite agents config with latest
         } catch (error: any) {
             if (error?.code === 'ENOENT') {
-                this.settings = agentsConfig;
+                this.settings = this.deepMerge(new Settings(), agentsConfig);
                 await this.save();
             } else {
                 Logger.error('Error loading settings:', error);

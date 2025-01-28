@@ -16,7 +16,7 @@ contextBridge.exposeInMainWorld(
             if (validChannels.includes(channel)) {
                 ipcRenderer.on(channel, (event, ...args) => func(...args));
                 return () => {
-                    ipcRenderer.removeListener(channel, func);
+                    // ipcRenderer.removeListener(channel, func);
                 };
             }
         },

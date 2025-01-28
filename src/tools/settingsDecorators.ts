@@ -7,7 +7,6 @@ export function ClientSettings(metadata: {
     description?: string;
     type?: 'string' | 'number' | 'boolean' | 'select' | 'section' | 'slider';
     options?: string[];
-    defaultValue?: any;
     min?: number;
     max?: number;
     step?: number;

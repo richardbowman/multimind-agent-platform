@@ -110,7 +110,7 @@ export class RouterAgent extends Agent {
                 break;
 
             case 'execute-transfer':
-                if (response.selectedAgent && response.confidence > 0.9) {
+                if (response.selectedAgent) {
                     await this.chatClient.postInChannel(
                         createUUID(userPost.channel_id),
                         `${response.selectedAgent} ${response.response}`,
