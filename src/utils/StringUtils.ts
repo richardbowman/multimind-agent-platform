@@ -57,6 +57,20 @@ export namespace StringUtils {
     }
 
     /**
+     * Truncates text with an ellipsis if it exceeds the specified maxLength
+     * @param text Input text to be truncated
+     * @param maxLength Maximum length of the text before truncation
+     * @returns Truncated text with ellipsis if necessary
+     */
+    export function truncateWithEllipsis(text: string, maxLength: number): string {
+        if (text.length > maxLength) {
+            return text.substring(0, maxLength - 3) + "...";
+        } else {
+            return text;
+        }
+    }
+
+    /**
      * Extracts text from a caption like "Report Title: XXXX"
      * @param text Input text containing the caption
      * @param caption The caption to search for, e.g., "Report Title"
