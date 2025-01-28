@@ -26,5 +26,6 @@ export enum ExecutorType {
     DOWNLOAD_WEBPAGE = "download-webpage",
     GOAL_PROGRESS = "goal-progress",
     NODE_EXECUTION = "nodejs-code-execution",
-    DEBUG = "debug"
+    DEBUG = "debug",
+    CALENDAR_MANAGEMENT = "calendar-management"
 }
