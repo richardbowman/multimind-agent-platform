@@ -6,18 +6,15 @@ MultiMind is a desktop app for Mac OS X, Windows, and Linux that uses your choic
 
 To get started with MultiMind, follow these steps:
 
-1. Install the package
-2. Configure your settings
-3. Start using the API
-
-```bash
-pip install your-package
-```
+1. **Download the latest release**: You can download the latest release from [GitHub releases](https://github.com/richardbowman/multimind-agent-platform/releases/).
+2. **Install the package**: Follow the installation instructions provided with the downloaded package.
+3. **Configure your settings**: Set up your configuration settings according to the instructions.
+4. **Start using the API**: Begin using MultiMind's features and APIs.
 
 ### Usage
 
-MultiMind is free to use for non-commercial purposes. For more details on license restrictions, please see the [LICENSE](LICENSE) file.
+MultiMind is free to use for non-commercial purposes. For more details on license restrictions, please see the [LICENSE](LICENSE) file. The app will automatically download and apply the latest updates.
 
 ## Contributing
 
-We welcome contributions! Please see our [GitHub repository](https://github.com/yourusername/your-public-repo) for more information.
+We welcome contributions! Please see our [GitHub repository](https://github.com/richardbowman/multimind-agent-platform) for more information.
