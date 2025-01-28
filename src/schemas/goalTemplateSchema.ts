@@ -96,8 +96,8 @@ export const GoalTemplates: GoalTemplate[] = [
         id: 'software-project',
         name: 'Software Development Project',
         description: 'Template for managing a software development project',
-        supportingAgents: ['2e330aba-4888-42b8-8685-ecdc7f4b1b43'], // ProjectManager
-        defaultResponder: '2e330aba-4888-42b8-8685-ecdc7f4b1b43',
+        supportingAgents: ["@product"],
+        defaultResponder: "@product",
         initialTasks: [
             {
                 description: 'Understand the product vision and product requirements to generate product requirements',
