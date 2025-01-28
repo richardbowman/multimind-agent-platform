@@ -63,6 +63,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
     const [availableModels, setAvailableModels] = useState<Record<string, ModelInfo[]>>({});
     const [availableEmbedders, setAvailableEmbedders] = useState<Record<string, EmbedderModelInfo[]>>({});
+    const [modelFetchError, setModelFetchError] = useState<string>('');
 
     useEffect(() => {
         const fetchModels = async () => {
@@ -84,6 +85,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     }));
                 } catch (error) {
                     console.error('Failed to fetch models:', error);
+                    setModelFetchError(`Failed to fetch models: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 }
             }
         }
@@ -105,6 +107,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     }));
                 } catch (error) {
                     console.error('Failed to fetch models:', error);
+                    setModelFetchError(`Failed to fetch models: ${error instanceof Error ? error.message : 'Unknown error'}`);
                 }
             }
 
@@ -523,6 +526,12 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     {successMessage && (
                         <Alert severity="success" sx={{ mt: 2 }}>
                             {successMessage}
+                        </Alert>
+                    )}
+
+                    {modelFetchError && (
+                        <Alert severity="error" sx={{ mt: 2 }}>
+                            {modelFetchError}
                         </Alert>
                     )}
                 </Box>
