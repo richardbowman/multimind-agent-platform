@@ -25,7 +25,11 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         label: string;
         onClick: () => void;
         disabled?: boolean;
-    }>>([]);
+    }>>([{
+        icon: <DescriptionIcon />,
+        label: 'Create New Artifact',
+        onClick: () => setEditorOpen(true)
+    }]);
 
     const handleCreateArtifact = async (artifact: Artifact) => {
         // Update the selected artifact
@@ -154,14 +158,10 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     setSelectedArtifact(selectedArtifact);
                                 }}
                                 onAddToolbarActions={(actions) => {
-                                    setToolbarActions([
-                                        {
-                                            icon: <DescriptionIcon />,
-                                            label: 'Create New Artifact',
-                                            onClick: () => setEditorOpen(true)
-                                        },
-                                        ...actions
-                                    ]);
+                                    setToolbarActions(prev => {
+                                        const baseAction = prev[0]; // Keep the create new action
+                                        return [baseAction, ...actions];
+                                    });
                                 }}
                             />
                         </Box>
