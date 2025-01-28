@@ -15,9 +15,10 @@ The AI Research Assistant is a sophisticated platform that combines:
 - **Custom Workflows**: Create tailored automation processes
 
 ## System Requirements
+- **Operating System**: Windows 11, Mac OS X Sonoma, or a Linux distribution capable of running AppImage packaged applications
 - Node.js 18+
 - ChromaDB or Vectra vector database (optional)
-- Supported LLM provider (LM Studio, OpenAI, Bedrock, etc)
+- Supported LLM provider (LM Studio, OpenAI, Bedrock, etc.)
 - Mattermost server (optional for chat interface)
 - Settings configured through the Settings panel
 
