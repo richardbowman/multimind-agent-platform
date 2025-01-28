@@ -32,6 +32,6 @@ jobs:
         uses: peaceiris/actions-gh-pages@v3
         with:
           deploy_key: ${{ secrets.DOCS_DEPLOY_KEY }}
-          external_repository: yourusername/multimind-agent-platform
+          external_repository: richardbowman/multimind-agent-platform
           publish_dir: ./public
           force_orphan: true
