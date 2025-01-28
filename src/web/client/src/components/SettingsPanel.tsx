@@ -500,7 +500,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             >
                 <Toolbar />
                 <List>
-                    {Object.keys(categories).map((category) => (
+                    {sortedCategories.map(([category]) => (
                         <ListItem key={category} disablePadding>
                             <ListItemButton
                                 onClick={() => {
@@ -573,7 +573,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         overflowY: 'auto'
                     }}
                     >
-                        {Object.entries(categories).map(([category, metadataList]) => {
+                        {sortedCategories.map(([category, metadataList]) => {
                             // Filter model settings based on selected provider
                             const filteredList = category === 'LLM Settings' || category === 'Embeddings'
                                 ? metadataList.filter(meta => {
