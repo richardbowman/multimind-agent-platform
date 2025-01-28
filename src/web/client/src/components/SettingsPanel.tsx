@@ -200,6 +200,26 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
             setValidationMessage('');
             setSaveSuccess(true);
 
+            // Reload available models after successful save
+            try {
+                if (settings.providers?.chat) {
+                    const models = await ipcService.getRPC().getAvailableModels(settings.providers.chat);
+                    setAvailableModels(prev => ({
+                        ...prev,
+                        [settings.providers!.chat]: models
+                    }));
+                }
+                if (settings.providers?.embeddings) {
+                    const embedders = await ipcService.getRPC().getAvailableEmbedders(settings.providers.embeddings);
+                    setAvailableEmbedders(prev => ({
+                        ...prev,
+                        [settings.providers!.embeddings]: embedders
+                    }));
+                }
+            } catch (error) {
+                console.error('Failed to reload models:', error);
+            }
+
             // Reset success state after animation
             setTimeout(() => {
                 setSaveSuccess(false);
