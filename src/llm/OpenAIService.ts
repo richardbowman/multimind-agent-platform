@@ -16,7 +16,7 @@ export class OpenAIService extends BaseLLMService {
     private embeddingService?: IEmbeddingFunction;
 
 
-    constructor(apiKey: string, model: string, embeddingModel?: string, baseUrl?: string) {
+    constructor(apiKey: string, model: string, embeddingModel?: string, baseUrl?: string, private settings?: Settings) {
         super("openai");
         const configuration: ClientOptions = ({
             apiKey: apiKey,
@@ -112,12 +112,12 @@ export class OpenAIService extends BaseLLMService {
                     }
                 }));
 
-                toolChoice = {
+                toolChoice = settings.tool_choice === 'required' ? {
                     type: "function",
                     function: {
                         name: "generate_structured_output"
                     }
-                }
+                } : settings.tool_choice === 'none' ? 'none' : 'auto'
             }
 
             // const model = params.modelType ? 

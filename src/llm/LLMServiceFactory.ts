@@ -41,7 +41,9 @@ export class LLMServiceFactory {
                 return new OpenAIService(
                     settings.openai.api.key,
                     settings.models.conversation.openai || "gpt-3.5-turbo",
-                    settings.models.embeddings.openai || "text-embedding-ada-002"
+                    settings.models.embeddings.openai || "text-embedding-ada-002",
+                    undefined,
+                    settings
                 );
             case LLMProvider.LLAMA_CPP:
                 return new LlamaCppService(settings.llama_cpp_execution_mode);
@@ -77,7 +79,9 @@ export class LLMServiceFactory {
                 return new OpenAIService(
                     settings.openai.api.key,
                     settings.models.conversation.openai || "gpt-3.5-turbo",
-                    settings.models.embeddings.openai || "text-embedding-ada-002"
+                    settings.models.embeddings.openai || "text-embedding-ada-002",
+                    undefined,
+                    settings
                 );
             case LLMProvider.OPENROUTER:
                 if (!settings.openrouter?.api?.key) {
