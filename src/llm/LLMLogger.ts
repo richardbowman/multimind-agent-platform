@@ -76,7 +76,8 @@ export class LLMCallLogger extends EventEmitter {
                 return await fs.promises.readFile(this.logFile, 'utf8');
             });
             const lines = content.trim().split('\n');
-            return lines.map(line => JSON.parse(line));
+            return lines.map(line => JSON.parse(line))
+                       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         } catch (err) {
             Logger.error('Failed to read LLM logs:', err);
             return [];
@@ -104,7 +105,8 @@ export class LLMCallLogger extends EventEmitter {
                 });
                 const lines = content.trim().split('\n');
                 const serviceName = file.split('-')[0];
-                logs[serviceName] = lines.map(line => JSON.parse(line));
+                logs[serviceName] = lines.map(line => JSON.parse(line))
+                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
             }
 
             return logs;
