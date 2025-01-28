@@ -126,6 +126,29 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
         }
     };
 
+    const handleTemplateSelect = (templateId: string) => {
+        setSelectedTemplate(templateId);
+        // Convert @handles to IDs when selecting template
+        setSelectedAgents(GoalTemplates.find(t => t.id === templateId)?.supportingAgents.map(idOrHandle => 
+            idOrHandle.startsWith('@') 
+                ? webSocket.handles.find(h => h.handle === idOrHandle.slice(1))?.id || idOrHandle
+                : idOrHandle
+        ) || []);
+        // Set default responder if specified in template
+        const template = GoalTemplates.find(t => t.id === templateId);
+        if (template?.defaultResponder) {
+            setDefaultResponderId(
+                template.defaultResponder.startsWith('@')
+                    ? webSocket.handles.find(h => h.handle === template.defaultResponder.slice(1))?.id || template.defaultResponder
+                    : template.defaultResponder
+            );
+        }
+        // Default channel name to template id if not already set
+        if (!channelName.trim() || !channelName.startsWith('#')) {
+            setChannelName(`#${templateId}`);
+        }
+    };
+
     return (
         <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'hidden' }}>
             <Box sx={{ mb: 2 }}>
@@ -280,23 +303,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                     }}
                                 >
                                     <CardActionArea 
-                                        onClick={() => {
-                                            setSelectedTemplate(template.id);
-                                            // Convert @handles to IDs when selecting template
-                                            setSelectedAgents(template.supportingAgents.map(idOrHandle => 
-                                                idOrHandle.startsWith('@') 
-                                                    ? webSocket.handles.find(h => h.handle === idOrHandle.slice(1))?.id || idOrHandle
-                                                    : idOrHandle
-                                            ));
-                                            // Set default responder if specified in template
-                                            if (template.defaultResponder) {
-                                                setDefaultResponderId(
-                                                    template.defaultResponder.startsWith('@')
-                                                        ? webSocket.handles.find(h => h.handle === template.defaultResponder?.slice(1))?.id || template.defaultResponder
-                                                        : template.defaultResponder
-                                                );
-                                            }
-                                        }}
+                                        onClick={() => handleTemplateSelect(template.id)}
                                         sx={{ height: '100%' }}
                                     >
                                         <CardContent>
