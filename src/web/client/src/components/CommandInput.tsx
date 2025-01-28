@@ -59,9 +59,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 const searchTerm = value.slice(5).toLowerCase();
                 const filtered = allArtifacts
                     .filter(artifact => 
-                        artifact.type.toLowerCase().includes(searchTerm) ||
-                        artifact.id.toLowerCase().includes(searchTerm) ||
-                        artifact.metadata?.title.toLowerCase().includes(searchTerm)
+                        artifact.type?.toLowerCase().includes(searchTerm) ||
+                        artifact.id?.toLowerCase().includes(searchTerm) ||
+                        artifact.metadata?.title?.toLowerCase().includes(searchTerm)
                     )
                     .map(artifact => ({
                         title: artifact.metadata?.title,

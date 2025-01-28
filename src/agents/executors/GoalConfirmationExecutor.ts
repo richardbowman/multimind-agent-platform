@@ -46,10 +46,6 @@ export class GoalConfirmationExecutor implements StepExecutor {
         
         // Add core instructions
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
-        promptBuilder.addInstruction(`Your goal is to:
-1. Restate the user's goal in your own words
-2. Decide if you have enough information to proceed, and if so, respond with understanding=true
-3. If the goal is not actionable, respond with the additional information you need and understanding=false`);
 
         // Add content sections
         promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
@@ -62,6 +58,13 @@ export class GoalConfirmationExecutor implements StepExecutor {
         promptBuilder.addContent(ContentType.CONVERSATION, params.context?.threadPosts);
         promptBuilder.addContent(ContentType.GOALS, params.channelGoals);
 
+        promptBuilder.addInstruction(`IMPORTANT RESPONSE INSTRUCTIONS:
+            YOU MUST ELIMINATE acronyms or other terminology that may be ambigous or confusing to other agents.
+
+            1. Determine if the goal, or any terminology used is ambiguous.
+            2. If the goal or terminology is ambiguous, respond with the additional information you need and understanding=false
+            3. If the goal and terminology is clear, respond with understanding=true. Restate the user's goal to be as clear and unambiguous as possible.`);
+            
         // Build and execute prompt
         const prompt = promptBuilder.build();
         const result = await this.modelHelpers.generate<GoalConfirmationResponse>({

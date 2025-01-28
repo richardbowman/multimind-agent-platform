@@ -207,6 +207,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                                     ]);
                                 }}
                             />
+                        </Box>
                     </Box>
                 )}
             </Drawer>

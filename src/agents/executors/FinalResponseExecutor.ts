@@ -8,6 +8,8 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { message } from 'blessed';
+import { StringUtils } from 'src/utils/StringUtils';
 
 /**
  * Executor that synthesizes all previous results into a final response.
@@ -32,20 +34,18 @@ export class FinalResponseExecutor implements StepExecutor {
     }
 
     async executeOld(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
-        const schema = await getGeneratedSchema(SchemaType.FinalResponse);
+        //const schema = await getGeneratedSchema(SchemaType.FinalResponse);
 
-        const systemPrompt = `You are an AI assistant generating a final response.
+        const instructions = `You are an AI assistant generating a final response.
 Synthesize all the intermediate results into a clear, comprehensive answer that addresses the original goal.
-Include relevant details from all steps while maintaining clarity and coherence. Include your sources.
-You will respond inside of the message key in Markdown format.`;
+Include relevant details from all steps while maintaining clarity and coherence. Include your sources.`;
 
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const context = JSON.stringify({
             originalGoal: goal,
             previousResults
         }, null, 2);
 
-        const response = await this.modelHelpers.generate<FinalResponse>({
+        const response = await this.modelHelpers.generate({
             message: context,
             instructions
         });
@@ -53,7 +53,9 @@ You will respond inside of the message key in Markdown format.`;
         return {
             type: StepResultType.FinalResponse,
             finished: true,
-            response
+            response: {
+                message: response
+            }
         };
     }
 }
