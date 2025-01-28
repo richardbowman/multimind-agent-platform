@@ -127,7 +127,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     
                     // Handle binary content
                     if (artifact.type === 'binary' || artifact.metadata?.format === 'binary') {
-                        return <pre>{artifact.content as string}</pre>;
+                        return <pre>Binary content</pre>;
                     }
                     
                     // Default to Markdown rendering
