@@ -1,5 +1,5 @@
 export namespace StringUtils {
-    export function truncate(string: string, maxLength: number, truncationMsg = (maxLength : number, originalLength : number) => `[Truncated to ${maxLength}. Original length: ${originalLength}`) {
+    export function truncate(string: string, maxLength: number, truncationMsg = (maxLength: number, originalLength: number) => `[Truncated to ${maxLength}. Original length: ${originalLength}`) {
         if (typeof string === "string") {
             const originalLength = string.length;
             return string.substring(0, maxLength) + (originalLength > maxLength ? truncationMsg(maxLength, originalLength) : "");
@@ -10,14 +10,14 @@ export namespace StringUtils {
 
     export function extractCodeBlocks(text: string): string[] {
         const codeBlockRegex =
-    /```(?:javascript|typescript|python|java|bash|json|html|css|markdown|yaml|xml)[\s\S]*?\n([\s\S]*?)```/g;
-        const matches : string[] = [];
-        let match : RegExpExecArray|null;
-    
+            /```(?:javascript|typescript|python|java|bash|json|html|css|markdown|yaml|xml)[\s\S]*?\n([\s\S]*?)```/g;
+        const matches: string[] = [];
+        let match: RegExpExecArray | null;
+
         while ((match = codeBlockRegex.exec(text)) !== null) {
             matches.push(match[1].trim());
         }
-    
+
         return matches;
     }
 
@@ -30,7 +30,7 @@ export namespace StringUtils {
     export function extractAndParseJsonBlocks(text: string): any[] {
         const jsonBlockRegex = /```json[\s\S]*?\n([\s\S]*?)```/g;
         const matches: any[] = [];
-        let match: RegExpExecArray|null;
+        let match: RegExpExecArray | null;
 
         while ((match = jsonBlockRegex.exec(text)) !== null) {
             try {
@@ -54,5 +54,17 @@ export namespace StringUtils {
         // Replace all code blocks (with any language specifier) with empty strings
         const withoutCodeBlocks = text.replace(/```[\s\S]*?```/g, '');
         return withoutCodeBlocks.trim();
+    }
+
+    /**
+     * Extracts the title from a caption like "Report Title: XXXX"
+     * @param text Input text containing the caption
+     * @param caption The caption to search for, e.g., "Report Title:"
+     * @returns The title extracted from the caption or an empty string if not found
+     */
+    export function extractTitleFromCaption(text: string, caption: string): string {
+        const captionRegex = new RegExp(`${caption}\\s*(.*?)\\n`);
+        const match = captionRegex.exec(text);
+        return match ? match[1].trim() : '';
     }
 }
