@@ -13,7 +13,7 @@ To get started with MultiMind, follow these steps:
 
 ### Usage
 
-MultiMind is free to use for non-commercial purposes. For more details on license restrictions, please see the [LICENSE](https://raw.githubusercontent.com/richardbowman/multimind-agent-platform/main/LICENSE) file. The app will automatically download and apply the latest updates.
+MultiMind is free to use for non-commercial purposes. For more details on license restrictions, please see the [LICENSE](LICENSE) file. The app will automatically download and apply the latest updates.
 
 ## Contributing
 
