@@ -47,6 +47,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
     const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
     const [defaultResponderId, setDefaultResponderId] = useState<string | null>(null);
+    const [lastSelectedTemplateName, setLastSelectedTemplateName] = useState<string>('');
 
     const webSocket = useWebSocket();
 
@@ -72,6 +73,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
             setSelectedAgents([]);
             setSelectedTemplate(null);
             setDefaultResponderId(null);
+            setLastSelectedTemplateName('');
         }
         setOpen(true);
     };
@@ -143,10 +145,11 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                     : template.defaultResponder
             );
         }
-        // Default channel name to template id if not already set
-        if (!channelName.trim() || !channelName.startsWith('#')) {
+        // Default channel name to template id if not already set or if the name is still the last selected template's name
+        if (!channelName.trim() || !channelName.startsWith('#') || channelName === `#${lastSelectedTemplateName}`) {
             setChannelName(`#${templateId}`);
         }
+        setLastSelectedTemplateName(templateId);
     };
 
     return (
