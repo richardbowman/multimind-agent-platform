@@ -18,3 +18,7 @@ MultiMind is free to use for non-commercial purposes. For more details on licens
 ## Contributing
 
 We welcome contributions! Please see our [GitHub repository](https://github.com/richardbowman/multimind-agent-platform) for more information.
+
+## Support
+
+For support, you can open issues on the [GitHub public issues tracker](https://github.com/richardbowman/multimind-agent-platform/issues).
