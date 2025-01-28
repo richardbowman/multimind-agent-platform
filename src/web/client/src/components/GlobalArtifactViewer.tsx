@@ -2,13 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
 import { useWebSocket } from '../contexts/DataContext';
-import { Paper, Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, IconButton, List, Drawer, Toolbar, Fab, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Stack } from '@mui/material';
+import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
-import Grid from '@mui/material/Grid2';
 import FolderIcon from '@mui/icons-material/Folder';
 import DescriptionIcon from '@mui/icons-material/Description';
-import MenuIcon from '@mui/icons-material/Menu';
+import { ActionToolbar } from './shared/ActionToolbar';
 
 export interface DrawerPage {
     drawerOpen: boolean;
