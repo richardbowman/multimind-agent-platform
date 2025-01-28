@@ -6,6 +6,8 @@ import { StepBasedAgent } from "src/agents/stepBasedAgent";
 import { ChatPost } from "src/chat/chatClient";
 import Logger from "src/helpers/logger";
 import { Artifact } from "src/tools/artifact";
+import { ModelHelpers } from "./modelHelpers";
+import { Project } from "src/tools/taskManager";
 
 export interface ContentRenderer<T> {
     (content: T): string;
@@ -21,15 +23,18 @@ export enum ContentType {
     GOALS = 'goals',
     STEP_RESULTS = 'step_results',
     EXECUTE_PARAMS = 'execute_params',
-    AGENT_CAPABILITIES = 'agent_capabilities'
+    AGENT_CAPABILITIES = 'agent_capabilities',
+    PURPOSE = "PURPOSE"
 }
 
 
 export class PromptRegistry {
     private contentRenderers: Map<ContentType, ContentRenderer<any>> = new Map();
 
-    constructor() {
+    constructor(private modelHelpers: ModelHelpers) {
         // Register default renderers
+        this.registerRenderer(ContentType.PURPOSE, this.renderPurpose.bind(this));
+
         this.registerRenderer(ContentType.ARTIFACTS, this.renderArtifacts.bind(this));
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation.bind(this));
         this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults.bind(this));
@@ -65,6 +70,12 @@ export class PromptRegistry {
 
     registerStepResultRenderer(type: StepResultType, renderer: ContentRenderer<StepResult>): void {
         this.stepResultRenderers.set(type, renderer);
+    }
+
+    renderPurpose() {
+        return `OVERALL AGENT PURPOSE:
+${this.modelHelpers.getPurpose()}
+`;
     }
 
     private renderStepResults(steps: StepTask[]): string {
@@ -177,15 +188,15 @@ export class PromptBuilder {
     private context: string[] = [];
     private registry: PromptRegistry;
 
-    constructor(registry?: PromptRegistry) {
-        this.registry = registry || new PromptRegistry();
+    constructor(registry: PromptRegistry) {
+        this.registry = registry;
     }
 
     registerRenderer<T>(contentType: ContentType, renderer: ContentRenderer<T>): void {
         this.registry.registerRenderer(contentType, renderer);
     }
 
-    addContent<T>(contentType: ContentType, content: T): void {
+    addContent<T>(contentType: ContentType, content?: T): void {
         this.contentSections.set(contentType, content);
     }
 

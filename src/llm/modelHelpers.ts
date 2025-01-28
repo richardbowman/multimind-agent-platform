@@ -76,7 +76,7 @@ export class StepSequence {
 
 export class ModelHelpers {
     private stepSequences: StepSequence[] = [];
-    private promptRegistry: PromptRegistry = new PromptRegistry();
+    private promptRegistry: PromptRegistry = new PromptRegistry(this);
 
     createPrompt() {
         return new PromptBuilder(this.promptRegistry);

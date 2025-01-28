@@ -57,13 +57,13 @@ export namespace StringUtils {
     }
 
     /**
-     * Extracts the title from a caption like "Report Title: XXXX"
+     * Extracts text from a caption like "Report Title: XXXX"
      * @param text Input text containing the caption
-     * @param caption The caption to search for, e.g., "Report Title:"
-     * @returns The title extracted from the caption or an empty string if not found
+     * @param caption The caption to search for, e.g., "Report Title"
+     * @returns The text extracted from the caption or an empty string if not found
      */
-    export function extractTitleFromCaption(text: string, caption: string): string {
-        const captionRegex = new RegExp(`${caption}\\s*(.*?)\\n`);
+    export function extractCaptionedText(text: string, caption: string): string {
+        const captionRegex = new RegExp(`${caption}:\\s*(.*?)\\n`);
         const match = captionRegex.exec(text);
         return match ? match[1].trim() : '';
     }

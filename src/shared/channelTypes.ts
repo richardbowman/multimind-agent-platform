@@ -1,10 +1,10 @@
-import { UUID } from 'src/types/uuid';
+import { ChannelHandle, UUID } from 'src/types/uuid';
 import { ChatHandle } from 'src/types/chatHandle';
 import { Task } from 'src/tools/taskManager';
 
 
 export interface CreateChannelHandlerParams {
-    name: string;
+    name: ChannelHandle;
     description?: string;
     isPrivate?: boolean;
     members?: (UUID | ChatHandle)[];
@@ -17,7 +17,7 @@ export interface CreateChannelHandlerParams {
 
 
 export interface CreateChannelParams {
-    name: string;
+    name: ChannelHandle;
     description?: string;
     isPrivate?: boolean;
     members?: UUID[];

@@ -64,7 +64,6 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
              type: 'template_selection',
              finished: true,
              response: {
-                 message: `Selected template: ${modelResponse.selectedTemplateId}`,
                  reasoning: modelResponse.reasoning,
                  templateId: modelResponse.selectedTemplateId,
                  suggestedModifications: modelResponse.suggestedModifications

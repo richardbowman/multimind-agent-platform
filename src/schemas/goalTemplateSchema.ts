@@ -6,27 +6,27 @@ export interface GoalTemplate {
      * Unique identifier for the goal template
      */
     id: UUID;
-    
+
     /**
      * Human-readable name of the goal template
      */
     name: string;
-    
+
     /**
      * Description of the goal type and what it's used for
      */
     description: string;
-    
+
     /**
      * List of agent IDs or types required to support this goal
      */
     supportingAgents: (UUID | ChatHandle)[];
-    
+
     /**
      * Default responding agent ID or @handle for this goal template
      */
     defaultResponder?: UUID;
-    
+
     /**
      * Initial tasks to create when this goal template is selected
      */
@@ -38,17 +38,17 @@ export interface InitialTask {
      * Task description
      */
     description: string;
-    
+
     /**
      * Task type identifier
      */
     type: string;
-    
+
     /**
      * Optional dependencies for task ordering
      */
     dependsOn?: string[];
-    
+
     /**
      * Optional metadata for the task
      */
@@ -121,7 +121,7 @@ export const GoalTemplates: GoalTemplate[] = [
             '@data', //data gatherer
             '@marketing' // marketing strategist
         ],
-        defaultResponder: '9d039c4e-f99d-4fb7-a160-452ac261569c',
+        defaultResponder: '@router',
         initialTasks: [
             {
                 description: 'Share existing website content',
@@ -137,16 +137,16 @@ export const GoalTemplates: GoalTemplate[] = [
                 dependsOn: ['define-campaign-goals']
             }
         ]
-    }
-],
+    },
     {
         id: 'web-research-channel',
         name: 'Web Research Channel',
         description: 'Template for setting up a web research channel with a research manager',
         supportingAgents: [
-            '@research-manager'
+            '@research',
+            '@researchteam'
         ],
-        defaultResponder: '@research-manager',
+        defaultResponder: '@research',
         initialTasks: [
             {
                 description: 'Define research goals and objectives',
@@ -163,4 +163,4 @@ export const GoalTemplates: GoalTemplate[] = [
                 dependsOn: ['gather-initial-research-data']
             }
         ]
-    }
+    }];

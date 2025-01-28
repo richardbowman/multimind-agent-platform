@@ -98,8 +98,8 @@ export class UnderstandGoalsExecutor implements StepExecutor {
                 - Build upon partial answers to get more specific details
                 - Focus on areas not yet covered or needing clarification
                 - Create as few questions as possible to succeed at the goal.
-                - If you have enough information to proceed, set shouldContinue: true and return no questions
-                - If the user seems frustrated or asks you to move on, set shouldContinue: true
+                - If you have enough information to proceed, return no questions
+                - If the user seems frustrated or asks you to move on, return no questions
 
                 Each question should help gather specific information about:
 
@@ -144,7 +144,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             });
         }
 
-        const shouldContinue = params.executionMode === 'task' ? true : response.shouldContinue || response.intakeQuestions.length === 0;
+        const shouldContinue = params.executionMode === 'task' ? true : response.intakeQuestions.length === 0;
 
         // If we're continuing, mark all pending question tasks as complete
         if (shouldContinue) {

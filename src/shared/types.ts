@@ -1,5 +1,5 @@
 
-import { UUID } from 'src/types/uuid';
+import { ChannelHandle, UUID } from 'src/types/uuid';
 import { TaskStatus } from 'src/tools/taskManager';
 
 export interface ClientTask {
@@ -45,7 +45,7 @@ export interface ClientProject {
 }
 export interface ClientChannel {
     id: string;
-    name: string;
+    name: ChannelHandle;
     description?: string;
     members: UUID[];
     projectId?: UUID;

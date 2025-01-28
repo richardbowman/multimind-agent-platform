@@ -13,6 +13,7 @@ import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { ResearchArtifactResponse } from '../../schemas/research-manager';
 import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { StringUtils } from 'src/utils/StringUtils';
 
 /**
  * Executor that combines and synthesizes research findings into comprehensive reports.
@@ -45,42 +46,61 @@ export class ResearchAggregationExecutor implements StepExecutor {
         const aggregatedData = await this.aggregateResults(goal, projectId);
         const schema = await getGeneratedSchema(SchemaType.ResearchArtifactResponse);
 
-        const systemPrompt = `
+        const instructions = `
 You are a research manager. Your team of research assistants have completed web searches to look up information
 based on your original requests list. Generate a comprehensive report based on the aggregated data and the user's original prompt.
 Make sure to include sources back to the results. Do not make up information missing in the search results.
-Make sure you put the entire report inside the artifactContent field in Markdown format.`;
 
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+Specify the title like this:
+
+Report Title: XXX
+
+And put the report inside of \`\`\`markdown tags.`;
+
+        // const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         // Generate the research report with token tracking
-        const result = await this.modelHelpers.generate<ResearchArtifactResponse>({
+        const result = await this.modelHelpers.generate({
             message: `Original Goal: ${goal}\nAggregated Data:\n${aggregatedData}`,
             instructions
         });
 
-        const artifact = await this.artifactManager.saveArtifact({
-            id: crypto.randomUUID(),
-            type: 'report',
-            content: result.artifactContent,
-            tokenCount: result._usage?.outputTokens,
-            metadata: {
-                title: result.artifactTitle,
-                projectId: projectId,
-                tokenUsage: result._usage
-            }
-        });
+        const title = StringUtils.extractCaptionedText(result.message, "Report Title")
+        const docBlocks = StringUtils.extractCodeBlocks(result.message);
+        const message = StringUtils.extractNonCodeContent(result.message);
 
-        return {
-            type: "aggregate-research",
-            finished: true,
-            response: {
-                message: result.message,
-                data: {
-                    artifactId: artifact.id,
-                    ...result
+        if (docBlocks.length > 0) {
+            const artifact = await this.artifactManager.saveArtifact({
+                type: 'report',
+                content: docBlocks.length>0?docBlocks[0]:"(No content provided)",
+                tokenCount: result._usage?.outputTokens,
+                metadata: {
+                    title: title,
+                    projectId: projectId,
+                    tokenUsage: result._usage
                 }
-            }
-        };
+            });
+
+            return {
+                type: "aggregate-research",
+                finished: true,
+                response: {
+                    message,
+                    data: {
+                        artifactId: artifact.id,
+                        ...result
+                    }
+                }
+            };
+        } else {
+            return {
+                type: "aggregate-research",
+                finished: false,
+                needsUserInput: true,
+                response: {
+                    message: message
+                }
+            };
+        }
     }
 
     private async aggregateResults(goal: string, projectId: string): Promise<string> {

@@ -48,16 +48,16 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
 
         const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
-        
+
         // Get both direct questions and template-based questions
-        const intakeQuestions = Object.values(project.tasks).filter(t => 
-            t.type === "step" && 
-            (t as StepTask).props.stepType === ExecutorType.ANSWER_QUESTIONS && 
+        const intakeQuestions = Object.values(project.tasks).filter(t =>
+            t.type === "step" &&
+            (t as StepTask).props.stepType === ExecutorType.ANSWER_QUESTIONS &&
             !t.complete
         );
 
         // Get template sections that need content
-        const templateSections = project.template?.sections.filter(s => 
+        const templateSections = project.template?.sections.filter(s =>
             s.status !== 'complete'
         ) || [];
 
@@ -83,7 +83,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         }
 
         const modelResponse = await this.modelHelpers.generate<AnswerAnalysisResponse>({
-            message: params.message||params.stepGoal,
+            message: params.message || params.stepGoal,
             instructions: new StructuredOutputPrompt(schema,
                 `OVERALL GOAL: ${params.overallGoal}
                 
@@ -94,17 +94,17 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 Here is the current state of our questions and answers:
 
                 Previously Answered Questions:
-                ${project.metadata.answers?.map((a : AnswerMetadata) => 
+                ${project.metadata.answers?.map((a: AnswerMetadata) =>
                     `Question: ${a.question}\nAnswer: ${a.answer}\n`
                 ).join('\n') || 'No previous answers'}
 
                 Pending Questions to Analyze:
-                ${intakeQuestions.map((q, i) => `${i+1}. ID ${q.id}: ${q.description}`).join('\n')}
+                ${intakeQuestions.map((q, i) => `${i + 1}. ID ${q.id}: ${q.description}`).join('\n')}
 
                 ${templateSections.length > 0 ? `
                 Document Sections Needing Content:
-                ${templateSections.map((s, i) => 
-                    `${i+1}. ${s.title} - ${s.description}
+                ${templateSections.map((s, i) =>
+                    `${i + 1}. ${s.title} - ${s.description}
                     Questions needed: ${s.questions.join(', ')}`
                 ).join('\n')}
                 ` : ''}
@@ -131,13 +131,13 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             if (task && answer.answered) {
                 await this.storeAnswer(project, task, answer);
                 await this.taskManager.completeTask(answer.questionId);
-                
+
                 // If this answer completes a template section, update the document
                 if (project.template && project.documentDraft) {
-                    const relatedSection = project.template.sections.find(s => 
+                    const relatedSection = project.template.sections.find(s =>
                         s.questions.includes(answer.questionId)
                     );
-                    
+
                     if (relatedSection) {
                         project.documentDraft = project.documentDraft.replace(
                             relatedSection.placeholder,
@@ -158,16 +158,36 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 return section?.status === 'complete';
             });
 
+
             if (allRequiredComplete) {
+                // If we're continuing, mark all pending question tasks as complete
+                if (modelResponse.shouldContinue) {
+                    const pendingTasks = Object.values(project.tasks || {})
+                        .filter((t: any) => t.type === 'process-answers' && !t.complete);
+
+                    for (const task of pendingTasks) {
+                        await this.taskManager.completeTask(task.id);
+                    }
+                }
                 return {
                     type: 'answer_analysis',
                     finished: true,
                     replan: ReplanType.Allow,
                     response: {
-                        message: "All required sections are complete!",
+                        message: modelResponse.message,
                         document: project.documentDraft
                     }
                 };
+            }
+        }
+
+        // If we're continuing, mark all pending question tasks as complete
+        if (modelResponse.shouldContinue) {
+            const pendingTasks = Object.values(project.tasks || {})
+                .filter((t: any) => t.type === 'process-answers' && !t.complete);
+
+            for (const task of pendingTasks) {
+                await this.taskManager.completeTask(task.id);
             }
         }
 

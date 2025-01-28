@@ -118,7 +118,7 @@
       "ProductManagerAnalyst": {
         "className": "ConfigurableAgent",
         "sourcePath": "configurableAgent.ts",
-        "userId": "c9f8d7e6-5b4a-3c2b-1e0f-9d8c7b6a5e4f",
+        "userId": "8fd319d9-b4dc-4f85-a92b-d54b216a6d3f",
         "handle": "@product",
         "description": "Helps create and document product specifications",
         "enabled": true,

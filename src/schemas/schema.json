@@ -188,8 +188,8 @@
               "method": {
                 "enum": [
                   "email",
-                  "popup",
-                  "sms"
+                  "display",
+                  "audio"
                 ],
                 "type": "string"
               },
@@ -209,7 +209,28 @@
           "format": "date-time",
           "type": "string"
         },
+        "status": {
+          "enum": [
+            "confirmed",
+            "tentative",
+            "cancelled"
+          ],
+          "type": "string"
+        },
         "title": {
+          "type": "string"
+        },
+        "transparency": {
+          "enum": [
+            "opaque",
+            "transparent"
+          ],
+          "type": "string"
+        },
+        "uid": {
+          "type": "string"
+        },
+        "url": {
           "type": "string"
         }
       },
@@ -897,6 +918,7 @@
           "type": "string"
         },
         "shouldContinue": {
+          "description": "if the LLM believes we have enough information to end questioning",
           "type": "boolean"
         }
       },

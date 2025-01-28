@@ -76,33 +76,9 @@ export class OnboardingConsultant extends StepBasedAgent {
         return this.templates;
     }
 
-    public async setupChatMonitor(monitorChannelId: UUID, handle?: string, autoRespond?: boolean): Promise<void> {
-        super.setupChatMonitor(monitorChannelId, handle, autoRespond);
-        // Check if welcome message exists in channel
-        const channelMessages = await this.chatClient.fetchPreviousMessages(monitorChannelId, 50);
-        const existingWelcome = channelMessages.find(c => c.props.messageType === 'welcome');
-
-//         if (!existingWelcome) {
-//             const welcomeMessage = {
-//                 message: `👋 Welcome! I'm your Goal-Based Onboarding Consultant.
-                
-// I help you achieve your business objectives by:
-// - Understanding your specific goals
-// - Creating actionable plans
-// - Tracking progress
-// - Adapting strategies as needed
-
-// Let's start by discussing your main business goals. What would you like to achieve?`,
-//                 props: { messageType: 'welcome' }
-//             };
-
-//             await this.send(welcomeMessage, monitorChannelId);
-//         }
-    }
-
     constructor(params: AgentConstructorParams) {
         super(params);
-        this.modelHelpers.setPurpose(`You are an Onboarding Agent focused on helping users achieve their business goals with this platform called Multimind. The service is designed
+        this.modelHelpers.setPurpose(`You are an Onboarding Agent focused on helping users achieve their goals with this platform called Multimind. The service is designed
 to help individuals and businesses automate tasks. It provides Web-based research and content creation agents. Your goal is to ensure that the rest of the agents in the platform
 are trained and educated on what the user would like to achieve with the platform. You should build an understanding of their goals and desired approach. 
 When you gather a sufficient profile to understand how our other agents should support the user, you should build a comprehensive guide documenting your Q&A.

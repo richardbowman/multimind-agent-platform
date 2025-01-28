@@ -234,11 +234,10 @@ Keep it concise but warm and engaging.`);
         promptBuilder.addInstruction(`You must explicitly choose one of these next steps:
 
 1. propose-transfer: When you have a good candidate agent but want user confirmation
-   - Explain why they're the best choice, and ask for user confirmation before transferring
+   - Explain why they're the best choice. Make sure to ask clearly in your message for user confirmation.
 
 2. execute-transfer: When you're highly confident and should immediately transfer
    - Develop a complete transfer note to the agent so they can successfully respond to the user. Make sure to repeat all pertinent information to the other agent, they will not see the original user's message.
-   - Only use when confidence > 0.9
 
 3. ask-clarification: ONLY If you do NOT know how to route the user already.
    - Politely ask specific clarifying questions, explain what information is missing

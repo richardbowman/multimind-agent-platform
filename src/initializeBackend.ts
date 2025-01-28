@@ -12,7 +12,7 @@ import { getDataPath } from "./helpers/paths";
 import path from "path";
 import { sleep } from "./utils/sleep";
 import { ServerRPCHandler } from "./server/RPCHandler";
-import { UUID } from "./types/uuid";
+import { createChannelHandle, UUID } from "./types/uuid";
 import { ConfigurationError } from "./errors/ConfigurationError";
 import { Agent } from "./agents/agents";
 
@@ -120,13 +120,14 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
     chatStorage.announceChannels();
 
-    const USER_ID = "test";
-    const userClient = new LocalTestClient(USER_ID, "test", chatStorage);
+    const USER_ID = "user";
+    const userClient = new LocalTestClient(USER_ID, "@user", chatStorage);
+    userClient.registerHandle("@user");
 
     if (!Object.values(chatStorage.channelNames).includes("#welcome")) {
         // Create RPC handler and use it to create channel
         const mappedParams = await ServerRPCHandler.createChannelHelper(userClient, tasks, {
-            name: "#welcome",
+            name: createChannelHandle("#welcome"),
             description: "This is where we'll get started",
             goalTemplate: 'welcome-channel' // Use the template
         });
