@@ -7,7 +7,7 @@ import { StructuredOutputPrompt } from '../llm/ILLMService';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { ChatPost } from 'src/chat/chatClient';
 import { ChannelData } from 'src/shared/channelTypes';
-import { createUUID } from 'src/types/uuid';
+import { createUUID, UUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { RoutingResponse } from 'src/schemas/RoutingResponse';
@@ -33,6 +33,8 @@ export class RouterAgent extends Agent {
 
     constructor(params: AgentConstructorParams) {
         super(params);
+        this.modelHelpers.setPurpose("YOU ARE THE ROUTER AGENT (@router). Your job is help route to other agents.");
+        this.modelHelpers.setFinalInstructions("Your ONLY goal is to TRANSFER USERS to the best agent to solve their needs, not try and solve their needs.");
     }
 
     async initialize(): Promise<void> {
@@ -43,6 +45,30 @@ export class RouterAgent extends Agent {
         // Router agent doesn't process tasks
         throw new Error("Router is not configured to handle task assignment");
     }
+
+public async setupChatMonitor(monitorChannelId: UUID, handle?: string, autoRespond?: boolean): Promise<void> {
+        super.setupChatMonitor(monitorChannelId, handle, autoRespond);
+        // Check if welcome message exists in channel
+        const channelMessages = await this.chatClient.fetchPreviousMessages(monitorChannelId, 50);
+        const existingWelcome = channelMessages.find(c => c.props.messageType === 'welcome');
+
+        if (!existingWelcome) {
+            const welcomeMessage = {
+                message: `@user 👋 Welcome! I'm your router agent.
+                
+I help you achieve your business objectives by:
+- Understanding your specific goals
+- Creating actionable plans
+- Tracking progress
+- Adapting strategies as needed
+
+Let's start by discussing your main business goals. What would you like to achieve?`,
+                props: { messageType: 'welcome' }
+            };
+
+            await this.send(welcomeMessage, monitorChannelId);
+        }
+    }    
 
     private async getRoutingContext(params: HandlerParams) : Promise<RoutingContext> {
         const { userPost, threadPosts = [] } = params;
@@ -156,9 +182,7 @@ export class RouterAgent extends Agent {
         const schema = await getGeneratedSchema(SchemaType.RoutingResponse);
 
         const promptBuilder = this.modelHelpers.createPrompt();
-
-        // Add core instructions
-        promptBuilder.addInstruction(`YOU ARE THE ROUTER AGENT (@router). Your ONLY goal is to TRANSFER USERS to the best agent to solve their needs, not try and solve their needs.`);
+        promptBuilder.addContent(ContentType.PURPOSE);
 
         // Add available agents with their capabilities
         promptBuilder.addContent<Agent[]>(ContentType.AGENT_CAPABILITIES, context.agentOptions);
