@@ -84,7 +84,7 @@ export class OpenAIService extends BaseLLMService {
             if (params.systemPrompt) {
                 messages.unshift({
                     role: "system",
-                    content: params.systemPrompt + (params.parseJSON ? "\n\nCall generate_structured_output with your response." : "")
+                    content: params.systemPrompt + (params.parseJSON ? "\n\YOU MUST ALWAYS CALL 'generate_structured_output' with a response." : "")
                 });
             }
 
@@ -129,7 +129,7 @@ export class OpenAIService extends BaseLLMService {
                 model: model,
                 messages,
                 tools,
-                // tool_choice: toolChoice,
+                tool_choice: toolChoice,
                 temperature: params.opts?.temperature,
                 max_tokens: params.opts?.maxPredictedTokens,
                 top_p: params.opts?.topP,
