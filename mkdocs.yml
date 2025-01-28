@@ -17,10 +17,18 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Getting Started:
-    - Installation: getting-started/installation.md
-    - Configuration: getting-started/configuration.md
-  - API Reference: api-reference.md
+  - Manual:
+    - Introduction: manual/01-introduction.md
+    - Core Concepts: manual/02-core-concepts.md
+    - Getting Started: manual/03-getting-started.md
+    - Agent Capabilities: manual/04-agent-capabilities.md
+    - Chat Usage: manual/05-chat-usage.md
+    - Artifacts: manual/06-artifacts.md
+    - Configurable Agents: manual/07-configurable-agents.md
+    - Prompt Builder: manual/08-promptbuilder.md
+  - Developer Guide:
+    - Codebase Guide: codebase-guide.md
+    - Structured LLM Calls: structured-llm-calls.md
 
 extra:
   social:
