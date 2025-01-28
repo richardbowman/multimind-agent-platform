@@ -93,7 +93,7 @@ Keep it concise but warm and engaging.`);
                 .map(memberId => this.agents.agents[memberId]);
 
             const welcomeMessage = {
-                message: await this.generateWelcomeMessage(agentOptions),
+                message: `@user ${await this.generateWelcomeMessage(agentOptions)}`,
                 props: { messageType: 'welcome' }
             };
 
