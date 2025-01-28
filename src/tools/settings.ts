@@ -6,24 +6,21 @@ export class BedrockConfig {
     @ClientSettings({
         label: 'Bedrock Max Tokens/Min',
         category: 'Rate Limiting',
-        type: 'number',
-        defaultValue: 20000
+        type: 'number'
     })
     maxTokensPerMinute: number = 20000;
 
     @ClientSettings({
         label: 'Bedrock Default Delay (ms)',
         category: 'Rate Limiting',
-        type: 'number',
-        defaultValue: 1000
+        type: 'number'
     })
     defaultDelayMs: number = 1000;
 
     @ClientSettings({
         label: 'Bedrock Window Size (ms)',
         category: 'Rate Limiting',
-        type: 'number',
-        defaultValue: 60000
+        type: 'number'
     })
     windowSizeMs: number = 60000;
 }
@@ -34,7 +31,6 @@ export class DuckDuckGoConfig {
         label: 'DuckDuckGo Headless Mode',
         category: 'Search Settings',
         type: 'boolean',
-        defaultValue: true,
         description: 'Run DuckDuckGo searches in headless browser mode',
         visibleWhen: (settings: Settings) => settings.searchProvider === 'duckduckgo'
     })
@@ -44,7 +40,6 @@ export class DuckDuckGoConfig {
         label: 'DuckDuckGo Timeout (ms)',
         category: 'Search Settings',
         type: 'number',
-        defaultValue: 30000,
         description: 'Timeout for DuckDuckGo search operations',
         visibleWhen: (settings: Settings) => settings.searchProvider === 'duckduckgo'
     })
@@ -65,7 +60,6 @@ export class BraveConfig {
         label: 'Brave Search Endpoint',
         category: 'Search Settings',
         type: 'string',
-        defaultValue: 'https://api.search.brave.com/res/v1/web/search',
         description: 'API endpoint for Brave Search',
         visibleWhen: (settings: Settings) => settings.searchProvider === 'brave'
     })
@@ -77,8 +71,7 @@ export class EmbeddingsModelByProvider {
         label: 'OpenAI Embeddings Model',
         category: 'Embeddings',
         type: 'select',
-        description: 'Model identifier for OpenAI embeddings',
-        defaultValue: 'text-embedding-3-small'
+        description: 'Model identifier for OpenAI embeddings'
     })
     openai: string = 'text-embedding-3-small';
 
