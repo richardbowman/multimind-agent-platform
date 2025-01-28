@@ -45,10 +45,11 @@ export class CreateChannelExecutor implements StepExecutor {
 ${channelPurpose}
 
 The name should:
+- Start with # symbol
 - Be 2-4 words
 - Use lowercase with hyphens between words
 - Be clear and specific
-- Avoid special characters except hyphens
+- Avoid special characters except hyphens and the leading #
 
 Return ONLY the channel name.`;
 
@@ -57,7 +58,9 @@ Return ONLY the channel name.`;
             instructions: ''
         });
         
-        const channelName = nameResponse.message?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') || channelPurpose.toLowerCase().replace(/\s+/g, '-');
+        // Ensure channel name starts with #, remove any existing # first
+        const baseName = (nameResponse.message?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') || channelPurpose.toLowerCase().replace(/\s+/g, '-')).replace(/^#/, '');
+        const channelName = `#${baseName}`;
         
         const selectedTemplate = await this.findBestTemplate(channelPurpose);
 
