@@ -157,6 +157,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const [saveSuccess, setSaveSuccess] = useState(false);
     const [aboutOpen, setAboutOpen] = useState(false);
     const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
+    const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
     const handleSave = async () => {
         // Get all required fields from metadata
@@ -646,21 +647,30 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     gap: 2,
                     transition: 'left 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
                 }}>
-                    <Button
-                        variant="outlined"
-                        onClick={() => setAboutOpen(true)}
-                    >
-                        About
-                    </Button>
+                    <Box sx={{ display: 'flex', gap: 2 }}>
+                        <Button
+                            variant="outlined"
+                            onClick={() => setAboutOpen(true)}
+                        >
+                            About
+                        </Button>
 
-                    <Button
-                        variant="outlined"
-                        color="warning"
-                        onClick={() => setRebuildDialogOpen(true)}
-                        sx={{ mr: 2 }}
-                    >
-                        Rebuild VectorDB
-                    </Button>
+                        <Button
+                            variant="outlined"
+                            color="warning"
+                            onClick={() => setRebuildDialogOpen(true)}
+                        >
+                            Rebuild VectorDB
+                        </Button>
+
+                        <Button
+                            variant="outlined"
+                            color="error"
+                            onClick={() => setResetDialogOpen(true)}
+                        >
+                            Reset to Factory Settings
+                        </Button>
+                    </Box>
                     <Button
                         variant="contained"
                         onClick={handleSave}
@@ -752,6 +762,42 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         color="warning"
                     >
                         Rebuild
+                    </Button>
+                </DialogActions>
+            </Dialog>
+
+            {/* Reset Settings Dialog */}
+            <Dialog
+                open={resetDialogOpen}
+                onClose={() => setResetDialogOpen(false)}
+                maxWidth="sm"
+                fullWidth
+            >
+                <DialogTitle>Reset to Factory Settings</DialogTitle>
+                <DialogContent>
+                    <DialogContentText>
+                        Are you sure you want to reset all settings to factory defaults? This cannot be undone.
+                    </DialogContentText>
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={() => setResetDialogOpen(false)} color="primary">
+                        Cancel
+                    </Button>
+                    <Button 
+                        onClick={async () => {
+                            setResetDialogOpen(false);
+                            try {
+                                const defaultSettings = new Settings();
+                                const { settings: updatedSettings } = await updateSettings(defaultSettings);
+                                setSettings(updatedSettings);
+                                setSuccessMessage('Settings reset to factory defaults');
+                            } catch (error) {
+                                setValidationMessage(`Failed to reset settings: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                            }
+                        }}
+                        color="error"
+                    >
+                        Reset Settings
                     </Button>
                 </DialogActions>
             </Dialog>
