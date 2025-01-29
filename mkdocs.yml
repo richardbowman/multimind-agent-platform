@@ -24,6 +24,7 @@ nav:
     - Agent Capabilities: manual/04-agent-capabilities.md
     - Chat Usage: manual/05-chat-usage.md
     - Artifacts: manual/06-artifacts.md
+    - Limitations: manual/06-limitations.md
   - Developer Guide:
     - Codebase Guide: developer/codebase-guide.md
     - Structured LLM Calls: developer/structured-llm-calls.md
