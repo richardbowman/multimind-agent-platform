@@ -9,9 +9,10 @@ export interface ChatClient {
      * Update an existing post's content
      * @param postId - ID of the post to update
      * @param newContent - New content for the post
+     * @param newProps - Optional new properties to update
      * @returns Promise resolving to the updated post
      */
-    updatePost(postId: UUID, newContent: string): Promise<ChatPost>;
+    updatePost(postId: UUID, newContent: string, newProps?: ConversationContext): Promise<ChatPost>;
 
     getThreadChain(post: ChatPost): Promise<ChatPost[]>;
     getPost(confirmationPostId: UUID): Promise<ChatPost>;

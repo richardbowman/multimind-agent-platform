@@ -229,13 +229,17 @@ export class LocalChatStorage extends EventEmitter {
         });
     }
 
-    public updatePost(postId: UUID, newContent: string): Promise<ChatPost> {
+    public updatePost(postId: UUID, newContent: string, newProps?: ConversationContext): Promise<ChatPost> {
         const post = this.posts.find(p => p.id === postId);
         if (!post) {
             throw new Error(`Post ${postId} not found`);
         }
         
         post.message = newContent;
+        if (newProps) {
+            post.props = { ...post.props, ...newProps };
+        }
+        
         this.callbacks.forEach(cb => cb(post));
         return this.save().then(() => post);
     }
