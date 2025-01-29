@@ -25,12 +25,12 @@
       "private": false
     },
     "extraFiles": [
-      "LICENSE"
+      "docs/LICENSE.md"
     ],
     "extraResources": [
       {
-        "from": "LICENSE",
-        "to": "LICENSE"
+        "from": "docs/LICENSE.md",
+        "to": "LICENSE.md"
       }
     ]
 }

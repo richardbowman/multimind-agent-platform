@@ -165,9 +165,12 @@ export class WebScrapeExecutor implements StepExecutor {
             threadPosts: params.context?.threadPosts
         });
 
+        const jsonBlocks = StringUtils.extractAndParseJsonBlocks(summary.message);
+        const markdownBlocks = StringUtils.extractCodeBlocks("markdown", summary.message);
+
         return {
-            ...StringUtils.extractAndParseJsonBlocks(summary.message)[0] as WebScrapeSummaryResponse,
-            summary: StringUtils.extractCodeBlocks("markdown", summary.message)[0].code
+            ...jsonBlocks[0] as WebScrapeSummaryResponse,
+            summary: markdownBlocks[0].code
         };
     }
 }

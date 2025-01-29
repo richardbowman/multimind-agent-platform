@@ -255,6 +255,9 @@ export class LLMSettings {
 }
 
 export class Settings {
+    scrapeTimeout(arg0: () => void, scrapeTimeout: any): void {
+        throw new Error('Method not implemented.');
+    }
 
     @ClientSettings({
         label: 'Providers',
@@ -322,6 +325,21 @@ export class Settings {
     maxResearchRequests: number = 3;
 
     @ClientSettings({
+        label: 'Webpage Scrape Timeout (seconds)',
+        category: 'Search Settings',
+        type: 'number'
+    })
+    pageScrapeTimeout: number = 10;
+
+    @ClientSettings({
+        label: 'Display Scraping Browser',
+        category: 'Search Settings',
+        type: 'boolean'
+    })
+    displayScrapeBrowser: boolean = false;
+
+
+    @ClientSettings({
         label: 'LLM Settings',
         category: 'LLM Settings',
         type: 'section',
@@ -372,14 +390,6 @@ export class Settings {
     port: number = 4001;
     protocol: string = 'ws';
     wsUrl: string = 'ws://localhost:4001';
-
-    @ClientSettings({
-        label: 'Simulate Typing on Paste',
-        category: 'UI Settings',
-        type: 'boolean',
-        description: 'Simulate typing when pasting text into the command input'
-    })
-    simulateTypingOnPaste: boolean = false;
 
     @ClientSettings({
         label: 'Simulate Typing on Paste',

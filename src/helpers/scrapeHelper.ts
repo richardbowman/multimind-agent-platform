@@ -43,7 +43,7 @@ class ScrapeHelper {
                 webPreferences: {
                     webSecurity: false
                 },
-                show: false
+                show: this.settings.displayScrapeBrowser
             });
         }
     }
@@ -136,7 +136,7 @@ class ScrapeHelper {
                 const webContents = this.electronWindow.webContents;
                 await Promise.race([
                     new Promise<void>(resolve => webContents.once('dom-ready', resolve)),
-                    new Promise<void>((_, reject) => setTimeout(() => reject(new Error('DOM ready timeout')), 5000))
+                    new Promise<void>((_, reject) => setTimeout(() => reject(new Error('DOM ready timeout')), this.settings.pageScrapeTimeout))
                 ]).catch(error => {
                     Logger.warn(`DOM ready event timed out for ${url}:`, error);
                 });
