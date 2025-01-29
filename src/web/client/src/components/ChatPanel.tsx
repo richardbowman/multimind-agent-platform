@@ -90,14 +90,27 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const ipcService = useIPCService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Initialize Mermaid
+    // Initialize and render Mermaid diagrams
     useEffect(() => {
         mermaid.initialize({ 
-            startOnLoad: true,
+            startOnLoad: false, // We'll handle rendering manually
             theme: 'dark',
             securityLevel: 'loose'
         });
-    }, []);
+        
+        // Render any mermaid diagrams after component updates
+        const renderMermaid = async () => {
+            try {
+                await mermaid.run({
+                    querySelector: '.mermaid',
+                });
+            } catch (error) {
+                console.error('Error rendering mermaid diagrams:', error);
+            }
+        };
+        
+        renderMermaid();
+    }, [messages]); // Re-render when messages change
     const { channels } = useWebSocket();
 
     const [isAtBottom, setIsAtBottom] = useState(true);
