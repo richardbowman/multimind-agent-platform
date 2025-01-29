@@ -81,7 +81,7 @@ export class EmbeddingsModelByProvider {
         type: 'select',
         description: 'Model path for Llama.cpp embeddings'
     })
-    llama_cpp: string = 'nomic-embed-text-v1.5.Q4_K_M.gguf';
+    llama_cpp: string = 'nomic-ai/nomic-embed-text-v1.5-GGUF/nomic-embed-text-v1.5.Q4_K_M.gguf';
 
     @ClientSettings({
         label: 'LM Studio Model',
