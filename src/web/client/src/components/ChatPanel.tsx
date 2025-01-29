@@ -92,48 +92,70 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
 
     // Initialize and render Mermaid diagrams
     useEffect(() => {
-        mermaid.initialize({ 
-            startOnLoad: false, // We'll handle rendering manually
-            theme: 'dark',
-            securityLevel: 'loose',
-            fontFamily: 'inherit',
-            fontSize: 16
-        });
+        try {
+            mermaid.initialize({ 
+                startOnLoad: false,
+                theme: 'dark',
+                securityLevel: 'loose',
+                fontFamily: 'inherit',
+                fontSize: 16,
+                logLevel: 1 // Set log level to show warnings
+            });
 
-        const renderMermaid = async () => {
-            try {
-                // Find all mermaid containers
-                const mermaidContainers = document.querySelectorAll('.mermaid');
-                
-                // Only process containers that haven't been rendered yet
-                mermaidContainers.forEach(container => {
-                    if (!container.dataset.processed) {
-                        const content = container.textContent || '';
-                        if (content.trim()) {
-                            // Clear container and render
-                            container.innerHTML = '';
-                            mermaid.render(
+            const renderMermaid = async () => {
+                try {
+                    const mermaidContainers = document.querySelectorAll('.mermaid:not([data-processed])');
+                    
+                    for (const container of mermaidContainers) {
+                        try {
+                            const content = container.textContent?.trim() || '';
+                            if (!content) continue;
+
+                            // Create a temporary container for rendering
+                            const tempDiv = document.createElement('div');
+                            tempDiv.style.visibility = 'hidden';
+                            document.body.appendChild(tempDiv);
+
+                            // Render to temporary container first
+                            const { svg } = await mermaid.render(
                                 `mermaid-${Date.now()}-${Math.random()}`,
                                 content,
-                                (svgCode) => {
-                                    container.innerHTML = svgCode;
-                                    container.dataset.processed = 'true';
-                                }
+                                tempDiv
                             );
+
+                            // Only update the actual container if rendering succeeded
+                            container.innerHTML = svg;
+                            container.dataset.processed = 'true';
+
+                            // Clean up temporary container
+                            document.body.removeChild(tempDiv);
+                        } catch (error) {
+                            console.error('Error rendering mermaid diagram:', error);
+                            container.innerHTML = `<div style="color: red; padding: 8px;">Error rendering diagram: ${error.message}</div>`;
+                            container.dataset.processed = 'true';
                         }
                     }
-                });
-            } catch (error) {
-                console.error('Error rendering mermaid diagrams:', error);
-            }
-        };
+                } catch (error) {
+                    console.error('Error in mermaid rendering process:', error);
+                }
+            };
 
-        // Use a timeout to ensure DOM is ready
-        const timeout = setTimeout(() => {
-            renderMermaid();
-        }, 100);
+            // Use requestAnimationFrame for better timing
+            let frameId: number;
+            const render = () => {
+                renderMermaid();
+                frameId = requestAnimationFrame(render);
+            };
 
-        return () => clearTimeout(timeout);
+            // Start rendering
+            frameId = requestAnimationFrame(render);
+
+            return () => {
+                cancelAnimationFrame(frameId);
+            };
+        } catch (error) {
+            console.error('Error initializing mermaid:', error);
+        }
     }, [messages]);
     const { channels } = useWebSocket();
 
@@ -533,13 +555,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                                             borderColor: 'divider',
                                                             borderRadius: 1,
                                                             overflowX: 'auto',
+                                                            minHeight: '100px',
                                                             '& svg': {
                                                                 maxWidth: '100%',
                                                                 height: 'auto'
+                                                            },
+                                                            '&.error': {
+                                                                color: 'error.main',
+                                                                borderColor: 'error.main'
                                                             }
                                                         }}
                                                     >
-                                                        {content}
+                                                        <div style={{ display: 'none' }}>{content}</div>
+                                                        <div className="mermaid-content" />
                                                     </Box>
                                                 );
                                             }
