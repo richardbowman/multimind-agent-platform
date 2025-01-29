@@ -2,7 +2,7 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResult } from '../interfaces/StepResult';
-import { RequestArtifacts } from '../../schemas/ModelResponse';
+import { ModelMessageResponse, RequestArtifacts } from '../../schemas/ModelResponse';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { randomUUID } from 'crypto';
@@ -110,19 +110,17 @@ ${JSON.stringify(schema, null, 2)}
         const prompt = promptBuilder.build();
         
         try {
-            const unstructuredResult = await this.modelHelpers.generate({
+            const unstructuredResult = await this.modelHelpers.generate<ModelMessageResponse>({
                 message: params.message || params.stepGoal,
                 instructions: prompt
             });
-
-            const json = StringUtils.extractCodeBlocks(unstructuredResult.messsage, "json")[0];
-            const md = StringUtils.extractCodeBlocks(unstructuredResult.messsage, "markdown")[0];
-            console.log(json);
             
+            const json = StringUtils.extractAndParseJsonBlocks(unstructuredResult.message)[0];
+            const md = StringUtils.extractCodeBlocks(unstructuredResult.message, "markdown")[0];
 
             const result = {
-                ...JSON5.parse(json),
-                content: md
+                ...json,
+                content: md.code
             } as ArtifactGenerationResponse;
 
             // Prepare the artifact

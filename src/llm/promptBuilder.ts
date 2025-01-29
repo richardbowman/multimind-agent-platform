@@ -1,7 +1,7 @@
 import { Agent } from "src/agents/agents";
 import { ExecuteParams } from "src/agents/interfaces/ExecuteParams";
 import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
-import { StepResult, StepResultType } from "src/agents/interfaces/StepResult";
+import { ReplanType, StepResult, StepResultType } from "src/agents/interfaces/StepResult";
 import { StepBasedAgent } from "src/agents/stepBasedAgent";
 import { ChatPost } from "src/chat/chatClient";
 import Logger from "src/helpers/logger";
@@ -25,8 +25,11 @@ export enum ContentType {
     STEP_RESULTS = 'step_results',
     EXECUTE_PARAMS = 'execute_params',
     AGENT_CAPABILITIES = 'agent_capabilities',
+    AGENT_OVERVIEWS = 'agent_overviews',
     PURPOSE = "PURPOSE",
-    CHANNEL = "CHANNEL"
+    CHANNEL = "CHANNEL",
+    FINAL_INSTRUCTIONS = "FINAL_INSTRUCTIONS",
+    OVERALL_GOAL = "OVERALL_GOAL"
 }
 
 
@@ -37,13 +40,16 @@ export class PromptRegistry {
         // Register default renderers
         this.registerRenderer(ContentType.PURPOSE, this.renderPurpose.bind(this));
         this.registerRenderer(ContentType.CHANNEL, this.renderChannel.bind(this));
-    
+        this.registerRenderer(ContentType.OVERALL_GOAL, this.renderOverallGoal.bind(this));
+        this.registerRenderer(ContentType.FINAL_INSTRUCTIONS, this.renderFinalInstructions.bind(this));
+
 
         this.registerRenderer(ContentType.ARTIFACTS, this.renderArtifacts.bind(this));
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation.bind(this));
         this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults.bind(this));
         this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
         this.registerRenderer(ContentType.AGENT_CAPABILITIES, this.renderAgentCapabilities.bind(this));
+        this.registerRenderer(ContentType.AGENT_OVERVIEWS, this.renderAgentOverviews.bind(this));
         this.registerRenderer(ContentType.GOALS, this.renderGoals.bind(this));
         
         // Register type-specific step result renderers
@@ -76,9 +82,19 @@ export class PromptRegistry {
         this.stepResultRenderers.set(type, renderer);
     }
 
+    renderOverallGoal(goal: string) {
+        return `OVERALL GOAL: ${goal}\n`;
+    }
+
     renderPurpose() {
         return `OVERALL AGENT PURPOSE:
 ${this.modelHelpers.getPurpose()}
+`;
+    }
+
+    renderFinalInstructions() {
+        return `KEY INSTRUCTIONS:
+${this.modelHelpers.getFinalInstructions()}
 `;
     }
 
@@ -144,7 +160,7 @@ ${this.modelHelpers.getPurpose()}
     private renderAgentCapabilities(agents: Agent[]): string {
         if (!agents || agents.length === 0) return '';
         
-        return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.map(agent => {
+        return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
             let output = `- ${agent.messagingHandle}: ${agent.description}`;
 
             // Get detailed capabilities for each agent that is a StepBasedAgent
@@ -161,6 +177,15 @@ ${this.modelHelpers.getPurpose()}
             
             return output;
         }).join('\n\n');
+    }
+
+    private renderAgentOverviews(agents: Agent[]): string {
+        if (!agents || agents.length === 0) return '';
+        
+        return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
+            let output = `- ${agent.messagingHandle}: ${agent.description}`;
+            return output;
+        }).join('\n');
     }
 
     private renderGoals(project: Project): string {

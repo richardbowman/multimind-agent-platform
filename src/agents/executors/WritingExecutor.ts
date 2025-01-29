@@ -95,7 +95,10 @@ ${section.keyPoints?.map(p => `- ${p}`).join('\n')||"None provided"}
 
 RESEARCH TO SUPPORT YOUR SECTION:
 ${section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).join('\n')||"None provided"}`,
-                    order: result.sections.indexOf(section)
+                    order: result.sections.indexOf(section),
+                    props: {
+                        attachedArtifactIds: params.context?.artifacts?.map(a => a.id)
+                    }
                 });
 
                 //TODO: need to find way to get other user id

@@ -509,7 +509,7 @@ export abstract class StepBasedAgent extends Agent {
                 }
             }
 
-            if (stepResult.finished) {
+            if (stepResult.finished || this.planner.alwaysComplete) {
                 this.projects.completeTask(task.id);
                 Logger.info(`Completed step "${task.props.stepType}" for project "${projectId}"`);
 
@@ -517,10 +517,12 @@ export abstract class StepBasedAgent extends Agent {
                 const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete && t.type === "step");
                 if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
                     //TODO: hacky, we don't really post this message
-                    await this.planSteps(project.id, [InMemoryPost.fromLoad({
-                        ...userPost,
-                        message: `Replanning requested after ${stepResult.type} step completed`
-                    })]);
+                    if (this.planner.allowReplan) {
+                        await this.planSteps(project.id, [InMemoryPost.fromLoad({
+                            ...userPost,
+                            message: `Replanning requested after ${stepResult.type} step completed`
+                        })]);
+                    }
                 }
 
                 if (!stepResult.needsUserInput) {

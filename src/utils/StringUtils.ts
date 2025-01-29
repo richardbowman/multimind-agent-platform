@@ -1,3 +1,10 @@
+import JSON5 from 'json5';
+
+export interface CodeBlock {
+    readonly type: string;
+    readonly code: string;
+}
+
 export namespace StringUtils {
     export function truncate(string: string, maxLength: number, truncationMsg = (maxLength: number, originalLength: number) => `[Truncated to ${maxLength}. Original length: ${originalLength}`) {
         if (typeof string === "string") {
@@ -8,18 +15,19 @@ export namespace StringUtils {
         }
     }
 
-    export function extractCodeBlocks(text: string, type?: string): string[] {
-        const codeBlockRegex = type 
-            ? new RegExp(`\`\`\`${type}[\\s\\S]*?\\n([\\s\\S]*?)\`\`\``, 'g') 
-            : /```(?:javascript|typescript|python|java|bash|json|html|css|markdown|yaml|xml)[\\s\\S]*?\\n([\\s\\S]*?)```/g;
-        const matches: string[] = [];
+    export function extractCodeBlocks(text: string, type?: string): CodeBlock[] {
+        const codeBlockRegex = /```((?:json|javascript|typescript|python|java|bash|json|html|css|markdown|yaml|xml))[\s\S]*?\n([\s\S]*?)```/g;
+        const matches: CodeBlock[] = [];
         let match: RegExpExecArray | null;
 
         while ((match = codeBlockRegex.exec(text)) !== null) {
-            matches.push(match[1].trim());
+            matches.push({
+                type: match[1],
+                code: match[2].trim()
+            });
         }
 
-        return matches;
+        return type? matches.filter(m => m.type === type) : matches;
     }
 
     /**
@@ -29,21 +37,7 @@ export namespace StringUtils {
      * @throws SyntaxError if JSON parsing fails
      */
     export function extractAndParseJsonBlocks(text: string): any[] {
-        const jsonBlockRegex = /```json[\s\S]*?\n([\s\S]*?)```/g;
-        const matches: any[] = [];
-        let match: RegExpExecArray | null;
-
-        while ((match = jsonBlockRegex.exec(text)) !== null) {
-            try {
-                const jsonString = match[1].trim();
-                const parsed = JSON.parse(jsonString);
-                matches.push(parsed);
-            } catch (error) {
-                throw new SyntaxError(`Failed to parse JSON block: ${error.message}`);
-            }
-        }
-
-        return matches;
+        return extractCodeBlocks(text, 'json').map(m => JSON5.parse(m.code));
     }
 
     /**

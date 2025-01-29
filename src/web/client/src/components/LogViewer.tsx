@@ -69,13 +69,13 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         refreshLogs();
 
         // Set up polling interval for updates
-        const pollInterval = setInterval(() => {
-            refreshLogs();
-        }, 5000); // Poll every 5 seconds
+        // const pollInterval = setInterval(() => {
+        //     refreshLogs();
+        // }, 5000); // Poll every 5 seconds
 
         return () => {
             logger.verbose('LogViewer: Cleaning up log subscription for type:', currentLogTab);
-            clearInterval(pollInterval);
+            // clearInterval(pollInterval);
         };
     }, [currentLogTab, refreshLogs, logger]);
 

@@ -3,23 +3,23 @@ import { NextActionResponse } from '../../schemas/NextActionResponse';
 import { PlanStepsResponse } from '../../schemas/PlanStepsResponse';
 import { Planner } from './planner';
 import { AddTaskParams, Task, TaskType } from '../../tools/taskManager';
-import { SchemaInliner } from '../../helpers/schemaInliner';
-import * as schemaJson from "../../schemas/schema.json";
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { TaskManager } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
-import crypto from 'crypto';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { EXECUTOR_METADATA_KEY } from '../decorators/executorDecorator';
 import { ChatClient } from 'src/chat/chatClient';
-import { Agent } from 'http';
 import { ContentType } from 'src/llm/promptBuilder';
 import { Agents } from 'src/utils/AgentLoader';
+import { StepTask } from '../interfaces/ExecuteStepParams';
 
 export class SimpleNextActionPlanner implements Planner {
+    readonly allowReplan: boolean = false;
+    readonly alwaysComplete: boolean = true;
+
     constructor(
         private llmService: ILLMService,
         private projects: TaskManager,
@@ -62,8 +62,8 @@ export class SimpleNextActionPlanner implements Planner {
 
         const formatCompletedTasks = (tasks: Task[]) => {
             return tasks.map(t => {
-                const type = t.type ? `**Type**: ${t.type}` : '';
-                return `- ${t.description}\n  ${type}`;
+                const type = t.type === TaskType.Step ? `**Step Type**: ${(t as StepTask).props.stepType}` : '**Task Type**: ${t.type}';
+                return `- ${type}: ${t.description}`;
             }).join('\n');
         };
 
@@ -95,10 +95,7 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
 
 
         const systemPrompt =
-            `## OVERALL AGENT PURPOSE:
-${this.modelHelpers.getPurpose()}
-
-## HIGH-LEVEL USER GOAL: ${project.name}
+            `## HIGH-LEVEL USER GOAL: ${project.name}
 ${userContext}
 
 ## AVAILABLE SEQUENCES:
@@ -107,24 +104,22 @@ ${sequencesPrompt}
 ## AVAILABLE ACTION TYPES (and descriptions of when to use them):
 ${stepDescriptions}
 
-## 
-
-
 ## YOUR GOAL:
-- Look at the completed tasks and determine the next action action that would move us closer to the high-level goal
+- Look at the completed tasks and determine the next Action Type from the Available Action Types action that would move us closer to the high-level goal
 - Consider the sequences for guidance on the order for steps to be successful.
 
 ## COMPLETED TASKS:
 ${completedSteps}`;
 
         const prompt = this.modelHelpers.createPrompt();
+        prompt.addContent(ContentType.PURPOSE);
+        prompt.addContent(ContentType.AGENT_OVERVIEWS, agentList);
         prompt.addInstruction(systemPrompt);
-        prompt.addContent(ContentType.AGENT_CAPABILITIES, agentList);
-        prompt.addInstruction(this.modelHelpers.getFinalInstructions());
+        prompt.addContent(ContentType.FINAL_INSTRUCTIONS);
 
         const response = await this.modelHelpers.generate<NextActionResponse>({
             ...handlerParams,
-            instructions: new StructuredOutputPrompt(schema, prompt.build())
+            instructions: new StructuredOutputPrompt(schema, prompt)
         });
 
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);

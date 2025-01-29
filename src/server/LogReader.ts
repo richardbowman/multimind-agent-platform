@@ -24,39 +24,55 @@ export class LogReader extends EventEmitter {
         this.initializeCache();
     }
 
-    private initializeCache() {
+    private processLogFile(isInitialization: boolean = false) {
         const startTime = Date.now();
-        Logger.verbose(`Initializing log cache from ${this.logFilePath}`);
-        
+        const operation = isInitialization ? 'Initializing' : 'Updating';
+        Logger.verbose(`${operation} log cache from ${this.logFilePath}`);
+
         if (!existsSync(this.logFilePath)) {
-            Logger.verbose('Log file does not exist, skipping cache initialization');
+            Logger.verbose('Log file does not exist, skipping operation');
             return;
         }
 
         try {
             const stats = statSync(this.logFilePath);
+
+            // For updates, check if we need to proceed
+            if (!isInitialization && !this.checkForUpdates()) {
+                Logger.verbose('No updates detected');
+                return;
+            }
+
             this.lastModified = stats.mtimeMs;
-            Logger.verbose(`Log file size: ${stats.size} bytes, last modified: ${new Date(this.lastModified).toISOString()}`);
-            
+            Logger.verbose(`Log file size: ${stats.size} bytes, last modified: ${new
+Date(this.lastModified).toISOString()}`);
+
             const fd = openSync(this.logFilePath, 'r');
-            const chunkSize = 1024 * 1024; // 1MB chunks
-            let position = 0;
-            let buffer = Buffer.alloc(chunkSize);
+            const bufferSize = 1024 * 1024; // 1MB buffer
+            const buffer = Buffer.alloc(bufferSize);
+
+            // Determine read position based on operation
+            const position = isInitialization ? 0 :
+                (this.logCache.length > 0 ? Math.max(0, stats.size - bufferSize) : 0);
+
+            let bytesRead = 0;
+            let newEntries = 0;
+            let continuationLines = 0;
             let partialLine = '';
             let totalLinesProcessed = 0;
             let totalBytesRead = 0;
             let chunkCount = 0;
 
-            while (position < stats.size) {
+            while (position + totalBytesRead < stats.size) {
                 const chunkStartTime = Date.now();
-                const bytesToRead = Math.min(chunkSize, stats.size - position);
-                const bytesRead = readSync(fd, buffer, 0, bytesToRead, position);
+                const bytesToRead = Math.min(bufferSize, stats.size - (position + totalBytesRead));
+                bytesRead = readSync(fd, buffer, 0, bytesToRead, position + totalBytesRead);
                 totalBytesRead += bytesRead;
                 chunkCount++;
-                
+
                 const chunk = buffer.toString('utf8', 0, bytesRead);
                 const lines = chunk.split('\n');
-                
+
                 // Handle partial line from previous chunk
                 if (partialLine) {
                     lines[0] = partialLine + lines[0];
@@ -68,9 +84,17 @@ export class LogReader extends EventEmitter {
                     partialLine = lines.pop() || '';
                 }
 
+                // Handle partial line from previous update (only for updates)
+                if (!isInitialization && this.logCache.length > 0 && !chunk.startsWith('\n')) {
+                    const lastEntry = this.logCache[this.logCache.length - 1];
+                    lastEntry.message += lines[0];
+                    lines.shift();
+                    continuationLines++;
+                }
+
                 for (const line of lines) {
                     if (!line.trim()) continue;
-                    
+
                     const match = line.match(/^\[(.*?)\] ([A-Z]+): (.*)/);
                     if (match) {
                         this.logCache.push({
@@ -78,8 +102,9 @@ export class LogReader extends EventEmitter {
                             level: match[2],
                             message: match[3]
                         });
+                        newEntries++;
                         totalLinesProcessed++;
-                        
+
                         // Maintain cache size
                         if (this.logCache.length > this.cacheSize) {
                             this.logCache.shift();
@@ -87,18 +112,45 @@ export class LogReader extends EventEmitter {
                     } else if (this.logCache.length > 0) {
                         // Append to previous message if it's a continuation
                         this.logCache[this.logCache.length - 1].message += '\n' + line;
+                        continuationLines++;
                     }
                 }
 
-                position += bytesRead;
-                Logger.verbose(`Processed chunk ${chunkCount} in ${Date.now() - chunkStartTime}ms - Position: ${position}, Lines: ${totalLinesProcessed}, Bytes: ${totalBytesRead}`);
+                Logger.verbose(`Processed chunk ${chunkCount} in ${Date.now() - chunkStartTime}ms - Position: ${position + totalBytesRead}, Lines: ${totalLinesProcessed}, Bytes: ${totalBytesRead}`);
+
+                // For updates, we only need to process the last chunk
+                if (!isInitialization) break;
             }
 
             closeSync(fd);
-            Logger.verbose(`Cache initialized in ${Date.now() - startTime}ms - Total lines: ${totalLinesProcessed}, Total bytes: ${totalBytesRead}, Cache size: ${this.logCache.length}`);
+            Logger.verbose(`${operation} completed in ${Date.now() - startTime}ms - New entries: ${newEntries},
+Continuations: ${continuationLines}, Total lines: ${totalLinesProcessed}, Total bytes: ${totalBytesRead}, Cache size:
+${this.logCache.length}`);
+
+            // Emit update event with debounce (only for updates)
+            if (!isInitialization && (newEntries > 0 || continuationLines > 0)) {
+                if (this.updateDebounceTimeout) {
+                    clearTimeout(this.updateDebounceTimeout);
+                }
+                this.updateDebounceTimeout = setTimeout(() => {
+                    this.emit('update', {
+                        newEntries,
+                        continuationLines,
+                        totalEntries: this.logCache.length
+                    });
+                }, 500); // Debounce for 500ms
+            }
         } catch (error) {
-            Logger.error('Error initializing log cache:', error);
+            Logger.error(`Error during ${operation.toLowerCase()} log cache:`, error);
         }
+    }
+
+    private initializeCache() {
+        this.processLogFile(true);
+    }
+
+    private updateCache() {
+        this.processLogFile(false);
     }
 
     private checkForUpdates(): boolean {
@@ -114,90 +166,7 @@ export class LogReader extends EventEmitter {
         }
     }
 
-    private updateCache() {
-        const startTime = Date.now();
-        Logger.verbose('Checking for log updates...');
-        
-        if (!this.checkForUpdates()) {
-            Logger.verbose('No updates detected');
-            return;
-        }
-
-        try {
-            const stats = statSync(this.logFilePath);
-            const fd = openSync(this.logFilePath, 'r');
-            
-            // Read from last known position
-            const position = this.logCache.length > 0 ? 
-                Math.max(0, stats.size - 1024 * 1024) : // Read last 1MB if we have existing cache
-                0; // Read from start if no cache
-            
-            const buffer = Buffer.alloc(1024 * 1024); // 1MB buffer
-            const bytesRead = readSync(fd, buffer, 0, buffer.length, position);
-            
-            Logger.verbose(`Reading ${bytesRead} bytes from position ${position}`);
-            
-            const newContent = buffer.toString('utf8', 0, bytesRead);
-            let newEntries = 0;
-            let continuationLines = 0;
-            let partialLine = '';
-
-            const lines = newContent.split('\n');
-            
-            // Handle partial line from previous update
-            if (this.logCache.length > 0 && !newContent.startsWith('\n')) {
-                const lastEntry = this.logCache[this.logCache.length - 1];
-                lastEntry.message += lines[0];
-                lines.shift();
-                continuationLines++;
-            }
-
-            for (const line of lines) {
-                if (!line.trim()) continue;
-                
-                const match = line.match(/^\[(.*?)\] ([A-Z]+): (.*)/);
-                if (match) {
-                    this.logCache.push({
-                        timestamp: match[1],
-                        level: match[2],
-                        message: match[3]
-                    });
-                    newEntries++;
-                    
-                    // Maintain cache size
-                    if (this.logCache.length > this.cacheSize) {
-                        this.logCache.shift();
-                    }
-                } else if (this.logCache.length > 0) {
-                    // Append to previous message if it's a continuation
-                    this.logCache[this.logCache.length - 1].message += '\n' + line;
-                    continuationLines++;
-                }
-            }
-
-            closeSync(fd);
-            Logger.verbose(`Cache updated in ${Date.now() - startTime}ms - New entries: ${newEntries}, Continuations: ${continuationLines}, Cache size: ${this.logCache.length}`);
-
-            // Update last modified time
-            this.lastModified = stats.mtimeMs;
-
-            // Emit update event with debounce
-            if (newEntries > 0 || continuationLines > 0) {
-                if (this.updateDebounceTimeout) {
-                    clearTimeout(this.updateDebounceTimeout);
-                }
-                this.updateDebounceTimeout = setTimeout(() => {
-                    this.emit('update', {
-                        newEntries,
-                        continuationLines,
-                        totalEntries: this.logCache.length
-                    });
-                }, 500); // Debounce for 500ms
-            }
-        } catch (error) {
-            Logger.error('Error updating log cache:', error);
-        }
-    }
+    
 
     getLogs(params: {
         limit?: number;
@@ -215,8 +184,7 @@ export class LogReader extends EventEmitter {
         // Force full refresh if needed
         this.updateCache();
 
-        // The cache is already in reverse chronological order (newest first)
-        let filtered = [...this.logCache];
+        let filtered = [...this.logCache.reverse()];
         let filterTime = 0;
         let paginationTime = 0;
         

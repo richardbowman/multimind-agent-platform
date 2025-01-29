@@ -15,6 +15,8 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { AnswerMetadata } from './AnswerQuestionsExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { IntakeQuestion } from 'src/schemas/IntakeQuestionsResponse';
+import { QAAnswers } from 'src/schemas/AnswerAnalysisResponse';
 
 /**
  * Executor that creates and revises operational business guides based on user requirements.
@@ -30,7 +32,7 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
  * - Tracks task completion and dependencies
  */
 
-@StepExecutorDecorator(ExecutorType.CREATE_PLAN, `Create (or revise) a guide for our agents of the user's desired business goals.`)
+@StepExecutorDecorator(ExecutorType.CREATE_PLAN, `Create (or revise) a guide for our agents of the user's desired goals (Must have selected a template prior to this step).`)
 export class CreatePlanExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private userId: string;
@@ -72,13 +74,11 @@ export class CreatePlanExecutor implements StepExecutor {
         }
         
         // Get all answers related to the template sections
-        const answers = this.getAnswersForTemplate(project);
+        const answers = this.getAnswersForTemplate(params);
 
         const schema = await getGeneratedSchema(SchemaType.DocumentPlanResponse);
-        const response = await this.modelHelpers.generate<DocumentPlanResponse>({
-            message: params.message || params.stepGoal,
-            instructions: new StructuredOutputPrompt(schema,
-                `OVERALL GOAL: ${params.overallGoal}
+
+        const prompt = `OVERALL GOAL: ${params.overallGoal}
                 
                 Template: ${project.template.name}
                 Description: ${project.template.description}
@@ -103,7 +103,12 @@ export class CreatePlanExecutor implements StepExecutor {
                 2. Maintain the template structure
                 3. Ensure all required sections are complete
                 4. Add any additional relevant information
-                `)
+                `;
+
+        const response = await this.modelHelpers.generate<DocumentPlanResponse>({
+            message: params.stepGoal || params.message,
+            threadPosts: params.context?.threadPosts,
+            instructions: new StructuredOutputPrompt(schema, prompt)
         });
 
         // Update the document draft with the generated content
@@ -148,14 +153,10 @@ export class CreatePlanExecutor implements StepExecutor {
         };
     }
 
-    private getAnswersForTemplate(project: OnboardingProject): QAItem[] {
-        if (!project.metadata.answers) return [];
+    private getAnswersForTemplate(params: ExecuteParams): QAAnswers[] {
+        if (!params.previousResult) return [];
         
         // Return all answers regardless of template association
-        return project.metadata.answers.map(answer => ({
-            question: project.tasks[answer.questionId]?.description || '',
-            answer: answer.answer,
-            category: project.tasks[answer.questionId]?.type
-        }));
+        return params.previousResult.map(r => r.data?.answers as QAAnswers[]).flat().filter(a => a?.answer);
     }
 }

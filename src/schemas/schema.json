@@ -13,14 +13,15 @@
         "extractedAnswer": {
           "type": "string"
         },
-        "questionId": {
-          "type": "string"
+        "questionIndex": {
+          "type": "number"
         }
       },
       "required": [
-        "questionId",
+        "questionIndex",
         "answered",
-        "analysis"
+        "analysis",
+        "extractedAnswer"
       ],
       "type": "object"
     },
@@ -1207,6 +1208,31 @@
       },
       "required": [
         "steps"
+      ],
+      "type": "object"
+    },
+    "QAAnswers": {
+      "additionalProperties": false,
+      "properties": {
+        "analysis": {
+          "type": "string"
+        },
+        "answer": {
+          "type": "string"
+        },
+        "answeredAt": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "question": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "question",
+        "answer",
+        "analysis",
+        "answeredAt"
       ],
       "type": "object"
     },

@@ -560,6 +560,8 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         dialog.showOpenDialog(mainWindow, {
             properties: ['openFile', 'multiSelections'],
             filters: [
+                { name: 'Documents (Markdown)', extensions: ['md'] },
+                { name: 'Spreadsheet (CSV)', extensions: ['csv'] },
                 { name: 'Images', extensions: ['jpg', 'png', 'gif', 'webp'] },
                 { name: 'All Files', extensions: ['*'] }
             ]

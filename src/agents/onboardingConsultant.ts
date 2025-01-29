@@ -96,6 +96,10 @@ const newUserSequence = [
         type: ExecutorType.UNDERSTAND_GOALS,
         description: "Understand the user's business goals and requirements"
     },
+    { 
+        type: ExecutorType.ANSWER_QUESTIONS,
+        description: "Interpret answers provided"
+    },
     {
         type: ExecutorType.SELECT_TEMPLATE,
         description: "Select appropriate document template based on user goals"

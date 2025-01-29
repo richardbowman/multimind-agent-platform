@@ -5,7 +5,7 @@ import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
-import { AnswerAnalysisResponse } from '../../schemas/AnswerAnalysisResponse';
+import { AnswerAnalysisResponse, QAAnswers } from '../../schemas/AnswerAnalysisResponse';
 import { TaskManager } from '../../tools/taskManager';
 import { OnboardingProject } from '../onboardingConsultant';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -13,9 +13,10 @@ import { ModelHelpers } from '../../llm/modelHelpers';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepTask } from '../interfaces/ExecuteStepParams';
+import { IntakeQuestion } from 'src/schemas/IntakeQuestionsResponse';
 
 export interface AnswerMetadata {
-    questionId: string;
+    index: number;
     question: string;
     answer: string;
     analysis: string;
@@ -33,7 +34,7 @@ export interface AnswerMetadata {
  * - Determines when enough information has been gathered (75% threshold)
  * - Generates contextual progress messages and next steps
  */
-@StepExecutorDecorator(ExecutorType.ANSWER_QUESTIONS, 'Analyze and process user responses to intake questions', false)
+@StepExecutorDecorator(ExecutorType.ANSWER_QUESTIONS, 'Analyze and process user responses to intake questions', true)
 export class AnswerQuestionsExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
@@ -50,21 +51,27 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
 
         // Get both direct questions and template-based questions
-        const intakeQuestions = Object.values(project.tasks).filter(t =>
+        const pastQA = Object.values(project.tasks).filter(t =>
             t.type === "step" &&
-            (t as StepTask).props.stepType === ExecutorType.ANSWER_QUESTIONS &&
-            !t.complete
+            ((t as StepTask).props.stepType === ExecutorType.UNDERSTAND_GOALS ||
+            (t as StepTask).props.stepType === ExecutorType.ANSWER_QUESTIONS) &&
+            t.complete
         );
+
+        const answers = pastQA.map(t => t.props?.result?.response?.data?.answers).flat().filter(a => a);
+        const outstandingQuestions : IntakeQuestion[] = pastQA ? pastQA[pastQA.length - 1].props?.result?.response?.data?.outstandingQuestions : [];
+
 
         // Get template sections that need content
         const templateSections = project.template?.sections.filter(s =>
             s.status !== 'complete'
         ) || [];
 
-        if (intakeQuestions.length === 0 && templateSections.length === 0) {
+        if (outstandingQuestions.length === 0 && templateSections.length === 0) {
             return {
                 type: 'answer_analysis',
                 finished: true,
+                replan: ReplanType.Force,
                 response: {
                     message: "No pending questions to analyze."
                 }
@@ -84,6 +91,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
 
         const modelResponse = await this.modelHelpers.generate<AnswerAnalysisResponse>({
             message: params.message || params.stepGoal,
+            threadPosts: params.context?.threadPosts,
             instructions: new StructuredOutputPrompt(schema,
                 `OVERALL GOAL: ${params.overallGoal}
                 
@@ -94,12 +102,12 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 Here is the current state of our questions and answers:
 
                 Previously Answered Questions:
-                ${project.metadata.answers?.map((a: AnswerMetadata) =>
+                ${answers?.map((a: QAAnswers) =>
                     `Question: ${a.question}\nAnswer: ${a.answer}\n`
                 ).join('\n') || 'No previous answers'}
 
                 Pending Questions to Analyze:
-                ${intakeQuestions.map((q, i) => `${i + 1}. ID ${q.id}: ${q.description}`).join('\n')}
+                ${outstandingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
 
                 ${templateSections.length > 0 ? `
                 Document Sections Needing Content:
@@ -109,7 +117,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
                 ).join('\n')}
                 ` : ''}
                 
-                Use the "answers" key to provide a JSON array with an item for EACH of the ${intakeQuestions.length} pending questions that includes:
+                Use the "answers" key to provide a JSON array with an item for EACH of the ${outstandingQuestions.length} pending questions that includes:
                 1. answered: If the question was answered completely and meaningfully
                 2. analysis: If answered, restate the specific answer from the response
                 3. extractedAnswer: Analyze the answer quality and completeness.
@@ -121,38 +129,45 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         });
 
         // Initialize answers array if it doesn't exist
-        if (!project.metadata.answers) {
-            project.metadata.answers = [];
-        }
+        // if (!project.metadata.answers) {
+        //     project.metadata.answers = [];
+        // }
 
         // Update tasks and store answers based on analysis
+        let newAnswers : QAAnswers[] = [];
         for (const answer of modelResponse.answers) {
-            const task = project.tasks[answer.questionId];
-            if (task && answer.answered) {
-                await this.storeAnswer(project, task, answer);
-                await this.taskManager.completeTask(answer.questionId);
+            const question = outstandingQuestions[answer.questionIndex];
+            if (question && answer.answered) {
+                newAnswers.push({
+                    question: question.question,
+                    answer: answer.extractedAnswer,
+                    analysis: answer.analysis,
+                    answeredAt: new Date()
+                });
 
                 // If this answer completes a template section, update the document
-                if (project.template && project.documentDraft) {
-                    const relatedSection = project.template.sections.find(s =>
-                        s.questions.includes(answer.questionId)
-                    );
+                // if (project.template && project.documentDraft) {
+                //     const relatedSection = project.template.sections.find(s =>
+                //         s.questions.includes(answer.questionIndex)
+                //     );
 
-                    if (relatedSection) {
-                        project.documentDraft = project.documentDraft.replace(
-                            relatedSection.placeholder,
-                            answer.extractedAnswer
-                        );
-                        relatedSection.status = 'draft';
-                    }
-                }
-            } else if (task) {
-                await this.markIncomplete(task, answer);
+                //     if (relatedSection) {
+                //         project.documentDraft = project.documentDraft.replace(
+                //             relatedSection.placeholder,
+                //             answer.extractedAnswer
+                //         );
+                //         relatedSection.status = 'draft';
+                //     }
+                // }
+            } else if (question) {
+                // await this.markIncomplete(question, answer);
             }
         }
+        
+        const remainingQuestions = outstandingQuestions.filter((q, i) => !newAnswers.map(a => a.index).includes(i));
 
         // Check if all required sections are complete
-        if (project.template) {
+            if (project.template) {
             const allRequiredComplete = project.template.requiredSections.every(sectionId => {
                 const section = project.template!.sections.find(s => s.id === sectionId);
                 return section?.status === 'complete';
@@ -161,73 +176,51 @@ export class AnswerQuestionsExecutor implements StepExecutor {
 
             if (allRequiredComplete) {
                 // If we're continuing, mark all pending question tasks as complete
-                if (modelResponse.shouldContinue) {
-                    const pendingTasks = Object.values(project.tasks || {})
-                        .filter((t: any) => t.type === 'process-answers' && !t.complete);
+                // if (modelResponse.shouldContinue) {
+                //     const pendingTasks = Object.values(project.tasks || {})
+                //         .filter((t: any) => t.type === 'process-answers' && !t.complete);
 
-                    for (const task of pendingTasks) {
-                        await this.taskManager.completeTask(task.id);
-                    }
-                }
+                //     for (const task of pendingTasks) {
+                //         await this.taskManager.completeTask(task.id);
+                //     }
+                // }
                 return {
                     type: 'answer_analysis',
                     finished: true,
                     replan: ReplanType.Allow,
                     response: {
                         message: modelResponse.message,
-                        document: project.documentDraft
+                        document: project.documentDraft,
+                        data: {
+                            answers: newAnswers
+                        }
                     }
                 };
             }
         }
 
         // If we're continuing, mark all pending question tasks as complete
-        if (modelResponse.shouldContinue) {
-            const pendingTasks = Object.values(project.tasks || {})
-                .filter((t: any) => t.type === 'process-answers' && !t.complete);
+        // if (modelResponse.shouldContinue) {
+        //     const pendingTasks = Object.values(project.tasks || {})
+        //         .filter((t: any) => t.type === 'process-answers' && !t.complete);
 
-            for (const task of pendingTasks) {
-                await this.taskManager.completeTask(task.id);
-            }
-        }
+        //     for (const task of pendingTasks) {
+        //         await this.taskManager.completeTask(task.id);
+        //     }
+        // }
 
         return {
             type: 'answer_analysis',
             finished: modelResponse.shouldContinue,
-            needsUserInput: !modelResponse.shouldContinue,
+            // needsUserInput: !modelResponse.shouldContinue,
             replan: modelResponse.shouldContinue ? ReplanType.Allow : ReplanType.None,
             response: {
-                message: modelResponse.message
+                message: modelResponse.message,
+                data: {
+                    answers: newAnswers,
+                    outstandingQuestions: remainingQuestions
+                }
             }
-        };
-    }
-
-    private async storeAnswer(project: OnboardingProject, task: any, answer: any) {
-        const answerMetadata: AnswerMetadata = {
-            questionId: answer.questionId,
-            question: task.description,
-            answer: answer.extractedAnswer,
-            analysis: answer.analysis,
-            answeredAt: new Date().toISOString()
-        };
-        project.metadata.answers.push(answerMetadata);
-
-        task.metadata = {
-            ...task.metadata,
-            analysis: answer.analysis,
-            answer: answer.extractedAnswer,
-            answeredAt: new Date().toISOString(),
-            isComplete: true
-        };
-    }
-
-    private async markIncomplete(task: any, answer: any) {
-        task.metadata = {
-            ...task.metadata,
-            analysis: answer.analysis,
-            partialAnswer: answer.extractedAnswer,
-            needsMoreInfo: true,
-            lastAttempt: new Date().toISOString()
         };
     }
 

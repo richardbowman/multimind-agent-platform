@@ -118,53 +118,56 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         }
         
         // Get existing tasks and their current max order
-        const existingTasks = this.taskManager.getAllTasks(params.projectId);
+        // const existingTasks = this.taskManager.getAllTasks(params.projectId);
         
         // Create tasks for each intake question with sequential ordering starting at 1
-        for (let i = 0; i < response.intakeQuestions.length; i++) {
-            const q = response.intakeQuestions[i];
-            await this.taskManager.addTask(project, {
-                id: crypto.randomUUID(),
-                type: TaskType.Step,
-                props: {
-                    stepType: ExecutorType.ANSWER_QUESTIONS,
-                },
-                category: 'process-answers',
-                description: `Gather answer to Q: ${q.question}; Purpose: ${q.purpose}`,
-                creator: this.userId,
-                complete: false,
-                order: i + 1
-            } as StepTask);
-        }
+        // for (let i = 0; i < response.intakeQuestions.length; i++) {
+        //     const q = response.intakeQuestions[i];
+        //     await this.taskManager.addTask(project, {
+        //         id: crypto.randomUUID(),
+        //         type: TaskType.Step,
+        //         props: {
+        //             stepType: ExecutorType.ANSWER_QUESTIONS,
+        //         },
+        //         category: 'process-answers',
+        //         description: `Gather answer to Q: ${q.question}; Purpose: ${q.purpose}`,
+        //         creator: this.userId,
+        //         complete: false,
+        //         order: i + 1
+        //     } as StepTask);
+        // }
         
-        // Update existing tasks to continue numbering after the new questions
-        for (const task of existingTasks) {
-            await this.taskManager.updateTask(task.id, {
-                order: task.order||0 + response.intakeQuestions.length + 1
-            });
-        }
+        // // Update existing tasks to continue numbering after the new questions
+        // for (const task of existingTasks) {
+        //     await this.taskManager.updateTask(task.id, {
+        //         order: task.order||0 + response.intakeQuestions.length + 1
+        //     });
+        // }
 
         const shouldContinue = params.executionMode === 'task' ? true : response.intakeQuestions.length === 0;
 
         // If we're continuing, mark all pending question tasks as complete
-        if (shouldContinue) {
-            const pendingTasks = Object.values(project.tasks || {})
-                .filter((t: any) => t.type === 'process-answers' && !t.complete);
+        // if (shouldContinue) {
+        //     const pendingTasks = Object.values(project.tasks || {})
+        //         .filter((t: any) => t.type === 'process-answers' && !t.complete);
             
-            for (const task of pendingTasks) {
-                await this.taskManager.completeTask(task.id);
-            }
-        }
+        //     for (const task of pendingTasks) {
+        //         await this.taskManager.completeTask(task.id);
+        //     }
+        // }
         
         return {
             finished: true,
-            needsUserInput: !shouldContinue && response.intakeQuestions.length > 0,
-            replan: shouldContinue ? ReplanType.Allow : ReplanType.None,
+            // needsUserInput: !shouldContinue && response.intakeQuestions.length > 0,
+            // replan: shouldContinue ? ReplanType.Allow : ReplanType.None,
             goal: response.goalRestatement,
             response: {
                 message: response.followupMessage + 
                     (response.intakeQuestions?.length > 0 ? " " + response.intakeQuestions[0].question : "") +
-                    (shouldContinue ? "\n\nI believe we have enough information to proceed." : "")
+                    (shouldContinue ? "\n\nI believe we have enough information to proceed." : ""),
+                data: {
+                    outstandingQuestions: response.intakeQuestions
+                }
             }
         };
     }

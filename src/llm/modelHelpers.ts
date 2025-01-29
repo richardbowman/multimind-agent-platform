@@ -12,6 +12,7 @@ import { ArtifactManager } from "src/tools/artifactManager";
 import { StructuredOutputPrompt } from "./ILLMService";
 import { SearchResult } from "./IVectorDatabase";
 import { PromptBuilder, PromptRegistry } from "./promptBuilder";
+import { isObject } from "src/types/types";
 
 export interface ModelHelpersParams {
     llmService: ILLMService;
@@ -283,8 +284,14 @@ export class ModelHelpers {
         // }
 
         // Fetch the latest memory artifact for the channel
-        let augmentedInstructions = this.addDateToSystemPrompt(structure.getPrompt());
-        augmentedInstructions = `OVERALL PURPOSE: ${this.getPurpose()}\n\n${augmentedInstructions}\n\nOverall agent instructions: ${this.getFinalInstructions()}`;
+        let augmentedInstructions;
+        const prompt = structure.getPrompt();
+        if (isObject(prompt) && prompt instanceof PromptBuilder) {
+            augmentedInstructions = prompt.build();
+        } else if (typeof prompt === "string") {
+            augmentedInstructions = this.addDateToSystemPrompt(prompt);
+            augmentedInstructions = `OVERALL PURPOSE: ${this.getPurpose()}\n\n${augmentedInstructions}\n\nOverall agent instructions: ${this.getFinalInstructions()}`;
+        };
 
         if (this.isMemoryEnabled) {
             const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);

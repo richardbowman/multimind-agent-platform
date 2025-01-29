@@ -15,6 +15,9 @@ import { StepTask } from '../interfaces/ExecuteStepParams';
 import { StringUtils } from 'src/utils/StringUtils';
 
 export class MultiStepPlanner implements Planner {
+    readonly allowReplan: boolean = true;
+    readonly alwaysComplete: boolean = false;
+    
     constructor(
         private llmService: ILLMService,
         private projects: TaskManager,

@@ -8,6 +8,8 @@ import { createUUID } from 'src/types/uuid';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ContentSectionResponse } from 'src/schemas/ContentSectionResponse';
+import { ContentType, PromptBuilder } from 'src/llm/promptBuilder';
+import { contentType } from 'mime-types';
 
 export class ContentWriter extends Agent {
     protected handlerThread(params: HandlerParams): Promise<void> {
@@ -42,7 +44,12 @@ export class ContentWriter extends Agent {
                 description: "Content Section: " + params.userPost.message,
                 type: TaskType.Standard,
                 category: TaskCategories.Writing,
-                creator: this.userId
+                creator: this.userId,
+                props: {
+                    'artifact-ids': params.artifacts?.map(a => a.id),
+                    'project-ids': params.projects?.map(p => p.id),
+                    'thread-chain': [params.rootPost, ...params.threadPosts||[]]
+                }
             });
             await this.processTask(task);
         } catch (error) {
@@ -57,7 +64,11 @@ export class ContentWriter extends Agent {
             
             // Create structured prompt
             const schema = await getGeneratedSchema(SchemaType.ContentSectionResponse);
-            const systemPrompt = `You are a professional content writer. Use the provided search results to:
+
+            const prompt = this.modelHelpers.createPrompt();
+
+            prompt.addContent(ContentType.PURPOSE);
+            prompt.addInstruction(`You are a professional content writer. Use the provided search results to:
             1. Write a response message summarizing your findings
             2. Create a structured content outline with headings and subheadings
             3. Include citations for all referenced material
@@ -67,20 +78,26 @@ export class ContentWriter extends Agent {
             - Structure content with clear, descriptive headings
             - Use bullet points for key information in subheadings
             - Cite sources using the provided search results
-            - Maintain professional tone and style`;
+            - Maintain professional tone and style`);
 
-            const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+            if (task.props && task.props['thread-chain']) {
+                prompt.addContent(ContentType.CONVERSATION, task.props['thread-chain']);
+            }
+            
+            if (task.props && task.props['artifact-ids']) {
+                const artifacts = await this.mapRequestedArtifacts(task.props['artifact-ids']);
+                prompt.addContent(ContentType.ARTIFACTS, artifacts);
+            }
+
+            prompt.addContent(ContentType.FINAL_INSTRUCTIONS);
+
+            const instructions = new StructuredOutputPrompt(schema, prompt);
 
             // Generate structured response
             const response = await this.modelHelpers.generate<ContentSectionResponse>({
                 message: task.description,
                 instructions,
-                artifacts: searchResults.map(s => ({
-                    id: s.id,
-                    type: 'search-result',
-                    content: `Title: ${s.metadata.title}\nContent: ${s.text}`,
-                    metadata: s.metadata
-                }))
+                searchResults: searchResults
             });
 
             // Update task with structured results
@@ -183,18 +200,15 @@ export class ContentWriter extends Agent {
 
         // Format final content with citations
         const formattedContent = mergedContent.sections
-            .map(section => {
-                let content = `## ${section.heading}\n\n${section.content}\n\n`;
-                if (section.citations.length > 0) {
-                    content += '### References\n\n';
-                    content += section.citations
-                        .map((cite, i) => `${i + 1}. [Source ${cite.sourceId}] ${cite.excerpt}`)
-                        .join('\n');
-                    content += '\n\n';
-                }
-                return content;
-            })
+            .map(section => `## ${section.heading}\n\n${section.content}\n\n`)
             .join('\n\n');
+
+        const formattedReferences = mergedContent.sections.map(section => section.citations).flat().filter(c => c && c.excerpt)
+            .map((cite, i) => `${i + 1}. [Source ${cite.sourceId}] ${cite.excerpt}`)
+            .join('\n\n');
+
+        const formattedFullContent = formattedContent + '### References\n\n' + formattedReferences;
+
 
         const replyTo = await this.getMessage(sourceMessage);
 
@@ -203,7 +217,7 @@ export class ContentWriter extends Agent {
             await this.reply(
                 replyTo,
                 {
-                    message: `Content generation completed!\n\n${formattedContent}\n\n` +
+                    message: `Content generation completed!\n\n${formattedFullContent}\n\n` +
                         `Total token usage: ${mergedContent.totalTokenUsage.inputTokens} input, ` +
                         `${mergedContent.totalTokenUsage.outputTokens} output`
                 },

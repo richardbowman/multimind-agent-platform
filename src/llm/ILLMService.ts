@@ -4,6 +4,7 @@ import { IEmbeddingFunction } from "chromadb";
 import { LLMCallLogger } from "./LLMLogger";
 import { ModelType } from "./LLMServiceFactory";
 import { ModelInfo } from "./types";
+import { PromptBuilder } from "./promptBuilder";
 
 export interface EmbedderModelInfo extends ModelInfo {
     pipelineTag: string;
@@ -74,9 +75,9 @@ export interface LLMRequestParams {
 
 export class StructuredOutputPrompt {
     private schema: any;
-    private prompt: string;
+    private prompt: string|PromptBuilder;
 
-    constructor(schema: any, prompt: string) {
+    constructor(schema: any, prompt: string|PromptBuilder) {
         this.schema = schema;
         this.prompt = prompt;
     }
@@ -85,7 +86,7 @@ export class StructuredOutputPrompt {
         return this.schema;
     }
 
-    public getPrompt(): string {
+    public getPrompt(): string|PromptBuilder {
         return this.prompt;
     }
 }
