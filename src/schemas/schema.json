@@ -570,19 +570,6 @@
       ],
       "type": "object"
     },
-    "DateResponse": {
-      "additionalProperties": false,
-      "properties": {
-        "date": {
-          "format": "date-time",
-          "type": "string"
-        }
-      },
-      "required": [
-        "date"
-      ],
-      "type": "object"
-    },
     "DocumentPlanResponse": {
       "additionalProperties": false,
       "properties": {
@@ -1637,7 +1624,7 @@
         "GoalProgressResponse",
         "CalendarResponse",
         "NextActionResponse",
-        "DateResponse"
+        "WebScrapeSummaryResponse"
       ],
       "type": "string"
     },
@@ -1836,6 +1823,23 @@
       "required": [
         "isComplete",
         "message"
+      ],
+      "type": "object"
+    },
+    "WebScrapeSummaryResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "format": "date-time",
+          "type": "string"
+        },
+        "relevant": {
+          "type": "boolean"
+        }
+      },
+      "required": [
+        "date",
+        "relevant"
       ],
       "type": "object"
     },

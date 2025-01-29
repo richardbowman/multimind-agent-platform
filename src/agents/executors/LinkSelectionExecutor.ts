@@ -56,29 +56,25 @@ export class LinkSelectionExecutor implements StepExecutor {
 
         const previousFindings = previousResult?.data?.analysis?.keyFindings || [];
 
-        const systemPrompt = `You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addInstruction(`You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
 
 Previous Research Findings:
 ${previousFindings.map((f: any) => `- ${f.finding}`).join('\n')}
 
-Given the following web search results, select 1-3 URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them.`;
+Given the following web search results, select 1-3 URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them. If you don't think any are relevant, return an empty array.`);
 
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
+        const instructions = new StructuredOutputPrompt(schema, prompt);
         const message = searchResults
-            .slice(0, 8)
+            .slice(0, 10)
             .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${sr.description.slice(0, 200)}`)
             .join("\n\n");
 
+            
         const response = await this.modelHelpers.generate<WebSearchResponse>({
             message,
             instructions
         });
-
-        // Handle potential malformed responses
-        if (!response.urls || !Array.isArray(response.urls)) {
-            Logger.warn('Received malformed URL response from LLM', response);
-            return [];
-        }
 
         return response.urls.filter(url => typeof url === 'string');
     }

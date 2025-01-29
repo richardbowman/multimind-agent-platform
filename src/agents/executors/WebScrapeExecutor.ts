@@ -16,7 +16,7 @@ import { ContentType, OutputType } from "src/llm/promptBuilder";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { StringUtils } from "src/utils/StringUtils";
-import { DateResponse } from "src/schemas/DateResponse";
+import { WebScrapeSummaryResponse } from "src/schemas/DateResponse";
 
 export interface ScrapeResult {
     artifacts: Artifact[];
@@ -24,7 +24,7 @@ export interface ScrapeResult {
     extractedLinks: LinkRef[];
 }
 
-interface SummaryResponse extends DateResponse {
+interface SummaryResponse extends WebScrapeSummaryResponse {
     summary: string;
 }
 
@@ -69,8 +69,8 @@ export class WebScrapeExecutor implements StepExecutor {
                     Logger.info(`Retrieving existing summary for URL: ${url}`);
                     const existingSummary = await this.getExistingSummary(url);
                     if (existingSummary) {
-                        summaries.push(existingSummary.content.toString());
-                        artifacts.push(existingSummary);
+                        result.summaries.push(existingSummary.content.toString());
+                        result.artifacts.push(existingSummary);
                         continue;
                     }
                 }
@@ -93,10 +93,10 @@ export class WebScrapeExecutor implements StepExecutor {
                 const summaryResponse = await this.summarizeContent(
                     params.stepGoal,
                     `Page Title: ${title}\nURL: ${url}\n\n${content}`,
-                    this.llmService
+                    params
                 );
 
-                if (summaryResponse.message !== "NOT RELEVANT") {
+                if (summaryResponse.relevant) {
                     const artifact = await this.artifactManager.saveArtifact({
                         id: createUUID(),
                         type: 'summary',
@@ -104,7 +104,7 @@ export class WebScrapeExecutor implements StepExecutor {
                         metadata: {
                             title: `Summary Report for ${title}`,
                             url,
-                            contentDate: summaryResponse.date
+                            contentDate: summaryResponse.date,
                             task: params.stepGoal,
                             projectId: params.projectId,
                             tokenUsage: summaryResponse._usage
@@ -151,11 +151,11 @@ export class WebScrapeExecutor implements StepExecutor {
         const prompt = this.modelHelpers.createPrompt();
         prompt.addContent(ContentType.PURPOSE);
         prompt.addInstruction(`You are a step in an agent. The goal is to summarize a web search result.
-        Create a report in Markdown of all of the specific information from the provided web page that is relevant to our goal.
-        If the page has no relevant information to the goal, respond with NOT RELEVANT.`);
+        If the page is relevant to the goals, create a report in Markdown of all of the specific information from the provided web page.
+        If the page is not relevant, specify the 'relevant' flag as false.`);
         prompt.addContent(ContentType.OVERALL_GOAL, params.overallGoal);
         prompt.addContent(ContentType.EXECUTE_PARAMS, params);
-        await prompt.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, SchemaType.DateResponse);
+        await prompt.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, SchemaType.WebScrapeSummaryResponse);
 
         const userPrompt = "Web Search Result:" + content;
         
@@ -166,7 +166,7 @@ export class WebScrapeExecutor implements StepExecutor {
         });
 
         return {
-            ...StringUtils.extractAndParseJsonBlocks(summary.message)[0] as DateResponse,
+            ...StringUtils.extractAndParseJsonBlocks(summary.message)[0] as WebScrapeSummaryResponse,
             summary: StringUtils.extractCodeBlocks("markdown", summary.message)[0].code
         };
     }

@@ -140,7 +140,11 @@ class ScrapeHelper {
                 ]).catch(error => {
                     Logger.warn(`DOM ready event timed out for ${url}:`, error);
                 });
-                await this.electronWindow.loadURL(url);
+                try {
+                    await this.electronWindow.loadURL(url);
+                } catch (e) {
+                    Logger.error(`Failed to load URL in Electron: ${url}`, e);
+                }
 
                 actualUrl = webContents.getURL();
                 htmlContent = await webContents.executeJavaScript('document.body.innerHTML');
