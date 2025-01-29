@@ -23,17 +23,17 @@ export class InMemoryPost implements ChatPost {
         return post;
     }
 
-    public id: string;
-    public channel_id: string;
+    public id: UUID;
+    public channel_id: UUID;
     public message: string;
-    public user_id: string;
+    public user_id: UUID;
     public props: ConversationContext;
     public create_at: number;
     public directed_at: string;
     public attachments?: Attachment[];
 
-    constructor(channel_id: string, message: string, user_id: string, props?: Record<string, any>, create_at?: number) {
-        this.id = Math.random().toString(36).substring(2, 15) + Math.random().toString(36).substring(2, 15);
+    constructor(channel_id: UUID, message: string, user_id: UUID, props?: Record<string, any>, create_at?: number) {
+        this.id = createUUID();
         this.channel_id = channel_id;
         this.message = message;
         this.user_id = user_id;
@@ -42,7 +42,7 @@ export class InMemoryPost implements ChatPost {
         this.directed_at = props?.directed_at;
     }
 
-    public getRootId(): string | null {
+    public getRootId(): UUID | null {
         return this.props['root-id'] || null;
     }
 
