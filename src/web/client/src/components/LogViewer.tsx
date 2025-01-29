@@ -36,10 +36,14 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const refreshLogs = useCallback(async () => {
         setIsLoading(true);
         try {
+            // Clear existing logs first
+            logs[currentLogTab] = { logs: [] };
+            
             // Fetch logs with newest first
             await fetchLogs(currentLogTab, {
                 sort: 'desc',
-                limit: pageSize
+                limit: pageSize,
+                forceRefresh: true
             });
             // Reset loaded logs since we're getting fresh data
             setLoadedLogs([]);
@@ -47,7 +51,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         } finally {
             setIsLoading(false);
         }
-    }, [currentLogTab, fetchLogs, pageSize]);
+    }, [currentLogTab, fetchLogs, pageSize, logs]);
 
     useEffect(() => {
         logger.verbose('LogViewer: Setting up log subscription for type:', currentLogTab);

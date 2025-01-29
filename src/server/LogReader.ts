@@ -111,10 +111,8 @@ export class LogReader extends EventEmitter {
         const startTime = Date.now();
         Logger.verbose('Checking for log updates...');
         
-        if (!this.checkForUpdates()) {
-            Logger.verbose('No updates found');
-            return;
-        }
+        // Force refresh by resetting lastModified
+        this.lastModified = 0;
 
         try {
             const fd = openSync(this.logFilePath, 'r');
@@ -183,6 +181,8 @@ export class LogReader extends EventEmitter {
         const startTime = Date.now();
         Logger.verbose('Starting getLogs request');
         
+        // Clear cache and force full refresh
+        this.logCache = [];
         this.updateCache();
 
         // The cache is already in reverse chronological order (newest first)
