@@ -412,7 +412,28 @@ export abstract class StepBasedAgent extends Agent {
                 type: ""
             }));
 
+            
+            let replyTo: ChatPost | undefined;
+            if (userPost && isValidChatPost(userPost)) {
+                replyTo = userPost;
+            } else if (project.metadata.originalPostId) {
+                replyTo = await this.chatClient.getPost(project.metadata.originalPostId);
+            }
+
             let stepResult: StepResult;
+            let post : ChatPost|null = null;
+            const partialResponse = async (message) => {
+                if (replyTo) {
+                    if (!post) {
+                        post = await this.reply(replyTo, {
+                            message
+                        });
+                    } else {
+                        post = await this.chatClient.updatePost(post.id, message);
+                    }
+                }    
+            };
+
             if (executor.execute) {
                 stepResult = await executor.execute({
                     agentId: this.userId,
@@ -433,7 +454,8 @@ export abstract class StepBasedAgent extends Agent {
                         threadId: userPost?.thread_id,
                         artifacts: params.context?.artifacts,
                         projects: params.context?.projects
-                    }
+                    },
+                    partialResponse
                 });
             } else {
                 stepResult = await executor.executeOld(
@@ -482,30 +504,21 @@ export abstract class StepBasedAgent extends Agent {
                 //TODO need a way to update project to disk
             }
 
-            let replyTo: ChatPost | undefined;
-            if (userPost && isValidChatPost(userPost)) {
-                replyTo = userPost;
-            } else if (project.metadata.originalPostId) {
-                replyTo = await this.chatClient.getPost(project.metadata.originalPostId);
-            }
-
             const artifactList = [...stepResult.artifactIds || [], ...stepResult.response?.artifactIds || [], stepResult.response?.data?.artifactId];
 
             // Only send replies if we have a userPost to reply to
-            if (replyTo) {
-                if (stepResult.needsUserInput && stepResult.response) {
-                    await this.reply(replyTo, stepResult.response, {
-                        "project-id": stepResult.projectId || projectId,
-                        "artifact-ids": artifactList
-                    });
+            if (replyTo && stepResult.response) {
+                const messageResponse = {
+                    message: stepResult.response?.message || stepResult.response?.reasoning || ""
+                }
+                const props = {
+                    "project-id": stepResult.projectId || projectId,
+                    "artifact-ids": artifactList
+                };
+                if (post) {
+                    await this.chatClient.updatePost((post as ChatPost).id, messageResponse.message, props);
                 } else {
-                    const message = stepResult.response?.message || stepResult.response?.reasoning || "";
-                    await this.reply(replyTo, {
-                        message: message
-                    }, {
-                        "project-id": stepResult.projectId || projectId,
-                        "artifact-ids": artifactList
-                    });
+                    await this.reply(replyTo, messageResponse, props);
                 }
             }
 
@@ -549,59 +562,5 @@ export abstract class StepBasedAgent extends Agent {
             Logger.error(`Error in step execution ${task.description}`, error);
             if (userPost) await this.reply(userPost, { message: "Sorry, I encountered an error while processing your request." });
         }
-    }
-
-    @HandleActivity("start-thread", "Start conversation with user", ResponseType.CHANNEL)
-    protected async handleConversation(params: HandlerParams): Promise<void> {
-        const { projectId } = await this.addNewProject({
-            projectName: params.userPost.message,
-            tasks: [{
-                type: "reply",
-                description: "Initial response to user query."
-            }],
-            metadata: {
-                originalPostId: params.userPost.id
-            }
-        });
-
-        const posts = [params.userPost];
-        const { userPost } = params;
-        const plan = await this.planSteps(projectId, posts);
-        await this.executeNextStep({
-            projectId,
-            userPost
-        });
-    }
-
-    @HandleActivity("response", "Handle responses on the thread", ResponseType.RESPONSE)
-    protected async handleThreadResponse(params: HandlerParams): Promise<void> {
-        const project = params.projects?.[0];
-        if (!project) {
-            await this.reply(params.userPost, {
-                message: "No active session found. Please start a new conversation."
-            });
-            return;
-        }
-
-        const currentTask = Object.values(project.tasks).find(t => t.inProgress);
-        if (!currentTask) {
-            await this.reply(params.userPost, {
-                message: "I wasn't expecting a response right now. What would you like to discuss?"
-            });
-            return;
-        }
-
-        // Get conversation history for this thread
-        const posts = await this.chatClient.getThreadChain(params.userPost);
-        const plan = await this.planSteps(project.id, posts);
-        await this.executeNextStep({
-            projectId: project.id,
-            userPost: params.userPost,
-            context: {
-                channelId: params.userPost?.channel_id,
-                threadId: params.userPost?.thread_id,
-                projects: params.projects
-            }
-        });
     }
 }

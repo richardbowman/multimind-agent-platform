@@ -20,7 +20,7 @@ export class LinkSelectionExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const searchResults = params.previousResult?.map(r => r.data?.searchResults).slice(-1)[0];
+        const searchResults = params.previousResult?.map(r => r.data?.searchResults).filter(s => s).slice(-1)[0];
 
         if (!searchResults) {
             return {

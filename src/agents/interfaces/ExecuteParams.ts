@@ -30,4 +30,5 @@ export interface ExecuteParams {
         readonly projects?: Project[];
         readonly threadPosts?: ChatPost[];
     };
+    readonly partialResponse: (message: string) => Promise<void>;
 }

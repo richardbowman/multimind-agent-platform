@@ -15,6 +15,11 @@ import { BrowserWindow } from "electron";
 // Add stealth plugin
 chromium.use(StealthPlugin());
 
+export interface LinkRef {
+    readonly href: string;
+    readonly text: string;
+}
+
 class ScrapeHelper {
     private browser: Browser | null = null;
     private artifactManager: ArtifactManager;
@@ -150,7 +155,7 @@ class ScrapeHelper {
             const markdownContent = convertPageToMarkdown($, actualUrl);
 
             // Extract links
-            const links: { href: string, text: string }[] = [];
+            const links: LinkRef[] = [];
             $('a').each((index, element) => {
                 const href = $(element).attr('href');
                 const text = $(element).text();

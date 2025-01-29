@@ -570,6 +570,19 @@
       ],
       "type": "object"
     },
+    "DateResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "date": {
+          "format": "date-time",
+          "type": "string"
+        }
+      },
+      "required": [
+        "date"
+      ],
+      "type": "object"
+    },
     "DocumentPlanResponse": {
       "additionalProperties": false,
       "properties": {
@@ -1623,7 +1636,8 @@
         "RoutingResponse",
         "GoalProgressResponse",
         "CalendarResponse",
-        "NextActionResponse"
+        "NextActionResponse",
+        "DateResponse"
       ],
       "type": "string"
     },

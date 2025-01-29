@@ -42,9 +42,9 @@ Once, you've done an existing knowledge check and need to search:
 `);
 
         // Register step executors
-        this.registerStepExecutor(new SearchExecutor(this.getExecutorParams());
-        this.registerStepExecutor(new LinkSelectionExecutor(this.getExecutorParams());
-        this.registerStepExecutor(new WebScrapeExecutor(this.getExecutorParams());
+        this.registerStepExecutor(new SearchExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new LinkSelectionExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new WebScrapeExecutor(this.getExecutorParams()));
         // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new KnowledgeCheckExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new FinalResponseExecutor(this.getExecutorParams()));

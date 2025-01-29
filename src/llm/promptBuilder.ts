@@ -9,6 +9,9 @@ import { Artifact } from "src/tools/artifact";
 import { ModelHelpers } from "./modelHelpers";
 import { Project } from "src/tools/taskManager";
 import { ChannelData } from "src/shared/channelTypes";
+import { SchemaType } from "src/schemas/SchemaTypes";
+import { json } from "stream/consumers";
+import { getGeneratedSchema } from "src/helpers/schemaUtils";
 
 export interface ContentRenderer<T> {
     (content: T): string;
@@ -29,7 +32,13 @@ export enum ContentType {
     PURPOSE = "PURPOSE",
     CHANNEL = "CHANNEL",
     FINAL_INSTRUCTIONS = "FINAL_INSTRUCTIONS",
-    OVERALL_GOAL = "OVERALL_GOAL"
+    OVERALL_GOAL = "OVERALL_GOAL",
+    STEP_GOAL = "STEP_GOAL"
+}
+
+export enum OutputType {
+    JSON_AND_MARKDOWN
+
 }
 
 
@@ -216,6 +225,13 @@ ${this.modelHelpers.getFinalInstructions()}
 }
 
 export class PromptBuilder {
+    async addOutputInstructions(outputType: OutputType, schema?: SchemaType, specialInstructions?: string) {
+        if (outputType === OutputType.JSON_AND_MARKDOWN && schema) {
+            const schemaDef = await getGeneratedSchema(schema);
+            this.addInstruction(`Please respond two code blocks. One enclosed \`\`\`json block format that follows this schema: ${JSON.stringify(schemaDef, null, 2)}. 
+            Then, provide a separately enclosed \`\`\`markdown block. ${specialInstructions || ''}`);   
+        }
+    }
     private contentSections: Map<ContentType, any> = new Map();
     private instructions: string[] = [];
     private context: string[] = [];
