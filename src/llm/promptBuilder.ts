@@ -8,6 +8,7 @@ import Logger from "src/helpers/logger";
 import { Artifact } from "src/tools/artifact";
 import { ModelHelpers } from "./modelHelpers";
 import { Project } from "src/tools/taskManager";
+import { ChannelData } from "src/shared/channelTypes";
 
 export interface ContentRenderer<T> {
     (content: T): string;
@@ -24,7 +25,8 @@ export enum ContentType {
     STEP_RESULTS = 'step_results',
     EXECUTE_PARAMS = 'execute_params',
     AGENT_CAPABILITIES = 'agent_capabilities',
-    PURPOSE = "PURPOSE"
+    PURPOSE = "PURPOSE",
+    CHANNEL = "CHANNEL"
 }
 
 
@@ -34,6 +36,8 @@ export class PromptRegistry {
     constructor(private modelHelpers: ModelHelpers) {
         // Register default renderers
         this.registerRenderer(ContentType.PURPOSE, this.renderPurpose.bind(this));
+        this.registerRenderer(ContentType.CHANNEL, this.renderChannel.bind(this));
+    
 
         this.registerRenderer(ContentType.ARTIFACTS, this.renderArtifacts.bind(this));
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation.bind(this));
@@ -76,6 +80,10 @@ export class PromptRegistry {
         return `OVERALL AGENT PURPOSE:
 ${this.modelHelpers.getPurpose()}
 `;
+    }
+
+    renderChannel(channel: ChannelData) {
+        return `CURRENT CHAT CHANNEL: ${channel.name} - ${channel.description}`;
     }
 
     private renderStepResults(steps: StepTask[]): string {

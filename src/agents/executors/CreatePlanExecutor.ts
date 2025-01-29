@@ -9,7 +9,7 @@ import { CreateArtifact } from '../../schemas/ModelResponse';
 import { DocumentPlanResponse } from '../../schemas/DocumentPlanResponse';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { updateBusinessPlan } from '../../helpers/businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
@@ -63,7 +63,8 @@ export class CreatePlanExecutor implements StepExecutor {
         if (!project.template) {
             return {
                 type: 'create_revise_plan',
-                finished: false,
+                finished: true,
+                replan: ReplanType.Force,
                 response: {
                     message: "No template selected. Please select a template first."
                 }

@@ -13,16 +13,21 @@ export class SimpleAgent extends Agent {
         throw new Error('Method not implemented.');
     }
     
-    public async initialize?() {}
-    
     protected async handlerThread(params: HandlerParams): Promise<void> {
         try {
-            const promptBuilder = new PromptBuilder(this.modelHelpers.getPromptRegistry());
-            promptBuilder.addInstruction("You are a helpful agent.");
-            promptBuilder.addContext(params.userPost.message);
-            if (params.threadPosts) {
-                promptBuilder.addContext(params.threadPosts.map(post => post.message).join('\n'));
+            const promptBuilder = this.modelHelpers.createPrompt();
+
+            // Get channel data including any project goals
+            const channelData = await this.chatClient.getChannelData(params.userPost.channel_id);
+            const project = channelData?.projectId
+                ? this.projects.getProject(channelData.projectId)
+                : null;
+            if (project) {
+                promptBuilder.addContent(ContentType.GOALS, project);
             }
+            promptBuilder.addContent(ContentType.PURPOSE);
+            promptBuilder.addContent(ContentType.CHANNEL, channelData);
+            promptBuilder.addInstruction("You are a helpful agent.");
             const prompt = promptBuilder.build();
 
             const response = await this.modelHelpers.generate<ModelMessageResponse>({
@@ -39,22 +44,6 @@ export class SimpleAgent extends Agent {
         }
     }
     protected async handleChannel(params: HandlerParams): Promise<void> {
-        try {
-            const promptBuilder = new PromptBuilder(this.modelHelpers.getPromptRegistry());
-            promptBuilder.addInstruction("You are a helpful agent.");
-            promptBuilder.addContext(params.userPost.message);
-            const prompt = promptBuilder.build();
-
-            const response = await this.modelHelpers.generate<ModelMessageResponse>({
-                instructions: prompt,
-                message: params.userPost.message
-            })
-            await this.reply(
-                params.userPost,
-                response
-            );
-        } catch (error) {
-            Logger.error("Error handling content creation message", error);
-        }
+        this.handlerThread(params);
     }
 }
