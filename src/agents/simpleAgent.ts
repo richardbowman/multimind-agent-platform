@@ -4,6 +4,7 @@ import { ContentProject, ContentTask } from './contentManager';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { Project, Task } from 'src/tools/taskManager';
 import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
+import { ModelType } from 'src/llm/LLMServiceFactory';
 
 export class SimpleAgent extends Agent {
     protected projectCompleted(project: Project): void {
@@ -33,7 +34,8 @@ export class SimpleAgent extends Agent {
             const response = await this.modelHelpers.generate<ModelMessageResponse>({
                 instructions: prompt,
                 message: params.userPost.message,
-                threadPosts: params.threadPosts
+                threadPosts: params.threadPosts,
+                model: ModelType.CONVERSATION,
             });
             await this.reply(
                 params.userPost,

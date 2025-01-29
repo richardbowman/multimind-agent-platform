@@ -79,7 +79,6 @@ export class LLMServiceFactory {
                 }
                 return new OpenAIService(
                     settings.openai.api.key,
-                    settings.models.conversation.openai || "gpt-3.5-turbo",
                     settings.models.embeddings.openai || "text-embedding-ada-002",
                     undefined,
                     settings
@@ -90,7 +89,6 @@ export class LLMServiceFactory {
                 }
                 return new OpenAIService(
                     settings.openrouter.api.key,
-                    settings.models.conversation.openrouter || "gpt-3.5-turbo",
                     undefined,
                     "https://openrouter.ai/api/v1",
                     settings
@@ -101,7 +99,6 @@ export class LLMServiceFactory {
                 }
                 return new OpenAIService(
                     settings.deepseek?.api.key,
-                    settings.models?.conversation?.deepseek || "deepseek-chat",
                     undefined,
                     "https://api.deepseek.com/v1",
                     settings
@@ -112,7 +109,6 @@ export class LLMServiceFactory {
                 }
                 return new OpenAIService(
                     settings.github.api.key,
-                    settings.models.conversation.github || "gpt-4",
                     undefined,
                     "https://models.inference.ai.azure.com",
                     settings

@@ -10,23 +10,21 @@ import Logger from "src/helpers/logger";
 import { error } from "console";
 import { Settings } from "src/tools/settings";
 import { isObject } from "src/types/types";
-import e from "express";
+import { ModelType } from "./LLMServiceFactory";
+
 
 export class OpenAIService extends BaseLLMService {
     private client: OpenAI;
-    private model: string;
     private embeddingModel?: string;
-    private embeddingService?: IEmbeddingFunction;
 
 
-    constructor(apiKey: string, model: string, embeddingModel?: string, baseUrl?: string, private settings?: Settings) {
+    constructor(apiKey: string, embeddingModel?: string, baseUrl?: string, private settings?: Settings) {
         super("openai");
         const configuration: ClientOptions = ({
             apiKey: apiKey,
             baseURL: baseUrl
         });
         this.client = new OpenAI(configuration);
-        this.model = model;
         this.embeddingModel = embeddingModel;
         this.settings = settings;
     }
@@ -62,14 +60,26 @@ export class OpenAIService extends BaseLLMService {
     async getAvailableModels(): Promise<ModelInfo[]> {
         try {
             const models = await this.client.models.list();
-            return models.data.map(m => ({
-                id: m.id,
-                name: m.id,
-                size: 'unknown', // OpenAI doesn't provide size info
-                lastModified: new Date(m.created * 1000),
-                isLocal: false,
-                author: 'OpenAI'
-            }));
+            if (models.body) {  //special Azure response
+                return models.body.map(m => ({
+                    id: m.name,
+                    name: m.friendlyname,
+                    size: 'unknown', // OpenAI doesn't provide size info
+                    lastModified: new Date(m.created * 1000),
+                    isLocal: false,
+                    author: m.publisher,
+                    tags: m.tags
+                }));
+            } else {
+                return models.data.map(m => ({
+                    id: m.id,
+                    name: m.id,
+                    size: 'unknown', // OpenAI doesn't provide size info
+                    lastModified: new Date(m.created * 1000),
+                    isLocal: false,
+                    author: 'OpenAI'
+                }));
+            }
         } catch (error) {
             await this.logger.logCall('getAvailableModels', {}, null, error);
             throw error;
@@ -77,7 +87,7 @@ export class OpenAIService extends BaseLLMService {
     }
 
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(
-        params: LLMRequestParams & { modelType?: ModelType }
+        params: LLMRequestParams
     ): Promise<GenerateOutputParams<T>> {
         try {
             const messages = params.messages.map(m => ({
@@ -124,10 +134,8 @@ export class OpenAIService extends BaseLLMService {
                 } : this.settings?.tool_choice === 'none' ? 'none' : 'auto'
             }
 
-            // const model = params.modelType ? 
-            //     settings.models[params.modelType].openai || this.model :
-            //     this.model;
-            const model = this.model;
+            const modelType = params.modelType || ModelType.REASONING; //defaulting right now to reasoning since most aren't set
+            const model = this.settings?.models[modelType][this.settings?.providers.chat];
 
             const response = await this.client.chat.completions.create({
                 model: model,
