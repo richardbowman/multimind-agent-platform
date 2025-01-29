@@ -5,6 +5,8 @@ import { Artifact } from '../../../../tools/artifact';
 interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: string[]) => void;
     currentChannel: string|null;
+    settings: Settings;
+    settings: Settings;
 }
 
 const COMMANDS = [
@@ -58,7 +60,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
 
-        if (e.nativeEvent.inputType === 'insertFromPaste') {
+        if (e.nativeEvent.inputType === 'insertFromPaste' && settings.simulateTypingOnPaste) {
             setInput(''); // Clear the input first
             simulateTyping(value);
         } else {

@@ -374,6 +374,22 @@ export class Settings {
     wsUrl: string = 'ws://localhost:4001';
 
     @ClientSettings({
+        label: 'Simulate Typing on Paste',
+        category: 'UI Settings',
+        type: 'boolean',
+        description: 'Simulate typing when pasting text into the command input'
+    })
+    simulateTypingOnPaste: boolean = false;
+
+    @ClientSettings({
+        label: 'Simulate Typing on Paste',
+        category: 'UI Settings',
+        type: 'boolean',
+        description: 'Simulate typing when pasting text into the command input'
+    })
+    simulateTypingOnPaste: boolean = false;
+
+    @ClientSettings({
         label: 'Models',
         category: 'LLM Settings',
         type: 'section',
