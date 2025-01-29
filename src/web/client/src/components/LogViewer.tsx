@@ -55,16 +55,29 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         // Initial fetch
         refreshLogs();
 
+        // Set up polling interval for updates
+        const pollInterval = setInterval(() => {
+            refreshLogs();
+        }, 2000); // Poll every 2 seconds
+
         // Set up event listener for log updates
         const handleLogUpdate = () => {
             refreshLogs();
         };
 
+        // Subscribe to WebSocket updates
+        if (currentLogTab === 'system') {
+            logger.on('log', handleLogUpdate);
+        }
+
         return () => {
             logger.verbose('LogViewer: Cleaning up log subscription for type:', currentLogTab);
-            // No need to explicitly unsubscribe since RPC handles cleanup
+            clearInterval(pollInterval);
+            if (currentLogTab === 'system') {
+                logger.off('log', handleLogUpdate);
+            }
         };
-    }, [currentLogTab, refreshLogs]);
+    }, [currentLogTab, refreshLogs, logger]);
 
     const filterLog = (content: string) => {
         if (!filterText) return true;
