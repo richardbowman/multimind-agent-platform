@@ -419,6 +419,18 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         )}
                     </Box>
                 );
+            case 'boolean':
+                return (
+                    <FormControlLabel
+                        control={
+                            <Checkbox
+                                checked={!!value}
+                                onChange={(e) => handleChange(metadata.key, e.target.checked)}
+                            />
+                        }
+                        label={metadata.label}
+                    />
+                );
             default:
                 return (
                     <TextField

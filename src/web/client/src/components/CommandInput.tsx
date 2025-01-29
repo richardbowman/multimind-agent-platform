@@ -6,7 +6,6 @@ interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: string[]) => void;
     currentChannel: string|null;
     settings: Settings;
-    settings: Settings;
 }
 
 const COMMANDS = [
