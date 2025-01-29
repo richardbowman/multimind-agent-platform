@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
     Button, 
     Dialog, 
@@ -41,12 +41,28 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     editingChannelId,
     initialData
 }) => {
-    const [channelName, setChannelName] = useState(initialData?.name || '');
+    const [channelName, setChannelName] = useState('');
     const [channelNameError, setChannelNameError] = useState(false);
-    const [description, setDescription] = useState(initialData?.description || '');
-    const [selectedAgents, setSelectedAgents] = useState<string[]>(initialData?.members || []);
-    const [selectedTemplate, setSelectedTemplate] = useState<string | null>(initialData?.goalTemplate || null);
-    const [defaultResponderId, setDefaultResponderId] = useState<string | null>(initialData?.defaultResponderId || null);
+    const [description, setDescription] = useState('');
+    const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
+    const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
+    const [defaultResponderId, setDefaultResponderId] = useState<string | null>(null);
+
+    useEffect(() => {
+        if (initialData) {
+            setChannelName(initialData.name);
+            setDescription(initialData.description);
+            setSelectedAgents(initialData.members);
+            setSelectedTemplate(initialData.goalTemplate);
+            setDefaultResponderId(initialData.defaultResponderId);
+        } else {
+            setChannelName('');
+            setDescription('');
+            setSelectedAgents([]);
+            setSelectedTemplate(null);
+            setDefaultResponderId(null);
+        }
+    }, [initialData]);
     const [lastSelectedTemplateName, setLastSelectedTemplateName] = useState<string>('');
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
