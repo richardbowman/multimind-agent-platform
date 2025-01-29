@@ -181,8 +181,7 @@ export class LogReader extends EventEmitter {
         const startTime = Date.now();
         Logger.verbose('Starting getLogs request');
         
-        // Clear cache and force full refresh
-        this.logCache = [];
+        // Force full refresh if needed
         this.updateCache();
 
         // The cache is already in reverse chronological order (newest first)

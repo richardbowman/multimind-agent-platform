@@ -56,9 +56,6 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         currentLogTypeRef.current = currentLogTab;
         logger.verbose('LogViewer: Setting up log subscription for type:', currentLogTab);
         
-        // Clear existing logs when changing tabs
-        logs[currentLogTab] = { logs: [] };
-        
         // Initial fetch
         refreshLogs();
 
@@ -156,7 +153,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const renderLogs = () => {
         switch (currentLogTab) {
             case 'llm':
-                return Object.entries(logs.llm || {}).flatMap(([service, entries]) => 
+                return Object.entries(logs?.llm || {}).flatMap(([service, entries]) => 
                     (Array.isArray(entries) ? [...entries].reverse() : [])
                         .filter(log => 
                             filterLog(JSON.stringify({
@@ -188,7 +185,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                 );
             
             case 'system':
-                return [...(logs.system?.logs || [])]
+                return [...(logs?.system?.logs || [])]
                     .filter(log => {
                     const levelMatch = logLevelFilter === 'all' || 
                                      log.level.toLowerCase() === logLevelFilter;
