@@ -69,7 +69,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             );
         }
         
-        if (!channelName.trim() || !channelName.startsWith('#') || channelName === `#${lastSelectedTemplateName}`) {
+        if (!channelName.trim() || !channelName.startsWith('#') || channelName === lastSelectedTemplateName) {
             setChannelName(templateId.startsWith('#') ? templateId : `#${templateId}`);
         }
         setLastSelectedTemplateName(templateId);
