@@ -116,9 +116,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             tempDiv.style.visibility = 'hidden';
                             document.body.appendChild(tempDiv);
 
+                            // Generate a valid ID without periods
+                            const mermaidId = `mermaid-${Date.now()}-${Math.random().toString().replace('.', '')}`;
+                            
                             // Render to temporary container first
                             const { svg } = await mermaid.render(
-                                `mermaid-${Date.now()}-${Math.random()}`,
+                                mermaidId,
                                 content,
                                 tempDiv
                             );
