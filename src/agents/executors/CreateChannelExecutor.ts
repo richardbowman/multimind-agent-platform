@@ -13,7 +13,7 @@ import { Settings } from '../../tools/settings';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { ChatClient } from 'src/chat/chatClient';
 import { ServerRPCHandler } from 'src/server/RPCHandler';
-import { CreateChannelHandlerParams } from 'src/shared/channelTypes';
+import { createChannelHandle, CreateChannelHandlerParams } from 'src/shared/channelTypes';
 
 @StepExecutorDecorator(ExecutorType.CREATE_CHANNEL, 'Create channels with appropriate templates and settings')
 export class CreateChannelExecutor implements StepExecutor {
@@ -60,7 +60,7 @@ Return ONLY the channel name.`;
         
         // Ensure channel name starts with #, remove any existing # first
         const baseName = (nameResponse.message?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') || channelPurpose.toLowerCase().replace(/\s+/g, '-')).replace(/^#/, '');
-        const channelName = `#${baseName}`;
+        const channelName = createChannelHandle(`#${baseName}`);
         
         const selectedTemplate = await this.findBestTemplate(channelPurpose);
 
