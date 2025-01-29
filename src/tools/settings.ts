@@ -236,6 +236,24 @@ export class ProvidersConfig {
     embeddings: string = 'llama_cpp';
 }
 
+export class LLMSettings {
+    @ClientSettings({
+        label: 'Context Size',
+        category: 'LLM Settings',
+        type: 'number'
+    })
+    contextSize: number = 16384;
+
+    @ClientSettings({
+        label: 'LM Studio Base URL',
+        category: 'LLM Settings',
+        type: 'string',
+        visibleWhen: (settings: Settings) => settings.providers?.chat === 'lmstudio'
+    })
+    lmStudioBaseUrl: string = 'ws://localhost:1234';
+
+}
+
 export class Settings {
 
     @ClientSettings({
@@ -304,19 +322,12 @@ export class Settings {
     maxResearchRequests: number = 3;
 
     @ClientSettings({
-        label: 'Context Size',
+        label: 'LLM Settings',
         category: 'LLM Settings',
-        type: 'number'
+        type: 'section',
+        description: 'General LLM configuration settings'
     })
-    contextSize: number = 16384;
-
-    @ClientSettings({
-        label: 'LM Studio Base URL',
-        category: 'LLM Settings',
-        type: 'string',
-        visibleWhen: (settings: Settings) => settings.providers?.chat === 'lmstudio'
-    })
-    lmStudioBaseUrl: string = 'ws://localhost:1234';
+    llmSettings: LLMSettings = new LLMSettings();
 
     @ClientSettings({
         label: 'UI Zoom Level',
