@@ -22,6 +22,7 @@ import remarkGfm from 'remark-gfm'
 import Link from '@mui/material/Link';
 import { TaskDialog } from './TaskDialog';
 import { ClientProject } from '../../../../shared/types';
+import { CSVRenderer } from './shared/CSVRenderer';
 
 // Custom link component that opens links in system browser
 const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -465,7 +466,48 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                 <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
                                     components={{
-                                        a: CustomLink
+                                        a: CustomLink,
+                                        code({node, inline, className, children, ...props}) {
+                                            const match = /language-(\w+)/.exec(className || '');
+                                            const content = String(children).replace(/\n$/, '');
+                                            
+                                            // Handle CSV content
+                                            if (match?.[1] === 'csv') {
+                                                return (
+                                                    <Box sx={{ 
+                                                        mt: 2, 
+                                                        mb: 2,
+                                                        border: '1px solid',
+                                                        borderColor: 'divider',
+                                                        borderRadius: 1
+                                                    }}>
+                                                        <CSVRenderer content={content} />
+                                                    </Box>
+                                                );
+                                            }
+
+                                            // Default code block handling
+                                            return !inline && match ? (
+                                                <Box component="pre" sx={{ 
+                                                    p: 2, 
+                                                    bgcolor: 'background.paper',
+                                                    border: '1px solid',
+                                                    borderColor: 'divider',
+                                                    borderRadius: 1,
+                                                    overflowX: 'auto',
+                                                    mt: 2,
+                                                    mb: 2
+                                                }}>
+                                                    <code className={className} {...props}>
+                                                        {content}
+                                                    </code>
+                                                </Box>
+                                            ) : (
+                                                <code className={className} {...props}>
+                                                    {children}
+                                                </code>
+                                            );
+                                        }
                                     }}
                                 >
                                     {message.message}
