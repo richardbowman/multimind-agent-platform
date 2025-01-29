@@ -228,6 +228,17 @@ export class LocalChatStorage extends EventEmitter {
             } as CreateChannelParams);
         });
     }
+
+    public updatePost(postId: UUID, newContent: string): Promise<ChatPost> {
+        const post = this.posts.find(p => p.id === postId);
+        if (!post) {
+            throw new Error(`Post ${postId} not found`);
+        }
+        
+        post.message = newContent;
+        this.callbacks.forEach(cb => cb(post));
+        return this.save().then(() => post);
+    }
 }
 
 export class LocalTestClient implements ChatClient {
@@ -437,6 +448,21 @@ export class LocalTestClient implements ChatClient {
         } else {
             throw new Error("Coudln't find post or post wasn't a root post to reply to.")
         }    
+    }
+
+    public async updatePost(postId: UUID, newContent: string): Promise<ChatPost> {
+        const post = this.storage.posts.find(p => p.id === postId);
+        if (!post) {
+            throw new Error(`Post ${postId} not found`);
+        }
+        
+        post.message = newContent;
+        await this.storage.save();
+        
+        // Notify listeners of the update
+        this.callback(post);
+        
+        return post;
     }
 
     private async pushPost(post: ChatPost): Promise<void> {

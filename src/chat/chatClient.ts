@@ -4,6 +4,14 @@ import { UUID } from "src/types/uuid";
 
 export interface ChatClient {
     onAddedToChannel(callback: (channelId: UUID, params: CreateChannelParams) => void): Promise<void>;
+    
+    /**
+     * Update an existing post's content
+     * @param postId - ID of the post to update
+     * @param newContent - New content for the post
+     * @returns Promise resolving to the updated post
+     */
+    updatePost(postId: UUID, newContent: string): Promise<ChatPost>;
 
     getThreadChain(post: ChatPost): Promise<ChatPost[]>;
     getPost(confirmationPostId: UUID): Promise<ChatPost>;
