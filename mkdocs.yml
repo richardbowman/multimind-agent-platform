@@ -1,6 +1,6 @@
 site_name: MultiMind
-repo_url: https://github.com/yourusername/multimind-agent-platform
-site_url: https://yourusername.github.io/multimind-agent-platform
+repo_url: https://github.com/richardbowman/multimind-agent-platform
+site_url: https://richardbowman.github.io/multimind-agent-platform/
 
 theme:
   name: material
@@ -17,20 +17,20 @@ markdown_extensions:
 
 nav:
   - Home: index.md
-  - Manual:
+  - User Manual:
     - Introduction: manual/01-introduction.md
     - Core Concepts: manual/02-core-concepts.md
     - Getting Started: manual/03-getting-started.md
     - Agent Capabilities: manual/04-agent-capabilities.md
     - Chat Usage: manual/05-chat-usage.md
     - Artifacts: manual/06-artifacts.md
-    - Configurable Agents: manual/07-configurable-agents.md
-    - Prompt Builder: manual/08-promptbuilder.md
   - Developer Guide:
-    - Codebase Guide: codebase-guide.md
-    - Structured LLM Calls: structured-llm-calls.md
+    - Codebase Guide: developer/codebase-guide.md
+    - Structured LLM Calls: developer/structured-llm-calls.md
+    - Configurable Agents: developer/07-configurable-agents.md
+    - Prompt Builder: developer/08-promptbuilder.md
 
 extra:
   social:
     - icon: fontawesome/brands/github
-      link: https://github.com/yourusername/your-public-repo
+      link: https://github.com/richardbowman/multimind-agent-platform

@@ -57,10 +57,6 @@
           "description": "Message describing what was done",
           "type": "string"
         },
-        "content": {
-          "description": "Content for the document",
-          "type": "string"
-        },
         "operation": {
           "description": "Operation to perform: \"create\" for new documents, \"replace\" or \"append\" for existing ones",
           "enum": [
@@ -78,7 +74,6 @@
       "required": [
         "operation",
         "title",
-        "content",
         "confirmationMessage"
       ],
       "type": "object"
@@ -1601,7 +1596,8 @@
         "ContentSectionResponse",
         "RoutingResponse",
         "GoalProgressResponse",
-        "CalendarResponse"
+        "CalendarResponse",
+        "NextActionResponse"
       ],
       "type": "string"
     },

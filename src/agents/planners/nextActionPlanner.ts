@@ -11,6 +11,13 @@ import Logger from '../../helpers/logger';
 import crypto from 'crypto';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
+import { EXECUTOR_METADATA_KEY } from '../decorators/executorDecorator';
+import { ChatClient } from 'src/chat/chatClient';
+import { Agent } from 'http';
+import { ContentType } from 'src/llm/promptBuilder';
+import { Agents } from 'src/utils/AgentLoader';
 
 export class SimpleNextActionPlanner implements Planner {
     constructor(
@@ -18,19 +25,37 @@ export class SimpleNextActionPlanner implements Planner {
         private projects: TaskManager,
         private userId: string,
         private modelHelpers: ModelHelpers,
-        private stepExecutors: Map<string, any> = new Map()
-    ) {}
+        private stepExecutors: Map<string, any> = new Map(),
+        private chatClient: ChatClient,
+        private agents: Agents
+    ) { }
 
     public async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
-        const executorMetadata = Array.from(this.stepExecutors.entries()).map(([key, executor]) => {
-            const metadata = Reflect.getMetadata('executor', executor.constructor);
-            return {
-                key,
-                description: metadata?.description || 'No description available'
-            };
-        });
+        // Get channel data including any project goals
+        const channelData = await this.chatClient.getChannelData(handlerParams.userPost.channel_id);
 
-        const schema = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions).NextActionResponse;
+        const agentList = Object.values(this.agents.agents).filter(a => a.userId !== this.userId);
+
+        // Get agent descriptions from settings for channel members
+        const agentOptions = (channelData.members || [])
+            .filter(memberId => this.userId !== memberId)
+            .map(memberId => {
+                return this.agents[memberId];
+            });
+
+
+        const executorMetadata = Array.from(this.stepExecutors.entries())
+            .map(([key, executor]) => {
+                const metadata = Reflect.getMetadata(EXECUTOR_METADATA_KEY, executor.constructor);
+                return {
+                    key,
+                    description: metadata?.description || 'No description available',
+                    planner: metadata?.planner !== false // Default to true if not specified
+                };
+            })
+            .filter(metadata => metadata.planner); // Only include executors marked for planner
+
+        const schema = await getGeneratedSchema(SchemaType.NextActionResponse);
 
         const project = handlerParams.projects[0];
         const tasks = this.projects.getAllTasks(project.id);
@@ -45,35 +70,61 @@ export class SimpleNextActionPlanner implements Planner {
         const completedTasks = tasks.filter(t => t.complete);
         const currentTasks = tasks.filter(t => !t.complete);
 
-        const completedSteps = completedTasks.length > 0 ? 
-            `## Completed Tasks\n${formatCompletedTasks(completedTasks)}\n\n` : 
-            `## Completed Tasks\n*No completed tasks yet*\n\n`;
+        const completedSteps = completedTasks.length > 0 ?
+            formatCompletedTasks(completedTasks) :
+            `*No completed tasks yet*`;
 
         const stepDescriptions = executorMetadata
-            .map(({ key, description }) => `${key}\n    Description: ${description}`)
-            .join("\n\n");
+            .filter(metadata => metadata.planner)
+            .map(({ key, description }) => `[${key}]: ${description}`)
+            .join("\n");
+
+        //TODO: opportunity here to better organize context of the chat chain to include info
+        const userContext = handlerParams.userPost?.message
+            ? `CONTEXT: ${handlerParams.userPost.message}`
+            : '';
+
+        // Get all available sequences
+        const sequences = this.modelHelpers.getStepSequences();
+
+        const sequencesPrompt = sequences.map(seq =>
+            `### ${seq.getName()} Sequence (${seq.getDescription()}):
+${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description}`).join('\n')}`
+        ).join('\n\n');
+
+
 
         const systemPrompt =
-            `${this.modelHelpers.getPurpose()}
+            `## OVERALL AGENT PURPOSE:
+${this.modelHelpers.getPurpose()}
 
-HIGH-LEVEL GOAL: ${project.name}
-${handlerParams.userPost?.message ? `CONTEXT: ${handlerParams.userPost.message}` : ''}
+## HIGH-LEVEL USER GOAL: ${project.name}
+${userContext}
 
-The allowable step types you can execute:
+## AVAILABLE SEQUENCES:
+${sequencesPrompt}
+
+## AVAILABLE ACTION TYPES (and descriptions of when to use them):
 ${stepDescriptions}
 
-TASK GOAL:
-- Look at the completed tasks and determine ONE next action that would move us closer to the high-level goal
-- Return exactly ONE step that should be performed next
-- Be specific and actionable in the parameters
+## 
 
-${completedSteps}
 
-${this.modelHelpers.getFinalInstructions()}`;
+## YOUR GOAL:
+- Look at the completed tasks and determine the next action action that would move us closer to the high-level goal
+- Consider the sequences for guidance on the order for steps to be successful.
 
-        const response: NextActionResponse = await this.modelHelpers.generate({
+## COMPLETED TASKS:
+${completedSteps}`;
+
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addInstruction(systemPrompt);
+        prompt.addContent(ContentType.AGENT_CAPABILITIES, agentList);
+        prompt.addInstruction(this.modelHelpers.getFinalInstructions());
+
+        const response = await this.modelHelpers.generate<NextActionResponse>({
             ...handlerParams,
-            instructions: new StructuredOutputPrompt(schema, systemPrompt)
+            instructions: new StructuredOutputPrompt(schema, prompt.build())
         });
 
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);

@@ -1,5 +1,5 @@
 
-import { ChannelHandle, UUID } from 'src/types/uuid';
+import { UUID } from 'src/types/uuid';
 import { TaskStatus } from 'src/tools/taskManager';
 
 export interface ClientTask {
@@ -49,12 +49,15 @@ export interface ClientChannel {
     description?: string;
     members: UUID[];
     projectId?: UUID;
+    defaultResponderId?: UUID;
+    goalTemplate: ChannelHandle;
 }
 import { ChatHandle } from 'src/types/chatHandle';
+import { ChannelHandle } from './channelTypes';
 
 export interface ClientMessage {
     id: string;
-    channel_id: string;
+    channel_id: UUID;
     thread_id?: UUID;
     message: string;
     user_id: string;

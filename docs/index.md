@@ -1,4 +1,6 @@
-# Welcome to MultiMind Documentation
+![Welcome Screen](./manual/images/01-welcome.png)
+
+# Welcome to MultiMind
 
 MultiMind is a desktop app for Mac OS X, Windows, and Linux that uses your choice of backend large-language models to perform agentic workflows. Its agents use a step-based planner to plan out a sequence of work and use specialized tools as they work. Current agents focus on basic capabilities like web research, content development, and analytical capabilities that use code. MultiMind provides a chat-style interface with channels and threads, a task manager that agents use to structure and manage their workflow, and artifacts which are documents and files that can be uploaded from existing documents, and agents will create and modify.
 
@@ -25,4 +27,4 @@ For support, you can open issues on the [GitHub public issues tracker](https://g
 
 ## Documentation
 
-For more detailed documentation, visit the [MultiMind Documentation Site](https://richardbowman.github.io/multimind-agent-platform/).
+For more detailed documentation, visit the [MultiMind User Manual](manual/01-introduction.md).

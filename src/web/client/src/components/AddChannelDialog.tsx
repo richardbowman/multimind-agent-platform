@@ -1,36 +1,35 @@
 import React, { useState, useEffect } from 'react';
-import { 
-    Button, 
-    Dialog, 
-    DialogActions, 
-    DialogContent, 
-    DialogTitle, 
-    TextField, 
-    FormControl, 
-    InputLabel, 
-    Select, 
-    MenuItem, 
-    Checkbox, 
-    ListItemText, 
-    Typography, 
-    FormControlLabel,
-    Grid,
+import {
+    Button,
+    Dialog,
+    DialogActions,
+    DialogContent,
+    DialogTitle,
+    TextField,
+    FormControl,
+    InputLabel,
+    Select,
+    MenuItem,
+    Checkbox,
+    ListItemText,
+    Typography, Grid,
     Card,
     CardContent,
     CardActionArea
 } from '@mui/material';
 import { GoalTemplates } from '../../../../schemas/goalTemplateSchema';
 import { useWebSocket } from '../contexts/DataContext';
+import { ChannelHandle, createChannelHandle } from '../../../../shared/channelTypes';
 
 interface AddChannelDialogProps {
     open: boolean;
     onClose: () => void;
     editingChannelId: string | null;
     initialData?: {
-        name: string;
+        name: ChannelHandle | null;
         description: string;
         members: string[];
-        goalTemplate: string | null;
+        goalTemplate: ChannelHandle | null;
         defaultResponderId: string | null;
     };
 }
@@ -41,7 +40,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     editingChannelId,
     initialData
 }) => {
-    const [channelName, setChannelName] = useState('');
+    const [channelName, setChannelName] = useState<ChannelHandle|null>(null);
     const [channelNameError, setChannelNameError] = useState(false);
     const [description, setDescription] = useState('');
     const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
@@ -56,7 +55,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             setSelectedTemplate(initialData.goalTemplate);
             setDefaultResponderId(initialData.defaultResponderId);
         } else {
-            setChannelName('');
+            setChannelName(null);
             setDescription('');
             setSelectedAgents([]);
             setSelectedTemplate(null);
@@ -68,7 +67,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
 
     const webSocket = useWebSocket();
 
-    const handleTemplateSelect = (templateId: string) => {
+    const handleTemplateSelect = (templateId: ChannelHandle) => {
         setSelectedTemplate(templateId);
         setSelectedAgents(GoalTemplates.find(t => t.id === templateId)?.supportingAgents.map(idOrHandle => 
             idOrHandle.startsWith('@') 
@@ -85,14 +84,14 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             );
         }
         
-        if (!channelName.trim() || !channelName.startsWith('#') || channelName === lastSelectedTemplateName) {
-            setChannelName(templateId.startsWith('#') ? templateId : `#${templateId}`);
+        if (!channelName?.trim() || !channelName?.startsWith('#') || channelName === lastSelectedTemplateName) {
+            setChannelName(templateId);
         }
         setLastSelectedTemplateName(templateId);
     };
 
     const handleSaveChannel = async () => {
-        if (!channelName.trim() || !channelName.startsWith('#')) {
+        if (!channelName || !channelName.trim() || !channelName.startsWith('#')) {
             setChannelNameError(true);
             return;
         }
@@ -153,7 +152,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                         value={channelName}
                         onChange={(e) => {
                             const value = e.target.value;
-                            const newName = value.startsWith('#') ? value : `#${value}`;
+                            const newName = createChannelHandle(value.startsWith('#') ? value : `#${value}`);
                             setChannelName(newName);
                             setChannelNameError(false);
                         }}
@@ -266,7 +265,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                     <Button 
                         onClick={handleSaveChannel} 
                         color="primary"
-                        disabled={!channelName.trim()}
+                        disabled={!channelName?.trim()}
                     >
                         {editingChannelId ? 'Save' : 'Create'}
                     </Button>

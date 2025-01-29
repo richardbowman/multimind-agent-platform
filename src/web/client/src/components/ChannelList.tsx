@@ -13,11 +13,12 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import { AddChannelDialog } from './AddChannelDialog';
+import { createChannelHandle } from '../../../../shared/channelTypes';
 
 interface ChannelListProps {}
 
 export const ChannelList: React.FC<ChannelListProps> = () => {
-    const { channels, currentChannelId, setCurrentChannelId } = useWebSocket();
+    const { channels, currentChannelId, setCurrentChannelId, setCurrentThreadId } = useWebSocket();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
 
@@ -66,7 +67,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                             selected={currentChannelId === channel.id}
                             onClick={() => {
                                 setCurrentChannelId(channel.id);
-                                webSocket.setCurrentThreadId(null); // Reset thread when switching channels
+                                setCurrentThreadId(null); // Reset thread when switching channels
                             }}
                             sx={{
                                 mb: 1,
@@ -135,7 +136,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 }}
                 editingChannelId={editingChannelId}
                 initialData={editingChannelId ? {
-                    name: channels.find(c => c.id === editingChannelId)?.name || '',
+                    name: channels.find(c => c.id === editingChannelId)?.name || null,
                     description: channels.find(c => c.id === editingChannelId)?.description || '',
                     members: channels.find(c => c.id === editingChannelId)?.members || [],
                     goalTemplate: channels.find(c => c.id === editingChannelId)?.goalTemplate || null,

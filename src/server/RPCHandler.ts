@@ -232,55 +232,6 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     async sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage> {
-        // Handle file uploads if present
-        if (message.files && message.files.length > 0) {
-            const uploadedAttachments: Attachment[] = [];
-            
-            for (const file of message.files) {
-                // Convert file to base64
-                const buffer = await file.arrayBuffer();
-                const base64 = Buffer.from(buffer).toString('base64');
-                
-                // Create artifact
-                const artifact = {
-                    id: crypto.randomUUID(),
-                    type: 'image',
-                    content: base64,
-                    metadata: {
-                        title: file.name,
-                        mimeType: file.type,
-                        size: file.size,
-                        binary: true
-                    }
-                };
-                
-                // Save artifact
-                const savedArtifact = await this.services.artifactManager.saveArtifact(artifact);
-                uploadedAttachments.push({
-                    id: savedArtifact.id,
-                    type: 'image',
-                    url: `/artifacts/${savedArtifact.id}`,
-                    name: file.name,
-                    size: file.size
-                });
-                
-                // Add to channel if needed
-                if (message.channel_id) {
-                    await this.services.chatClient.addArtifactToChannel(
-                        message.channel_id,
-                        savedArtifact.id
-                    );
-                }
-            }
-            
-            // Add attachments to message props
-            message.props = message.props || {};
-            message.props.attachments = [
-                ...(message.props.attachments || []),
-                ...uploadedAttachments
-            ];
-        }
-
         if (message.thread_id) {
             return await this.services.chatClient.postReply(
                 message.thread_id,
@@ -322,7 +273,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return channelMessages;
     }
 
-    async getThreads({ channelId }: { channelId: string }): Promise<ClientThread[]> {
+    async getThreads({ channelId }: { channelId: UUID }): Promise<ClientThread[]> {
         const posts = await this.services.chatClient.fetchPreviousMessages(channelId);
         const threadMap = new Map<string, any>();
 
@@ -425,7 +376,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return tasks;
     }
 
-    async getArtifacts({ channelId, threadId }: { channelId: string; threadId: string | null }): Promise<any[]> {
+    async getArtifacts({ channelId, threadId }: { channelId: UUID; threadId: string | null }): Promise<any[]> {
         // Get all messages for this channel/thread
         const messages = await this.services.chatClient.fetchPreviousMessages(channelId, 1000);
         const filteredMessages = messages.filter(message => {
@@ -469,19 +420,19 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return this.processArtifactContent(artifact);
     }
 
-    async addArtifactToChannel(channelId: string, artifactId: string): Promise<void> {
+    async addArtifactToChannel(channelId: UUID, artifactId: UUID): Promise<void> {
         await this.services.chatClient.addArtifactToChannel(channelId, artifactId);
     }
 
-    async removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void> {
+    async removeArtifactFromChannel(channelId: UUID, artifactId: UUID): Promise<void> {
         await this.services.chatClient.removeArtifactFromChannel(channelId, artifactId);
     }
 
-    async getHandles(): Promise<Array<{id: string; handle: string}>> {
+    async getHandles(): Promise<Array<{id: UUID; handle: ChatHandle}>> {
         const handleSet = await this.services.chatClient.getHandles();
         const handles = Object.entries(handleSet).map(([id, name]) => ({
-            id,
-            handle: name
+            id: createUUID(id),
+            handle: createChatHandle(name)
         }));
         return handles;
     }
@@ -498,7 +449,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 // Find the agent ID that matches this handle
                 const idx = Object.values(handles).findIndex((handle, index) => handle === agentRef);
                 if (idx == -1) {
-                    throw new Error(`Agent with handle @${handle} not found`);
+                    throw new Error(`Agent with handle ${agentRef} not found`);
                 }
                 ids.push(createUUID(Object.keys(handles)[idx]));
             } else {

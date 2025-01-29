@@ -1,6 +1,7 @@
 import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent, useLayoutEffect } from 'react';
 import { useWebSocket } from '../contexts/DataContext';
 import { Artifact } from '../../../../tools/artifact';
+import { Settings } from 'electron';
 
 interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: string[]) => void;
@@ -23,7 +24,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [pendingArtifacts, setPendingArtifacts] = useState<Artifact[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { channels, handles, artifacts, pendingFiles, resetPendingFiles, allArtifacts, showFileDialog } = useWebSocket();
+    const { settings, channels, handles, pendingFiles, resetPendingFiles, allArtifacts, showFileDialog } = useWebSocket();
     
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {
@@ -59,7 +60,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
 
-        if (e.nativeEvent.inputType === 'insertFromPaste' && settings.simulateTypingOnPaste) {
+        if (e.nativeEvent.inputType === 'insertFromPaste' && settings?.simulateTypingOnPaste) {
             setInput(''); // Clear the input first
             simulateTyping(value);
         } else {

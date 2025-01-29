@@ -142,7 +142,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                                     bytesDownloaded += chunk.length;
                                     const percent = totalSize > 0 ? (bytesDownloaded / totalSize) : 0;
                                     const percentFormatted = percent > 0 ? ` (${(percent * 100).toFixed(1)}%)` : "";
-                                    Logger.progress(`Downloading ${bytesDownloaded}/${totalSize} bytes${percentFormatted} of ${modelName}`, percent/100);
+                                    Logger.progress(`Downloading ${bytesDownloaded}/${totalSize} bytes${percentFormatted} of ${modelName}`, percent);
                                 });
 
                                 pipeline(redirectResponse, fileStream)

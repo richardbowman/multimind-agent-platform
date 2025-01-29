@@ -25,7 +25,9 @@ import {
     DialogTitle,
     DialogContent,
     DialogContentText,
-    DialogActions
+    DialogActions,
+    FormControlLabel,
+    Checkbox
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useWebSocket } from '../contexts/DataContext';
@@ -116,10 +118,12 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         fetchEmbeddingModels();
     }, [settings.providers?.embeddings]);
 
-    const handleChange = async (key: string, value: string | number) => {
+    const handleChange = async (key: string, value: string | number | boolean) => {
         // Get metadata using reflection
         const fieldMeta = metadata[key];
-        const processedValue = fieldMeta?.type === 'number' ? Number(value) : value;
+        const processedValue = 
+            fieldMeta?.type === 'boolean' ? Boolean(value) : 
+            fieldMeta?.type === 'number' ? Number(value) : value;
 
         // Handle nested keys (e.g. "providers.chat")
         const parts = key.split('.');

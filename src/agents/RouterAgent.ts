@@ -211,7 +211,7 @@ Keep it concise but warm and engaging.`);
     }
 
     protected async handleMessage(params: HandlerParams): Promise<void> {
-        const { userPost, threadPosts = [] } = params;
+        const { userPost, rootPost, threadPosts = [] } = params;
         const context = await this.getRoutingContext(params);
 
         const schema = await getGeneratedSchema(SchemaType.RoutingResponse);
@@ -228,7 +228,7 @@ Keep it concise but warm and engaging.`);
         }
 
         // Add conversation context
-        promptBuilder.addContent(ContentType.CONVERSATION, threadPosts);
+        promptBuilder.addContent(ContentType.CONVERSATION, [rootPost, ...threadPosts]);
 
         // Add routing instructions
         promptBuilder.addInstruction(`You must explicitly choose one of these next steps:
@@ -236,16 +236,13 @@ Keep it concise but warm and engaging.`);
 1. propose-transfer: When you have a good candidate agent but want user confirmation
    - Explain why they're the best choice. Make sure to ask clearly in your message for user confirmation.
 
-2. execute-transfer: When you're highly confident and should immediately transfer
+2. execute-transfer: When you're highly confident, should immediately transfer, or have already proposed and the user has accepted.
    - Develop a complete transfer note to the agent so they can successfully respond to the user. Make sure to repeat all pertinent information to the other agent, they will not see the original user's message.
 
 3. ask-clarification: ONLY If you do NOT know how to route the user already.
    - Politely ask specific clarifying questions, explain what information is missing
 
-4. provide-information: When you can answer directly
-   - Provide the requested information, explain relevant context, suggest next steps
-
-5. start-goal: When there are outstanding project tasks and the user seems unsure what to do
+4. start-goal: When there are outstanding project tasks and the user seems unsure what to do
    - Suggest starting or continuing work on the project goals
    - Only available when there are incomplete tasks in the project
    - Use this especially when the user is greeting you or seems unsure what to do next

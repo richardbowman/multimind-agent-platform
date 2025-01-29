@@ -15,6 +15,7 @@ import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Settings } from "src/tools/settings";
 import { Agents } from "src/utils/AgentLoader";
 import { UUID } from "src/types/uuid";
+import { StringUtils } from "src/utils/StringUtils";
 
 
 export enum TaskEventType {
@@ -289,7 +290,7 @@ export abstract class Agent {
             const userId = post.user_id;
 
             if (monitorChannelId === channelId && userId !== this.userId) {
-                Logger.verbose(`Received message: ${post.message.slice(0, 100)}... in ${channelId} from ${userId}, with root id ${post.getRootId()}`);
+                Logger.verbose(`Received message: ${StringUtils.truncateWithEllipsis(post.message, 100)} in ${channelId} from ${userId}, with root id ${post.getRootId()}`);
 
                 let context: ConversationContext | undefined;
 

@@ -4,7 +4,7 @@ import SimpleTaskManager from "./test/simpleTaskManager";
 import { ArtifactManager } from "./tools/artifactManager";
 import { createVectorDatabase } from "./llm/vectorDatabaseFactory";
 import Logger from "./helpers/logger";
-import { AgentInformation, AgentLoader, Agents } from "./utils/AgentLoader";
+import { AgentLoader, Agents } from "./utils/AgentLoader";
 import { BackendServices } from "./types/BackendServices";
 import { LogReader } from "./server/LogReader";
 import { SettingsManager } from "./tools/settingsManager";
@@ -12,9 +12,10 @@ import { getDataPath } from "./helpers/paths";
 import path from "path";
 import { sleep } from "./utils/sleep";
 import { ServerRPCHandler } from "./server/RPCHandler";
-import { createChannelHandle, UUID } from "./types/uuid";
+import { createUUID, UUID } from "./types/uuid";
 import { ConfigurationError } from "./errors/ConfigurationError";
 import { Agent } from "./agents/agents";
+import { createChannelHandle } from "./shared/channelTypes";
 
 export async function initializeBackend(settingsManager: SettingsManager, options: { 
     reindex?: boolean
@@ -23,8 +24,8 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     const _s = settingsManager.getSettings();
 
     Logger.progress('Initializing LLM services...', 0.1);
-    const chatService = LLMServiceFactory.createService(_s);
     const embeddingService = LLMServiceFactory.createEmbeddingService(_s);
+    const chatService = LLMServiceFactory.createService(_s);
     await sleep();
 
     // Initialize the models
@@ -120,7 +121,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
     chatStorage.announceChannels();
 
-    const USER_ID = "user";
+    const USER_ID = createUUID("bd1c9698-ce26-41e4-819f-83982891456e");
     const userClient = new LocalTestClient(USER_ID, "@user", chatStorage);
     userClient.registerHandle("@user");
 
@@ -129,7 +130,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         const mappedParams = await ServerRPCHandler.createChannelHelper(userClient, tasks, {
             name: createChannelHandle("#welcome"),
             description: "This is where we'll get started",
-            goalTemplate: 'welcome-channel' // Use the template
+            goalTemplate: createChannelHandle('#welcome')
         });
         await userClient.createChannel(mappedParams);
     }

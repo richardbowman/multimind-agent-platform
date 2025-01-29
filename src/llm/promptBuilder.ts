@@ -136,14 +136,14 @@ ${this.modelHelpers.getPurpose()}
     private renderAgentCapabilities(agents: Agent[]): string {
         if (!agents || agents.length === 0) return '';
         
-        return "🤖 Available Agents:\n\n" + agents.map(agent => {
+        return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.map(agent => {
             let output = `- ${agent.messagingHandle}: ${agent.description}`;
 
             // Get detailed capabilities for each agent that is a StepBasedAgent
             const capabilities = (agent as StepBasedAgent).getExecutorCapabilities?.() || []
             
             if (capabilities.length > 0) {
-                output += `\n  Capabilities:\n` + 
+                output += `\n  ${agent.messagingHandle} CAPABILTIES:\n` + 
                     capabilities.map(cap => 
                         `    * ${cap.stepType}: ${cap.description}\n` +
                         (cap.exampleInput ? `      Example Input: ${cap.exampleInput}\n` : '') +
@@ -176,7 +176,7 @@ ${this.modelHelpers.getPurpose()}
 
     private renderConversation(posts: ChatPost[]): string {
         if (!posts || posts.length === 0) return '';
-        return "💬 Conversation Context:\n\n" + posts.map(post => 
+        return "💬 Conversation Context:\n\n" + posts.filter(post => post && post.user_id && post.message).map(post => 
             `${post.user_id}: ${post.message}`
         ).join('\n');
     }

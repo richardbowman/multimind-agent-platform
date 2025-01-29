@@ -9,6 +9,8 @@ import { ConfigurationError } from "../errors/ConfigurationError";
 import Logger from "src/helpers/logger";
 import { error } from "console";
 import { Settings } from "src/tools/settings";
+import { isObject } from "src/types/types";
+import e from "express";
 
 export class OpenAIService extends BaseLLMService {
     private client: OpenAI;
@@ -138,7 +140,11 @@ export class OpenAIService extends BaseLLMService {
             });
 
             if (response?.error) {
-                throw new Error(`Error from LLM provider ${error.code} ${error.message}\n${error.metadata ? JSON.stringify(error.metadata, undefined, 2) : ''}`);
+                if (isObject(response.error) && (error.code || error.message)) {
+                    throw new Error(`Error from LLM provider ${error.code} ${error.message}\n${error.metadata ? JSON.stringify(error.metadata, undefined, 2) : ''}`);
+                } else {
+                    throw new Error(`Error from LLM provider ${error}`);
+                }
             }
 
             const result = {

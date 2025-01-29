@@ -1,5 +1,5 @@
 import Logger from "../helpers/logger";
-import { Attachment, ChatClient, ChatPost, ConversationContext, ProjectChainResponse } from "../chat/chatClient";
+import { Attachment, ChatClient, ChatPost, ConversationContext, isValidChatPost, ProjectChainResponse } from "../chat/chatClient";
 import * as fs from "fs/promises";
 import { AsyncQueue } from "../helpers/asyncQueue";
 import { ChannelData, CreateChannelParams } from "src/shared/channelTypes";
@@ -99,12 +99,8 @@ export class LocalChatStorage extends EventEmitter {
     }
 
     public async addPost(post: ChatPost) : Promise<void> {
-        if (!post.message) {
-            try {
-                throw new Error("Empty message.")
-            } catch (e) {
-                Logger.error("Add post failed", e);
-            }
+        if (!isValidChatPost(post)) {
+            Logger.error(`Invalid post ${JSON.stringify(post, null, 2)}`);
             return;
         }
         this.posts.push(post);

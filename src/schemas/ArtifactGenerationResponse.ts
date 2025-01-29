@@ -9,7 +9,7 @@ export interface ArtifactGenerationResponse {
     title: string;
 
     /** Content for the document */
-    content: string;
+    // content: string;
 
     /** Message describing what was done */
     confirmationMessage: string;

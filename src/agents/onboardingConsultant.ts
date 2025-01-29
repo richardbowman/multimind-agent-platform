@@ -15,6 +15,8 @@ import path from 'path';
 import { TemplateSelectorExecutor } from './executors/TemplateSelectorExecutor';
 import { ExecutorType } from './interfaces/ExecutorType';
 import { UUID } from 'src/types/uuid';
+import { DelegationExecutor } from './executors/DelegationExecutor';
+import { SimpleNextActionPlanner } from './planners/nextActionPlanner';
 
 
 
@@ -78,6 +80,8 @@ export class OnboardingConsultant extends StepBasedAgent {
 
     constructor(params: AgentConstructorParams) {
         super(params);
+        this.planner = new SimpleNextActionPlanner(params.llmService, params.taskManager, params.userId, this.modelHelpers, this.stepExecutors, this.chatClient, this.agents);
+
         this.modelHelpers.setPurpose(`You are an Onboarding Agent focused on helping users achieve their goals with this platform called Multimind. The service is designed
 to help individuals and businesses automate tasks. It provides Web-based research and content creation agents. Your goal is to ensure that the rest of the agents in the platform
 are trained and educated on what the user would like to achieve with the platform. You should build an understanding of their goals and desired approach. 
@@ -95,6 +99,10 @@ const newUserSequence = [
     {
         type: ExecutorType.SELECT_TEMPLATE,
         description: "Select appropriate document template based on user goals"
+    },
+    {
+        type: ExecutorType.GOAL_PROGRESS,
+        description: "Complete any outstanding welcome goal around template selection."
     },
     {
         type: ExecutorType.CREATE_PLAN,
@@ -133,6 +141,7 @@ this.modelHelpers.setFinalInstructions(`Use the appropriate sequence based on us
         this.registerStepExecutor(new ReviewProgressExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new CreateChannelExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new TemplateSelectorExecutor(this.getExecutorParams(), this));
+        this.registerStepExecutor(new DelegationExecutor(this.getExecutorParams()));
         // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
 
 

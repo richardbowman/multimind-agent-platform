@@ -12,6 +12,7 @@ import Logger from '../../helpers/logger';
 import crypto from 'crypto';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepTask } from '../interfaces/ExecuteStepParams';
+import { StringUtils } from 'src/utils/StringUtils';
 
 export class MultiStepPlanner implements Planner {
     constructor(
@@ -23,7 +24,7 @@ export class MultiStepPlanner implements Planner {
     ) {}
 
     public async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
-        Logger.progress(`Planning steps for ${handlerParams.userPost.message}`);
+        Logger.progress(`Planning steps for ${StringUtils.truncateWithEllipsis(handlerParams.userPost.message, 100)}`);
 
         const executorMetadata = Array.from(this.stepExecutors.entries())
             .map(([key, executor]) => {

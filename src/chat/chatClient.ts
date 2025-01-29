@@ -115,6 +115,6 @@ export const isValidChatPost = (post: any): post is ChatPost => {
            typeof post.message === 'string' &&
            typeof post.user_id === 'string' &&
            typeof post.create_at === 'number' &&
-           typeof post.directed_at === 'string' &&
+           (post.directed_at === undefined || typeof post.directed_at === 'string') &&
            typeof post.props === 'object';
 };

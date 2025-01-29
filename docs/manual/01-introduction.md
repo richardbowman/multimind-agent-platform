@@ -28,4 +28,4 @@ For support, you can open issues on the [GitHub public issues tracker](https://g
 ## Screenshot
 Here is a screenshot of the welcome screen:
 
-![Welcome Screen](./01-welcome.png)
+![Welcome Screen](./images/01-welcome.png)

@@ -54,7 +54,7 @@ Include relevant details from all steps while maintaining clarity and coherence.
             type: StepResultType.FinalResponse,
             finished: true,
             response: {
-                message: response
+                message: response.message
             }
         };
     }

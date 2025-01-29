@@ -16,12 +16,14 @@ import { Agents } from "src/utils/AgentLoader";
 export interface BackendServicesWithWindows extends BackendServices {
     type: "full",
     mainWindow: MainWindow;
+    autoUpdater: AppUpdater;
 }
 
 export interface BackendServicesConfigNeeded extends BackendServicesOnly {
     type: "configNeeded",
     mainWindow: MainWindow;
     error: ConfigurationError
+    autoUpdater: AppUpdater;
 }
 
 export interface BackendServices extends BackendServicesOnly {
@@ -38,5 +40,4 @@ export interface BackendServices extends BackendServicesOnly {
 export interface BackendServicesOnly {
     settingsManager: SettingsManager;
     logReader: LogReader;
-    autoUpdater: AppUpdater;
 }

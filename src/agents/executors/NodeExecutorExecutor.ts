@@ -181,7 +181,7 @@ const data = JSON.parse(artifact.content);
 ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResult, null, 2)}
     
     
-RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE \`\`\`javascript BLOCK.` : ''}`;
+RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE ENCLOSED \`\`\`javascript CODE BLOCK.` : ''}`;
 
         let result = await this.modelHelpers.generate({
             message: params.stepGoal||params.message,
@@ -190,7 +190,9 @@ RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE \`\`\`javascript BLOCK
         
         let executionResult, originalCode, correctedCode;
         try {
-            originalCode = StringUtils.extractCodeBlocks(result.message)[0];
+            originalCode = StringUtils.extractCodeBlocks(result.message, "javascript")[0];
+            if (originalCode === undefined) throw new Error("No code found");
+
             executionResult = await this.executeInWorker(originalCode, params.context?.artifacts);
         } catch (error) {
             // If there's an error, try again with error feedback

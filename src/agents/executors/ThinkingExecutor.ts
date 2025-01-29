@@ -59,7 +59,7 @@ Consider multiple angles and potential implications.`);
             type: StepResultType.Thinking,
             finished: true,
             response: {
-                message: `**Reasoning Process:**\n\n${result.reasoning}\n\n**Conclusion:**\n\n${result.conclusion}`
+                message: `**Reasoning Process:**\n\n${result.reasoning}\n\n**Conclusion (so far):**\n\n${result.conclusion}`
             }
         };
     }

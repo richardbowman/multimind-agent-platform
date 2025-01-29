@@ -18,7 +18,8 @@ import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationRespon
 import { StructuredOutputPrompt } from 'src/llm/ILLMService';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
-
+import { StringUtils } from 'src/utils/StringUtils';
+import JSON5 from 'json5';
 /**
  * Executor that generates and manages Markdown document artifacts.
  * Key capabilities:
@@ -97,14 +98,32 @@ export class GenerateArtifactExecutor implements StepExecutor {
             promptBuilder.addContent(ContentType.STEP_RESULTS, params.previousResult);
         }
 
+        const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);
+
+        promptBuilder.addInstruction(`OUTPUT INSTRUCTIONS:
+1. To formulate your response, include one enclosed \`\`\`json code block that matches this JSON Schema:
+${JSON.stringify(schema, null, 2)}
+`);
+
+        promptBuilder.addInstruction(`2. Then, provide your Markdown-formatted content in a separately enclosed \'\'\'markdown code block.`);
+
         const prompt = promptBuilder.build();
         
         try {
-            const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);
-            const result = await this.modelHelpers.generate<ArtifactGenerationResponse>({
+            const unstructuredResult = await this.modelHelpers.generate({
                 message: params.message || params.stepGoal,
-                instructions: new StructuredOutputPrompt(schema, prompt)
+                instructions: prompt
             });
+
+            const json = StringUtils.extractCodeBlocks(unstructuredResult.messsage, "json")[0];
+            const md = StringUtils.extractCodeBlocks(unstructuredResult.messsage, "markdown")[0];
+            console.log(json);
+            
+
+            const result = {
+                ...JSON5.parse(json),
+                content: md
+            } as ArtifactGenerationResponse;
 
             // Prepare the artifact
             let finalContent = result.content;

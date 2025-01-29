@@ -1,3 +1,4 @@
+import { ChannelHandle, createChannelHandle } from "src/shared/channelTypes";
 import { ChatHandle } from "src/types/chatHandle";
 import { UUID } from "src/types/uuid";
 
@@ -5,7 +6,7 @@ export interface GoalTemplate {
     /**
      * Unique identifier for the goal template
      */
-    id: UUID;
+    id: ChannelHandle;
 
     /**
      * Human-readable name of the goal template
@@ -60,7 +61,7 @@ export interface InitialTask {
  */
 export const GoalTemplates: GoalTemplate[] = [
     {
-        id: 'chat-channel',
+        id: createChannelHandle('#chat'),
         name: 'Chat Channel',
         description: 'Template for setting up a chat channel with an AI assistant',
         supportingAgents: ['@ai'],
@@ -73,7 +74,7 @@ export const GoalTemplates: GoalTemplate[] = [
         ]
     },
     {
-        id: 'welcome-channel',
+        id: createChannelHandle('#welcome'),
         name: 'Welcome Channel Setup',
         description: 'Template for initializing a welcome channel and onboarding new users',
         supportingAgents: [
@@ -87,7 +88,7 @@ export const GoalTemplates: GoalTemplate[] = [
                 description: 'Select an on-boarding template based on high-level goal',
                 type: 'onboarding',
                 metadata: {
-                    agent: 'onboarding'
+                    agent: '@onboarding'
                 }
             },
             {
@@ -95,7 +96,7 @@ export const GoalTemplates: GoalTemplate[] = [
                 type: 'onboarding',
                 dependsOn: ['gather-existing-documents'],
                 metadata: {
-                    agent: 'onboarding'
+                    agent: '@onboarding'
                 }
             },
             {
@@ -106,7 +107,7 @@ export const GoalTemplates: GoalTemplate[] = [
         ]
     },
     {
-        id: 'software-project',
+        id: createChannelHandle('#product'),
         name: 'Software Development Project',
         description: 'Template for managing a software development project',
         supportingAgents: ["@product"],
@@ -124,7 +125,7 @@ export const GoalTemplates: GoalTemplate[] = [
         ]
     },
     {
-        id: 'marketing-campaign',
+        id: '#marketing-campaign',
         name: 'Marketing Campaign',
         description: 'Template for running a marketing campaign',
         supportingAgents: [
@@ -152,7 +153,7 @@ export const GoalTemplates: GoalTemplate[] = [
         ]
     },
     {
-        id: 'web-research-channel',
+        id: '#web-research',
         name: 'Web Research Channel',
         description: 'Template for setting up a web research channel with a research manager',
         supportingAgents: [
@@ -176,17 +177,5 @@ export const GoalTemplates: GoalTemplate[] = [
                 dependsOn: ['gather-initial-research-data']
             }
         ]
-    },
-    {
-        id: 'chat-channel',
-        name: 'Chat Channel',
-        description: 'Template for setting up a chat channel with an AI assistant',
-        supportingAgents: ['@ai'],
-        defaultResponder: '@ai',
-        initialTasks: [
-            {
-                description: 'Initial setup for chat channel',
-                type: 'setup'
-            }
-        ]
-    }];
+    }
+];

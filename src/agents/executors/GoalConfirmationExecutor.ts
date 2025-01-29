@@ -74,8 +74,8 @@ export class GoalConfirmationExecutor implements StepExecutor {
         });
 
         return {
-            finished: result.understanding,
-            needsUserInput: !result.understanding,
+            finished: params.executionMode === "task" ? true : result.understanding,
+            needsUserInput: params.executionMode === "task" ? false : !result.understanding,
             replan: ReplanType.Allow,
             goal: result.message,
             response: {

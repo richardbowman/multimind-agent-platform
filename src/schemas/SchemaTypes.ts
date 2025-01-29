@@ -41,5 +41,6 @@ export enum SchemaType {
     ContentSectionResponse = 'ContentSectionResponse',
     RoutingResponse = "RoutingResponse",
     GoalProgressResponse = "GoalProgressResponse",
-    CalendarResponse = "CalendarResponse"
+    CalendarResponse = "CalendarResponse",
+    NextActionResponse = "NextActionResponse"
 }

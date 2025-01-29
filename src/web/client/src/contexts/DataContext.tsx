@@ -28,6 +28,7 @@ export interface DataContextMethods {
   currentThreadId: string | null;
   isLoading: boolean;
   needsConfig: boolean | null;
+  settings: Settings | null;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   fetchChannels: () => Promise<void>;
   fetchTasks: (channelId: string, threadId: string | null) => Promise<void>;
@@ -66,6 +67,7 @@ export const DataProvider: React.FC<{
   const ipcService = useIPCService();
   const { showSnackbar } = useSnackbar();
 
+  const [settings, setSettings] = useState<Settings|null>();
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ClientChannel[]>([]);
   const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);
@@ -135,6 +137,12 @@ export const DataProvider: React.FC<{
     loadChannelData();
   }, [currentChannelId, currentThreadId]);
 
+  const getSettings = () => ipcService.getRPC().getSettings();
+
+  const fetchSettings = async () => {
+    setSettings(await getSettings());
+  }
+
   useEffect(() => {
     if (needsConfig === false) {
         // Trigger initial data fetch when backend is ready
@@ -142,6 +150,7 @@ export const DataProvider: React.FC<{
             fetchChannels();
             fetchHandles();
             fetchAllArtifacts();
+            fetchSettings();
         } catch (error) {
             console.error(error);
         };
@@ -305,6 +314,7 @@ export const DataProvider: React.FC<{
     currentThreadId,
     isLoading,
     needsConfig,
+    settings,
     sendMessage,
     fetchChannels,
     fetchTasks,
@@ -322,7 +332,7 @@ export const DataProvider: React.FC<{
     setCurrentChannelId,
     setCurrentThreadId,
     setTasks,
-    getSettings: () => ipcService.getRPC().getSettings(),
+    getSettings,
     updateSettings: async (settings: Settings) => {
       try {
         const updatedSettings = await ipcService.getRPC().updateSettings(settings);
@@ -370,6 +380,7 @@ export const DataProvider: React.FC<{
     allArtifacts,
     logs,
     handles,
+    settings,
     currentChannelId,
     currentThreadId,
     isLoading,
@@ -386,6 +397,7 @@ export const DataProvider: React.FC<{
     deleteArtifact,
     setCurrentChannelId,
     setCurrentThreadId,
+    setSettings,
     setTasks
   ]);
 
