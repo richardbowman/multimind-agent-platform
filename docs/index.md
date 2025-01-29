@@ -2,6 +2,15 @@
 
 # Welcome to MultiMind
 
+## Privacy and Security Benefits
+
+MultiMind is designed with privacy and security as core principles:
+
+- **Local Processing**: Web searching and scraping are performed locally on your machine, keeping your data private
+- **Flexible AI Options**: Choose between running LLM models locally on your hardware or using secure cloud-hosted models with privacy protections
+- **Data Control**: Your conversations, tasks, and artifacts remain under your control - we don't store or access your data
+- **Transparent Operations**: Open-source code allows you to verify how your data is handled
+
 MultiMind is a desktop app for Mac OS X, Windows, and Linux that uses your choice of backend large-language models to perform agentic workflows. Its agents use a step-based planner to plan out a sequence of work and use specialized tools as they work. Current agents focus on basic capabilities like web research, content development, and analytical capabilities that use code. MultiMind provides a chat-style interface with channels and threads, a task manager that agents use to structure and manage their workflow, and artifacts which are documents and files that can be uploaded from existing documents, and agents will create and modify.
 
 ## Getting Started
