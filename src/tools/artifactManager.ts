@@ -6,6 +6,7 @@ import { IVectorDatabase } from '../llm/IVectorDatabase';
 import { Artifact } from './artifact';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { createUUID } from 'src/types/uuid';
+import * as pdf from 'pdf-parse';
 
 export class ArtifactManager {
   private storageDir: string;
@@ -170,15 +171,28 @@ export class ArtifactManager {
     if (mimeType.startsWith('image/') || 
         mimeType.startsWith('audio/') || 
         mimeType.startsWith('video/') ||
-        mimeType === 'application/pdf' ||
         mimeType === 'application/octet-stream') {
       Logger.info(`Skipping indexing of non-text artifact: ${artifact.id} (${mimeType})`);
       return;
     }
 
+    let contentToIndex = artifact.content.toString();
+
+    // Extract text from PDF if the MIME type is application/pdf
+    if (mimeType === 'application/pdf') {
+      try {
+        const pdfData = await fs.readFile(artifact.metadata?.url || artifact.metadata?.contentPath!);
+        const pdfText = await pdf(pdfData);
+        contentToIndex = pdfText.text;
+      } catch (error) {
+        Logger.error('Error extracting text from PDF:', error);
+        return;
+      }
+    }
+
     // Index text content into vector DB
     await this.vectorDb.handleContentChunks(
-      artifact.content.toString(),
+      contentToIndex,
       artifact.metadata?.url,
       artifact.metadata?.task,
       artifact.metadata?.projectId,
