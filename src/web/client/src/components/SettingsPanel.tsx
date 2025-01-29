@@ -275,10 +275,11 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
                     return (
                         <Autocomplete
+                            freeSolo
                             options={models}
-                            value={models.find(m => m.id === value) || null}
-                            onChange={(_, newValue) => handleChange(metadata.key, newValue?.id || '')}
-                            getOptionLabel={(option) => option.name || option.id}
+                            value={models.find(m => m.id === value) || value || null}
+                            onChange={(_, newValue) => handleChange(metadata.key, typeof newValue === 'string' ? newValue : newValue?.id || '')}
+                            getOptionLabel={(option) => typeof option === 'string' ? option : option.name || option.id}
                             renderInput={(params) => (
                                 <TextField
                                     {...params}
