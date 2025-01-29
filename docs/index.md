@@ -37,4 +37,5 @@ For support, you can open issues on the [GitHub public issues tracker](https://g
 
 ## Documentation
 
-For more detailed documentation, visit the [MultiMind User Manual](manual/01-introduction.md).
+For more detailed documentation, visit the [MultiMind User Manual](manual/01-introduction.md).  
+See also: [Limitations and Known Issues](manual/06-limitations.md)
