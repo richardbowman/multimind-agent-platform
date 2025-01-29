@@ -119,6 +119,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     }, [settings.providers?.embeddings]);
 
     const handleChange = async (key: string, value: string | number | boolean) => {
+        console.log('handleChange:', key, value);
         // Get metadata using reflection
         const fieldMeta = metadata[key];
         const processedValue = 
@@ -164,6 +165,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const [resetDialogOpen, setResetDialogOpen] = useState(false);
 
     const handleSave = async () => {
+        console.log('Saving settings:', settings);
         // Get all required fields from metadata
         const missingFields = Object.entries(metadata)
             .filter(([_, meta]) => meta.required)
@@ -278,7 +280,15 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             freeSolo
                             options={models}
                             value={models.find(m => m.id === value) || value || null}
-                            onChange={(_, newValue) => handleChange(metadata.key, typeof newValue === 'string' ? newValue : newValue?.id || '')}
+                            onChange={(_, newValue) => {
+                                let valueToSave = '';
+                                if (typeof newValue === 'string') {
+                                    valueToSave = newValue;
+                                } else if (newValue && typeof newValue === 'object') {
+                                    valueToSave = newValue.id;
+                                }
+                                handleChange(metadata.key, valueToSave);
+                            }}
                             getOptionLabel={(option) => typeof option === 'string' ? option : option.name || option.id}
                             renderInput={(params) => (
                                 <TextField
