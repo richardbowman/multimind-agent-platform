@@ -29,8 +29,11 @@ nav:
     - Structured LLM Calls: developer/structured-llm-calls.md
     - Configurable Agents: developer/07-configurable-agents.md
     - Prompt Builder: developer/08-promptbuilder.md
+  - License: LICENSE.md
 
 extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/richardbowman/multimind-agent-platform
+  
+copyright: Copyright &copy; 2024 - 2025 Rick Bowman
