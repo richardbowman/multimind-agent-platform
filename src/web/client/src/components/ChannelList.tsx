@@ -137,7 +137,6 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 initialData={editingChannelId ? {
                     name: channels.find(c => c.id === editingChannelId)?.name || '',
                     description: channels.find(c => c.id === editingChannelId)?.description || '',
-                    isPrivate: channels.find(c => c.id === editingChannelId)?.isPrivate || false,
                     members: channels.find(c => c.id === editingChannelId)?.members || [],
                     goalTemplate: channels.find(c => c.id === editingChannelId)?.goalTemplate || null,
                     defaultResponderId: channels.find(c => c.id === editingChannelId)?.defaultResponderId || null

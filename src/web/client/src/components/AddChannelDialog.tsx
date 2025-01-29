@@ -29,7 +29,6 @@ interface AddChannelDialogProps {
     initialData?: {
         name: string;
         description: string;
-        isPrivate: boolean;
         members: string[];
         goalTemplate: string | null;
         defaultResponderId: string | null;
@@ -45,7 +44,6 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     const [channelName, setChannelName] = useState(initialData?.name || '');
     const [channelNameError, setChannelNameError] = useState(false);
     const [description, setDescription] = useState(initialData?.description || '');
-    const [isPrivate, setIsPrivate] = useState(initialData?.isPrivate || false);
     const [selectedAgents, setSelectedAgents] = useState<string[]>(initialData?.members || []);
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(initialData?.goalTemplate || null);
     const [defaultResponderId, setDefaultResponderId] = useState<string | null>(initialData?.defaultResponderId || null);
@@ -87,7 +85,6 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             const params = {
                 name: channelName,
                 description,
-                isPrivate,
                 members: selectedAgents,
                 goalTemplate: selectedTemplate,
                 defaultResponderId: defaultResponderId || undefined
@@ -155,16 +152,6 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                         fullWidth
                         value={description}
                         onChange={(e) => setDescription(e.target.value)}
-                        sx={{ mb: 2 }}
-                    />
-                    <FormControlLabel
-                        control={
-                            <Checkbox
-                                checked={isPrivate}
-                                onChange={(e) => setIsPrivate(e.target.checked)}
-                            />
-                        }
-                        label="Private Channel"
                         sx={{ mb: 2 }}
                     />
                     <Typography variant="h6" sx={{ mb: 2 }}>Select Goal Template</Typography>
