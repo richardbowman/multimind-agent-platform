@@ -3,6 +3,7 @@ import Logger from 'src/helpers/logger';
 import { ContentProject, ContentTask } from './contentManager';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { Project, Task } from 'src/tools/taskManager';
+import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
 
 export class SimpleAgent extends Agent {
     protected projectCompleted(project: Project): void {
@@ -16,8 +17,16 @@ export class SimpleAgent extends Agent {
     
     protected async handlerThread(params: HandlerParams): Promise<void> {
         try {
+            const promptBuilder = new PromptBuilder(this.modelHelpers.getPromptRegistry());
+            promptBuilder.addInstruction("You are a helpful agent.");
+            promptBuilder.addContext(params.userPost.message);
+            if (params.threadPosts) {
+                promptBuilder.addContext(params.threadPosts.map(post => post.message).join('\n'));
+            }
+            const prompt = promptBuilder.build();
+
             const response = await this.modelHelpers.generate<ModelMessageResponse>({
-                instructions: "You are a helpful agent.",
+                instructions: prompt,
                 message: params.userPost.message,
                 threadPosts: params.threadPosts
             });
@@ -31,8 +40,13 @@ export class SimpleAgent extends Agent {
     }
     protected async handleChannel(params: HandlerParams): Promise<void> {
         try {
+            const promptBuilder = new PromptBuilder(this.modelHelpers.getPromptRegistry());
+            promptBuilder.addInstruction("You are a helpful agent.");
+            promptBuilder.addContext(params.userPost.message);
+            const prompt = promptBuilder.build();
+
             const response = await this.modelHelpers.generate<ModelMessageResponse>({
-                instructions: "You are a helpful agent.",
+                instructions: prompt,
                 message: params.userPost.message
             })
             await this.reply(
