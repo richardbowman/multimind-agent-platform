@@ -40,27 +40,32 @@ export class LogReader extends EventEmitter {
             
             const fd = openSync(this.logFilePath, 'r');
             const chunkSize = 1024 * 1024; // 1MB chunks
-            let position = stats.size;
+            let position = 0;
             let buffer = Buffer.alloc(chunkSize);
-            let remainingLines = this.cacheSize;
             let partialLine = '';
             let totalLinesProcessed = 0;
             let totalBytesRead = 0;
             let chunkCount = 0;
 
-            while (position > 0 && remainingLines > 0) {
+            while (position < stats.size) {
                 const chunkStartTime = Date.now();
-                position = Math.max(0, position - chunkSize);
-                const bytesRead = readSync(fd, buffer, 0, chunkSize, position);
+                const bytesToRead = Math.min(chunkSize, stats.size - position);
+                const bytesRead = readSync(fd, buffer, 0, bytesToRead, position);
                 totalBytesRead += bytesRead;
                 chunkCount++;
                 
                 const chunk = buffer.toString('utf8', 0, bytesRead);
-                const lines = chunk.split('\n').reverse();
+                const lines = chunk.split('\n');
                 
+                // Handle partial line from previous chunk
                 if (partialLine) {
-                    lines[0] += partialLine;
+                    lines[0] = partialLine + lines[0];
                     partialLine = '';
+                }
+
+                // If last line doesn't end with newline, it's partial
+                if (!chunk.endsWith('\n')) {
+                    partialLine = lines.pop() || '';
                 }
 
                 for (const line of lines) {
@@ -73,17 +78,19 @@ export class LogReader extends EventEmitter {
                             level: match[2],
                             message: match[3]
                         });
-                        remainingLines--;
                         totalLinesProcessed++;
+                        
+                        // Maintain cache size
+                        if (this.logCache.length > this.cacheSize) {
+                            this.logCache.shift();
+                        }
                     } else if (this.logCache.length > 0) {
-                        this.logCache[this.logCache.length - 1].message = line + '\n' + this.logCache[this.logCache.length - 1].message;
+                        // Append to previous message if it's a continuation
+                        this.logCache[this.logCache.length - 1].message += '\n' + line;
                     }
                 }
 
-                if (position > 0) {
-                    partialLine = lines[lines.length - 1];
-                }
-
+                position += bytesRead;
                 Logger.verbose(`Processed chunk ${chunkCount} in ${Date.now() - chunkStartTime}ms - Position: ${position}, Lines: ${totalLinesProcessed}, Bytes: ${totalBytesRead}`);
             }
 
@@ -111,24 +118,42 @@ export class LogReader extends EventEmitter {
         const startTime = Date.now();
         Logger.verbose('Checking for log updates...');
         
-        // Force refresh by resetting lastModified
-        this.lastModified = 0;
+        if (!this.checkForUpdates()) {
+            Logger.verbose('No updates detected');
+            return;
+        }
 
         try {
-            const fd = openSync(this.logFilePath, 'r');
             const stats = statSync(this.logFilePath);
-            const position = Math.max(0, stats.size - 1024); // Read last 1KB for new entries
-            const buffer = Buffer.alloc(1024);
-            const bytesRead = readSync(fd, buffer, 0, 1024, position);
+            const fd = openSync(this.logFilePath, 'r');
+            
+            // Read from last known position
+            const position = this.logCache.length > 0 ? 
+                Math.max(0, stats.size - 1024 * 1024) : // Read last 1MB if we have existing cache
+                0; // Read from start if no cache
+            
+            const buffer = Buffer.alloc(1024 * 1024); // 1MB buffer
+            const bytesRead = readSync(fd, buffer, 0, buffer.length, position);
             
             Logger.verbose(`Reading ${bytesRead} bytes from position ${position}`);
             
             const newContent = buffer.toString('utf8', 0, bytesRead);
             let newEntries = 0;
             let continuationLines = 0;
+            let partialLine = '';
 
-            newContent.split('\n').forEach(line => {
-                if (!line.trim()) return;
+            const lines = newContent.split('\n');
+            
+            // Handle partial line from previous update
+            if (this.logCache.length > 0 && !newContent.startsWith('\n')) {
+                const lastEntry = this.logCache[this.logCache.length - 1];
+                lastEntry.message += lines[0];
+                lines.shift();
+                continuationLines++;
+            }
+
+            for (const line of lines) {
+                if (!line.trim()) continue;
                 
                 const match = line.match(/^\[(.*?)\] ([A-Z]+): (.*)/);
                 if (match) {
@@ -139,26 +164,32 @@ export class LogReader extends EventEmitter {
                     });
                     newEntries++;
                     
+                    // Maintain cache size
                     if (this.logCache.length > this.cacheSize) {
                         this.logCache.shift();
                     }
                 } else if (this.logCache.length > 0) {
+                    // Append to previous message if it's a continuation
                     this.logCache[this.logCache.length - 1].message += '\n' + line;
                     continuationLines++;
                 }
-            });
+            }
 
             closeSync(fd);
             Logger.verbose(`Cache updated in ${Date.now() - startTime}ms - New entries: ${newEntries}, Continuations: ${continuationLines}, Cache size: ${this.logCache.length}`);
 
+            // Update last modified time
+            this.lastModified = stats.mtimeMs;
+
             // Emit update event with debounce
-            if (newEntries > 0) {
+            if (newEntries > 0 || continuationLines > 0) {
                 if (this.updateDebounceTimeout) {
                     clearTimeout(this.updateDebounceTimeout);
                 }
                 this.updateDebounceTimeout = setTimeout(() => {
                     this.emit('update', {
                         newEntries,
+                        continuationLines,
                         totalEntries: this.logCache.length
                     });
                 }, 500); // Debounce for 500ms
