@@ -122,7 +122,12 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
 
     return (
         <>
-            <Dialog open={open} onClose={onClose}>
+            <Dialog 
+                open={open} 
+                onClose={onClose}
+                maxWidth="lg"
+                fullWidth
+            >
                 <DialogTitle>
                     {editingChannelId ? `Edit Channel "${channelName}"` : 'Create New Channel'}
                 </DialogTitle>
@@ -165,7 +170,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                     <Typography variant="h6" sx={{ mb: 2 }}>Select Goal Template</Typography>
                     <Grid container spacing={2} sx={{ mb: 3 }}>
                         {GoalTemplates.map(template => (
-                            <Grid item xs={6} key={template.id}>
+                            <Grid item xs={4} key={template.id}>
                                 <Card 
                                     variant={selectedTemplate === template.id ? 'elevation' : 'outlined'}
                                     sx={{
