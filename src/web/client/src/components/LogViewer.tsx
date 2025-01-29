@@ -33,14 +33,13 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const [verboseToggleTimestamp, setVerboseToggleTimestamp] = useState(Date.now());
     const [logLevelFilter, setLogLevelFilter] = useState<'all' | 'error' | 'warn' | 'info' | 'debug' | 'verbose'>('all');
 
+    const currentLogTypeRef = useRef(currentLogTab);
+    
     const refreshLogs = useCallback(async () => {
         setIsLoading(true);
         try {
-            // Clear existing logs first
-            logs[currentLogTab] = { logs: [] };
-            
             // Fetch logs with newest first
-            await fetchLogs(currentLogTab, {
+            await fetchLogs(currentLogTypeRef.current, {
                 sort: 'desc',
                 limit: pageSize,
                 forceRefresh: true
@@ -51,10 +50,14 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         } finally {
             setIsLoading(false);
         }
-    }, [currentLogTab, fetchLogs, pageSize, logs]);
+    }, [fetchLogs, pageSize]);
 
     useEffect(() => {
+        currentLogTypeRef.current = currentLogTab;
         logger.verbose('LogViewer: Setting up log subscription for type:', currentLogTab);
+        
+        // Clear existing logs when changing tabs
+        logs[currentLogTab] = { logs: [] };
         
         // Initial fetch
         refreshLogs();
