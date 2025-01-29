@@ -112,11 +112,11 @@ ${previousContext}`;
             pendingTasks.add(task.id);
 
             //TODO: major todo, figure out task delegation
-            const researcher = params.agents?.find(a => a.messagingHandle === "@researchteam");
+            const researcher = params.agents?.find(a => a.messagingHandle === "@research-assistant");
             if (researcher) {
                 await this.taskManager.assignTaskToAgent(task.id, researcher.userId);
             } else {
-                Logger.error("Failed to find @researchteam user to assign to");
+                Logger.error("Failed to find @research-assistant user to assign to");
             }
 
         }

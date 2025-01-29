@@ -26,7 +26,7 @@
         "className": "ResearchAssistant",
         "sourcePath": "researchAssistant.ts",
         "userId": "90b9c45a-e79e-43e7-b4f5-3e852cd723a4",
-        "handle": "@researchteam",
+        "handle": "@research-assistant",
         "description": "Conducts simple web research and information gathering. Part of the research manager's team (who can help breakdown and review more complex research tasks).",
         "enabled": true,
         "config": {

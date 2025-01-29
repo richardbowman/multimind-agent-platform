@@ -158,7 +158,7 @@ export const GoalTemplates: GoalTemplate[] = [
         description: 'Template for setting up a web research channel with a research manager',
         supportingAgents: [
             '@research',
-            '@researchteam'
+            '@research-assistant'
         ],
         defaultResponder: '@research',
         initialTasks: [
