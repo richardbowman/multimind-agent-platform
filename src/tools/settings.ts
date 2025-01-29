@@ -142,6 +142,14 @@ export class ModelByProvider {
     deepseek: string = 'deepseek-chat';
 
     @ClientSettings({
+        label: 'GitHub Model',
+        category: 'LLM Settings',
+        type: 'select',
+        description: 'Model identifier for GitHub Models'
+    })
+    github: string = 'gpt-4';
+
+    @ClientSettings({
         label: 'Llama.cpp Model',
         category: 'LLM Settings',
         type: 'select',
@@ -223,7 +231,7 @@ export class ProvidersConfig {
         label: 'Chat Provider',
         category: 'LLM Settings',
         type: 'select',
-        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp', 'deepseek']
+        options: ['lmstudio', 'anthropic', 'bedrock', 'openai', 'openrouter', 'llama_cpp', 'deepseek', 'github']
     })
     chat: string = 'openrouter';
 
@@ -460,6 +468,14 @@ export class Settings {
         sensitive: true
     })
     deepseek: ProviderConfig = new ProviderConfig();
+
+    @ClientSettings({
+        label: 'GitHub Configuration',
+        category: 'API Keys',
+        type: 'section',
+        sensitive: true
+    })
+    github: ProviderConfig = new ProviderConfig();
 
     // Rate Limiting
     @ClientSettings({

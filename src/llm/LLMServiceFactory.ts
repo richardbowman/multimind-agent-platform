@@ -14,7 +14,8 @@ export enum LLMProvider {
     LLAMA_CPP = "llama_cpp",
     OPENAI = "openai",
     OPENROUTER = "openrouter",
-    DEEPSEEK = "deepseek"
+    DEEPSEEK = "deepseek",
+    GITHUB = "github"
 }
 
 
@@ -103,6 +104,17 @@ export class LLMServiceFactory {
                     settings.models?.conversation?.deepseek || "deepseek-chat",
                     undefined,
                     "https://api.deepseek.com/v1",
+                    settings
+                );
+            case LLMProvider.GITHUB:
+                if (!settings.github?.api?.key) {
+                    throw new ConfigurationError("GitHub API key is required");
+                }
+                return new OpenAIService(
+                    settings.github.api.key,
+                    settings.models.conversation.github || "gpt-4",
+                    undefined,
+                    "https://models.inference.ai.azure.com",
                     settings
                 );
             default:
