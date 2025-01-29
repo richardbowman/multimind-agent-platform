@@ -24,11 +24,8 @@ For best results, we recommend using one of these high-quality language models:
 
 ## System Requirements
 - **Operating System**: Windows 11, Mac OS X Sonoma, or a Linux distribution capable of running AppImage packaged applications
-- Node.js 18+
-- ChromaDB or Vectra vector database (optional)
+- ChromaDB vector database (optional)
 - Supported LLM provider (LM Studio, OpenAI, Bedrock, etc.)
-- Mattermost server (optional for chat interface)
-- Settings configured through the Settings panel
 
 ## Getting Help
 For support, you can open issues on the [GitHub public issues tracker](https://github.com/richardbowman/multimind-agent-platform/issues).
