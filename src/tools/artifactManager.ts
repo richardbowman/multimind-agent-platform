@@ -184,6 +184,14 @@ export class ArtifactManager {
         const pdfData = await fs.readFile(artifact.metadata?.url || artifact.metadata?.contentPath!);
         const pdfText = await pdf(pdfData);
         contentToIndex = pdfText.text;
+
+        // Update metadata to include extracted text
+        let metadata = await this.loadArtifactMetadata();
+        metadata[artifact.id] = {
+          ...metadata[artifact.id],
+          extractedText: contentToIndex
+        };
+        await this.saveArtifactMetadata(metadata);
       } catch (error) {
         Logger.error('Error extracting text from PDF:', error);
         return;
@@ -283,7 +291,7 @@ export class ArtifactManager {
     Logger.info(`Indexing ${artifacts.length} artifacts`);
 
     for (let i = 0; i < artifacts.length; i++) {
-      Logger.progress(`Indexing ${i} of ${artifacts.length} artifacts`, i/artifacts.length)
+      Logger.progress(`Indexing ${i} of ${artifacts.length} artifacts`, i/artifacts.length);
       await this.indexArtifact(artifacts[i]);
     }
 
