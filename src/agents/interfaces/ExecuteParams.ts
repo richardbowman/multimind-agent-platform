@@ -11,7 +11,7 @@ import { Agent } from '../agents';
 export interface ExecuteParams {
     readonly agentId: UUID;
     readonly message?: string;
-    readonly stepGoal?: string;
+    readonly stepGoal: string;
     readonly overallGoal?: string;
     readonly goal: string;
     readonly step: string;

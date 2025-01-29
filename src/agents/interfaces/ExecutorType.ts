@@ -28,5 +28,8 @@ export enum ExecutorType {
     NODE_EXECUTION = "nodejs-code-execution",
     DEBUG = "debug",
     CALENDAR_MANAGEMENT = "calendar-management",
-    DELEGATION = "delegation"
+    DELEGATION = "delegation",
+    WEB_SCRAPE = "web-scrape",
+    WEB_SEARCH = "web-search",
+    SELECT_LINKS = "select-links"
 }

@@ -9,6 +9,9 @@ import { ValidationExecutor } from './executors/ValidationExecutor';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { ExecutorType } from './interfaces/ExecutorType';
+import { SearchExecutor } from './executors/WebSearchExecutor';
+import { LinkSelectionExecutor } from './executors/LinkSelectionExecutor';
+import { WebScrapeExecutor } from './executors/WebScrapeExecutor';
 
 
 export interface ResearchProject extends Project {
@@ -30,20 +33,19 @@ export class ResearchAssistant extends StepBasedAgent {
 For incoming new user requests, you should typically follow this order:
 1) ${ExecutorType.CHECK_KNOWLEDGE}
 2) ${ExecutorType.VALIDATION}
-3) ${ExecutorType.FINAL_RESPONSE}
 
-If you've already done this, you should follow this order:
-1) ${ExecutorType.WEB_RESEARCH}
-2) ${ExecutorType.VALIDATION}
-3) ${ExecutorType.FINAL_RESPONSE}
+Once, you've done an existing knowledge check and need to search:
+1) ${ExecutorType.WEB_SEARCH}
+2) ${ExecutorType.SELECT_LINKS}
+3) ${ExecutorType.WEB_SCRAPE}
+4) ${ExecutorType.FINAL_RESPONSE}
 `);
 
         // Register step executors
-        this.registerStepExecutor(new WebSearchExecutor({
-            ...this.getExecutorParams(),
-            searchHelper: this.searchHelper,
-        }));
-        this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new SearchExecutor(this.getExecutorParams());
+        this.registerStepExecutor(new LinkSelectionExecutor(this.getExecutorParams());
+        this.registerStepExecutor(new WebScrapeExecutor(this.getExecutorParams());
+        // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new KnowledgeCheckExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new FinalResponseExecutor(this.getExecutorParams()));
     }
