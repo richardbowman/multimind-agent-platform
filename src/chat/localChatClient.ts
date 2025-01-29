@@ -454,13 +454,17 @@ export class LocalTestClient implements ChatClient {
         }    
     }
 
-    public async updatePost(postId: UUID, newContent: string): Promise<ChatPost> {
+    public async updatePost(postId: UUID, newContent: string, newProps?: ConversationContext): Promise<ChatPost> {
         const post = this.storage.posts.find(p => p.id === postId);
         if (!post) {
             throw new Error(`Post ${postId} not found`);
         }
         
         post.message = newContent;
+        if (newProps) {
+            post.props = { ...post.props, ...newProps };
+        }
+        
         await this.storage.save();
         
         // Notify listeners of the update
