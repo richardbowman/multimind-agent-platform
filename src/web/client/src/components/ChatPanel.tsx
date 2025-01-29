@@ -99,7 +99,30 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 securityLevel: 'loose',
                 fontFamily: 'inherit',
                 fontSize: 16,
-                logLevel: 1 // Set log level to show warnings
+                logLevel: 1, // Set log level to show warnings
+                themeCSS: `
+                    .mermaid {
+                        font-family: inherit;
+                    }
+                    .mermaid .label {
+                        font-family: inherit;
+                        color: #ffffff;
+                    }
+                    .mermaid .node rect,
+                    .mermaid .node circle,
+                    .mermaid .node ellipse,
+                    .mermaid .node polygon {
+                        fill: #2a2a2a;
+                        stroke: #444;
+                    }
+                    .mermaid .edgePath .path {
+                        stroke: #666;
+                    }
+                    .mermaid .cluster rect {
+                        fill: #1a1a1a;
+                        stroke: #333;
+                    }
+                `
             });
 
             const renderMermaid = async () => {
