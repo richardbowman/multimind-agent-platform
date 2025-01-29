@@ -7,6 +7,9 @@ While MultiMind provides powerful capabilities, there are some current limitatio
 - Debugging capabilities are currently basic
 - Error handling and reporting could be more robust
 
+## Current Limitations
+- Most LLM calls currently use the reasoning model option, which may not be optimal for all tasks
+
 ## Planned Enhancements
 - Improved goal-based planning system
 - More consistent context management across workflow steps
