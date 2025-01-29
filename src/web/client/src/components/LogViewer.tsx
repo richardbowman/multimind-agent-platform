@@ -35,19 +35,28 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
 
     const currentLogTypeRef = useRef(currentLogTab);
     
+    const previousLogsRef = useRef<string>('');
+    
     const refreshLogs = useCallback(async () => {
-        setIsLoading(true);
         try {
             // Fetch logs with newest first
-            await fetchLogs(currentLogTypeRef.current, {
+            const result = await fetchLogs(currentLogTypeRef.current, {
                 sort: 'desc',
                 limit: pageSize,
                 forceRefresh: true
             });
-            // Reset loaded logs since we're getting fresh data
-            setLoadedLogs([]);
-            setHasMore(true);
-        } finally {
+            
+            // Compare with previous logs
+            const currentLogsString = JSON.stringify(result);
+            if (currentLogsString !== previousLogsRef.current) {
+                setIsLoading(true);
+                previousLogsRef.current = currentLogsString;
+                setLoadedLogs([]);
+                setHasMore(true);
+                setIsLoading(false);
+            }
+        } catch (error) {
+            console.error('Error refreshing logs:', error);
             setIsLoading(false);
         }
     }, [fetchLogs, pageSize]);
@@ -62,7 +71,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         // Set up polling interval for updates
         const pollInterval = setInterval(() => {
             refreshLogs();
-        }, 2000); // Poll every 2 seconds
+        }, 5000); // Poll every 5 seconds
 
         return () => {
             logger.verbose('LogViewer: Cleaning up log subscription for type:', currentLogTab);
