@@ -19,7 +19,7 @@ For best results, we recommend using one of these high-quality language models:
 - **OpenAI GPT-4o** (via OpenAI API)
 - **Anthropic Claude 3.5 Sonnet** (via Anthropic API)
 - **DeepSeek V3** (via DeepSeek API)
-- **Qwen 2.5 72B Instruct** (available via OpenRouter)
+- **Qwen 2.5 72B Instruct** (qwen/qwen-2.5-72b-instruct, available via OpenRouter)
 - **NVIDIA Nemotron 70B Instruct** (nvidia/llama-3.1-nemotron-70b-instruct, available via OpenRouter)
 
 ## System Requirements
