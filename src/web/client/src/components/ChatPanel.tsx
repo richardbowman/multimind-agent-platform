@@ -23,6 +23,7 @@ import Link from '@mui/material/Link';
 import { TaskDialog } from './TaskDialog';
 import { ClientProject } from '../../../../shared/types';
 import { CSVRenderer } from './shared/CSVRenderer';
+import mermaid from 'mermaid';
 
 // Custom link component that opens links in system browser
 const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -88,6 +89,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const [currentProject, setCurrentProject] = useState<ClientProject | null>(null);
     const ipcService = useIPCService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
+
+    // Initialize Mermaid
+    useEffect(() => {
+        mermaid.initialize({ 
+            startOnLoad: true,
+            theme: 'dark',
+            securityLevel: 'loose'
+        });
+    }, []);
     const { channels } = useWebSocket();
 
     const [isAtBottom, setIsAtBottom] = useState(true);
@@ -471,6 +481,27 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                             const match = /language-(\w+)/.exec(className || '');
                                             const content = String(children).replace(/\n$/, '');
                                             
+                                            // Handle Mermaid diagrams
+                                            if (match?.[1] === 'mermaid') {
+                                                return (
+                                                    <Box 
+                                                        component="div"
+                                                        className="mermaid"
+                                                        sx={{ 
+                                                            mt: 2,
+                                                            mb: 2,
+                                                            p: 2,
+                                                            bgcolor: 'background.paper',
+                                                            border: '1px solid',
+                                                            borderColor: 'divider',
+                                                            borderRadius: 1,
+                                                            overflowX: 'auto'
+                                                        }}
+                                                        dangerouslySetInnerHTML={{ __html: content }}
+                                                    />
+                                                );
+                                            }
+
                                             // Handle CSV content
                                             if (match?.[1] === 'csv') {
                                                 return (
