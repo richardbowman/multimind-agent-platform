@@ -95,22 +95,46 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         mermaid.initialize({ 
             startOnLoad: false, // We'll handle rendering manually
             theme: 'dark',
-            securityLevel: 'loose'
+            securityLevel: 'loose',
+            fontFamily: 'inherit',
+            fontSize: 16
         });
-        
-        // Render any mermaid diagrams after component updates
+
         const renderMermaid = async () => {
             try {
-                await mermaid.run({
-                    querySelector: '.mermaid',
+                // Find all mermaid containers
+                const mermaidContainers = document.querySelectorAll('.mermaid');
+                
+                // Only process containers that haven't been rendered yet
+                mermaidContainers.forEach(container => {
+                    if (!container.dataset.processed) {
+                        const content = container.textContent || '';
+                        if (content.trim()) {
+                            // Clear container and render
+                            container.innerHTML = '';
+                            mermaid.render(
+                                `mermaid-${Date.now()}-${Math.random()}`,
+                                content,
+                                (svgCode) => {
+                                    container.innerHTML = svgCode;
+                                    container.dataset.processed = 'true';
+                                }
+                            );
+                        }
+                    }
                 });
             } catch (error) {
                 console.error('Error rendering mermaid diagrams:', error);
             }
         };
-        
-        renderMermaid();
-    }, [messages]); // Re-render when messages change
+
+        // Use a timeout to ensure DOM is ready
+        const timeout = setTimeout(() => {
+            renderMermaid();
+        }, 100);
+
+        return () => clearTimeout(timeout);
+    }, [messages]);
     const { channels } = useWebSocket();
 
     const [isAtBottom, setIsAtBottom] = useState(true);
@@ -508,10 +532,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                                             border: '1px solid',
                                                             borderColor: 'divider',
                                                             borderRadius: 1,
-                                                            overflowX: 'auto'
+                                                            overflowX: 'auto',
+                                                            '& svg': {
+                                                                maxWidth: '100%',
+                                                                height: 'auto'
+                                                            }
                                                         }}
-                                                        dangerouslySetInnerHTML={{ __html: content }}
-                                                    />
+                                                    >
+                                                        {content}
+                                                    </Box>
                                                 );
                                             }
 
