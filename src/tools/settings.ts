@@ -158,9 +158,14 @@ export class ModelByProvider {
     llama_cpp: string = '';
 }
 
+export enum PlannerType {
+    NextStep = "nextStep"
+}
+
 export interface AgentConfig {
     purpose: string;
     finalInstructions: string;
+    plannerType: PlannerType;
     executors: {
         className: string;
         config?: Record<string, any>;
