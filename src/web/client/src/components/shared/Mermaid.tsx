@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, Typography } from '@mui/material';
+import { Spinner } from './Spinner';
 
 interface MermaidProps {
     content: string;
