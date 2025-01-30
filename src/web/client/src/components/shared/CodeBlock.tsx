@@ -142,11 +142,23 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                     {viewMode === 'visual' ? (
                         <ReactMarkdown
                             components={{
+                                p: ({node, ...props}) => (
+                                    <p style={{margin: '0.5em 0'}} {...props} />
+                                ),
+                                ul: ({node, ...props}) => (
+                                    <ul style={{margin: '0.5em 0', paddingLeft: '1.5em'}} {...props} />
+                                ),
+                                ol: ({node, ...props}) => (
+                                    <ol style={{margin: '0.5em 0', paddingLeft: '1.5em'}} {...props} />
+                                ),
+                                li: ({node, ...props}) => (
+                                    <li style={{margin: '0.25em 0'}} {...props} />
+                                ),
                                 pre: ({node, ...props}) => (
-                                    <pre style={{whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'inherit'}} {...props} />
+                                    <div style={{backgroundColor: '#f5f5f5', padding: '0.5em', borderRadius: '4px', margin: '0.5em 0'}} {...props} />
                                 ),
                                 code: ({node, ...props}) => (
-                                    <code style={{whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'inherit'}} {...props} />
+                                    <code style={{fontFamily: 'monospace', backgroundColor: '#f5f5f5', padding: '0.2em 0.4em', borderRadius: '4px'}} {...props} />
                                 )
                             }}
                         >
