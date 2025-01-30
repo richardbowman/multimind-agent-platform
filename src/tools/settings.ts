@@ -156,6 +156,14 @@ export class ModelByProvider {
         description: 'Model path for Llama.cpp'
     })
     llama_cpp: string = '';
+
+    @ClientSettings({
+        label: 'Advanced Reasoning Model',
+        category: 'LLM Settings',
+        type: 'select',
+        description: 'Model for complex reasoning and problem solving tasks'
+    })
+    advancedReasoning: string = 'anthropic/claude-3-opus';
 }
 
 export enum PlannerType {
@@ -188,6 +196,14 @@ export class LLMModels {
         description: 'Models for reasoning tasks'
     })
     reasoning: ModelByProvider = new ModelByProvider();
+
+    @ClientSettings({
+        label: 'Advanced Reasoning Models',
+        category: 'LLM Settings',
+        type: 'section',
+        description: 'Models for complex reasoning and problem solving tasks'
+    })
+    advancedReasoning: ModelByProvider = new ModelByProvider();
 
     @ClientSettings({
         label: 'Document Models',
