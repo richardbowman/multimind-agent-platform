@@ -429,6 +429,14 @@ export class Settings {
     simulateTypingOnPaste: boolean = false;
 
     @ClientSettings({
+        label: 'Open Dev Tools on Load',
+        category: 'UI Settings',
+        type: 'boolean',
+        description: 'Automatically open developer tools when window loads'
+    })
+    openDevToolsOnLoad: boolean = false;
+
+    @ClientSettings({
         label: 'Models',
         category: 'LLM Settings',
         type: 'section',
