@@ -1,5 +1,6 @@
 import JSON5 from 'json5';
-import { marked } from 'marked';
+import { marked, RendererObject } from 'marked';
+import { LinkRef } from 'src/helpers/scrapeHelper';
 
 export interface CodeBlock {
     readonly type: string;
@@ -100,11 +101,12 @@ export namespace StringUtils {
      * @param markdown Input Markdown document
      * @returns Array of links found in the Markdown document, each containing text and href
      */
-    export function extractLinksFromMarkdown(markdown: string): Link[] {
-        const links: Link[] = [];
+    export function extractLinksFromMarkdown(markdown: string): LinkRef[] {
+        const links: LinkRef[] = [];
 
-        const renderer = {
-            link({ href, title, text }: marked.Tokens.Link) {
+        const renderer : RendererObject = {
+            link(args) {
+                const { href, text } = args;
                 links.push({ text, href });
                 return '';
             }
