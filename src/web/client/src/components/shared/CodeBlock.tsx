@@ -143,10 +143,10 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                         <ReactMarkdown
                             components={{
                                 pre: ({node, ...props}) => (
-                                    <pre style={{whiteSpace: 'pre-wrap', wordWrap: 'break-word'}} {...props} />
+                                    <pre style={{whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'inherit'}} {...props} />
                                 ),
                                 code: ({node, ...props}) => (
-                                    <code style={{whiteSpace: 'pre-wrap', wordWrap: 'break-word'}} {...props} />
+                                    <code style={{whiteSpace: 'pre-wrap', wordWrap: 'break-word', fontFamily: 'inherit'}} {...props} />
                                 )
                             }}
                         >
