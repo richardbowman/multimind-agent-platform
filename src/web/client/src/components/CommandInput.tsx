@@ -117,7 +117,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     };
 
     const handleKeyPress = (event: KeyboardEvent<HTMLInputElement>) => {
-        if (event.key === 'Enter' && input.trim()) {
+        if (event.key === 'Enter' && input.trim() && !event.shiftKey) {
             // Special handling for /artifacts, /tasks, and /add commands
             if (input.trim() === '/artifacts' || input.trim() === '/tasks') {
                 // These commands are handled by the UI through the WebSocket context
