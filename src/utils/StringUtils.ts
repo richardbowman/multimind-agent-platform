@@ -2,6 +2,7 @@ import JSON5 from 'json5';
 
 export interface CodeBlock {
     readonly type: string;
+    readonly attribute?: string;
     readonly code: string;
 }
 
@@ -16,18 +17,19 @@ export namespace StringUtils {
     }
 
     export function extractCodeBlocks(text: string, type?: string): CodeBlock[] {
-        const codeBlockRegex = /```((?:json|javascript|typescript|python|java|bash|json|html|css|markdown|yaml|xml))[\s\S]*?\n([\s\S]*?)```/g;
+        const codeBlockRegex = /```([a-zA-Z]+)(?:\[([^\]]+)\])?\n([\s\S]*?)```/g;
         const matches: CodeBlock[] = [];
         let match: RegExpExecArray | null;
-
+   
         while ((match = codeBlockRegex.exec(text)) !== null) {
             matches.push({
                 type: match[1],
-                code: match[2].trim()
+                attribute: match[2],
+                code: match[3].trim()
             });
         }
-
-        return type? matches.filter(m => m.type === type) : matches;
+   
+        return type ? matches.filter(m => m.type === type) : matches;
     }
 
     /**
