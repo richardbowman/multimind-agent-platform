@@ -22,9 +22,6 @@ export class LinkSelectionExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const searchResults = params.previousResult?.map(r => r.data?.searchResults).filter(s => s).slice(-1)[0];
-        const scrapedPageLinks = [...new Set(params.previousResult?.map(r => r.data?.extractedLinks).flat().filter(s => s))] as LinkRef[];
-        
         // Get all previously scraped URLs from WebScrapeExecutor results
         const alreadyScrapedUrls = new Set(
             params.previousResult
@@ -33,6 +30,20 @@ export class LinkSelectionExecutor implements StepExecutor {
                 .filter(Boolean) || []
         );
 
+        // Filter search results and scraped links to remove already scraped URLs
+        const searchResults = params.previousResult
+            ?.map(r => r.data?.searchResults)
+            .filter(s => s)
+            .slice(-1)[0]
+            ?.filter(sr => !alreadyScrapedUrls.has(sr.url));
+
+        const scrapedPageLinks = [...new Set(
+            params.previousResult
+                ?.map(r => r.data?.extractedLinks)
+                .flat()
+                .filter(s => s && !alreadyScrapedUrls.has(s.href))
+        )] as LinkRef[];
+
         if (!searchResults && scrapedPageLinks.length == 0) {
             return {
                 finished: true,
@@ -40,12 +51,12 @@ export class LinkSelectionExecutor implements StepExecutor {
             };
         }
 
-        const selectedUrls = (await this.selectRelevantSearchResults(
+        const selectedUrls = await this.selectRelevantSearchResults(
             params.stepGoal,
             params.goal,
             searchResults,
             scrapedPageLinks
-        )).filter(url => !alreadyScrapedUrls.has(url));
+        );
 
         return {
             finished: true,
