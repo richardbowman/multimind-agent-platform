@@ -7,6 +7,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import DownloadIcon from '@mui/icons-material/Download';
 import { CSVRenderer } from './CSVRenderer';
+import { Mermaid } from './Mermaid';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
@@ -159,6 +160,11 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                     // Handle CSV content
                     if (artifact.metadata?.mimeType === 'text/csv' || artifact.type === 'csv') {
                         return <CSVRenderer content={artifact.content as string} />;
+                    }
+
+                    // Handle Mermaid diagrams
+                    if (artifact.type === 'mermaid') {
+                        return <Mermaid content={artifact.content as string} />;
                     }
                     
                     // Handle image content
