@@ -45,8 +45,14 @@ export class WebScrapeExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        // Get selected URLs from previous step (LinkSelectionExecutor)
-        const selectedUrls = params.previousResult?.map(r => r.data?.selectedUrls).filter(s => s).slice(-1)[0];
+        // First try to extract URLs from stepGoal
+        let selectedUrls = StringUtils.extractUrls(params.stepGoal);
+        
+        // If no URLs in stepGoal, check previousResult (LinkSelectionExecutor)
+        if (!selectedUrls?.length) {
+            selectedUrls = params.previousResult?.map(r => r.data?.selectedUrls).filter(s => s).slice(-1)[0];
+        }
+
         if (!selectedUrls?.length) {
             return {
                 finished: true,
