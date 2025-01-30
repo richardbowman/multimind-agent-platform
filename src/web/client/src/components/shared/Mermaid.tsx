@@ -38,9 +38,16 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
 
     useEffect(() => {
         let isActive = true;
+        let tempDiv: HTMLDivElement | null = null;
         
         const initializeAndRender = async () => {
             try {
+                // Clean up any previous diagram first
+                const existingDiv = document.getElementById(mermaidId.current);
+                if (existingDiv) {
+                    document.body.removeChild(existingDiv);
+                }
+
                 // Initialize Mermaid with default config
                 mermaid.initialize({ 
                     startOnLoad: false,
@@ -51,8 +58,8 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                     logLevel: 'warn'
                 });
 
-                // Create temporary container
-                const tempDiv = document.createElement('div');
+                // Create new temporary container
+                tempDiv = document.createElement('div');
                 tempDiv.id = mermaidId.current;
                 tempDiv.style.position = 'absolute';
                 tempDiv.style.visibility = 'hidden';
@@ -71,12 +78,6 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                     console.error('Mermaid rendering error:', err);
                     setError(`Error rendering diagram: ${err.message}`);
                 }
-            } finally {
-                // Clean up temporary container
-                const tempDiv = document.getElementById(mermaidId.current);
-                if (tempDiv) {
-                    document.body.removeChild(tempDiv);
-                }
             }
         };
 
@@ -86,6 +87,10 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
 
         return () => {
             isActive = false;
+            // Clean up temporary container on unmount
+            if (tempDiv) {
+                document.body.removeChild(tempDiv);
+            }
         };
     }, [content]);
 
