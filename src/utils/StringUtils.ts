@@ -104,7 +104,7 @@ export namespace StringUtils {
         const links: Link[] = [];
 
         const renderer = {
-            link(href: string, title: string, text: string) {
+            link({ href, title, text }: marked.Tokens.Link) {
                 links.push({ text, href });
                 return '';
             }
