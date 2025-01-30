@@ -62,8 +62,14 @@ export class GenerateArtifactExecutor implements StepExecutor {
 - artifactId: ID of document to modify (only required for replace/append operations)
 - operation: Must be "create" for new documents, "replace" or "append" for existing ones
 - title: Document title
+- type: Document type - must be one of: "markdown", "csv", or "mermaid"
 - content: New or additional content
 - confirmationMessage: Message describing what was done`);
+
+        promptBuilder.addInstruction(`CONTENT FORMATTING RULES:
+- For markdown: Use standard Markdown syntax
+- For csv: Provide comma-separated values with header row
+- For mermaid: Provide Mermaid diagram syntax only`);
 
         promptBuilder.addInstruction(`IMPORTANT RULES:
 - For NEW documents: Use operation="create" and omit artifactId
@@ -105,7 +111,10 @@ export class GenerateArtifactExecutor implements StepExecutor {
 ${JSON.stringify(schema, null, 2)}
 `);
 
-        promptBuilder.addInstruction(`2. Then, provide your Markdown-formatted content in a separately enclosed \'\'\'markdown code block.`);
+        promptBuilder.addInstruction(`2. Then, provide your content in a separately enclosed code block using the appropriate syntax:
+- For markdown: \`\`\`markdown
+- For csv: \`\`\`csv
+- For mermaid: \`\`\`mermaid`);
 
         const prompt = promptBuilder.build();
         
@@ -130,9 +139,15 @@ ${JSON.stringify(schema, null, 2)}
                 finalContent = `${existingArtifact?.content||""}\n\n${result.content}`;
             }
 
+            // Validate document type
+            const validTypes = ['markdown', 'csv', 'mermaid'];
+            if (!validTypes.includes(result.type?.toLowerCase())) {
+                throw new Error(`Invalid document type: ${result.type}. Must be one of: ${validTypes.join(', ')}`);
+            }
+
             const artifact: Artifact = {
                 id: result.artifactId?.length||0 > 0 ? createUUID(result.artifactId) : createUUID(),
-                type: 'markdown',
+                type: result.type.toLowerCase(),
                 content: finalContent,
                 metadata: {
                     title: result.title,
