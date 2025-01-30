@@ -1,7 +1,8 @@
 import React, { useEffect, useState, useCallback } from 'react';
 import { DataGrid, GridColDef, GridRenderCellParams, GridRowModel } from '@mui/x-data-grid';
 import { Box, Button } from '@mui/material';
-import { parse, stringify } from 'csv-parse/browser/esm/sync';
+import { parse } from 'csv-parse/browser/esm/sync';
+import { stringify } from 'csv-stringify/browser/esm/sync';
 import SaveIcon from '@mui/icons-material/Save';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
