@@ -512,16 +512,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                     components={{
                                         a: CustomLink,
                                         code({node, inline, className, children, ...props}) {
-                                            const match = /language-(\w+)/.exec(className || '');
+                                            const match = /language-(\w+)(?:\s*\[hidden\])?/.exec(className || '');
                                             const content = String(children).replace(/\n$/, '');
+                                            const isHidden = className?.includes('[hidden]');
                                             
                                             // Handle code blocks
                                             if (!inline && match) {
-                                                return <CodeBlock language={match[1]} content={content} />;
+                                                return isHidden ? null : (
+                                                    <CodeBlock 
+                                                        language={match[1]} 
+                                                        content={content} 
+                                                    />
+                                                );
                                             }
 
                                             // Inline code
-                                            return <code className={className} {...props}>{children}</code>;
+                                            return isHidden ? null : (
+                                                <code className={className} {...props}>
+                                                    {children}
+                                                </code>
+                                            );
                                         }
                                     }}
                                 >
