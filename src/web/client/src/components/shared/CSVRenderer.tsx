@@ -39,7 +39,7 @@ export const CSVRenderer: React.FC<CSVRendererProps> = ({ content }) => {
                         headerName: key,
                         width: 150,
                         editable: false,
-                        renderCell: (params: GridRenderCellParams<any, string>) => {
+                        renderCell: (params: GridRenderCellParams<any, string>) => (
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={{
@@ -48,7 +48,7 @@ export const CSVRenderer: React.FC<CSVRendererProps> = ({ content }) => {
                             >
                                 {params.value||""}
                             </ReactMarkdown>
-                        }
+                        )
                     }));
 
                 setColumns(columnDefs);
