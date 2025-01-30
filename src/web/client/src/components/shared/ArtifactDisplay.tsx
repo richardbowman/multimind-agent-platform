@@ -162,15 +162,8 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                         return <CSVRenderer 
                             content={artifact.content as string} 
                             onSave={(csvContent) => {
-                                // Update the artifact content
-                                const updatedArtifact = {
-                                    ...artifact,
-                                    content: csvContent
-                                };
-                                // Call the onEdit handler if available
-                                if (onEdit) {
-                                    onEdit();
-                                }
+                                // Update the artifact content directly
+                                artifact.content = csvContent;
                                 // Update the toolbar actions to show save state
                                 if (onAddToolbarActions) {
                                     onAddToolbarActions([
