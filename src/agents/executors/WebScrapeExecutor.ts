@@ -138,7 +138,7 @@ export class WebScrapeExecutor implements StepExecutor {
             type: 'webpage_scrape',
             artifactIds: result.artifacts.map(a => a.id),
             response: {
-                message: `Scraped ${result.artifacts.length} pages:\n\n${result.summaries.join('\n\n---\n\n')}`,
+                message: `Scraped ${result.artifacts.length} pages:\n\n${result.summaries.map(s => s.summary).join('\n\n---\n\n')}`,
                 data: {
                     artifacts: result.artifacts,
                     summaries: result.summaries,
