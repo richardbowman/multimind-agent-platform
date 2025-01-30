@@ -45,12 +45,16 @@ Include relevant details from all steps while maintaining clarity and coherence.
     Overall goal: ${params.overallGoal} 
     Step goal: ${params.stepGoal}`;
 
-        const context = params.previousResult?.map(r => r.message).join('\n\n');
+        const messages = params.previousResult?.map(r => r.message).filter(m => m);
+        const summaries = params.previousResult?.map(r => r.data?.summaries).flat().filter(s => s?.summary).map(s => `Date: ${s.date}\nSummary: ${s.summary}`);
+
+        const context = summaries && summaries.length > 0 ? `PAGE SUMMARIES:\n${summaries.join('\n\n')}` : `PAST MESSAGES:\n${messages?.join('\n\n')}`
 
         const response = await this.modelHelpers.generate({
             message: context,
             instructions,
-            model: ModelType.CONVERSATION
+            model: ModelType.CONVERSATION,
+            threadPosts: params.context?.threadPosts
         });
 
         return {
