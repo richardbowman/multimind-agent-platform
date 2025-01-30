@@ -60,10 +60,10 @@ export class OpenAIService extends BaseLLMService {
     async getAvailableModels(): Promise<ModelInfo[]> {
         try {
             const models = await this.client.models.list();
-            if (models.body) {  //special Azure response
+            if (models.body?.length && models.body.length > 0) {  //special Azure response
                 return models.body.map(m => ({
                     id: m.name,
-                    name: m.friendlyname,
+                    name: m.friendly_name,
                     size: 'unknown', // OpenAI doesn't provide size info
                     lastModified: new Date(m.created * 1000),
                     isLocal: false,
@@ -98,7 +98,7 @@ export class OpenAIService extends BaseLLMService {
             if (params.systemPrompt) {
                 messages.unshift({
                     role: "system",
-                    content: params.systemPrompt + (params.parseJSON ? "\n\YOU MUST ALWAYS CALL 'generate_structured_output' with a response." : "")
+                    content: params.systemPrompt + (params.parseJSON ? "\n\nYOU MUST ALWAYS CALL 'generate_structured_output' with a response." : "")
                 });
             }
 
@@ -131,7 +131,7 @@ export class OpenAIService extends BaseLLMService {
                     function: {
                         name: "generate_structured_output"
                     }
-                } : this.settings?.tool_choice === 'none' ? 'none' : 'auto'
+                } : this.settings?.tool_choice === 'none' ? undefined : 'auto'
             }
 
             const modelType = params.modelType || ModelType.REASONING; //defaulting right now to reasoning since most aren't set

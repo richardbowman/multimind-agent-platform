@@ -17,6 +17,7 @@ import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { StringUtils } from "src/utils/StringUtils";
 import { WebScrapeSummaryResponse } from "src/schemas/DateResponse";
+import { ModelType } from "src/llm/LLMServiceFactory";
 
 export interface ScrapeResult {
     artifacts: Artifact[];
@@ -129,6 +130,7 @@ export class WebScrapeExecutor implements StepExecutor {
                 message: `Scraped ${result.artifacts.length} pages:\n\n${result.summaries.join('\n\n---\n\n')}`,
                 data: {
                     artifacts: result.artifacts,
+                    summaries: result.summaries,
                     extractedLinks: [...new Set(result.extractedLinks)] // Deduplicate links
                 }
             }
@@ -162,7 +164,8 @@ export class WebScrapeExecutor implements StepExecutor {
         const summary = await this.modelHelpers.generate({
             instructions: prompt.build(),
             message: userPrompt,
-            threadPosts: params.context?.threadPosts
+            threadPosts: params.context?.threadPosts,
+            model: ModelType.DOCUMENT
         });
 
         const jsonBlocks = StringUtils.extractAndParseJsonBlocks(summary.message);

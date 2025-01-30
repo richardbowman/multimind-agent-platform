@@ -97,7 +97,7 @@ class ScrapeHelper {
                 try {
                     await page.goto(url, {
                         waitUntil: 'networkidle',
-                        timeout: 5000
+                        timeout: this.settings.pageScrapeTimeout*1000
                     });
                 } catch (error) {
                     Logger.warn(`Element 'body' did not load within the specified timeout. Continuing with the current content.`);
@@ -136,7 +136,7 @@ class ScrapeHelper {
                 const webContents = this.electronWindow.webContents;
                 await Promise.race([
                     new Promise<void>(resolve => webContents.once('dom-ready', resolve)),
-                    new Promise<void>((_, reject) => setTimeout(() => reject(new Error('DOM ready timeout')), this.settings.pageScrapeTimeout))
+                    new Promise<void>((_, reject) => setTimeout(() => reject(new Error('DOM ready timeout')), this.settings.pageScrapeTimeout*1000))
                 ]).catch(error => {
                     Logger.warn(`DOM ready event timed out for ${url}:`, error);
                 });

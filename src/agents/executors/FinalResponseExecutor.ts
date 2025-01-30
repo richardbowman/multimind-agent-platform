@@ -10,6 +10,8 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { message } from 'blessed';
 import { StringUtils } from 'src/utils/StringUtils';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { ModelType } from 'src/llm/LLMServiceFactory';
 
 /**
  * Executor that synthesizes all previous results into a final response.
@@ -33,21 +35,22 @@ export class FinalResponseExecutor implements StepExecutor {
 
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         //const schema = await getGeneratedSchema(SchemaType.FinalResponse);
 
         const instructions = `You are an AI assistant generating a final response.
 Synthesize all the intermediate results into a clear, comprehensive answer that addresses the original goal.
-Include relevant details from all steps while maintaining clarity and coherence. Include your sources.`;
+Include relevant details from all steps while maintaining clarity and coherence. Include your sources.
 
-        const context = JSON.stringify({
-            originalGoal: goal,
-            previousResults
-        }, null, 2);
+    Overall goal: ${params.overallGoal} 
+    Step goal: ${params.stepGoal}`;
+
+        const context = params.previousResult?.map(r => r.message).join('\n\n');
 
         const response = await this.modelHelpers.generate({
             message: context,
-            instructions
+            instructions,
+            model: ModelType.CONVERSATION
         });
 
         return {
