@@ -160,7 +160,8 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                     // Handle CSV content
                     if (artifact.metadata?.mimeType === 'text/csv' || artifact.type === 'csv') {
                         return <CSVRenderer 
-                            content={artifact.content as string} 
+                            content={artifact.content as string}
+                            onAddToolbarActions={onAddToolbarActions}
                             onSave={(csvContent) => {
                                 // Update the artifact content directly
                                 artifact.content = csvContent;

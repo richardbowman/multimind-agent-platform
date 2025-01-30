@@ -79,6 +79,12 @@ const styles = {
 
 export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }) => {
     const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual');
+    const [toolbarActions, setToolbarActions] = useState<Array<{
+        icon: React.ReactNode;
+        label: string;
+        onClick: () => void;
+        disabled?: boolean;
+    }>>([]);
     const dataContext = useDataContext();
 
     // Handle Markdown rendering
@@ -184,10 +190,12 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
             <Box sx={styles.container}>
                 <ActionToolbar 
                     title={title || `CSV Export - ${new Date().toLocaleDateString()}`}
-                    actions={[{
-                        icon: <DescriptionIcon />,
-                        label: 'Save as Artifact',
-                        onClick: async () => {
+                    actions={[
+                        ...toolbarActions,
+                        {
+                            icon: <DescriptionIcon />,
+                            label: 'Save as Artifact',
+                            onClick: async () => {
                             const artifactTitle = title || `Code Export - ${new Date().toLocaleDateString()}`;
                             if (dataContext) {
                                 try {
@@ -223,7 +231,16 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                 </Box>
                 <Box sx={styles.contentContainerFixed}>
                     {viewMode === 'visual' ? (
-                        <CSVRenderer content={content} />
+                        <CSVRenderer 
+                            content={content}
+                            onAddToolbarActions={(actions) => {
+                                // Add CSV save action to existing toolbar
+                                setToolbarActions(prev => [
+                                    ...prev.filter(a => a.label !== 'Save CSV'),
+                                    ...actions
+                                ]);
+                            }}
+                        />
                     ) : (
                         <Box 
                             component="textarea" 

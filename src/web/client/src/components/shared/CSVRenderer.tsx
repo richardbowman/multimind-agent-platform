@@ -13,7 +13,14 @@ interface CSVRendererProps {
     onSave?: (csvContent: string) => void;
 }
 
-export const CSVRenderer: React.FC<CSVRendererProps> = ({ content, onSave }) => {
+export const CSVRenderer: React.FC<CSVRendererProps & { 
+    onAddToolbarActions?: (actions: Array<{
+        icon: React.ReactNode;
+        label: string;
+        onClick: () => void;
+        disabled?: boolean;
+    }>) => void 
+}> = ({ content, onSave, onAddToolbarActions }) => {
     const [rows, setRows] = useState<any[]>([]);
     const [columns, setColumns] = useState<GridColDef[]>([]);
     const [isDirty, setIsDirty] = useState(false);
@@ -94,21 +101,23 @@ export const CSVRenderer: React.FC<CSVRendererProps> = ({ content, onSave }) => 
         return newRow;
     };
 
+    useEffect(() => {
+        if (onAddToolbarActions && rows.length > 0) {
+            onAddToolbarActions([
+                {
+                    icon: <SaveIcon fontSize="small" />,
+                    label: 'Save CSV',
+                    onClick: handleSave,
+                    disabled: !isDirty
+                }
+            ]);
+        }
+    }, [isDirty, rows.length]);
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
             {rows.length > 0 ? (
-                <>
-                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
-                        <Button
-                            variant="contained"
-                            startIcon={<SaveIcon />}
-                            onClick={handleSave}
-                            disabled={!isDirty}
-                        >
-                            Save Changes
-                        </Button>
-                    </Box>
-                    <DataGrid
+                <DataGrid
                         rows={rows}
                         columns={columns}
                         pageSize={5}
