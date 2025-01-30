@@ -12,7 +12,21 @@ interface CodeBlockProps {
 export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content }) => {
     // Handle Mermaid diagrams
     if (language === 'mermaid') {
-        return <Mermaid content={content} />;
+        return (
+            <Box sx={{ 
+                position: 'relative',
+                mt: 2,
+                mb: 2
+            }}>
+                <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
+                    <ActionToolbar 
+                        content={content}
+                        title={`Mermaid Diagram - ${new Date().toLocaleDateString()}`}
+                    />
+                </Box>
+                <Mermaid content={content} />
+            </Box>
+        );
     }
 
     // Handle CSV rendering
