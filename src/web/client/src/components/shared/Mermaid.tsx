@@ -89,20 +89,60 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
         };
     }, [content]);
 
-    const renderDiagram = () => (
-        <Box
-            sx={{
-                position: 'relative',
-                transform: `scale(${zoomLevel})`,
-                transformOrigin: 'top left',
-                transition: 'transform 0.2s ease',
-                width: 'fit-content',
-                height: 'fit-content'
-            }}
-            ref={svgContainerRef}
-        >
-            <div dangerouslySetInnerHTML={{ __html: svg || '' }} />
-        </Box>
+    const renderDiagram = () => {
+        const [isDragging, setIsDragging] = useState(false);
+        const [position, setPosition] = useState({ x: 0, y: 0 });
+        const [startPos, setStartPos] = useState({ x: 0, y: 0 });
+
+        const handleMouseDown = (e: React.MouseEvent) => {
+            setIsDragging(true);
+            setStartPos({
+                x: e.clientX - position.x,
+                y: e.clientY - position.y
+            });
+        };
+
+        const handleMouseMove = (e: React.MouseEvent) => {
+            if (isDragging) {
+                setPosition({
+                    x: e.clientX - startPos.x,
+                    y: e.clientY - startPos.y
+                });
+            }
+        };
+
+        const handleMouseUp = () => {
+            setIsDragging(false);
+        };
+
+        return (
+            <Box
+                sx={{
+                    position: 'relative',
+                    transform: `scale(${zoomLevel})`,
+                    transformOrigin: 'top left',
+                    transition: 'transform 0.2s ease',
+                    width: 'fit-content',
+                    height: 'fit-content',
+                    cursor: isDragging ? 'grabbing' : 'grab',
+                    overflow: 'hidden'
+                }}
+                ref={svgContainerRef}
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onMouseLeave={handleMouseUp}
+            >
+                <div 
+                    style={{
+                        transform: `translate(${position.x}px, ${position.y}px)`,
+                        transition: isDragging ? 'none' : 'transform 0.2s ease'
+                    }}
+                    dangerouslySetInnerHTML={{ __html: svg || '' }} 
+                />
+            </Box>
+        );
+    };
     );
 
     return (
@@ -162,8 +202,10 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                         display: 'flex',
                         justifyContent: 'center',
                         alignItems: 'center',
-                        overflow: 'auto',
-                        position: 'relative'
+                        overflow: 'hidden',
+                        position: 'relative',
+                        touchAction: 'none',
+                        userSelect: 'none'
                     }}
                 >
                     {renderDiagram()}
