@@ -39,15 +39,10 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
     useEffect(() => {
         let isActive = true;
         let tempDiv: HTMLDivElement | null = null;
+        let cleanupTimeout: NodeJS.Timeout | null = null;
         
         const initializeAndRender = async () => {
             try {
-                // Clean up any previous diagram first
-                const existingDiv = document.getElementById(mermaidId.current);
-                if (existingDiv && existingDiv.parentNode === document.body) {
-                    document.body.removeChild(existingDiv);
-                }
-
                 // Initialize Mermaid with default config
                 mermaid.initialize({ 
                     startOnLoad: false,
@@ -60,14 +55,15 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
 
                 // Create new temporary container
                 tempDiv = document.createElement('div');
-                tempDiv.id = mermaidId.current;
+                const tempId = `mermaid-temp-${Date.now()}`;
+                tempDiv.id = tempId;
                 tempDiv.style.position = 'absolute';
                 tempDiv.style.visibility = 'hidden';
                 document.body.appendChild(tempDiv);
 
                 // Parse and render the diagram
                 await mermaid.parse(content);
-                const { svg } = await mermaid.render(mermaidId.current, content);
+                const { svg } = await mermaid.render(tempId, content);
 
                 if (isActive) {
                     setSvg(svg);
@@ -78,6 +74,13 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                     console.error('Mermaid rendering error:', err);
                     setError(`Error rendering diagram: ${err.message}`);
                 }
+            } finally {
+                // Schedule cleanup with a small delay
+                cleanupTimeout = setTimeout(() => {
+                    if (tempDiv && tempDiv.parentNode === document.body) {
+                        document.body.removeChild(tempDiv);
+                    }
+                }, 100);
             }
         };
 
@@ -87,7 +90,9 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
 
         return () => {
             isActive = false;
-            // Clean up temporary container on unmount
+            if (cleanupTimeout) {
+                clearTimeout(cleanupTimeout);
+            }
             if (tempDiv && tempDiv.parentNode === document.body) {
                 document.body.removeChild(tempDiv);
             }
