@@ -44,7 +44,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
             try {
                 // Clean up any previous diagram first
                 const existingDiv = document.getElementById(mermaidId.current);
-                if (existingDiv) {
+                if (existingDiv && existingDiv.parentNode === document.body) {
                     document.body.removeChild(existingDiv);
                 }
 
@@ -88,7 +88,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
         return () => {
             isActive = false;
             // Clean up temporary container on unmount
-            if (tempDiv) {
+            if (tempDiv && tempDiv.parentNode === document.body) {
                 document.body.removeChild(tempDiv);
             }
         };
