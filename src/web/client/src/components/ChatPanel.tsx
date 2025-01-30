@@ -599,60 +599,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                                 );
                                             }
 
-                                            // Handle CSV content
-                                            if (match?.[1] === 'csv') {
-                                                return (
-                                                    <Box sx={{ 
-                                                        mt: 2, 
-                                                        mb: 2,
-                                                        border: '1px solid',
-                                                        borderColor: 'divider',
-                                                        borderRadius: 1,
-                                                        position: 'relative'
-                                                    }}>
-                                                        <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
-                                                            <ActionToolbar 
-                                                                content={content}
-                                                                title={`CSV Export - ${new Date().toLocaleDateString()}`}
-                                                            />
-                                                        </Box>
-                                                        <CSVRenderer content={content} />
-                                                    </Box>
-                                                );
+                                            // Handle code blocks
+                                            if (!inline && match) {
+                                                return <CodeBlock language={match[1]} content={content} />;
                                             }
 
-                                            // Default code block handling
-                                            return !inline && match ? (
-                                                <Box sx={{ 
-                                                    position: 'relative',
-                                                    mt: 2,
-                                                    mb: 2
-                                                }}>
-                                                    <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
-                                                        <ActionToolbar 
-                                                            content={content}
-                                                            title={`Code Export - ${new Date().toLocaleDateString()}`}
-                                                        />
-                                                    </Box>
-                                                    <Box component="pre" sx={{ 
-                                                        p: 2, 
-                                                        bgcolor: 'background.paper',
-                                                        border: '1px solid',
-                                                        borderColor: 'divider',
-                                                        borderRadius: 1,
-                                                        overflowX: 'auto',
-                                                        pt: 6 // Add padding to prevent toolbar overlap
-                                                    }}>
-                                                        <code className={className} {...props}>
-                                                            {content}
-                                                        </code>
-                                                    </Box>
-                                                </Box>
-                                            ) : (
-                                                <code className={className} {...props}>
-                                                    {children}
-                                                </code>
-                                            );
+                                            // Inline code
+                                            return <code className={className} {...props}>{children}</code>;
                                         }
                                     }}
                                 >
