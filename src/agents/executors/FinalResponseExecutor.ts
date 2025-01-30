@@ -8,7 +8,6 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { message } from 'blessed';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ModelType } from 'src/llm/LLMServiceFactory';
@@ -32,11 +31,10 @@ export class FinalResponseExecutor implements StepExecutor {
     modelHelpers: ModelHelpers;
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
-
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        //const schema = await getGeneratedSchema(SchemaType.FinalResponse);
+        const schema = await getGeneratedSchema(SchemaType.FinalResponse);
 
         const instructions = `You are an AI assistant generating a final response.
 Synthesize all the intermediate results into a clear, comprehensive answer that addresses the original goal.
@@ -48,20 +46,54 @@ Include relevant details from all steps while maintaining clarity and coherence.
         const messages = params.previousResult?.map(r => r.message).filter(m => m);
         const summaries = params.previousResult?.map(r => r.data?.summaries).flat().filter(s => s?.summary).map(s => `Date: ${s.date}\nSummary: ${s.summary}`);
 
-        const context = summaries && summaries.length > 0 ? `PAGE SUMMARIES:\n${summaries.join('\n\n')}` : `PAST MESSAGES:\n${messages?.join('\n\n')}`
+        const context = summaries && summaries.length > 0 ? `PAGE SUMMARIES:\n${summaries.join('\n\n')}` : `PAST MESSAGES:\n${messages?.join('\n\n')}`;
+
+        const promptBuilder = this.modelHelpers.createPrompt();
+        promptBuilder.addInstruction(instructions);
+        promptBuilder.addContent("context", context);
+
+        // Add output instructions for multiple content types
+        promptBuilder.addInstruction(`OUTPUT INSTRUCTIONS:
+1. To generate the final response, you will use two code blocks.
+2. Use one enclosed code block with the hidden indicator \`\`\`json[hidden] that matches this JSON Schema:
+${JSON.stringify(schema, null, 2)}
+for the response attributes.`);
+
+        promptBuilder.addInstruction(`3. Provide the content in a separately enclosed code block using the appropriate syntax:
+- For markdown: \`\`\`markdown
+- For csv: \`\`\`csv
+- For mermaid: \`\`\`mermaid`);
+
+        const prompt = promptBuilder.build();
 
         const response = await this.modelHelpers.generate({
-            message: context,
-            instructions,
+            message: prompt,
+            instructions: prompt,
             model: ModelType.CONVERSATION,
             threadPosts: params.context?.threadPosts
         });
+
+        const json = StringUtils.extractAndParseJsonBlocks(response.message)[0];
+        const contentBlocks = StringUtils.extractCodeBlocks(response.message).filter(b => b.type !== 'json');
+
+        if (contentBlocks.length === 0) {
+            throw new Error('No content blocks found in the response.');
+        }
+
+        const finalContent = contentBlocks[0].code;
+        const contentType = contentBlocks[0].type;
+
+        const result = {
+            ...json,
+            content: finalContent,
+            contentType: contentType
+        } as FinalResponse;
 
         return {
             type: StepResultType.FinalResponse,
             finished: true,
             response: {
-                message: response.message
+                message: `**Response Attributes:**\n\`\`\`json[hidden]\n${JSON.stringify(json, null, 2)}\n\`\`\`\n\n**Content (${contentType}):**\n\`\`\`${contentType}\n${finalContent}\n\`\`\``
             }
         };
     }
