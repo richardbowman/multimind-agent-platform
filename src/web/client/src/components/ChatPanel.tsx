@@ -23,6 +23,7 @@ import Link from '@mui/material/Link';
 import { TaskDialog } from './TaskDialog';
 import { ClientProject } from '../../../../shared/types';
 import { CSVRenderer } from './shared/CSVRenderer';
+import { ActionToolbar } from './shared/ActionToolbar';
 import mermaid from 'mermaid';
 
 // Custom link component that opens links in system browser
