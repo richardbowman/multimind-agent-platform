@@ -160,8 +160,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             }}>
                 <ActionToolbar actions={toolbarActions} />
                 {selectedArtifact ? (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%', overflow: 'hidden' }}>
-                        <Box sx={{ flex: 1, overflow: 'auto', pt: 1 }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', overflow: 'hidden' }}>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto', pt: 1 }}>
                             <ArtifactDisplay 
                                 artifact={selectedArtifact} 
                                 showMetadata={true}

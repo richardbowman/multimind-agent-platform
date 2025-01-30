@@ -40,11 +40,11 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
         let isActive = true;
         let tempDiv: HTMLDivElement | null = null;
         let cleanupTimeout: NodeJS.Timeout | null = null;
-        
+
         const initializeAndRender = async () => {
             try {
                 // Initialize Mermaid with default config
-                mermaid.initialize({ 
+                mermaid.initialize({
                     startOnLoad: false,
                     theme: 'dark',
                     securityLevel: 'loose',
@@ -133,7 +133,11 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                 transformOrigin: 'top left',
                 transition: 'transform 0.2s ease',
                 cursor: isDragging ? 'grabbing' : 'grab',
-                overflow: 'hidden'
+                overflow: 'hidden',
+                flexDirection: 'column',
+                flex: 1,
+                display: 'flex',
+                width: '100%'
             }}
             ref={svgContainerRef}
             onMouseDown={handleMouseDown}
@@ -141,20 +145,23 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
             onMouseUp={handleMouseUp}
             onMouseLeave={handleMouseUp}
         >
-            <div 
+            <div
                 style={{
                     transform: `translate(${position.x}px, ${position.y}px)`,
-                    transition: isDragging ? 'none' : 'transform 0.2s ease'
+                    transition: isDragging ? 'none' : 'transform 0.2s ease',
+                    flexDirection: 'column',
+                    flex: 1,
+                    display: 'flex'
                 }}
-                dangerouslySetInnerHTML={{ __html: svg || '' }} 
+                dangerouslySetInnerHTML={{ __html: svg || '' }}
             />
         </Box>
     );
 
     return (
         <>
-            <Box 
-                sx={{ 
+            <Box
+                sx={{
                     mt: 2,
                     mb: 2,
                     p: 2,
@@ -164,7 +171,9 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                     borderRadius: 1,
                     overflowX: 'auto',
                     minHeight: '100px',
-                    position: 'relative',
+                    flexDirection: 'column',
+                    flex: 1,
+                    display: 'flex',
                     '& svg': {
                         maxWidth: '100%',
                         height: 'auto'
@@ -206,10 +215,11 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                 <DialogContent
                     sx={{
                         display: 'flex',
+                        flex: 1,
+                        flexDirection: 'column',
                         justifyContent: 'center',
                         alignItems: 'center',
                         overflow: 'hidden',
-                        position: 'relative',
                         touchAction: 'none',
                         userSelect: 'none'
                     }}
