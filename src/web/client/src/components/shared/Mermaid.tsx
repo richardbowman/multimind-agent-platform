@@ -122,8 +122,6 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                 transform: `scale(${zoomLevel})`,
                 transformOrigin: 'top left',
                 transition: 'transform 0.2s ease',
-                width: 'fit-content',
-                height: 'fit-content',
                 cursor: isDragging ? 'grabbing' : 'grab',
                 overflow: 'hidden'
             }}
