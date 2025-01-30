@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import { DataContext } from '../../contexts/DataContext';
 import { Box } from '@mui/material';
 import { CSVRenderer } from './CSVRenderer';
 import { ActionToolbar } from './ActionToolbar';
@@ -79,9 +80,24 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                     actions={[{
                         icon: <DescriptionIcon />,
                         label: 'Save as Artifact',
-                        onClick: () => {
+                        onClick: async () => {
                             const artifactTitle = title || `Code Export - ${new Date().toLocaleDateString()}`;
-                            console.log('Saving artifact:', { title: artifactTitle, content });
+                            const dataContext = useContext(DataContext);
+                            if (dataContext) {
+                                try {
+                                    await dataContext.saveArtifact({
+                                        id: crypto.randomUUID(),
+                                        type: 'code',
+                                        content: content,
+                                        metadata: {
+                                            language: language,
+                                            title: artifactTitle
+                                        }
+                                    });
+                                } catch (error) {
+                                    console.error('Failed to save artifact:', error);
+                                }
+                            }
                         }
                     }]}
                 />
@@ -101,8 +117,24 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                     actions={[{
                         icon: <DescriptionIcon />,
                         label: 'Save as Artifact',
-                        onClick: () => {
-                            console.log('Saving artifact:', content);
+                        onClick: async () => {
+                            const artifactTitle = title || `Code Export - ${new Date().toLocaleDateString()}`;
+                            const dataContext = useContext(DataContext);
+                            if (dataContext) {
+                                try {
+                                    await dataContext.saveArtifact({
+                                        id: crypto.randomUUID(),
+                                        type: 'code',
+                                        content: content,
+                                        metadata: {
+                                            language: language,
+                                            title: artifactTitle
+                                        }
+                                    });
+                                } catch (error) {
+                                    console.error('Failed to save artifact:', error);
+                                }
+                            }
                         }
                     }]}
                 />
