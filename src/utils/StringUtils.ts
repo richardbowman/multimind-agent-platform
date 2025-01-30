@@ -7,6 +7,11 @@ export interface CodeBlock {
     readonly code: string;
 }
 
+export interface Link {
+    text: string;
+    href: string;
+}
+
 export namespace StringUtils {
     export function truncate(string: string, maxLength: number, truncationMsg = (maxLength: number, originalLength: number) => `[Truncated to ${maxLength}. Original length: ${originalLength}`) {
         if (typeof string === "string") {
@@ -93,14 +98,14 @@ export namespace StringUtils {
     /**
      * Extracts links from a Markdown document using the marked parser
      * @param markdown Input Markdown document
-     * @returns Array of URLs found in the Markdown document
+     * @returns Array of links found in the Markdown document, each containing text and href
      */
-    export function extractLinksFromMarkdown(markdown: string): string[] {
-        const links: string[] = [];
+    export function extractLinksFromMarkdown(markdown: string): Link[] {
+        const links: Link[] = [];
 
         const renderer = {
             link(href: string, title: string, text: string) {
-                links.push(href);
+                links.push({ text, href });
                 return '';
             }
         };
