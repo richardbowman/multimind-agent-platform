@@ -3,6 +3,7 @@ import { Box } from '@mui/material';
 import { CSVRenderer } from './CSVRenderer';
 import { ActionToolbar } from './ActionToolbar';
 import { Mermaid } from './Mermaid';
+import ReactMarkdown from 'react-markdown';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { DataContextMethods, useDataContext } from '../../contexts/DataContext';
 
@@ -79,6 +80,67 @@ const styles = {
 export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }) => {
     const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual');
     const dataContext = useDataContext();
+
+    // Handle Markdown rendering
+    if (language === 'markdown') {
+        return (
+            <Box sx={styles.container}>
+                <ActionToolbar 
+                    title={title || `Markdown Export - ${new Date().toLocaleDateString()}`}
+                    actions={[{
+                        icon: <DescriptionIcon />,
+                        label: 'Save as Artifact',
+                        onClick: async () => {
+                            const artifactTitle = title || `Markdown Export - ${new Date().toLocaleDateString()}`;
+                            if (dataContext) {
+                                try {
+                                    await dataContext.saveArtifact({
+                                        id: crypto.randomUUID(),
+                                        type: 'code',
+                                        content: content,
+                                        metadata: {
+                                            language: language,
+                                            title: artifactTitle
+                                        }
+                                    });
+                                } catch (error) {
+                                    console.error('Failed to save artifact:', error);
+                                }
+                            }
+                        }
+                    }]}
+                />
+                <Box sx={styles.viewToggle}>
+                    {viewOptions.map(option => (
+                        <Box
+                            key={option.value}
+                            onClick={() => setViewMode(option.value as 'visual' | 'raw')}
+                            sx={[
+                                styles.viewOption,
+                                viewMode === option.value && styles.activeViewOption
+                            ]}
+                        >
+                            {option.label}
+                        </Box>
+                    ))}
+                </Box>
+                <Box sx={styles.contentContainerScrolling}>
+                    {viewMode === 'visual' ? (
+                        <ReactMarkdown>
+                            {content}
+                        </ReactMarkdown>
+                    ) : (
+                        <Box 
+                            component="textarea" 
+                            value={content}
+                            readOnly
+                            sx={styles.textarea}
+                        />
+                    )}
+                </Box>
+            </Box>
+        );
+    }
 
     // Handle Mermaid diagrams
     if (language === 'mermaid') {
