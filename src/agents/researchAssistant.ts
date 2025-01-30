@@ -12,7 +12,7 @@ import { ExecutorType } from './interfaces/ExecutorType';
 import { SearchExecutor } from './executors/WebSearchExecutor';
 import { LinkSelectionExecutor } from './executors/LinkSelectionExecutor';
 import { WebScrapeExecutor } from './executors/WebScrapeExecutor';
-
+import { ModelHelpers } from '../llm/modelHelpers';
 
 export interface ResearchProject extends Project {
     postId: string;
@@ -30,36 +30,40 @@ export class ResearchAssistant extends StepBasedAgent {
 
         this.modelHelpers.setPurpose("You are a research assistant who performs web searches to meet the goal.");
         this.modelHelpers.setFinalInstructions(`
-STEP STRATEGIES YOU SHOULD CONSIDER:
-
-NEW-USER: For incoming new user requests, you can look for existing information in our knowledge base:
-1) ${ExecutorType.CHECK_KNOWLEDGE}
-2) ${ExecutorType.VALIDATION}
-
-PROVIDED-URL: If the goal includes a specific complete URL, download it directly and then assess relevant links to also process:
-1) ${ExecutorType.WEB_SCRAPE}: Scrape provided URL
-2) ${ExecutorType.SELECT_LINKS}: Select child links from this page
-3) ${ExecutorType.WEB_SCRAPE}: Scrape selected child links 
-
-NO-EXISTING-KNOWLEDGE: Once, you've done an existing knowledge check and need to search:
-1) ${ExecutorType.WEB_SEARCH}
-2) ${ExecutorType.SELECT_LINKS}
-3) ${ExecutorType.WEB_SCRAPE}
-4) ${ExecutorType.FINAL_RESPONSE}
-
-FOLLOW-UP: For follow-up requests where you've scraped some pages already, you can go deeper:
-1) ${ExecutorType.SELECT_LINKS}: Select child links from this page
-2) ${ExecutorType.WEB_SCRAPE}: Scrape selected child links 
-3) ${ExecutorType.FINAL_RESPONSE}
-
 IN YOUR REASONING, Explain the step strategies you considered.
 `);
+
+        // Define step sequences
+        this.modelHelpers.addStepSequence("NEW-USER", "For incoming new user requests, check existing knowledge base and validate.", [
+            { type: ExecutorType.CHECK_KNOWLEDGE, description: "Check existing knowledge base" },
+            { type: ExecutorType.VALIDATION, description: "Validate information" }
+        ]);
+
+        this.modelHelpers.addStepSequence("PROVIDED-URL", "If the goal includes a specific complete URL, download and process relevant links.", [
+            { type: ExecutorType.WEB_SCRAPE, description: "Scrape provided URL" },
+            { type: ExecutorType.SELECT_LINKS, description: "Select child links from this page" },
+            { type: ExecutorType.WEB_SCRAPE, description: "Scrape selected child links" },
+            { type: ExecutorType.FINAL_RESPONSE, description: "Provide final response" }
+        ]);
+
+        this.modelHelpers.addStepSequence("NO-EXISTING-KNOWLEDGE", "Search, process links, and provide final response.", [
+            { type: ExecutorType.WEB_SEARCH, description: "Perform web search" },
+            { type: ExecutorType.SELECT_LINKS, description: "Select child links from search results" },
+            { type: ExecutorType.WEB_SCRAPE, description: "Scrape selected child links" },
+            { type: ExecutorType.FINAL_RESPONSE, description: "Provide final response" }
+        ]);
+
+        this.modelHelpers.addStepSequence("FOLLOW-UP", "For follow-up requests, process deeper.", [
+            { type: ExecutorType.SELECT_LINKS, description: "Select child links from this page" },
+            { type: ExecutorType.WEB_SCRAPE, description: "Scrape selected child links" },
+            { type: ExecutorType.FINAL_RESPONSE, description: "Provide final response" }
+        ]);
 
         // Register step executors
         this.registerStepExecutor(new SearchExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new LinkSelectionExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new WebScrapeExecutor(this.getExecutorParams()));
-        // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new KnowledgeCheckExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new FinalResponseExecutor(this.getExecutorParams()));
     }
