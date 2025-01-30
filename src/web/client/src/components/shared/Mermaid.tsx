@@ -14,73 +14,55 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
     const mermaidId = useRef(`mermaid-${Date.now()}-${Math.random().toString().replace('.', '')}`);
 
     useEffect(() => {
-        // Initialize Mermaid once
-        mermaid.initialize({ 
-            startOnLoad: false,
-            theme: 'dark',
-            securityLevel: 'loose',
-            fontFamily: 'inherit',
-            fontSize: 16,
-            logLevel: 'warn',
-            themeCSS: `
-                .mermaid {
-                    font-family: inherit;
-                }
-                .mermaid .label {
-                    font-family: inherit;
-                    color: #ffffff;
-                }
-                .mermaid .node rect,
-                .mermaid .node circle,
-                .mermaid .node ellipse,
-                .mermaid .node polygon {
-                    fill: #2a2a2a;
-                    stroke: #444;
-                }
-                .mermaid .edgePath .path {
-                    stroke: #666;
-                }
-                .mermaid .cluster rect {
-                    fill: #1a1a1a;
-                    stroke: #333;
-                }
-            `
-        });
-
-        const renderMermaid = async () => {
-            if (!isMounted.current) return;
-
+        let isActive = true;
+        
+        const initializeAndRender = async () => {
             try {
-                // Create temporary container for rendering
+                // Initialize Mermaid with default config
+                mermaid.initialize({ 
+                    startOnLoad: false,
+                    theme: 'dark',
+                    securityLevel: 'loose',
+                    fontFamily: 'inherit',
+                    fontSize: 16,
+                    logLevel: 'warn'
+                });
+
+                // Create temporary container
                 const tempDiv = document.createElement('div');
+                tempDiv.id = mermaidId.current;
+                tempDiv.style.position = 'absolute';
                 tempDiv.style.visibility = 'hidden';
                 document.body.appendChild(tempDiv);
 
-                // Render the diagram
-                const { svg } = await mermaid.render(mermaidId.current, content, tempDiv);
-                
-                if (isMounted.current) {
+                // Parse and render the diagram
+                await mermaid.parse(content);
+                const { svg } = await mermaid.render(mermaidId.current, content);
+
+                if (isActive) {
                     setSvg(svg);
                     setError(null);
                 }
-
-                // Clean up temporary container
-                document.body.removeChild(tempDiv);
             } catch (err) {
-                if (isMounted.current) {
-                    console.error('Error rendering mermaid diagram:', err);
+                if (isActive) {
+                    console.error('Mermaid rendering error:', err);
                     setError(`Error rendering diagram: ${err.message}`);
+                }
+            } finally {
+                // Clean up temporary container
+                const tempDiv = document.getElementById(mermaidId.current);
+                if (tempDiv) {
+                    document.body.removeChild(tempDiv);
                 }
             }
         };
 
-        // Only render if content has changed
         if (content.trim()) {
-            renderMermaid();
+            initializeAndRender();
         }
 
         return () => {
-            isMounted.current = false;
+            isActive = false;
         };
     }, [content]);
 
