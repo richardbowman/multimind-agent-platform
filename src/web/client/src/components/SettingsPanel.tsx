@@ -660,68 +660,35 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
                     </Box> {/* End of scrollable content */}
                 </Box>
-                <Box sx={{
-                    bottom: 0,
-                    left: drawerOpen ? 250 : 0,
-                    right: 0,
-                    bgcolor: 'background.paper',
-                    borderTop: '1px solid',
-                    borderColor: 'divider',
-                    p: 2,
-                    zIndex: 1,
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    gap: 2,
-                    transition: 'left 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
-                }}>
-                    <Box sx={{ display: 'flex', gap: 2 }}>
-                        <Button
-                            variant="outlined"
-                            onClick={() => setAboutOpen(true)}
-                        >
-                            About
-                        </Button>
-
-                        <Button
-                            variant="outlined"
-                            color="warning"
-                            onClick={() => setRebuildDialogOpen(true)}
-                        >
-                            Rebuild VectorDB
-                        </Button>
-
-                        <Button
-                            variant="outlined"
-                            color="error"
-                            onClick={() => setResetDialogOpen(true)}
-                        >
-                            Reset to Factory Settings
-                        </Button>
-                    </Box>
-                    <Button
-                        variant="contained"
-                        onClick={handleSave}
-                        disabled={saveSuccess}
-                        sx={{
-                            minWidth: 120,
-                            transition: 'all 0.3s',
-                            ...(saveSuccess && {
-                                bgcolor: 'success.main',
-                                '&:hover': {
-                                    bgcolor: 'success.dark'
-                                }
-                            })
-                        }}
-                    >
-                        {saveSuccess ? (
-                            <>
-                                Saved!
-                            </>
-                        ) : (
-                            'Save Settings'
-                        )}
-                    </Button>
-                </Box>
+                <ActionToolbar
+                    align="space-between"
+                    actions={[
+                        {
+                            label: 'About',
+                            variant: 'outlined',
+                            onClick: () => setAboutOpen(true)
+                        },
+                        {
+                            label: 'Rebuild VectorDB',
+                            variant: 'outlined',
+                            color: 'warning',
+                            onClick: () => setRebuildDialogOpen(true)
+                        },
+                        {
+                            label: 'Reset to Factory Settings',
+                            variant: 'outlined',
+                            color: 'error',
+                            onClick: () => setResetDialogOpen(true)
+                        },
+                        {
+                            label: saveSuccess ? 'Saved!' : 'Save Settings',
+                            variant: 'contained',
+                            onClick: handleSave,
+                            disabled: saveSuccess,
+                            color: saveSuccess ? 'success' : 'primary'
+                        }
+                    ]}
+                />
             </Box>
 
             {/* About Dialog */}
