@@ -1,4 +1,5 @@
 import JSON5 from 'json5';
+import { marked } from 'marked';
 
 export interface CodeBlock {
     readonly type: string;
@@ -87,5 +88,26 @@ export namespace StringUtils {
     export function extractUrls(text: string): string[] {
         const urlRegex = /https?:\/\/(www\.)?[-a-zA-Z0-9@:%._\+~#=]{1,256}\.[a-zA-Z0-9()]{1,6}\b([-a-zA-Z0-9()@:%_\+.~#?&//=]*)/g;
         return text.match(urlRegex) || [];
+    }
+
+    /**
+     * Extracts links from a Markdown document using the marked parser
+     * @param markdown Input Markdown document
+     * @returns Array of URLs found in the Markdown document
+     */
+    export function extractLinksFromMarkdown(markdown: string): string[] {
+        const links: string[] = [];
+
+        const renderer = {
+            link(href: string, title: string, text: string) {
+                links.push(href);
+                return '';
+            }
+        };
+
+        marked.use({ renderer });
+        marked.parse(markdown);
+
+        return links;
     }
 }
