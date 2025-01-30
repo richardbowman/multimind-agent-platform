@@ -32,6 +32,14 @@ const styles = {
         bgcolor: 'background.paper',
         overflow: 'auto',
         maxHeight: '400px',
+        '& pre': {
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word'
+        },
+        '& p': {
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word'
+        }
     },
     contentContainerFixed: {
         bgcolor: 'background.paper',
@@ -132,7 +140,16 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                 </Box>
                 <Box sx={styles.contentContainerScrolling}>
                     {viewMode === 'visual' ? (
-                        <ReactMarkdown>
+                        <ReactMarkdown
+                            components={{
+                                pre: ({node, ...props}) => (
+                                    <pre style={{whiteSpace: 'pre-wrap', wordWrap: 'break-word'}} {...props} />
+                                ),
+                                code: ({node, ...props}) => (
+                                    <code style={{whiteSpace: 'pre-wrap', wordWrap: 'break-word'}} {...props} />
+                                )
+                            }}
+                        >
                             {content}
                         </ReactMarkdown>
                     ) : (
