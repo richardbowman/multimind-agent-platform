@@ -1,12 +1,9 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
-import mermaid from 'mermaid';
 import {
     Box,
     Typography,
     List,
-    ListItem,
-    ListItemText,
-    Paper,
+    ListItem, Paper,
     Dialog,
     DialogTitle,
     DialogContent,
@@ -19,11 +16,12 @@ import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
 import { useWebSocket } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
-import remarkGfm from 'remark-gfm'
+import remarkGfm from 'remark-gfm';
 import Link from '@mui/material/Link';
 import { TaskDialog } from './TaskDialog';
 import { ClientProject } from '../../../../shared/types';
 import { CodeBlock } from './shared/CodeBlock';
+import { GoalTemplates } from '../../../../schemas/goalTemplateSchema';
 
 // Custom link component that opens links in system browser
 const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -99,21 +97,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         if (messagesContainerRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
             const newIsAtBottom = scrollHeight - (scrollTop + clientHeight) < 50;
-            console.debug('Scroll position check:', {
-                scrollTop,
-                scrollHeight, 
-                clientHeight,
-                newIsAtBottom
-            });
+            console.debug('Setting isAtBottom:', newIsAtBottom, isAtBottom);
             setIsAtBottom(newIsAtBottom);
         }
     }, []);
 
     const scrollToBottom = useCallback(() => {
         if (isAtBottom && messagesEndRef.current) {
-            messagesEndRef.current.scrollIntoView({ behavior: "smooth" });
+            console.debug('scrollToBottom activated');
+            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 500);
         }
-    }, [isAtBottom]);
+    }, [isAtBottom, messagesEndRef]);
 
     const fetchProject = useCallback(async (projectId: string) => {
         try {
@@ -171,7 +165,25 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 console.debug('Not scrolling - user is not at bottom');
             }
         }
-    }, [messages.length, currentChannelId, currentThreadId]);
+    }, [messages.length]);
+
+    // Scroll to bottom when new messages come in for current thread/channel
+    useEffect(() => {
+        const relevantMessages = messages.filter(message =>
+            message.channel_id === currentChannelId &&
+            (currentThreadId
+                ? message.id === currentThreadId || message.props?.['root-id'] === currentThreadId
+                : !message.props?.['root-id'])
+        );
+
+        console.debug('Messages changed - relevant messages:', relevantMessages.length);
+        console.debug('isAtBottom:', isAtBottom);
+
+        if (relevantMessages.length > 0) {
+            console.debug('Scrolling to bottom');
+            setIsAtBottom(true);
+        }
+    }, [currentChannelId, currentThreadId]);    
 
     // Scroll to bottom when in-progress messages update in current thread
     useEffect(() => {
@@ -189,7 +201,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         if (hasRelevantInProgress) {
             if (isAtBottom) {
                 console.debug('Scrolling to bottom for in-progress message');
-                scrollToBottom();
+                // scrollToBottom();
             } else {
                 console.debug('Not scrolling - user is not at bottom');
             }
