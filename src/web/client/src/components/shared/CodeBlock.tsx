@@ -16,19 +16,21 @@ const viewOptions = [
     { value: 'raw', label: 'Raw' }
 ];
 
-export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content }) => {
+export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }) => {
     const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual');
     // Handle Mermaid diagrams
     if (language === 'mermaid') {
         return (
             <Box sx={{ 
-                position: 'relative',
                 mt: 2,
-                mb: 2
+                mb: 2,
+                border: '1px solid',
+                borderColor: 'divider',
+                borderRadius: 1
             }}>
-                <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
-                    <ActionToolbar 
-                        actions={[
+                <ActionToolbar 
+                    title={title || `Mermaid Diagram - ${new Date().toLocaleDateString()}`}
+                    actions={[
                             {
                                 icon: <DescriptionIcon />,
                                 label: 'Save as Artifact',
@@ -40,7 +42,6 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content }) => {
                             }
                         ]}
                     />
-                </Box>
                 <Mermaid content={content} />
             </Box>
         );
@@ -54,9 +55,9 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content }) => {
                 mt: 2,
                 mb: 2
             }}>
-                <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1, display: 'flex', gap: 1 }}>
-                    <ActionToolbar 
-                        actions={[
+                <ActionToolbar 
+                    title={title || `CSV Export - ${new Date().toLocaleDateString()}`}
+                    actions={[
                             {
                                 icon: <DescriptionIcon />,
                                 label: 'Save as Artifact',
@@ -141,9 +142,9 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content }) => {
             mt: 2,
             mb: 2
         }}>
-            <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1, display: 'flex', gap: 1 }}>
-                <ActionToolbar 
-                    actions={[
+            <ActionToolbar 
+                title={title || `Code Export - ${new Date().toLocaleDateString()}`}
+                actions={[
                         {
                             icon: <DescriptionIcon />,
                             label: 'Save as Artifact',

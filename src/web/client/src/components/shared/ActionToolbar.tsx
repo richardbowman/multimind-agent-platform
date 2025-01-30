@@ -3,6 +3,7 @@ import { Box, Button, IconButton, Tooltip } from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 
 interface ActionToolbarProps {
+    title?: string;
     actions: Array<{
         icon: React.ReactNode;
         label: string;
@@ -11,7 +12,7 @@ interface ActionToolbarProps {
     }>;
 }
 
-export const ActionToolbar: React.FC<ActionToolbarProps> = ({ actions }) => {
+export const ActionToolbar: React.FC<ActionToolbarProps> = ({ title, actions }) => {
     return (
         <Box sx={{
             width: '100%',
@@ -23,6 +24,15 @@ export const ActionToolbar: React.FC<ActionToolbarProps> = ({ actions }) => {
             padding: 1,
             alignItems: 'center'
         }}>
+            {title && (
+                <Box sx={{ 
+                    flexGrow: 1,
+                    fontWeight: 'bold',
+                    paddingLeft: 1
+                }}>
+                    {title}
+                </Box>
+            )}
             {actions?.map((action, index) => (
                 <Tooltip key={index} title={action.label}>
                     <IconButton
