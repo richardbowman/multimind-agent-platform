@@ -39,22 +39,79 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content }) => {
     if (language === 'csv') {
         return (
             <Box sx={{ 
-                mt: 2, 
-                mb: 2,
-                border: '1px solid',
-                borderColor: 'divider',
-                borderRadius: 1,
                 position: 'relative',
-                maxHeight: '300px', // Set max height
-                overflowY: 'auto' // Add vertical scrollbar if needed
+                mt: 2,
+                mb: 2
             }}>
-                <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
+                <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1, display: 'flex', gap: 1 }}>
                     <ActionToolbar 
                         content={content}
                         title={`CSV Export - ${new Date().toLocaleDateString()}`}
                     />
+                    <Box sx={{ 
+                        display: 'flex',
+                        gap: 0.5,
+                        bgcolor: 'background.paper',
+                        borderRadius: 1,
+                        p: 0.5,
+                        border: '1px solid',
+                        borderColor: 'divider'
+                    }}>
+                        {viewOptions.map(option => (
+                            <Box
+                                key={option.value}
+                                onClick={() => setViewMode(option.value as 'visual' | 'raw')}
+                                sx={{
+                                    px: 1,
+                                    py: 0.5,
+                                    borderRadius: 0.5,
+                                    cursor: 'pointer',
+                                    bgcolor: viewMode === option.value ? 'primary.main' : 'transparent',
+                                    color: viewMode === option.value ? 'primary.contrastText' : 'text.primary',
+                                    '&:hover': {
+                                        bgcolor: viewMode === option.value ? 'primary.dark' : 'action.hover'
+                                    }
+                                }}
+                            >
+                                {option.label}
+                            </Box>
+                        ))}
+                    </Box>
                 </Box>
-                <CSVRenderer content={content} />
+                {viewMode === 'visual' ? (
+                    <Box sx={{ 
+                        mt: 2, 
+                        mb: 2,
+                        border: '1px solid',
+                        borderColor: 'divider',
+                        borderRadius: 1,
+                        position: 'relative',
+                        maxHeight: '300px', // Set max height
+                        overflowY: 'auto' // Add vertical scrollbar if needed
+                    }}>
+                        <CSVRenderer content={content} />
+                    </Box>
+                ) : (
+                    <Box component="textarea" 
+                        value={content}
+                        readOnly
+                        sx={{ 
+                            width: '100%',
+                            p: 2,
+                            bgcolor: 'background.paper',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 1,
+                            fontFamily: 'monospace',
+                            fontSize: '0.875rem',
+                            lineHeight: 1.5,
+                            minHeight: '200px',
+                            mt: 2,
+                            mb: 2,
+                            overflow: 'auto'
+                        }}
+                    />
+                )}
             </Box>
         );
     }
