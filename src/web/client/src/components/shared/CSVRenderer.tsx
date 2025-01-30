@@ -1,7 +1,10 @@
 import React, { useEffect, useState } from 'react';
-import { DataGrid, GridColDef } from '@mui/x-data-grid';
+import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
 import { Box } from '@mui/material';
-import { parse } from 'csv-parse/sync';
+import { parse } from 'csv-parse/browser/esm/sync';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
+import { CustomLink } from '../ChatPanel';
 
 interface CSVRendererProps {
     content: string;
@@ -28,13 +31,24 @@ export const CSVRenderer: React.FC<CSVRendererProps> = ({ content }) => {
 
             // Generate columns from headers
             if (parsedRows.length > 0) {
-                const columnDefs = Object.keys(parsedRows[0])
+                const columnDefs : GridColDef[] = Object.keys(parsedRows[0])
                     .filter(key => key !== 'id')
                     .map((key) => ({
+                        type: 'string',
                         field: key,
                         headerName: key,
                         width: 150,
                         editable: false,
+                        renderCell: (params: GridRenderCellParams<any, string>) => {
+                            <ReactMarkdown
+                                remarkPlugins={[remarkGfm]}
+                                components={{
+                                    a: CustomLink
+                                }}
+                            >
+                                {params.value||""}
+                            </ReactMarkdown>
+                        }
                     }));
 
                 setColumns(columnDefs);
@@ -60,14 +74,13 @@ export const CSVRenderer: React.FC<CSVRendererProps> = ({ content }) => {
                     experimentalFeatures={{ newEditingApi: true }}
                 />
             ) : (
-                <Box component="pre" sx={{ 
-                    p: 2, 
+                <Box component="pre" sx={{
+                    p: 2,
                     bgcolor: 'background.paper',
                     border: '1px solid',
                     borderColor: 'divider',
                     borderRadius: 1,
                     overflowX: 'auto',
-                    maxHeight: '300px',
                     overflowY: 'auto'
                 }}>
                     {content}
