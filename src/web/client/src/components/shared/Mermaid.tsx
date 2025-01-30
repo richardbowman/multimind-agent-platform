@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Box, Typography } from '@mui/material';
-import { Spinner } from './Spinner';
+import { Spinner } from '../Spinner';
+import mermaid from 'mermaid';
 
 interface MermaidProps {
     content: string;
@@ -21,7 +22,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                     securityLevel: 'loose',
                     fontFamily: 'inherit',
                     fontSize: 16,
-                    logLevel: 1,
+                    logLevel: 'warn',
                     themeCSS: `
                         .mermaid {
                             font-family: inherit;

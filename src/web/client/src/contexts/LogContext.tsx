@@ -13,7 +13,9 @@ export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     
     const logger = useMemo(() => {
         const logger = new ClientLogger((level, message, details) => {
-            return ipcService.getRPC().logClientEvent(level, message, details);
+            if (level !== "debug") {
+                return ipcService.getRPC().logClientEvent(level, message, details);
+            }
         });
         return logger;
     }, []);
