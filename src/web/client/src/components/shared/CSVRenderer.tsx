@@ -1,18 +1,21 @@
-import React, { useEffect, useState } from 'react';
-import { DataGrid, GridColDef, GridRenderCellParams } from '@mui/x-data-grid';
-import { Box } from '@mui/material';
-import { parse } from 'csv-parse/browser/esm/sync';
+import React, { useEffect, useState, useCallback } from 'react';
+import { DataGrid, GridColDef, GridRenderCellParams, GridRowModel } from '@mui/x-data-grid';
+import { Box, Button } from '@mui/material';
+import { parse, stringify } from 'csv-parse/browser/esm/sync';
+import SaveIcon from '@mui/icons-material/Save';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CustomLink } from '../ChatPanel';
 
 interface CSVRendererProps {
     content: string;
+    onSave?: (csvContent: string) => void;
 }
 
-export const CSVRenderer: React.FC<CSVRendererProps> = ({ content }) => {
+export const CSVRenderer: React.FC<CSVRendererProps> = ({ content, onSave }) => {
     const [rows, setRows] = useState<any[]>([]);
     const [columns, setColumns] = useState<GridColDef[]>([]);
+    const [isDirty, setIsDirty] = useState(false);
 
     useEffect(() => {
         try {
@@ -38,7 +41,7 @@ export const CSVRenderer: React.FC<CSVRendererProps> = ({ content }) => {
                         field: key,
                         headerName: key,
                         width: 150,
-                        editable: false,
+                        editable: true,
                         renderCell: (params: GridRenderCellParams<any, string>) => (
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
@@ -62,17 +65,59 @@ export const CSVRenderer: React.FC<CSVRendererProps> = ({ content }) => {
         }
     }, [content]);
 
+    const handleSave = () => {
+        if (rows.length > 0 && columns.length > 0) {
+            const data = rows.map(row => {
+                const newRow: Record<string, string> = {};
+                columns.forEach(col => {
+                    newRow[col.field] = row[col.field] || '';
+                });
+                return newRow;
+            });
+
+            const csvContent = stringify(data, {
+                header: true,
+                columns: columns.map(col => col.field)
+            });
+
+            if (onSave) {
+                onSave(csvContent);
+            }
+            setIsDirty(false);
+        }
+    };
+
+    const handleProcessRowUpdate = (newRow: GridRowModel) => {
+        setRows(rows.map(row => row.id === newRow.id ? newRow : row));
+        setIsDirty(true);
+        return newRow;
+    };
+
     return (
         <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
             {rows.length > 0 ? (
-                <DataGrid
-                    rows={rows}
-                    columns={columns}
-                    pageSize={5}
-                    rowsPerPageOptions={[5]}
-                    disableSelectionOnClick
-                    experimentalFeatures={{ newEditingApi: true }}
-                />
+                <>
+                    <Box sx={{ display: 'flex', justifyContent: 'flex-end', mb: 1 }}>
+                        <Button
+                            variant="contained"
+                            startIcon={<SaveIcon />}
+                            onClick={handleSave}
+                            disabled={!isDirty}
+                        >
+                            Save Changes
+                        </Button>
+                    </Box>
+                    <DataGrid
+                        rows={rows}
+                        columns={columns}
+                        pageSize={5}
+                        rowsPerPageOptions={[5]}
+                        disableSelectionOnClick
+                        experimentalFeatures={{ newEditingApi: true }}
+                        processRowUpdate={handleProcessRowUpdate}
+                        onProcessRowUpdateError={(error) => console.error('Row update error:', error)}
+                    />
+                </>
             ) : (
                 <Box component="pre" sx={{
                     p: 2,
