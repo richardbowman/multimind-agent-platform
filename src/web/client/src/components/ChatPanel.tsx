@@ -565,38 +565,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                             const match = /language-(\w+)/.exec(className || '');
                                             const content = String(children).replace(/\n$/, '');
                                             
-                                            // Handle Mermaid diagrams
-                                            if (match?.[1] === 'mermaid') {
-                                                return (
-                                                    <Box 
-                                                        component="div"
-                                                        className="mermaid"
-                                                        sx={{ 
-                                                            mt: 2,
-                                                            mb: 2,
-                                                            p: 2,
-                                                            bgcolor: 'background.paper',
-                                                            border: '1px solid',
-                                                            borderColor: 'divider',
-                                                            borderRadius: 1,
-                                                            overflowX: 'auto',
-                                                            minHeight: '100px',
-                                                            '& svg': {
-                                                                maxWidth: '100%',
-                                                                height: 'auto'
-                                                            },
-                                                            '&.error': {
-                                                                color: 'error.main',
-                                                                borderColor: 'error.main'
-                                                            }
-                                                        }}
-                                                    >
-                                                        <div style={{ display: 'none' }}>{content}</div>
-                                                        <div className="mermaid-content" />
-                                                    </Box>
-                                                );
-                                            }
-
                                             // Handle code blocks
                                             if (!inline && match) {
                                                 return <CodeBlock language={match[1]} content={content} />;

@@ -2,6 +2,7 @@ import React from 'react';
 import { Box } from '@mui/material';
 import { CSVRenderer } from './CSVRenderer';
 import { ActionToolbar } from './ActionToolbar';
+import { Mermaid } from './Mermaid';
 
 interface CodeBlockProps {
     language?: string;
@@ -9,6 +10,12 @@ interface CodeBlockProps {
 }
 
 export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content }) => {
+    // Handle Mermaid diagrams
+    if (language === 'mermaid') {
+        return <Mermaid content={content} />;
+    }
+
+    // Handle CSV rendering
     if (language === 'csv') {
         return (
             <Box sx={{ 
