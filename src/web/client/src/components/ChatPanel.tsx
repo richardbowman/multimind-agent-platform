@@ -99,6 +99,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         if (messagesContainerRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
             const newIsAtBottom = scrollHeight - (scrollTop + clientHeight) < 50;
+            console.debug('Scroll position check:', {
+                scrollTop,
+                scrollHeight, 
+                clientHeight,
+                newIsAtBottom
+            });
             setIsAtBottom(newIsAtBottom);
         }
     }, []);
@@ -134,10 +140,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         const container = messagesContainerRef.current;
         if (container) {
             const scrollHandler = () => {
+                console.debug('Scroll event detected');
                 requestAnimationFrame(checkScrollPosition);
             };
             container.addEventListener('scroll', scrollHandler);
-            return () => container.removeEventListener('scroll', scrollHandler);
+            return () => {
+                console.debug('Removing scroll listener');
+                container.removeEventListener('scroll', scrollHandler);
+            };
         }
     }, [checkScrollPosition]);
 
@@ -150,9 +160,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 : !message.props?.['root-id'])
         );
 
+        console.debug('Messages changed - relevant messages:', relevantMessages.length);
+        console.debug('isAtBottom:', isAtBottom);
+
         if (relevantMessages.length > 0) {
             if (isAtBottom) {
+                console.debug('Scrolling to bottom');
                 scrollToBottom();
+            } else {
+                console.debug('Not scrolling - user is not at bottom');
             }
         }
     }, [messages.length, currentChannelId, currentThreadId]);
@@ -167,9 +183,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 : !m.props?.['root-id'])
         );
 
+        console.debug('Checking in-progress messages:', hasRelevantInProgress);
+        console.debug('isAtBottom:', isAtBottom);
+
         if (hasRelevantInProgress) {
             if (isAtBottom) {
+                console.debug('Scrolling to bottom for in-progress message');
                 scrollToBottom();
+            } else {
+                console.debug('Not scrolling - user is not at bottom');
             }
         }
     }, [messages]);
