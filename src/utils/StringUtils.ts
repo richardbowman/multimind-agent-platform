@@ -78,4 +78,14 @@ export namespace StringUtils {
         const match = captionRegex.exec(text);
         return match ? match[1].trim() : '';
     }
+
+    /**
+     * Extracts URLs from a string
+     * @param text Input text containing URLs
+     * @returns Array of URLs found in the text
+     */
+    export function extractUrls(text: string): string[] {
+        const urlRegex = /https?:\/\/[^\s]+/g;
+        return text.match(urlRegex) || [];
+    }
 }
