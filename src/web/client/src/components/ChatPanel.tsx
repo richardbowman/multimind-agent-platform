@@ -99,11 +99,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         if (messagesContainerRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
             const newIsAtBottom = scrollHeight - (scrollTop + clientHeight) < 50;
-            if (newIsAtBottom !== isAtBottom) {
-                setIsAtBottom(newIsAtBottom);
-            }
+            setIsAtBottom(newIsAtBottom);
         }
-    }, [isAtBottom]);
+    }, []);
 
     const scrollToBottom = useCallback(() => {
         if (isAtBottom && messagesEndRef.current) {
@@ -135,7 +133,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     useEffect(() => {
         const container = messagesContainerRef.current;
         if (container) {
-            const scrollHandler = checkScrollPosition;
+            const scrollHandler = () => {
+                requestAnimationFrame(checkScrollPosition);
+            };
             container.addEventListener('scroll', scrollHandler);
             return () => container.removeEventListener('scroll', scrollHandler);
         }
@@ -150,10 +150,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 : !message.props?.['root-id'])
         );
 
-        if (relevantMessages.length > 0 && isAtBottom) {
-            scrollToBottom();
+        if (relevantMessages.length > 0) {
+            if (isAtBottom) {
+                scrollToBottom();
+            }
         }
-    }, [messages.length, currentChannelId, currentThreadId, isAtBottom, scrollToBottom]);
+    }, [messages.length, currentChannelId, currentThreadId]);
 
     // Scroll to bottom when in-progress messages update in current thread
     useEffect(() => {
@@ -165,10 +167,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 : !m.props?.['root-id'])
         );
 
-        if (hasRelevantInProgress && isAtBottom) {
-            scrollToBottom();
+        if (hasRelevantInProgress) {
+            if (isAtBottom) {
+                scrollToBottom();
+            }
         }
-    }, [messages, isAtBottom, scrollToBottom]);
+    }, [messages]);
 
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
