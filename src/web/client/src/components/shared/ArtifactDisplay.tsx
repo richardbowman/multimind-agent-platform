@@ -159,7 +159,40 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                 {(() => {
                     // Handle CSV content
                     if (artifact.metadata?.mimeType === 'text/csv' || artifact.type === 'csv') {
-                        return <CSVRenderer content={artifact.content as string} />;
+                        return <CSVRenderer 
+                            content={artifact.content as string} 
+                            onSave={(csvContent) => {
+                                // Update the artifact content
+                                const updatedArtifact = {
+                                    ...artifact,
+                                    content: csvContent
+                                };
+                                // Call the onEdit handler if available
+                                if (onEdit) {
+                                    onEdit();
+                                }
+                                // Update the toolbar actions to show save state
+                                if (onAddToolbarActions) {
+                                    onAddToolbarActions([
+                                        {
+                                            icon: <EditIcon fontSize="small" />,
+                                            label: 'Edit Artifact',
+                                            onClick: () => onEdit && onEdit()
+                                        },
+                                        {
+                                            icon: <DeleteIcon fontSize="small" />,
+                                            label: 'Delete Artifact',
+                                            onClick: () => onDelete && onDelete()
+                                        },
+                                        {
+                                            icon: <DownloadIcon fontSize="small" />,
+                                            label: 'Export Artifact',
+                                            onClick: handleExport
+                                        }
+                                    ]);
+                                }
+                            }}
+                        />;
                     }
 
                     // Handle Mermaid diagrams
