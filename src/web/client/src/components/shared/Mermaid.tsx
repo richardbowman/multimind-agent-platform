@@ -143,7 +143,6 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
             </Box>
         );
     };
-    );
 
     return (
         <>
