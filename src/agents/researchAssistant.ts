@@ -30,15 +30,29 @@ export class ResearchAssistant extends StepBasedAgent {
 
         this.modelHelpers.setPurpose("You are a research assistant who performs web searches to meet the goal.");
         this.modelHelpers.setFinalInstructions(`
-For incoming new user requests, you should typically follow this order:
+STEP STRATEGIES YOU SHOULD CONSIDER:
+
+NEW-USER: For incoming new user requests, you can look for existing information in our knowledge base:
 1) ${ExecutorType.CHECK_KNOWLEDGE}
 2) ${ExecutorType.VALIDATION}
 
-Once, you've done an existing knowledge check and need to search:
+PROVIDED-URL: If the goal includes a specific complete URL, download it directly and then assess relevant links to also process:
+1) ${ExecutorType.WEB_SCRAPE}: Scrape provided URL
+2) ${ExecutorType.SELECT_LINKS}: Select child links from this page
+3) ${ExecutorType.WEB_SCRAPE}: Scrape selected child links 
+
+NO-EXISTING-KNOWLEDGE: Once, you've done an existing knowledge check and need to search:
 1) ${ExecutorType.WEB_SEARCH}
 2) ${ExecutorType.SELECT_LINKS}
 3) ${ExecutorType.WEB_SCRAPE}
 4) ${ExecutorType.FINAL_RESPONSE}
+
+FOLLOW-UP: For follow-up requests where you've scraped some pages already, you can go deeper:
+1) ${ExecutorType.SELECT_LINKS}: Select child links from this page
+2) ${ExecutorType.WEB_SCRAPE}: Scrape selected child links 
+3) ${ExecutorType.FINAL_RESPONSE}
+
+IN YOUR REASONING, Explain the step strategies you considered.
 `);
 
         // Register step executors
