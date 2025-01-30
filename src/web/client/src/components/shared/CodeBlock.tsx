@@ -1,10 +1,10 @@
 import React, { useState, useContext } from 'react';
-import { DataContext } from '../../contexts/DataContext';
 import { Box } from '@mui/material';
 import { CSVRenderer } from './CSVRenderer';
 import { ActionToolbar } from './ActionToolbar';
 import { Mermaid } from './Mermaid';
 import DescriptionIcon from '@mui/icons-material/Description';
+import { DataContextMethods, useDataContext } from '../../contexts/DataContext';
 
 interface CodeBlockProps {
     language?: string;
@@ -26,11 +26,18 @@ const styles = {
         borderRadius: 1,
         overflow: 'hidden'
     },
-    contentContainer: {
+    contentContainerScrolling: {
         p: 2,
         bgcolor: 'background.paper',
         overflow: 'auto',
-        maxHeight: '300px'
+        maxHeight: '400px',
+    },
+    contentContainerFixed: {
+        bgcolor: 'background.paper',
+        overflow: 'hidden',
+        maxHeight: '400px',
+        display: 'flex',
+        flexDirection: 'column'
     },
     viewToggle: {
         display: 'flex',
@@ -71,6 +78,8 @@ const styles = {
 
 export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }) => {
     const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual');
+    const dataContext = useDataContext();
+
     // Handle Mermaid diagrams
     if (language === 'mermaid') {
         return (
@@ -82,7 +91,6 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                         label: 'Save as Artifact',
                         onClick: async () => {
                             const artifactTitle = title || `Code Export - ${new Date().toLocaleDateString()}`;
-                            const dataContext = useContext(DataContext);
                             if (dataContext) {
                                 try {
                                     await dataContext.saveArtifact({
@@ -101,7 +109,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                         }
                     }]}
                 />
-                <Box sx={styles.contentContainer}>
+                <Box sx={styles.contentContainerFixed}>
                     <Mermaid content={content} />
                 </Box>
             </Box>
@@ -119,7 +127,6 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                         label: 'Save as Artifact',
                         onClick: async () => {
                             const artifactTitle = title || `Code Export - ${new Date().toLocaleDateString()}`;
-                            const dataContext = useContext(DataContext);
                             if (dataContext) {
                                 try {
                                     await dataContext.saveArtifact({
@@ -152,7 +159,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                         </Box>
                     ))}
                 </Box>
-                <Box sx={styles.contentContainer}>
+                <Box sx={styles.contentContainerFixed}>
                     {viewMode === 'visual' ? (
                         <CSVRenderer content={content} />
                     ) : (
@@ -194,7 +201,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                     </Box>
                 ))}
             </Box>
-            <Box sx={styles.contentContainer}>
+            <Box sx={styles.contentContainerScrolling}>
                 {viewMode === 'visual' ? (
                     <Box component="pre">
                         <code>

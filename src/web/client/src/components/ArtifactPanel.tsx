@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
@@ -32,7 +32,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
         currentChannelId,
         addArtifactToChannel,
         removeArtifactFromChannel 
-    } = useWebSocket();
+    } = useDataContext();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
     const [toolbarActions, setToolbarActions] = useState<Array<{

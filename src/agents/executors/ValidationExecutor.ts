@@ -61,7 +61,7 @@ Analyze the previous steps and their results to determine if a reasonable effort
         promptBuilder.addContent(ContentType.STEP_RESULTS, params.steps);
 
         // Add previous results if available
-        promptBuilder.addContent(ContentType.ARTIFACTS, params.context?.artifacts);
+        promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
 
         // Add evaluation guidelines
         promptBuilder.addInstruction(`Evaluation Guidelines:

@@ -12,7 +12,7 @@ import {
     ListItem,
     ListItemText
 } from '@mui/material';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
@@ -33,7 +33,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     setSelectedTask,
     tasks
 }) => {
-    const { fetchTasks, handles, tasks: allTasks } = useWebSocket();
+    const { fetchTasks, handles, tasks: allTasks } = useDataContext();
     const ipcService = useIPCService();
     const [projectDetails, setProjectDetails] = useState<any>(null);
 

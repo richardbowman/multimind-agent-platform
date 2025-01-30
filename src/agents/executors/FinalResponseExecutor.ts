@@ -11,6 +11,7 @@ import { ExecutorType } from '../interfaces/ExecutorType';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ContentType } from 'src/llm/promptBuilder';
 
 /**
  * Executor that synthesizes all previous results into a final response.
@@ -44,13 +45,15 @@ Include relevant details from all steps while maintaining clarity and coherence.
     Step goal: ${params.stepGoal}`;
 
         const messages = params.previousResult?.map(r => r.message).filter(m => m);
-        const summaries = params.previousResult?.map(r => r.data?.summaries).flat().filter(s => s?.summary).map(s => `Date: ${s.date}\nSummary: ${s.summary}`);
+        const summaries = params.previousResult?.map(r => r.data?.summaries).flat().filter(s => s?.summary).map(s => `Date: ${s.date}\nSummary: \`\`\`\n${s.summary}\n\`\`\`\n`);
 
         const context = summaries && summaries.length > 0 ? `PAGE SUMMARIES:\n${summaries.join('\n\n')}` : `PAST MESSAGES:\n${messages?.join('\n\n')}`;
 
         const promptBuilder = this.modelHelpers.createPrompt();
         promptBuilder.addInstruction(instructions);
-        promptBuilder.addContent("context", context);
+        promptBuilder.addContext(context);
+
+        promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
 
         // Add output instructions for multiple content types
         promptBuilder.addInstruction(`OUTPUT INSTRUCTIONS:
@@ -63,6 +66,12 @@ for the response attributes.`);
 - For markdown: \`\`\`markdown
 - For csv: \`\`\`csv
 - For mermaid: \`\`\`mermaid`);
+
+        promptBuilder.addInstruction(`For CSV format: 
+1. Enclose all fields in double quotes ("").
+2. Escape double quotes inside fields by doubling them ("Field with ""quotes"" inside").
+3. Escape newlines inside of fields with \\n
+` );
 
         const prompt = promptBuilder.build();
 
@@ -93,7 +102,7 @@ for the response attributes.`);
             type: StepResultType.FinalResponse,
             finished: true,
             response: {
-                message: `**Response Attributes:**\n\`\`\`json[hidden]\n${JSON.stringify(json, null, 2)}\n\`\`\`\n\n**Content (${contentType}):**\n\`\`\`${contentType}\n${finalContent}\n\`\`\``
+                message: response.message
             }
         };
     }

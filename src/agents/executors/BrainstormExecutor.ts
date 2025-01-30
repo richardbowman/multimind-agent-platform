@@ -45,7 +45,7 @@ export class BrainstormExecutor implements StepExecutor {
 
         // Add artifacts if available
         if (params.context?.artifacts) {
-            promptBuilder.addContent(ContentType.ARTIFACTS, params.context?.artifacts);
+            promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
         }
 
         // Add execution parameters

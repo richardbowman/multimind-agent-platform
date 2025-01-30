@@ -54,7 +54,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
             projectId
         });
 
-        promptBuilder.addContent(ContentType.ARTIFACTS, params.context?.artifacts);
+        promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
         promptBuilder.addContent(ContentType.CONVERSATION, params.context?.threadPosts);
         promptBuilder.addContent(ContentType.GOALS, params.channelGoals);
 

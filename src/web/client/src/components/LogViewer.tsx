@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import DOMPurify from 'dompurify';
 import { 
     AppBar, 
@@ -25,7 +25,7 @@ interface LogViewerProps {
 export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType }) => {
     const pageSize = 50;
     const [currentLogTab, setCurrentLogTab] = useState<'llm' | 'system'>(initialLogType);
-    const { logs, fetchLogs } = useWebSocket();
+    const { logs, fetchLogs } = useDataContext();
     const logger = useLogger();
     const [filterText, setFilterText] = useState('');
     const [isLoading, setIsLoading] = useState(false);

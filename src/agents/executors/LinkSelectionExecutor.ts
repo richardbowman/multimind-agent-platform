@@ -10,6 +10,8 @@ import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorPara
 import { StepExecutor } from "../interfaces/StepExecutor";
 import { StepResult } from "../interfaces/StepResult";
 import { ExecutorType } from "../interfaces/ExecutorType";
+import { LinkRef } from "src/helpers/scrapeHelper";
+import { prev } from "cheerio/dist/commonjs/api/traversing";
 
 @StepExecutorDecorator(ExecutorType.SELECT_LINKS, 'Analyzes and selects relevant links to follow')
 export class LinkSelectionExecutor implements StepExecutor {
@@ -21,11 +23,12 @@ export class LinkSelectionExecutor implements StepExecutor {
 
     async execute(params: ExecuteParams): Promise<StepResult> {
         const searchResults = params.previousResult?.map(r => r.data?.searchResults).filter(s => s).slice(-1)[0];
+        const scrapedPageLinks = [...new Set(params.previousResult?.map(r => r.data?.extractedLinks).flat().filter(s => s))] as LinkRef[];
 
-        if (!searchResults) {
+        if (!searchResults && scrapedPageLinks.length == 0) {
             return {
                 finished: true,
-                response: { message: 'No search results to analyze' }
+                response: { message: 'No search results or prior page links to analyze' }
             };
         }
 
@@ -33,7 +36,7 @@ export class LinkSelectionExecutor implements StepExecutor {
             params.stepGoal,
             params.goal,
             searchResults,
-            params.previousResult
+            scrapedPageLinks
         );
 
         return {
@@ -50,25 +53,24 @@ export class LinkSelectionExecutor implements StepExecutor {
         task: string,
         goal: string,
         searchResults: { title: string, url: string, description: string }[],
-        previousResult?: any
+        previousLinks?: LinkRef[]
     ): Promise<string[]> {
         const schema = await getGeneratedSchema(SchemaType.WebSearchResponse);
-
-        const previousFindings = previousResult?.data?.analysis?.keyFindings || [];
 
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(`You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
 
-Previous Research Findings:
-${previousFindings.map((f: any) => `- ${f.finding}`).join('\n')}
-
-Given the following web search results, select 1-3 URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them. If you don't think any are relevant, return an empty array.`);
+Given the following web search results and links from existing pages you've scraped, select 1-3 URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them. If you don't think any are relevant, return an empty array.`);
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
-        const message = searchResults
+        const message = `Links from previously scraped pages:
+${previousLinks?.map(l => `- ${l.href}: ${l.text}`).join('\n')}
+
+Search Results:
+${searchResults && searchResults
             .slice(0, 10)
             .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${sr.description.slice(0, 200)}`)
-            .join("\n\n");
+            .join("\n\n")}`;
 
             
         const response = await this.modelHelpers.generate<WebSearchResponse>({

@@ -419,10 +419,10 @@ export const DataProvider: React.FC<{
   );
 };
 
-export const useWebSocket = () => {
+export const useDataContext = () => {
   const context = useContext(DataContext);
   if (!context) {
-    throw new Error('useWebSocket must be used within a DataProvider');
+    throw new Error('useDataContext must be used within a DataProvider');
   }
   return context;
 };

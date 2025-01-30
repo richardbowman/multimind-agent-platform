@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Channel } from '../../../../types/types';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import { 
     IconButton, 
     List, 
@@ -18,7 +18,7 @@ import { createChannelHandle } from '../../../../shared/channelTypes';
 interface ChannelListProps {}
 
 export const ChannelList: React.FC<ChannelListProps> = () => {
-    const { channels, currentChannelId, setCurrentChannelId, setCurrentThreadId } = useWebSocket();
+    const { channels, currentChannelId, setCurrentChannelId, setCurrentThreadId } = useDataContext();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
 

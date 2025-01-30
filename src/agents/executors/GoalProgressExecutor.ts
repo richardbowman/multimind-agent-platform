@@ -57,7 +57,7 @@ export class GoalProgressExecutor implements StepExecutor {
         });
 
         if (context?.artifacts) {
-            promptBuilder.addContent(ContentType.ARTIFACTS, context.artifacts);
+            promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, context.artifacts);
         }
 
         if (context?.threadPosts) {

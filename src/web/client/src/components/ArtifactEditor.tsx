@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { Button, TextField, Select, MenuItem, Box, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 
 interface ArtifactEditorProps {
@@ -48,7 +48,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
         }
     }, [artifact]);
 
-    const { saveArtifact } = useWebSocket();
+    const { saveArtifact } = useDataContext();
 
     const handleCreate = async () => {
         try {

@@ -6,7 +6,7 @@ import {
     ListItemText, 
     Checkbox
 } from '@mui/material';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 
 interface TaskCardProps {
     task: any;
@@ -21,7 +21,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
     onClick,
     onCheckboxClick
 }) => {
-    const { handles } = useWebSocket();
+    const { handles } = useDataContext();
 
     return (
         <ListItem 

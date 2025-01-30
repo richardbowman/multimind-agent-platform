@@ -250,7 +250,7 @@ Keep it concise but warm and engaging.`);
 
         // Add artifacts if present
         if (params.artifacts) {
-            promptBuilder.addContent(ContentType.ARTIFACTS, params.artifacts);
+            promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.artifacts);
         }
 
         // Add response format

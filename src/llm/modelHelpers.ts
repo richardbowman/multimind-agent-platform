@@ -22,6 +22,13 @@ export interface ModelHelpersParams {
     messagingHandle?: string;
 }
 
+export type WithTokens<T> = T extends object ? T & {
+    _usage?: {
+        inputTokens: number;
+        outputTokens: number;
+    };
+} : never;
+
 export class StepSequence {
     private steps: { type: string, description: string }[] = [];
     private currentStepIndex = 0;
@@ -369,7 +376,7 @@ export class ModelHelpers {
         throw new Error('Failed to generate valid response after retries');
     }
 
-    public async generate<T extends ModelResponse>(params: GenerateInputParams): Promise<T> {
+    public async generate<T extends WithTokens<ModelResponse>>(params: GenerateInputParams): Promise<T> {
         if (params.instructions instanceof StructuredOutputPrompt) {
             return this.generateStructured<T>(params.instructions, params);
         } else {

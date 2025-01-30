@@ -41,7 +41,7 @@ export class CalendarExecutor implements StepExecutor {
 3. Delete events when requested
 4. Always confirm changes with the user before applying them`);
 
-      prompt.addContent(ContentType.ARTIFACTS, params.context?.artifacts);
+      prompt.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
 
       prompt.addContent(ContentType.STEP_RESULTS, params.previousResult);
 

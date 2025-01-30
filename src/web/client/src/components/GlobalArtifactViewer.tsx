@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
@@ -16,7 +16,7 @@ export interface DrawerPage {
 }
 
 export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
-    const { allArtifacts, fetchAllArtifacts, deleteArtifact, showFileDialog } = useWebSocket();
+    const { allArtifacts, fetchAllArtifacts, deleteArtifact, showFileDialog } = useDataContext();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);

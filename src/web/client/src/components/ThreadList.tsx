@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import { 
     Box, 
     Typography, 
@@ -16,7 +16,7 @@ interface ThreadListProps {
 }
 
 export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
-    const { messages, currentThreadId, setCurrentThreadId } = useWebSocket();
+    const { messages, currentThreadId, setCurrentThreadId } = useDataContext();
     const activeThreadRef = useRef<HTMLLIElement>(null);
 
     useEffect(() => {

@@ -1,5 +1,5 @@
 import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent, useLayoutEffect } from 'react';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import { Artifact } from '../../../../tools/artifact';
 import { Settings } from 'electron';
 
@@ -24,7 +24,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [pendingArtifacts, setPendingArtifacts] = useState<Artifact[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { settings, channels, handles, pendingFiles, resetPendingFiles, allArtifacts, showFileDialog } = useWebSocket();
+    const { settings, channels, handles, pendingFiles, resetPendingFiles, allArtifacts, showFileDialog } = useDataContext();
     
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {

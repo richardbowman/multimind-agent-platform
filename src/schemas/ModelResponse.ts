@@ -20,6 +20,9 @@ export interface ModelMessageResponse extends ModelResponse {
 }
 
 export interface ReasoningResponse extends ModelResponse {
+    /**
+     * Explain your underlying thinking
+     */
     reasoning: string;
 }
 

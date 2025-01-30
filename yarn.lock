@@ -12110,6 +12110,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"marked@npm:^15.0.6":
+  version: 15.0.6
+  resolution: "marked@npm:15.0.6"
+  bin:
+    marked: bin/marked.js
+  checksum: 10c0/8f30972ac5fdf879353484bdd7717409c241d15031a58bbc483070dedb58e4b314c41c0b59b78e536658907c02ee149eaf4b9be221f198df97beae703f529d40
+  languageName: node
+  linkType: hard
+
 "marked@npm:^4.0.12":
   version: 4.3.0
   resolution: "marked@npm:4.3.0"
@@ -13239,6 +13248,7 @@ __metadata:
     kafkajs: "npm:^2.2.4"
     langchain: "npm:^0.3.11"
     markdown-table: "npm:^3.0.4"
+    marked: "npm:^15.0.6"
     mattermost-client: "npm:^6.5.0"
     mermaid: "npm:^11.4.1"
     mime: "npm:3"

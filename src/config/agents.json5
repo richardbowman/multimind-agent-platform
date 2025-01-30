@@ -14,6 +14,36 @@
   
         ]
       },
+      "PersonalAssistant": {
+        "className": "ConfigurableAgent",
+        "sourcePath": "configurableAgent.ts",
+        "userId": "0051ce41-3fe7-4efa-9734-e6801ea4544b",
+        "handle": "@assistant",
+        "description": "A helpful general purpose agent.",
+        "enabled": true,
+        "config": {
+          "purpose": "My name is Atlas. My job is to help make your life easier./",
+          "finalInstructions": "",
+          "plannerType": "nextStep",
+          "executors": [
+            {
+              "className": "ReplyExecutor"
+            },
+            {
+              "className": "GenerateArtifactExecutor"
+            },
+            {
+              "className": "BrainstormExecutor"
+            },
+            {
+              "className": "DelegationExecutor"
+            },
+            {
+              "className": "ScheduleTaskExecutor"
+            }
+          ]
+        }
+      },  
       "SimpleAgent": {
         "className": "SimpleAgent",
         "sourcePath": "simpleAgent.ts",
@@ -71,6 +101,7 @@
           "finalInstructions": "When planning steps for a project: \
 1. Start with 'goal_confirmation' to ensure clear understanding \
 2. Kickoff the 'delegation' to delegate to expert agent",
+          "plannerType": "advanced",
           "executors": [
             {
               "className": "BrainstormExecutor"
@@ -161,7 +192,7 @@
          "sourcePath": "configurableAgent.ts",
          "userId": "9d2c67c3-68e3-4f6c-b613-c8cb4c8d4f6a",
          "handle": "@data",
-         "description": "Specializes in gathering and processing data from web sources",
+         "description": "Gather and summarize website (please provide exact URLs)",
          "enabled": true,
          "config": {
            "purpose": "My name is Data Gatherer. \

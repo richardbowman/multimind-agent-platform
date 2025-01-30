@@ -18,7 +18,8 @@ export interface ContentRenderer<T> {
 }
 
 export enum ContentType {
-    ARTIFACTS = 'artifacts',
+    ARTIFACTS_EXCERPTS = 'artifacts',
+    ARTIFACTS_TITLES = 'artifact_titles',
     CONVERSATION = 'conversation',
     SEARCH_RESULTS = 'search_results',
     CODE = 'code',
@@ -52,8 +53,8 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.OVERALL_GOAL, this.renderOverallGoal.bind(this));
         this.registerRenderer(ContentType.FINAL_INSTRUCTIONS, this.renderFinalInstructions.bind(this));
 
-
-        this.registerRenderer(ContentType.ARTIFACTS, this.renderArtifacts.bind(this));
+        this.registerRenderer(ContentType.ARTIFACTS_TITLES, this.renderArtifactTitles.bind(this));
+        this.registerRenderer(ContentType.ARTIFACTS_EXCERPTS, this.renderArtifacts.bind(this));
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation.bind(this));
         this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults.bind(this));
         this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
@@ -162,7 +163,14 @@ ${this.modelHelpers.getFinalInstructions()}
                 content = content.substring(0, 1000) + '... [truncated]';
             }
             
-            return `Artifact ${index + 1} (${artifact.type}):\n${content}`;
+            return `Artifact ${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}\n$\`\`\`${artifact.type}\n{content}\`\`\`\n`;
+        }).join('\n\n');
+    }
+
+    private renderArtifactTitles(artifacts: Artifact[]): string {
+        if (!artifacts || artifacts.length === 0) return '';
+        return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
+            return `Artifact ${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}`;
         }).join('\n\n');
     }
 
@@ -260,11 +268,6 @@ export class PromptBuilder {
     build(): string {
         const sections: string[] = [];
 
-        // Add instructions first
-        if (this.instructions.length > 0) {
-            sections.push("## Instructions\n" + this.instructions.join('\n\n'));
-        }
-
         // Add context
         if (this.context.length > 0) {
             sections.push("## Context\n" + this.context.join('\n\n'));
@@ -283,6 +286,11 @@ export class PromptBuilder {
             }
         }
 
+        // Add instructions last
+        if (this.instructions.length > 0) {
+            sections.push("## INSTRUCTIONS\n" + this.instructions.join('\n\n'));
+        }
+        
         return sections.join('\n\n');
     }
 }

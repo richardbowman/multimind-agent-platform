@@ -29,7 +29,8 @@ export abstract class StepBasedAgent extends Agent {
             params.taskManager,
             params.userId,
             this.modelHelpers,
-            this.stepExecutors
+            this.stepExecutors,
+            this.agents
         );
     }
 

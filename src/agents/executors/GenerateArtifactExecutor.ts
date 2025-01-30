@@ -12,7 +12,7 @@ import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { TaskManager } from 'src/tools/taskManager';
 import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
-import { createUUID } from 'src/types/uuid';
+import { createUUID, UUID } from 'src/types/uuid';
 import { contentType } from 'mime-types';
 import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationResponse';
 import { StructuredOutputPrompt } from 'src/llm/ILLMService';
@@ -34,7 +34,7 @@ import JSON5 from 'json5';
  * - Generates unique IDs for new artifacts
  * - Preserves existing IDs during revisions
  */
-@StepExecutorDecorator(ExecutorType.GENERATE_ARTIFACT, 'Create/revise a Markdown document')
+@StepExecutorDecorator(ExecutorType.GENERATE_ARTIFACT, 'Create/revise a Markdown document, Mermaid diagram, or spreadsheet (CSV)')
 export class GenerateArtifactExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
@@ -62,9 +62,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
 - artifactId: ID of document to modify (only required for replace/append operations)
 - operation: Must be "create" for new documents, "replace" or "append" for existing ones
 - title: Document title
-- type: Document type - must be one of: "markdown", "csv", or "mermaid"
-- content: New or additional content
-- confirmationMessage: Message describing what was done`);
+- type: Document type - must be one of: "markdown", "csv", or "mermaid"`);
 
         promptBuilder.addInstruction(`CONTENT FORMATTING RULES:
 - For markdown: Use standard Markdown syntax
@@ -91,7 +89,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
         }
 
         // Add existing artifacts from previous results
-        promptBuilder.addContent(ContentType.ARTIFACTS, params.context?.artifacts);
+        promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
 
         // Add execution parameters
         promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
@@ -107,47 +105,60 @@ export class GenerateArtifactExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);
 
         promptBuilder.addInstruction(`OUTPUT INSTRUCTIONS:
-1. To formulate your response, include one enclosed \`\`\`json code block that matches this JSON Schema:
+1. To create the requested artifact, you will use two code blocks, one to contain attributes about the document, and the other for the content.
+2. Use one enclosed code block with the hidden indicator \`\`\`json[hidden] that matches this JSON Schema:
 ${JSON.stringify(schema, null, 2)}
-`);
+for the file attributes`);
 
-        promptBuilder.addInstruction(`2. Then, provide your content in a separately enclosed code block using the appropriate syntax:
+        promptBuilder.addInstruction(`3. Provide the content in a separately enclosed code block using the appropriate syntax:
 - For markdown: \`\`\`markdown
 - For csv: \`\`\`csv
 - For mermaid: \`\`\`mermaid`);
+
+promptBuilder.addInstruction(`4. You may only provide one content type per response. If you need to provide multiple content types, please respond suggesting other content types to generate.`);
 
         const prompt = promptBuilder.build();
         
         try {
             const unstructuredResult = await this.modelHelpers.generate<ModelMessageResponse>({
                 message: params.message || params.stepGoal,
-                instructions: prompt
+                instructions: prompt,
+                threadPosts: params.context?.threadPosts
             });
             
             const json = StringUtils.extractAndParseJsonBlocks(unstructuredResult.message)[0];
-            const md = StringUtils.extractCodeBlocks(unstructuredResult.message, "markdown")[0];
+            const md = StringUtils.extractCodeBlocks(unstructuredResult.message).filter(b => b.type !== 'json')[0];
 
             const result = {
                 ...json,
                 content: md.code
-            } as ArtifactGenerationResponse;
+            } as ArtifactGenerationResponse & { content: string };
 
             // Prepare the artifact
             let finalContent = result.content;
-            if (result.artifactId && result.operation === 'append') {
-                const existingArtifact = await this.artifactManager.loadArtifact(result.artifactId);
-                finalContent = `${existingArtifact?.content||""}\n\n${result.content}`;
+            let finalType = result.type?.toLowerCase();
+            let finalArtifactId : UUID = undefined;
+
+            if (result.artifactId && result.operation === 'append' && result.artifactId) {
+                try {
+                    finalArtifactId = params.context?.artifacts[result.artifactId].id;
+                    const existingArtifact = await this.artifactManager.loadArtifact(finalArtifactId);
+                    finalContent = `${existingArtifact?.content||""}\n${result.content}`;
+                    finalType = existingArtifact?.type;
+                } catch (error) {
+                    Logger.error(`Could not find existing artifact for append operation ${result.artifactId}`, error);
+                }
+            } else {
+                // Validate document type
+                const validTypes = ['markdown', 'csv', 'mermaid'];
+                if (!validTypes.includes(finalType)) {
+                    throw new Error(`Invalid document type: ${finalType}. Must be one of: ${validTypes.join(', ')}`);
+                }
             }
 
-            // Validate document type
-            const validTypes = ['markdown', 'csv', 'mermaid'];
-            if (!validTypes.includes(result.type?.toLowerCase())) {
-                throw new Error(`Invalid document type: ${result.type}. Must be one of: ${validTypes.join(', ')}`);
-            }
-
-            const artifact: Artifact = {
-                id: result.artifactId?.length||0 > 0 ? createUUID(result.artifactId) : createUUID(),
-                type: result.type.toLowerCase(),
+            const artifact: Partial<Artifact> = {
+                id: finalArtifactId,
+                type: finalType,
                 content: finalContent,
                 metadata: {
                     title: result.title,
@@ -164,9 +175,7 @@ ${JSON.stringify(schema, null, 2)}
                 type: "generate-artifact",
                 finished: true,
                 artifactIds: [artifact.id],
-                response: {
-                    message: result.confirmationMessage,
-                } as RequestArtifacts
+                response: unstructuredResult,
             };
 
         } catch (error) {

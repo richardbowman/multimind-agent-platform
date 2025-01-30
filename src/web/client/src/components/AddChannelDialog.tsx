@@ -18,7 +18,7 @@ import {
     CardActionArea
 } from '@mui/material';
 import { GoalTemplates } from '../../../../schemas/goalTemplateSchema';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import { ChannelHandle, createChannelHandle } from '../../../../shared/channelTypes';
 
 interface AddChannelDialogProps {
@@ -65,7 +65,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     const [lastSelectedTemplateName, setLastSelectedTemplateName] = useState<string>('');
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-    const webSocket = useWebSocket();
+    const webSocket = useDataContext();
 
     const handleTemplateSelect = (templateId: ChannelHandle) => {
         setSelectedTemplate(templateId);

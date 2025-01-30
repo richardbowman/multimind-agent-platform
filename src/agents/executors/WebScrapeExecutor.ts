@@ -11,7 +11,7 @@ import { ModelMessageResponse } from "src/schemas/ModelResponse";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { createUUID } from "src/types/uuid";
 import { Artifact } from "src/tools/artifact";
-import { ModelHelpers } from "src/llm/modelHelpers";
+import { ModelHelpers, WithTokens } from "src/llm/modelHelpers";
 import { ContentType, OutputType } from "src/llm/promptBuilder";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";
@@ -46,8 +46,8 @@ export class WebScrapeExecutor implements StepExecutor {
 
     async execute(params: ExecuteParams): Promise<StepResult> {
         // First try to extract URLs from stepGoal
-        let selectedUrls = StringUtils.extractUrls(params.stepGoal);
-        
+        let selectedUrls = [...new Set(StringUtils.extractUrls(params.goal))];
+
         // If no URLs in stepGoal, check previousResult (LinkSelectionExecutor)
         if (!selectedUrls?.length) {
             selectedUrls = params.previousResult?.map(r => r.data?.selectedUrls).filter(s => s).slice(-1)[0];
@@ -62,22 +62,27 @@ export class WebScrapeExecutor implements StepExecutor {
 
         const scrapedUrls = await this.getScrapedUrls();
         let summaries = [];
-        
+
         const result: ScrapeResult = {
             artifacts: [],
             summaries: [],
             extractedLinks: []
         };
 
-        for (const url of selectedUrls) {
+        const total = selectedUrls.length;
+        for (const [index, url] of selectedUrls.entries()) {
             try {
                 // Check if already processed
                 if (this.visitedUrls.has(url) || scrapedUrls.has(url)) {
                     Logger.info(`Retrieving existing summary for URL: ${url}`);
-                    const existingSummary = await this.getExistingSummary(url);
-                    if (existingSummary) {
-                        result.summaries.push(existingSummary.content.toString());
-                        result.artifacts.push(existingSummary);
+                    const webPage = await this.getStoredWebpage(url);
+                    const existingSummary = await this.getStoredSummary(url);
+                    if (webPage && existingSummary) {
+                        result.summaries.push(existingSummary);
+                        result.extractedLinks = [...new Set([
+                            ...result.extractedLinks,
+                            ...StringUtils.extractLinksFromMarkdown(webPage.content.toString())
+                        ])];
                         continue;
                     }
                 }
@@ -85,17 +90,17 @@ export class WebScrapeExecutor implements StepExecutor {
                 this.visitedUrls.add(url);
 
                 // Scrape page
-                await params.partialResponse(`Scraping ${url}...`);
-                
+                await params.partialResponse(`Scraping ${url} (${index+1} of ${total})...`);
+
                 const { content, title, links } = await this.scrapeHelper.scrapePage(url, {
                     task: params.stepGoal,
                     projectId: params.projectId
                 });
-                
+
                 result.extractedLinks.push(...links);
-                
+
                 // Generate summary
-                await params.partialResponse(`Summarizing ${title}...`);
+                await params.partialResponse(`Summarizing ${title} (${index + 1} of ${total})...`);
 
                 const summaryResponse = await this.summarizeContent(
                     params.stepGoal,
@@ -118,7 +123,7 @@ export class WebScrapeExecutor implements StepExecutor {
                         },
                         tokenCount: summaryResponse._usage?.outputTokens
                     });
-                    
+
                     result.summaries.push(summaryResponse);
                     result.artifacts.push(artifact);
                 }
@@ -143,11 +148,28 @@ export class WebScrapeExecutor implements StepExecutor {
         };
     }
 
-    private async getExistingSummary(url: string): Promise<Artifact | null> {
+    private async getStoredWebpage(url: string): Promise<Artifact | null> {
+        const existingSummaries = await this.artifactManager.getArtifacts({
+            type: 'webpage'
+        });
+        const artifact = existingSummaries.find(a => a.metadata?.url === url);
+        return artifact||null;
+    }
+
+    private async getStoredSummary(url: string): Promise<SummaryResponse | null> {
         const existingSummaries = await this.artifactManager.getArtifacts({
             type: 'summary'
         });
-        return existingSummaries.find(a => a.metadata?.url === url) || null;
+        const artifact = existingSummaries.find(a => a.metadata?.url === url);
+        if (artifact) {
+            return {
+                summary: artifact.content.toString(),
+                date: artifact.metadata?.contentDate,
+                relevant: true
+            }
+        } else { 
+            return null;
+        }
     }
 
     private async getScrapedUrls(): Promise<Set<string>> {
@@ -155,7 +177,7 @@ export class WebScrapeExecutor implements StepExecutor {
         return new Set(artifacts.map(a => a.metadata?.url));
     }
 
-    private async summarizeContent(task: string, content: string, params: ExecuteParams): Promise<SummaryResponse> {
+    private async summarizeContent(task: string, content: string, params: ExecuteParams): Promise<WithTokens<SummaryResponse>> {
         const prompt = this.modelHelpers.createPrompt();
         prompt.addContent(ContentType.PURPOSE);
         prompt.addInstruction(`You are a step in an agent. The goal is to summarize a web search result.
@@ -166,7 +188,7 @@ export class WebScrapeExecutor implements StepExecutor {
         await prompt.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, SchemaType.WebScrapeSummaryResponse);
 
         const userPrompt = "Web Search Result:" + content;
-        
+
         const summary = await this.modelHelpers.generate({
             instructions: prompt.build(),
             message: userPrompt,
@@ -175,7 +197,7 @@ export class WebScrapeExecutor implements StepExecutor {
         });
 
         const jsonBlocks = StringUtils.extractAndParseJsonBlocks(summary.message);
-        const markdownBlocks = StringUtils.extractCodeBlocks("markdown", summary.message);
+        const markdownBlocks = StringUtils.extractCodeBlocks(summary.message, "markdown");
 
         return {
             ...jsonBlocks[0] as WebScrapeSummaryResponse,

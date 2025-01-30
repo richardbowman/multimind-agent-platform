@@ -3,7 +3,12 @@
  */
 export interface FinalResponse {
     /**
-     * Final comprehensive response in Markdown format
+     * Document title
      */
-    message: string;
+    title: string;
+
+    /**
+     * Document type
+     */
+    type: string;
 }

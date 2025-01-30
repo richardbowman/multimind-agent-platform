@@ -5,7 +5,7 @@ import MinimizeIcon from '@mui/icons-material/Minimize';
 import MaximizeIcon from '@mui/icons-material/CropSquare';
 import CloseIcon from '@mui/icons-material/Close';
 import DeveloperModeIcon from '@mui/icons-material/DeveloperMode';
-import { useWebSocket, DataProvider } from './contexts/DataContext';
+import { useDataContext, DataProvider } from './contexts/DataContext';
 import { IPCProvider, useIPCService } from './contexts/IPCContext';
 import { SnackbarProvider, useSnackbar } from './contexts/SnackbarContext';
 import { LogProvider } from './contexts/LogContext';
@@ -55,7 +55,7 @@ const AppContent: React.FC = () => {
         currentThreadId,
         setCurrentThreadId,
         needsConfig
-    } = useWebSocket();
+    } = useDataContext();
 
     const ipcService = useIPCService();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings' | 'none'>('none');

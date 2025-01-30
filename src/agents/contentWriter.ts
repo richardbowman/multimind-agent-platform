@@ -86,7 +86,7 @@ export class ContentWriter extends Agent {
             
             if (task.props && task.props['artifact-ids']) {
                 const artifacts = await this.mapRequestedArtifacts(task.props['artifact-ids']);
-                prompt.addContent(ContentType.ARTIFACTS, artifacts);
+                prompt.addContent(ContentType.ARTIFACTS_EXCERPTS, artifacts);
             }
 
             prompt.addContent(ContentType.FINAL_INSTRUCTIONS);

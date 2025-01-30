@@ -3,6 +3,9 @@ import { Task } from "src/tools/taskManager";
 import { StepBasedAgent } from './stepBasedAgent';
 import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 import { Planner } from "./planners/planner";
+import { SimpleNextActionPlanner } from "./planners/nextActionPlanner";
+import { MultiStepPlanner } from "./planners/multiStepPlanner";
+import { ModelType } from "src/llm/LLMServiceFactory";
 
 export class ConfigurableAgent extends StepBasedAgent {
     agentName: string | undefined;
@@ -10,6 +13,13 @@ export class ConfigurableAgent extends StepBasedAgent {
     constructor(params: AgentConstructorParams, planner?: Planner) {
         super(params, planner);
         this.agentName = params.agentName;
+        if (params.config.plannerType === "nextStep") {
+            this.planner = new SimpleNextActionPlanner(params.llmService, params.taskManager, params.userId, this.modelHelpers, this.stepExecutors, params.chatClient, params.agents);
+        } else if (params.config.plannerType === "advanced") {
+            const planner = new MultiStepPlanner(params.llmService, params.taskManager, params.userId, this.modelHelpers, this.stepExecutors, params.agents);
+            planner.modelType = ModelType.ADVANCED_REASONING;
+            this.planner = planner;
+        }
     }
     
     async initialize() {

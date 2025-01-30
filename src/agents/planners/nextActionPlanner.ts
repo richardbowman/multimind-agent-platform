@@ -104,17 +104,19 @@ ${sequencesPrompt}
 ## AVAILABLE ACTION TYPES (and descriptions of when to use them):
 ${stepDescriptions}
 
-## YOUR GOAL:
-- Look at the completed tasks and determine the next Action Type from the Available Action Types action that would move us closer to the high-level goal
-- Consider the sequences for guidance on the order for steps to be successful.
-
 ## COMPLETED TASKS:
 ${completedSteps}`;
 
         const prompt = this.modelHelpers.createPrompt();
         prompt.addContent(ContentType.PURPOSE);
         prompt.addContent(ContentType.AGENT_OVERVIEWS, agentList);
-        prompt.addInstruction(systemPrompt);
+        prompt.addContext(systemPrompt);
+        prompt.addInstruction(`
+- Review the completed tasks you've already done.
+- Review the user's message.
+- Determine the next Action Type from the AVAILABLE ACTION TYPES that the user would most benefit from.
+- Consider the sequences for guidance on the order for steps to be successful.`);
+
         prompt.addContent(ContentType.FINAL_INSTRUCTIONS);
 
         const response = await this.modelHelpers.generate<NextActionResponse>({
@@ -143,7 +145,7 @@ ${completedSteps}`;
             reasoning: response.reasoning,
             steps: response.action ? [{
                 actionType: response.action.actionType,
-                parameters: response.action.parameters
+                context: response.action.taskDescription
             }] : []
         };
 

@@ -5,6 +5,7 @@
   "scripts": {
     "uuid": "tsx src/cli/generate-uuid.ts",
     "test": "jest",
+    "dev": "yarn electron:dev",
     "docs": "mkdocs serve",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
@@ -78,6 +79,7 @@
     "kafkajs": "^2.2.4",
     "langchain": "^0.3.11",
     "markdown-table": "^3.0.4",
+    "marked": "^15.0.6",
     "mattermost-client": "^6.5.0",
     "mime": "3",
     "mime-types": "^2.1.35",

@@ -54,10 +54,6 @@
           "description": "ID of document to modify (only required for replace/append operations)",
           "type": "string"
         },
-        "confirmationMessage": {
-          "description": "Message describing what was done",
-          "type": "string"
-        },
         "operation": {
           "description": "Operation to perform: \"create\" for new documents, \"replace\" or \"append\" for existing ones",
           "enum": [
@@ -74,8 +70,7 @@
       },
       "required": [
         "operation",
-        "title",
-        "confirmationMessage"
+        "title"
       ],
       "type": "object"
     },
@@ -665,13 +660,18 @@
       "additionalProperties": false,
       "description": "Interface for final comprehensive response",
       "properties": {
-        "message": {
-          "description": "Final comprehensive response in Markdown format",
+        "title": {
+          "description": "Document title",
+          "type": "string"
+        },
+        "type": {
+          "description": "Document type",
           "type": "string"
         }
       },
       "required": [
-        "message"
+        "title",
+        "type"
       ],
       "type": "object"
     },
@@ -1019,13 +1019,13 @@
         "actionType": {
           "type": "string"
         },
-        "parameters": {
+        "taskDescription": {
           "type": "string"
         }
       },
       "required": [
         "actionType",
-        "parameters"
+        "taskDescription"
       ],
       "type": "object"
     },
@@ -1035,6 +1035,7 @@
           "$ref": "#/definitions/NextAction"
         },
         "reasoning": {
+          "description": "Explain your underlying thinking",
           "type": "string"
         }
       },
@@ -1185,9 +1186,6 @@
         },
         "context": {
           "type": "string"
-        },
-        "existingId": {
-          "type": "string"
         }
       },
       "required": [
@@ -1197,8 +1195,11 @@
       "type": "object"
     },
     "PlanStepsResponse": {
-      "additionalProperties": false,
       "properties": {
+        "reasoning": {
+          "description": "Explain your underlying thinking",
+          "type": "string"
+        },
         "steps": {
           "items": {
             "$ref": "#/definitions/PlanStepTask"
@@ -1207,6 +1208,7 @@
         }
       },
       "required": [
+        "reasoning",
         "steps"
       ],
       "type": "object"
@@ -1297,6 +1299,7 @@
     "ReasoningResponse": {
       "properties": {
         "reasoning": {
+          "description": "Explain your underlying thinking",
           "type": "string"
         }
       },

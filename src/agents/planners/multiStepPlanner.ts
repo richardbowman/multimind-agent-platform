@@ -13,17 +13,24 @@ import crypto from 'crypto';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepTask } from '../interfaces/ExecuteStepParams';
 import { StringUtils } from 'src/utils/StringUtils';
+import { ExecutorType } from '../interfaces/ExecutorType';
+import { ContentType } from 'src/llm/promptBuilder';
+import { exec } from 'child_process';
+import { Agents } from 'src/utils/AgentLoader';
+import { ModelType } from 'src/llm/LLMServiceFactory';
 
 export class MultiStepPlanner implements Planner {
     readonly allowReplan: boolean = true;
     readonly alwaysComplete: boolean = false;
+    modelType: ModelType = ModelType.REASONING;
     
     constructor(
         private llmService: ILLMService,
         private projects: TaskManager,
         private userId: string,
         private modelHelpers: ModelHelpers,
-        private stepExecutors: Map<string, any> = new Map()
+        private stepExecutors: Map<string, any> = new Map(),
+        private agents: Agents
     ) {}
 
     public async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
@@ -94,6 +101,7 @@ export class MultiStepPlanner implements Planner {
 ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description}`).join('\n')}`
         ).join('\n\n');
 
+    
         const systemPrompt =
             `## YOUR GOAL
 You are a step that is a part of a multi-step agent workflow. Your task is to generate a proposed plan of upcoming steps that will best achieve
@@ -123,9 +131,19 @@ ${completedSteps}
 ## CURRENT PLAN:
 ${currentSteps}`;
 
+        let delegationInstructions = ''
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addInstruction(systemPrompt);
+        prompt.addContent(ContentType.ARTIFACTS_TITLES, handlerParams.artifacts);
+        
+        if (executorMetadata.find(e => e.key === ExecutorType.DELEGATION)) {
+            const agentList = Object.values(this.agents.agents).filter(a => a.userId !== this.userId);
+            prompt.addContent(ContentType.AGENT_OVERVIEWS, agentList)
+        }
+
         const response = await this.modelHelpers.generate<PlanStepsResponse>({
             ...handlerParams,
-            instructions: new StructuredOutputPrompt(schema, systemPrompt)
+            instructions: new StructuredOutputPrompt(schema, prompt)
         });
 
         Logger.verbose(`PlanStepsResponse: ${JSON.stringify(response, null, 2)}`);

@@ -30,7 +30,7 @@ import {
     Checkbox
 } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { Settings } from '../../../../tools/settings';
 import { ModelInfo } from '../../../../llm/types';
@@ -45,7 +45,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const [settings, setSettings] = useState<Settings>({});
     const [validationMessage, setValidationMessage] = useState<string>('');
     const [successMessage, setSuccessMessage] = useState<string>('');
-    const { getSettings, updateSettings } = useWebSocket();
+    const { getSettings, updateSettings } = useDataContext();
     const ipcService = useIPCService();
     const metadata = getClientSettingsMetadata(new Settings());
 
