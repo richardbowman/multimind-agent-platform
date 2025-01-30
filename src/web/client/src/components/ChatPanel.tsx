@@ -48,6 +48,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useDataContext();
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
     const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
+    const [messageVersions, setMessageVersions] = useState<Record<string, number>>({});
+
+    // Watch for message updates
+    useEffect(() => {
+        const updatedMessages = messages.filter(m => m.updated_at);
+        if (updatedMessages.length > 0) {
+            setMessageVersions(prev => {
+                const newVersions = {...prev};
+                updatedMessages.forEach(m => {
+                    newVersions[m.id] = (newVersions[m.id] || 0) + 1;
+                });
+                return newVersions;
+            });
+        }
+    }, [messages]);
 
     // Automatically expand the last 2 messages
     const visibleMessages = useMemo(() => {
@@ -67,7 +82,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         setExpandedMessages(prev => new Set([...prev, ...lastTwoIds]));
 
         return filtered;
-    }, [messages, currentChannelId, currentThreadId]);
+    }, [messages, currentChannelId, currentThreadId, messageVersions]);
 
     const toggleMessageExpansion = useCallback((messageId: string) => {
         setExpandedMessages(prev => {
@@ -472,7 +487,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                     </Typography>
                 ) : (
                     visibleMessages.map((message, index) => (
-                        <Paper key={message.id} sx={{
+                        <Paper key={`${message.id}-${messageVersions[message.id] || 0}`} sx={{
                             mb: 2,
                             p: 2,
                             bgcolor: 'background.default'
