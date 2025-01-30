@@ -98,7 +98,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                 <DrawerHeader/>
                 {selectedArtifact && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-                        <ActionToolbar actions={toolbarActions || [
+                        <ActionToolbar actions={[
                             {
                                 icon: <ChevronLeftIcon />,
                                 label: 'Previous Artifact',
@@ -145,7 +145,8 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                                 icon: <CloseIcon />,
                                 label: 'Close',
                                 onClick: () => setDrawerOpen(false)
-                            }
+                            },
+                            ...(toolbarActions || [])
                         ]} />
                         <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
                             <ArtifactDisplay
