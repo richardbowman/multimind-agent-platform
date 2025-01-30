@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import mermaid from 'mermaid';
 import {
     Box,
     Typography,
@@ -89,99 +90,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const ipcService = useIPCService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    // Initialize and render Mermaid diagrams
-    useEffect(() => {
-        try {
-            mermaid.initialize({ 
-                startOnLoad: false,
-                theme: 'dark',
-                securityLevel: 'loose',
-                fontFamily: 'inherit',
-                fontSize: 16,
-                logLevel: 1, // Set log level to show warnings
-                themeCSS: `
-                    .mermaid {
-                        font-family: inherit;
-                    }
-                    .mermaid .label {
-                        font-family: inherit;
-                        color: #ffffff;
-                    }
-                    .mermaid .node rect,
-                    .mermaid .node circle,
-                    .mermaid .node ellipse,
-                    .mermaid .node polygon {
-                        fill: #2a2a2a;
-                        stroke: #444;
-                    }
-                    .mermaid .edgePath .path {
-                        stroke: #666;
-                    }
-                    .mermaid .cluster rect {
-                        fill: #1a1a1a;
-                        stroke: #333;
-                    }
-                `
-            });
-
-            const renderMermaid = async () => {
-                try {
-                    const mermaidContainers = document.querySelectorAll('.mermaid:not([data-processed])');
-                    
-                    for (const container of mermaidContainers) {
-                        try {
-                            const content = container.textContent?.trim() || '';
-                            if (!content) continue;
-
-                            // Create a temporary container for rendering
-                            const tempDiv = document.createElement('div');
-                            tempDiv.style.visibility = 'hidden';
-                            document.body.appendChild(tempDiv);
-
-                            // Generate a valid ID without periods
-                            const mermaidId = `mermaid-${Date.now()}-${Math.random().toString().replace('.', '')}`;
-                            
-                            // Render to temporary container first
-                            const { svg } = await mermaid.render(
-                                mermaidId,
-                                content,
-                                tempDiv
-                            );
-
-                            // Only update the actual container if rendering succeeded
-                            container.innerHTML = svg;
-                            container.dataset.processed = 'true';
-
-                            // Clean up temporary container
-                            document.body.removeChild(tempDiv);
-                        } catch (error) {
-                            console.error('Error rendering mermaid diagram:', error);
-                            container.innerHTML = `<div style="color: red; padding: 8px;">Error rendering diagram: ${error.message}</div>`;
-                            container.dataset.processed = 'true';
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error in mermaid rendering process:', error);
-                }
-            };
-
-            // Use requestAnimationFrame for better timing
-            let frameId: number;
-            const render = () => {
-                renderMermaid();
-                frameId = requestAnimationFrame(render);
-            };
-
-            // Start rendering
-            frameId = requestAnimationFrame(render);
-
-            return () => {
-                cancelAnimationFrame(frameId);
-            };
-        } catch (error) {
-            console.error('Error initializing mermaid:', error);
-        }
-    }, [messages]);
     const { channels } = useWebSocket();
 
     const [isAtBottom, setIsAtBottom] = useState(true);
