@@ -606,8 +606,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                                         mb: 2,
                                                         border: '1px solid',
                                                         borderColor: 'divider',
-                                                        borderRadius: 1
+                                                        borderRadius: 1,
+                                                        position: 'relative'
                                                     }}>
+                                                        <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
+                                                            <ActionToolbar 
+                                                                content={content}
+                                                                title={`CSV Export - ${new Date().toLocaleDateString()}`}
+                                                            />
+                                                        </Box>
                                                         <CSVRenderer content={content} />
                                                     </Box>
                                                 );
@@ -615,19 +622,30 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
 
                                             // Default code block handling
                                             return !inline && match ? (
-                                                <Box component="pre" sx={{ 
-                                                    p: 2, 
-                                                    bgcolor: 'background.paper',
-                                                    border: '1px solid',
-                                                    borderColor: 'divider',
-                                                    borderRadius: 1,
-                                                    overflowX: 'auto',
+                                                <Box sx={{ 
+                                                    position: 'relative',
                                                     mt: 2,
                                                     mb: 2
                                                 }}>
-                                                    <code className={className} {...props}>
-                                                        {content}
-                                                    </code>
+                                                    <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
+                                                        <ActionToolbar 
+                                                            content={content}
+                                                            title={`Code Export - ${new Date().toLocaleDateString()}`}
+                                                        />
+                                                    </Box>
+                                                    <Box component="pre" sx={{ 
+                                                        p: 2, 
+                                                        bgcolor: 'background.paper',
+                                                        border: '1px solid',
+                                                        borderColor: 'divider',
+                                                        borderRadius: 1,
+                                                        overflowX: 'auto',
+                                                        pt: 6 // Add padding to prevent toolbar overlap
+                                                    }}>
+                                                        <code className={className} {...props}>
+                                                            {content}
+                                                        </code>
+                                                    </Box>
                                                 </Box>
                                             ) : (
                                                 <code className={className} {...props}>
