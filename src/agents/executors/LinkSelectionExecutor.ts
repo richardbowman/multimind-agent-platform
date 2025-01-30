@@ -24,10 +24,8 @@ export class LinkSelectionExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         // Get all previously scraped URLs from WebScrapeExecutor results
         const alreadyScrapedUrls = new Set(
-            params.previousResult
-                ?.filter(r => r.type === 'webpage_scrape')
-                .flatMap(r => r.data?.artifacts?.map(a => a.metadata?.url))
-                .filter(Boolean) || []
+            params.previousResult?.flatMap(r => r.data?.artifacts?.map(a => a.metadata?.url))
+                .filter(u => u) || []
         );
 
         // Filter search results and scraped links to remove already scraped URLs
@@ -37,12 +35,18 @@ export class LinkSelectionExecutor implements StepExecutor {
             .slice(-1)[0]
             ?.filter(sr => !alreadyScrapedUrls.has(sr.url));
 
-        const scrapedPageLinks = [...new Set(
-            params.previousResult
-                ?.map(r => r.data?.extractedLinks)
-                .flat()
-                .filter(s => s && !alreadyScrapedUrls.has(s.href))
-        )] as LinkRef[];
+        // Deduplicate links based on href property
+        const uniqueLinksMap = new Map<string, LinkRef>();
+        params.previousResult
+            ?.map(r => r.data?.extractedLinks)
+            .flat()
+            .filter(s => s && !alreadyScrapedUrls.has(s.href))
+            .forEach(link => {
+                if (!uniqueLinksMap.has(link.href)) {
+                    uniqueLinksMap.set(link.href, link);
+                }
+            });
+        const scrapedPageLinks = Array.from(uniqueLinksMap.values());
 
         if (!searchResults && scrapedPageLinks.length == 0) {
             return {
@@ -87,11 +91,11 @@ ${previousLinks?.map(l => `- ${l.href}: ${l.text}`).join('\n')}
 
 Search Results:
 ${searchResults && searchResults
-            .slice(0, 10)
-            .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${sr.description.slice(0, 200)}`)
-            .join("\n\n")}`;
+                .slice(0, 10)
+                .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${sr.description.slice(0, 200)}`)
+                .join("\n\n")}`;
 
-            
+
         const response = await this.modelHelpers.generate<WebSearchResponse>({
             message,
             instructions

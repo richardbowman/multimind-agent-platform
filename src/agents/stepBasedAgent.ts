@@ -473,7 +473,7 @@ export abstract class StepBasedAgent extends Agent {
             }
 
             // Store the result in task props
-            this.projects.updateTask(task.id, {
+            await this.projects.updateTask(task.id, {
                 props: {
                     ...task.props,
                     result: stepResult,
@@ -522,7 +522,6 @@ export abstract class StepBasedAgent extends Agent {
                     await this.reply(replyTo, messageResponse, props);
                 }
             }
-
             if (stepResult.finished || this.planner.alwaysComplete) {
                 this.projects.completeTask(task.id);
                 Logger.info(`Completed step "${task.props.stepType}" for project "${projectId}"`);

@@ -50,9 +50,9 @@
     "ArtifactGenerationResponse": {
       "additionalProperties": false,
       "properties": {
-        "artifactId": {
-          "description": "ID of document to modify (only required for replace/append operations)",
-          "type": "string"
+        "artifactIndex": {
+          "description": "Index of document to modify (only required for replace/append operations)",
+          "type": "number"
         },
         "operation": {
           "description": "Operation to perform: \"create\" for new documents, \"replace\" or \"append\" for existing ones",

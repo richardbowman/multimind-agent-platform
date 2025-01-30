@@ -59,11 +59,11 @@ export class MultiStepPlanner implements Planner {
 
         const formatCompletedTasks = (tasks: Task[]) => {
             return tasks.map(t => {
-                const type = t.type ? `**Type**: ${t.type}` : '';
-                return `- ${t.description}\n  ${type}`;
+                const type = t.type === TaskType.Step ? `**Step Type**: ${(t as StepTask).props.stepType}` : '**Task Type**: ${t.type}';
+                return `- ${type}: ${t.description}`;
             }).join('\n');
         };
-
+        
         const formatCurrentTasks = (tasks: Task[]) => {
             return tasks.map(t => {
                 const type = t.type ? `**Type**: ${t.type}` : '';

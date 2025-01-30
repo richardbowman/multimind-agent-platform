@@ -20,6 +20,7 @@ export interface ContentRenderer<T> {
 export enum ContentType {
     ARTIFACTS_EXCERPTS = 'artifacts',
     ARTIFACTS_TITLES = 'artifact_titles',
+    ARTIFACTS_FULL = 'artifacts_full',
     CONVERSATION = 'conversation',
     SEARCH_RESULTS = 'search_results',
     CODE = 'code',
@@ -54,7 +55,8 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.FINAL_INSTRUCTIONS, this.renderFinalInstructions.bind(this));
 
         this.registerRenderer(ContentType.ARTIFACTS_TITLES, this.renderArtifactTitles.bind(this));
-        this.registerRenderer(ContentType.ARTIFACTS_EXCERPTS, this.renderArtifacts.bind(this));
+        this.registerRenderer(ContentType.ARTIFACTS_EXCERPTS, this.renderArtifactExcerpts.bind(this));
+        this.registerRenderer(ContentType.ARTIFACTS_FULL, this.renderArtifacts.bind(this));
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation.bind(this));
         this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults.bind(this));
         this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
@@ -157,20 +159,31 @@ ${this.modelHelpers.getFinalInstructions()}
             let content = typeof artifact.content === 'string' 
                 ? artifact.content
                 : `[Binary data - ${artifact.content.length} bytes]`;
+           
+            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
+        }).join('\n\n');
+    }
+
+    private renderArtifactExcerpts(artifacts: Artifact[]): string {
+        if (!artifacts || artifacts.length === 0) return '';
+        return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
+            let content = typeof artifact.content === 'string' 
+                ? artifact.content
+                : `[Binary data - ${artifact.content.length} bytes]`;
             
             // Truncate string content to 1000 chars
             if (typeof content === 'string' && content.length > 1000) {
                 content = content.substring(0, 1000) + '... [truncated]';
             }
             
-            return `Artifact ${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}\n$\`\`\`${artifact.type}\n{content}\`\`\`\n`;
+            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
         }).join('\n\n');
     }
 
     private renderArtifactTitles(artifacts: Artifact[]): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
-            return `Artifact ${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}`;
+            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}`;
         }).join('\n\n');
     }
 

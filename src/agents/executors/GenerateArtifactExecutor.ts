@@ -89,7 +89,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
         }
 
         // Add existing artifacts from previous results
-        promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
+        promptBuilder.addContent(ContentType.ARTIFACTS_FULL, params.context?.artifacts);
 
         // Add execution parameters
         promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
@@ -116,6 +116,7 @@ for the file attributes`);
 - For mermaid: \`\`\`mermaid`);
 
 promptBuilder.addInstruction(`4. You may only provide one content type per response. If you need to provide multiple content types, please respond suggesting other content types to generate.`);
+promptBuilder.addInstruction(`If you are appending to a CSV file, make sure you include the exactly same column structure for the new rows.`);
 
         const prompt = promptBuilder.build();
         
@@ -139,9 +140,9 @@ promptBuilder.addInstruction(`4. You may only provide one content type per respo
             let finalType = result.type?.toLowerCase();
             let finalArtifactId : UUID = undefined;
 
-            if (result.artifactId && result.operation === 'append' && result.artifactId) {
+            if (result.artifactIndex && result.artifactIndex > 0 && result.operation === 'append') {
                 try {
-                    finalArtifactId = params.context?.artifacts[result.artifactId].id;
+                    finalArtifactId = params.context?.artifacts[result.artifactIndex-1].id;
                     const existingArtifact = await this.artifactManager.loadArtifact(finalArtifactId);
                     finalContent = `${existingArtifact?.content||""}\n${result.content}`;
                     finalType = existingArtifact?.type;

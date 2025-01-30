@@ -57,12 +57,14 @@ Include relevant details from all steps while maintaining clarity and coherence.
 
         // Add output instructions for multiple content types
         promptBuilder.addInstruction(`OUTPUT INSTRUCTIONS:
-1. To generate the final response, you will use two code blocks.
-2. Use one enclosed code block with the hidden indicator \`\`\`json[hidden] that matches this JSON Schema:
+1. Explain to the user what you found and how you synthesized the information.
+
+2. In order to share the results, you will use two code blocks.
+3. Use one enclosed code block with the hidden indicator \`\`\`json[hidden] that matches this JSON Schema:
 ${JSON.stringify(schema, null, 2)}
 for the response attributes.`);
 
-        promptBuilder.addInstruction(`3. Provide the content in a separately enclosed code block using the appropriate syntax:
+        promptBuilder.addInstruction(`4. Provide the content in a separately enclosed code block using the appropriate syntax:
 - For markdown: \`\`\`markdown
 - For csv: \`\`\`csv
 - For mermaid: \`\`\`mermaid`);
