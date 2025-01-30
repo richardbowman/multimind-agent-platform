@@ -14,7 +14,7 @@ import {
 import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
-import { useWebSocket } from '../contexts/DataContext';
+import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 import remarkGfm from 'remark-gfm';
 import Link from '@mui/material/Link';
@@ -24,7 +24,7 @@ import { CodeBlock } from './shared/CodeBlock';
 import { GoalTemplates } from '../../../../schemas/goalTemplateSchema';
 
 // Custom link component that opens links in system browser
-const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
+export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();
         if (href) {
@@ -45,7 +45,7 @@ interface ChatPanelProps {
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen }) => {
-    const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useWebSocket();
+    const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useDataContext();
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
     const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
 
@@ -88,7 +88,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const ipcService = useIPCService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const { channels } = useWebSocket();
+    const { channels } = useDataContext();
 
     const [isAtBottom, setIsAtBottom] = useState(true);
     const messagesContainerRef = useRef<HTMLDivElement>(null);
@@ -521,7 +521,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                                 return isHidden ? null : (
                                                     <CodeBlock 
                                                         language={match[1]} 
-                                                        content={content} 
+                                                        content={content}
                                                     />
                                                 );
                                             }
