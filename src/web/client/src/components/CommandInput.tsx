@@ -291,7 +291,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         borderRadius: '4px',
                         boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
                         zIndex: 1000,
-                        maxHeight: '200px',
+                        maxHeight: suggestions.length > 5 ? '400px' : '200px',
                         overflowY: 'auto',
                         color: '#fff'
                     }}
