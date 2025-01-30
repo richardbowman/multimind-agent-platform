@@ -8,6 +8,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 interface CodeBlockProps {
     language?: string;
     content: string;
+    title?: string;
 }
 
 const viewOptions = [
@@ -33,7 +34,8 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content }) => {
                                 label: 'Save as Artifact',
                                 onClick: () => {
                                     // TODO: Implement save artifact functionality
-                                    console.log('Saving artifact:', content);
+                                    const artifactTitle = title || `Code Export - ${new Date().toLocaleDateString()}`;
+                                    console.log('Saving artifact:', { title: artifactTitle, content });
                                 }
                             }
                         ]}
