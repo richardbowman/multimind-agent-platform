@@ -38,7 +38,9 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content }) => {
                 border: '1px solid',
                 borderColor: 'divider',
                 borderRadius: 1,
-                position: 'relative'
+                position: 'relative',
+                maxHeight: '300px', // Set max height
+                overflowY: 'auto' // Add vertical scrollbar if needed
             }}>
                 <Box sx={{ position: 'absolute', top: 8, right: 8, zIndex: 1 }}>
                     <ActionToolbar 
@@ -70,7 +72,9 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content }) => {
                 borderColor: 'divider',
                 borderRadius: 1,
                 overflowX: 'auto',
-                pt: 6 // Add padding to prevent toolbar overlap
+                pt: 6, // Add padding to prevent toolbar overlap
+                maxHeight: '300px', // Set max height
+                overflowY: 'auto' // Add vertical scrollbar if needed
             }}>
                 <code>
                     {content}
