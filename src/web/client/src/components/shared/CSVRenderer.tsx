@@ -127,7 +127,6 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                         processRowUpdate={handleProcessRowUpdate}
                         onProcessRowUpdateError={(error) => console.error('Row update error:', error)}
                     />
-                </>
             ) : (
                 <Box component="pre" sx={{
                     p: 2,
