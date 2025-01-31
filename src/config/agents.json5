@@ -193,7 +193,7 @@
          "userId": "9d2c67c3-68e3-4f6c-b613-c8cb4c8d4f6a",
          "handle": "@data",
          "description": "Gather and summarize website (please provide exact URLs)",
-         "enabled": true,
+         "enabled": false,
          "config": {
            "purpose": "My name is Data Gatherer. \
    My goal is to help you collect, process and analyze data from web sources.",
@@ -202,7 +202,7 @@
 2. depending on if the user requested a document or a website, use the appropriate tool. ",
            "executors": [
              {
-               "className": "WebpageExecutor"
+               "className": "UrlExecutor"
              },
              {
                "className": "GenerateArtifactExecutor",

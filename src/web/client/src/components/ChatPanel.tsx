@@ -526,6 +526,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                     remarkPlugins={[remarkGfm]}
                                     components={{
                                         a: CustomLink,
+                                        pre: ({node, ...props}) => (
+                                            <div {...props} />
+                                        ),
                                         code({node, inline, className, children, ...props}) {
                                             const match = /language-(\w+)(?:\s*\[hidden\])?/.exec(className || '');
                                             const content = String(children).replace(/\n$/, '');
@@ -543,9 +546,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
 
                                             // Inline code
                                             return isHidden ? null : (
-                                                <code className={className} {...props}>
+                                                <div className={className} {...props}>
                                                     {children}
-                                                </code>
+                                                </div>
                                             );
                                         }
                                     }}

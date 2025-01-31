@@ -23,7 +23,7 @@ export enum ExecutorType {
     CREATE_CHANNEL = "create_channel",
     SELECT_TEMPLATE = "select-template",
     CONTENT_COMBINATION = "content-combination",
-    DOWNLOAD_WEBPAGE = "download-webpage",
+    URL_EXTRACT = "url-extract",
     GOAL_PROGRESS = "goal-progress",
     NODE_EXECUTION = "nodejs-code-execution",
     DEBUG = "debug",

@@ -48,6 +48,8 @@ export class GoalConfirmationExecutor implements StepExecutor {
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
 
         // Add content sections
+        promptBuilder.addContent(ContentType.OVERALL_GOAL, params.overallGoal)
+
         promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
             goal,
             step,
@@ -58,6 +60,8 @@ export class GoalConfirmationExecutor implements StepExecutor {
         promptBuilder.addContent(ContentType.CONVERSATION, params.context?.threadPosts);
         promptBuilder.addContent(ContentType.GOALS, params.channelGoals);
 
+        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, params)
+
         promptBuilder.addInstruction(`IMPORTANT RESPONSE INSTRUCTIONS:
             YOU MUST ELIMINATE acronyms or other terminology that may be ambigous or confusing to other agents.
 
@@ -66,10 +70,9 @@ export class GoalConfirmationExecutor implements StepExecutor {
             3. If the goal and terminology is clear, respond with understanding=true. Restate the user's goal to be as clear and unambiguous as possible.`);
             
         // Build and execute prompt
-        const prompt = promptBuilder.build();
         const result = await this.modelHelpers.generate<GoalConfirmationResponse>({
             message: goal,
-            instructions: new StructuredOutputPrompt(schema, prompt),
+            instructions: new StructuredOutputPrompt(schema, promptBuilder),
             threadPosts: params.context?.threadPosts || []
         });
 

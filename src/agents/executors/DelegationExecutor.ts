@@ -53,7 +53,7 @@ export class DelegationExecutor implements StepExecutor {
         prompt.addContent(ContentType.AGENT_CAPABILITIES, params.agents);
         prompt.addInstruction( `IMPORTANT DELEGATION RULES:
             - Create THE FEWEST delegation steps as possible to achieve the goal.
-            - If you delegate to managers, do not also delegate to their team. (i.e. don't delegate to the reserch manager AND the research assistant)
+            - If you delegate to managers, do not also delegate to their team. (i.e. don't delegate to the research manager AND the research assistant)
             - Instead of making multiple tasks for the same agent, combine them into one complete task.
             - Make sure the task description has ALL of the information needed. The agent will not receive other context.`);
 

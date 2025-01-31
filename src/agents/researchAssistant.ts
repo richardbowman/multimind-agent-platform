@@ -13,6 +13,8 @@ import { SearchExecutor } from './executors/WebSearchExecutor';
 import { LinkSelectionExecutor } from './executors/LinkSelectionExecutor';
 import { WebScrapeExecutor } from './executors/WebScrapeExecutor';
 import { ModelHelpers } from '../llm/modelHelpers';
+import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
+import { UrlExecutor } from './executors/UrlExecutor';
 
 export interface ResearchProject extends Project {
     postId: string;
@@ -35,11 +37,13 @@ IN YOUR REASONING, Explain the step strategies you considered.
 
         // Define step sequences
         this.modelHelpers.addStepSequence("NEW-USER", "For incoming new user requests, check existing knowledge base and validate.", [
+            { type: ExecutorType.GOAL_CONFIRMATION, description: "Confirm and restate the user's goal clearly with context for other steps." },
             { type: ExecutorType.CHECK_KNOWLEDGE, description: "Check existing knowledge base" },
             { type: ExecutorType.VALIDATION, description: "Validate information" }
         ]);
 
         this.modelHelpers.addStepSequence("PROVIDED-URL", "If the goal includes a specific complete URL, download and process relevant links.", [
+            { type: ExecutorType.URL_EXTRACT, description: "Extract the URLs from the task information" },
             { type: ExecutorType.WEB_SCRAPE, description: "Scrape provided URL" },
             { type: ExecutorType.SELECT_LINKS, description: "Select child links from this page" },
             { type: ExecutorType.WEB_SCRAPE, description: "Scrape selected child links" },
@@ -60,6 +64,8 @@ IN YOUR REASONING, Explain the step strategies you considered.
         ]);
 
         // Register step executors
+        this.registerStepExecutor(new UrlExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new GoalConfirmationExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new SearchExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new LinkSelectionExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new WebScrapeExecutor(this.getExecutorParams()));

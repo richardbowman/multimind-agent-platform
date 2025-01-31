@@ -40,6 +40,8 @@ import { DrawerPage } from './GlobalArtifactViewer';
 // Import package.json and LICENSE file contents
 import packageJson from '../../../../../package.json';
 import licenseText from '../../../../../docs/LICENSE.md';
+import { ActionToolbar } from './shared/ActionToolbar';
+import { EmbedderModelInfo } from '../../../../llm/ILLMService';
 
 export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
     const [settings, setSettings] = useState<Settings>({});
