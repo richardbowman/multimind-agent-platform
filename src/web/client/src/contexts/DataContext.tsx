@@ -8,6 +8,7 @@ import { useClientMethods } from '../services/ClientMethods';
 import { Artifact } from '../../../../tools/artifact';
 import { Settings } from '../../../../tools/settings';
 import { ConfigurationError } from '../../../../errors/ConfigurationError';
+import { ClientError } from '@mattermost/client';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 
@@ -50,7 +51,7 @@ export interface DataContextMethods {
   setCurrentChannelId: React.Dispatch<React.SetStateAction<string | null>>;
   setCurrentThreadId: React.Dispatch<React.SetStateAction<string | null>>;
   getSettings: () => Promise<any>;
-  updateSettings: (settings: any) => Promise<{settings: Settings, error: string}>;
+  updateSettings: (settings: any) => Promise<Settings|ClientError>;
   createChannel: (params: CreateChannelParams) => Promise<string>;
   deleteChannel: (channelId: string) => Promise<void>;
   setTasks: React.Dispatch<React.SetStateAction<ClientTask[]>>;

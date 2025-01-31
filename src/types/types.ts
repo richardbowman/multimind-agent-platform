@@ -1,6 +1,14 @@
+import { error } from "node:console";
 
 export const isObject = (obj: any): boolean => {
     return obj && typeof obj === 'object' && !Array.isArray(obj);
+};
+
+export const isError = (obj: any): boolean => {
+    return obj && typeof obj === 'object' && !Array.isArray(obj) && obj.message;
+};
+export const asError = (obj: any): { message: string, trace?: string} => {
+    return obj && typeof obj === 'object' && !Array.isArray(obj) && obj.message ? obj : undefined;
 };
 
 export interface WebSocketMessage {

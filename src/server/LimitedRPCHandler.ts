@@ -10,6 +10,11 @@ import { EmbedderModelInfo } from "src/llm/ILLMService";
 import { UpdateStatus } from "src/shared/UpdateStatus";
 import { AppUpdater } from "electron-updater";
 import { ConfigurationError } from "src/errors/ConfigurationError";
+import { asError } from "src/types/types";
+
+interface ClientError {
+    message: string;
+}
 
 export class LimitedRPCHandler implements Partial<ServerMethods> {
     protected clientRpc?: ClientMethods;
@@ -35,17 +40,25 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
         return settings;
     }
 
-    async getAvailableModels(provider: string): Promise<ModelInfo[]> {
-        const service = LLMServiceFactory.createServiceByName(provider, this.partialServices.settingsManager.getSettings());
-        return service.getAvailableModels();
+    async getAvailableModels(provider: string): Promise<ModelInfo[]|ClientError> {
+        try {
+            const service = LLMServiceFactory.createServiceByName(provider, this.partialServices.settingsManager.getSettings());
+            return service.getAvailableModels();
+        } catch (e) {
+            return {message: e.message}
+        }
     }
 
-    async getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]> {
-        const service = LLMServiceFactory.createServiceByName(provider, this.partialServices.settingsManager.getSettings());
-        return service.getAvailableEmbedders();
+    async getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]|ClientError> {
+        try {
+            const service = LLMServiceFactory.createServiceByName(provider, this.partialServices.settingsManager.getSettings());
+            return service.getAvailableEmbedders();
+        } catch (e) {
+            return { message: "Error getting available embedders: "+asError(e)?.message||"Unknown error getting available embedders" };
+        }
     }
 
-    async updateSettings(settings: Partial<Settings>): Promise<{ settings: Settings, error?: string}> {
+    async updateSettings(settings: Partial<Settings>): Promise<Settings|ClientError> {
         Logger.info('Update settings called');
         
         this.partialServices.settingsManager.updateSettings(settings);
@@ -57,12 +70,14 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
             if (backendServices.error?.message) {
                 error = backendServices.error.message;
             }
+            return this.partialServices.settingsManager.getSettings();
         } catch (caughtError) {
             Logger.error("Error updating settings", caughtError);
             error = (caughtError instanceof Error) ? caughtError.message : caughtError;
+            return {
+                message: error 
+            };
         }
-
-        return { settings: this.partialServices.settingsManager.getSettings(), error };
     }
 
     setupClientEvents(rpc: ClientMethods, autoUpdater: AppUpdater) {

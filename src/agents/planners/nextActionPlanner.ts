@@ -15,6 +15,9 @@ import { ChatClient } from 'src/chat/chatClient';
 import { ContentType } from 'src/llm/promptBuilder';
 import { Agents } from 'src/utils/AgentLoader';
 import { StepTask } from '../interfaces/ExecuteStepParams';
+import { Settings } from 'src/tools/settings';
+import { SettingsManager } from 'src/tools/settingsManager';
+import { ModelType } from 'src/llm/LLMServiceFactory';
 
 export class SimpleNextActionPlanner implements Planner {
     readonly allowReplan: boolean = false;
@@ -112,8 +115,10 @@ ${completedSteps}`;
         prompt.addContent(ContentType.AGENT_OVERVIEWS, agentList);
         prompt.addContext(systemPrompt);
         prompt.addInstruction(`
+- IN YOUR REASONING, describe this process:
 - Review the completed tasks you've already done.
 - Review the user's message.
+- Explain each step and why it would or would not make sense to be the next action.
 - Determine the next Action Type from the AVAILABLE ACTION TYPES that the user would most benefit from.
 - Consider the sequences for guidance on the order for steps to be successful.`);
 
@@ -121,7 +126,8 @@ ${completedSteps}`;
 
         const response = await this.modelHelpers.generate<NextActionResponse>({
             ...handlerParams,
-            instructions: new StructuredOutputPrompt(schema, prompt)
+            instructions: new StructuredOutputPrompt(schema, prompt),
+            model: ModelType.ADVANCED_REASONING
         });
 
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);

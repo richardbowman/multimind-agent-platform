@@ -9,6 +9,7 @@ import { ModelInfo } from 'src/llm/types';
 import { UpdateStatus } from './UpdateStatus';
 import { UUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
+import { ClientError } from '@mattermost/client';
 
 export interface LogEntry {
     timestamp: string;
@@ -48,7 +49,7 @@ export interface ServerMethods {
     addArtifactToChannel(channelId: string, artifactId: string): Promise<void>;
     removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void>;
     getSettings(): Promise<any>;
-    updateSettings(settings: any): Promise<any>;
+    updateSettings(settings: any): Promise<ClientError>;
     getLogs(logType: 'llm' | 'system' | 'api'): Promise<any>;
     getHandles(): Promise<Array<{id: string; handle: string}>>;
     quitAndInstall(): Promise<void>;
@@ -77,8 +78,8 @@ export interface ServerMethods {
      */
     deleteChannel(channelId: UUID): Promise<void>;
 
-    getAvailableModels(provider: string): Promise<ModelInfo[]>;
-    getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]>;
+    getAvailableModels(provider: string): Promise<ModelInfo[]|ClientError>;
+    getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]|ClientError>;
     rebuildVectorDB(): Promise<void>;
     getProject(projectId: string): Promise<ClientProject>;
     markTaskComplete(taskId: string, complete: boolean): Promise<ClientTask>;

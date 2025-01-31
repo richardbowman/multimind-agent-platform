@@ -42,6 +42,7 @@ import packageJson from '../../../../../package.json';
 import licenseText from '../../../../../docs/LICENSE.md';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { EmbedderModelInfo } from '../../../../llm/ILLMService';
+import { asError, isError } from '../../../../types/types';
 
 export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
     const [settings, setSettings] = useState<Settings>({});
@@ -75,6 +76,8 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 try {
                     const models = await ipcService.getRPC().getAvailableModels(settings.providers.chat);
 
+                    if (models.message) { throw models; }
+
                     // Sort models with local first, then by name
                     const sortedModels = models.sort((a, b) => {
                         if (a.isLocal === b.isLocal) {
@@ -89,7 +92,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     }));
                 } catch (error) {
                     console.error('Failed to fetch models:', error);
-                    setModelFetchError(`Failed to fetch models: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    setModelFetchError(`Failed to fetch models: ${asError(error)?.message || 'Unknown error'}`);
                 }
             }
         }
@@ -102,6 +105,8 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                 try {
                     const embedders = await ipcService.getRPC().getAvailableEmbedders(settings.providers.embeddings);
 
+                    if (embedders.message) { throw embedders; }
+
                     // Sort embedders by downloads
                     const sortedEmbedders = embedders.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
 
@@ -111,7 +116,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     }));
                 } catch (error) {
                     console.error('Failed to fetch models:', error);
-                    setModelFetchError(`Failed to fetch models: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                    setModelFetchError(`Failed to fetch models: ${asError(error)?.message || 'Unknown error'}`);
                 }
             }
 
@@ -198,13 +203,10 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
         try {
             console.log('Saving settings:', settings);
-            const { settings: updatedSettings, error } = await updateSettings(settings);
+            const updatedSettings = await updateSettings(settings);
+            if (updatedSettings.message) throw new Error(updatedSettings.message);
             console.log('Updated settings:', updatedSettings);
             setSettings(updatedSettings);
-
-            if (error) {
-                throw new Error(error);
-            }
 
             setSuccessMessage('Settings saved successfully');
             setValidationMessage('');

@@ -50,7 +50,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                     securityLevel: 'loose',
                     fontFamily: 'inherit',
                     fontSize: 16,
-                    logLevel: 'warn'
+                    logLevel: 'error'
                 });
 
                 // Create new temporary container
