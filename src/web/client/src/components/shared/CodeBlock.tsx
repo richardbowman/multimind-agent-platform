@@ -96,28 +96,31 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
         <Box sx={styles.container}>
             <ActionToolbar 
                 title={title || `Content Export - ${new Date().toLocaleDateString()}`}
-                actions={[{
-                    icon: <DescriptionIcon />,
-                    label: 'Save as Artifact',
-                    onClick: async () => {
-                        const artifactTitle = title || `Content Export - ${new Date().toLocaleDateString()}`;
-                        if (dataContext) {
-                            try {
-                                await dataContext.saveArtifact({
-                                    id: crypto.randomUUID(),
-                                    type: 'code',
-                                    content: content,
-                                    metadata: {
-                                        language: language,
-                                        title: artifactTitle
-                                    }
-                                });
-                            } catch (error) {
-                                console.error('Failed to save artifact:', error);
+                actions={[
+                    {
+                        icon: <DescriptionIcon />,
+                        label: 'Save as Artifact',
+                        onClick: async () => {
+                            const artifactTitle = title || `Content Export - ${new Date().toLocaleDateString()}`;
+                            if (dataContext) {
+                                try {
+                                    await dataContext.saveArtifact({
+                                        id: crypto.randomUUID(),
+                                        type: 'code',
+                                        content: content,
+                                        metadata: {
+                                            language: language,
+                                            title: artifactTitle
+                                        }
+                                    });
+                                } catch (error) {
+                                    console.error('Failed to save artifact:', error);
+                                }
                             }
                         }
-                    }
-                }]}
+                    },
+                    ...toolbarActions
+                ]}
             />
             <Box sx={styles.viewToggle}>
                 {viewOptions.map(option => (
