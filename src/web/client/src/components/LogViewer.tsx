@@ -74,8 +74,9 @@ const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) => {
                 sx={{ 
                     maxHeight: 400,
                     overflow: 'auto',
-                    backgroundColor: theme => theme.palette.background.paper,
-                    border: theme => `1px solid ${theme.palette.divider}`
+                    backgroundColor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: 'divider'
                 }}
             >
                 <Table size="small" stickyHeader>
@@ -83,15 +84,15 @@ const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) => {
                         <TableRow>
                             <TableCell sx={{ 
                                 fontWeight: 'bold',
-                                backgroundColor: theme => theme.palette.background.default,
-                                color: theme => theme.palette.text.primary
+                                backgroundColor: 'background.default',
+                                color: 'text.primary'
                             }}>
                                 Key
                             </TableCell>
                             <TableCell sx={{ 
                                 fontWeight: 'bold',
-                                backgroundColor: theme => theme.palette.background.default,
-                                color: theme => theme.palette.text.primary
+                                backgroundColor: 'background.default',
+                                color: 'text.primary'
                             }}>
                                 Value
                             </TableCell>
@@ -102,14 +103,16 @@ const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) => {
                             <TableRow key={key}>
                                 <TableCell sx={{ 
                                     fontWeight: 500,
-                                    color: theme => theme.palette.text.primary,
-                                    borderBottom: theme => `1px solid ${theme.palette.divider}`
+                                    color: 'text.primary',
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider'
                                 }}>
                                     {key}
                                 </TableCell>
                                 <TableCell sx={{ 
-                                    color: theme => theme.palette.text.primary,
-                                    borderBottom: theme => `1px solid ${theme.palette.divider}`
+                                    color: 'text.primary',
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider'
                                 }}>
                                     {typeof value === 'object' ? (
                                         <FormattedDataView data={value} />
@@ -499,12 +502,13 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                             marginTop: '8px'
                         },
                         '& pre': {
-                            backgroundColor: theme => theme.palette.background.paper,
+                            backgroundColor: 'background.paper',
                             padding: '8px',
                             borderRadius: '4px',
                             margin: '8px 0 0 0',
                             maxWidth: '100%',
-                            overflowX: 'auto'
+                            overflowX: 'auto',
+                            color: 'text.primary'
                         }
                     }
                 }}
