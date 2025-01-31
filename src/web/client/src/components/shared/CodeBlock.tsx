@@ -138,8 +138,30 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                     {viewMode === 'visual' ? (
                         <ReactMarkdown
                             components={{
-                                code: ({node, ...props}) => (
-                                    <code style={{fontFamily: 'monospace', backgroundColor: '#f5f5f5', padding: '0.2em 0.4em', borderRadius: '4px'}} {...props} />
+                                pre: ({node, ...props}) => (
+                                    <div {...props} style={{ 
+                                        whiteSpace: 'pre-wrap',
+                                        wordWrap: 'break-word',
+                                        fontFamily: 'inherit',
+                                        backgroundColor: '#f5f5f5',
+                                        padding: '0.5em',
+                                        borderRadius: '4px',
+                                        margin: '0.5em 0'
+                                    }} />
+                                ),
+                                code: ({node, inline, ...props}) => inline ? (
+                                    <code {...props} style={{
+                                        fontFamily: 'monospace',
+                                        backgroundColor: '#f5f5f5',
+                                        padding: '0.2em 0.4em',
+                                        borderRadius: '4px'
+                                    }} />
+                                ) : (
+                                    <div {...props} style={{
+                                        whiteSpace: 'pre-wrap',
+                                        wordWrap: 'break-word',
+                                        fontFamily: 'inherit'
+                                    }} />
                                 )
                             }}
                         >
