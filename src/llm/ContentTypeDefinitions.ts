@@ -69,3 +69,24 @@ export interface OverallGoalContent {
 export interface StepGoalContent {
     goal: string;
 }
+
+export type ContentInput = 
+    | string 
+    | { contentType: ContentType.ARTIFACTS_EXCERPTS, content: ArtifactsExcerptsContent } 
+    | { contentType: ContentType.ARTIFACTS_TITLES, content: ArtifactsTitlesContent } 
+    | { contentType: ContentType.ARTIFACTS_FULL, content: ArtifactsFullContent } 
+    | { contentType: ContentType.CONVERSATION, content: ConversationContent } 
+    | { contentType: ContentType.SEARCH_RESULTS, content: SearchResultsContent } 
+    | { contentType: ContentType.CODE, content: CodeContent } 
+    | { contentType: ContentType.DOCUMENTS, content: DocumentsContent } 
+    | { contentType: ContentType.TASKS, content: TasksContent } 
+    | { contentType: ContentType.GOALS, content: GoalsContent } 
+    | { contentType: ContentType.STEP_RESULTS, content: StepResultsContent } 
+    | { contentType: ContentType.EXECUTE_PARAMS, content: ExecuteParamsContent } 
+    | { contentType: ContentType.AGENT_CAPABILITIES, content: AgentCapabilitiesContent } 
+    | { contentType: ContentType.AGENT_OVERVIEWS, content: AgentOverviewsContent } 
+    | { contentType: ContentType.PURPOSE, content: PurposeContent } 
+    | { contentType: ContentType.CHANNEL, content: ChannelContent } 
+    | { contentType: ContentType.FINAL_INSTRUCTIONS, content: FinalInstructionsContent } 
+    | { contentType: ContentType.OVERALL_GOAL, content: OverallGoalContent } 
+    | { contentType: ContentType.STEP_GOAL, content: StepGoalContent };
