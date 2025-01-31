@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useCallback, useRef } from 'react';
+import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react';
+import { Collapse, List, ListItem, ListItemText, ListItemButton, ListItemIcon } from '@mui/material';
+import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useDataContext } from '../contexts/DataContext';
 import DOMPurify from 'dompurify';
 import { 
@@ -172,25 +174,89 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                                 error: log?.error
                             }))
                         )
-                        .map((log, index) => (
-                        <div key={`${service}-${index}`} className="log-entry info">
-                            <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
-                            <span className="log-level">{service.toUpperCase()}</span>
-                            <span className="log-message">
-                                Method: <span dangerouslySetInnerHTML={{ __html: highlightText(log.method) }} /><br/>
-                                Input: <span dangerouslySetInnerHTML={{ __html: highlightText(JSON.stringify(log.input, null, 2)) }} /><br/>
-                                Output: <span dangerouslySetInnerHTML={{ __html: highlightText(JSON.stringify(log.output, null, 2)) }} />
-                                {log.error && (
-                                    <div className="error-details">
-                                        <div>Error: {typeof log.error === 'string' ? log.error : log.error.message || 'Unknown error'}</div>
-                                        {log.error.stack && (
-                                            <pre>{log.error.stack}</pre>
-                                        )}
-                                    </div>
-                                )}
-                            </span>
-                        </div>
-                    ))
+                        .map((log, index) => {
+                            const [open, setOpen] = useState(false);
+                            const toggleOpen = () => setOpen(!open);
+
+                            return (
+                                <div key={`${service}-${index}`} className="log-entry info">
+                                    <ListItemButton onClick={toggleOpen} sx={{ p: 0 }}>
+                                        <ListItemText
+                                            primary={
+                                                <Fragment>
+                                                    <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
+                                                    <span className="log-level">{service.toUpperCase()}</span>
+                                                    <span className="log-method" dangerouslySetInnerHTML={{ __html: highlightText(log.method) }} />
+                                                </Fragment>
+                                            }
+                                            secondary={log.error ? 'Error occurred' : 'Success'}
+                                            sx={{ my: 0 }}
+                                        />
+                                        {open ? <ExpandLess /> : <ExpandMore />}
+                                    </ListItemButton>
+                                    
+                                    <Collapse in={open} timeout="auto" unmountOnExit>
+                                        <List component="div" disablePadding>
+                                            <ListItem sx={{ pl: 4, pt: 0 }}>
+                                                <ListItemText
+                                                    primary="Input"
+                                                    secondary={
+                                                        <pre style={{ 
+                                                            margin: 0,
+                                                            whiteSpace: 'pre-wrap',
+                                                            wordWrap: 'break-word',
+                                                            maxWidth: '100%',
+                                                            overflowX: 'auto'
+                                                        }}>
+                                                            {JSON.stringify(log.input, null, 2)}
+                                                        </pre>
+                                                    }
+                                                />
+                                            </ListItem>
+                                            <ListItem sx={{ pl: 4, pt: 0 }}>
+                                                <ListItemText
+                                                    primary="Output"
+                                                    secondary={
+                                                        <pre style={{ 
+                                                            margin: 0,
+                                                            whiteSpace: 'pre-wrap',
+                                                            wordWrap: 'break-word',
+                                                            maxWidth: '100%',
+                                                            overflowX: 'auto'
+                                                        }}>
+                                                            {JSON.stringify(log.output, null, 2)}
+                                                        </pre>
+                                                    }
+                                                />
+                                            </ListItem>
+                                            {log.error && (
+                                                <ListItem sx={{ pl: 4, pt: 0 }}>
+                                                    <ListItemText
+                                                        primary="Error"
+                                                        secondary={
+                                                            <div className="error-details">
+                                                                <div>{typeof log.error === 'string' ? log.error : log.error.message || 'Unknown error'}</div>
+                                                                {log.error.stack && (
+                                                                    <pre style={{ 
+                                                                        margin: 0,
+                                                                        whiteSpace: 'pre-wrap',
+                                                                        wordWrap: 'break-word',
+                                                                        maxWidth: '100%',
+                                                                        overflowX: 'auto'
+                                                                    }}>
+                                                                        {log.error.stack}
+                                                                    </pre>
+                                                                )}
+                                                            </div>
+                                                        }
+                                                    />
+                                                </ListItem>
+                                            )}
+                                        </List>
+                                    </Collapse>
+                                </div>
+                            );
+                        })
                 );
             
             case 'system':
@@ -271,7 +337,42 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                     overflowY: 'auto', 
                     padding: 1,
                     display: 'flex',
-                    flexDirection: 'column'
+                    flexDirection: 'column',
+                    '& .log-entry': {
+                        borderBottom: '1px solid #eee',
+                        padding: '8px 0',
+                        '& .log-timestamp': {
+                            color: '#666',
+                            marginRight: '16px',
+                            fontSize: '0.875rem'
+                        },
+                        '& .log-level': {
+                            fontWeight: 'bold',
+                            marginRight: '16px',
+                            textTransform: 'uppercase',
+                            fontSize: '0.875rem'
+                        },
+                        '& .log-method': {
+                            fontWeight: '500',
+                            color: theme => theme.palette.primary.main
+                        },
+                        '& .MuiListItemText-secondary': {
+                            color: theme => theme.palette.text.secondary,
+                            fontSize: '0.875rem'
+                        },
+                        '& .error-details': {
+                            color: theme => theme.palette.error.main,
+                            marginTop: '8px'
+                        },
+                        '& pre': {
+                            backgroundColor: theme => theme.palette.background.paper,
+                            padding: '8px',
+                            borderRadius: '4px',
+                            margin: '8px 0 0 0',
+                            maxWidth: '100%',
+                            overflowX: 'auto'
+                        }
+                    }
                 }}
             >
                 {renderLogs()}
