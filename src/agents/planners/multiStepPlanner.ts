@@ -177,14 +177,17 @@ ${currentSteps}`;
                 //     mentionedTaskIds.add(step.existingId);
                 // } else {
                     // Create new task
+                    // Clean up action type by removing square brackets if present
+                    const cleanActionType = step.actionType.replace(/^\[|\]$/g, '');
+                    
                     const newTask: AddTaskParams = {
                         type: TaskType.Step,
-                        description: step.context || step.actionType,
+                        description: step.context || cleanActionType,
                         creator: this.userId,
                         complete: false,
                         order: index,
                         props: {
-                            stepType: step.actionType
+                            stepType: cleanActionType
                         }
                     };
                     this.projects.addTask(project, newTask);
