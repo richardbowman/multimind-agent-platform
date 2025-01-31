@@ -12,7 +12,7 @@ import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { TaskManager } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType } from 'src/llm/promptBuilder';
-import { GoalAndPlanResponse } from "../../schemas/goalAndPlan";
+import { AddTaskParams, TaskType } from '../../tools/taskManager';
 
 /**
  * Executor that establishes a goal and plan for the agent.
@@ -47,29 +47,50 @@ export class EstablishGoalAndPlanExecutor implements StepExecutor {
         const project = this.taskManager.getProject(params.projectId);
         const activeMasterPlan = project.metadata.activeMasterPlan;
 
-        // Clear existing sub-plan if re-evaluating
+        // Only handle sub-plan if there is an active master plan
         if (activeMasterPlan) {
             promptBuilder.addContext(`ACTIVE MASTER PLAN: ${activeMasterPlan.goal}`);
             promptBuilder.addContext(`USER MESSAGE: ${params.message}`);
-        } else {
-            promptBuilder.addContext(`USER MESSAGE: ${params.message}`);
+
+            promptBuilder.addInstruction(`IMPORTANT RESPONSE INSTRUCTIONS:
+                YOU MUST ELIMINATE acronyms or other terminology that may be ambiguous or confusing to other agents.
+
+                1. Review the active master plan: ${activeMasterPlan.goal}.
+                2. Plan the sub-steps required to achieve the active master plan.
+                3. Ensure the sub-steps are clear and unambiguous.
+                4. Provide a structured response with the sub-plan.
+            `);
+
+            // Clear existing tasks if re-evaluating
+            const currentTasks = this.taskManager.getAllTasks(project.id).filter(task => task.type === TaskType.Step);
+            currentTasks.forEach(task => this.taskManager.cancelTask(task.id));
+
+            // Create new tasks for the sub-plan
+            if (result.subPlan && result.subPlan.plan) {
+                result.subPlan.plan.forEach((step, index) => {
+                    const newTask: AddTaskParams = {
+                        type: TaskType.Step,
+                        description: step.description,
+                        creator: this.taskManager.newUUID(),
+                        order: index,
+                        props: {
+                            stepType: step.actionType
+                        }
+                    };
+                    this.taskManager.addTask(this.taskManager.getProject(params.projectId), newTask);
+                });
+            }
+
+            return {
+                finished: true,
+                needsUserInput: false,
+                replan: ReplanType.None,
+                goal: result.subPlan?.goal,
+                response: {
+                    message: result.message
+                }
+            };
         }
-
-        promptBuilder.addInstruction(`IMPORTANT RESPONSE INSTRUCTIONS:
-            YOU MUST ELIMINATE acronyms or other terminology that may be ambiguous or confusing to other agents.
-
-            ${activeMasterPlan ? `
-            1. Review the active master plan: ${activeMasterPlan.goal}.
-            2. Plan the sub-steps required to achieve the active master plan.
-            3. Ensure the sub-steps are clear and unambiguous.
-            4. Provide a structured response with the sub-plan.
-            ` : `
-            1. Determine the overall goal for the user.
-            2. Plan the steps required to achieve the goal.
-            3. Ensure the goal and plan are clear and unambiguous.
-            4. Provide a structured response with the goal and plan.
-            `}
-        `);
             
         // Build and execute prompt
         const result = await this.modelHelpers.generate<GoalAndPlanResponse>({
