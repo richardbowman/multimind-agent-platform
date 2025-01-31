@@ -311,6 +311,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                     logs={logs}
                     filterText={filterText}
                     highlightText={highlightText}
+                    filterLog={filterLog}
                 />;
             
             case 'system':

@@ -15,9 +15,10 @@ interface LLMLogViewerProps {
     logs: any;
     filterText: string;
     highlightText: (text: string) => string;
+    filterLog: (content: string) => boolean;
 }
 
-export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, highlightText }) => {
+export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, highlightText, filterLog }) => {
     const [openEntries, setOpenEntries] = useState<Record<string, boolean>>({});
     
     const toggleEntry = (id: string) => {
