@@ -4,7 +4,13 @@ export interface PlanStepTask {
 }
 
 export interface GoalAndPlanResponse {
-    goal: string;
-    plan: PlanStepTask[];
+    masterPlan?: {
+        goal: string;
+        plan: PlanStepTask[];
+    };
+    subPlan?: {
+        goal: string;
+        plan: PlanStepTask[];
+    };
     message: string;
 }

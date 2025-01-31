@@ -44,26 +44,41 @@ export class EstablishGoalAndPlanExecutor implements StepExecutor {
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
 
         // Add content sections
-        promptBuilder.addContext(`USER MESSAGE: ${params.message}`);
+        const project = this.taskManager.getProject(params.projectId);
+        const activeMasterPlan = project.metadata.activeMasterPlan;
+
+        if (activeMasterPlan) {
+            promptBuilder.addContext(`ACTIVE MASTER PLAN: ${activeMasterPlan.goal}`);
+        } else {
+            promptBuilder.addContext(`USER MESSAGE: ${params.message}`);
+        }
 
         promptBuilder.addInstruction(`IMPORTANT RESPONSE INSTRUCTIONS:
             YOU MUST ELIMINATE acronyms or other terminology that may be ambiguous or confusing to other agents.
 
+            ${activeMasterPlan ? `
+            1. Review the active master plan: ${activeMasterPlan.goal}.
+            2. Plan the sub-steps required to achieve the active master plan.
+            3. Ensure the sub-steps are clear and unambiguous.
+            4. Provide a structured response with the sub-plan.
+            ` : `
             1. Determine the overall goal for the user.
             2. Plan the steps required to achieve the goal.
             3. Ensure the goal and plan are clear and unambiguous.
-            4. Provide a structured response with the goal and plan.`);
+            4. Provide a structured response with the goal and plan.
+            `}
+        `);
             
         // Build and execute prompt
         const result = await this.modelHelpers.generate<GoalAndPlanResponse>({
-            message: params.message,
+            message: activeMasterPlan ? activeMasterPlan.goal : params.message,
             instructions: new StructuredOutputPrompt(schema, promptBuilder),
             threadPosts: params.context?.threadPosts || []
         });
 
-        if (result.goal && result.plan) {
-            // Create new tasks for the plan
-            result.plan.forEach((step, index) => {
+        if (activeMasterPlan && result.subPlan && result.subPlan.plan) {
+            // Create new tasks for the sub-plan
+            result.subPlan.plan.forEach((step, index) => {
                 const newTask: AddTaskParams = {
                     type: TaskType.Step,
                     description: step.description,
@@ -75,6 +90,24 @@ export class EstablishGoalAndPlanExecutor implements StepExecutor {
                 };
                 this.taskManager.addTask(this.taskManager.getProject(params.projectId), newTask);
             });
+        } else if (!activeMasterPlan && result.masterPlan && result.masterPlan.plan) {
+            // Create new tasks for the master plan
+            result.masterPlan.plan.forEach((step, index) => {
+                const newTask: AddTaskParams = {
+                    type: TaskType.Step,
+                    description: step.description,
+                    creator: this.taskManager.newUUID(),
+                    order: index,
+                    props: {
+                        stepType: step.actionType
+                    }
+                };
+                this.taskManager.addTask(this.taskManager.getProject(params.projectId), newTask);
+            });
+
+            // Update project metadata with the active master plan
+            project.metadata.activeMasterPlan = result.masterPlan;
+            this.taskManager.replaceProject(project);
         }
 
         return {
