@@ -40,11 +40,11 @@ export class ValidationExecutor implements StepExecutor {
 
         // Get validation attempt count from most recent validation result
         const validationResults = params.previousResult?.filter(r => 
-            r.metadata?.validationAttempts !== undefined
+            r.data?.validationAttempts !== undefined
         ) || [];
         
         const latestValidationAttempt = validationResults[validationResults.length - 1];
-        const validationAttempts = (latestValidationAttempt?.metadata?.validationAttempts || 0) + 1;
+        const validationAttempts = (latestValidationAttempt?.data?.validationAttempts || 0) + 1;
         const maxAttempts = 3; // Maximum validation attempts before forcing completion
 
         // Create a new prompt builder
@@ -55,13 +55,13 @@ export class ValidationExecutor implements StepExecutor {
 Analyze the previous steps and their results to determine if a reasonable effort has been made.`);
 
         // Add execute params including goal
-        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, params);
+        promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
 
         // Add previous results if available
-        promptBuilder.addContent(ContentType.STEP_RESULTS, params.steps);
+        promptBuilder.addContext({contentType: ContentType.STEP_RESULTS, steps: params.steps});
 
         // Add previous results if available
-        promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
+        promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts||[]});
 
         // Add evaluation guidelines
         promptBuilder.addInstruction(`Evaluation Guidelines:
@@ -80,7 +80,8 @@ If the solution is wrong, list the specific aspects that must be addressed.`);
         // Generate the validation response
         const response = await this.modelHelpers.generate<ValidationResult>({
             message: "Validate solution meets user goal.",
-            instructions: new StructuredOutputPrompt(schema, promptBuilder.build())
+            instructions: new StructuredOutputPrompt(schema, promptBuilder.build()),
+            threadPosts: params.context?.threadPosts
         });
 
         // Force completion if we've reached max validation attempts
@@ -96,7 +97,7 @@ If the solution is wrong, list the specific aspects that must be addressed.`);
                     ? `Maximum validation attempts reached (${maxAttempts}). Marking as complete despite remaining issues:\n` +
                       `${response.missingAspects?.map(a => `- ${a}`).join('\n')}`
                     : response.message,
-                metadata: {
+                data: {
                     validationAttempts,
                     missingAspects: response.missingAspects || []
                 }
