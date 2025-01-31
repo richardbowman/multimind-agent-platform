@@ -110,6 +110,10 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         );
     }
 
+    if (type === "javascript") {
+        return <pre>{content}</pre>;
+    }
+
     // Handle binary content
     if (type === 'binary' || metadata?.format === 'binary') {
         return <pre>Binary content</pre>;
