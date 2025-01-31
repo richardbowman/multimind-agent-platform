@@ -12,6 +12,7 @@ import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { TaskManager } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType } from 'src/llm/promptBuilder';
+import { GoalAndPlanResponse } from "../../schemas/goalAndPlan";
 
 /**
  * Executor that establishes a goal and plan for the agent.
