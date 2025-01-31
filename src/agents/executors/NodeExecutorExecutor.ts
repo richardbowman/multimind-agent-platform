@@ -188,12 +188,14 @@ RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE ENCLOSED \`\`\`javascr
             instructions: prompt
         });
         
-        let executionResult, originalCode, correctedCode;
+        let executionResult, originalCode, correctedCode, reasoning;
         try {
             originalCode = StringUtils.extractCodeBlocks(result.message, "javascript")[0];
             if (originalCode === undefined) throw new Error("No code found");
 
-            executionResult = await this.executeInWorker(originalCode, params.context?.artifacts);
+            reasoning = StringUtils.extractNonCodeContent(result.message);
+
+            executionResult = await this.executeInWorker(originalCode.code, params.context?.artifacts);
         } catch (error) {
             // If there's an error, try again with error feedback
             const errorPrompt = `${prompt}
@@ -211,7 +213,7 @@ Please fix the code and try again.`;
 
             try {
                 correctedCode = StringUtils.extractCodeBlocks(result.message)[0];
-                executionResult = await this.executeInWorker(correctedCode, params.context?.artifacts);
+                executionResult = await this.executeInWorker(correctedCode.code, params.context?.artifacts);
                 result = retryResult;
             } catch (retryError) {
                 executionResult = {
@@ -247,16 +249,16 @@ Please fix the code and try again.`;
             response: {
                 message: `**Code:**
 \`\`\`javascript
-${originalCode}
+${originalCode.code}
 \`\`\`
 
-Corrected code:
+${correctedCode && `Corrected code:
 \`\`\`javascript
-${correctedCode}
-\`\`\`
+${correctedCode.code}
+\`\`\``}
 
 **Explanation:**
-${result.explanation}
+${reasoning}
 
 **Execution Result:**
 \`\`\`
