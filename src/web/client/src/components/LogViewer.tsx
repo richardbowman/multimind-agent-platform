@@ -74,22 +74,43 @@ const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) => {
                 sx={{ 
                     maxHeight: 400,
                     overflow: 'auto',
-                    backgroundColor: '#f5f5f5',
-                    border: '1px solid #ddd'
+                    backgroundColor: theme => theme.palette.background.paper,
+                    border: theme => `1px solid ${theme.palette.divider}`
                 }}
             >
                 <Table size="small" stickyHeader>
                     <TableHead>
                         <TableRow>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Key</TableCell>
-                            <TableCell sx={{ fontWeight: 'bold' }}>Value</TableCell>
+                            <TableCell sx={{ 
+                                fontWeight: 'bold',
+                                backgroundColor: theme => theme.palette.background.default,
+                                color: theme => theme.palette.text.primary
+                            }}>
+                                Key
+                            </TableCell>
+                            <TableCell sx={{ 
+                                fontWeight: 'bold',
+                                backgroundColor: theme => theme.palette.background.default,
+                                color: theme => theme.palette.text.primary
+                            }}>
+                                Value
+                            </TableCell>
                         </TableRow>
                     </TableHead>
                     <TableBody>
                         {Object.entries(data).map(([key, value]) => (
                             <TableRow key={key}>
-                                <TableCell sx={{ fontWeight: 500 }}>{key}</TableCell>
-                                <TableCell>
+                                <TableCell sx={{ 
+                                    fontWeight: 500,
+                                    color: theme => theme.palette.text.primary,
+                                    borderBottom: theme => `1px solid ${theme.palette.divider}`
+                                }}>
+                                    {key}
+                                </TableCell>
+                                <TableCell sx={{ 
+                                    color: theme => theme.palette.text.primary,
+                                    borderBottom: theme => `1px solid ${theme.palette.divider}`
+                                }}>
                                     {typeof value === 'object' ? (
                                         <FormattedDataView data={value} />
                                     ) : (
