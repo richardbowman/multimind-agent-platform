@@ -26,7 +26,8 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     content, 
     type, 
     mimeType, 
-    metadata 
+    metadata,
+    onAddToolbarActions 
 }) => {
     // Handle CSV content
     if (mimeType === 'text/csv' || type === 'csv') {
