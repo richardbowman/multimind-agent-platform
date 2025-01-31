@@ -12,7 +12,7 @@ import { ChannelData } from "src/shared/channelTypes";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { json } from "stream/consumers";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { ArtifactsExcerptsContent, ArtifactsTitlesContent, ArtifactsFullContent, ConversationContent, SearchResultsContent, CodeContent, DocumentsContent, TasksContent, GoalsContent, StepResultsContent, ExecuteParamsContent, AgentCapabilitiesContent, AgentOverviewsContent, PurposeContent, ChannelContent, FinalInstructionsContent, OverallGoalContent, StepGoalContent } from "./contentTypes";
+import { ArtifactsExcerptsContent, ArtifactsTitlesContent, ArtifactsFullContent, ConversationContent, SearchResultsContent, CodeContent, DocumentsContent, TasksContent, GoalsContent, StepResultsContent, ExecuteParamsContent, AgentCapabilitiesContent, AgentOverviewsContent, PurposeContent, ChannelContent, FinalInstructionsContent, OverallGoalContent, StepGoalContent } from "./ContentTypeDefinitions";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 
 export interface ContentRenderer<T> {
