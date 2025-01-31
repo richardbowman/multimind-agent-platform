@@ -675,6 +675,56 @@
       ],
       "type": "object"
     },
+    "GoalAndPlanResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "masterPlan": {
+          "additionalProperties": false,
+          "properties": {
+            "goal": {
+              "type": "string"
+            },
+            "plan": {
+              "items": {
+                "$ref": "#/definitions/PlanStepTask"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "goal",
+            "plan"
+          ],
+          "type": "object"
+        },
+        "message": {
+          "type": "string"
+        },
+        "subPlan": {
+          "additionalProperties": false,
+          "properties": {
+            "goal": {
+              "type": "string"
+            },
+            "plan": {
+              "items": {
+                "$ref": "#/definitions/PlanStepTask"
+              },
+              "type": "array"
+            }
+          },
+          "required": [
+            "goal",
+            "plan"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "message"
+      ],
+      "type": "object"
+    },
     "GoalConfirmationResponse": {
       "additionalProperties": false,
       "description": "Interface for goal confirmation response",
