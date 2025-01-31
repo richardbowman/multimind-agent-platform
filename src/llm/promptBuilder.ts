@@ -12,6 +12,8 @@ import { ChannelData } from "src/shared/channelTypes";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { json } from "stream/consumers";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
+import { ArtifactsExcerptsContent, ArtifactsTitlesContent, ArtifactsFullContent, ConversationContent, SearchResultsContent, CodeContent, DocumentsContent, TasksContent, GoalsContent, StepResultsContent, ExecuteParamsContent, AgentCapabilitiesContent, AgentOverviewsContent, PurposeContent, ChannelContent, FinalInstructionsContent, OverallGoalContent, StepGoalContent } from "./contentTypes";
+import { InputPrompt } from "src/prompts/structuredInputPrompt";
 
 export interface ContentRenderer<T> {
     (content: T): string;
@@ -63,7 +65,7 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.AGENT_CAPABILITIES, this.renderAgentCapabilities.bind(this));
         this.registerRenderer(ContentType.AGENT_OVERVIEWS, this.renderAgentOverviews.bind(this));
         this.registerRenderer(ContentType.GOALS, this.renderGoals.bind(this));
-        
+
         // Register type-specific step result renderers
         this.registerStepResultRenderer(StepResultType.Validation, this.renderValidationStep.bind(this));
         this.registerStepResultRenderer(StepResultType.Question, this.renderQuestionStep.bind(this));
@@ -72,19 +74,19 @@ export class PromptRegistry {
 
     private renderExecuteParams(params: ExecuteParams): string {
         let output = `🎯 Goal:\n${params.goal}\n\n`;
-        
+
         if (params.step) {
             output += `🔧 Current Step:\n${params.step}\n\n`;
         }
-        
+
         if (params.executionMode) {
             output += `⚙️ Execution Mode:\n${params.executionMode}\n\n`;
         }
-        
+
         // if (params.context) {
         //     output += `📌 Context:\n${JSON.stringify(params.context, null, 2)}\n\n`;
         // }
-        
+
         return output;
     }
 
@@ -117,7 +119,7 @@ ${this.modelHelpers.getFinalInstructions()}
     private renderStepResults(steps: StepTask[]): string {
         const stepsWithResults = steps?.filter(s => s.props?.result?.type && s.props.result != undefined);
         if (!stepsWithResults || stepsWithResults.length === 0) return '';
-        
+
         return "📝 Step History:\n\n" + stepsWithResults.map((step, index) => {
             const stepResult = step.props.result!;
             const typeRenderer = this.stepResultRenderers.get(stepResult.type!);
@@ -156,10 +158,10 @@ ${this.modelHelpers.getFinalInstructions()}
     private renderArtifacts(artifacts: Artifact[]): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
-            let content = typeof artifact.content === 'string' 
+            let content = typeof artifact.content === 'string'
                 ? artifact.content
                 : `[Binary data - ${artifact.content.length} bytes]`;
-           
+
             return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
         }).join('\n\n');
     }
@@ -167,15 +169,15 @@ ${this.modelHelpers.getFinalInstructions()}
     private renderArtifactExcerpts(artifacts: Artifact[]): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
-            let content = typeof artifact.content === 'string' 
+            let content = typeof artifact.content === 'string'
                 ? artifact.content
                 : `[Binary data - ${artifact.content.length} bytes]`;
-            
+
             // Truncate string content to 1000 chars
             if (typeof content === 'string' && content.length > 1000) {
                 content = content.substring(0, 1000) + '... [truncated]';
             }
-            
+
             return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
         }).join('\n\n');
     }
@@ -189,29 +191,29 @@ ${this.modelHelpers.getFinalInstructions()}
 
     private renderAgentCapabilities(agents: Agent[]): string {
         if (!agents || agents.length === 0) return '';
-        
+
         return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
             let output = `- ${agent.messagingHandle}: ${agent.description}`;
 
             // Get detailed capabilities for each agent that is a StepBasedAgent
             const capabilities = (agent as StepBasedAgent).getExecutorCapabilities?.() || []
-            
+
             if (capabilities.length > 0) {
-                output += `\n  ${agent.messagingHandle} CAPABILTIES:\n` + 
-                    capabilities.map(cap => 
+                output += `\n  ${agent.messagingHandle} CAPABILTIES:\n` +
+                    capabilities.map(cap =>
                         `    * ${cap.stepType}: ${cap.description}\n` +
                         (cap.exampleInput ? `      Example Input: ${cap.exampleInput}\n` : '') +
                         (cap.exampleOutput ? `      Example Output: ${cap.exampleOutput}` : '')
                     ).join('\n');
             }
-            
+
             return output;
         }).join('\n\n');
     }
 
     private renderAgentOverviews(agents: Agent[]): string {
         if (!agents || agents.length === 0) return '';
-        
+
         return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
             let output = `- ${agent.messagingHandle}: ${agent.description}`;
             return output;
@@ -220,37 +222,41 @@ ${this.modelHelpers.getFinalInstructions()}
 
     private renderGoals(project: Project): string {
         if (!project) return '';
-        
+
         let output = `🎯 Project: ${project.name}\n`;
         output += `📝 Description: ${project.metadata?.description || 'No description'}\n`;
         output += `📊 Status: ${project.metadata?.status || 'active'}\n\n`;
-        
+
         if (project.tasks) {
-            output += `📋 Tasks:\n` + 
+            output += `📋 Tasks:\n` +
                 Object.values(project.tasks)
                     .sort((a, b) => (a.order || 0) - (b.order || 0))
-                    .map((task, index) => 
+                    .map((task, index) =>
                         `${index + 1}. ${task.description} (${task.complete ? 'completed' : 'pending'})`
                     ).join('\n');
         }
-        
+
         return output;
     }
 
     private renderConversation(posts: ChatPost[]): string {
         if (!posts || posts.length === 0) return '';
-        return "💬 Conversation Context:\n\n" + posts.filter(post => post && post.user_id && post.message).map(post => 
+        return "💬 Conversation Context:\n\n" + posts.filter(post => post && post.user_id && post.message).map(post =>
             `${post.user_id}: ${post.message}`
         ).join('\n');
     }
 }
 
-export class PromptBuilder {
+export class PromptBuilder implements InputPrompt {
+    getInstructions(): string {
+        return this.build();
+    }
+    
     async addOutputInstructions(outputType: OutputType, schema?: SchemaType, specialInstructions?: string) {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schema) {
             const schemaDef = await getGeneratedSchema(schema);
             this.addInstruction(`Please respond two code blocks. One enclosed \`\`\`json block format that follows this schema: ${JSON.stringify(schemaDef, null, 2)}. 
-            Then, provide a separately enclosed \`\`\`markdown block. ${specialInstructions || ''}`);   
+            Then, provide a separately enclosed \`\`\`markdown block. ${specialInstructions || ''}`);
         }
     }
     private contentSections: Map<ContentType, any> = new Map();
@@ -270,9 +276,25 @@ export class PromptBuilder {
         this.contentSections.set(contentType, content);
     }
 
-    import { ArtifactsExcerptsContent, ArtifactsTitlesContent, ArtifactsFullContent, ConversationContent, SearchResultsContent, CodeContent, DocumentsContent, TasksContent, GoalsContent, StepResultsContent, ExecuteParamsContent, AgentCapabilitiesContent, AgentOverviewsContent, PurposeContent, ChannelContent, FinalInstructionsContent, OverallGoalContent, StepGoalContent } from "./contentTypes";
-
-    addInstruction(instruction: string | { contentType: ContentType.ARTIFACTS_EXCERPTS, content: ArtifactsExcerptsContent } | { contentType: ContentType.ARTIFACTS_TITLES, content: ArtifactsTitlesContent } | { contentType: ContentType.ARTIFACTS_FULL, content: ArtifactsFullContent } | { contentType: ContentType.CONVERSATION, content: ConversationContent } | { contentType: ContentType.SEARCH_RESULTS, content: SearchResultsContent } | { contentType: ContentType.CODE, content: CodeContent } | { contentType: ContentType.DOCUMENTS, content: DocumentsContent } | { contentType: ContentType.TASKS, content: TasksContent } | { contentType: ContentType.GOALS, content: GoalsContent } | { contentType: ContentType.STEP_RESULTS, content: StepResultsContent } | { contentType: ContentType.EXECUTE_PARAMS, content: ExecuteParamsContent } | { contentType: ContentType.AGENT_CAPABILITIES, content: AgentCapabilitiesContent } | { contentType: ContentType.AGENT_OVERVIEWS, content: AgentOverviewsContent } | { contentType: ContentType.PURPOSE, content: PurposeContent } | { contentType: ContentType.CHANNEL, content: ChannelContent } | { contentType: ContentType.FINAL_INSTRUCTIONS, content: FinalInstructionsContent } | { contentType: ContentType.OVERALL_GOAL, content: OverallGoalContent } | { contentType: ContentType.STEP_GOAL, content: StepGoalContent } | undefined): void {
+    addInstruction(instruction: string | 
+            { contentType: ContentType.ARTIFACTS_EXCERPTS, content: ArtifactsExcerptsContent } | 
+            { contentType: ContentType.ARTIFACTS_TITLES, content: ArtifactsTitlesContent } | 
+            { contentType: ContentType.ARTIFACTS_FULL, content: ArtifactsFullContent } | 
+            { contentType: ContentType.CONVERSATION, content: ConversationContent } | 
+            { contentType: ContentType.SEARCH_RESULTS, content: SearchResultsContent } | 
+            { contentType: ContentType.CODE, content: CodeContent } | 
+            { contentType: ContentType.DOCUMENTS, content: DocumentsContent } |
+            { contentType: ContentType.TASKS, content: TasksContent } |
+            { contentType: ContentType.GOALS, content: GoalsContent } | 
+            { contentType: ContentType.STEP_RESULTS, content: StepResultsContent } |
+            { contentType: ContentType.EXECUTE_PARAMS, content: ExecuteParamsContent } | 
+            { contentType: ContentType.AGENT_CAPABILITIES, content: AgentCapabilitiesContent } | 
+            { contentType: ContentType.AGENT_OVERVIEWS, content: AgentOverviewsContent } | 
+            { contentType: ContentType.PURPOSE, content: PurposeContent } | 
+            { contentType: ContentType.CHANNEL, content: ChannelContent } | 
+            { contentType: ContentType.FINAL_INSTRUCTIONS, content: FinalInstructionsContent } | 
+            { contentType: ContentType.OVERALL_GOAL, content: OverallGoalContent } | 
+            { contentType: ContentType.STEP_GOAL, content: StepGoalContent } | undefined): void {
         if (typeof instruction === 'string' && instruction) {
             this.instructions.push(instruction);
         } else if (instruction && instruction.contentType && instruction.content !== undefined) {
@@ -288,9 +310,25 @@ export class PromptBuilder {
         }
     }
 
-    import { ArtifactsExcerptsContent, ArtifactsTitlesContent, ArtifactsFullContent, ConversationContent, SearchResultsContent, CodeContent, DocumentsContent, TasksContent, GoalsContent, StepResultsContent, ExecuteParamsContent, AgentCapabilitiesContent, AgentOverviewsContent, PurposeContent, ChannelContent, FinalInstructionsContent, OverallGoalContent, StepGoalContent } from "./contentTypes";
-
-    addContext(context: string | { contentType: ContentType.ARTIFACTS_EXCERPTS, content: ArtifactsExcerptsContent } | { contentType: ContentType.ARTIFACTS_TITLES, content: ArtifactsTitlesContent } | { contentType: ContentType.ARTIFACTS_FULL, content: ArtifactsFullContent } | { contentType: ContentType.CONVERSATION, content: ConversationContent } | { contentType: ContentType.SEARCH_RESULTS, content: SearchResultsContent } | { contentType: ContentType.CODE, content: CodeContent } | { contentType: ContentType.DOCUMENTS, content: DocumentsContent } | { contentType: ContentType.TASKS, content: TasksContent } | { contentType: ContentType.GOALS, content: GoalsContent } | { contentType: ContentType.STEP_RESULTS, content: StepResultsContent } | { contentType: ContentType.EXECUTE_PARAMS, content: ExecuteParamsContent } | { contentType: ContentType.AGENT_CAPABILITIES, content: AgentCapabilitiesContent } | { contentType: ContentType.AGENT_OVERVIEWS, content: AgentOverviewsContent } | { contentType: ContentType.PURPOSE, content: PurposeContent } | { contentType: ContentType.CHANNEL, content: ChannelContent } | { contentType: ContentType.FINAL_INSTRUCTIONS, content: FinalInstructionsContent } | { contentType: ContentType.OVERALL_GOAL, content: OverallGoalContent } | { contentType: ContentType.STEP_GOAL, content: StepGoalContent }): void {
+    addContext(context: string | 
+            { contentType: ContentType.ARTIFACTS_EXCERPTS, content: ArtifactsExcerptsContent } | 
+            { contentType: ContentType.ARTIFACTS_TITLES, content: ArtifactsTitlesContent } | 
+            { contentType: ContentType.ARTIFACTS_FULL, content: ArtifactsFullContent } | 
+            { contentType: ContentType.CONVERSATION, content: ConversationContent } | 
+            { contentType: ContentType.SEARCH_RESULTS, content: SearchResultsContent } | 
+            { contentType: ContentType.CODE, content: CodeContent } | 
+            { contentType: ContentType.DOCUMENTS, content: DocumentsContent } |
+            { contentType: ContentType.TASKS, content: TasksContent } |
+            { contentType: ContentType.GOALS, content: GoalsContent } | 
+            { contentType: ContentType.STEP_RESULTS, content: StepResultsContent } |
+            { contentType: ContentType.EXECUTE_PARAMS, content: ExecuteParamsContent } | 
+            { contentType: ContentType.AGENT_CAPABILITIES, content: AgentCapabilitiesContent } | 
+            { contentType: ContentType.AGENT_OVERVIEWS, content: AgentOverviewsContent } | 
+            { contentType: ContentType.PURPOSE, content: PurposeContent } | 
+            { contentType: ContentType.CHANNEL, content: ChannelContent } | 
+            { contentType: ContentType.FINAL_INSTRUCTIONS, content: FinalInstructionsContent } | 
+            { contentType: ContentType.OVERALL_GOAL, content: OverallGoalContent } | 
+            { contentType: ContentType.STEP_GOAL, content: StepGoalContent } | undefined): void {
         if (typeof context === 'string') {
             this.context.push(context);
         } else if (context && context.contentType && context.content !== undefined) {
@@ -331,7 +369,7 @@ export class PromptBuilder {
         if (this.instructions.length > 0) {
             sections.push("## INSTRUCTIONS\n" + this.instructions.join('\n\n'));
         }
-        
+
         return sections.join('\n\n');
     }
 }

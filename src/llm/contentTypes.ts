@@ -1,3 +1,13 @@
+import { Task } from "electron";
+import { Agent } from "http";
+import { ExecuteParams } from "src/agents/interfaces/ExecuteParams";
+import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
+import { ChatPost } from "src/chat/chatClient";
+import { ChannelData } from "src/shared/channelTypes";
+import { Artifact } from "src/tools/artifact";
+import { Project } from "src/tools/taskManager";
+import { SearchResult } from "./IVectorDatabase";
+
 export interface ArtifactsExcerptsContent {
     artifacts: Artifact[];
 }
@@ -31,7 +41,7 @@ export interface TasksContent {
 }
 
 export interface GoalsContent {
-    project: Project;
+    tasks: Task[];
 }
 
 export interface StepResultsContent {
