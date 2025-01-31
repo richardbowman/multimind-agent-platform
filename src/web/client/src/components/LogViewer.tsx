@@ -161,18 +161,19 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
         }
     }, [currentLogTab, filterText, verboseToggleTimestamp]);
 
+    // Track open/closed state for LLM log entries
+    const [openEntries, setOpenEntries] = useState<Record<string, boolean>>({});
+    
+    const toggleEntry = (id: string) => {
+        setOpenEntries(prev => ({
+            ...prev,
+            [id]: !prev[id]
+        }));
+    };
+
     const renderLogs = () => {
         switch (currentLogTab) {
             case 'llm':
-                // Track open/closed state for each log entry
-                const [openEntries, setOpenEntries] = useState<Record<string, boolean>>({});
-                
-                const toggleEntry = (id: string) => {
-                    setOpenEntries(prev => ({
-                        ...prev,
-                        [id]: !prev[id]
-                    }));
-                };
 
                 return Object.entries(logs?.llm || {}).flatMap(([service, entries]) => 
                     (Array.isArray(entries) ? [...entries].reverse() : [])
