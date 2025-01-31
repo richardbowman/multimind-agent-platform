@@ -156,6 +156,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                     type={artifact.type}
                     mimeType={artifact.mimeType}
                     metadata={artifact.metadata}
+                    onAddToolbarActions={onAddToolbarActions}
                 />
             </div>
         </Box>

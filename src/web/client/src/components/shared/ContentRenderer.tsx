@@ -14,6 +14,12 @@ interface ContentRendererProps {
     type?: string;
     mimeType?: string;
     metadata?: Record<string, any>;
+    onAddToolbarActions?: (actions: Array<{
+        icon: React.ReactNode;
+        label: string;
+        onClick: () => void;
+        disabled?: boolean;
+    }>) => void;
 }
 
 export const ContentRenderer: React.FC<ContentRendererProps> = ({ 
@@ -24,7 +30,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
 }) => {
     // Handle CSV content
     if (mimeType === 'text/csv' || type === 'csv') {
-        return <CSVRenderer content={content} />;
+        return <CSVRenderer content={content} onAddToolbarActions={onAddToolbarActions} />;
     }
 
     // Handle Mermaid diagrams

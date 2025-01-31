@@ -142,6 +142,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                             title: title,
                             language: language
                         }}
+                        onAddToolbarActions={setToolbarActions}
                     />
                 ) : (
                     <Box 
