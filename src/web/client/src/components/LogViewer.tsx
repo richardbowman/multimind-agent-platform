@@ -1,5 +1,18 @@
 import React, { useEffect, useState, useCallback, useRef, Fragment } from 'react';
-import { Collapse, List, ListItem, ListItemText, ListItemButton, ListItemIcon } from '@mui/material';
+import { 
+    Collapse, 
+    List, 
+    ListItem, 
+    ListItemText, 
+    ListItemButton, 
+    Table, 
+    TableBody, 
+    TableCell, 
+    TableContainer, 
+    TableHead, 
+    TableRow, 
+    Paper 
+} from '@mui/material';
 import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useDataContext } from '../contexts/DataContext';
 import DOMPurify from 'dompurify';
@@ -23,6 +36,100 @@ import { useLogger } from '../contexts/LogContext';
 interface LogViewerProps {
     logType: 'llm' | 'system';
 }
+
+interface FormattedDataViewProps {
+    data: any;
+}
+
+const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) => {
+    if (typeof data === 'string') {
+        // Format string with preserved newlines
+        return (
+            <pre style={{ 
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                maxWidth: '100%',
+                maxHeight: '400px',
+                overflow: 'auto',
+                backgroundColor: '#f5f5f5',
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd'
+            }}>
+                <code style={{
+                    color: '#333',
+                    fontFamily: 'monospace',
+                    fontSize: '0.875rem'
+                }}>
+                    {data}
+                </code>
+            </pre>
+        );
+    } else if (typeof data === 'object' && data !== null) {
+        // Convert object to table
+        return (
+            <TableContainer 
+                component={Paper} 
+                sx={{ 
+                    maxHeight: 400,
+                    overflow: 'auto',
+                    backgroundColor: '#f5f5f5',
+                    border: '1px solid #ddd'
+                }}
+            >
+                <Table size="small" stickyHeader>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Key</TableCell>
+                            <TableCell sx={{ fontWeight: 'bold' }}>Value</TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {Object.entries(data).map(([key, value]) => (
+                            <TableRow key={key}>
+                                <TableCell sx={{ fontWeight: 500 }}>{key}</TableCell>
+                                <TableCell>
+                                    {typeof value === 'object' ? (
+                                        <FormattedDataView data={value} />
+                                    ) : (
+                                        <span style={{ whiteSpace: 'pre-wrap' }}>
+                                            {String(value)}
+                                        </span>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        );
+    }
+    
+    // Fallback for other types
+    return (
+        <pre style={{ 
+            margin: 0,
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            maxWidth: '100%',
+            maxHeight: '400px',
+            overflow: 'auto',
+            backgroundColor: '#f5f5f5',
+            padding: '8px',
+            borderRadius: '4px',
+            border: '1px solid #ddd'
+        }}>
+            <code style={{
+                color: '#333',
+                fontFamily: 'monospace',
+                fontSize: '0.875rem'
+            }}>
+                {JSON.stringify(data, null, 2)}
+            </code>
+        </pre>
+    );
+};
 
 export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType }) => {
     const pageSize = 50;
@@ -212,26 +319,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                                                 <ListItemText
                                                     primary="Input"
                                                     secondary={
-                                                        <pre style={{ 
-                                                            margin: 0,
-                                                            whiteSpace: 'pre-wrap',
-                                                            wordWrap: 'break-word',
-                                                            maxWidth: '100%',
-                                                            maxHeight: '400px',
-                                                            overflow: 'auto',
-                                                            backgroundColor: '#f5f5f5',
-                                                            padding: '8px',
-                                                            borderRadius: '4px',
-                                                            border: '1px solid #ddd'
-                                                        }}>
-                                                            <code style={{
-                                                                color: '#333',
-                                                                fontFamily: 'monospace',
-                                                                fontSize: '0.875rem'
-                                                            }}>
-                                                                {JSON.stringify(log.input, null, 2)}
-                                                            </code>
-                                                        </pre>
+                                                        <FormattedDataView data={log.input} />
                                                     }
                                                 />
                                             </ListItem>
@@ -239,26 +327,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                                                 <ListItemText
                                                     primary="Output"
                                                     secondary={
-                                                        <pre style={{ 
-                                                            margin: 0,
-                                                            whiteSpace: 'pre-wrap',
-                                                            wordWrap: 'break-word',
-                                                            maxWidth: '100%',
-                                                            maxHeight: '400px',
-                                                            overflow: 'auto',
-                                                            backgroundColor: '#f5f5f5',
-                                                            padding: '8px',
-                                                            borderRadius: '4px',
-                                                            border: '1px solid #ddd'
-                                                        }}>
-                                                            <code style={{
-                                                                color: '#333',
-                                                                fontFamily: 'monospace',
-                                                                fontSize: '0.875rem'
-                                                            }}>
-                                                                {JSON.stringify(log.output, null, 2)}
-                                                            </code>
-                                                        </pre>
+                                                        <FormattedDataView data={log.output} />
                                                     }
                                                 />
                                             </ListItem>
