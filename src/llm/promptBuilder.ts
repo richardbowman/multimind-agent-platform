@@ -270,12 +270,36 @@ export class PromptBuilder {
         this.contentSections.set(contentType, content);
     }
 
-    addInstruction(instruction: string|undefined): void {
-        if (instruction) this.instructions.push(instruction);
+    addInstruction(instruction: string | { contentType: ContentType, content: any } | undefined): void {
+        if (typeof instruction === 'string' && instruction) {
+            this.instructions.push(instruction);
+        } else if (instruction && instruction.contentType && instruction.content !== undefined) {
+            const renderer = this.registry.getRenderer(instruction.contentType);
+            if (renderer) {
+                const rendered = renderer(instruction.content);
+                if (rendered) {
+                    this.instructions.push(rendered);
+                } else {
+                    Logger.error(`PromptBuilder renderer for content type ${instruction.contentType} not found`);
+                }
+            }
+        }
     }
 
-    addContext(context: string): void {
-        this.context.push(context);
+    addContext(context: string | { contentType: ContentType, content: any }): void {
+        if (typeof context === 'string') {
+            this.context.push(context);
+        } else if (context && context.contentType && context.content !== undefined) {
+            const renderer = this.registry.getRenderer(context.contentType);
+            if (renderer) {
+                const rendered = renderer(context.content);
+                if (rendered) {
+                    this.context.push(rendered);
+                } else {
+                    Logger.error(`PromptBuilder renderer for content type ${context.contentType} not found`);
+                }
+            }
+        }
     }
 
     build(): string {
