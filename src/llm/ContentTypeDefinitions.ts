@@ -1,3 +1,13 @@
+import { Task } from "electron";
+import { Agent } from "http";
+import { ExecuteParams } from "src/agents/interfaces/ExecuteParams";
+import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
+import { ChatPost } from "src/chat/chatClient";
+import { ChannelData } from "src/shared/channelTypes";
+import { Artifact } from "src/tools/artifact";
+import { SearchResult } from "./IVectorDatabase";
+import { ContentType } from "./promptBuilder";
+
 export interface ArtifactsExcerptsContent {
     artifacts: Artifact[];
 }
@@ -31,7 +41,7 @@ export interface TasksContent {
 }
 
 export interface GoalsContent {
-    project: Project;
+    tasks: Task[];
 }
 
 export interface StepResultsContent {
@@ -70,6 +80,10 @@ export interface StepGoalContent {
     goal: string;
 }
 
+export interface AboutContent {
+    agent: Agent;
+}
+
 export type ContentInput = 
     | string 
     | { contentType: ContentType.ARTIFACTS_EXCERPTS, content: ArtifactsExcerptsContent } 
@@ -89,4 +103,5 @@ export type ContentInput =
     | { contentType: ContentType.CHANNEL, content: ChannelContent } 
     | { contentType: ContentType.FINAL_INSTRUCTIONS, content: FinalInstructionsContent } 
     | { contentType: ContentType.OVERALL_GOAL, content: OverallGoalContent } 
-    | { contentType: ContentType.STEP_GOAL, content: StepGoalContent };
+    | { contentType: ContentType.STEP_GOAL, content: StepGoalContent }
+    | { contentType: ContentType.ABOUT, content: AboutContent };

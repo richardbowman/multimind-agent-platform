@@ -12,7 +12,7 @@ import { ChannelData } from "src/shared/channelTypes";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { json } from "stream/consumers";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { ArtifactsExcerptsContent, ArtifactsTitlesContent, ArtifactsFullContent, ConversationContent, SearchResultsContent, CodeContent, DocumentsContent, TasksContent, GoalsContent, StepResultsContent, ExecuteParamsContent, AgentCapabilitiesContent, AgentOverviewsContent, PurposeContent, ChannelContent, FinalInstructionsContent, OverallGoalContent, StepGoalContent } from "./ContentTypeDefinitions";
+import { ArtifactsExcerptsContent, ArtifactsTitlesContent, ArtifactsFullContent, ConversationContent, SearchResultsContent, CodeContent, DocumentsContent, TasksContent, GoalsContent, StepResultsContent, ExecuteParamsContent, AgentCapabilitiesContent, AgentOverviewsContent, PurposeContent, ChannelContent, FinalInstructionsContent, OverallGoalContent, StepGoalContent, ContentInput } from "./ContentTypeDefinitions";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 
 export interface ContentRenderer<T> {
@@ -276,26 +276,8 @@ export class PromptBuilder implements InputPrompt {
         this.contentSections.set(contentType, content);
     }
 
-    addInstruction(instruction: string | 
-            { contentType: ContentType.ARTIFACTS_EXCERPTS, content: ArtifactsExcerptsContent } | 
-            { contentType: ContentType.ARTIFACTS_TITLES, content: ArtifactsTitlesContent } | 
-            { contentType: ContentType.ARTIFACTS_FULL, content: ArtifactsFullContent } | 
-            { contentType: ContentType.CONVERSATION, content: ConversationContent } | 
-            { contentType: ContentType.SEARCH_RESULTS, content: SearchResultsContent } | 
-            { contentType: ContentType.CODE, content: CodeContent } | 
-            { contentType: ContentType.DOCUMENTS, content: DocumentsContent } |
-            { contentType: ContentType.TASKS, content: TasksContent } |
-            { contentType: ContentType.GOALS, content: GoalsContent } | 
-            { contentType: ContentType.STEP_RESULTS, content: StepResultsContent } |
-            { contentType: ContentType.EXECUTE_PARAMS, content: ExecuteParamsContent } | 
-            { contentType: ContentType.AGENT_CAPABILITIES, content: AgentCapabilitiesContent } | 
-            { contentType: ContentType.AGENT_OVERVIEWS, content: AgentOverviewsContent } | 
-            { contentType: ContentType.PURPOSE, content: PurposeContent } | 
-            { contentType: ContentType.CHANNEL, content: ChannelContent } | 
-            { contentType: ContentType.FINAL_INSTRUCTIONS, content: FinalInstructionsContent } | 
-            { contentType: ContentType.OVERALL_GOAL, content: OverallGoalContent } | 
-            { contentType: ContentType.STEP_GOAL, content: StepGoalContent } | undefined): void {
-        if (typeof instruction === 'string' && instruction) {
+    addInstruction(instruction?: ContentInput): void {
+        if (typeof instruction === 'string') {
             this.instructions.push(instruction);
         } else if (instruction && instruction.contentType && instruction.content !== undefined) {
             const renderer = this.registry.getRenderer(instruction.contentType);
@@ -310,25 +292,7 @@ export class PromptBuilder implements InputPrompt {
         }
     }
 
-    addContext(context: string | 
-            { contentType: ContentType.ARTIFACTS_EXCERPTS, content: ArtifactsExcerptsContent } | 
-            { contentType: ContentType.ARTIFACTS_TITLES, content: ArtifactsTitlesContent } | 
-            { contentType: ContentType.ARTIFACTS_FULL, content: ArtifactsFullContent } | 
-            { contentType: ContentType.CONVERSATION, content: ConversationContent } | 
-            { contentType: ContentType.SEARCH_RESULTS, content: SearchResultsContent } | 
-            { contentType: ContentType.CODE, content: CodeContent } | 
-            { contentType: ContentType.DOCUMENTS, content: DocumentsContent } |
-            { contentType: ContentType.TASKS, content: TasksContent } |
-            { contentType: ContentType.GOALS, content: GoalsContent } | 
-            { contentType: ContentType.STEP_RESULTS, content: StepResultsContent } |
-            { contentType: ContentType.EXECUTE_PARAMS, content: ExecuteParamsContent } | 
-            { contentType: ContentType.AGENT_CAPABILITIES, content: AgentCapabilitiesContent } | 
-            { contentType: ContentType.AGENT_OVERVIEWS, content: AgentOverviewsContent } | 
-            { contentType: ContentType.PURPOSE, content: PurposeContent } | 
-            { contentType: ContentType.CHANNEL, content: ChannelContent } | 
-            { contentType: ContentType.FINAL_INSTRUCTIONS, content: FinalInstructionsContent } | 
-            { contentType: ContentType.OVERALL_GOAL, content: OverallGoalContent } | 
-            { contentType: ContentType.STEP_GOAL, content: StepGoalContent } | undefined): void {
+    addContext(context?: ContentInput): void {
         if (typeof context === 'string') {
             this.context.push(context);
         } else if (context && context.contentType && context.content !== undefined) {
