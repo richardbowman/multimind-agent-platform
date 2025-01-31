@@ -42,7 +42,7 @@ interface FormattedDataViewProps {
     data: any;
 }
 
-const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) => {
+export const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) => {
     if (typeof data === 'string') {
         // Format string with preserved newlines
         return (
