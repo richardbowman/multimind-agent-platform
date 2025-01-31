@@ -164,6 +164,16 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const renderLogs = () => {
         switch (currentLogTab) {
             case 'llm':
+                // Track open/closed state for each log entry
+                const [openEntries, setOpenEntries] = useState<Record<string, boolean>>({});
+                
+                const toggleEntry = (id: string) => {
+                    setOpenEntries(prev => ({
+                        ...prev,
+                        [id]: !prev[id]
+                    }));
+                };
+
                 return Object.entries(logs?.llm || {}).flatMap(([service, entries]) => 
                     (Array.isArray(entries) ? [...entries].reverse() : [])
                         .filter(log => 
@@ -175,12 +185,12 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                             }))
                         )
                         .map((log, index) => {
-                            const [open, setOpen] = useState(false);
-                            const toggleOpen = () => setOpen(!open);
+                            const entryId = `${service}-${index}`;
+                            const isOpen = openEntries[entryId] || false;
 
                             return (
-                                <div key={`${service}-${index}`} className="log-entry info">
-                                    <ListItemButton onClick={toggleOpen} sx={{ p: 0 }}>
+                                <div key={entryId} className="log-entry info">
+                                    <ListItemButton onClick={() => toggleEntry(entryId)} sx={{ p: 0 }}>
                                         <ListItemText
                                             primary={
                                                 <Fragment>
@@ -192,10 +202,10 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                                             secondary={log.error ? 'Error occurred' : 'Success'}
                                             sx={{ my: 0 }}
                                         />
-                                        {open ? <ExpandLess /> : <ExpandMore />}
+                                        {isOpen ? <ExpandLess /> : <ExpandMore />}
                                     </ListItemButton>
                                     
-                                    <Collapse in={open} timeout="auto" unmountOnExit>
+                                    <Collapse in={isOpen} timeout="auto" unmountOnExit>
                                         <List component="div" disablePadding>
                                             <ListItem sx={{ pl: 4, pt: 0 }}>
                                                 <ListItemText
