@@ -217,9 +217,20 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                                                             whiteSpace: 'pre-wrap',
                                                             wordWrap: 'break-word',
                                                             maxWidth: '100%',
-                                                            overflowX: 'auto'
+                                                            maxHeight: '400px',
+                                                            overflow: 'auto',
+                                                            backgroundColor: '#f5f5f5',
+                                                            padding: '8px',
+                                                            borderRadius: '4px',
+                                                            border: '1px solid #ddd'
                                                         }}>
-                                                            {JSON.stringify(log.input, null, 2)}
+                                                            <code style={{
+                                                                color: '#333',
+                                                                fontFamily: 'monospace',
+                                                                fontSize: '0.875rem'
+                                                            }}>
+                                                                {JSON.stringify(log.input, null, 2)}
+                                                            </code>
                                                         </pre>
                                                     }
                                                 />
@@ -233,9 +244,20 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                                                             whiteSpace: 'pre-wrap',
                                                             wordWrap: 'break-word',
                                                             maxWidth: '100%',
-                                                            overflowX: 'auto'
+                                                            maxHeight: '400px',
+                                                            overflow: 'auto',
+                                                            backgroundColor: '#f5f5f5',
+                                                            padding: '8px',
+                                                            borderRadius: '4px',
+                                                            border: '1px solid #ddd'
                                                         }}>
-                                                            {JSON.stringify(log.output, null, 2)}
+                                                            <code style={{
+                                                                color: '#333',
+                                                                fontFamily: 'monospace',
+                                                                fontSize: '0.875rem'
+                                                            }}>
+                                                                {JSON.stringify(log.output, null, 2)}
+                                                            </code>
                                                         </pre>
                                                     }
                                                 />
@@ -253,9 +275,20 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                                                                         whiteSpace: 'pre-wrap',
                                                                         wordWrap: 'break-word',
                                                                         maxWidth: '100%',
-                                                                        overflowX: 'auto'
+                                                                        maxHeight: '400px',
+                                                                        overflow: 'auto',
+                                                                        backgroundColor: '#f5f5f5',
+                                                                        padding: '8px',
+                                                                        borderRadius: '4px',
+                                                                        border: '1px solid #ddd'
                                                                     }}>
-                                                                        {log.error.stack}
+                                                                        <code style={{
+                                                                            color: '#333',
+                                                                            fontFamily: 'monospace',
+                                                                            fontSize: '0.875rem'
+                                                                        }}>
+                                                                            {log.error.stack}
+                                                                        </code>
                                                                     </pre>
                                                                 )}
                                                             </div>
