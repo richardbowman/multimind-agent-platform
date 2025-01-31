@@ -6,6 +6,7 @@ import { Mermaid } from './Mermaid';
 import ReactMarkdown from 'react-markdown';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { DataContextMethods, useDataContext } from '../../contexts/DataContext';
+import { ContentRenderer } from './ContentRenderer';
 
 interface CodeBlockProps {
     language?: string;
@@ -91,200 +92,68 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
     }>>([]);
     const dataContext = useDataContext();
 
-    // Handle Markdown rendering
-    if (language === 'markdown') {
-        return (
-            <Box sx={styles.container}>
-                <ActionToolbar 
-                    title={title || `Markdown Export - ${new Date().toLocaleDateString()}`}
-                    actions={[{
-                        icon: <DescriptionIcon />,
-                        label: 'Save as Artifact',
-                        onClick: async () => {
-                            const artifactTitle = title || `Markdown Export - ${new Date().toLocaleDateString()}`;
-                            if (dataContext) {
-                                try {
-                                    await dataContext.saveArtifact({
-                                        id: crypto.randomUUID(),
-                                        type: 'code',
-                                        content: content,
-                                        metadata: {
-                                            language: language,
-                                            title: artifactTitle
-                                        }
-                                    });
-                                } catch (error) {
-                                    console.error('Failed to save artifact:', error);
-                                }
+    return (
+        <Box sx={styles.container}>
+            <ActionToolbar 
+                title={title || `Content Export - ${new Date().toLocaleDateString()}`}
+                actions={[{
+                    icon: <DescriptionIcon />,
+                    label: 'Save as Artifact',
+                    onClick: async () => {
+                        const artifactTitle = title || `Content Export - ${new Date().toLocaleDateString()}`;
+                        if (dataContext) {
+                            try {
+                                await dataContext.saveArtifact({
+                                    id: crypto.randomUUID(),
+                                    type: 'code',
+                                    content: content,
+                                    metadata: {
+                                        language: language,
+                                        title: artifactTitle
+                                    }
+                                });
+                            } catch (error) {
+                                console.error('Failed to save artifact:', error);
                             }
                         }
-                    }]}
-                />
-                <Box sx={styles.viewToggle}>
-                    {viewOptions.map(option => (
-                        <Box
-                            key={option.value}
-                            onClick={() => setViewMode(option.value as 'visual' | 'raw')}
-                            sx={[
-                                styles.viewOption,
-                                viewMode === option.value && styles.activeViewOption
-                            ]}
-                        >
-                            {option.label}
-                        </Box>
-                    ))}
-                </Box>
-                <Box sx={styles.contentContainerScrolling}>
-                    {viewMode === 'visual' ? (
-                        <ReactMarkdown
-                            components={{
-                                pre: ({node, ...props}) => (
-                                    <div {...props} style={{ 
-                                        whiteSpace: 'pre-wrap',
-                                        wordWrap: 'break-word',
-                                        fontFamily: 'inherit',
-                                        backgroundColor: '#f5f5f5',
-                                        padding: '0.5em',
-                                        borderRadius: '4px',
-                                        margin: '0.5em 0'
-                                    }} />
-                                ),
-                                code: ({node, inline, ...props}) => inline ? (
-                                    <code {...props} style={{
-                                        fontFamily: 'monospace',
-                                        backgroundColor: '#f5f5f5',
-                                        padding: '0.2em 0.4em',
-                                        borderRadius: '4px'
-                                    }} />
-                                ) : (
-                                    <div {...props} style={{
-                                        whiteSpace: 'pre-wrap',
-                                        wordWrap: 'break-word',
-                                        fontFamily: 'inherit'
-                                    }} />
-                                )
-                            }}
-                        >
-                            {content}
-                        </ReactMarkdown>
-                    ) : (
-                        <Box 
-                            component="textarea" 
-                            value={content}
-                            readOnly
-                            sx={styles.textarea}
-                        />
-                    )}
-                </Box>
+                    }
+                }]}
+            />
+            <Box sx={styles.viewToggle}>
+                {viewOptions.map(option => (
+                    <Box
+                        key={option.value}
+                        onClick={() => setViewMode(option.value as 'visual' | 'raw')}
+                        sx={[
+                            styles.viewOption,
+                            viewMode === option.value && styles.activeViewOption
+                        ]}
+                    >
+                        {option.label}
+                    </Box>
+                ))}
             </Box>
-        );
-    }
-
-    // Handle Mermaid diagrams
-    if (language === 'mermaid') {
-        return (
-            <Box sx={styles.container}>
-                <ActionToolbar 
-                    title={title || `Mermaid Diagram - ${new Date().toLocaleDateString()}`}
-                    actions={[{
-                        icon: <DescriptionIcon />,
-                        label: 'Save as Artifact',
-                        onClick: async () => {
-                            const artifactTitle = title || `Code Export - ${new Date().toLocaleDateString()}`;
-                            if (dataContext) {
-                                try {
-                                    await dataContext.saveArtifact({
-                                        id: crypto.randomUUID(),
-                                        type: 'code',
-                                        content: content,
-                                        metadata: {
-                                            language: language,
-                                            title: artifactTitle
-                                        }
-                                    });
-                                } catch (error) {
-                                    console.error('Failed to save artifact:', error);
-                                }
-                            }
-                        }
-                    }]}
-                />
-                <Box sx={styles.contentContainerFixed}>
-                    <Mermaid content={content} />
-                </Box>
+            <Box sx={styles.contentContainerScrolling}>
+                {viewMode === 'visual' ? (
+                    <ContentRenderer 
+                        content={content}
+                        type={language}
+                        metadata={{
+                            title: title,
+                            language: language
+                        }}
+                    />
+                ) : (
+                    <Box 
+                        component="textarea" 
+                        value={content}
+                        readOnly
+                        sx={styles.textarea}
+                    />
+                )}
             </Box>
-        );
-    }
-
-    // Handle CSV rendering
-    if (language === 'csv') {
-        return (
-            <Box sx={styles.container}>
-                <ActionToolbar 
-                    title={title || `CSV Export - ${new Date().toLocaleDateString()}`}
-                    actions={[
-                        ...toolbarActions,
-                        {
-                            icon: <DescriptionIcon />,
-                            label: 'Save as Artifact',
-                            onClick: async () => {
-                            const artifactTitle = title || `Code Export - ${new Date().toLocaleDateString()}`;
-                            if (dataContext) {
-                                try {
-                                    await dataContext.saveArtifact({
-                                        id: crypto.randomUUID(),
-                                        type: 'code',
-                                        content: content,
-                                        metadata: {
-                                            language: language,
-                                            title: artifactTitle
-                                        }
-                                    });
-                                } catch (error) {
-                                    console.error('Failed to save artifact:', error);
-                                }
-                            }
-                        }
-                    }]}
-                />
-                <Box sx={styles.viewToggle}>
-                    {viewOptions.map(option => (
-                        <Box
-                            key={option.value}
-                            onClick={() => setViewMode(option.value as 'visual' | 'raw')}
-                            sx={[
-                                styles.viewOption,
-                                viewMode === option.value && styles.activeViewOption
-                            ]}
-                        >
-                            {option.label}
-                        </Box>
-                    ))}
-                </Box>
-                <Box sx={styles.contentContainerFixed}>
-                    {viewMode === 'visual' ? (
-                        <CSVRenderer 
-                            content={content}
-                            onAddToolbarActions={(actions) => {
-                                // Add CSV save action to existing toolbar
-                                setToolbarActions(prev => [
-                                    ...prev.filter(a => a.label !== 'Save CSV'),
-                                    ...actions
-                                ]);
-                            }}
-                        />
-                    ) : (
-                        <Box 
-                            component="textarea" 
-                            value={content}
-                            readOnly
-                            sx={styles.textarea}
-                        />
-                    )}
-                </Box>
-            </Box>
-        );
-    }
+        </Box>
+    );
 
     return (
         <Box sx={styles.container}>

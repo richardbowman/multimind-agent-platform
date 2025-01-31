@@ -1,16 +1,11 @@
-import React, { useEffect, useState } from 'react';
-import ReactMarkdown from 'react-markdown';
-import { Artifact, CalendarEvent } from '../../../../../tools/artifact';
-import remarkGfm from 'remark-gfm'
-import { Box, Button, Typography, Paper } from '@mui/material';
+import React, { useEffect } from 'react';
+import { Artifact } from '../../../../../tools/artifact';
+import { Box } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import DownloadIcon from '@mui/icons-material/Download';
-import { CSVRenderer } from './CSVRenderer';
-import { Mermaid } from './Mermaid';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { ContentRenderer } from './ContentRenderer';
 
 interface ArtifactDisplayProps {
     artifact: Artifact;
@@ -156,146 +151,12 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                         </tbody>
                     </table>
                 )}
-                {(() => {
-                    // Handle CSV content
-                    if (artifact.metadata?.mimeType === 'text/csv' || artifact.type === 'csv') {
-                        return <CSVRenderer 
-                            content={artifact.content as string}
-                            onAddToolbarActions={onAddToolbarActions}
-                            onSave={(csvContent) => {
-                                // Update the artifact content directly
-                                artifact.content = csvContent;
-                                // Update the toolbar actions to show save state
-                                if (onAddToolbarActions) {
-                                    onAddToolbarActions([
-                                        {
-                                            icon: <EditIcon fontSize="small" />,
-                                            label: 'Edit Artifact',
-                                            onClick: () => onEdit && onEdit()
-                                        },
-                                        {
-                                            icon: <DeleteIcon fontSize="small" />,
-                                            label: 'Delete Artifact',
-                                            onClick: () => onDelete && onDelete()
-                                        },
-                                        {
-                                            icon: <DownloadIcon fontSize="small" />,
-                                            label: 'Export Artifact',
-                                            onClick: handleExport
-                                        }
-                                    ]);
-                                }
-                            }}
-                        />;
-                    }
-
-                    // Handle Mermaid diagrams
-                    if (artifact.type === 'mermaid') {
-                        return <Mermaid content={artifact.content as string} />;
-                    }
-                    
-                    // Handle image content
-                    if (artifact.metadata?.mimeType?.startsWith('image/')) {
-                        let dataUrl;
-                        if (typeof artifact.content === 'string') {
-                            // If it's already a data URL, use it directly
-                            if (artifact.content.startsWith('data:')) {
-                                dataUrl = artifact.content;
-                            } else {
-                                // If it's base64 without prefix, add it
-                                dataUrl = `data:${artifact.metadata.mimeType};base64,${artifact.content}`;
-                            }
-                        } else if (artifact.content instanceof ArrayBuffer) {
-                            // Convert ArrayBuffer to base64
-                            const bytes = new Uint8Array(artifact.content);
-                            const binary = bytes.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
-                            const base64 = btoa(binary);
-                            dataUrl = `data:${artifact.metadata.mimeType};base64,${base64}`;
-                        } else if (artifact.content instanceof Uint8Array) {
-                            // Convert Uint8Array to base64
-                            const binary = artifact.content.reduce((acc, byte) => acc + String.fromCharCode(byte), '');
-                            const base64 = btoa(binary);
-                            dataUrl = `data:${artifact.metadata.mimeType};base64,${base64}`;
-                        } else {
-                            console.error('Unsupported image content type:', typeof artifact.content);
-                            return <Typography color="error">Unsupported image format</Typography>;
-                        }
-                        
-                        return (
-                            <Box sx={{ 
-                                display: 'flex', 
-                                justifyContent: 'center', 
-                                alignItems: 'center',
-                                p: 2 
-                            }}>
-                                <Paper elevation={3} sx={{ p: 1, maxWidth: '100%', maxHeight: '70vh' }}>
-                                    <img 
-                                        src={dataUrl} 
-                                        alt={artifact.metadata?.title || 'Image artifact'} 
-                                        style={{ 
-                                            maxWidth: '100%', 
-                                            maxHeight: '70vh',
-                                            objectFit: 'contain'
-                                        }}
-                                    />
-                                </Paper>
-                            </Box>
-                        );
-                    }
-                    
-                    // Handle calendar content
-                    if (artifact.mimeType === 'text/calendar' || artifact.type === 'calendar') {
-                        const [events, setEvents] = useState<CalendarEvent[]>([]);
-                        const [currentDate, setCurrentDate] = useState(new Date());
-                        const localizer = momentLocalizer(moment);
-
-                        const handleNavigate = (newDate: Date) => {
-                            setCurrentDate(newDate);
-                        };
-
-                        useEffect(() => {
-                            try {
-                                // Expecting artifact.content to be already parsed into CalendarEvent[]
-                                if (Array.isArray(artifact.content)) {
-                                    const calendarEvents = (artifact.content as CalendarEvent[]).map(event => ({
-                                        title: event.title,
-                                        start: new Date(event.start),
-                                        end: new Date(event.end),
-                                        description: event.description,
-                                        location: event.location
-                                    }));
-                                    setEvents(calendarEvents);
-                                }
-                            } catch (error) {
-                                console.error('Error processing calendar events:', error);
-                            }
-                        }, [artifact.content]);
-
-                        return (
-                            <Box sx={{ height: '70vh', mt: 2 }}>
-                                <Calendar
-                                    localizer={localizer}
-                                    events={events}
-                                    startAccessor="start"
-                                    endAccessor="end"
-                                    date={currentDate}
-                                    onNavigate={handleNavigate}
-                                    defaultView="month"
-                                    views={['month', 'week', 'day']}
-                                    style={{ height: '100%' }}
-                                />
-                            </Box>
-                        );
-                    }
-
-                    // Handle binary content
-                    if (artifact.type === 'binary' || artifact.metadata?.format === 'binary') {
-                        return <pre>Binary content</pre>;
-                    }
-                    
-                    // Default to Markdown rendering
-                    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{artifact.content as string}</ReactMarkdown>;
-                })()}
+                <ContentRenderer 
+                    content={artifact.content}
+                    type={artifact.type}
+                    mimeType={artifact.mimeType}
+                    metadata={artifact.metadata}
+                />
             </div>
         </Box>
     );

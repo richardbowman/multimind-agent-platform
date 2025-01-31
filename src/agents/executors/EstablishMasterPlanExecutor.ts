@@ -43,6 +43,8 @@ export class EstablishMasterPlanExecutor implements StepExecutor {
         // Add core instructions
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
 
+        promptBuilder.addContent(ContentType.)
+        
         // Add content sections
         promptBuilder.addContext(`USER MESSAGE: ${params.message}`);
 
