@@ -94,6 +94,9 @@ export class LLMCallLogger extends EventEmitter {
             const files = await fs.promises.readdir(logDir);
             const logs: Record<string, LLMLogEntry[]> = {};
 
+            // Collect all entries across all files
+            const allEntries: LLMLogEntry[] = [];
+            
             for (const file of files) {
                 if (!file.endsWith('.jsonl')) continue;
                 
@@ -105,11 +108,26 @@ export class LLMCallLogger extends EventEmitter {
                 });
                 const lines = content.trim().split('\n');
                 const serviceName = file.split('-')[0];
-                logs[serviceName] = lines.map(line => JSON.parse(line))
-                    .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+                const entries = lines.map(line => ({
+                    ...JSON.parse(line),
+                    serviceName
+                }));
+                allEntries.push(...entries);
             }
 
-            return logs;
+            // Sort all entries by timestamp descending
+            allEntries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+            // Group by service name while maintaining the global sort order
+            const sortedLogs: Record<string, LLMLogEntry[]> = {};
+            for (const entry of allEntries) {
+                if (!sortedLogs[entry.serviceName]) {
+                    sortedLogs[entry.serviceName] = [];
+                }
+                sortedLogs[entry.serviceName].push(entry);
+            }
+
+            return sortedLogs;
         } catch (err) {
             Logger.error('Failed to read all LLM logs:', err);
             return {};
