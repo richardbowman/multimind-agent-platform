@@ -9,99 +9,118 @@ import { SearchResult } from "./IVectorDatabase";
 import { ContentType } from "./promptBuilder";
 
 export interface ArtifactsExcerptsContent {
+    contentType: ContentType.ARTIFACTS_EXCERPTS;
     artifacts: Artifact[];
 }
 
 export interface ArtifactsTitlesContent {
+    contentType: ContentType.ARTIFACTS_TITLES;
     artifacts: Artifact[];
 }
 
 export interface ArtifactsFullContent {
+    contentType: ContentType.ARTIFACTS_FULL;
     artifacts: Artifact[];
 }
 
 export interface ConversationContent {
+    contentType: ContentType.CONVERSATION;
     posts: ChatPost[];
 }
 
 export interface SearchResultsContent {
+    contentType: ContentType.SEARCH_RESULTS;
     searchResults: SearchResult[];
 }
 
 export interface CodeContent {
+    contentType: ContentType.CODE;
     code: string;
 }
 
 export interface DocumentsContent {
+    contentType: ContentType.DOCUMENTS;
     documents: Document[];
 }
 
 export interface TasksContent {
+    contentType: ContentType.TASKS;
     tasks: Task[];
 }
 
 export interface GoalsContent {
+    contentType: ContentType.GOALS;
     tasks: Task[];
 }
 
 export interface StepResultsContent {
+    contentType: ContentType.STEP_RESULTS;
     steps: StepTask[];
 }
 
 export interface ExecuteParamsContent {
+    contentType: ContentType.EXECUTE_PARAMS;
     params: ExecuteParams;
 }
 
 export interface AgentCapabilitiesContent {
+    contentType: ContentType.AGENT_CAPABILITIES;
     agents: Agent[];
 }
 
 export interface AgentOverviewsContent {
+    contentType: ContentType.AGENT_OVERVIEWS;
     agents: Agent[];
 }
 
 export interface PurposeContent {
+    contentType: ContentType.PURPOSE;
     purpose: string;
 }
 
 export interface ChannelContent {
+    contentType: ContentType.CHANNEL;
     channel: ChannelData;
 }
 
 export interface FinalInstructionsContent {
+    contentType: ContentType.FINAL_INSTRUCTIONS;
     instructions: string;
 }
 
 export interface OverallGoalContent {
+    contentType: ContentType.OVERALL_GOAL;
     goal: string;
 }
 
 export interface StepGoalContent {
+    contentType: ContentType.STEP_GOAL;
     goal: string;
 }
 
 export interface AboutContent {
+    contentType: ContentType.ABOUT;
     agent: Agent;
 }
 
 export type ContentInput = 
     | string 
-    | { contentType: ContentType.ARTIFACTS_EXCERPTS, content: ArtifactsExcerptsContent } 
-    | { contentType: ContentType.ARTIFACTS_TITLES, content: ArtifactsTitlesContent } 
-    | { contentType: ContentType.ARTIFACTS_FULL, content: ArtifactsFullContent } 
-    | { contentType: ContentType.CONVERSATION, content: ConversationContent } 
-    | { contentType: ContentType.SEARCH_RESULTS, content: SearchResultsContent } 
-    | { contentType: ContentType.CODE, content: CodeContent } 
-    | { contentType: ContentType.DOCUMENTS, content: DocumentsContent } 
-    | { contentType: ContentType.TASKS, content: TasksContent } 
-    | { contentType: ContentType.GOALS, content: GoalsContent } 
-    | { contentType: ContentType.STEP_RESULTS, content: StepResultsContent } 
-    | { contentType: ContentType.EXECUTE_PARAMS, content: ExecuteParamsContent } 
-    | { contentType: ContentType.AGENT_CAPABILITIES, content: AgentCapabilitiesContent } 
-    | { contentType: ContentType.AGENT_OVERVIEWS, content: AgentOverviewsContent } 
-    | { contentType: ContentType.PURPOSE, content: PurposeContent } 
-    | { contentType: ContentType.CHANNEL, content: ChannelContent } 
-    | { contentType: ContentType.FINAL_INSTRUCTIONS, content: FinalInstructionsContent } 
-    | { contentType: ContentType.OVERALL_GOAL, content: OverallGoalContent } 
-    | { contentType: ContentType.STEP_GOAL, content: StepGoalContent }
-    | { contentType: ContentType.ABOUT, content: AboutContent };
+    | ArtifactsExcerptsContent 
+    | ArtifactsTitlesContent 
+    | ArtifactsFullContent 
+    | ConversationContent 
+    | SearchResultsContent 
+    | CodeContent 
+    | DocumentsContent 
+    | TasksContent 
+    | GoalsContent 
+    | StepResultsContent 
+    | ExecuteParamsContent 
+    | AgentCapabilitiesContent 
+    | AgentOverviewsContent 
+    | PurposeContent 
+    | ChannelContent 
+    | FinalInstructionsContent 
+    | OverallGoalContent 
+    | StepGoalContent 
+    | AboutContent;

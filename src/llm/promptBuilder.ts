@@ -279,10 +279,10 @@ export class PromptBuilder implements InputPrompt {
     addInstruction(instruction?: ContentInput): void {
         if (typeof instruction === 'string') {
             this.instructions.push(instruction);
-        } else if (instruction && instruction.contentType && instruction.content !== undefined) {
+        } else if (instruction) {
             const renderer = this.registry.getRenderer(instruction.contentType);
             if (renderer) {
-                const rendered = renderer(instruction.content);
+                const rendered = renderer(instruction);
                 if (rendered) {
                     this.instructions.push(rendered);
                 } else {
@@ -295,10 +295,10 @@ export class PromptBuilder implements InputPrompt {
     addContext(context?: ContentInput): void {
         if (typeof context === 'string') {
             this.context.push(context);
-        } else if (context && context.contentType && context.content !== undefined) {
+        } else if (context) {
             const renderer = this.registry.getRenderer(context.contentType);
             if (renderer) {
-                const rendered = renderer(context.content);
+                const rendered = renderer(context);
                 if (rendered) {
                     this.context.push(rendered);
                 } else {
