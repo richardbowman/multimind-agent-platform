@@ -1,13 +1,16 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState } from 'react';
 import { 
-    Collapse, 
-    List, 
     ListItem, 
     ListItemText, 
     ListItemButton,
-    Box
+    Box,
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions,
+    Button,
+    Typography
 } from '@mui/material';
-import { ExpandLess, ExpandMore } from '@mui/icons-material';
 import { useDataContext } from '../contexts/DataContext';
 import { FormattedDataView } from './LogViewer';
 
@@ -19,13 +22,14 @@ interface LLMLogViewerProps {
 }
 
 export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, highlightText, filterLog }) => {
-    const [openEntries, setOpenEntries] = useState<Record<string, boolean>>({});
-    
-    const toggleEntry = (id: string) => {
-        setOpenEntries(prev => ({
-            ...prev,
-            [id]: !prev[id]
-        }));
+    const [selectedLog, setSelectedLog] = useState<any>(null);
+
+    const handleOpenDetails = (log: any) => {
+        setSelectedLog(log);
+    };
+
+    const handleCloseDetails = () => {
+        setSelectedLog(null);
     };
 
     return (
@@ -46,7 +50,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
 
                         return (
                             <div key={entryId} className="log-entry info">
-                                <ListItemButton onClick={() => toggleEntry(entryId)} sx={{ p: 0 }}>
+                                <ListItemButton onClick={() => handleOpenDetails(log)} sx={{ p: 0 }}>
                                     <ListItemText
                                         primary={
                                             <Fragment>
@@ -61,64 +65,60 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                     {isOpen ? <ExpandLess /> : <ExpandMore />}
                                 </ListItemButton>
                                 
-                                <Collapse in={isOpen} timeout="auto" unmountOnExit>
-                                    <List component="div" disablePadding>
-                                        <ListItem sx={{ pl: 4, pt: 0 }}>
-                                            <ListItemText
-                                                primary="Input"
-                                                secondary={
-                                                    <FormattedDataView data={log.input} />
-                                                }
-                                            />
-                                        </ListItem>
-                                        <ListItem sx={{ pl: 4, pt: 0 }}>
-                                            <ListItemText
-                                                primary="Output"
-                                                secondary={
-                                                    <FormattedDataView data={log.output} />
-                                                }
-                                            />
-                                        </ListItem>
-                                        {log.error && (
-                                            <ListItem sx={{ pl: 4, pt: 0 }}>
-                                                <ListItemText
-                                                    primary="Error"
-                                                    secondary={
-                                                        <div className="error-details">
-                                                            <div>{typeof log.error === 'string' ? log.error : log.error.message || 'Unknown error'}</div>
-                                                            {log.error.stack && (
-                                                                <pre style={{ 
-                                                                    margin: 0,
-                                                                    whiteSpace: 'pre-wrap',
-                                                                    wordWrap: 'break-word',
-                                                                    maxWidth: '100%',
-                                                                    maxHeight: '400px',
-                                                                    overflow: 'auto',
-                                                                    backgroundColor: '#f5f5f5',
-                                                                    padding: '8px',
-                                                                    borderRadius: '4px',
-                                                                    border: '1px solid #ddd'
-                                                                }}>
-                                                                    <code style={{
-                                                                        color: '#333',
-                                                                        fontFamily: 'monospace',
-                                                                        fontSize: '0.875rem'
-                                                                    }}>
-                                                                        {log.error.stack}
-                                                                    </code>
-                                                                </pre>
-                                                            )}
-                                                        </div>
-                                                    }
-                                                />
-                                            </ListItem>
-                                        )}
-                                    </List>
-                                </Collapse>
                             </div>
                         );
                     })
             )}
+            
+            <Dialog 
+                open={!!selectedLog} 
+                onClose={handleCloseDetails}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle>LLM Request Details</DialogTitle>
+                <DialogContent dividers>
+                    <Typography variant="subtitle1" gutterBottom>Input</Typography>
+                    <FormattedDataView data={selectedLog?.input} />
+                    
+                    <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>Output</Typography>
+                    <FormattedDataView data={selectedLog?.output} />
+                    
+                    {selectedLog?.error && (
+                        <>
+                            <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>Error</Typography>
+                            <div className="error-details">
+                                <div>{typeof selectedLog.error === 'string' ? selectedLog.error : selectedLog.error.message || 'Unknown error'}</div>
+                                {selectedLog.error.stack && (
+                                    <pre style={{ 
+                                        margin: 0,
+                                        whiteSpace: 'pre-wrap',
+                                        wordWrap: 'break-word',
+                                        maxWidth: '100%',
+                                        maxHeight: '400px',
+                                        overflow: 'auto',
+                                        backgroundColor: '#f5f5f5',
+                                        padding: '8px',
+                                        borderRadius: '4px',
+                                        border: '1px solid #ddd'
+                                    }}>
+                                        <code style={{
+                                            color: '#333',
+                                            fontFamily: 'monospace',
+                                            fontSize: '0.875rem'
+                                        }}>
+                                            {selectedLog.error.stack}
+                                        </code>
+                                    </pre>
+                                )}
+                            </div>
+                        </>
+                    )}
+                </DialogContent>
+                <DialogActions>
+                    <Button onClick={handleCloseDetails}>Close</Button>
+                </DialogActions>
+            </Dialog>
         </Box>
     );
 };
