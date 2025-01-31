@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, Fragment } from 'react';
 import { 
     ListItem, 
     ListItemText, 
@@ -45,26 +45,21 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                         }))
                     )
                     .map((log, index) => {
-                        const entryId = `${service}-${index}`;
-                        const isOpen = openEntries[entryId] || false;
-
                         return (
-                            <div key={entryId} className="log-entry info">
+                            <div key={`${service}-${index}`} className="log-entry info">
                                 <ListItemButton onClick={() => handleOpenDetails(log)} sx={{ p: 0 }}>
                                     <ListItemText
                                         primary={
-                                            <Fragment>
+                                            <>
                                                 <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                                                 <span className="log-level">{service.toUpperCase()}</span>
                                                 <span className="log-method" dangerouslySetInnerHTML={{ __html: highlightText(log.method) }} />
-                                            </Fragment>
+                                            </>
                                         }
                                         secondary={log.error ? 'Error occurred' : 'Success'}
                                         sx={{ my: 0 }}
                                     />
-                                    {isOpen ? <ExpandLess /> : <ExpandMore />}
                                 </ListItemButton>
-                                
                             </div>
                         );
                     })
