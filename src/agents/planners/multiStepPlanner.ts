@@ -18,6 +18,8 @@ import { ContentType } from 'src/llm/promptBuilder';
 import { exec } from 'child_process';
 import { Agents } from 'src/utils/AgentLoader';
 import { ModelType } from 'src/llm/LLMServiceFactory';
+import { SchemaType } from 'src/schemas/SchemaTypes';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 
 export class MultiStepPlanner implements Planner {
     readonly allowReplan: boolean = true;
@@ -47,7 +49,7 @@ export class MultiStepPlanner implements Planner {
             })
             .filter(metadata => metadata.planner); // Only include executors marked for planner
 
-        const schema = new SchemaInliner(schemaJson).inlineReferences(schemaJson.definitions).PlanStepsResponse;
+        const schema = await getGeneratedSchema(SchemaType.PlanStepsResponse);
 
         const project = handlerParams.projects?.[0];
 

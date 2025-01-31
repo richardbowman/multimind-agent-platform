@@ -37,9 +37,10 @@ export class TemplateSelectorExecutor implements StepExecutor {
         const templates = this.onboardingConsultant.getAvailableTemplates();
 
         const prompt = this.modelHelpers.createPrompt();
-        prompt.addContent(ContentType.PURPOSE);
-        prompt.addContent(ContentType.OVERALL_GOAL, params.overallGoal);
-        prompt.addContent(ContentType.CONVERSATION, params.context?.threadPosts);
+        prompt.addContext({contentType: ContentType.ABOUT});
+        prompt.addContext({contentType: ContentType.INTENT, params});
+        prompt.addContext({contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal||""});
+        prompt.addContext({contentType: ContentType.CONVERSATION, posts: params.context?.threadPosts||[]});
         prompt.addInstruction( `Available Templates:
             ${templates.map(t => `
             - ${t.name} (${t.id})

@@ -1,12 +1,12 @@
 import { ModelResponse } from 'src/schemas/ModelResponse';
 import { Artifact } from 'src/tools/artifact';
-import { Project } from 'src/tools/taskManager';
+import { Project, Task } from 'src/tools/taskManager';
 import { StepTask } from './ExecuteStepParams';
 import { UUID } from 'src/types/uuid';
 import { ChatHandle } from 'src/types/chatHandle';
 import { ChatPost } from 'src/chat/chatClient';
-import { Task } from 'electron';
 import { Agent } from '../agents';
+import { StepResponse } from './StepResult';
 
 export interface ExecuteParams {
     readonly agentId: UUID;
@@ -17,7 +17,7 @@ export interface ExecuteParams {
     readonly step: string;
     readonly stepId: UUID;
     readonly projectId: UUID;
-    readonly previousResult?: ModelResponse[];
+    readonly previousResult?: StepResponse[];
     readonly channelGoals: Task[];
     readonly steps: StepTask[],
     readonly mode?: 'quick' | 'detailed';

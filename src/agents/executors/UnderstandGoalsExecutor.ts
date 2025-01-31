@@ -14,6 +14,7 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { Artifact } from '../../tools/artifact';
 import { StepTask } from '../interfaces/ExecuteStepParams';
+import { ContentType } from 'src/llm/promptBuilder';
 
 /**
  * Executor that generates targeted questions to understand user requirements.
@@ -88,10 +89,8 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         
         const formattedMessage = this.formatMessage(params.goal, project, params.context?.artifacts);
 
-        const response = await this.modelHelpers.generate<IntakeQuestionsResponse>({
-            message: formattedMessage,
-            instructions: new StructuredOutputPrompt(schema,
-                `Generate required questions to achieve the goal: ${params.goal}
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addInstruction(`Review if we have sufficient information to achieve the goal. If not, we will generate questions to gather the necessary information.
                 
                 IMPORTANT: 
                 - Review any previous answers carefully to avoid redundant questions
@@ -109,6 +108,12 @@ export class UnderstandGoalsExecutor implements StepExecutor {
                 
                 
                 Keep questions focused and actionable. If you have a good understanding, return no more questions.`)
+        prompt.addContext({contentType: ContentType.INTENT, params});
+        
+        const response = await this.modelHelpers.generate<IntakeQuestionsResponse>({
+            message: formattedMessage,
+            instructions: new StructuredOutputPrompt(schema, prompt),
+            threadPosts: params.context?.threadPosts
         });
 
         Logger.info('UnderstandGoalsExecutor response:', JSON.stringify(response, null, 2));
@@ -117,6 +122,9 @@ export class UnderstandGoalsExecutor implements StepExecutor {
             throw new Error(`Invalid response format. Expected array of questions but got: ${JSON.stringify(response)}`);
         }
         
+
+        
+
         // Get existing tasks and their current max order
         // const existingTasks = this.taskManager.getAllTasks(params.projectId);
         

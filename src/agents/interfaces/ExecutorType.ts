@@ -31,5 +31,7 @@ export enum ExecutorType {
     DELEGATION = "delegation",
     WEB_SCRAPE = "web-scrape",
     WEB_SEARCH = "web-search",
-    SELECT_LINKS = "select-links"
+    SELECT_LINKS = "select-links",
+    ESTABLISH_INTENT = "ESTABLISH_INTENT",
+    NEXT_STEP = "NEXT_STEP"
 }

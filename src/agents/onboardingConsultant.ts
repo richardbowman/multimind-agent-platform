@@ -17,6 +17,8 @@ import { ExecutorType } from './interfaces/ExecutorType';
 import { UUID } from 'src/types/uuid';
 import { DelegationExecutor } from './executors/DelegationExecutor';
 import { SimpleNextActionPlanner } from './planners/nextActionPlanner';
+import { EstablishIntentExecutor } from './executors/IntentExecutor';
+import { NextActionExecutor } from './planners/nextActionExecutor';
 
 
 
@@ -80,7 +82,7 @@ export class OnboardingConsultant extends StepBasedAgent {
 
     constructor(params: AgentConstructorParams) {
         super(params);
-        this.planner = new SimpleNextActionPlanner(params.llmService, params.taskManager, params.userId, this.modelHelpers, this.stepExecutors, this.chatClient, this.agents);
+        this.planner = null;
 
         this.modelHelpers.setPurpose(`You are an Onboarding Agent focused on helping users achieve their goals with this platform called Multimind. The service is designed
 to help individuals and businesses automate tasks. It provides Web-based research and content creation agents. Your goal is to ensure that the rest of the agents in the platform
@@ -92,6 +94,10 @@ Goals Understanding:
 `);
 // Define sequences for different scenarios
 const newUserSequence = [
+    { 
+        type: ExecutorType.ESTABLISH_INTENT,
+        description: "Establish your own intentions for what you would like to accomplish"
+    },
     { 
         type: ExecutorType.UNDERSTAND_GOALS,
         description: "Understand the user's business goals and requirements"
@@ -139,6 +145,7 @@ this.modelHelpers.setFinalInstructions(`Use the appropriate sequence based on us
 - For existing users: Use the followup sequence to continue their onboarding`);
 
         // Register our specialized executors
+        this.registerStepExecutor(new EstablishIntentExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new UnderstandGoalsExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new AnswerQuestionsExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new CreatePlanExecutor(this.getExecutorParams(), this));
@@ -147,6 +154,8 @@ this.modelHelpers.setFinalInstructions(`Use the appropriate sequence based on us
         this.registerStepExecutor(new TemplateSelectorExecutor(this.getExecutorParams(), this));
         this.registerStepExecutor(new DelegationExecutor(this.getExecutorParams()));
         // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
+
+        this.registerStepExecutor(new NextActionExecutor(this.getExecutorParams(), this.stepExecutors));
 
 
         }

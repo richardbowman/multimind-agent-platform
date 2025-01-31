@@ -1,5 +1,4 @@
 import { Task } from "electron";
-import { Agent } from "http";
 import { ExecuteParams } from "src/agents/interfaces/ExecuteParams";
 import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
 import { ChatPost } from "src/chat/chatClient";
@@ -7,6 +6,9 @@ import { ChannelData } from "src/shared/channelTypes";
 import { Artifact } from "src/tools/artifact";
 import { SearchResult } from "./IVectorDatabase";
 import { ContentType } from "./promptBuilder";
+import { StepResult } from "src/agents/interfaces/StepResult";
+import { Agent } from "src/agents/agents";
+import { Project } from "src/tools/taskManager";
 
 export interface ArtifactsExcerptsContent {
     contentType: ContentType.ARTIFACTS_EXCERPTS;
@@ -53,9 +55,14 @@ export interface GoalsContent {
     tasks: Task[];
 }
 
-export interface StepResultsContent {
+export interface StepTaskContent {
     contentType: ContentType.STEP_RESULTS;
     steps: StepTask[];
+}
+
+export interface ValidationContent {
+    contentType: ContentType.VALIDATION_RESULTS;
+    step: StepResult;
 }
 
 export interface ExecuteParamsContent {
@@ -100,7 +107,11 @@ export interface StepGoalContent {
 
 export interface AboutContent {
     contentType: ContentType.ABOUT;
-    agent: Agent;
+}
+
+export interface IntentContent {
+    contentType: ContentType.INTENT;
+    params: ExecuteParams;
 }
 
 export type ContentInput = 
@@ -114,7 +125,7 @@ export type ContentInput =
     | DocumentsContent 
     | TasksContent 
     | GoalsContent 
-    | StepResultsContent 
+    | StepTaskContent 
     | ExecuteParamsContent 
     | AgentCapabilitiesContent 
     | AgentOverviewsContent 
@@ -123,4 +134,5 @@ export type ContentInput =
     | FinalInstructionsContent 
     | OverallGoalContent 
     | StepGoalContent 
-    | AboutContent;
+    | AboutContent
+    | IntentContent;

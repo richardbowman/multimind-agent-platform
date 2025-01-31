@@ -1,7 +1,7 @@
 import { Agent } from "src/agents/agents";
 import { ExecuteParams } from "src/agents/interfaces/ExecuteParams";
 import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
-import { ReplanType, StepResult, StepResultType } from "src/agents/interfaces/StepResult";
+import { ReplanType, StepResponseType, StepResult, StepResultType } from "src/agents/interfaces/StepResult";
 import { StepBasedAgent } from "src/agents/stepBasedAgent";
 import { ChatPost } from "src/chat/chatClient";
 import Logger from "src/helpers/logger";
@@ -10,10 +10,10 @@ import { ModelHelpers } from "./modelHelpers";
 import { Project } from "src/tools/taskManager";
 import { ChannelData } from "src/shared/channelTypes";
 import { SchemaType } from "src/schemas/SchemaTypes";
-import { json } from "stream/consumers";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { ArtifactsExcerptsContent, ArtifactsTitlesContent, ArtifactsFullContent, ConversationContent, SearchResultsContent, CodeContent, DocumentsContent, TasksContent, GoalsContent, StepResultsContent, ExecuteParamsContent, AgentCapabilitiesContent, AgentOverviewsContent, PurposeContent, ChannelContent, FinalInstructionsContent, OverallGoalContent, StepGoalContent, ContentInput } from "./ContentTypeDefinitions";
+import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepTaskContent, ValidationContent as StepResultContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent } from "./ContentTypeDefinitions";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
+import { IntentionsResponse } from "src/schemas/goalAndPlan";
 
 export interface ContentRenderer<T> {
     (content: T): string;
@@ -37,7 +37,10 @@ export enum ContentType {
     CHANNEL = "CHANNEL",
     FINAL_INSTRUCTIONS = "FINAL_INSTRUCTIONS",
     OVERALL_GOAL = "OVERALL_GOAL",
-    STEP_GOAL = "STEP_GOAL"
+    STEP_GOAL = "STEP_GOAL",
+    ABOUT = "ABOUT",
+    INTENT = "INTENT",
+    VALIDATION_RESULTS = "VALIDATION_RESULTS"
 }
 
 export enum OutputType {
@@ -51,6 +54,9 @@ export class PromptRegistry {
 
     constructor(private modelHelpers: ModelHelpers) {
         // Register default renderers
+        this.registerRenderer(ContentType.ABOUT, this.renderAboutAgent.bind(this));
+        this.registerRenderer(ContentType.INTENT, this.renderIntent.bind(this));
+
         this.registerRenderer(ContentType.PURPOSE, this.renderPurpose.bind(this));
         this.registerRenderer(ContentType.CHANNEL, this.renderChannel.bind(this));
         this.registerRenderer(ContentType.OVERALL_GOAL, this.renderOverallGoal.bind(this));
@@ -64,7 +70,7 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
         this.registerRenderer(ContentType.AGENT_CAPABILITIES, this.renderAgentCapabilities.bind(this));
         this.registerRenderer(ContentType.AGENT_OVERVIEWS, this.renderAgentOverviews.bind(this));
-        this.registerRenderer(ContentType.GOALS, this.renderGoals.bind(this));
+        this.registerRenderer(ContentType.GOALS, this.renderChannelGoals.bind(this));
 
         // Register type-specific step result renderers
         this.registerStepResultRenderer(StepResultType.Validation, this.renderValidationStep.bind(this));
@@ -72,7 +78,23 @@ export class PromptRegistry {
         // Add more type-specific renderers as needed
     }
 
-    private renderExecuteParams(params: ExecuteParams): string {
+    private renderAboutAgent() {
+        return `🤖 Agent: ${this.modelHelpers.messagingHandle}
+📝 Purpose: ${this.modelHelpers.getPurpose()}`
+    };
+
+    private renderIntent({params} : IntentContent) {
+        const intents = params.previousResult?.filter(r => r.type === StepResponseType.Intent).slice(-1);
+        if (intents?.length == 1) {
+            const intent = intents[0].data as IntentionsResponse;
+            return `🤖 My Intention: ${intent.intention}\nWorking Plan: ${intent.plan.map((p, i) => (i+1)===intent.currentFocus? ` - **CURRENT GOAL: ${p}**` :` - ${p}`).join('\n')}`
+        } else {
+            return `🤖 My Intention: [No intentions set yet.]`
+        }
+    };
+
+
+    private renderExecuteParams({params}: ExecuteParamsContent): string {
         let output = `🎯 Goal:\n${params.goal}\n\n`;
 
         if (params.step) {
@@ -112,11 +134,11 @@ ${this.modelHelpers.getFinalInstructions()}
 `;
     }
 
-    renderChannel(channel: ChannelData) {
+    renderChannel({channel} : ChannelContent) {
         return `CURRENT CHAT CHANNEL: ${channel.name} - ${channel.description}`;
     }
 
-    private renderStepResults(steps: StepTask[]): string {
+    private renderStepResults({steps} : StepTaskContent): string {
         const stepsWithResults = steps?.filter(s => s.props?.result?.type && s.props.result != undefined);
         if (!stepsWithResults || stepsWithResults.length === 0) return '';
 
@@ -131,7 +153,7 @@ ${this.modelHelpers.getFinalInstructions()}
         }).join('\n\n');
     }
 
-    private renderValidationStep(step: StepResult): string {
+    private renderValidationStep({step} : StepResultContent): string {
         const metadata = step.response.metadata;
         return `🔍 Validation Step:\n` +
             `- Status: ${step.finished ? 'Complete' : 'In Progress'}\n` +
@@ -141,7 +163,7 @@ ${this.modelHelpers.getFinalInstructions()}
             `- Result: ${step.response.message}`;
     }
 
-    private renderQuestionStep(step: StepResult): string {
+    private renderQuestionStep({step} : StepResultContent): string {
         return `❓ Question Step:\n` +
             `- Question: ${step.response.message}\n` +
             `- Status: ${step.finished ? 'Answered' : 'Pending'}`;
@@ -155,7 +177,7 @@ ${this.modelHelpers.getFinalInstructions()}
         return this.contentRenderers.get(contentType);
     }
 
-    private renderArtifacts(artifacts: Artifact[]): string {
+    private renderArtifacts({artifacts} : ArtifactsFullContent): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
             let content = typeof artifact.content === 'string'
@@ -166,7 +188,7 @@ ${this.modelHelpers.getFinalInstructions()}
         }).join('\n\n');
     }
 
-    private renderArtifactExcerpts(artifacts: Artifact[]): string {
+    private renderArtifactExcerpts({artifacts}: ArtifactsExcerptsContent): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
             let content = typeof artifact.content === 'string'
@@ -182,14 +204,14 @@ ${this.modelHelpers.getFinalInstructions()}
         }).join('\n\n');
     }
 
-    private renderArtifactTitles(artifacts: Artifact[]): string {
+    private renderArtifactTitles({artifacts}: ArtifactsTitlesContent): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
             return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}`;
         }).join('\n\n');
     }
 
-    private renderAgentCapabilities(agents: Agent[]): string {
+    private renderAgentCapabilities({agents} : AgentCapabilitiesContent): string {
         if (!agents || agents.length === 0) return '';
 
         return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
@@ -211,7 +233,7 @@ ${this.modelHelpers.getFinalInstructions()}
         }).join('\n\n');
     }
 
-    private renderAgentOverviews(agents: Agent[]): string {
+    private renderAgentOverviews({agents} : AgentOverviewsContent): string {
         if (!agents || agents.length === 0) return '';
 
         return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
@@ -220,7 +242,20 @@ ${this.modelHelpers.getFinalInstructions()}
         }).join('\n');
     }
 
-    private renderGoals(project: Project): string {
+    private renderChannelGoals({tasks}: GoalsContent): string {
+        if (!tasks || tasks.length == 0) return '';
+
+        let output = `🎯 In this channel, there are a ${tasks.length} of high-level goals associated:`;
+        output += `📋 CHANNEL GOALS:\n` +
+            Object.values(tasks)
+                .sort((a, b) => (a.order || 0) - (b.order || 0))
+                .map((task, index) =>
+                    `${index + 1}. ${task.description} (${task.complete ? 'completed' : 'pending'})`
+                ).join('\n');
+        return output;
+    }
+
+    private renderProject({project}): string {
         if (!project) return '';
 
         let output = `🎯 Project: ${project.name}\n`;
@@ -239,7 +274,7 @@ ${this.modelHelpers.getFinalInstructions()}
         return output;
     }
 
-    private renderConversation(posts: ChatPost[]): string {
+    private renderConversation({posts}: ConversationContent): string {
         if (!posts || posts.length === 0) return '';
         return "💬 Conversation Context:\n\n" + posts.filter(post => post && post.user_id && post.message).map(post =>
             `${post.user_id}: ${post.message}`
@@ -272,8 +307,14 @@ export class PromptBuilder implements InputPrompt {
         this.registry.registerRenderer(contentType, renderer);
     }
 
+    /**
+     * @deprecated
+     */
     addContent<T>(contentType: ContentType, content?: T): void {
-        this.contentSections.set(contentType, content);
+        this.contentSections.set(contentType, {
+            contentType: contentType,
+            params: content
+        });
     }
 
     addInstruction(instruction?: ContentInput): void {
@@ -302,8 +343,10 @@ export class PromptBuilder implements InputPrompt {
                 if (rendered) {
                     this.context.push(rendered);
                 } else {
-                    Logger.error(`PromptBuilder renderer for content type ${context.contentType} not found`);
+                    Logger.warn(`PromptBuilder renderer for content type ${context.contentType} provided no content`);
                 }
+            } else {
+                Logger.error(`PromptBuilder renderer for content type ${context.contentType} not found`);
             }
         }
     }

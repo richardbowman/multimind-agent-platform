@@ -43,5 +43,8 @@ export enum SchemaType {
     GoalProgressResponse = "GoalProgressResponse",
     CalendarResponse = "CalendarResponse",
     NextActionResponse = "NextActionResponse",
-    WebScrapeSummaryResponse = "WebScrapeSummaryResponse"
+    WebScrapeSummaryResponse = "WebScrapeSummaryResponse",
+    GoalAndPlanResponse = "GoalAndPlanResponse",
+    PlanStepsResponse = "PlanStepsResponse",
+    IntentionsResponse = "IntentionsResponse"
 }

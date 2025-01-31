@@ -4,7 +4,7 @@ import 'reflect-metadata';
 import { ChatPost, isValidChatPost, Message } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { Project, Task, TaskType } from '../tools/taskManager';
+import { AddTaskParams, Project, Task, TaskType } from '../tools/taskManager';
 import { Planner } from './planners/planner';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import Logger from '../helpers/logger';
@@ -17,10 +17,11 @@ import { ExecuteNextStepParams } from './interfaces/ExecuteNextStepParams';
 import { ExecuteStepParams, StepTask } from './interfaces/ExecuteStepParams';
 import { pathExists } from 'fs-extra';
 import { ModelHelpers } from 'src/llm/modelHelpers';
+import { ExecutorType } from './interfaces/ExecutorType';
 
 export abstract class StepBasedAgent extends Agent {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
-    protected planner: Planner;
+    protected planner: Planner|null;
 
     constructor(params: AgentConstructorParams, planner?: Planner) {
         super(params);
@@ -49,7 +50,8 @@ export abstract class StepBasedAgent extends Agent {
                 userId: this.userId,
                 messagingHandle: this.messagingHandle,
                 purpose: this.modelHelpers.getPurpose(),
-                finalInstructions: this.modelHelpers.getFinalInstructions()
+                finalInstructions: this.modelHelpers.getFinalInstructions(),
+                sequences: this.modelHelpers.getStepSequences()
             }),
             settings: this.settings
         };
@@ -130,7 +132,8 @@ export abstract class StepBasedAgent extends Agent {
                 channelId: params.userPost?.channel_id,
                 threadId: params.userPost?.thread_id,
                 projects: params.projects,
-                artifacts: params.artifacts
+                artifacts: params.artifacts,
+                threadPosts: params.threadPosts
             }
         });
     }
@@ -157,7 +160,8 @@ export abstract class StepBasedAgent extends Agent {
                     channelId: params.userPost?.channel_id,
                     threadId: params.userPost?.thread_id,
                     projects: params.projects,
-                    artifacts: params.artifacts
+                    artifacts: params.artifacts,
+                    threadPosts: params.threadPosts
                 }
             });
             return;
@@ -179,7 +183,8 @@ export abstract class StepBasedAgent extends Agent {
                 channelId: params.userPost?.channel_id,
                 threadId: params.userPost?.thread_id,
                 projects: params.projects,
-                artifacts: params.artifacts
+                artifacts: params.artifacts,
+                threadPosts: params.threadPosts
             }
         });
     }
@@ -190,8 +195,8 @@ export abstract class StepBasedAgent extends Agent {
             // Use decorator metadata if available
             this.stepExecutors.set(metadata.key, executor);
             //todo: not great to duplicate this list
-            if (this.planner.stepExecutors) {
-                this.planner.stepExecutors.set(metadata.key, executor);
+            if (this.planner?.stepExecutors) {
+                this.planner?.stepExecutors.set(metadata.key, executor);
             }
         } else {
             Logger.warn(`No metadata or description found for executor ${executor.constructor.name}`);
@@ -226,22 +231,43 @@ export abstract class StepBasedAgent extends Agent {
             threadPosts: posts?.slice(0, -1),
             userPost: posts?.[posts?.length - 1]
         };
-        const steps = await this.planner.planSteps(handlerParams);
 
-        // Send a progress message about the next steps
-        const nextStepsMessage = steps.steps ?
-            steps.steps.map((step, index) => `${index + 1}. ${step.actionType}`)
-                .join('\n') : "No steps provided";
+        if (this.planner === null) {
+            const newTask: AddTaskParams = {
+                type: TaskType.Step,
+                description: `Perform planning for user's goal: ${handlerParams.userPost.message}`,
+                creator: this.userId,
+                order: 0, // Add to end of current tasks
+                props: {
+                    stepType: ExecutorType.NEXT_STEP
+                }
+            };
+            await this.projects.addTask(project, newTask);
+            return {
+                steps: [{
+                    actionType: ExecutorType.NEXT_STEP,
+                    context: "None"
+                }]
+            }
+        } else {
 
-        if (isValidChatPost(handlerParams.userPost)) {
-            await this.reply(handlerParams.userPost, {
-                message: `🔄 Planning next steps:\n${nextStepsMessage}`
-            }, {
-                "project-id": handlerParams.projects?.[0].id
-            });
+            const steps = await this.planner.planSteps(handlerParams);
+
+            // Send a progress message about the next steps
+            const nextStepsMessage = steps.steps ?
+                steps.steps.map((step, index) => `${index + 1}. ${step.actionType}`)
+                    .join('\n') : "No steps provided";
+
+            if (isValidChatPost(handlerParams.userPost)) {
+                await this.reply(handlerParams.userPost, {
+                    message: `🔄 Planning next steps:\n${nextStepsMessage}`
+                }, {
+                    "project-id": handlerParams.projects?.[0].id
+                });
+            }
+
+            return steps;
         }
-
-        return steps;
     }
 
     protected async executeNextStep(params: ExecuteNextStepParams): Promise<void> {
@@ -453,6 +479,7 @@ export abstract class StepBasedAgent extends Agent {
                     context: {
                         channelId: userPost?.channel_id,
                         threadId: userPost?.thread_id,
+                        threadPosts: params.context?.threadPosts,
                         artifacts: params.context?.artifacts,
                         projects: params.context?.projects
                     },
@@ -522,7 +549,7 @@ export abstract class StepBasedAgent extends Agent {
                     await this.reply(replyTo, messageResponse, props);
                 }
             }
-            if (stepResult.finished || this.planner.alwaysComplete) {
+            if (stepResult.finished || this.planner?.alwaysComplete) {
                 this.projects.completeTask(task.id);
                 Logger.info(`Completed step "${task.props.stepType}" for project "${projectId}"`);
 
@@ -530,7 +557,7 @@ export abstract class StepBasedAgent extends Agent {
                 const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete && t.type === "step");
                 if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
                     //TODO: hacky, we don't really post this message
-                    if (this.planner.allowReplan) {
+                    if (this.planner?.allowReplan) {
                         await this.planSteps(project.id, [InMemoryPost.fromLoad({
                             ...userPost,
                             message: `Replanning requested after ${stepResult.type} step completed`

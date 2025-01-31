@@ -12,13 +12,25 @@ export enum StepResultType {
     FinalResponse = "FinalResponse",
     Debug = "Debug",
     Delegation = "Delegation",
-    Calendar = "Calendar"
+    Calendar = "Calendar",
+    GenerateIntention = "GenerateIntention"
+}
+
+export enum StepResponseType {
+    Intent
+
 }
 
 export enum ReplanType {
     None = "none",
     Allow = "allow", 
     Force = "force"
+}
+
+export interface StepResponse {
+    type?: StepResponseType;
+    message: string;
+    data?: Record<string, any>;
 }
 
 export interface StepResult {
@@ -31,5 +43,5 @@ export interface StepResult {
     async?: boolean;
     replan?: ReplanType;
     needsUserInput?: boolean;
-    response: ModelResponse;
+    response: StepResponse;
 }

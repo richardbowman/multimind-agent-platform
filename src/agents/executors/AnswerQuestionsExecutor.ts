@@ -14,6 +14,7 @@ import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepTask } from '../interfaces/ExecuteStepParams';
 import { IntakeQuestion } from 'src/schemas/IntakeQuestionsResponse';
+import { ContentType, PromptBuilder } from 'src/llm/promptBuilder';
 
 export interface AnswerMetadata {
     index: number;
@@ -59,7 +60,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         );
 
         const answers = pastQA.map(t => t.props?.result?.response?.data?.answers).flat().filter(a => a);
-        const outstandingQuestions : IntakeQuestion[] = pastQA ? pastQA[pastQA.length - 1].props?.result?.response?.data?.outstandingQuestions : [];
+        const outstandingQuestions : IntakeQuestion[] = pastQA ? pastQA.map(q => q.props?.result?.response?.data?.outstandingQuestions||[]).flat() : [];
 
 
         // Get template sections that need content
@@ -89,43 +90,47 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             artifacts += '\n\n' + this.modelHelpers.formatArtifacts(params.context.artifacts);
         }
 
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addContext({contentType: ContentType.ABOUT})
+        prompt.addContext({contentType: ContentType.INTENT, params})
+        prompt.addInstruction(`OVERALL GOAL: ${params.overallGoal}
+
+Artifacts Attached To This Conversation:
+${artifacts}
+
+
+Here is the current state of our questions and answers:
+
+Previously Answered Questions:
+${answers?.map((a: QAAnswers) =>
+    `Question: ${a.question}\nAnswer: ${a.answer}\n`
+).join('\n') || 'No previous answers'}
+
+Pending Questions to Analyze:
+${outstandingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
+
+${templateSections.length > 0 ? `
+Document Sections Needing Content:
+${templateSections.map((s, i) =>
+    `${i + 1}. ${s.title} - ${s.description}
+    Questions needed: ${s.questions.join(', ')}`
+).join('\n')}
+` : ''}
+
+Use the "answers" key to provide a JSON array with an item for EACH of the ${outstandingQuestions.length} pending questions that includes:
+1. answered: If the question was answered completely and meaningfully
+2. analysis: If answered, restate the specific answer from the response
+3. extractedAnswer: Analyze the answer quality and completeness.
+
+Additionally, analyze the overall progress and provide:
+1. shouldContinue: true if you have enough information to proceed (roughly 75% of questions answered meaningfully), false if we need more answers
+2. message: Show the user you're listening by restating what you learned, and explain what you'd still like to know.
+`)
+
         const modelResponse = await this.modelHelpers.generate<AnswerAnalysisResponse>({
             message: params.message || params.stepGoal,
             threadPosts: params.context?.threadPosts,
-            instructions: new StructuredOutputPrompt(schema,
-                `OVERALL GOAL: ${params.overallGoal}
-                
-                Artifacts Attached To This Conversation:
-                ${artifacts}
-
-                
-                Here is the current state of our questions and answers:
-
-                Previously Answered Questions:
-                ${answers?.map((a: QAAnswers) =>
-                    `Question: ${a.question}\nAnswer: ${a.answer}\n`
-                ).join('\n') || 'No previous answers'}
-
-                Pending Questions to Analyze:
-                ${outstandingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
-
-                ${templateSections.length > 0 ? `
-                Document Sections Needing Content:
-                ${templateSections.map((s, i) =>
-                    `${i + 1}. ${s.title} - ${s.description}
-                    Questions needed: ${s.questions.join(', ')}`
-                ).join('\n')}
-                ` : ''}
-                
-                Use the "answers" key to provide a JSON array with an item for EACH of the ${outstandingQuestions.length} pending questions that includes:
-                1. answered: If the question was answered completely and meaningfully
-                2. analysis: If answered, restate the specific answer from the response
-                3. extractedAnswer: Analyze the answer quality and completeness.
-
-                Additionally, analyze the overall progress and provide:
-                1. shouldContinue: true if you have enough information to proceed (roughly 75% of questions answered meaningfully), false if we need more answers
-                2. message: Show the user you're listening by restating what you learned, and explain what you'd still like to know.
-                `)
+            instructions: new StructuredOutputPrompt(schema, prompt)
         });
 
         // Initialize answers array if it doesn't exist

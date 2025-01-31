@@ -678,50 +678,19 @@
     "GoalAndPlanResponse": {
       "additionalProperties": false,
       "properties": {
-        "masterPlan": {
-          "additionalProperties": false,
-          "properties": {
-            "goal": {
-              "type": "string"
-            },
-            "plan": {
-              "items": {
-                "$ref": "#/definitions/PlanStepTask"
-              },
-              "type": "array"
-            }
-          },
-          "required": [
-            "goal",
-            "plan"
-          ],
-          "type": "object"
-        },
-        "message": {
+        "intention": {
           "type": "string"
         },
-        "subPlan": {
-          "additionalProperties": false,
-          "properties": {
-            "goal": {
-              "type": "string"
-            },
-            "plan": {
-              "items": {
-                "$ref": "#/definitions/PlanStepTask"
-              },
-              "type": "array"
-            }
+        "plan": {
+          "items": {
+            "$ref": "#/definitions/PlanStepTask"
           },
-          "required": [
-            "goal",
-            "plan"
-          ],
-          "type": "object"
+          "type": "array"
         }
       },
       "required": [
-        "message"
+        "plan",
+        "intention"
       ],
       "type": "object"
     },
@@ -877,6 +846,18 @@
       ],
       "type": "object"
     },
+    "HighLevelPlan": {
+      "additionalProperties": false,
+      "properties": {
+        "plan": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "plan"
+      ],
+      "type": "object"
+    },
     "ImplementationStep": {
       "additionalProperties": false,
       "properties": {
@@ -973,6 +954,30 @@
         "reasoning",
         "goalRestatement",
         "followupMessage"
+      ],
+      "type": "object"
+    },
+    "IntentionsResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "currentFocus": {
+          "description": "The plan item we are focused on achieving right now, indexed from 1 to n.",
+          "type": "number"
+        },
+        "intention": {
+          "type": "string"
+        },
+        "plan": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        }
+      },
+      "required": [
+        "plan",
+        "intention",
+        "currentFocus"
       ],
       "type": "object"
     },
@@ -1677,7 +1682,10 @@
         "GoalProgressResponse",
         "CalendarResponse",
         "NextActionResponse",
-        "WebScrapeSummaryResponse"
+        "WebScrapeSummaryResponse",
+        "GoalAndPlanResponse",
+        "PlanStepsResponse",
+        "IntentionsResponse"
       ],
       "type": "string"
     },

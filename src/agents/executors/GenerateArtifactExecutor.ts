@@ -79,7 +79,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
             if (project?.metadata?.answers) {
                 promptBuilder.addContent(ContentType.DOCUMENTS, {
                     title: "Q&A Context",
-                    content: project.metadata.answers.map((a: any) => 
+                    content: project.metadata.answers.map((a: any) =>
                         `Q: ${a.question}\nA: ${a.answer}`
                     ).join('\n\n')
                 });
@@ -110,75 +110,73 @@ export class GenerateArtifactExecutor implements StepExecutor {
 ${JSON.stringify(schema, null, 2)}
 for the file attributes`);
 
-        promptBuilder.addInstruction(`3. Provide the content in a separately enclosed code block using the appropriate syntax:
+        promptBuilder.addInstruction(`3. Provide the content in a separately enclosed code block using the appropriate syntax using only one of these three supported formats:
 - For markdown: \`\`\`markdown
 - For csv: \`\`\`csv
-- For mermaid: \`\`\`mermaid`);
+- For mermaid diagrams: \`\`\`mermaid`);
 
-promptBuilder.addInstruction(`4. You may only provide one content type per response. If you need to provide multiple content types, please respond suggesting other content types to generate.`);
-promptBuilder.addInstruction(`If you are appending to a CSV file, make sure you include the exactly same column structure for the new rows.`);
+        promptBuilder.addInstruction(`4. You may only provide one content type per response. If you need to provide multiple content types, please respond suggesting other content types to generate.`);
+        promptBuilder.addInstruction(`If you are appending to a CSV file, make sure you include the exactly same column structure for the new rows.`);
 
         const prompt = promptBuilder.build();
-        
+
         try {
             const unstructuredResult = await this.modelHelpers.generate<ModelMessageResponse>({
                 message: params.message || params.stepGoal,
                 instructions: prompt,
                 threadPosts: params.context?.threadPosts
             });
-            
-            const json = StringUtils.extractAndParseJsonBlocks(unstructuredResult.message)[0];
-            const md = StringUtils.extractCodeBlocks(unstructuredResult.message).filter(b => b.type !== 'json')[0];
 
+            const json = StringUtils.extractAndParseJsonBlock(unstructuredResult.message, schema);
+            const md = StringUtils.extractCodeBlocks(unstructuredResult.message).filter(b => b.type !== 'json');
             const result = {
-                ...json,
-                content: md.code
+                ...json
             } as ArtifactGenerationResponse & { content: string };
 
-            // Prepare the artifact
-            let finalContent = result.content;
-            let finalType = result.type?.toLowerCase();
-            let finalArtifactId : UUID = undefined;
-
-            if (result.artifactIndex && result.artifactIndex > 0 && result.operation === 'append') {
-                try {
-                    finalArtifactId = params.context?.artifacts[result.artifactIndex-1].id;
-                    const existingArtifact = await this.artifactManager.loadArtifact(finalArtifactId);
-                    finalContent = `${existingArtifact?.content||""}\n${result.content}`;
-                    finalType = existingArtifact?.type;
-                } catch (error) {
-                    Logger.error(`Could not find existing artifact for append operation ${result.artifactId}`, error);
-                }
+            if (md && md.length == 0) {
+                Logger.error(`No code block found in the response: ${unstructuredResult.message}`);
+                throw new Error(`No code block found in the response: ${unstructuredResult.message}`);
             } else {
-                // Validate document type
-                const validTypes = ['markdown', 'csv', 'mermaid'];
-                if (!validTypes.includes(finalType)) {
-                    throw new Error(`Invalid document type: ${finalType}. Must be one of: ${validTypes.join(', ')}`);
+                result.content = md[0].code;
+
+                // Prepare the artifact
+                const artifactUpdate: Partial<Artifact> = {
+                    type: md[0].type?.toLowerCase(),
+                    content: result.content,
+                    metadata: {
+                        title: result.title,
+                        operation: result.operation || 'create',
+                        projectId: params.projectId
+                    }
+                };
+
+                if (result.artifactIndex && result.artifactIndex > 0 && result.operation === 'append' && params.context?.artifacts) {
+                    try {
+                        artifactUpdate.id = params.context?.artifacts[result.artifactIndex - 1].id;
+                        const existingArtifact = await this.artifactManager.loadArtifact(artifactUpdate.id);
+                        artifactUpdate.content = `${existingArtifact?.content || ""}\n${result.content}`;
+                        artifactUpdate.type = existingArtifact?.type;
+                    } catch (error) {
+                        Logger.error(`Could not find existing artifact for append operation ${artifactUpdate.id}`, error);
+                    }
+                } else {
+                    // Validate document type
+                    const validTypes = ['markdown', 'csv', 'mermaid'];
+                    if (!artifactUpdate.type || !validTypes.includes(artifactUpdate.type)) {
+                        throw new Error(`Invalid document type: ${artifactUpdate.type}. Must be one of: ${validTypes.join(', ')}`);
+                    }
                 }
+
+                // Save the artifact
+                const artifact = await this.artifactManager.saveArtifact(artifactUpdate);
+
+                return {
+                    type: "generate-artifact",
+                    finished: true,
+                    artifactIds: [artifact?.id],
+                    response: unstructuredResult
+                };
             }
-
-            const artifact: Partial<Artifact> = {
-                id: finalArtifactId,
-                type: finalType,
-                content: finalContent,
-                metadata: {
-                    title: result.title,
-                    operation: result.operation || 'create',
-                    previousVersion: result.artifactId ? result.artifactId : undefined,
-                    projectId: params.projectId
-                }
-            };
-
-            // Save the artifact
-            await this.artifactManager.saveArtifact(artifact);
-
-            return {
-                type: "generate-artifact",
-                finished: true,
-                artifactIds: [artifact.id],
-                response: unstructuredResult,
-            };
-
         } catch (error) {
             Logger.error('Error generating artifact:', error);
             return {

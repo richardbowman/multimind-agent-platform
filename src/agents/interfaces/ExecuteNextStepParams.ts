@@ -12,5 +12,6 @@ export interface ExecuteNextStepParams {
         threadId?: UUID;
         artifacts?: Artifact[];
         projects?: Project[];
+        threadPosts?: ChatPost[];
     };
 }

@@ -13,6 +13,7 @@ import { StructuredOutputPrompt } from "./ILLMService";
 import { SearchResult } from "./IVectorDatabase";
 import { PromptBuilder, PromptRegistry } from "./promptBuilder";
 import { isObject } from "src/types/types";
+import { InputPrompt } from "src/prompts/structuredInputPrompt";
 
 export interface ModelHelpersParams {
     llmService: ILLMService;
@@ -20,6 +21,7 @@ export interface ModelHelpersParams {
     purpose?: string;
     finalInstructions?: string;
     messagingHandle?: string;
+    sequences: StepSequence[];
 }
 
 export type WithTokens<T> = T extends object ? T & {
@@ -128,7 +130,7 @@ export class ModelHelpers {
     private threadSummaries: Map<string, ThreadSummary> = new Map();
     protected userId: string;
     protected finalInstructions?: string;
-    protected messagingHandle?: string;
+    readonly messagingHandle?: string;
 
     constructor(params: ModelHelpersParams) {
         this.userId = params.userId;
@@ -136,6 +138,7 @@ export class ModelHelpers {
         this.finalInstructions = params.finalInstructions;
         this.messagingHandle = params.messagingHandle;
         this.modelCache = new ModelCache();
+        this.stepSequences = [...params.sequences||[]];
         if (params.purpose) this.purpose = params.purpose;
         this.finalInstructions = params.finalInstructions;
     }
@@ -389,7 +392,7 @@ export class ModelHelpers {
         if (params.instructions instanceof StructuredOutputPrompt) {
             return this.generateStructured<T>(params.instructions, params);
         } else {
-            return this.generateOld(params.instructions.toString(), params);
+            return this.generateOld(params.instructions, params);
         }
     }
 
@@ -453,42 +456,46 @@ export class ModelHelpers {
         return message;
     }
 
-    private async generateOld(instructions: string, params: GenerateParams): Promise<ModelMessageResponse> {
+    private async generateOld(instructions: string|InputPrompt, params: GenerateParams): Promise<ModelMessageResponse> {
         // Check cache first
         const cacheContext = { params };
         // const cachedResponse = this.modelCache.get(instructions, cacheContext);
         // if (cachedResponse) {
         //     return cachedResponse;
         // }
-
-        // Fetch the latest memory artifact for the channel
-        let augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`);
-
-        if (this.isMemoryEnabled && (params as HandlerParams).userPost) {
-            const memoryArtifact = await this.fetchLatestMemoryArtifact((params as HandlerParams).userPost.channel_id);
-
-            // Append the memory content to the instructions if it exists
-            if (memoryArtifact && memoryArtifact.content) {
-                const memoryContent = memoryArtifact.content.toString();
-                augmentedInstructions += `\n\nContext from previous interactions:\n${memoryContent}`;
+        
+        let augmentedInstructions : string;
+        if (typeof instructions === "string") {
+            // Fetch the latest memory artifact for the channel
+            augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`);
+            if (this.isMemoryEnabled && (params as HandlerParams).userPost) {
+                const memoryArtifact = await this.fetchLatestMemoryArtifact((params as HandlerParams).userPost.channel_id);
+    
+                // Append the memory content to the instructions if it exists
+                if (memoryArtifact && memoryArtifact.content) {
+                    const memoryContent = memoryArtifact.content.toString();
+                    augmentedInstructions += `\n\nContext from previous interactions:\n${memoryContent}`;
+                }
             }
-        }
-
-        // Deduplicate artifacts first, then search results
-        const deduplicatedArtifacts = params.artifacts ? this.deduplicateArtifacts(params.artifacts) : [];
-        const deduplicatedSearchResults = params.searchResults ? this.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
-
-        if (deduplicatedSearchResults) {
-            augmentedInstructions += `\n\nSearch results from knowledge base:\n${deduplicatedSearchResults.map(s => `<searchresult>Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}</searchresult>\n\n`)}`;
-        }
-
-        if (deduplicatedArtifacts) {
-            for (const artifact of deduplicatedArtifacts) {
-                const artifactContent = artifact.content ? artifact.content.toString() : 'No content available';
-                augmentedInstructions += `\n\n<artifact>Artifact ID: ${artifact.id}\nTitle: ${artifact.metadata?.title || 'No title'}\nContent:\n${artifactContent}</artifact>`;
+    
+            // Deduplicate artifacts first, then search results
+            const deduplicatedArtifacts = params.artifacts ? this.deduplicateArtifacts(params.artifacts) : [];
+            const deduplicatedSearchResults = params.searchResults ? this.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
+    
+            if (deduplicatedSearchResults) {
+                augmentedInstructions += `\n\nSearch results from knowledge base:\n${deduplicatedSearchResults.map(s => `<searchresult>Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}</searchresult>\n\n`)}`;
             }
+    
+            if (deduplicatedArtifacts) {
+                for (const artifact of deduplicatedArtifacts) {
+                    const artifactContent = artifact.content ? artifact.content.toString() : 'No content available';
+                    augmentedInstructions += `\n\n<artifact>Artifact ID: ${artifact.id}\nTitle: ${artifact.metadata?.title || 'No title'}\nContent:\n${artifactContent}</artifact>`;
+                }
+            }    
+        } else {
+            augmentedInstructions = instructions.getInstructions();
         }
-
+       
         // Augment instructions with context and generate a response
         const history = (params as HandlerParams).threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
         const response = await this.llmService.generate(augmentedInstructions, (params as HandlerParams).userPost || { message: params.message || params.content || "" }, history);
@@ -504,7 +511,7 @@ export class ModelHelpers {
         }
 
         // Cache the response
-        this.modelCache.set(instructions, cacheContext, formattedResponse);
+        // this.modelCache.set(augmentedInstructions, cacheContext, formattedResponse);
 
         return formattedResponse;
     }

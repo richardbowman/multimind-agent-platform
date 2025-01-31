@@ -163,7 +163,8 @@ export class OpenAIService extends BaseLLMService {
                     _usage: {
                         inputTokens: response.usage?.prompt_tokens || 0,
                         outputTokens: response.usage?.completion_tokens || 0
-                    }
+                    },
+                    _message: params.parseJSON ? response.choices[0].message?.content: undefined
                 }
             };
 

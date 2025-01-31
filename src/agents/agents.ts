@@ -16,6 +16,7 @@ import { Settings } from "src/tools/settings";
 import { Agents } from "src/utils/AgentLoader";
 import { UUID } from "src/types/uuid";
 import { StringUtils } from "src/utils/StringUtils";
+import { PromptBuilder } from "src/llm/promptBuilder";
 
 
 export enum TaskEventType {

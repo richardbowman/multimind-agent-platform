@@ -1,2 +1,2 @@
 import { GoalConfirmationExecutor } from './GoalConfirmationExecutor';
-import { EstablishMasterPlanExecutor } from './EstablishMasterPlanExecutor';
+import { EstablishMasterPlanExecutor } from './IntentExecutor';

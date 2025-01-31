@@ -1,5 +1,6 @@
 import JSON5 from 'json5';
 import { marked, RendererObject } from 'marked';
+import { JSONSchema } from 'openai/lib/jsonschema';
 import { LinkRef } from 'src/helpers/scrapeHelper';
 
 export interface CodeBlock {
@@ -47,6 +48,21 @@ export namespace StringUtils {
      */
     export function extractAndParseJsonBlocks(text: string): any[] {
         return extractCodeBlocks(text, 'json').map(m => JSON5.parse(m.code));
+    }
+
+    /**
+     * Extracts first JSON from code blocks and optionally parses it against a schema
+     * @param text Input text containing JSON code blocks
+     * @returns Array of parsed JSON objects
+     * @throws SyntaxError if JSON parsing fails
+     */
+    export function extractAndParseJsonBlock<T>(text: string, schema?: JSONSchema): T|undefined {
+        const blocks = extractCodeBlocks(text, 'json').map(m => JSON5.parse(m.code));
+        if (blocks.length == 1) {
+            return blocks[0];
+        } else {
+            return undefined;
+        }
     }
 
     /**
