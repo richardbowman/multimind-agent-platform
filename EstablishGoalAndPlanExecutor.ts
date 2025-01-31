@@ -47,8 +47,10 @@ export class EstablishGoalAndPlanExecutor implements StepExecutor {
         const project = this.taskManager.getProject(params.projectId);
         const activeMasterPlan = project.metadata.activeMasterPlan;
 
+        // Clear existing sub-plan if re-evaluating
         if (activeMasterPlan) {
             promptBuilder.addContext(`ACTIVE MASTER PLAN: ${activeMasterPlan.goal}`);
+            promptBuilder.addContext(`USER MESSAGE: ${params.message}`);
         } else {
             promptBuilder.addContext(`USER MESSAGE: ${params.message}`);
         }
@@ -76,20 +78,28 @@ export class EstablishGoalAndPlanExecutor implements StepExecutor {
             threadPosts: params.context?.threadPosts || []
         });
 
-        if (activeMasterPlan && result.subPlan && result.subPlan.plan) {
+        // Clear existing tasks if re-evaluating
+        if (activeMasterPlan) {
+            // Clear existing sub-plan tasks
+            const project = this.taskManager.getProject(params.projectId);
+            const currentTasks = this.taskManager.getAllTasks(project.id).filter(task => task.type === TaskType.Step);
+            currentTasks.forEach(task => this.taskManager.cancelTask(task.id));
+
             // Create new tasks for the sub-plan
-            result.subPlan.plan.forEach((step, index) => {
-                const newTask: AddTaskParams = {
-                    type: TaskType.Step,
-                    description: step.description,
-                    creator: this.taskManager.newUUID(),
-                    order: index,
-                    props: {
-                        stepType: step.actionType
-                    }
-                };
-                this.taskManager.addTask(this.taskManager.getProject(params.projectId), newTask);
-            });
+            if (result.subPlan && result.subPlan.plan) {
+                result.subPlan.plan.forEach((step, index) => {
+                    const newTask: AddTaskParams = {
+                        type: TaskType.Step,
+                        description: step.description,
+                        creator: this.taskManager.newUUID(),
+                        order: index,
+                        props: {
+                            stepType: step.actionType
+                        }
+                    };
+                    this.taskManager.addTask(this.taskManager.getProject(params.projectId), newTask);
+                });
+            }
         } else if (!activeMasterPlan && result.masterPlan && result.masterPlan.plan) {
             // Create new tasks for the master plan
             result.masterPlan.plan.forEach((step, index) => {
