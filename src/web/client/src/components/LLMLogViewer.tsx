@@ -213,7 +213,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                         ))
                 )
                 .sort((a, b) => b.timestamp - a.timestamp) // Sort by timestamp descending
-            )}
+            }
             
             <Dialog 
                 open={!!selectedLog} 
@@ -302,7 +302,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                             borderRadius: '4px',
                             border: '1px solid',
                             borderColor: 'divider',
-                            overflow: 'hidden',
+                            overflow: 'auto',
                             flex: 1,
                             display: 'flex',
                             flexDirection: 'column'
