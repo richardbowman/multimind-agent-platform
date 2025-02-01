@@ -12,8 +12,11 @@ import {
     Button,
     Typography,
     Tabs,
-    Tab
+    Tab,
+    IconButton
 } from '@mui/material';
+import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useDataContext } from '../contexts/DataContext';
 import { FormattedDataView } from './LogViewer';
 
@@ -26,10 +29,31 @@ interface LLMLogViewerProps {
 
 export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, highlightText, filterLog }) => {
     const [selectedLog, setSelectedLog] = useState<any>(null);
+    const [selectedLogIndex, setSelectedLogIndex] = useState<number>(-1);
     const [tabValue, setTabValue] = useState(0);
+    const [allLogs, setAllLogs] = useState<any[]>([]);
 
-    const handleOpenDetails = (log: any) => {
+    const handleOpenDetails = (log: any, index: number) => {
+        const logsArray = Object.entries(logs?.llm || {})
+            .flatMap(([_, entries]) => Array.isArray(entries) ? [...entries].reverse() : [])
+            .filter(log => filterLog(JSON.stringify({
+                method: log?.method,
+                input: log?.input,
+                output: log?.output,
+                error: log?.error
+            })));
+            
+        setAllLogs(logsArray);
         setSelectedLog(log);
+        setSelectedLogIndex(logsArray.indexOf(log));
+    };
+
+    const handleNavigate = (direction: 'prev' | 'next') => {
+        const newIndex = direction === 'prev' ? selectedLogIndex - 1 : selectedLogIndex + 1;
+        if (newIndex >= 0 && newIndex < allLogs.length) {
+            setSelectedLog(allLogs[newIndex]);
+            setSelectedLogIndex(newIndex);
+        }
     };
 
     const handleCloseDetails = () => {
@@ -51,7 +75,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                     .map((log, index) => {
                         return (
                             <div key={`${service}-${index}`} className="log-entry info">
-                                <ListItemButton onClick={() => handleOpenDetails(log)} sx={{ p: 0 }}>
+                                <ListItemButton onClick={() => handleOpenDetails(log, index)} sx={{ p: 0 }}>
                                     <ListItemText
                                         primary={
                                             <>
@@ -82,7 +106,28 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                     }
                 }}
             >
-                <DialogTitle>LLM Request Details</DialogTitle>
+                <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                    <Box>
+                        <IconButton 
+                            onClick={() => handleNavigate('prev')} 
+                            disabled={selectedLogIndex <= 0}
+                            sx={{ mr: 1 }}
+                        >
+                            <ArrowBackIosIcon />
+                        </IconButton>
+                        <IconButton 
+                            onClick={() => handleNavigate('next')} 
+                            disabled={selectedLogIndex >= allLogs.length - 1}
+                            sx={{ ml: 1 }}
+                        >
+                            <ArrowForwardIosIcon />
+                        </IconButton>
+                    </Box>
+                    <Typography variant="h6" component="span">
+                        LLM Request Details ({selectedLogIndex + 1}/{allLogs.length})
+                    </Typography>
+                    <Box /> {/* Spacer to balance the layout */}
+                </DialogTitle>
                 <DialogContent dividers>
                     <Tabs 
                         value={tabValue} 
