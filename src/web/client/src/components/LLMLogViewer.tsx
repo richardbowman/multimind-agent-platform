@@ -78,22 +78,28 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                     <FormattedDataView data={selectedLog?.input} />
                     
                     <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>Output</Typography>
-                    {typeof selectedLog?.output === 'string' ? (
-                        <Box sx={{ 
-                            p: 2,
-                            backgroundColor: '#f5f5f5',
-                            borderRadius: '4px',
-                            border: '1px solid #ddd',
-                            maxHeight: '400px',
-                            overflow: 'auto'
-                        }}>
+                    <Box sx={{ 
+                        p: 2,
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd',
+                        maxHeight: '400px',
+                        overflow: 'auto'
+                    }}>
+                        {typeof selectedLog?.output === 'string' ? (
                             <ReactMarkdown>
                                 {selectedLog.output}
                             </ReactMarkdown>
-                        </Box>
-                    ) : (
-                        <FormattedDataView data={selectedLog?.output} />
-                    )}
+                        ) : (
+                            selectedLog?.output ? (
+                                <FormattedDataView data={selectedLog.output} />
+                            ) : (
+                                <Typography variant="body2" color="textSecondary">
+                                    No output available
+                                </Typography>
+                            )
+                        )}
+                    </Box>
                     
                     {selectedLog?.error && (
                         <>
