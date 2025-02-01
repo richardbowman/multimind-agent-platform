@@ -11,11 +11,14 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { ExecutorType } from './interfaces/ExecutorType';
+import { NextActionExecutor } from './planners/nextActionExecutor';
 
 export class SolverAgent extends StepBasedAgent {
 
     constructor(params: AgentConstructorParams) {
         super(params);
+
+        this.planner = null;
 
         // Set purpose and instructions
         this.modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning who can write code.`);
@@ -115,7 +118,8 @@ export class SolverAgent extends StepBasedAgent {
         // this.registerStepExecutor(new CodeExecutorExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new NodeExecutorExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new FinalResponseExecutor(this.getExecutorParams()));
-
+        
+        this.registerStepExecutor(new NextActionExecutor(this.getExecutorParams(), this.stepExecutors));
     }
 
     public async initialize(): Promise<void> {

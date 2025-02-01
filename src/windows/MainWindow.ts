@@ -85,6 +85,8 @@ export class MainWindow {
         this.window.on('resize', this.debounceResize);
 
         await this.window.loadFile(path.join(__dirname, './web/index.html'));
+        //await this.window.loadURL('http://localhost:3000');
+
         this.window.show();
         this.window.webContents.setZoomFactor(1);
         this.window.webContents.setZoomLevel(this.zoomLevel);          

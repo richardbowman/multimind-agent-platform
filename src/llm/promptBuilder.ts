@@ -1,7 +1,7 @@
 import { Agent } from "src/agents/agents";
 import { ExecuteParams } from "src/agents/interfaces/ExecuteParams";
 import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
-import { ReplanType, StepResponseType, StepResult, StepResultType } from "src/agents/interfaces/StepResult";
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "src/agents/interfaces/StepResult";
 import { StepBasedAgent } from "src/agents/stepBasedAgent";
 import { ChatPost } from "src/chat/chatClient";
 import Logger from "src/helpers/logger";
@@ -11,7 +11,7 @@ import { Project } from "src/tools/taskManager";
 import { ChannelData } from "src/shared/channelTypes";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepTaskContent, ValidationContent as StepResultContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent } from "./ContentTypeDefinitions";
+import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepResponseContent, ValidationContent as StepResultContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent } from "./ContentTypeDefinitions";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { IntentionsResponse } from "src/schemas/goalAndPlan";
 
@@ -29,7 +29,7 @@ export enum ContentType {
     DOCUMENTS = 'documents',
     TASKS = 'tasks',
     GOALS = 'goals',
-    STEP_RESULTS = 'step_results',
+    STEP_RESPONSE = 'step_results',
     EXECUTE_PARAMS = 'execute_params',
     AGENT_CAPABILITIES = 'agent_capabilities',
     AGENT_OVERVIEWS = 'agent_overviews',
@@ -66,7 +66,7 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.ARTIFACTS_EXCERPTS, this.renderArtifactExcerpts.bind(this));
         this.registerRenderer(ContentType.ARTIFACTS_FULL, this.renderArtifacts.bind(this));
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation.bind(this));
-        this.registerRenderer(ContentType.STEP_RESULTS, this.renderStepResults.bind(this));
+        this.registerRenderer(ContentType.STEP_RESPONSE, this.renderStepResults.bind(this));
         this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
         this.registerRenderer(ContentType.AGENT_CAPABILITIES, this.renderAgentCapabilities.bind(this));
         this.registerRenderer(ContentType.AGENT_OVERVIEWS, this.renderAgentOverviews.bind(this));
@@ -112,9 +112,9 @@ export class PromptRegistry {
         return output;
     }
 
-    private stepResultRenderers = new Map<StepResultType, ContentRenderer<StepResult>>();
+    private stepResultRenderers = new Map<StepResponseType, ContentRenderer<StepResponse>>();
 
-    registerStepResultRenderer(type: StepResultType, renderer: ContentRenderer<StepResult>): void {
+    registerStepResultRenderer(type: StepResponseType, renderer: ContentRenderer<StepResponse>): void {
         this.stepResultRenderers.set(type, renderer);
     }
 
@@ -138,23 +138,22 @@ ${this.modelHelpers.getFinalInstructions()}
         return `CURRENT CHAT CHANNEL: ${channel.name} - ${channel.description}`;
     }
 
-    private renderStepResults({steps} : StepTaskContent): string {
-        const stepsWithResults = steps?.filter(s => s.props?.result?.type && s.props.result != undefined);
-        if (!stepsWithResults || stepsWithResults.length === 0) return '';
+    private renderStepResults({responses} : StepResponseContent): string {
+        const filteredResponses = responses?.filter(r => r.type);
+        if (!filteredResponses || filteredResponses.length === 0) return '';
 
-        return "📝 Step History:\n\n" + stepsWithResults.map((step, index) => {
-            const stepResult = step.props.result!;
+        return "📝 Step History:\n\n" + filteredResponses.map((stepResult, index) => {
             const typeRenderer = this.stepResultRenderers.get(stepResult.type!);
             if (typeRenderer) {
                 return typeRenderer(stepResult);
             }
             // Default renderer for unknown types
-            return `Step ${index + 1} (${stepResult.type}):\n${stepResult.response?.message}`;
+            return `Step ${index + 1} (${stepResult.type}):\n${stepResult.message}`;
         }).join('\n\n');
     }
 
-    private renderValidationStep({step} : StepResultContent): string {
-        const metadata = step.response.metadata;
+    private renderValidationStep(step : StepResult): string {
+        const metadata = step.response.data;
         return `🔍 Validation Step:\n` +
             `- Status: ${step.finished ? 'Complete' : 'In Progress'}\n` +
             `- Attempts: ${metadata?.validationAttempts || 1}\n` +
@@ -163,7 +162,7 @@ ${this.modelHelpers.getFinalInstructions()}
             `- Result: ${step.response.message}`;
     }
 
-    private renderQuestionStep({step} : StepResultContent): string {
+    private renderQuestionStep(step : StepResult): string {
         return `❓ Question Step:\n` +
             `- Question: ${step.response.message}\n` +
             `- Status: ${step.finished ? 'Answered' : 'Pending'}`;

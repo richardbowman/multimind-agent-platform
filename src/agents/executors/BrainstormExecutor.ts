@@ -5,9 +5,8 @@ import { StepResult } from '../interfaces/StepResult';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
+import { ContentType } from 'src/llm/promptBuilder';
 import { BrainstormResponse } from 'src/schemas/BrainstormResponse';
-import { StructuredInputPrompt } from 'src/prompts/structuredInputPrompt';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StructuredOutputPrompt } from 'src/llm/ILLMService';
@@ -40,19 +39,16 @@ export class BrainstormExecutor implements StepExecutor {
 
         // Add previous results if available
         if (params.previousResult) {
-            promptBuilder.addContent(ContentType.STEP_RESULTS, params.previousResult);
+            promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult||[]});
         }
 
         // Add artifacts if available
         if (params.context?.artifacts) {
-            promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
+            promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts||[]});
         }
 
         // Add execution parameters
-        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
-            goal: params.goal,
-            stepGoal: params.stepGoal
-        });
+        promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
 
         const prompt = promptBuilder.build();
         

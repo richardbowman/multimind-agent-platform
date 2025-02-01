@@ -41,14 +41,14 @@ import { ContentType } from 'src/llm/promptBuilder';
          });
 
          // Add available executor types
-         promptBuilder.addContent(ContentType.DOCUMENTS, {
+         promptBuilder.addContext({contentType: ContentType.DOCUMENTS, documents: {
              title: "Available Executor Types",
              content: Object.values(ExecutorType).map(type => `- ${type}`).join('\n')
-         });
+         }});
 
          // Add previous results if available
          if (params.previousResult) {
-             promptBuilder.addContent(ContentType.STEP_RESULTS, params.previousResult);
+             promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult});
          }
 
          const prompt = promptBuilder.build();

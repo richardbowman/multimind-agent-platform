@@ -1,6 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ValidationResult } from '../../schemas/validation';
@@ -58,7 +58,7 @@ Analyze the previous steps and their results to determine if a reasonable effort
         promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
 
         // Add previous results if available
-        promptBuilder.addContext({contentType: ContentType.STEP_RESULTS, steps: params.steps});
+        promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult||[]});
 
         // Add previous results if available
         promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts||[]});
@@ -93,6 +93,7 @@ If the solution is wrong, list the specific aspects that must be addressed.`);
             needsUserInput: params.executionMode === 'conversation' && !response.isComplete && !forceCompletion,
             replan: response.isComplete ? ReplanType.None : ReplanType.Force,
             response: {
+                type: StepResponseType.Validation,
                 message: forceCompletion 
                     ? `Maximum validation attempts reached (${maxAttempts}). Marking as complete despite remaining issues:\n` +
                       `${response.missingAspects?.map(a => `- ${a}`).join('\n')}`

@@ -89,17 +89,14 @@ export class GenerateArtifactExecutor implements StepExecutor {
         }
 
         // Add existing artifacts from previous results
-        promptBuilder.addContent(ContentType.ARTIFACTS_FULL, params.context?.artifacts);
+        promptBuilder.addContext({contentType: ContentType.ARTIFACTS_FULL, artifacts: params.context?.artifacts||[]});
 
         // Add execution parameters
-        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
-            goal: params.goal,
-            stepGoal: params.stepGoal
-        });
+        promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
 
         // Add previous results if available
         if (params.previousResult) {
-            promptBuilder.addContent(ContentType.STEP_RESULTS, params.previousResult);
+            promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult});
         }
 
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);

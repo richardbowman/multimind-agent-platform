@@ -6,7 +6,7 @@ import { ChannelData } from "src/shared/channelTypes";
 import { Artifact } from "src/tools/artifact";
 import { SearchResult } from "./IVectorDatabase";
 import { ContentType } from "./promptBuilder";
-import { StepResult } from "src/agents/interfaces/StepResult";
+import { StepResponse, StepResult } from "src/agents/interfaces/StepResult";
 import { Agent } from "src/agents/agents";
 import { Project } from "src/tools/taskManager";
 
@@ -55,9 +55,9 @@ export interface GoalsContent {
     tasks: Task[];
 }
 
-export interface StepTaskContent {
-    contentType: ContentType.STEP_RESULTS;
-    steps: StepTask[];
+export interface StepResponseContent {
+    contentType: ContentType.STEP_RESPONSE;
+    responses: StepResponse[];
 }
 
 export interface ValidationContent {
@@ -125,7 +125,7 @@ export type ContentInput =
     | DocumentsContent 
     | TasksContent 
     | GoalsContent 
-    | StepTaskContent 
+    | StepResponseContent 
     | ExecuteParamsContent 
     | AgentCapabilitiesContent 
     | AgentOverviewsContent 

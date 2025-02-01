@@ -10,6 +10,8 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ContentType } from 'src/llm/promptBuilder';
+import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
 
 /**
  * Executor that performs deep analytical thinking and reasoning.
@@ -34,7 +36,7 @@ export class ThinkingExecutor implements StepExecutor {
 
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.ThinkingResponse);
 
         const promptBuilder = this.modelHelpers.createPrompt();
@@ -42,17 +44,14 @@ export class ThinkingExecutor implements StepExecutor {
 Given a problem, break it down into logical steps and reason through it carefully.
 Consider multiple angles and potential implications.`);
 
-        if (previousResult) {
-            promptBuilder.addContent(ContentType.STEP_RESULTS, [{
-                props: {
-                    result: previousResult
-                }
-            }]);
+        if (params.previousResult) {
+            promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult});
         }
 
         const result = await this.modelHelpers.generate<ThinkingResponse>({
-            message: goal,
-            instructions: new StructuredOutputPrompt(schema, promptBuilder.build())
+            message: params.stepGoal,
+            instructions: new StructuredOutputPrompt(schema, promptBuilder.build()),
+            model: ModelType.ADVANCED_REASONING
         });
 
         return {

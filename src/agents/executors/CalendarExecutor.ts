@@ -41,9 +41,9 @@ export class CalendarExecutor implements StepExecutor {
 3. Delete events when requested
 4. Always confirm changes with the user before applying them`);
 
-      prompt.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
+      prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts||[]});
 
-      prompt.addContent(ContentType.STEP_RESULTS, params.previousResult);
+      prompt.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult||[]});
 
       const instructions = new StructuredOutputPrompt(schema, prompt.build());
 

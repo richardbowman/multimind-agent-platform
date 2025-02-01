@@ -204,7 +204,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                         primary={
                                             <>
                                                 <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
-                                                <span className="log-level">{service.toUpperCase()}</span>
+                                                <span className="log-level">{log.service.toUpperCase()}</span>
                                                 <span className="log-method" dangerouslySetInnerHTML={{ __html: highlightText(log.method) }} />
                                             </>
                                         }

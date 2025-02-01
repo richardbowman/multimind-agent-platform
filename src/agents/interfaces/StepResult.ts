@@ -17,7 +17,8 @@ export enum StepResultType {
 }
 
 export enum StepResponseType {
-    Intent
+    Intent,
+    Validation
 
 }
 
