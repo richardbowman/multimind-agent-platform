@@ -183,17 +183,20 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
 
     return (
         <Box>
-            {Object.entries(logs?.llm || {}).flatMap(([service, entries]) => 
-                (Array.isArray(entries) ? [...entries].reverse() : [])
-                    .filter(log => 
-                        filterLog(JSON.stringify({
-                            method: log?.method,
-                            input: log?.input,
-                            output: log?.output,
-                            error: log?.error
-                        }))
-                    )
-                    .map((log, index) => {
+            {Object.entries(logs?.llm || {})
+                .flatMap(([service, entries]) => 
+                    (Array.isArray(entries) ? [...entries] : [])
+                        .filter(log => 
+                            filterLog(JSON.stringify({
+                                method: log?.method,
+                                input: log?.input,
+                                output: log?.output,
+                                error: log?.error
+                            }))
+                        )
+                )
+                .sort((a, b) => b.timestamp - a.timestamp) // Sort by timestamp descending
+                .map((log, index) => {
                         return (
                             <div key={`${service}-${index}`} className="log-entry info">
                                 <ListItemButton onClick={() => handleOpenDetails(log, index)} sx={{ p: 0 }}>
