@@ -144,8 +144,9 @@ ${this.modelHelpers.getFinalInstructions()}
     }
 
     private renderSteps({steps} : StepsContent): string {
+        const filteredSteps = steps.filter(s => s.props.result && s.props.stepType !== ExecutorType.NEXT_STEP);
         return "# 📝 STEP HISTORY:\n" + 
-            steps.filter(s => s.props.result && s.props.stepType !== ExecutorType.NEXT_STEP).map((step, index) => {
+            filteredSteps.map((step, index) => {
                 const stepResult = step.props.result!;
                 if (stepResult.response.type) {
                     const typeRenderer = this.stepResultRenderers.get(stepResult.response.type);
@@ -154,7 +155,7 @@ ${this.modelHelpers.getFinalInstructions()}
                     }
                 }
                 // Default renderer for unknown types
-                return `Step ${index + 1} [${step.props.stepType}]: ${stepResult?.response.message}`;
+                return `- STEP ${index + 1} of ${filteredSteps.length} ${index+1==filteredSteps.length?"[LAST COMPLETED STEP]":""}: [${step.props.stepType}]: ${stepResult?.response.message}`;
             }).join('\n') + "\n";
     }
 

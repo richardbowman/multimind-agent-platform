@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ExecutorType } from '../interfaces/ExecutorType';
@@ -44,6 +44,7 @@ export class ListTemplatesExecutor implements StepExecutor {
 
         return {
             type: 'template_list',
+            replan: ReplanType.Allow,
             finished: true,
             response: {
                 templates: templateList,

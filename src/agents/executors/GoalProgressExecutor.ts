@@ -57,10 +57,6 @@ export class GoalProgressExecutor implements StepExecutor {
             promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: context.artifacts});
         }
 
-        if (context?.threadPosts) {
-            promptBuilder.addContext({contentType: ContentType.CONVERSATION, posts: context.threadPosts});
-        }
-
         if (params.channelGoals) {
             promptBuilder.addContext({contentType: ContentType.CHANNEL_GOALS, tasks: params.channelGoals});
         }

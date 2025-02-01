@@ -59,8 +59,8 @@ Return ONLY the channel name.`;
         });
         
         // Ensure channel name starts with #, remove any existing # first
-        const baseName = (nameResponse.message?.trim().toLowerCase().replace(/[^a-z0-9-]/g, '-') || channelPurpose.toLowerCase().replace(/\s+/g, '-')).replace(/^#/, '');
-        const channelName = createChannelHandle(`#${baseName}`);
+        const baseName = nameResponse.message;
+        const channelName = createChannelHandle(baseName);
         
         const selectedTemplate = await this.findBestTemplate(channelPurpose);
 

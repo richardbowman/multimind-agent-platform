@@ -113,7 +113,7 @@ const selectTemplateSequence = [
         description: "Interpret answers provided"
     },
     {
-        type: ExecutorType.SELECT_TEMPLATE,
+    type: ExecutorType.SELECT_TEMPLATE,
         description: "Select appropriate document template based on user goals"
     },
     {
@@ -143,13 +143,13 @@ const createChannelSequence = [
 ];
 
 this.modelHelpers.addStepSequence(
-    'select-template',
+    'template-selection-flow',
     'Standard sequence for new users needing an onboarding template',
     selectTemplateSequence
 );
 
 this.modelHelpers.addStepSequence(
-    'create-channel',
+    'create-channel-flow',
     'Once you have generated their plan, setup a channel for agents to begin working',
     createChannelSequence
 )
@@ -163,7 +163,7 @@ this.modelHelpers.setFinalInstructions(`Use the appropriate sequence based on us
         this.registerStepExecutor(new UnderstandGoalsExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new AnswerQuestionsExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new CreatePlanExecutor(this.getExecutorParams(), this));
-        this.registerStepExecutor(new ReviewProgressExecutor(this.getExecutorParams()));
+        // this.registerStepExecutor(new ReviewProgressExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new CreateChannelExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new ListTemplatesExecutor(this.getExecutorParams(), this));
         this.registerStepExecutor(new TemplateSelectorExecutor(this.getExecutorParams(), this));

@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { TemplateSelectionResponse } from '../../schemas/TemplateSelectionResponse';
@@ -67,6 +67,7 @@ export class TemplateSelectorExecutor implements StepExecutor {
         return {
             type: 'template_selection',
             finished: true,
+            replan: ReplanType.Allow,
             response: {
                 reasoning: modelResponse.reasoning,
                 templateId: modelResponse.selectedTemplateId,

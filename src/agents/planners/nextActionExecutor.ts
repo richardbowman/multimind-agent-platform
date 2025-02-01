@@ -89,33 +89,8 @@ export class NextActionExecutor implements StepExecutor {
             .map(({ key, description }) => `[${key}]: ${description}`)
             .join("\n");
 
-        //TODO: opportunity here to better organize context of the chat chain to include info
-        const userContext = params.message
-            ? `CONTEXT: ${params.message}`
-            : '';
-
         // Get all available sequences
         const sequences = this.modelHelpers.getStepSequences();
-
-        const sequencesPrompt = sequences.map(seq =>
-            `### ${seq.getName()} Sequence (${seq.getDescription()}):
-${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description}`).join('\n')}`
-        ).join('\n\n');
-
-
-
-        const systemPrompt =
-            `## HIGH-LEVEL USER GOAL: ${project.name}
-${userContext}
-
-## AVAILABLE SEQUENCES:
-${sequencesPrompt}
-
-## AVAILABLE ACTION TYPES (and descriptions of when to use them):
-${stepDescriptions}
-
-## COMPLETED TASKS:
-${completedSteps}`;
 
         const prompt = this.modelHelpers.createPrompt();
         prompt.addContext(ContentType.PURPOSE);
@@ -132,7 +107,6 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
             .filter(metadata => metadata.planner)
             .map(({ key, description }) => `[${key}]: ${description}`)
             .join("\n")}`);
-        prompt.addContext(systemPrompt);
         prompt.addInstruction(`
 - IN YOUR REASONING, describe this process:
 - Review the completed tasks you've already done.
