@@ -13,12 +13,133 @@ import {
     Typography,
     Tabs,
     Tab,
-    IconButton
+    IconButton,
+    Paper,
+    Table,
+    TableBody,
+    TableCell,
+    TableContainer,
+    TableHead,
+    TableRow
 } from '@mui/material';
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useDataContext } from '../contexts/DataContext';
-import { FormattedDataView } from './LogViewer';
+
+interface FormattedDataViewProps {
+    data: any;
+}
+
+export const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) => {
+    if (typeof data === 'string') {
+        // Format string with preserved newlines
+        return (
+            <pre style={{ 
+                margin: 0,
+                whiteSpace: 'pre-wrap',
+                wordWrap: 'break-word',
+                maxWidth: '100%',
+                overflow: 'auto',
+                backgroundColor: '#f5f5f5',
+                padding: '8px',
+                borderRadius: '4px',
+                border: '1px solid #ddd'
+            }}>
+                <code style={{
+                    color: '#333',
+                    fontFamily: 'monospace',
+                    fontSize: '0.875rem'
+                }}>
+                    {data}
+                </code>
+            </pre>
+        );
+    } else if (typeof data === 'object' && data !== null) {
+        // Convert object to table
+        return (
+            <TableContainer 
+                component={Paper} 
+                sx={{ 
+                    overflow: 'auto',
+                    backgroundColor: 'background.paper',
+                    border: '1px solid',
+                    borderColor: 'divider'
+                }}
+            >
+                <Table size="small" stickyHeader>
+                    <TableHead>
+                        <TableRow>
+                            <TableCell sx={{ 
+                                fontWeight: 'bold',
+                                backgroundColor: 'background.default',
+                                color: 'text.primary'
+                            }}>
+                                Key
+                            </TableCell>
+                            <TableCell sx={{ 
+                                fontWeight: 'bold',
+                                backgroundColor: 'background.default',
+                                color: 'text.primary'
+                            }}>
+                                Value
+                            </TableCell>
+                        </TableRow>
+                    </TableHead>
+                    <TableBody>
+                        {Object.entries(data).map(([key, value]) => (
+                            <TableRow key={key}>
+                                <TableCell sx={{ 
+                                    fontWeight: 500,
+                                    color: 'text.primary',
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider'
+                                }}>
+                                    {key}
+                                </TableCell>
+                                <TableCell sx={{ 
+                                    color: 'text.primary',
+                                    borderBottom: '1px solid',
+                                    borderColor: 'divider'
+                                }}>
+                                    {typeof value === 'object' ? (
+                                        <FormattedDataView data={value} />
+                                    ) : (
+                                        <span style={{ whiteSpace: 'pre-wrap' }}>
+                                            {String(value)}
+                                        </span>
+                                    )}
+                                </TableCell>
+                            </TableRow>
+                        ))}
+                    </TableBody>
+                </Table>
+            </TableContainer>
+        );
+    }
+    
+    // Fallback for other types
+    return (
+        <pre style={{ 
+            margin: 0,
+            whiteSpace: 'pre-wrap',
+            wordWrap: 'break-word',
+            maxWidth: '100%',
+            overflow: 'auto',
+            backgroundColor: '#f5f5f5',
+            padding: '8px',
+            borderRadius: '4px',
+            border: '1px solid #ddd'
+        }}>
+            <code style={{
+                color: '#333',
+                fontFamily: 'monospace',
+                fontSize: '0.875rem'
+            }}>
+                {JSON.stringify(data, null, 2)}
+            </code>
+        </pre>
+    );
+};
 
 interface LLMLogViewerProps {
     logs: any;
@@ -128,7 +249,12 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                     </Typography>
                     <Box /> {/* Spacer to balance the layout */}
                 </DialogTitle>
-                <DialogContent dividers>
+                <DialogContent dividers sx={{
+                    overflow: 'hidden',
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column'
+                }}>
                     <Tabs 
                         value={tabValue} 
                         onChange={(_, newValue) => setTabValue(newValue)}
@@ -146,8 +272,10 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                             borderRadius: '4px',
                             border: '1px solid',
                             borderColor: 'divider',
-                            maxHeight: '400px',
-                            overflow: 'auto'
+                            overflow: 'auto',
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column'
                         }}>
                             {selectedLog?.input && typeof selectedLog.input === 'object' ? (
                                 Object.entries(selectedLog.input).map(([key, value]) => (
@@ -169,11 +297,14 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                     {tabValue === 1 && (
                         <Box sx={{ 
                             p: 2,
-                            backgroundColor: '#f5f5f5',
+                            backgroundColor: 'background.paper',
                             borderRadius: '4px',
-                            border: '1px solid #ddd',
-                            maxHeight: '400px',
-                            overflow: 'auto'
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            overflow: 'hidden',
+                            flex: 1,
+                            display: 'flex',
+                            flexDirection: 'column'
                         }}>
                             {selectedLog?.output && typeof selectedLog.output === 'object' ? (
                                 Object.entries(selectedLog.output).map(([key, value]) => (
@@ -204,7 +335,6 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                             backgroundColor: '#f5f5f5',
                             borderRadius: '4px',
                             border: '1px solid #ddd',
-                            maxHeight: '400px',
                             overflow: 'auto'
                         }}>
                             <div>{typeof selectedLog.error === 'string' ? selectedLog.error : selectedLog.error.message || 'Unknown error'}</div>
