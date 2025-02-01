@@ -72,8 +72,15 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
             <Dialog 
                 open={!!selectedLog} 
                 onClose={handleCloseDetails}
-                maxWidth="md"
+                maxWidth={false}
                 fullWidth
+                sx={{
+                    '& .MuiDialog-paper': {
+                        width: '95vw',
+                        maxWidth: 'none',
+                        height: '95vh'
+                    }
+                }}
             >
                 <DialogTitle>LLM Request Details</DialogTitle>
                 <DialogContent dividers>
