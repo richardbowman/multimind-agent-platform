@@ -194,8 +194,10 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                 error: log?.error
                             }))
                         )
-                        .map((log, index) => (
-                            <div key={`${service}-${index}`} className="log-entry info">
+                )
+                .sort((a, b) => b.timestamp - a.timestamp) // Sort by timestamp descending
+                .map((log, index) => (
+                    <div key={`${log.service}-${index}`} className="log-entry info">
                                 <ListItemButton onClick={() => handleOpenDetails(log, index)} sx={{ p: 0 }}>
                                     <ListItemText
                                         primary={
@@ -211,8 +213,6 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                 </ListItemButton>
                             </div>
                         ))
-                )
-                .sort((a, b) => b.timestamp - a.timestamp) // Sort by timestamp descending
             }
             
             <Dialog 
