@@ -75,7 +75,29 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                 <DialogTitle>LLM Request Details</DialogTitle>
                 <DialogContent dividers>
                     <Typography variant="subtitle1" gutterBottom>Input</Typography>
-                    <FormattedDataView data={selectedLog?.input} />
+                    <Box sx={{ 
+                        p: 2,
+                        backgroundColor: '#f5f5f5',
+                        borderRadius: '4px',
+                        border: '1px solid #ddd',
+                        maxHeight: '400px',
+                        overflow: 'auto'
+                    }}>
+                        {selectedLog?.input && typeof selectedLog.input === 'object' ? (
+                            Object.entries(selectedLog.input).map(([key, value]) => (
+                                <Box key={key} sx={{ mb: 2 }}>
+                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                        {key}
+                                    </Typography>
+                                    <FormattedDataView data={value} />
+                                </Box>
+                            ))
+                        ) : (
+                            <Typography variant="body2" color="textSecondary">
+                                No input available
+                            </Typography>
+                        )}
+                    </Box>
                     
                     <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>Output</Typography>
                     <Box sx={{ 
