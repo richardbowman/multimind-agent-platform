@@ -155,24 +155,28 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
     const [allLogs, setAllLogs] = useState<any[]>([]);
 
     const handleOpenDetails = (log: any, index: number) => {
-        const logsArray = Object.entries(logs?.llm || {})
-            .flatMap(([service, entries]) => 
-                (Array.isArray(entries) ? [...entries] : [])
-                    .filter(log => 
-                        filterLog(JSON.stringify({
-                            method: log?.method,
-                            input: log?.input,
-                            output: log?.output,
-                            error: log?.error
-                        }))
-                    )
-                    .map(log => ({ ...log, service }))
-            )
-            .sort((a, b) => b.timestamp - a.timestamp);
+        // Only create the sorted array if we don't have one yet
+        if (allLogs.length === 0) {
+            const logsArray = Object.entries(logs?.llm || {})
+                .flatMap(([service, entries]) => 
+                    (Array.isArray(entries) ? [...entries] : [])
+                        .filter(log => 
+                            filterLog(JSON.stringify({
+                                method: log?.method,
+                                input: log?.input,
+                                output: log?.output,
+                                error: log?.error
+                            }))
+                        )
+                        .map(log => ({ ...log, service }))
+                )
+                .sort((a, b) => b.timestamp - a.timestamp);
             
-        setAllLogs(logsArray);
+            setAllLogs(logsArray);
+        }
+        
         setSelectedLog(log);
-        setSelectedLogIndex(logsArray.findIndex(l => l.timestamp === log.timestamp && l.service === log.service));
+        setSelectedLogIndex(allLogs.findIndex(l => l.timestamp === log.timestamp && l.service === log.service));
     };
 
     const handleNavigate = (direction: 'prev' | 'next') => {
