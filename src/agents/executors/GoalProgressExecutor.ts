@@ -65,7 +65,7 @@ export class GoalProgressExecutor implements StepExecutor {
         }
 
         if (params.channelGoals) {
-            promptBuilder.addContent(ContentType.GOALS, params.channelGoals);
+            promptBuilder.addContent(ContentType.CHANNEL_GOALS, params.channelGoals);
         }
 
         // Build and execute prompt

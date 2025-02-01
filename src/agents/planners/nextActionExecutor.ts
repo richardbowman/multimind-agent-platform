@@ -121,6 +121,17 @@ ${completedSteps}`;
         prompt.addContext(ContentType.PURPOSE);
         prompt.addContext({ contentType: ContentType.AGENT_OVERVIEWS, agents: agentList||[]});
         prompt.addContext({ contentType: ContentType.INTENT, params })
+        if (params.steps) {
+            prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
+        }
+        prompt.addContext(sequences.map(seq => 
+            `### ${seq.getName()} Sequence (${seq.getDescription()}):
+${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description}`).join('\n')}`
+        ).join('\n'));
+        prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
+            .filter(metadata => metadata.planner)
+            .map(({ key, description }) => `[${key}]: ${description}`)
+            .join("\n")}`);
         prompt.addContext(systemPrompt);
         prompt.addInstruction(`
 - IN YOUR REASONING, describe this process:
@@ -130,7 +141,7 @@ ${completedSteps}`;
 - Determine the next Action Type from the AVAILABLE ACTION TYPES that the user would most benefit from.
 - Consider the sequences for guidance on the order for steps to be successful.`);
 
-        prompt.addContent(ContentType.FINAL_INSTRUCTIONS);
+        prompt.addContext({contentType: ContentType.FINAL_INSTRUCTIONS, instructions: this.modelHelpers.getFinalInstructions()||""});
 
         const response = await this.modelHelpers.generate<NextActionResponse>({
             message: params.message,
@@ -163,10 +174,11 @@ ${completedSteps}`;
             }] : []
         };
 
+        await params.partialResponse("Planning...");
+
         return {
             finished: true,
             response: {
-                message: 'planning process completed',
                 data: planResponse
             }
         };

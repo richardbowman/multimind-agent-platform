@@ -82,9 +82,9 @@ export class KnowledgeCheckExecutor implements StepExecutor {
         // only include relevant items
         searchResults = searchResults.filter(s => s.score > 0.5);
 
-        const analysisPrompt = `You are analyzing knowledgebase and past artifacts for: "${goal}"
+        const analysisPrompt = `You are helping search for existing information for: "${goal}"
 
-Attached Artifacts:
+ATTACHED KNOWLEDGE BASE ARTIFACTS:
 ${artifacts?.map(a => `ID: ${a.id}
 Title: ${a.metadata?.title}
 Content: ${a.content.slice(0, 1000)} ${a.content.length > 1000 ? `[truncated, full size is available ${a.content.length}]` : ''}
@@ -94,7 +94,7 @@ Date Created: ${a.metadata?.version}
 `).join('\n')}
 
 
-Search Results:
+NOT-ATTACHED SEARCH RESULTS FROM KNOWLEDGE BASE:
 ${searchResults.map(r => `
 Source: ${r.metadata?.title || 'Untitled'} (Score: ${r.score?.toFixed(3)})
 Content: ${r.text}

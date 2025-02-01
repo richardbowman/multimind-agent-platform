@@ -29,7 +29,7 @@ export class SearchExecutor implements StepExecutor {
             finished: true,
             type: 'search_results',
             response: {
-                message: `Found ${searchResults.length} search results`,
+                status: `Found ${searchResults.length} search results`,
                 data: {
                     searchResults,
                     query: searchQuery

@@ -18,7 +18,8 @@ export enum StepResultType {
 
 export enum StepResponseType {
     Intent,
-    Validation
+    Validation,
+    Question
 
 }
 
@@ -30,7 +31,7 @@ export enum ReplanType {
 
 export interface StepResponse {
     type?: StepResponseType;
-    message: string;
+    message?: string;
     data?: Record<string, any>;
 }
 

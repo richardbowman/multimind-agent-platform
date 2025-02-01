@@ -1,6 +1,6 @@
 import { IEmbeddingFunction } from "chromadb";
 import { BaseLLMService } from "./BaseLLMService";
-import { type LlamaChatSession, type Llama, type LlamaContext, type LlamaModel, type LlamaOptions, LlamaChatSessionOptions } from "node-llama-cpp";
+import { type LlamaChatSession, type Llama, type LlamaContext, type LlamaModel, type LlamaOptions, LlamaChatSessionOptions, LlamaEmbeddingContext } from "node-llama-cpp";
 import { EmbedderModelInfo, IEmbeddingService, ILLMService, LLMRequestParams, ModelRole } from "./ILLMService";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
@@ -41,17 +41,17 @@ async function loadLlamaChatSession(options: LlamaChatSessionOptions) : Promise<
 }
 
 class LlamaEmbedder implements IEmbeddingFunction {
-    private context: LlamaContext;
+    private embeddingContext: LlamaEmbeddingContext;
 
-    constructor(context: LlamaContext) {
-        this.context = context;
+    constructor(context: LlamaEmbeddingContext) {
+        this.embeddingContext = context;
     }
 
     async generate(texts: string[]): Promise<number[][]> {
         const embeddings: number[][] = [];
         for (const text of texts) {
-            const embedding = await this.context.getEmbeddingFor(text);
-            embeddings.push(Array.from(embedding)); // Convert Float32Array to number[]
+            const embedding = await this.embeddingContext.getEmbeddingFor(text);
+            embeddings.push(Array.from(embedding.vector)); // Convert Float32Array to number[]
         }
         return embeddings;
     }
@@ -63,7 +63,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
     private context?: LlamaContext;
     private embedder?: LlamaEmbedder;
     private session?: LlamaChatSession;
-    embeddingContext: any;
+    private embeddingContext: any;
     private gpuMode: string;
 
     constructor(gpuMode: string) {

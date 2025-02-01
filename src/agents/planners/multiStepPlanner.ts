@@ -136,11 +136,11 @@ ${currentSteps}`;
         let delegationInstructions = ''
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(systemPrompt);
-        prompt.addContent(ContentType.ARTIFACTS_TITLES, handlerParams.artifacts);
+        prompt.addContext({contentType: ContentType.ARTIFACTS_TITLES, artifacts: handlerParams.artifacts||[]});
         
         if (executorMetadata.find(e => e.key === ExecutorType.DELEGATION)) {
             const agentList = Object.values(this.agents.agents).filter(a => a.userId !== this.userId);
-            prompt.addContent(ContentType.AGENT_OVERVIEWS, agentList)
+            prompt.addContext({contentType: ContentType.AGENT_OVERVIEWS, agents: agentList});
         }
 
         const response = await this.modelHelpers.generate<PlanStepsResponse>({

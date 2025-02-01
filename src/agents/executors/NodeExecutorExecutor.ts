@@ -1,7 +1,7 @@
 import { Worker } from 'worker_threads';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -245,6 +245,7 @@ Please fix the code and try again.`;
         return {
             type: StepResultType.CodeGenerationStep,
             finished: true,
+            replan: ReplanType.Allow,
             artifactIds: newArtifacts.map(a => a.id),
             response: {
                 message: `**Code:**

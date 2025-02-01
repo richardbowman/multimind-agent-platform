@@ -24,7 +24,7 @@ export class SimpleAgent extends Agent {
                 ? this.projects.getProject(channelData.projectId)
                 : null;
             if (project) {
-                promptBuilder.addContent(ContentType.GOALS, project);
+                promptBuilder.addContent(ContentType.CHANNEL_GOALS, project);
             }
             promptBuilder.addContent(ContentType.PURPOSE);
             promptBuilder.addContent(ContentType.CHANNEL, channelData);

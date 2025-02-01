@@ -40,7 +40,7 @@ export class EstablishIntentExecutor implements StepExecutor {
         // Add core instructions
         promptBuilder.addContext({contentType: ContentType.ABOUT});
         promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
-        promptBuilder.addContext({contentType: ContentType.GOALS, tasks: params.channelGoals});
+        promptBuilder.addContext({contentType: ContentType.CHANNEL_GOALS, tasks: params.channelGoals});
 
         promptBuilder.addInstruction(`In this step, your goal is to establish the current overall intention for the agent. This
 includes defining the overall goal and planning the steps required to achieve it. If the user's message doesn't help you determine

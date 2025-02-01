@@ -1,6 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -52,6 +52,7 @@ ${previousResult ? `Specifically analyze these previous conclusions:\n${JSON.str
         return {
             type: "refuting",
             finished: true,
+            replan: ReplanType.Allow,
             response: {
                 message: `**Potential Counterarguments:**\n${counterargumentsList}\n\n**Analysis:**\n${result.analysis}\n\n**Final Verdict:**\n${result.finalVerdict}`
             }

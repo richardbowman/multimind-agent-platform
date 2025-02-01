@@ -90,8 +90,8 @@ If the solution is wrong, list the specific aspects that must be addressed.`);
         const result: StepResult = {
             type: StepResultType.Validation,
             finished: true,
-            needsUserInput: params.executionMode === 'conversation' && !response.isComplete && !forceCompletion,
-            replan: response.isComplete ? ReplanType.None : ReplanType.Force,
+            needsUserInput: params.executionMode === 'conversation' && forceCompletion,
+            replan: response.isComplete ? ReplanType.Allow : ReplanType.Force,
             response: {
                 type: StepResponseType.Validation,
                 message: forceCompletion 

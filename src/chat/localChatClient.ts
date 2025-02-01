@@ -228,21 +228,6 @@ export class LocalChatStorage extends EventEmitter {
             } as CreateChannelParams);
         });
     }
-
-    public updatePost(postId: UUID, newContent: string, newProps?: ConversationContext): Promise<ChatPost> {
-        const post = this.posts.find(p => p.id === postId);
-        if (!post) {
-            throw new Error(`Post ${postId} not found`);
-        }
-        
-        post.message = newContent;
-        if (newProps) {
-            post.props = { ...post.props, ...newProps };
-        }
-        
-        this.callbacks.forEach(cb => cb(post));
-        return this.save().then(() => post);
-    }
 }
 
 export class LocalTestClient implements ChatClient {
@@ -461,6 +446,7 @@ export class LocalTestClient implements ChatClient {
         }
         
         post.message = newContent;
+        post.update_at = Date.now();
         if (newProps) {
             post.props = { ...post.props, ...newProps };
         }
@@ -468,7 +454,7 @@ export class LocalTestClient implements ChatClient {
         await this.storage.save();
         
         // Notify listeners of the update
-        this.callback(post);
+        this.storage.callbacks.forEach(c => c(post));
         
         return post;
     }

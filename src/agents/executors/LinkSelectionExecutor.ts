@@ -66,7 +66,7 @@ export class LinkSelectionExecutor implements StepExecutor {
             finished: true,
             type: 'selected_links',
             response: {
-                message: `Selected ${selectedUrls.length} relevant links`,
+                status: `Selected ${selectedUrls.length} relevant links`,
                 data: { selectedUrls }
             }
         };

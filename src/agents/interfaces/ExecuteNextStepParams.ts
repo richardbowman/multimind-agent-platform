@@ -14,4 +14,5 @@ export interface ExecuteNextStepParams {
         projects?: Project[];
         threadPosts?: ChatPost[];
     };
+    partialPost?: ChatPost;
 }

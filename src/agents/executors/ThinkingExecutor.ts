@@ -1,6 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ThinkingResponse } from '../../schemas/thinking';
@@ -40,16 +40,18 @@ export class ThinkingExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.ThinkingResponse);
 
         const promptBuilder = this.modelHelpers.createPrompt();
-        promptBuilder.addInstruction(`You are a careful analytical thinker.
+        promptBuilder.addInstruction(`You are a thinking step in a broader agentic workflow.
 Given a problem, break it down into logical steps and reason through it carefully.
-Consider multiple angles and potential implications.`);
+Consider multiple angles and potential implications. You cannot run code, but you can recommend it (make sure to strongly recommend it in all caps).`);
 
         if (params.previousResult) {
             promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult});
         }
 
+        promptBuilder.addContext({contentType: ContentType.GOALS_FULL, params});
+
         const result = await this.modelHelpers.generate<ThinkingResponse>({
-            message: params.stepGoal,
+            message: params.message,
             instructions: new StructuredOutputPrompt(schema, promptBuilder.build()),
             model: ModelType.ADVANCED_REASONING
         });
@@ -57,6 +59,7 @@ Consider multiple angles and potential implications.`);
         return {
             type: StepResultType.Thinking,
             finished: true,
+            replan: ReplanType.Allow,
             response: {
                 message: `**Reasoning Process:**\n\n${result.reasoning}\n\n**Conclusion (so far):**\n\n${result.conclusion}`
             }

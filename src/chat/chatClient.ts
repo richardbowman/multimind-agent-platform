@@ -106,6 +106,7 @@ export interface ChatPost extends Message {
     user_id: UUID;
     props: ConversationContext;
     create_at: number;
+    update_at?: number;
     directed_at: string;
     thread_id?: UUID;
     attachments?: Attachment[];

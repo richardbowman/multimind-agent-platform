@@ -18,10 +18,11 @@ import { ExecuteStepParams, StepTask } from './interfaces/ExecuteStepParams';
 import { pathExists } from 'fs-extra';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ExecutorType } from './interfaces/ExecutorType';
+import { exec } from 'child_process';
 
 export abstract class StepBasedAgent extends Agent {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
-    protected planner: Planner|null;
+    protected planner: Planner | null;
 
     constructor(params: AgentConstructorParams, planner?: Planner) {
         super(params);
@@ -124,8 +125,7 @@ export abstract class StepBasedAgent extends Agent {
         params.projects = [...params.projects || [], project];
 
         const posts = [params.userPost];
-        const plan = await this.planSteps(projectId, posts);
-        await this.executeNextStep({
+        const execParams: ExecuteNextStepParams = {
             projectId,
             userPost: params.userPost,
             context: {
@@ -135,7 +135,9 @@ export abstract class StepBasedAgent extends Agent {
                 artifacts: params.artifacts,
                 threadPosts: params.threadPosts
             }
-        });
+        };
+        const plan = await this.planSteps(projectId, posts, this.getPartialPost(params.userPost, execParams));
+        await this.executeNextStep(execParams);
     }
 
     protected async handlerThread(params: HandlerParams): Promise<void> {
@@ -151,9 +153,7 @@ export abstract class StepBasedAgent extends Agent {
                     originalPostId: params.userPost.id
                 }
             });
-
-            const plan = await this.planSteps(projectId, [params.rootPost || { message: "(missing root post)" }, ...params.threadPosts || [], params.userPost]);
-            await this.executeNextStep({
+            const execParams: ExecuteNextStepParams = {
                 projectId,
                 userPost: params.userPost,
                 context: {
@@ -163,20 +163,19 @@ export abstract class StepBasedAgent extends Agent {
                     artifacts: params.artifacts,
                     threadPosts: params.threadPosts
                 }
-            });
+            };
+            const plan = await this.planSteps(projectId,
+                [params.rootPost || { message: "(missing root post)" }, ...params.threadPosts || [], params.userPost],
+                this.getPartialPost(params.rootPost, execParams)
+            );
+            await this.executeNextStep(execParams);
             return;
         }
 
         // Handle response to existing project
         const task = this.projects.getNextTask(projectId, TaskType.Step);
 
-        if (!task) {
-            Logger.info("No remaining tasks, planning new steps");
-            const plan = await this.planSteps(projectId, [params.rootPost || { message: "(missing root post)" }, ...params.threadPosts || [], params.userPost]);
-        }
-
-        // Continue with existing tasks without replanning
-        await this.executeNextStep({
+        const execParams: ExecuteNextStepParams = {
             projectId,
             userPost: params.userPost,
             context: {
@@ -186,7 +185,18 @@ export abstract class StepBasedAgent extends Agent {
                 artifacts: params.artifacts,
                 threadPosts: params.threadPosts
             }
-        });
+        };
+
+        if (!task) {
+            Logger.info("No remaining tasks, planning new steps");
+            const plan = await this.planSteps(projectId,
+                [params.rootPost || { message: "(missing root post)" }, ...params.threadPosts || [],
+                params.userPost],
+                this.getPartialPost(params.rootPost, execParams));
+        }
+
+        // Continue with existing tasks without replanning
+        await this.executeNextStep(execParams);
     }
 
     protected registerStepExecutor(executor: StepExecutor): void {
@@ -224,7 +234,7 @@ export abstract class StepBasedAgent extends Agent {
         return capabilities;
     }
 
-    protected async planSteps(projectId: string, posts: Message[]): Promise<PlanStepsResponse> {
+    protected async planSteps(projectId: string, posts: Message[], partialPostFn: Function): Promise<PlanStepsResponse> {
         const project = await this.projects.getProject(projectId);
         const handlerParams: PlannerParams = {
             projects: [project],
@@ -258,14 +268,7 @@ export abstract class StepBasedAgent extends Agent {
                 steps.steps.map((step, index) => `${index + 1}. ${step.actionType}`)
                     .join('\n') : "No steps provided";
 
-            if (isValidChatPost(handlerParams.userPost)) {
-                await this.reply(handlerParams.userPost, {
-                    message: `🔄 Planning next steps:\n${nextStepsMessage}`
-                }, {
-                    "project-id": handlerParams.projects?.[0].id
-                });
-            }
-
+            await partialPostFn(`🔄 Planning next steps:\n${nextStepsMessage}`);
             return steps;
         }
     }
@@ -351,19 +354,23 @@ export abstract class StepBasedAgent extends Agent {
 
             const parentProject = await this.projects.getProject(task.projectId);
 
-            const plan = await this.planSteps(projectId, [{
-                message: task.description
-            }]);
-
-            const artifacts = task.props?.attachedArtifactIds?.length || 0 > 0 ? await this.mapRequestedArtifacts(task.props?.attachedArtifactIds!) : [];
-
-            await this.executeNextStep({
+            const execParams: ExecuteNextStepParams = {
                 projectId,
                 context: {
                     projects: [parentProject],
                     artifacts
                 }
-            });
+            };
+
+            const plan = await this.planSteps(projectId, [{
+                message: task.description
+            }],
+                this.getPartialPost(undefined, execParams)
+            );
+
+            const artifacts = task.props?.attachedArtifactIds?.length || 0 > 0 ? await this.mapRequestedArtifacts(task.props?.attachedArtifactIds!) : [];
+
+            await this.executeNextStep(execParams);
 
             // Update parent project with child project reference
             if (parentProject.metadata.childProjects) {
@@ -377,6 +384,24 @@ export abstract class StepBasedAgent extends Agent {
             Logger.error(`Error processing task ${task.id}`, error);
             // You might want to mark the task as failed or handle the error differently
         }
+    }
+
+    private getPartialPost(replyTo: ChatPost | undefined, params: ExecuteNextStepParams) {
+        const partialResponse = async (message) => {
+            if (replyTo) {
+                if (!params.partialPost) {
+                    params.partialPost = await this.reply(replyTo, {
+                        message,
+                        props: {
+                            partial: true
+                        }
+                    });
+                } else {
+                    params.partialPost = await this.chatClient.updatePost(params.partialPost.id, message);
+                }
+            }
+        };
+        return partialResponse;
     }
 
     protected async executeStep(params: ExecuteStepParams): Promise<void> {
@@ -439,7 +464,7 @@ export abstract class StepBasedAgent extends Agent {
                 type: ""
             }));
 
-            
+
             let replyTo: ChatPost | undefined;
             if (userPost && isValidChatPost(userPost)) {
                 replyTo = userPost;
@@ -448,18 +473,6 @@ export abstract class StepBasedAgent extends Agent {
             }
 
             let stepResult: StepResult;
-            let post : ChatPost|null = null;
-            const partialResponse = async (message) => {
-                if (replyTo) {
-                    if (!post) {
-                        post = await this.reply(replyTo, {
-                            message
-                        });
-                    } else {
-                        post = await this.chatClient.updatePost(post.id, message);
-                    }
-                }    
-            };
 
             if (executor.execute) {
                 stepResult = await executor.execute({
@@ -483,7 +496,7 @@ export abstract class StepBasedAgent extends Agent {
                         artifacts: params.context?.artifacts,
                         projects: params.context?.projects
                     },
-                    partialResponse
+                    partialResponse: this.getPartialPost(replyTo, params)
                 });
             } else {
                 stepResult = await executor.executeOld(
@@ -497,6 +510,11 @@ export abstract class StepBasedAgent extends Agent {
             // step wants to revise overall goal
             if (stepResult.goal) {
                 project.name = stepResult.goal;
+            }
+
+            if (stepResult.response.status) {
+                const partialPostFn = this.getPartialPost(replyTo, params);
+                await partialPostFn(stepResult.response.status);
             }
 
             // Store the result in task props
@@ -521,8 +539,7 @@ export abstract class StepBasedAgent extends Agent {
                     await this.planSteps(project.id, [InMemoryPost.fromLoad({
                         ...userPost,
                         message: planningPrompt
-                    })]
-                    );
+                    })], this.getPartialPost(replyTo, params));
                 }
             }
 
@@ -535,16 +552,23 @@ export abstract class StepBasedAgent extends Agent {
             const artifactList = [...stepResult.artifactIds || [], ...stepResult.response?.artifactIds || [], stepResult.response?.data?.artifactId];
 
             // Only send replies if we have a userPost to reply to
-            if (replyTo && stepResult.response) {
+            if (replyTo && stepResult.response.message) {
                 const messageResponse = {
-                    message: stepResult.response?.message || stepResult.response?.reasoning || ""
+                    message: stepResult.response?.message
                 }
                 const props = {
                     "project-id": stepResult.projectId || projectId,
                     "artifact-ids": artifactList
                 };
-                if (post) {
-                    await this.chatClient.updatePost((post as ChatPost).id, messageResponse.message, props);
+                if (params.partialPost) {
+                    await this.chatClient.updatePost(
+                        (params.partialPost as ChatPost).id, 
+                        messageResponse.message, 
+                        {
+                            ...props, 
+                            partial: false
+                        });
+                    params.partialPost = undefined;
                 } else {
                     await this.reply(replyTo, messageResponse, props);
                 }
@@ -557,11 +581,11 @@ export abstract class StepBasedAgent extends Agent {
                 const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete && t.type === "step");
                 if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
                     //TODO: hacky, we don't really post this message
-                    if (this.planner?.allowReplan) {
+                    if (!this.planner || this.planner.allowReplan) {
                         await this.planSteps(project.id, [InMemoryPost.fromLoad({
                             ...userPost,
                             message: `Replanning requested after ${stepResult.type} step completed`
-                        })]);
+                        })], this.getPartialPost(replyTo, params));
                     }
                 }
 
@@ -576,7 +600,8 @@ export abstract class StepBasedAgent extends Agent {
                         context: {
                             ...params.context,
                             artifacts: fullArtifactList
-                        }
+                        },
+                        partialPost: params.partialPost
                     });
                 }
 

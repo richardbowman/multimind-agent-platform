@@ -185,6 +185,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 message: post.message,
                 user_id: post.user_id,
                 create_at: post.create_at,
+                update_at: post.update_at,
                 directed_at: post.directed_at,
                 props: {
                     ...post.props,
@@ -209,6 +210,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                         message: parentMessage.message,
                         user_id: parentMessage.user_id,
                         create_at: parentMessage.create_at,
+                        update_at: parentMessage.update_at,
                         directed_at: parentMessage.directed_at,
                         props: parentMessage.props,
                         thread_id: parentMessage.getRootId(),
@@ -263,6 +265,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                     message: post.message,
                     user_id: post.user_id,
                     create_at: post.create_at,
+                    update_at: post.update_at,
                     directed_at: post.directed_at,
                     props: post.props,
                     thread_id: post.getRootId(),
@@ -288,12 +291,13 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                         message: post.message,
                         user_id: post.user_id,
                         create_at: post.create_at,
+                        update_at: post.update_at,
                         directed_at: post.directed_at,
                         props: post.props
                     });
                     // Update last_message_at if this reply is newer
-                    if (post.create_at > threadMap.get(rootId).last_message_at) {
-                        threadMap.get(rootId).last_message_at = post.create_at;
+                    if (Math.max(post.create_at,post.update_at||0) > threadMap.get(rootId).last_message_at) {
+                        threadMap.get(rootId).last_message_at = Math.max(post.create_at,post.update_at||0);
                     }
                 }
             } else {
@@ -305,6 +309,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                         message: post.message,
                         user_id: post.user_id,
                         create_at: post.create_at,
+                        update_at: post.update_at,
                         directed_at: post.directed_at,
                         props: post.props
                     },

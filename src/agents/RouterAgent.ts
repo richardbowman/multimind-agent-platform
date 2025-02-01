@@ -224,7 +224,7 @@ Keep it concise but warm and engaging.`);
 
         // Add project details if exists
         if (context.project) {
-            promptBuilder.addContent(ContentType.GOALS, context.project);
+            promptBuilder.addContent(ContentType.CHANNEL_GOALS, context.project);
         }
 
         // Add conversation context

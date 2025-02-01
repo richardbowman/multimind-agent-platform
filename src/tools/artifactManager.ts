@@ -160,12 +160,6 @@ export class ArtifactManager {
   }
 
   protected async indexArtifact(artifact: Artifact): Promise<void> {
-    // Skip indexing binary content
-    if (Buffer.isBuffer(artifact.content)) {
-      Logger.info(`Skipping indexing of binary artifact: ${artifact.id}`);
-      return;
-    }
-
     // Skip if mime type indicates non-text content
     const mimeType = artifact.metadata?.mimeType || '';
     if (mimeType.startsWith('image/') || 

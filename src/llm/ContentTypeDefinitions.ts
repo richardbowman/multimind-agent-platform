@@ -51,7 +51,7 @@ export interface TasksContent {
 }
 
 export interface GoalsContent {
-    contentType: ContentType.GOALS;
+    contentType: ContentType.CHANNEL_GOALS;
     tasks: Task[];
 }
 
@@ -114,6 +114,16 @@ export interface IntentContent {
     params: ExecuteParams;
 }
 
+export interface FullGoalsContent {
+    contentType: ContentType.GOALS_FULL;
+    params: ExecuteParams;
+}
+
+export interface StepsContent {
+    contentType: ContentType.STEPS;
+    steps: StepTask[]
+}
+
 export type ContentInput = 
     | string 
     | ArtifactsExcerptsContent 
@@ -135,4 +145,6 @@ export type ContentInput =
     | OverallGoalContent 
     | StepGoalContent 
     | AboutContent
-    | IntentContent;
+    | IntentContent
+    | FullGoalsContent
+    | StepsContent;
