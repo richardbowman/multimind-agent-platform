@@ -1068,35 +1068,30 @@
       ],
       "type": "object"
     },
-    "NextAction": {
-      "additionalProperties": false,
+    "NextActionResponse": {
       "properties": {
         "actionType": {
+          "description": "A supported action type",
+          "type": "string"
+        },
+        "reasoning": {
+          "description": "Explain your underlying thinking",
+          "type": "string"
+        },
+        "sequence": {
+          "description": "The sequence you are planning to follow (or \"none\")",
           "type": "string"
         },
         "taskDescription": {
+          "description": "The goal for performing this actiom type",
           "type": "string"
         }
       },
       "required": [
         "actionType",
+        "reasoning",
+        "sequence",
         "taskDescription"
-      ],
-      "type": "object"
-    },
-    "NextActionResponse": {
-      "properties": {
-        "action": {
-          "$ref": "#/definitions/NextAction"
-        },
-        "reasoning": {
-          "description": "Explain your underlying thinking",
-          "type": "string"
-        }
-      },
-      "required": [
-        "action",
-        "reasoning"
       ],
       "type": "object"
     },
@@ -1253,6 +1248,9 @@
       "properties": {
         "reasoning": {
           "description": "Explain your underlying thinking",
+          "type": "string"
+        },
+        "sequence": {
           "type": "string"
         },
         "steps": {

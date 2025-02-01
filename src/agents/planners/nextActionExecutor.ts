@@ -124,10 +124,10 @@ ${completedSteps}`;
         if (params.steps) {
             prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
         }
-        prompt.addContext(sequences.map(seq => 
-            `### ${seq.getName()} Sequence (${seq.getDescription()}):
+        prompt.addContext(sequences.map((seq, i) => 
+            `### SEQUENCE ${i+1} of ${sequences.length}: ID: [${seq.getName()}] (${seq.getDescription()}):
 ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description}`).join('\n')}`
-        ).join('\n'));
+        ).join('\n\n'));
         prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
             .filter(metadata => metadata.planner)
             .map(({ key, description }) => `[${key}]: ${description}`)
@@ -138,8 +138,9 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
 - Review the completed tasks you've already done.
 - Review the user's message.
 - Explain each step and why it would or would not make sense to be the next action.
+- Make sure you don't go into a loop, don't do the same action over and over again.
 - Determine the next Action Type from the AVAILABLE ACTION TYPES that the user would most benefit from.
-- Consider the sequences for guidance on the order for steps to be successful.`);
+- Consider the sequences for guidance on the order for steps to be successful. If you decide a sequence makes sense, use the 'sequence' field to share the ID.`);
 
         prompt.addContext({contentType: ContentType.FINAL_INSTRUCTIONS, instructions: this.modelHelpers.getFinalInstructions()||""});
 
@@ -147,19 +148,19 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
             message: params.message,
             instructions: new StructuredOutputPrompt(schema, prompt),
             model: ModelType.ADVANCED_REASONING
-        });
+        }); 
 
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);
 
         // Create new task for the next action
-        if (response.action) {
+        if (response.actionType) {
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
-                description: response.action.taskDescription || response.action.actionType,
+                description: response.taskDescription || response.actionType,
                 creator: this.userId,
                 order: currentTasks.length, // Add to end of current tasks
                 props: {
-                    stepType: response.action.actionType
+                    stepType: response.actionType
                 }
             };
             await this.projects.addTask(project, newTask);
@@ -169,8 +170,8 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
         const planResponse: PlanStepsResponse = {
             reasoning: response.reasoning,
             steps: response.action ? [{
-                actionType: response.action.actionType,
-                context: response.action.taskDescription
+                actionType: response.actionType,
+                context: response.taskDescription
             }] : []
         };
 

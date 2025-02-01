@@ -1,4 +1,3 @@
-import { Task } from "electron";
 import { ExecuteParams } from "src/agents/interfaces/ExecuteParams";
 import { StepTask } from "src/agents/interfaces/ExecuteStepParams";
 import { ChatPost } from "src/chat/chatClient";
@@ -8,7 +7,7 @@ import { SearchResult } from "./IVectorDatabase";
 import { ContentType } from "./promptBuilder";
 import { StepResponse, StepResult } from "src/agents/interfaces/StepResult";
 import { Agent } from "src/agents/agents";
-import { Project } from "src/tools/taskManager";
+import { Project, Task } from "src/tools/taskManager";
 
 export interface ArtifactsExcerptsContent {
     contentType: ContentType.ARTIFACTS_EXCERPTS;
@@ -82,7 +81,6 @@ export interface AgentOverviewsContent {
 
 export interface PurposeContent {
     contentType: ContentType.PURPOSE;
-    purpose: string;
 }
 
 export interface ChannelContent {

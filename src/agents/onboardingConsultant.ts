@@ -19,6 +19,8 @@ import { DelegationExecutor } from './executors/DelegationExecutor';
 import { SimpleNextActionPlanner } from './planners/nextActionPlanner';
 import { EstablishIntentExecutor } from './executors/IntentExecutor';
 import { NextActionExecutor } from './planners/nextActionExecutor';
+import { ListTemplatesExecutor } from './executors/ListTemplatesExecutor';
+import { GoalProgressExecutor } from './executors/GoalProgressExecutor';
 
 
 
@@ -93,10 +95,14 @@ Goals Understanding:
 - How they hope to use MutliMind and how the agents can help them and their desired outcomes
 `);
 // Define sequences for different scenarios
-const newUserSequence = [
+const selectTemplateSequence = [
     { 
         type: ExecutorType.ESTABLISH_INTENT,
         description: "Establish your own intentions for what you would like to accomplish"
+    },
+    { 
+        type: ExecutorType.LIST_TEMPLATES,
+        description: "Understand the template options available"
     },
     { 
         type: ExecutorType.UNDERSTAND_GOALS,
@@ -112,16 +118,24 @@ const newUserSequence = [
     },
     {
         type: ExecutorType.GOAL_PROGRESS,
-        description: "Complete any outstanding welcome goal around template selection."
+        description: "Mark channel goal complete"
     },
-    {
-        type: ExecutorType.CREATE_PLAN,
-        description: "Create a comprehensive guide for agents based on user goals"
-    }
+    { 
+        type: ExecutorType.ESTABLISH_INTENT,
+        description: "Once completing this sequence, re-esablish a new intention."
+    },
 ];
 
 
 const createChannelSequence = [
+    { 
+        type: ExecutorType.ESTABLISH_INTENT,
+        description: "Establish your own intentions for what you would like to accomplish"
+    },
+    {
+        type: ExecutorType.CREATE_PLAN,
+        description: "Create a comprehensive guide for agents based on user goals"
+    },
     { 
         type: ExecutorType.CREATE_CHANNEL,
         description: "Understand the user's business goals and requirements"
@@ -129,9 +143,9 @@ const createChannelSequence = [
 ];
 
 this.modelHelpers.addStepSequence(
-    'new-user',
-    'Standard sequence for new users starting onboarding',
-    newUserSequence
+    'select-template',
+    'Standard sequence for new users needing an onboarding template',
+    selectTemplateSequence
 );
 
 this.modelHelpers.addStepSequence(
@@ -151,8 +165,10 @@ this.modelHelpers.setFinalInstructions(`Use the appropriate sequence based on us
         this.registerStepExecutor(new CreatePlanExecutor(this.getExecutorParams(), this));
         this.registerStepExecutor(new ReviewProgressExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new CreateChannelExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new ListTemplatesExecutor(this.getExecutorParams(), this));
         this.registerStepExecutor(new TemplateSelectorExecutor(this.getExecutorParams(), this));
         this.registerStepExecutor(new DelegationExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new GoalProgressExecutor(this.getExecutorParams()));
         // this.registerStepExecutor(new ValidationExecutor(this.getExecutorParams()));
 
         this.registerStepExecutor(new NextActionExecutor(this.getExecutorParams(), this.stepExecutors));

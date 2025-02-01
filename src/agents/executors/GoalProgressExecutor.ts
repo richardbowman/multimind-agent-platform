@@ -51,21 +51,18 @@ export class GoalProgressExecutor implements StepExecutor {
 4. Update goal status where appropriate`);
 
         // Add content sections
-        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
-            goal,
-            projectId
-        });
+        promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
 
         if (context?.artifacts) {
-            promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, context.artifacts);
+            promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: context.artifacts});
         }
 
         if (context?.threadPosts) {
-            promptBuilder.addContent(ContentType.CONVERSATION, context.threadPosts);
+            promptBuilder.addContext({contentType: ContentType.CONVERSATION, posts: context.threadPosts});
         }
 
         if (params.channelGoals) {
-            promptBuilder.addContent(ContentType.CHANNEL_GOALS, params.channelGoals);
+            promptBuilder.addContext({contentType: ContentType.CHANNEL_GOALS, tasks: params.channelGoals});
         }
 
         // Build and execute prompt
@@ -128,7 +125,7 @@ export class GoalProgressExecutor implements StepExecutor {
             goal: result.summary,
             response: {
                 message: result.summary,
-                metadata: {
+                data: {
                     goalsUpdated: result.goalsUpdated,
                     goalsInProgress: result.goalsInProgress,
                     goalsCompleted: result.goalsCompleted

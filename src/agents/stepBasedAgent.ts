@@ -4,7 +4,7 @@ import 'reflect-metadata';
 import { ChatPost, isValidChatPost, Message } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { AddTaskParams, Project, Task, TaskType } from '../tools/taskManager';
+import { AddTaskParams, Project, Task, TaskStatus, TaskType } from '../tools/taskManager';
 import { Planner } from './planners/planner';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import Logger from '../helpers/logger';
@@ -519,6 +519,13 @@ export abstract class StepBasedAgent extends Agent {
             if (stepResult.response.status) {
                 const partialPostFn = this.getPartialPost(replyTo, params);
                 await partialPostFn(stepResult.response.status);
+            }
+
+            // check to see if user cancelled steps (run-away?)
+            const checkTask = await this.projects.getTaskById(task.id);
+            if (!checkTask || checkTask?.status === TaskStatus.Cancelled) {
+                Logger.info("Step task was cancelled, aborting process");
+                return;
             }
 
             // Store the result in task props

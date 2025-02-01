@@ -85,7 +85,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         }
 
         // Add artifact context if available
-        let artifacts;
+        let artifacts = "";
         if (params.context?.artifacts) {
             artifacts += '\n\n' + this.modelHelpers.formatArtifacts(params.context.artifacts);
         }
@@ -107,7 +107,7 @@ ${answers?.map((a: QAAnswers) =>
 ).join('\n') || 'No previous answers'}
 
 Pending Questions to Analyze:
-${outstandingQuestions.map((q, i) => `${i + 1}. ${q}`).join('\n')}
+${outstandingQuestions.map((q, i) => `${i + 1}. ${q.question}`).join('\n')}
 
 ${templateSections.length > 0 ? `
 Document Sections Needing Content:

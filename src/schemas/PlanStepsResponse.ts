@@ -7,4 +7,5 @@ export interface PlanStepTask {
 
 export interface PlanStepsResponse extends ReasoningResponse{
     steps: PlanStepTask[];
+    sequence?: string
 }

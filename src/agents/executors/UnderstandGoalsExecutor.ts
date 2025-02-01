@@ -165,9 +165,10 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         // }
         
         return {
-            finished: shouldContinue || response.intakeQuestions.length == 0,
-            needsUserInput: !shouldContinue && response.intakeQuestions.length > 0,
-            replan: shouldContinue ? ReplanType.Allow : ReplanType.None,
+            // finished: shouldContinue || response.intakeQuestions.length == 0,
+            // needsUserInput: !shouldContinue && response.intakeQuestions.length > 0,
+            finished: true,
+            replan: shouldContinue || response.intakeQuestions.length == 0 ? ReplanType.Allow : ReplanType.None,
             goal: response.goalRestatement,
             response: {
                 message: response.followupMessage + 

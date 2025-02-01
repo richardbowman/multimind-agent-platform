@@ -1,10 +1,10 @@
 import { ReasoningResponse } from "./ModelResponse";
 
-export interface NextAction {
-    actionType: string;
-    taskDescription: string;
-}
-
 export interface NextActionResponse extends ReasoningResponse {
-    action: NextAction;
+    /** A supported action type */
+    actionType: string;
+    /** The goal for performing this actiom type */
+    taskDescription: string;
+    /** The sequence you are planning to follow (or "none") */
+    sequence: string;
 }

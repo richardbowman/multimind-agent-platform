@@ -239,14 +239,14 @@ export class ArtifactManager {
     const metadata = await this.loadArtifactMetadata();
     const artifacts: Artifact[] = [];
     for (const artifactId in metadata) {
-      const uuid = asUUID(artifactId);
-      const contentPath = metadata[uuid].contentPath;
       try {
+        const uuid = asUUID(artifactId);
+        const contentPath = metadata[uuid].contentPath;
         const content = await fs.readFile(contentPath);
         const type = metadata[uuid].type; // Retrieve the artifact type from metadata
         artifacts.push({ id: uuid, type, content, metadata: metadata[uuid] });
       } catch (error) {
-        Logger.warn(`Artifact file not found: ${contentPath}`);
+        Logger.warn(`Artifact not loadable: ${artifactId}`, error);
       }
     }
     return artifacts;

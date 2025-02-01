@@ -24,10 +24,10 @@ export class SimpleAgent extends Agent {
                 ? this.projects.getProject(channelData.projectId)
                 : null;
             if (project) {
-                promptBuilder.addContent(ContentType.CHANNEL_GOALS, project);
+                promptBuilder.addContext({contentType: ContentType.CHANNEL_GOALS, tasks: Object.values(project.tasks)});
             }
-            promptBuilder.addContent(ContentType.PURPOSE);
-            promptBuilder.addContent(ContentType.CHANNEL, channelData);
+            promptBuilder.addContext({contentType: ContentType.PURPOSE});
+            promptBuilder.addContext({contentType: ContentType.CHANNEL, channel: channelData});
             promptBuilder.addInstruction("You are a helpful agent.");
             const prompt = promptBuilder.build();
 

@@ -33,5 +33,6 @@ export enum ExecutorType {
     WEB_SEARCH = "web-search",
     SELECT_LINKS = "select-links",
     ESTABLISH_INTENT = "ESTABLISH_INTENT",
-    NEXT_STEP = "NEXT_STEP"
+    NEXT_STEP = "NEXT_STEP",
+    LIST_TEMPLATES = "LIST_TEMPLATES"
 }

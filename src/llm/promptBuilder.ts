@@ -124,7 +124,7 @@ ${params.stepGoal && `CURRENT STEP GOAL: ${params.stepGoal}`}`;
     }
 
     renderOverallGoal({goal}: OverallGoalContent) {
-        return `OVERALL GOAL: ${goal}\n`;
+        return `USER'S OVERALL GOAL: ${goal}\n`;
     }
 
     renderPurpose() {
@@ -144,7 +144,7 @@ ${this.modelHelpers.getFinalInstructions()}
     }
 
     private renderSteps({steps} : StepsContent): string {
-        return "📝 Step History:\n" + 
+        return "# 📝 STEP HISTORY:\n" + 
             steps.filter(s => s.props.result && s.props.stepType !== ExecutorType.NEXT_STEP).map((step, index) => {
                 const stepResult = step.props.result!;
                 if (stepResult.response.type) {
