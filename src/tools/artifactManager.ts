@@ -5,8 +5,9 @@ import Logger from '../helpers/logger';
 import { IVectorDatabase } from '../llm/IVectorDatabase';
 import { Artifact } from './artifact';
 import { AsyncQueue } from '../helpers/asyncQueue';
-import { createUUID } from 'src/types/uuid';
+import { asUUID, createUUID, UUID } from 'src/types/uuid';
 import * as pdf from 'pdf-parse';
+import { asError, isError } from 'src/types/types';
 
 export class ArtifactManager {
   private storageDir: string;
@@ -43,7 +44,7 @@ export class ArtifactManager {
       );
       return JSON.parse(data);
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (asError(error).code === 'ENOENT') {
         // Create initial empty metadata file
         const emptyMetadata = {};
         await this.saveArtifactMetadata(emptyMetadata);
@@ -138,6 +139,7 @@ export class ArtifactManager {
     const extension = getFileExtension(artifact.metadata?.mimeType);
     const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${extension}`);
     await this.fileQueue.enqueue(() =>
+      //TODO: need to handle calendrevents
       fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
     );
 
@@ -204,15 +206,15 @@ export class ArtifactManager {
     );
   }
 
-  async loadArtifact(artifactId: string, version?: number): Promise<Artifact | undefined> {
+  async loadArtifact(artifactId: UUID, version?: number): Promise<Artifact | null> {
     if (artifactId === null || artifactId === undefined) {
-      return;
+      return null;
     }
 
     const metadata = await this.loadArtifactMetadata();
     if (!metadata[artifactId]) {
       Logger.warn(`Artifact not found in metadata: ${artifactId}`);
-      return undefined;
+      return null;
     }
 
     let contentPath = metadata[artifactId].contentPath;
@@ -225,7 +227,7 @@ export class ArtifactManager {
       const type = metadata[artifactId].type; // Retrieve the artifact type from metadata
       return { id: artifactId, type, content, metadata: metadata[artifactId] };
     } catch (error) {
-      if (error.code === 'ENOENT') {
+      if (asError(error).code === 'ENOENT') {
         Logger.warn(`Artifact file not found: ${contentPath}`);
         return null;
       }
@@ -237,11 +239,12 @@ export class ArtifactManager {
     const metadata = await this.loadArtifactMetadata();
     const artifacts: Artifact[] = [];
     for (const artifactId in metadata) {
-      const contentPath = metadata[artifactId].contentPath;
+      const uuid = asUUID(artifactId);
+      const contentPath = metadata[uuid].contentPath;
       try {
         const content = await fs.readFile(contentPath);
-        const type = metadata[artifactId].type; // Retrieve the artifact type from metadata
-        artifacts.push({ id: artifactId, type, content, metadata: metadata[artifactId] });
+        const type = metadata[uuid].type; // Retrieve the artifact type from metadata
+        artifacts.push({ id: uuid, type, content, metadata: metadata[uuid] });
       } catch (error) {
         Logger.warn(`Artifact file not found: ${contentPath}`);
       }
@@ -276,7 +279,7 @@ export class ArtifactManager {
       Logger.info(`Successfully deleted artifact: ${artifactId}`);
     } catch (error) {
       Logger.error('Error deleting artifact:', error);
-      throw new Error(`Failed to delete artifact ${artifactId}: ${error.message}`);
+      throw new Error(`Failed to delete artifact ${artifactId}: ${asError(error).message}`);
     }
   }
 

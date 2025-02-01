@@ -79,8 +79,9 @@ export interface ProjectMetadata {
     description?: string;
     priority?: 'low' | 'medium' | 'high';
     originalPostId?: UUID;
-    parentTaskId?: any;
-    contentArtifactId?: any;
+    parentTaskId?: UUID;
+    parentProjectId?: UUID;
+    contentArtifactId?: UUID;
 }
 
 export interface Project {

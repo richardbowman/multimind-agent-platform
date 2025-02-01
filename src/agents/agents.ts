@@ -14,7 +14,7 @@ import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { Settings } from "src/tools/settings";
 import { Agents } from "src/utils/AgentLoader";
-import { UUID } from "src/types/uuid";
+import { asUUID, createUUID, UUID } from "src/types/uuid";
 import { StringUtils } from "src/utils/StringUtils";
 import { PromptBuilder } from "src/llm/promptBuilder";
 
@@ -40,6 +40,7 @@ export interface HandlerParams extends GenerateParams {
     userPost: ChatPost;
     rootPost?: ChatPost;
     threadPosts?: ChatPost[];
+    agents: Agents;
 }
 
 export interface PlannerParams extends GenerateParams {
@@ -121,7 +122,8 @@ export abstract class Agent {
         this.modelHelpers = new ModelHelpers({
             llmService: params.llmService,
             userId: params.userId,
-            messagingHandle: params.messagingHandle
+            messagingHandle: params.messagingHandle,
+            sequences: []
         });
 
         this.promptBuilder = new SystemPromptBuilder();
@@ -238,7 +240,7 @@ export abstract class Agent {
         this.modelHelpers.enableMemory();
     }
 
-    protected async send(post: Message, channelId: string): Promise<void> {
+    protected async send(post: Message, channelId: UUID): Promise<void> {
         try {
             // Assuming you have a chatClient or similar service to send messages to the channel
             await this.chatClient.postInChannel(channelId, post.message, post.props);
@@ -277,7 +279,7 @@ export abstract class Agent {
     }
 
     // Common method for fetching previous messages
-    protected async fetchMessages(channelId: string): Promise<ChatPost[]> {
+    protected async fetchMessages(channelId: UUID): Promise<ChatPost[]> {
         return await this.chatClient.fetchPreviousMessages(channelId);
     }
 
@@ -299,7 +301,7 @@ export abstract class Agent {
                     let requestedArtifacts: string[] = [], searchResults: SearchResult[] = [];
 
                     const allArtifacts =    [...new Set([...requestedArtifacts, ...post.props["artifact-ids"]||[]].flat())];
-                    const artifacts = await this.mapRequestedArtifacts(allArtifacts);
+                    const artifacts = await this.mapRequestedArtifacts(allArtifacts.map(a => asUUID(a)));
 
                     await this.handleChannel({ userPost: post, artifacts: artifacts, agents: this.agents });
                 } else if (post.getRootId()) {
@@ -318,10 +320,10 @@ export abstract class Agent {
                             if (project) projects.push(project);
                         }
 
-                        let requestedArtifacts: string[] = [], searchResults: SearchResult[] = [];
+                        let requestedArtifacts: UUID[] = [], searchResults: SearchResult[] = [];
 
                         const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifact-ids"] || [])].flat())];
-                        const artifacts = await this.mapRequestedArtifacts(allArtifacts);
+                        const artifacts = await this.mapRequestedArtifacts(allArtifacts.filter(a => a).map(a => asUUID(a)));
 
                         this.handlerThread({
                             userPost: post,
@@ -412,18 +414,14 @@ export abstract class Agent {
     }
     private async reviseMemoryArtifact(channelId: string, importantPoints: string[], previousMemory?: string): Promise<void> {
         const newMemoryContent = previousMemory ? `${previousMemory}\n${importantPoints.join('\n')}` : importantPoints.join('\n');
-
-        const artifact: Artifact = {
-            id: `${channelId}-${this.userId}-memory`,
+        await this.artifactManager.saveArtifact({
             type: 'memory',
             content: newMemoryContent,
             metadata: {
                 channel_id: channelId,
                 timestamp: Date.now()
             }
-        };
-
-        await this.artifactManager.saveArtifact(artifact);
+        });
 
         Logger.info(`Revised memory for channel ${channelId} with important points:`, importantPoints);
     }
@@ -433,10 +431,10 @@ export abstract class Agent {
         projectName: string;
         tasks: {
             description: string;
-            type: string;
+            type: TaskType;
         }[];
         metadata?: Partial<ProjectMetadata>
-    }): Promise<{ projectId: string, taskIds: string[] }> {
+    }): Promise<{ projectId: UUID, taskIds: UUID[] }> {
         const project = await this.projects.createProject({
             name: projectName,
             tasks: tasks,
@@ -449,7 +447,7 @@ export abstract class Agent {
         return { projectId: project.id, taskIds };
     }
 
-    protected async getMessage(messageId: string): Promise<ChatPost | undefined> {
+    protected async getMessage(messageId: UUID): Promise<ChatPost | undefined> {
         return this.chatClient.getPost(messageId);
     }
 }

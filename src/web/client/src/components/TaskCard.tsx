@@ -34,7 +34,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                     : task.inProgress 
                         ? 'action.selected'
                         : task.status === 'cancelled'
-                            ? 'error.light'
+                            ? 'primary.disabledBackground'
                             : task.complete
                                 ? 'action.disabledBackground'
                                 : 'background.paper',

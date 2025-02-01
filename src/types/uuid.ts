@@ -21,3 +21,11 @@ export function createUUID(value?: string): UUID {
     }
     return value as UUID;
 }
+
+// Utility functions
+export function asUUID(value: string): UUID {
+    if (!isUUID(value)) {
+        throw new Error(`Invalid UUID format: ${value}`);
+    }
+    return value as UUID;
+}

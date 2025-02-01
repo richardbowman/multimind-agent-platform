@@ -20,6 +20,13 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ExecutorType } from './interfaces/ExecutorType';
 import { exec } from 'child_process';
 
+interface ExecutorCapability {
+    stepType: string;
+    description: string;
+    exampleInput?: string;
+    exampleOutput?: string;
+}
+
 export abstract class StepBasedAgent extends Agent {
     protected stepExecutors: Map<string, StepExecutor> = new Map();
     protected planner: Planner | null;
@@ -69,7 +76,7 @@ export abstract class StepBasedAgent extends Agent {
         for (const executorConfig of config.executors) {
             try {
                 // Use require.context to load executors
-                const executorContext = require.context('./executors', true, /\.ts$/);
+                const executorContext = (require as any).context('./executors', true, /\.ts$/);
                 const module = executorContext(`./${executorConfig.className}.ts`);
                 const ExecutorClass = module[executorConfig.className] || module.default;
 
@@ -213,13 +220,8 @@ export abstract class StepBasedAgent extends Agent {
         }
     }
 
-    public getExecutorCapabilities(): Array<{
-        stepType: string;
-        description: string;
-        exampleInput?: string;
-        exampleOutput?: string;
-    }> {
-        const capabilities = [];
+    public getExecutorCapabilities(): Array<ExecutorCapability> {
+        const capabilities : ExecutorCapability[] = [];
         for (const [key, executor] of this.stepExecutors) {
             const metadata = getExecutorMetadata(executor.constructor);
             if (metadata) {
@@ -243,9 +245,10 @@ export abstract class StepBasedAgent extends Agent {
         };
 
         if (this.planner === null) {
+            const goal = `Perform planning for user's goal: ${handlerParams.userPost.message}`;
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
-                description: `Perform planning for user's goal: ${handlerParams.userPost.message}`,
+                description: goal,
                 creator: this.userId,
                 order: 0, // Add to end of current tasks
                 props: {
@@ -254,6 +257,7 @@ export abstract class StepBasedAgent extends Agent {
             };
             await this.projects.addTask(project, newTask);
             return {
+                reasoning: goal,
                 steps: [{
                     actionType: ExecutorType.NEXT_STEP,
                     context: "None"

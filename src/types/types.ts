@@ -7,8 +7,10 @@ export const isObject = (obj: any): boolean => {
 export const isError = (obj: any): boolean => {
     return obj && typeof obj === 'object' && !Array.isArray(obj) && obj.message;
 };
-export const asError = (obj: any): { message: string, trace?: string} => {
-    return obj && typeof obj === 'object' && !Array.isArray(obj) && obj.message ? obj : undefined;
+export const asError = (obj: any): { message: string, trace?: string, code?: string} => {
+    return obj && typeof obj === 'object' && !Array.isArray(obj) && obj.message ? obj : {
+        message: "Non-error object: " + JSON.stringify(obj, null, 2)
+    };
 };
 
 export interface WebSocketMessage {
