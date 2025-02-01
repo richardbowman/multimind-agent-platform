@@ -469,10 +469,11 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         // Always include the RouterAgent in the channel members
         const router = createChatHandle('@router');
 
-        let members = [...(params.members || []), router];
+        let members = [...(params.members || [])];
         // Use the selected default responder or fallback to router-agent
         const defaultResponder = params.defaultResponderId || router;
-
+        if (!params.defaultResponderId) members = [...members, router];
+        
         // If a goal template is specified, create a project with its tasks
         let projectId;
         if (params.goalTemplate) {

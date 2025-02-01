@@ -16,7 +16,8 @@ import { Settings } from "src/tools/settings";
 import { Agents } from "src/utils/AgentLoader";
 import { asUUID, createUUID, UUID } from "src/types/uuid";
 import { StringUtils } from "src/utils/StringUtils";
-import { PromptBuilder } from "src/llm/promptBuilder";
+import { ContentType, PromptBuilder } from "src/llm/promptBuilder";
+import { ChatHandle } from "src/types/chatHandle";
 
 
 export enum TaskEventType {
@@ -118,7 +119,7 @@ export abstract class Agent {
         this.settings = params.settings;
         this.agents = params.agents;
         this.description = params.description;
-        
+
         this.modelHelpers = new ModelHelpers({
             llmService: params.llmService,
             userId: params.userId,
@@ -159,7 +160,7 @@ export abstract class Agent {
                 }
             });
 
-            
+
             if (params.messagingHandle) this.chatClient.registerHandle(params.messagingHandle);
             this.chatClient.onAddedToChannel((channelId, channelParams) => {
                 this.setupChatMonitor(channelId, params.messagingHandle, channelParams.defaultResponderId === this.userId);
@@ -175,7 +176,7 @@ export abstract class Agent {
 
     protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {
         const isMine = task.assignee === this.userId;
-        Logger.info(`Agent [${this.messagingHandle}]: Received task notification '${eventType}': ${task.description} [${isMine?"MINE":"CREATOR"}]}]`);
+        Logger.info(`Agent [${this.messagingHandle}]: Received task notification '${eventType}': ${task.description} [${isMine ? "MINE" : "CREATOR"}]}]`);
 
         // when tasks are assigned to me, start working on them; also for completed async tasks we need to kickoff queue
         if (isMine && task.type === TaskType.Standard) {
@@ -226,7 +227,7 @@ export abstract class Agent {
         }
     }
 
-    public getPurpose() : string {
+    public getPurpose(): string {
         return this.modelHelpers.getPurpose();
     }
 
@@ -283,7 +284,7 @@ export abstract class Agent {
         return await this.chatClient.fetchPreviousMessages(channelId);
     }
 
-    public setupChatMonitor(monitorChannelId: string, handle?: string, autoRespond?: boolean) {
+    public async setupChatMonitor(monitorChannelId: UUID, handle?: ChatHandle, autoRespond?: boolean) {
         Logger.verbose(`REGISTRATION ${monitorChannelId}: ${handle}`)
 
         // Initialize the WebSocket client for real-time message listening
@@ -300,7 +301,7 @@ export abstract class Agent {
                 if (!post.getRootId() && (handle && post.message.startsWith(handle + " ") || (!post.message.startsWith("@") && autoRespond))) {
                     let requestedArtifacts: string[] = [], searchResults: SearchResult[] = [];
 
-                    const allArtifacts =    [...new Set([...requestedArtifacts, ...post.props["artifact-ids"]||[]].flat())];
+                    const allArtifacts = [...new Set([...requestedArtifacts, ...post.props["artifact-ids"] || []].flat())];
                     const artifacts = await this.mapRequestedArtifacts(allArtifacts.map(a => asUUID(a)));
 
                     await this.handleChannel({ userPost: post, artifacts: artifacts, agents: this.agents });
@@ -314,7 +315,7 @@ export abstract class Agent {
                     if (posts.length > 1 && posts[1].user_id === this.userId && post.id !== this.userId) {
                         // Get all available actions for this response type
                         const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
-                        const projects : Project[] = [];
+                        const projects: Project[] = [];
                         for (const projectId of projectIds) {
                             const project = this.projects.getProject(projectId);
                             if (project) projects.push(project);
@@ -340,12 +341,84 @@ export abstract class Agent {
                 // Logger.info(`Ignoring message: ${post.message} in ${channelId} from ${userId}, with root id ${post.root_id}`);
             }
         });
+
+        // Check if welcome message exists in channel
+        const channelMessages = await this.chatClient.fetchPreviousMessages(monitorChannelId, 50);
+        const existingWelcome = channelMessages.find(c => c.props.messageType === 'welcome');
+
+        if (!existingWelcome) {
+            // Get channel data to find available agents
+            const channelData = await this.chatClient.getChannelData(monitorChannelId);
+
+            // Only send welcome if we're the default responder
+            if (channelData.defaultResponderId === this.userId) {
+                const agentOptions = (channelData.members || [])
+                    .filter(memberId => this.userId !== memberId)
+                    .map(memberId => this.agents.agents[memberId]);
+
+                const welcomeMessage = {
+                    message: `@user ${await this.generateWelcomeMessage(agentOptions, monitorChannelId)}`,
+                    props: { messageType: 'welcome' }
+                };
+
+                await this.send(welcomeMessage, monitorChannelId);
+            }
+        }
+    }
+
+    private async generateWelcomeMessage(agentOptions: Agent[], channelId: UUID): Promise<string> {
+        const schema = {
+            type: "object",
+            properties: {
+                welcomeMessage: {
+                    type: "string",
+                    description: "A friendly, personalized welcome message"
+                }
+            },
+            required: ["welcomeMessage"]
+        };
+
+
+        const channelData = await this.chatClient.getChannelData(channelId);
+        const channelProject = channelData?.projectId
+            ? this.projects.getProject(channelData.projectId)
+            : null;
+        const channelGoals = [
+            ...Object.values(channelProject?.tasks || {})
+        ]
+
+        // Get agent descriptions from settings for channel members
+        const agentsOptions = (channelData.members || [])
+            .filter(memberId => this.userId !== memberId)
+            .map(memberId => {
+                return this.agents.agents[memberId];
+            });
+
+
+        const promptBuilder = this.modelHelpers.createPrompt();
+        promptBuilder.addContext({ contentType: ContentType.PURPOSE });
+        promptBuilder.addContext({ contentType: ContentType.AGENT_CAPABILITIES, agents: agentOptions });
+
+        promptBuilder.addInstruction(`Generate a friendly welcome message for a new user that:
+1. Introduces yourself
+2. Briefly explains how you help users achieve their goals
+3. Mentions the specific types of agents available to help them
+4. Invites them to share what they'd like to achieve
+        
+Keep it concise but warm and engaging.`);
+
+        const response = await this.modelHelpers.generate<{ welcomeMessage: string }>({
+            message: "Generate welcome message",
+            instructions: new StructuredOutputPrompt(schema, promptBuilder.build())
+        });
+
+        return response.welcomeMessage;
     }
 
     // @deprecated
     protected async generateStructured(structure: StructuredOutputPrompt, params: GenerateParams): Promise<ModelMessageResponse> {
         return this.modelHelpers.generate({
-            instructions: structure, 
+            instructions: structure,
             ...params
         });
     }
@@ -440,10 +513,10 @@ export abstract class Agent {
             tasks: tasks,
             metadata: metadata
         });
-        
+
         // Get the task IDs from the created project
         const taskIds = Object.values(project.tasks).map(t => t.id);
-        
+
         return { projectId: project.id, taskIds };
     }
 

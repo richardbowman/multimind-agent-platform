@@ -11,7 +11,7 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { ExecutorType } from './interfaces/ExecutorType';
-import { NextActionExecutor } from './planners/nextActionExecutor';
+import { NextActionExecutor } from './executors/NextActionExecutor';
 
 export class SolverAgent extends StepBasedAgent {
 

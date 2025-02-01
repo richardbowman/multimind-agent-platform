@@ -5,6 +5,8 @@ import { AgentConstructorParams } from "./interfaces/AgentConstructorParams";
 import { Planner } from "./planners/planner";
 import { MultiStepPlanner } from "./planners/multiStepPlanner";
 import { ModelType } from "src/llm/LLMServiceFactory";
+import { parseAndMergeNestedHeaders } from "@mattermost/client/lib/client4";
+import { NextActionExecutor } from "./executors/NextActionExecutor";
 
 export class ConfigurableAgent extends StepBasedAgent {
     agentName: string | undefined;
@@ -33,5 +35,9 @@ export class ConfigurableAgent extends StepBasedAgent {
         }
 
         await this.initializeFromConfig(agentConfig);
+
+        if (this.planner === null) {
+            this.registerStepExecutor(new NextActionExecutor(this.getExecutorParams(), this.stepExecutors));
+        }
     }
 }

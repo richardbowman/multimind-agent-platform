@@ -125,12 +125,22 @@ export async function initializeBackend(settingsManager: SettingsManager, option
     const userClient = new LocalTestClient(USER_ID, "@user", chatStorage);
     userClient.registerHandle("@user");
 
-    if (!Object.values(chatStorage.channelNames).includes("#welcome")) {
+    if (!Object.values(chatStorage.channelNames).includes("#general")) {
         // Create RPC handler and use it to create channel
         const mappedParams = await ServerRPCHandler.createChannelHelper(userClient, tasks, {
-            name: createChannelHandle("#welcome"),
-            description: "This is where we'll get started",
-            goalTemplate: createChannelHandle('#welcome')
+            name: createChannelHandle("#general"),
+            description: "A place to just chat with a simple agent.",
+            goalTemplate: createChannelHandle('#general')
+        });
+        await userClient.createChannel(mappedParams);
+    }
+
+    if (!Object.values(chatStorage.channelNames).includes("#onboarding")) {
+        // Create RPC handler and use it to create channel
+        const mappedParams = await ServerRPCHandler.createChannelHelper(userClient, tasks, {
+            name: createChannelHandle("#onboarding"),
+            description: "The on-boarding agent will help configure more channels based on your needs.",
+            goalTemplate: createChannelHandle('#onboarding')
         });
         await userClient.createChannel(mappedParams);
     }

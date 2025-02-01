@@ -46,64 +46,7 @@ export class RouterAgent extends Agent {
         throw new Error("Router is not configured to handle task assignment");
     }
 
-private async generateWelcomeMessage(agentOptions: Agent[]): Promise<string> {
-        const schema = {
-            type: "object",
-            properties: {
-                welcomeMessage: {
-                    type: "string",
-                    description: "A friendly, personalized welcome message"
-                }
-            },
-            required: ["welcomeMessage"]
-        };
 
-        const promptBuilder = this.modelHelpers.createPrompt();
-        promptBuilder.addContent(ContentType.PURPOSE);
-        promptBuilder.addContent<Agent[]>(ContentType.AGENT_CAPABILITIES, agentOptions);
-        
-        promptBuilder.addInstruction(`Generate a friendly welcome message for a new user that:
-1. Introduces you as the router agent
-2. Briefly explains how you help users achieve their goals
-3. Mentions the specific types of agents available to help them
-4. Invites them to share what they'd like to achieve
-        
-Keep it concise but warm and engaging.`);
-
-        const response = await this.modelHelpers.generate<{welcomeMessage: string}>({
-            message: "Generate welcome message",
-            instructions: new StructuredOutputPrompt(schema, promptBuilder.build())
-        });
-
-        return response.welcomeMessage;
-    }
-
-    public async setupChatMonitor(monitorChannelId: UUID, handle?: string, autoRespond?: boolean): Promise<void> {
-        super.setupChatMonitor(monitorChannelId, handle, autoRespond);
-        
-        // Check if welcome message exists in channel
-        const channelMessages = await this.chatClient.fetchPreviousMessages(monitorChannelId, 50);
-        const existingWelcome = channelMessages.find(c => c.props.messageType === 'welcome');
-
-        if (!existingWelcome) {
-            // Get channel data to find available agents
-            const channelData = await this.chatClient.getChannelData(monitorChannelId);
-            
-            // Only send welcome if we're the default responder
-            if (channelData.defaultResponderId === this.userId) {
-                const agentOptions = (channelData.members || [])
-                    .filter(memberId => this.userId !== memberId)
-                    .map(memberId => this.agents.agents[memberId]);
-
-                const welcomeMessage = {
-                    message: `@user ${await this.generateWelcomeMessage(agentOptions)}`,
-                    props: { messageType: 'welcome' }
-                };
-
-                await this.send(welcomeMessage, monitorChannelId);
-            }
-        }
-    }    
 
     private async getRoutingContext(params: HandlerParams) : Promise<RoutingContext> {
         const { userPost, threadPosts = [] } = params;

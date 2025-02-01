@@ -1,6 +1,6 @@
 import { ChannelHandle, createChannelHandle } from "src/shared/channelTypes";
-import { ChatHandle } from "src/types/chatHandle";
-import { UUID } from "src/types/uuid";
+import { ChatHandle, createChatHandle } from "src/types/chatHandle";
+import { asUUID, UUID } from "src/types/uuid";
 
 export interface GoalTemplate {
     /**
@@ -21,12 +21,12 @@ export interface GoalTemplate {
     /**
      * List of agent IDs or types required to support this goal
      */
-    supportingAgents: (UUID | ChatHandle)[];
+    supportingAgents: ChatHandle[];
 
     /**
      * Default responding agent ID or @handle for this goal template
      */
-    defaultResponder?: UUID;
+    defaultResponder?: ChatHandle;
 
     /**
      * Initial tasks to create when this goal template is selected
@@ -61,28 +61,21 @@ export interface InitialTask {
  */
 export const GoalTemplates: GoalTemplate[] = [
     {
-        id: createChannelHandle('#chat'),
+        id: createChannelHandle('#general'),
         name: 'Chat Channel',
         description: 'Template for setting up a chat channel with an AI assistant',
-        supportingAgents: ['@ai'],
-        defaultResponder: '@ai',
-        initialTasks: [
-            {
-                description: 'Initial setup for chat channel',
-                type: 'setup'
-            }
-        ]
+        supportingAgents: [createChatHandle('@ai')],
+        defaultResponder: createChatHandle('@ai'),
+        initialTasks: []
     },
     {
-        id: createChannelHandle('#welcome'),
-        name: 'Welcome Channel Setup',
-        description: 'Template for initializing a welcome channel and onboarding new users',
+        id: createChannelHandle('#onboarding'),
+        name: 'Onboarding Channel',
+        description: 'Template for initializing an onboarding for new projects',
         supportingAgents: [
-            '@assistant', //data gatherer
-            '@onboarding', // Onboarding agent
-            '@router'
+            createChatHandle('@onboarding')
         ],
-        defaultResponder: '@assistant',
+        defaultResponder: createChatHandle('@onboarding'),
         initialTasks: [
             {
                 description: 'Select an on-boarding template based on high-level goal',

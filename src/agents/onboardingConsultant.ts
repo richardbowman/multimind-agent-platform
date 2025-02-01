@@ -11,14 +11,11 @@ import { UnderstandGoalsExecutor } from './executors/UnderstandGoalsExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { CreateChannelExecutor } from './executors/CreateChannelExecutor';
 import templates from '../templates/documentTemplates.json';
-import path from 'path';
 import { TemplateSelectorExecutor } from './executors/TemplateSelectorExecutor';
 import { ExecutorType } from './interfaces/ExecutorType';
-import { UUID } from 'src/types/uuid';
 import { DelegationExecutor } from './executors/DelegationExecutor';
-import { SimpleNextActionPlanner } from './planners/nextActionPlanner';
 import { EstablishIntentExecutor } from './executors/IntentExecutor';
-import { NextActionExecutor } from './planners/nextActionExecutor';
+import { NextActionExecutor } from './executors/NextActionExecutor';
 import { ListTemplatesExecutor } from './executors/ListTemplatesExecutor';
 import { GoalProgressExecutor } from './executors/GoalProgressExecutor';
 
