@@ -10,7 +10,9 @@ import {
     DialogContent,
     DialogActions,
     Button,
-    Typography
+    Typography,
+    Tabs,
+    Tab
 } from '@mui/material';
 import { useDataContext } from '../contexts/DataContext';
 import { FormattedDataView } from './LogViewer';
@@ -24,6 +26,7 @@ interface LLMLogViewerProps {
 
 export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, highlightText, filterLog }) => {
     const [selectedLog, setSelectedLog] = useState<any>(null);
+    const [tabValue, setTabValue] = useState(0);
 
     const handleOpenDetails = (log: any) => {
         setSelectedLog(log);
@@ -74,84 +77,92 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
             >
                 <DialogTitle>LLM Request Details</DialogTitle>
                 <DialogContent dividers>
-                    <Typography variant="subtitle1" gutterBottom>Input</Typography>
-                    <Box sx={{ 
-                        p: 2,
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '4px',
-                        border: '1px solid #ddd',
-                        maxHeight: '400px',
-                        overflow: 'auto'
-                    }}>
-                        {selectedLog?.input && typeof selectedLog.input === 'object' ? (
-                            Object.entries(selectedLog.input).map(([key, value]) => (
-                                <Box key={key} sx={{ mb: 2 }}>
-                                    <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
-                                        {key}
-                                    </Typography>
-                                    <FormattedDataView data={value} />
-                                </Box>
-                            ))
-                        ) : (
-                            <Typography variant="body2" color="textSecondary">
-                                No input available
-                            </Typography>
-                        )}
-                    </Box>
+                    <Tabs 
+                        value={tabValue} 
+                        onChange={(_, newValue) => setTabValue(newValue)}
+                        sx={{ mb: 2 }}
+                    >
+                        <Tab label="Input" />
+                        <Tab label="Output" />
+                        {selectedLog?.error && <Tab label="Error" />}
+                    </Tabs>
                     
-                    <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>Output</Typography>
-                    <Box sx={{ 
-                        p: 2,
-                        backgroundColor: '#f5f5f5',
-                        borderRadius: '4px',
-                        border: '1px solid #ddd',
-                        maxHeight: '400px',
-                        overflow: 'auto'
-                    }}>
-                        {typeof selectedLog?.output === 'string' ? (
-                            <ReactMarkdown>
-                                {selectedLog.output}
-                            </ReactMarkdown>
-                        ) : (
-                            selectedLog?.output ? (
-                                <FormattedDataView data={selectedLog.output} />
+                    {tabValue === 0 && (
+                        <Box sx={{ 
+                            p: 2,
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '4px',
+                            border: '1px solid #ddd',
+                            maxHeight: '400px',
+                            overflow: 'auto'
+                        }}>
+                            {selectedLog?.input && typeof selectedLog.input === 'object' ? (
+                                Object.entries(selectedLog.input).map(([key, value]) => (
+                                    <Box key={key} sx={{ mb: 2 }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                            {key}
+                                        </Typography>
+                                        <FormattedDataView data={value} />
+                                    </Box>
+                                ))
                             ) : (
                                 <Typography variant="body2" color="textSecondary">
-                                    No output available
+                                    No input available
                                 </Typography>
-                            )
-                        )}
-                    </Box>
+                            )}
+                        </Box>
+                    )}
                     
-                    {selectedLog?.error && (
-                        <>
-                            <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>Error</Typography>
-                            <div className="error-details">
-                                <div>{typeof selectedLog.error === 'string' ? selectedLog.error : selectedLog.error.message || 'Unknown error'}</div>
-                                {selectedLog.error.stack && (
-                                    <pre style={{ 
-                                        margin: 0,
-                                        whiteSpace: 'pre-wrap',
-                                        wordWrap: 'break-word',
-                                        maxWidth: '100%',
-                                        maxHeight: '400px',
-                                        overflow: 'auto',
-                                        backgroundColor: '#f5f5f5',
-                                        padding: '8px',
-                                        borderRadius: '4px',
-                                        border: '1px solid #ddd'
-                                    }}>
-                                        <code style={{
-                                            color: '#333',
-                                            fontFamily: 'monospace',
-                                            fontSize: '0.875rem'
-                                        }}>
-                                            {selectedLog.error.stack}
-                                        </code>
-                                    </pre>
-                                )}
-                            </div>
-                        </>
+                    {tabValue === 1 && (
+                        <Box sx={{ 
+                            p: 2,
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '4px',
+                            border: '1px solid #ddd',
+                            maxHeight: '400px',
+                            overflow: 'auto'
+                        }}>
+                            {typeof selectedLog?.output === 'string' ? (
+                                <ReactMarkdown>
+                                    {selectedLog.output}
+                                </ReactMarkdown>
+                            ) : (
+                                selectedLog?.output ? (
+                                    <FormattedDataView data={selectedLog.output} />
+                                ) : (
+                                    <Typography variant="body2" color="textSecondary">
+                                        No output available
+                                    </Typography>
+                                )
+                            )}
+                        </Box>
+                    )}
+                    
+                    {tabValue === 2 && selectedLog?.error && (
+                        <Box sx={{ 
+                            p: 2,
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '4px',
+                            border: '1px solid #ddd',
+                            maxHeight: '400px',
+                            overflow: 'auto'
+                        }}>
+                            <div>{typeof selectedLog.error === 'string' ? selectedLog.error : selectedLog.error.message || 'Unknown error'}</div>
+                            {selectedLog.error.stack && (
+                                <pre style={{ 
+                                    margin: 0,
+                                    whiteSpace: 'pre-wrap',
+                                    wordWrap: 'break-word',
+                                    maxWidth: '100%',
+                                    overflow: 'auto',
+                                    color: '#333',
+                                    fontFamily: 'monospace',
+                                    fontSize: '0.875rem'
+                                }}>
+                                    {selectedLog.error.stack}
+                                </pre>
+                            )}
+                        </Box>
                     )}
                 </DialogContent>
                 <DialogActions>
