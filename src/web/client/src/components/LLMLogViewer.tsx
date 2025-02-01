@@ -156,17 +156,23 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
 
     const handleOpenDetails = (log: any, index: number) => {
         const logsArray = Object.entries(logs?.llm || {})
-            .flatMap(([_, entries]) => Array.isArray(entries) ? [...entries].reverse() : [])
-            .filter(log => filterLog(JSON.stringify({
-                method: log?.method,
-                input: log?.input,
-                output: log?.output,
-                error: log?.error
-            })));
+            .flatMap(([service, entries]) => 
+                (Array.isArray(entries) ? [...entries] : [])
+                    .filter(log => 
+                        filterLog(JSON.stringify({
+                            method: log?.method,
+                            input: log?.input,
+                            output: log?.output,
+                            error: log?.error
+                        }))
+                    )
+                    .map(log => ({ ...log, service }))
+            )
+            .sort((a, b) => b.timestamp - a.timestamp);
             
         setAllLogs(logsArray);
         setSelectedLog(log);
-        setSelectedLogIndex(logsArray.indexOf(log));
+        setSelectedLogIndex(logsArray.findIndex(l => l.timestamp === log.timestamp && l.service === log.service));
     };
 
     const handleNavigate = (direction: 'prev' | 'next') => {
