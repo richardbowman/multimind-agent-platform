@@ -123,18 +123,25 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                             maxHeight: '400px',
                             overflow: 'auto'
                         }}>
-                            {typeof selectedLog?.output === 'string' ? (
-                                <ReactMarkdown>
-                                    {selectedLog.output}
-                                </ReactMarkdown>
+                            {selectedLog?.output && typeof selectedLog.output === 'object' ? (
+                                Object.entries(selectedLog.output).map(([key, value]) => (
+                                    <Box key={key} sx={{ mb: 2 }}>
+                                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                            {key}
+                                        </Typography>
+                                        {key === 'message' ? (
+                                            <ReactMarkdown>
+                                                {value as string}
+                                            </ReactMarkdown>
+                                        ) : (
+                                            <FormattedDataView data={value} />
+                                        )}
+                                    </Box>
+                                ))
                             ) : (
-                                selectedLog?.output ? (
-                                    <FormattedDataView data={selectedLog.output} />
-                                ) : (
-                                    <Typography variant="body2" color="textSecondary">
-                                        No output available
-                                    </Typography>
-                                )
+                                <Typography variant="body2" color="textSecondary">
+                                    No output available
+                                </Typography>
                             )}
                         </Box>
                     )}
