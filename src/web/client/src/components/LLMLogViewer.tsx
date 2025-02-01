@@ -194,6 +194,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                 error: log?.error
                             }))
                         )
+                        .map(log => ({ ...log, service })) // Preserve service info
                 )
                 .sort((a, b) => b.timestamp - a.timestamp) // Sort by timestamp descending
                 .map((log, index) => (
