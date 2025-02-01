@@ -90,9 +90,10 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                     {tabValue === 0 && (
                         <Box sx={{ 
                             p: 2,
-                            backgroundColor: '#f5f5f5',
+                            backgroundColor: 'background.paper',
                             borderRadius: '4px',
-                            border: '1px solid #ddd',
+                            border: '1px solid',
+                            borderColor: 'divider',
                             maxHeight: '400px',
                             overflow: 'auto'
                         }}>
