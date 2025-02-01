@@ -1,4 +1,5 @@
-import React, { useState, Fragment } from 'react';
+import React, { useState } from 'react';
+import ReactMarkdown from 'react-markdown';
 import { 
     ListItem, 
     ListItemText, 
@@ -77,7 +78,22 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                     <FormattedDataView data={selectedLog?.input} />
                     
                     <Typography variant="subtitle1" gutterBottom sx={{ mt: 2 }}>Output</Typography>
-                    <FormattedDataView data={selectedLog?.output} />
+                    {typeof selectedLog?.output === 'string' ? (
+                        <Box sx={{ 
+                            p: 2,
+                            backgroundColor: '#f5f5f5',
+                            borderRadius: '4px',
+                            border: '1px solid #ddd',
+                            maxHeight: '400px',
+                            overflow: 'auto'
+                        }}>
+                            <ReactMarkdown>
+                                {selectedLog.output}
+                            </ReactMarkdown>
+                        </Box>
+                    ) : (
+                        <FormattedDataView data={selectedLog?.output} />
+                    )}
                     
                     {selectedLog?.error && (
                         <>
