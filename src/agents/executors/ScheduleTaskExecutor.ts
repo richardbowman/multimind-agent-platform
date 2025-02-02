@@ -17,7 +17,7 @@ import { UUID } from 'src/types/uuid';
 import { timeStamp } from 'console';
 import { ExecutorType } from '../interfaces/ExecutorType';
 
-@StepExecutorDecorator(ExecutorType.RECURRING_TASK, 'Schedule a recurring task')
+@StepExecutorDecorator(ExecutorType.SCHEDULE_TASK, 'Schedule a task')
 export class ScheduleTaskExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
