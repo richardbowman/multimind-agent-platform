@@ -6,9 +6,13 @@ import {
     Typography, 
     List, 
     IconButton,
-    Tooltip
+    Tooltip,
+    ToggleButtonGroup,
+    ToggleButton
 } from '@mui/material';
 import CancelIcon from '@mui/icons-material/Cancel';
+import PersonIcon from '@mui/icons-material/Person';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import { TaskDialog } from './TaskDialog';
 import { TaskCard } from './TaskCard';
 
@@ -33,6 +37,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
     const ipcService = useIPCService();
     const [localSelectedTask, setLocalSelectedTask] = useState<any>(null);
     const [localDialogOpen, setLocalDialogOpen] = useState(false);
+    const [viewMode, setViewMode] = useState<'user' | 'agent'>('user');
 
     useEffect(() => {
         let isSubscribed = true;
@@ -54,9 +59,35 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
     return (
         <Box sx={{ p: 2, height: '100%', overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <Typography variant="h6" sx={{ color: '#fff' }}>
+                <Typography variant="h6" sx={{ color: '#fff', mr: 2 }}>
                     Tasks
                 </Typography>
+                <ToggleButtonGroup
+                    value={viewMode}
+                    exclusive
+                    onChange={(_, newMode) => setViewMode(newMode)}
+                    size="small"
+                    sx={{ 
+                        '& .MuiToggleButton-root': {
+                            color: '#fff',
+                            borderColor: '#fff',
+                            '&.Mui-selected': {
+                                backgroundColor: 'rgba(255, 255, 255, 0.12)'
+                            }
+                        }
+                    }}
+                >
+                    <ToggleButton value="user">
+                        <Tooltip title="User Tasks">
+                            <PersonIcon fontSize="small" />
+                        </Tooltip>
+                    </ToggleButton>
+                    <ToggleButton value="agent">
+                        <Tooltip title="Agent Tasks">
+                            <SmartToyIcon fontSize="small" />
+                        </Tooltip>
+                    </ToggleButton>
+                </ToggleButtonGroup>
                 <Tooltip title="Cancel all outstanding tasks">
                     <IconButton
                         size="small"
@@ -79,7 +110,14 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                 </Tooltip>
             </Box>
             <List sx={{ display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-                {Array.from(new Map((tasks || []).map(task => [task.id, task])).values())
+                {Array.from(new Map((tasks || [])
+                    .filter(task => {
+                        if (viewMode === 'user') {
+                            return !task.isAgentTask;
+                        }
+                        return task.isAgentTask;
+                    })
+                    .map(task => [task.id, task])).values())
                     .sort((a, b) => {
                         // Sort in-progress to top, then not started, then completed
                         if (a.inProgress && !b.inProgress) return -1;
