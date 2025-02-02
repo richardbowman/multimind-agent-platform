@@ -1,8 +1,9 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
+import { useDropzone } from 'react-dropzone';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
-import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle } from '@mui/material';
+import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper } from '@mui/material';
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -27,6 +28,13 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         onClick: () => void;
         disabled?: boolean;
     }>>([
+        {
+            icon: <AttachFileIcon />,
+            label: 'Upload File',
+            onClick: async () => {
+                showFileDialog();
+            }
+        },
         {
             icon: <DescriptionIcon />,
             label: 'Create New Artifact',
@@ -103,8 +111,47 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         }
     }, [allArtifacts]);
 
+    const onDrop = useCallback((acceptedFiles: File[]) => {
+        // Handle file uploads
+        if (acceptedFiles.length > 0) {
+            showFileDialog(acceptedFiles);
+        }
+    }, [showFileDialog]);
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        onDrop,
+        noClick: true,
+        noKeyboard: true
+    });
+
     return (
-        <Box sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}>
+        <Box 
+            sx={{ display: 'flex', flex: 1, overflow: 'hidden' }}
+            {...getRootProps()}
+        >
+            <input {...getInputProps()} />
+            {isDragActive && (
+                <Paper
+                    sx={{
+                        position: 'absolute',
+                        top: 0,
+                        left: 0,
+                        right: 0,
+                        bottom: 0,
+                        zIndex: 9999,
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
+                        border: '2px dashed #fff',
+                        pointerEvents: 'none'
+                    }}
+                >
+                    <Typography variant="h4" color="white">
+                        Drop files to upload
+                    </Typography>
+                </Paper>
+            )}
             <Drawer
                 variant="persistent"
                 anchor="left"
