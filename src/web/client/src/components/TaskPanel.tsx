@@ -13,6 +13,7 @@ import {
 import CancelIcon from '@mui/icons-material/Cancel';
 import PersonIcon from '@mui/icons-material/Person';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
+import ListAltIcon from '@mui/icons-material/ListAlt';
 import { TaskDialog } from './TaskDialog';
 import { TaskCard } from './TaskCard';
 
@@ -37,7 +38,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
     const ipcService = useIPCService();
     const [localSelectedTask, setLocalSelectedTask] = useState<any>(null);
     const [localDialogOpen, setLocalDialogOpen] = useState(false);
-    const [viewMode, setViewMode] = useState<'user' | 'agent'>('user');
+    const [viewMode, setViewMode] = useState<'user' | 'agent' | 'steps'>('user');
 
     useEffect(() => {
         let isSubscribed = true;
@@ -87,6 +88,11 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                             <SmartToyIcon fontSize="small" />
                         </Tooltip>
                     </ToggleButton>
+                    <ToggleButton value="steps">
+                        <Tooltip title="Step Tasks">
+                            <ListAltIcon fontSize="small" />
+                        </Tooltip>
+                    </ToggleButton>
                 </ToggleButtonGroup>
                 <Tooltip title="Cancel all outstanding tasks">
                     <IconButton
@@ -118,8 +124,11 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                         if (viewMode === 'user') {
                             return task.id === userHandle.id;
                         }
-                        // Agent tasks are those not assigned to the current user
-                        return task.assignee !== userHandle.id;
+                        if (viewMode === 'steps') {
+                            return task.type === 'step';
+                        }
+                        // Agent tasks are those not assigned to the current user and not steps
+                        return task.assignee !== userHandle.id && task.type !== 'step';
                     })
                     .map(task => [task.id, task])).values())
                     .sort((a, b) => {
