@@ -59,13 +59,14 @@ export class ScheduleTaskExecutor implements StepExecutor {
                 threadPosts: params.context?.threadPosts || []
             });
 
-            const { taskDescription, recurrencePattern, responseMessage } = response;
+            const { taskDescription, recurrencePattern, isRecurring, assignee, responseMessage } = response;
 
             // Map string pattern to enum
             const pattern = {
                 'Daily': RecurrencePattern.Daily,
                 'Weekly': RecurrencePattern.Weekly,
-                'Monthly': RecurrencePattern.Monthly
+                'Monthly': RecurrencePattern.Monthly,
+                'None': undefined
             }[recurrencePattern];
 
             // Add task to project
@@ -73,9 +74,10 @@ export class ScheduleTaskExecutor implements StepExecutor {
             const task = await this.taskManager.addTask(project, {
                 description: taskDescription,
                 creator: this.userId,
-                isRecurring: true,
+                assignee: assignee === 'user' ? this.userId : assignee,
+                isRecurring: isRecurring,
                 recurrencePattern: pattern,
-                lastRunDate: new Date(),
+                lastRunDate: isRecurring ? new Date() : undefined,
                 complete: false
             });
 
