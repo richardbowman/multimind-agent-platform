@@ -41,14 +41,18 @@ export class ScheduleTaskExecutor implements StepExecutor {
         
         // Add content sections
         params.overallGoal && promptBuilder.addContext({ contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal });
-        promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params });
+        promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params: { goal, step, projectId } });
         params.context?.artifacts && promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts });
         
+        promptBuilder.addContext({ contentType: ContentType.CONVERSATION, params: params.context?.threadPosts });
+        promptBuilder.addContext({ contentType: ContentType.CHANNEL_GOALS, params: params.channelGoals });
+        promptBuilder.addContext({ contentType: ContentType.AGENTS, params: params.agents });
+
         promptBuilder.addInstruction(`Create a new task based on this goal.
             Specify:
             1. A clear task description
             2. How often it should recur (Daily, Weekly, Monthly, One-time, or None)
-            3. Who the task should be assigned to (user or an agent's UUID)
+            3. Who the task should be assigned to (@user or an agent's chat handle)
             4. A user-friendly confirmation message`);
             
         const structuredPrompt = new StructuredOutputPrompt(schema, promptBuilder);
