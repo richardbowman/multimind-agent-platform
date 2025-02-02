@@ -5,6 +5,7 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { Settings } from 'src/tools/settings';
 import { TaskManager } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
+import { UUID } from 'src/types/uuid';
 
 
 export interface ExecutorConstructorParams {
@@ -13,7 +14,7 @@ export interface ExecutorConstructorParams {
     taskManager: TaskManager;
     artifactManager: ArtifactManager;
     settings: Settings;
-    userId?: string;
+    userId: UUID;
     config?: Record<string, any>;
     modelHelpers: ModelHelpers;
     chatClient: ChatClient;

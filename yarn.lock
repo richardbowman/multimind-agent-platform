@@ -2267,6 +2267,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mintplex-labs/piper-tts-web@npm:^1.0.4":
+  version: 1.0.4
+  resolution: "@mintplex-labs/piper-tts-web@npm:1.0.4"
+  peerDependencies:
+    onnxruntime-web: ^1.18.0
+  checksum: 10c0/0461664dd74f46f3bf96fbd0046f06baf1251bba30da4e0d23d8f8f3895e5f0d28b99368f51a14fd9a14c20a7dfb585707742cf20669fd4b8eb8d13796d7ed7d
+  languageName: node
+  linkType: hard
+
 "@mixmark-io/domino@npm:^2.2.0":
   version: 2.2.0
   resolution: "@mixmark-io/domino@npm:2.2.0"
@@ -13191,6 +13200,7 @@ __metadata:
     "@lmstudio/sdk": "npm:^0.4.3"
     "@mattermost/client": "npm:^10.3.0"
     "@mattermost/types": "npm:^10.3.0"
+    "@mintplex-labs/piper-tts-web": "npm:^1.0.4"
     "@mui/icons-material": "npm:^6.4.0"
     "@mui/lab": "npm:6.0.0-beta.23"
     "@mui/material": "npm:^6.4.0"

@@ -118,5 +118,5 @@ jobs:
             dist/*.dmg
             dist/*.exe
             dist/*.zip
-          retention-days: 5  # Only keep artifacts for 5 days
+          retention-days: 2  # Only keep artifacts for 5 days
           if-no-files-found: ignore

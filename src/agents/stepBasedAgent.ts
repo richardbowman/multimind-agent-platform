@@ -358,6 +358,8 @@ export abstract class StepBasedAgent extends Agent {
 
             const parentProject = await this.projects.getProject(task.projectId);
 
+            const artifacts = task.props?.attachedArtifactIds?.length || 0 > 0 ? await this.mapRequestedArtifacts(task.props?.attachedArtifactIds!) : [];
+
             const execParams: ExecuteNextStepParams = {
                 projectId,
                 context: {
@@ -371,8 +373,6 @@ export abstract class StepBasedAgent extends Agent {
             }],
                 this.getPartialPost(undefined, execParams)
             );
-
-            const artifacts = task.props?.attachedArtifactIds?.length || 0 > 0 ? await this.mapRequestedArtifacts(task.props?.attachedArtifactIds!) : [];
 
             await this.executeNextStep(execParams);
 

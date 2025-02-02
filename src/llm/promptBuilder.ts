@@ -27,6 +27,7 @@ export enum ContentType {
     EXECUTE_PARAMS = 'execute_params',
     AGENT_CAPABILITIES = 'agent_capabilities',
     AGENT_OVERVIEWS = 'agent_overviews',
+    AGENTS = 'agents',
     PURPOSE = "PURPOSE",
     CHANNEL = "CHANNEL",
     FINAL_INSTRUCTIONS = "FINAL_INSTRUCTIONS",
@@ -254,9 +255,11 @@ ${this.modelHelpers.getFinalInstructions()}
     private renderAgents({agents} : {agents: any[]}): string {
         if (!agents || agents.length === 0) return '';
 
-        return "👥 Available Agents:\n\n" + agents.map(agent => {
-            return `- ${agent.chatHandle}: ${agent.description}`;
-        }).join('\n');
+        return "👥 Available Assignees:\n\n" + 
+            "- @user (assign to the human user)\n" +
+            agents.map(agent => {
+                return `- ${agent.messagingHandle}: ${agent.description}`;
+            }).join('\n');
     }
 
         return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {

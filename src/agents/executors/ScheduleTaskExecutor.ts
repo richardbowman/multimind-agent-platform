@@ -75,12 +75,22 @@ export class ScheduleTaskExecutor implements StepExecutor {
                 'None': undefined
             }[recurrencePattern];
 
+            // Handle assignment
+            let assigneeId: UUID | undefined;
+            if (assignee === '@user') {
+                assigneeId = this.userId;
+            } else {
+                // Find agent by messaging handle
+                const agent = params.agents?.find(a => a.messagingHandle === assignee);
+                assigneeId = agent?.id;
+            }
+
             // Add task to project
             const project = await this.taskManager.getProject(projectId);
             const task = await this.taskManager.addTask(project, {
                 description: taskDescription,
                 creator: this.userId,
-                assignee: assignee === 'user' ? this.userId : assignee,
+                assignee: assigneeId,
                 isRecurring: isRecurring,
                 recurrencePattern: pattern,
                 lastRunDate: isRecurring ? new Date() : undefined,

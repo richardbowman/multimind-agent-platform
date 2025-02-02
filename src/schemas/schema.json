@@ -1683,7 +1683,8 @@
         "WebScrapeSummaryResponse",
         "GoalAndPlanResponse",
         "PlanStepsResponse",
-        "IntentionsResponse"
+        "IntentionsResponse",
+        "TaskCreationResponse"
       ],
       "type": "string"
     },
@@ -1746,6 +1747,31 @@
       "required": [
         "section",
         "suggestions"
+      ],
+      "type": "object"
+    },
+    "TaskCreationResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "recurrencePattern": {
+          "enum": [
+            "Daily",
+            "Weekly",
+            "Monthly"
+          ],
+          "type": "string"
+        },
+        "responseMessage": {
+          "type": "string"
+        },
+        "taskDescription": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "taskDescription",
+        "recurrencePattern",
+        "responseMessage"
       ],
       "type": "object"
     },
