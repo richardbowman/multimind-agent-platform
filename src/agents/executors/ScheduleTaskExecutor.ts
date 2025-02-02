@@ -44,11 +44,12 @@ export class ScheduleTaskExecutor implements StepExecutor {
         promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params });
         params.context?.artifacts && promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts });
         
-        promptBuilder.addInstruction(`Create a new recurring task based on this goal.
+        promptBuilder.addInstruction(`Create a new task based on this goal.
             Specify:
             1. A clear task description
-            2. How often it should recur (Daily, Weekly, or Monthly)
-            3. A user-friendly confirmation message`);
+            2. How often it should recur (Daily, Weekly, Monthly, or None)
+            3. Who the task should be assigned to (user or an agent's UUID)
+            4. A user-friendly confirmation message`);
             
         const structuredPrompt = new StructuredOutputPrompt(schema, promptBuilder);
 
