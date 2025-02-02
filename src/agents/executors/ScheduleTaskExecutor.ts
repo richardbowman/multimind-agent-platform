@@ -67,6 +67,7 @@ export class ScheduleTaskExecutor implements StepExecutor {
                 'Daily': RecurrencePattern.Daily,
                 'Weekly': RecurrencePattern.Weekly,
                 'Monthly': RecurrencePattern.Monthly,
+                'One-time': undefined,
                 'None': undefined
             }[recurrencePattern];
 
