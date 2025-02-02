@@ -47,7 +47,7 @@ export class ScheduleTaskExecutor implements StepExecutor {
         promptBuilder.addInstruction(`Create a new task based on this goal.
             Specify:
             1. A clear task description
-            2. How often it should recur (Daily, Weekly, Monthly, or None)
+            2. How often it should recur (Daily, Weekly, Monthly, One-time, or None)
             3. Who the task should be assigned to (user or an agent's UUID)
             4. A user-friendly confirmation message`);
             
