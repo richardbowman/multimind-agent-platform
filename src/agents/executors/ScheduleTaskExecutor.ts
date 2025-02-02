@@ -59,7 +59,7 @@ export class ScheduleTaskExecutor implements StepExecutor {
 params.context?.artifacts });                                                                                                       
         params.agents && promptBuilder.addContext({ contentType: ContentType.AGENT_OVERVIEWS, agents: params.agents });             
                                                                                                                                     
-        promptBuilder.addInstruction(`Create or update a task based on this goal.                                                   
+        promptBuilder.addInstruction(`Create, update, or remove a task based on this goal.                                                   
             If this is an update to an existing task, specify:                                                                      
             1. The task ID to update                                                                                                
             2. Updated task description                                                                                             
@@ -71,7 +71,11 @@ params.context?.artifacts });
             1. A clear task description                                                                                             
             2. How often it should recur (Daily, Weekly, Monthly, One-time, or None)                                                
             3. Who the task should be assigned to (@user, myself (${messagingHandle}) or an agent's chat handle)                    
-            4. A user-friendly confirmation message`);     
+            4. A user-friendly confirmation message
+                                                                
+            If this is a task removal, specify:
+            1. The task ID to remove
+            2. A user-friendly confirmation message`);     
             
         const structuredPrompt = new StructuredOutputPrompt(schema, promptBuilder);
 
@@ -82,7 +86,7 @@ params.context?.artifacts });
                 threadPosts: params.context?.threadPosts || []
             });
 
-            const { taskId, taskDescription, recurrencePattern, isRecurring, assignee, responseMessage } = response;                
+            const { taskId, taskDescription, recurrencePattern, isRecurring, assignee, responseMessage, removeTask } = response;                
                                                                                                                                      
              // Map string pattern to enum                                                                                           
              const pattern = {                                                                                                       
@@ -113,33 +117,41 @@ params.context?.artifacts });
                  });                                                                                                                 
              }                                                                                                                       
                                                                                                                                      
-             let task;                                                                                                               
-             if (taskId) {                                                                                                           
-                 // Update existing task                                                                                             
-                 const existingTask = channelProject.tasks[taskId];                                                                  
-                 if (!existingTask) {                                                                                                
-                     throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);                                    
-                 }                                                                                                                   
-                                                                                                                                     
-                 task = await this.taskManager.updateTask(channelProject.id, {                                                          
-                     ...existingTask,                                                                                                
-                     description: taskDescription || existingTask.description,                                                       
-                     assignee: assigneeId || existingTask.assignee,                                                                  
-                     isRecurring: isRecurring ?? existingTask.isRecurring,                                                           
-                     recurrencePattern: pattern || existingTask.recurrencePattern,                                                   
-                     lastRunDate: isRecurring ? new Date() : existingTask.lastRunDate                                                
-                 });                                                                                                                 
-             } else {                                                                                                                
-                 // Create new task                                                                                                  
-                 task = await this.taskManager.addTask(channelProject, {                                                             
-                     description: taskDescription,                                                                                   
-                     creator: this.userId,                                                                                           
-                     assignee: assigneeId,                                                                                           
-                     isRecurring: isRecurring,                                                                                       
-                     recurrencePattern: pattern,                                                                                     
-                     lastRunDate: isRecurring ? new Date() : undefined,                                                              
-                     complete: false                                                                                                 
-                 });                                                                                                                 
+             let task;
+             if (removeTask && taskId) {
+                 // Remove existing task
+                 const existingTask = channelProject.tasks[taskId];
+                 if (!existingTask) {
+                     throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
+                 }
+                 
+                 await this.taskManager.cancelTask(taskId);
+             } else if (taskId) {
+                 // Update existing task
+                 const existingTask = channelProject.tasks[taskId];
+                 if (!existingTask) {
+                     throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
+                 }
+                 
+                 task = await this.taskManager.updateTask(channelProject.id, {
+                     ...existingTask,
+                     description: taskDescription || existingTask.description,
+                     assignee: assigneeId || existingTask.assignee,
+                     isRecurring: isRecurring ?? existingTask.isRecurring,
+                     recurrencePattern: pattern || existingTask.recurrencePattern,
+                     lastRunDate: isRecurring ? new Date() : existingTask.lastRunDate
+                 });
+             } else {
+                 // Create new task
+                 task = await this.taskManager.addTask(channelProject, {
+                     description: taskDescription,
+                     creator: this.userId,
+                     assignee: assigneeId,
+                     isRecurring: isRecurring,
+                     recurrencePattern: pattern,
+                     lastRunDate: isRecurring ? new Date() : undefined,
+                     complete: false
+                 });
              }
 
              return {
