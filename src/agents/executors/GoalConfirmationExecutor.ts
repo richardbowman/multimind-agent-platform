@@ -48,19 +48,15 @@ export class GoalConfirmationExecutor implements StepExecutor {
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
 
         // Add content sections
-        promptBuilder.addContent(ContentType.OVERALL_GOAL, params.overallGoal)
+        promptBuilder.addContext({ contentType: ContentType.OVERALL_GOAL, params: params.overallGoal });
 
-        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
-            goal,
-            step,
-            projectId
-        });
+        promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params: { goal, step, projectId } });
 
-        promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
-        promptBuilder.addContent(ContentType.CONVERSATION, params.context?.threadPosts);
-        promptBuilder.addContent(ContentType.CHANNEL_GOALS, params.channelGoals);
+        promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_EXCERPTS, params: params.context?.artifacts });
+        promptBuilder.addContext({ contentType: ContentType.CONVERSATION, params: params.context?.threadPosts });
+        promptBuilder.addContext({ contentType: ContentType.CHANNEL_GOALS, params: params.channelGoals });
 
-        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, params)
+        promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params: params });
 
         promptBuilder.addInstruction(`IMPORTANT RESPONSE INSTRUCTIONS:
             YOU MUST ELIMINATE acronyms or other terminology that may be ambigous or confusing to other agents.
