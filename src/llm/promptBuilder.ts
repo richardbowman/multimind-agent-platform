@@ -251,6 +251,14 @@ ${this.modelHelpers.getFinalInstructions()}
     private renderAgentOverviews({agents} : AgentOverviewsContent): string {
         if (!agents || agents.length === 0) return '';
 
+    private renderAgents({agents} : {agents: any[]}): string {
+        if (!agents || agents.length === 0) return '';
+
+        return "👥 Available Agents:\n\n" + agents.map(agent => {
+            return `- ${agent.chatHandle}: ${agent.description}`;
+        }).join('\n');
+    }
+
         return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
             let output = `- ${agent.messagingHandle}: ${agent.description}`;
             return output;
