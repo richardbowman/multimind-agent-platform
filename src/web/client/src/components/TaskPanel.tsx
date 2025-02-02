@@ -112,14 +112,14 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
             <List sx={{ display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
                 {Array.from(new Map((tasks || [])
                     .filter(task => {
-                        const userHandle = handles.find(h => h.handle === '@userid');
+                        const userHandle = handles.find(h => h.handle === '@user');
                         if (!userHandle) return false;
                         
                         if (viewMode === 'user') {
-                            return task.userId === userHandle.id;
+                            return task.id === userHandle.id;
                         }
-                        // Agent tasks are those not created by the current user
-                        return task.userId !== userHandle.id;
+                        // Agent tasks are those not assigned to the current user
+                        return task.assignee !== userHandle.id;
                     })
                     .map(task => [task.id, task])).values())
                     .sort((a, b) => {
