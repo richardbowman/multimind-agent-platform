@@ -132,11 +132,19 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                     })
                     .map(task => [task.id, task])).values())
                     .sort((a, b) => {
-                        // Sort in-progress to top, then not started, then completed
-                        if (a.inProgress && !b.inProgress) return -1;
-                        if (!a.inProgress && b.inProgress) return 1;
-                        if (a.complete && !b.complete) return 1;
-                        if (!a.complete && b.complete) return -1;
+                        // Status priority: in-progress > not started > cancelled > completed
+                        const statusPriority = {
+                            'inProgress': 0,
+                            'notStarted': 1,
+                            'cancelled': 2,
+                            'completed': 3
+                        };
+                        
+                        const aPriority = statusPriority[a.status] || 1;
+                        const bPriority = statusPriority[b.status] || 1;
+                        
+                        if (aPriority < bPriority) return -1;
+                        if (aPriority > bPriority) return 1;
                         return 0;
                     })
                     .map(task => (
