@@ -101,7 +101,7 @@ const AppContent: React.FC = () => {
                     >
                         <MenuIcon />
                     </IconButton>
-                    <Tabs
+                    {currentTab !== 'none' && <Tabs
                         value={currentTab}
                         onChange={(_, newValue) => setCurrentTab(newValue)}
                         textColor="inherit"
@@ -127,7 +127,7 @@ const AppContent: React.FC = () => {
                             label="Settings"
                             value="settings"
                         />
-                    </Tabs>
+                    </Tabs>}
                     <Box sx={{ flexGrow: 1 }} /> {/* Spacer to push right icon to end */}
                     <Stack direction="row" spacing={1} sx={{ WebkitAppRegion: 'no-drag' }}>
                         {process.env.NODE_ENV === 'development' && (

@@ -34,7 +34,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'main.electron.js'
   },
-  devtool: 'eval-cheap-module-source-map',
+  devtool: 'source-map',
   module: {
     rules: [
       {

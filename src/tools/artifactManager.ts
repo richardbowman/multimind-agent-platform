@@ -246,7 +246,7 @@ export class ArtifactManager {
         const type = metadata[uuid].type; // Retrieve the artifact type from metadata
         artifacts.push({ id: uuid, type, content, metadata: metadata[uuid] });
       } catch (error) {
-        Logger.warn(`Artifact not loadable: ${artifactId}`, error);
+        Logger.verbose(`Artifact not loadable: ${artifactId}`, error);
       }
     }
     return artifacts;

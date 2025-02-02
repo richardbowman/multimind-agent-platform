@@ -70,7 +70,7 @@ params.context?.artifacts });
             If this is a new task, specify:                                                                                         
             1. A clear task description                                                                                             
             2. How often it should recur (Daily, Weekly, Monthly, One-time, or None)                                                
-            3. Who the task should be assigned to (@user, myself (${messagingHandle}) or an agent's chat handle)                    
+            3. Who the task should be assigned to (@user, myself (${messagingHandle}), or other agent's chat handle)                    
             4. A user-friendly confirmation message
                                                                 
             If this is a task removal, specify:

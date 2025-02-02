@@ -6,6 +6,8 @@
     "uuid": "tsx src/cli/generate-uuid.ts",
     "test": "jest",
     "dev": "yarn electron:dev",
+    "build": "yarn build:app",
+    "package": "yarn electron:package",
     "docs": "mkdocs serve",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",

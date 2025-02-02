@@ -1069,13 +1069,10 @@
       "type": "object"
     },
     "NextActionResponse": {
+      "additionalProperties": false,
       "properties": {
         "actionType": {
           "description": "A supported action type",
-          "type": "string"
-        },
-        "reasoning": {
-          "description": "Explain your underlying thinking",
           "type": "string"
         },
         "sequence": {
@@ -1083,15 +1080,14 @@
           "type": "string"
         },
         "taskDescription": {
-          "description": "The goal for performing this actiom type",
+          "description": "The goal for performing this action type",
           "type": "string"
         }
       },
       "required": [
         "actionType",
-        "reasoning",
-        "sequence",
-        "taskDescription"
+        "taskDescription",
+        "sequence"
       ],
       "type": "object"
     },
@@ -1753,11 +1749,29 @@
     "TaskCreationResponse": {
       "additionalProperties": false,
       "properties": {
+        "agents": {
+          "items": {},
+          "type": "array"
+        },
+        "assignee": {
+          "anyOf": [
+            {
+              "const": "@user",
+              "type": "string"
+            },
+            {}
+          ]
+        },
+        "isRecurring": {
+          "type": "boolean"
+        },
         "recurrencePattern": {
           "enum": [
             "Daily",
             "Weekly",
-            "Monthly"
+            "Monthly",
+            "One-time",
+            "None"
           ],
           "type": "string"
         },
@@ -1771,6 +1785,9 @@
       "required": [
         "taskDescription",
         "recurrencePattern",
+        "isRecurring",
+        "assignee",
+        "agents",
         "responseMessage"
       ],
       "type": "object"

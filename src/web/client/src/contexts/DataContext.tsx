@@ -371,7 +371,7 @@ export const DataProvider: React.FC<{
       setPendingFiles([]);
     },
     showFileDialog: async () => {
-      await ipcService.getRPC().showFileDialog();
+      ipcService.getRPC().showFileDialog();
     }
   } as DataContextMethods), [
     messages,

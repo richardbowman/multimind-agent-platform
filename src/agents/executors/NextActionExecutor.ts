@@ -10,7 +10,7 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { EXECUTOR_METADATA_KEY, StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ChatClient } from 'src/chat/chatClient';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { StepTask } from '../interfaces/ExecuteStepParams';
 import { ModelType } from 'src/llm/LLMServiceFactory';
 import { StepExecutor } from '../interfaces/StepExecutor';
@@ -18,6 +18,12 @@ import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResult } from '../interfaces/StepResult';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { StringUtils } from 'src/utils/StringUtils';
+import { ModelResponse } from 'src/schemas/ModelResponse';
+
+export type WithReasoning<T extends ModelResponse> = T & {
+    reasoning: string;
+};
 
 @StepExecutorDecorator(ExecutorType.NEXT_STEP, 'Generate focused questions to understand user goals')
 export class NextActionExecutor implements StepExecutor {
@@ -118,11 +124,18 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
 
         prompt.addContext({contentType: ContentType.FINAL_INSTRUCTIONS, instructions: this.modelHelpers.getFinalInstructions()||""});
 
-        const response = await this.modelHelpers.generate<NextActionResponse>({
+        await prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, SchemaType.NextActionResponse, "Before providing your action, please think out your choice out loud.");
+
+        const responseText = await this.modelHelpers.generate({
             message: params.message,
-            instructions: new StructuredOutputPrompt(schema, prompt),
+            instructions: prompt,
             model: ModelType.ADVANCED_REASONING
         }); 
+
+        const response : WithReasoning<NextActionResponse> = {
+            ...StringUtils.extractAndParseJsonBlock<NextActionResponse>(responseText.message, schema),
+            reasoning: StringUtils.extractNonCodeContent(responseText.message)
+        };
 
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);
 

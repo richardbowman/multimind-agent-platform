@@ -40,8 +40,8 @@ export enum ContentType {
 }
 
 export enum OutputType {
-    JSON_AND_MARKDOWN
-
+    JSON_AND_MARKDOWN,
+    JSON_WITH_MESSAGE
 }
 
 
@@ -306,6 +306,10 @@ export class PromptBuilder implements InputPrompt {
             const schemaDef = await getGeneratedSchema(schema);
             this.addInstruction(`Please respond two code blocks. One enclosed \`\`\`json block format that follows this schema: ${JSON.stringify(schemaDef, null, 2)}. 
             Then, provide a separately enclosed \`\`\`markdown block. ${specialInstructions || ''}`);
+        } else if (outputType === OutputType.JSON_WITH_MESSAGE && schema) {
+            const schemaDef = await getGeneratedSchema(schema);
+            this.addInstruction(`Please respond with one enclosed \`\`\`json block format that follows this schema: ${JSON.stringify(schemaDef, null, 2)}. 
+             ${specialInstructions || ''}`);
         }
     }
     private contentSections: Map<ContentType, any> = new Map();

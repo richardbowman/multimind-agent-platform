@@ -66,12 +66,10 @@ module.exports = {
       'process.version': JSON.stringify('0.0.0')
     })
   ],
+  devtool: 'source-map',
   devServer: {
     historyApiFallback: true,
     port: 3000,
     hot: true
-  },
-  cache: {
-    type: "filesystem"
   }
 };
