@@ -1,6 +1,6 @@
-import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
+import { ExecutorConstructorParams, ExecuteParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResult, ReplanType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -9,6 +9,10 @@ import { TaskManager, RecurrencePattern } from '../../tools/taskManager';
 import { Task } from '../../tools/taskManager';
 import { randomUUID } from 'crypto';
 import Logger from '../../helpers/logger';
+import { getGeneratedSchema } from '../../helpers/schemaUtils';
+import { SchemaType } from '../../schemas/SchemaTypes';
+import { ContentType } from 'src/llm/promptBuilder';
+import { TaskCreationResponse } from '../../schemas/taskCreation';
 
 @StepExecutorDecorator('schedule_task', 'Schedule a recurring task')
 export class ScheduleTaskExecutor implements StepExecutor {
@@ -21,30 +25,42 @@ export class ScheduleTaskExecutor implements StepExecutor {
         this.taskManager = params.taskManager!;
     }
 
-    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
-        const structuredPrompt = new StructuredOutputPrompt(
-            {
-                type: 'object',
-                properties: {
-                    taskDescription: { type: 'string' },
-                    recurrencePattern: { type: 'string', enum: ['Daily', 'Weekly', 'Monthly'] },
-                    responseMessage: { type: 'string' }
-                }
-            },
-            `Create a new recurring task based on this goal.
+    async execute(params: ExecuteParams): Promise<StepResult> {
+        const { goal, step, projectId } = params;
+        const schema = await getGeneratedSchema(SchemaType.TaskCreationResponse);
+        
+        // Create prompt using PromptBuilder
+        const promptBuilder = this.modelHelpers.createPrompt();
+        
+        // Add core instructions
+        promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
+        
+        // Add content sections
+        promptBuilder.addContent(ContentType.OVERALL_GOAL, params.overallGoal);
+        promptBuilder.addContent(ContentType.EXECUTE_PARAMS, {
+            goal,
+            step,
+            projectId
+        });
+        promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.context?.artifacts);
+        promptBuilder.addContent(ContentType.CONVERSATION, params.context?.threadPosts);
+        
+        promptBuilder.addInstruction(`Create a new recurring task based on this goal.
             Specify:
             1. A clear task description
             2. How often it should recur (Daily, Weekly, or Monthly)
-            3. A user-friendly confirmation message`
-        );
+            3. A user-friendly confirmation message`);
+            
+        const structuredPrompt = new StructuredOutputPrompt(schema, promptBuilder);
 
         try {
-            const responseJSON = await this.modelHelpers.generate({
+            const response = await this.modelHelpers.generate<TaskCreationResponse>({
                 message: goal,
-                instructions: structuredPrompt
+                instructions: structuredPrompt,
+                threadPosts: params.context?.threadPosts || []
             });
 
-            const { taskDescription, recurrencePattern, responseMessage } = responseJSON;
+            const { taskDescription, recurrencePattern, responseMessage } = response;
 
             const taskId = randomUUID();
 
@@ -71,7 +87,9 @@ export class ScheduleTaskExecutor implements StepExecutor {
 
             return {
                 type: "schedule_task",
-                finished: true,
+                finished: params.executionMode === "task" ? true : true,
+                needsUserInput: false,
+                replan: ReplanType.Allow,
                 response: {
                     message: responseMessage
                 }
