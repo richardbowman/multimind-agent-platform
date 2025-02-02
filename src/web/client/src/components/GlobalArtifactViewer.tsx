@@ -36,9 +36,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             icon: <AttachFileIcon />,
             label: 'Upload File',
             onClick: async () => {
-                await showFileDialog();
-                // The file will be handled by the WebSocket context
-                // and added to the artifacts list automatically
+                showFileDialog();
             }
         }
     ]);
