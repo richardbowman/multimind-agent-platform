@@ -1,4 +1,4 @@
-import { ExecutorConstructorParams, ExecuteParams } from '../interfaces/ExecutorConstructorParams';
+import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResult, ReplanType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
@@ -7,21 +7,25 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ILLMService } from '../../llm/ILLMService';
 import { TaskManager, RecurrencePattern } from '../../tools/taskManager';
 import { Task } from '../../tools/taskManager';
-import { randomUUID } from 'crypto';
 import Logger from '../../helpers/logger';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ContentType } from 'src/llm/promptBuilder';
 import { TaskCreationResponse } from '../../schemas/taskCreation';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
+import { UUID } from 'src/types/uuid';
+import { timeStamp } from 'console';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
-@StepExecutorDecorator('schedule_task', 'Schedule a recurring task')
+@StepExecutorDecorator(ExecutorType.RECURRING_TASK, 'Schedule a recurring task')
 export class ScheduleTaskExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
-    taskManager: TaskManager;
+    private taskManager: TaskManager;
+    private userId: UUID;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
-
+        this.userId = params.userId;
         this.taskManager = params.taskManager!;
     }
 
@@ -36,10 +40,9 @@ export class ScheduleTaskExecutor implements StepExecutor {
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
         
         // Add content sections
-        promptBuilder.addContext({ contentType: ContentType.OVERALL_GOAL, params: params.overallGoal });
-        promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params: { goal, step, projectId } });
-        promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_EXCERPTS, params: params.context?.artifacts });
-        promptBuilder.addContext({ contentType: ContentType.CONVERSATION, params: params.context?.threadPosts });
+        params.overallGoal && promptBuilder.addContext({ contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal });
+        promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params });
+        params.context?.artifacts && promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts });
         
         promptBuilder.addInstruction(`Create a new recurring task based on this goal.
             Specify:
@@ -58,8 +61,6 @@ export class ScheduleTaskExecutor implements StepExecutor {
 
             const { taskDescription, recurrencePattern, responseMessage } = response;
 
-            const taskId = randomUUID();
-
             // Map string pattern to enum
             const pattern = {
                 'Daily': RecurrencePattern.Daily,
@@ -67,19 +68,16 @@ export class ScheduleTaskExecutor implements StepExecutor {
                 'Monthly': RecurrencePattern.Monthly
             }[recurrencePattern];
 
-            const task: Task = {
-                id: taskId,
+            // Add task to project
+            const project = await this.taskManager.getProject(projectId);
+            const task = await this.taskManager.addTask(project, {
                 description: taskDescription,
-                creator: 'system',
-                projectId: projectId,
+                creator: this.userId,
                 isRecurring: true,
                 recurrencePattern: pattern,
                 lastRunDate: new Date(),
                 complete: false
-            };
-
-            // Add task to project
-            await this.taskManager.addTask(projectId, task);
+            });
 
             return {
                 type: "schedule_task",
