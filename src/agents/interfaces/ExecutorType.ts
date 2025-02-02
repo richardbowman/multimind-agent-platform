@@ -35,5 +35,5 @@ export enum ExecutorType {
     ESTABLISH_INTENT = 'establish-intent',
     NEXT_STEP = 'next-step',
     LIST_TEMPLATES = 'list-templates',
-    SCHEDULE_TASK = "create-task"
+    CREATE_TASK = "create-task"
 }

@@ -68,7 +68,7 @@ export class NextActionExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.NextActionResponse);
 
         const project = params.context?.projects?.filter(p => p.metadata.tags?.includes("agent-internal-steps"))[0];
-        const tasks = this.projects.getAllTasks(project.id);
+        const tasks = project ? this.projects.getAllTasks(project.id) : [];
 
         const formatCompletedTasks = (tasks: Task[]) => {
             return tasks.map(t => {
@@ -109,7 +109,7 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
             .join("\n")}`);
         prompt.addInstruction(`
 - IN YOUR REASONING, describe this process:
-- Review the completed tasks you've already done.
+- Review the STEP HISTORY to see what you've already done, don't keep repeating your action.
 - Review the user's message.
 - Explain each step and why it would or would not make sense to be the next action.
 - Make sure you don't go into a loop, don't do the same action over and over again.

@@ -27,7 +27,7 @@ export interface CreateChannelHandlerParams {
     defaultResponderId?: UUID | ChatHandle;
     projectId?: UUID;
     goalTemplate?: ChannelHandle;
-    goalDescriptions?: String[];
+    goalDescriptions?: string[];
     artifactIds?: UUID[];
 }
 

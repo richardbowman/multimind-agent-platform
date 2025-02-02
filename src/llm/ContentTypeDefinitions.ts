@@ -119,7 +119,12 @@ export interface FullGoalsContent {
 
 export interface StepsContent {
     contentType: ContentType.STEPS;
-    steps: StepTask[]
+    steps: StepTask[];
+}
+
+export interface TasksContent {
+    contentType: ContentType.TASKS;
+    tasks: Task[];
 }
 
 export type ContentInput = 
@@ -145,4 +150,5 @@ export type ContentInput =
     | AboutContent
     | IntentContent
     | FullGoalsContent
-    | StepsContent;
+    | StepsContent
+    | TasksContent;

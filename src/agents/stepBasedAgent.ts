@@ -481,7 +481,7 @@ export abstract class StepBasedAgent extends Agent {
             if (executor.execute) {
                 stepResult = await executor.execute({
                     agentId: this.userId,
-                    goal: `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message}`,
+                    goal: `[Step: ${task.description}] [Project: ${project.name}] Solve the user's request: ${userPost?.message}`,
                     step: task.props.stepType,
                     stepId: task.id,
                     channelGoals,

@@ -4,7 +4,7 @@ import Logger from "src/helpers/logger";
 import { ModelHelpers } from "./modelHelpers";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepResponseContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent, OverallGoalContent, FullGoalsContent, StepsContent } from "./ContentTypeDefinitions";
+import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepResponseContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent, OverallGoalContent, FullGoalsContent, StepsContent, TasksContent } from "./ContentTypeDefinitions";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { IntentionsResponse } from "src/schemas/goalAndPlan";
 import { ExecutorType } from "src/agents/interfaces/ExecutorType";
@@ -27,7 +27,6 @@ export enum ContentType {
     EXECUTE_PARAMS = 'execute_params',
     AGENT_CAPABILITIES = 'agent_capabilities',
     AGENT_OVERVIEWS = 'agent_overviews',
-    AGENTS = 'agents',
     PURPOSE = "PURPOSE",
     CHANNEL = "CHANNEL",
     FINAL_INSTRUCTIONS = "FINAL_INSTRUCTIONS",
@@ -62,7 +61,11 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.ARTIFACTS_TITLES, this.renderArtifactTitles.bind(this));
         this.registerRenderer(ContentType.ARTIFACTS_EXCERPTS, this.renderArtifactExcerpts.bind(this));
         this.registerRenderer(ContentType.ARTIFACTS_FULL, this.renderArtifacts.bind(this));
+
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation.bind(this));
+        
+        this.registerRenderer(ContentType.TASKS, this.renderTasks.bind(this));
+
         this.registerRenderer(ContentType.STEP_RESPONSE, this.renderStepResults.bind(this));
         this.registerRenderer(ContentType.STEPS, this.renderSteps.bind(this));
         this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
@@ -252,16 +255,6 @@ ${this.modelHelpers.getFinalInstructions()}
     private renderAgentOverviews({agents} : AgentOverviewsContent): string {
         if (!agents || agents.length === 0) return '';
 
-    private renderAgents({agents} : {agents: any[]}): string {
-        if (!agents || agents.length === 0) return '';
-
-        return "👥 Available Assignees:\n\n" + 
-            "- @user (assign to the human user)\n" +
-            agents.map(agent => {
-                return `- ${agent.messagingHandle}: ${agent.description}`;
-            }).join('\n');
-    }
-
         return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
             let output = `- ${agent.messagingHandle}: ${agent.description}`;
             return output;
@@ -281,23 +274,18 @@ ${this.modelHelpers.getFinalInstructions()}
         return output;
     }
 
-    private renderProject({project}): string {
-        if (!project) return '';
+    private renderTasks({tasks} : TasksContent): string {
+        if (!tasks || tasks.length == 0) return '';
 
-        let output = `🎯 Project: ${project.name}\n`;
-        output += `📝 Description: ${project.metadata?.description || 'No description'}\n`;
-        output += `📊 Status: ${project.metadata?.status || 'active'}\n\n`;
-
-        if (project.tasks) {
-            output += `📋 Tasks:\n` +
-                Object.values(project.tasks)
-                    .sort((a, b) => (a.order || 0) - (b.order || 0))
-                    .map((task, index) =>
-                        `${index + 1}. ${task.description} (${task.complete ? 'completed' : 'pending'})`
-                    ).join('\n');
-        }
-
-        return output;
+        // let output = `🎯 Project: ${project.name}\n`;
+        // output += `📝 Description: ${project.metadata?.description || 'No description'}\n`;
+        // output += `📊 Status: ${project.metadata?.status || 'active'}\n\n`;
+        return `📋 Tasks:\n` +
+            Object.values(tasks)
+                .sort((a, b) => (a.order || 0) - (b.order || 0))
+                .map((task, index) =>
+                    `${index + 1}. ${task.description} (${task.complete ? 'completed' : 'pending'})`
+                ).join('\n');;
     }
 
     private renderConversation({posts}: ConversationContent): string {

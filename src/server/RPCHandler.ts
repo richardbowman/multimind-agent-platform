@@ -499,7 +499,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                     tasks: goalTasks,
                     metadata: {
                         description: params.description || '',
-                        tags: template.tags
+                        tags: ["channel-goals"]
                     }
                 });
                 projectId = project.id;
