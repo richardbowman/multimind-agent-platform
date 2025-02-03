@@ -217,8 +217,27 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 }}
                                 onAddToolbarActions={(actions) => {
                                     setToolbarActions(prev => {
-                                        const baseActions = prev.slice(0, 2); // Keep create new and upload actions
-                                        return [...baseActions, ...actions];
+                                        // Keep the first two base actions (Upload File and Create New Artifact)
+                                        const baseActions = [
+                                            {
+                                                icon: <AttachFileIcon />,
+                                                label: 'Upload File',
+                                                onClick: async () => {
+                                                    showFileDialog();
+                                                }
+                                            },
+                                            {
+                                                icon: <DescriptionIcon />,
+                                                label: 'Create New Artifact',
+                                                onClick: () => setEditorOpen(true)
+                                            }
+                                        ];
+                                        // Add any new actions after the base actions
+                                        // Filter out any duplicate actions based on label
+                                        const uniqueActions = actions.filter(action => 
+                                            !baseActions.some(base => base.label === action.label)
+                                        );
+                                        return [...baseActions, ...uniqueActions];
                                     });
                                 }}
                             />
