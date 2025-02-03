@@ -44,7 +44,17 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
 
     const handleEditClick = (agentId: string) => {
         setEditingAgentId(agentId);
-        setAgentForm(settings.agentBuilder?.[agentId] || {});
+        // Get the agent config from either agentBuilder or agents
+        const agentConfig = settings.agentBuilder?.[agentId] || settings.agents?.[agentId];
+        setAgentForm({
+            name: agentConfig?.name || '',
+            description: agentConfig?.description || '',
+            purpose: agentConfig?.purpose || '',
+            finalInstructions: agentConfig?.finalInstructions || '',
+            plannerType: agentConfig?.plannerType || 'nextStep',
+            autoRespondChannelIds: agentConfig?.autoRespondChannelIds || '',
+            enabled: agentConfig?.enabled ?? true
+        });
     };
 
     const handleFormChange = (field: string, value: any) => {
@@ -56,13 +66,18 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
 
     const handleSaveAgent = () => {
         if (editingAgentId) {
-            onSettingsChange({
+            const updatedSettings = {
                 ...settings,
                 agentBuilder: {
                     ...settings.agentBuilder,
-                    [editingAgentId]: agentForm
+                    [editingAgentId]: {
+                        ...agentForm,
+                        // Preserve any existing fields not in the form
+                        ...(settings.agentBuilder?.[editingAgentId] || {})
+                    }
                 }
-            });
+            };
+            onSettingsChange(updatedSettings);
             setEditingAgentId(null);
             setAgentForm({});
         }
