@@ -39,6 +39,7 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
     if (log.details.percentComplete > 0) {
       setOptions({
         percentComplete: log.details.percentComplete,
+        persist: log.details.percentComplete < 1,
         message: log.message,
         severity: 'progress',
       });

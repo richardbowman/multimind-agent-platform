@@ -47,7 +47,7 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
     const [isLoading, setIsLoading] = useState(false);
     const [showVerbose, setShowVerbose] = useState(false);
     const [verboseToggleTimestamp, setVerboseToggleTimestamp] = useState(Date.now());
-    const [logLevelFilter, setLogLevelFilter] = useState<'all' | 'error' | 'warn' | 'info' | 'debug' | 'verbose'>('all');
+    const [logLevelFilter, setLogLevelFilter] = useState<'all' | 'error' | 'warn' | 'info' | 'debug' | 'verbose'>('error');
 
     const currentLogTypeRef = useRef(currentLogTab);
     

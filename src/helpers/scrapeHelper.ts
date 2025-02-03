@@ -1,4 +1,6 @@
-import { chromium, devices, Browser } from 'playwright-extra';
+import { chromium, devices } from 'playwright-extra';
+import type Browser from 'playwright-extra';
+
 import TurndownService from 'turndown';
 import { CheerioAPI, load } from 'cheerio';
 import { ArtifactManager } from '../tools/artifactManager';
@@ -11,6 +13,7 @@ import Logger from './logger';
 import { Settings } from 'src/tools/settings';
 
 import { BrowserWindow } from "electron";
+import { ArtifactType } from 'src/tools/artifact';
 
 // Add stealth plugin
 chromium.use(StealthPlugin());
@@ -99,7 +102,7 @@ class ScrapeHelper {
             Logger.error('Error during cleanup:', error);
         }
     }
-    async scrapePage(url: string, metadata: Record<string, any> = {}): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot: Buffer, artifactId: string }> {
+    async scrapePage(url: string, metadata: Record<string, any> = {}): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot?: Buffer, artifactId: string }> {
         // Only initialize browser when actually scraping
         if (!this.browser && !this.electronWindow) {
             await this.initialize();
@@ -203,10 +206,8 @@ class ScrapeHelper {
             }
 
             // Save the full webpage content as an artifact
-            const artifactId = crypto.randomUUID();
-            const artifact = {
-                id: artifactId,
-                type: 'webpage',
+            const artifact = await this.artifactManager.saveArtifact({
+                type: ArtifactType.Webpage,
                 content: markdownContent,
                 metadata: {
                     url,
@@ -214,11 +215,9 @@ class ScrapeHelper {
                     scrapedAt: new Date().toISOString(),
                     ...metadata
                 }
-            };
+            });
 
-            await this.artifactManager.saveArtifact(artifact);
-
-            return { content: markdownContent, links, title, screenshot, artifactId };
+            return { content: markdownContent, links, title, screenshot, artifactId: artifact.id };
 
         } catch (error) {
             Logger.error(`Error scraping page "${url}":`, error);

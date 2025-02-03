@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Artifact } from '../../../../../tools/artifact';
 import { Box } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';

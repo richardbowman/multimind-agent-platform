@@ -4,7 +4,7 @@ import { Task } from "src/tools/taskManager";
 import { AssignWritersExecutor } from './executors/WritingExecutor';
 import { EditingExecutor } from './executors/EditingExecutor';
 import { OutlineExecutor } from './executors/OutlineExecutor';
-import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
+import { KnowledgeCheckExecutor } from './executors/KnowledgeCheckExecutor';
 import { ContentCombinationExecutor } from './executors/ContentCombinationExecutor';
 import { StepBasedAgent } from './stepBasedAgent';
 import { DocumentRetrievalExecutor } from './executors/DocumentRetrievalExecutor';

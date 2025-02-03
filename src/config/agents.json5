@@ -40,6 +40,9 @@
             },
             {
               "className": "ScheduleTaskExecutor"
+            },
+            {
+              "className": "KnowledgeCheckExecutor"
             }
           ]
         }

@@ -96,8 +96,6 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                 </ToggleButtonGroup>
                 <Tooltip title="Cancel all outstanding tasks">
                     <IconButton
-                        size="small"
-                        color="error"
                         onClick={async () => {
                             const outstandingTasks = tasks.filter(t => 
                                 !t.complete && t.status !== 'cancelled'

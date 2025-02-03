@@ -4,7 +4,7 @@ import { RefutingExecutor } from './executors/RefutingExecutor';
 import { CodeExecutorExecutor } from './executors/CodeExecutorExecutor';
 import { NodeExecutorExecutor } from './executors/NodeExecutorExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
-import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
+import { KnowledgeCheckExecutor } from './executors/KnowledgeCheckExecutor';
 import { GoalConfirmationExecutor } from './executors/GoalConfirmationExecutor';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { ModelHelpers } from 'src/llm/modelHelpers';

@@ -120,7 +120,7 @@ export const DataProvider: React.FC<{
   // Fetch messages whenever channel or thread changes
   useEffect(() => {
     const loadChannelData = async () => {
-      if (currentChannelId) {
+      if (currentChannelId && isLoading === false) {
         setIsLoading(true);
         setMessages([]); // Clear messages before loading new ones
 
@@ -364,6 +364,10 @@ export const DataProvider: React.FC<{
     addPendingFiles: (artifacts: Artifact[]) => {
       setPendingFiles([
         ...pendingFiles,
+        ...artifacts
+      ]);
+      setAllArtifacts([
+        ...allArtifacts,
         ...artifacts
       ]);
     },

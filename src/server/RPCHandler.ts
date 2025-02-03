@@ -495,22 +495,17 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     public static async createChannelHelper(chatClient: ChatClient, taskManager: TaskManager, params: CreateChannelHandlerParams) : Promise<CreateChannelParams> {
-        // Always include the RouterAgent in the channel members
-        const router = createChatHandle('@router');
         const templates = await this.loadGoalTemplates();
+        let defaultResponder = params.defaultResponder;
 
-        let members = [...(params.members || [])];
-        // Use the selected default responder or fallback to router-agent
-        const defaultResponder = params.defaultResponderId || router;
-        if (!params.defaultResponderId) members = [...members, router];
-        
         // If a goal template is specified, create a project with its tasks
-        let projectId;
+        let projectId, members : ChatHandle[] = [];
         if (params.goalTemplate) {
             const template = templates.find(t => t.id === params.goalTemplate);
             if (template) {
                 // Resolve agent handles to IDs
-                const resolvedAgents = await this.mapHandles(chatClient, template.supportingAgents);
+                members = [...template.supportingAgents];
+                const resolvedAgents = await this.mapHandles(chatClient, members);
 
                 // use provided goals if given, or fallback to template goal tasks
                 const goalTasks = params.goalDescriptions ? params.goalDescriptions.map(goal => ({
@@ -534,16 +529,18 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 });
                 projectId = project.id;
 
-                // Add supporting agents to channel members if not already present
-                const existingMembers = new Set(params.members || []);
-                resolvedAgents.forEach(agentId => {
-                    if (!existingMembers.has(agentId)) {
-                        members.push(agentId);
-                    }
-                });
+                if (!defaultResponder && template.defaultResponder) {
+                    defaultResponder = template.defaultResponder;
+                }
             }
         }
 
+        if (!defaultResponder) defaultResponder = createChatHandle('@router');
+        members = [...new Set([...params.members || [], defaultResponder, ...members])];
+
+
+        // Use the selected default responder or fallback to router-agent
+        
         const defaultResponderId = (await this.mapHandles(chatClient, [defaultResponder]))[0];
         const memberIds = [...new Set(await this.mapHandles(chatClient, members))];
 

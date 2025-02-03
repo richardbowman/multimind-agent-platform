@@ -90,7 +90,7 @@ Return ONLY the channel name.`;
             members: selectedTemplate.supportingAgents,
             goalTemplate: selectedTemplate.id,
             goalDescriptions: selectedTemplate.initialTasks.map(t => t.description),
-            defaultResponderId: selectedTemplate.defaultResponder,
+            defaultResponder: selectedTemplate.defaultResponder,
             artifactIds: artifactIds
         });
 

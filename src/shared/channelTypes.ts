@@ -23,8 +23,8 @@ export interface CreateChannelHandlerParams {
     name: ChannelHandle;
     description?: string;
     isPrivate?: boolean;
-    members?: (UUID | ChatHandle)[];
-    defaultResponderId?: UUID | ChatHandle;
+    members?: ChatHandle[];
+    defaultResponder?: ChatHandle;
     projectId?: UUID;
     goalTemplate?: ChannelHandle;
     goalDescriptions?: string[];

@@ -4,7 +4,7 @@ import { WebSearchExecutor } from './executors/WebResearchExecutor';
 import SearchHelper from '../helpers/searchHelper';
 import ScrapeHelper from '../helpers/scrapeHelper';
 import Logger from '../helpers/logger';
-import { KnowledgeCheckExecutor } from './executors/checkKnowledgeExecutor';
+import { KnowledgeCheckExecutor } from './executors/KnowledgeCheckExecutor';
 import { ValidationExecutor } from './executors/ValidationExecutor';
 import { FinalResponseExecutor } from './executors/FinalResponseExecutor';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';

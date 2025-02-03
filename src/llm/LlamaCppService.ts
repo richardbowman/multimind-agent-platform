@@ -9,12 +9,13 @@ import JSON5 from "json5";
 import { promises as fs } from 'fs';
 import path from 'path';
 import https from 'https';
-import { createWriteStream } from 'fs';
+import { createWriteStream } from 'node:fs';
 import { pipeline } from 'stream/promises';
 import { getDataPath } from "src/helpers/paths";
 import axios from 'axios';
 import { ModelInfo } from "./types";
 import { ConfigurationError } from "src/errors/ConfigurationError";
+import { sleep } from "src/utils/sleep";
 
 interface HFModel {
     id: string;
@@ -51,8 +52,12 @@ class LlamaEmbedder implements IEmbeddingFunction {
         const embeddings: number[][] = [];
         for (let i=0; i<texts.length; i++) {
             Logger.progress(`Indexing documents (Chunk ${i+1} of ${texts.length})`, (i+1)/ texts.length);
-            const embedding = await this.embeddingContext.getEmbeddingFor(texts[i]);
-            embeddings.push(Array.from(embedding.vector)); // Convert Float32Array to number[]
+            try {
+                const embedding = await this.embeddingContext.getEmbeddingFor(texts[i]);
+                embeddings.push(Array.from(embedding.vector)); // Convert Float32Array to number[]
+            } catch (e) {
+                Logger.error(`Failed to generate embedding for text: ${texts[i]}`, e);
+            }
         }
         return embeddings;
     }
@@ -174,6 +179,9 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                     }).on('error', reject);
                 });
 
+                fileStream.end();
+                await new Promise((resolve) => fileStream.close(resolve));
+
                 // Verify the downloaded file
                 try {
                     const stats = await fs.stat(modelPath);
@@ -193,6 +201,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                     }
                     
                     Logger.info(`Model verification successful: ${modelPath}`);
+                    await sleep(5000);
                 } catch (verifyError) {
                     // Clean up invalid file
                     await fs.unlink(modelPath).catch(() => {});
