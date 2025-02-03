@@ -95,12 +95,18 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
         }
     ], [onEdit, onDelete]);
 
-    const { registerActions, unregisterActions } = useToolbarActions();
+    const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
 
     useEffect(() => {
         registerActions('artifact-display', baseActions);
         return () => unregisterActions('artifact-display');
     }, [registerActions, unregisterActions]);
+
+    // Update action states based on props
+    useEffect(() => {
+        updateActionState('Edit Artifact', { disabled: !onEdit });
+        updateActionState('Delete Artifact', { disabled: !onDelete });
+    }, [onEdit, onDelete, updateActionState]);
 
     return (
         <Box component="main" sx={{ 
