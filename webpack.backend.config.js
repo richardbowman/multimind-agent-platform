@@ -103,8 +103,8 @@ module.exports = {
           to: path.resolve(__dirname, 'dist/goalTemplates')
         },
         {
-          from: path.resolve(__dirname, 'src/assets/job-aids'),
-          to: path.resolve(__dirname, 'dist/assets/job-aids')
+          from: path.resolve(__dirname, 'src/assets/procedure-guides'),
+          to: path.resolve(__dirname, 'dist/assets/procedure-guides')
         }
       ]
     })

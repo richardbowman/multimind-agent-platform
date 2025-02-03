@@ -20,11 +20,11 @@ import fs from 'fs';
 import path from 'path';
 import { ArtifactType } from "./tools/artifact";
 
-async function loadJobAids(artifactManager: ArtifactManager): Promise<void> {
-    const jobAidsDir = path.join("assets","job-aids");
+async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<void> {
+    const guidesDir = path.join("assets","procedure-guides");
     
-    if (!fs.existsSync(jobAidsDir)) {
-        Logger.warn(`Job aids directory not found at ${jobAidsDir}`);
+    if (!fs.existsSync(guidesDir)) {
+        Logger.warn(`Procedure guides directory not found at ${guidesDir}`);
         return;
     }
 
@@ -48,7 +48,7 @@ async function loadJobAids(artifactManager: ArtifactManager): Promise<void> {
                 }
             });
 
-            Logger.info(`Loaded job aid: ${file}`);
+            Logger.info(`Loaded procedure guide: ${file}`);
         }
     }
 }
@@ -188,8 +188,8 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         process.exit(0);
     }
 
-    // Load job aids
-    await loadJobAids(artifactManager);
+    // Load procedure guides
+    await loadProcedureGuides(artifactManager);
 
     return {
         chatClient: userClient,
