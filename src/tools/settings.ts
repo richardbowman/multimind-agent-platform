@@ -283,7 +283,72 @@ export class LLMSettings {
 
 }
 
+export class AgentBuilderConfig {
+    @ClientSettings({
+        label: 'Agent Name',
+        category: 'Agent Builder',
+        type: 'string',
+        required: true
+    })
+    name: string = '';
+
+    @ClientSettings({
+        label: 'Description',
+        category: 'Agent Builder',
+        type: 'string'
+    })
+    description: string = '';
+
+    @ClientSettings({
+        label: 'Purpose',
+        category: 'Agent Builder',
+        type: 'string',
+        required: true
+    })
+    purpose: string = '';
+
+    @ClientSettings({
+        label: 'Final Instructions',
+        category: 'Agent Builder',
+        type: 'string',
+        required: true
+    })
+    finalInstructions: string = '';
+
+    @ClientSettings({
+        label: 'Planner Type',
+        category: 'Agent Builder',
+        type: 'select',
+        options: ['nextStep'],
+        defaultValue: 'nextStep'
+    })
+    plannerType: PlannerType = PlannerType.NextStep;
+
+    @ClientSettings({
+        label: 'Auto Respond Channels',
+        category: 'Agent Builder',
+        type: 'string',
+        description: 'Comma separated list of channel IDs to auto respond in'
+    })
+    autoRespondChannelIds: string = '';
+
+    @ClientSettings({
+        label: 'Enabled',
+        category: 'Agent Builder',
+        type: 'boolean',
+        defaultValue: true
+    })
+    enabled: boolean = true;
+}
+
 export class Settings {
+    @ClientSettings({
+        label: 'Agent Builder',
+        category: 'Agent Builder',
+        type: 'section'
+    })
+    agentBuilder: Record<string, AgentBuilderConfig> = {};
+
     scrapeTimeout(arg0: () => void, scrapeTimeout: any): void {
         throw new Error('Method not implemented.');
     }
