@@ -22,20 +22,19 @@ interface ContentRendererProps {
     type?: string;
     mimeType?: string;
     metadata?: Record<string, any>;
-    const { addActions } = useToolbarActions();
 }
 
 export const ContentRenderer: React.FC<ContentRendererProps> = ({ 
     content, 
     type, 
-    metadata,
-    onAddToolbarActions 
+    metadata
 }) => {
+    const { addActions } = useToolbarActions();
     const mimeType = metadata?.mimeType;
     
     // Handle CSV content
     if (mimeType === 'text/csv' || type === 'csv' || type == ArtifactType.Spreadsheet) {
-        return <CSVRenderer content={content} onAddToolbarActions={onAddToolbarActions} />;
+        return <CSVRenderer content={content} />;
     }
 
     // Handle Mermaid diagrams
@@ -162,7 +161,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                     onClick: zoomIn
                 }
             ]);
-        }, [pageNumber, numPages, zoomIn, zoomOut, onAddToolbarActions]);
+        }, [pageNumber, numPages, zoomIn, zoomOut, addActions]);
 
         return (
             <Box sx={{ 
@@ -190,7 +189,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                     Page {pageNumber} of {numPages}
                 </Typography>
                 
-                {!onAddToolbarActions && (
+                {(
                     <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
                         <IconButton 
                             onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))} 
