@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { CSVRenderer } from './CSVRenderer';
 import { Mermaid } from './Mermaid';
 import ReactMarkdown from 'react-markdown';
@@ -142,7 +142,9 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         }, []);
 
         const handleNextPage = useCallback(() => {
-            setPageNumber(prev => Math.min(prev + 1, numPages || 1));
+            setPageNumber(prev => {
+                return Math.min(prev + 1, numPages || 1)
+            });
         }, [numPages]);
 
         // Register actions once on mount
@@ -174,7 +176,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
 
             registerActions('pdf-renderer', pdfActions);
             return () => unregisterActions('pdf-renderer');
-        }, [handlePreviousPage, handleNextPage, zoomIn, zoomOut, registerActions, unregisterActions]);
+        }, [registerActions, unregisterActions]);
 
         // Update action states when page number changes
         useEffect(() => {
