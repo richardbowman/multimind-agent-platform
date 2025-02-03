@@ -107,12 +107,32 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         }
     }, [allArtifacts]);
 
-    const onDrop = useCallback((acceptedFiles: File[]) => {
-        // Handle file uploads
+    const onDrop = useCallback(async (acceptedFiles: File[]) => {
         if (acceptedFiles.length > 0) {
-            showFileDialog(acceptedFiles);
+            const file = acceptedFiles[0];
+            const reader = new FileReader();
+            
+            reader.onload = async (e) => {
+                const content = e.target?.result;
+                if (content) {
+                    const artifact: Artifact = {
+                        id: crypto.randomUUID() as UUID,
+                        type: ArtifactType.Document,
+                        content: content,
+                        metadata: {
+                            fileName: file.name,
+                            fileType: file.type,
+                            size: file.size,
+                            lastModified: file.lastModified
+                        }
+                    };
+                    await handleCreateArtifact(artifact);
+                }
+            };
+            
+            reader.readAsText(file);
         }
-    }, [showFileDialog]);
+    }, [handleCreateArtifact]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
