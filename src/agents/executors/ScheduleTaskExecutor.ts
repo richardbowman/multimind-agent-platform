@@ -39,7 +39,6 @@ export class ScheduleTaskExecutor implements StepExecutor {
         // Add core instructions
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
 
-
         const messagingHandle = (await this.chatClient.getHandles())[this.userId];
 
         let channelProject = params.context?.projects?.find(p => p.metadata.tags?.includes("channel-goals"));                   
@@ -66,13 +65,15 @@ params.context?.artifacts });
             3. Updated recurrence pattern                                                                                           
             4. Updated assignee                                                                                                     
             5. A user-friendly confirmation message                                                                                 
-                                                                                                                                    
+            6. Optional due date (e.g., "tomorrow", "next week", "2024-03-15")                                                         
+
             If this is a new task, specify:                                                                                         
             1. A clear task description                                                                                             
             2. How often it should recur (Daily, Weekly, Monthly, One-time, or None)                                                
             3. Who the task should be assigned to (@user, myself (${messagingHandle}), or other agent's chat handle)                    
-            4. A user-friendly confirmation message
-                                                                
+            4. A user-friendly confirmation message                                                                                 
+            5. Optional due date (e.g., "tomorrow", "next week", "2024-03-15")                                                         
+
             If this is a task removal, specify:
             1. The task ID to remove
             2. A user-friendly confirmation message`);     
@@ -86,7 +87,16 @@ params.context?.artifacts });
                 threadPosts: params.context?.threadPosts || []
             });
 
-            const { action, taskId, taskDescription, recurrencePattern, isRecurring, assignee, responseMessage } = response;                
+            const { 
+                action, 
+                taskId, 
+                taskDescription, 
+                recurrencePattern, 
+                isRecurring, 
+                assignee, 
+                responseMessage,
+                dueDate // New field for due date
+            } = response;                
                                                                                                                                      
              // Map string pattern to enum                                                                                           
              const pattern = {                                                                                                       
@@ -133,16 +143,22 @@ params.context?.artifacts });
                      throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
                  }
                  
+                 // Parse due date if provided
+                 const parsedDueDate = dueDate ? new Date(dueDate) : undefined;
+                 
                  task = await this.taskManager.updateTask(channelProject.id, {
                      ...existingTask,
                      description: taskDescription || existingTask.description,
                      assignee: assigneeId || existingTask.assignee,
                      isRecurring: isRecurring ?? existingTask.isRecurring,
                      recurrencePattern: pattern || existingTask.recurrencePattern,
-                     lastRunDate: isRecurring ? new Date() : existingTask.lastRunDate
+                     lastRunDate: isRecurring ? new Date() : existingTask.lastRunDate,
+                     dueDate: parsedDueDate // Add due date to update
                  });
              } else if (action === UpdateActions.Create) {
-                 // Create new task
+                 // Parse due date if provided
+                 const parsedDueDate = dueDate ? new Date(dueDate) : undefined;
+
                  task = await this.taskManager.addTask(channelProject, {
                      description: taskDescription,
                      creator: this.userId,
@@ -150,7 +166,8 @@ params.context?.artifacts });
                      isRecurring: isRecurring,
                      recurrencePattern: pattern,
                      lastRunDate: isRecurring ? new Date() : undefined,
-                     complete: false
+                     complete: false,
+                     dueDate: parsedDueDate // Add due date to create
                  });
              } else {
                 Logger.error("Improper response, need to handle");
