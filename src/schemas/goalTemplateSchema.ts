@@ -1,6 +1,5 @@
-import { ChannelHandle, createChannelHandle } from "src/shared/channelTypes";
-import { ChatHandle, createChatHandle } from "src/types/chatHandle";
-import { asUUID, UUID } from "src/types/uuid";
+import { ChannelHandle } from "src/shared/channelTypes";
+import { ChatHandle } from "src/types/chatHandle";
 
 export interface GoalTemplate {
     /**
@@ -55,25 +54,3 @@ export interface InitialTask {
      */
     metadata?: Record<string, any>;
 }
-
-/**
- * Predefined goal templates for common use cases
- */
-import fs from 'fs';
-import path from 'path';
-import { createChannelHandle, createChatHandle } from "src/shared/channelTypes";
-
-import { getDataPath } from '../helpers/paths';
-const templatesDir = path.join(getDataPath(), 'goalTemplates');
-
-export const GoalTemplates: GoalTemplate[] = fs.readdirSync(templatesDir)
-    .filter(file => file.endsWith('.json'))
-    .map(file => {
-        const template = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf8'));
-        return {
-            ...template,
-            id: createChannelHandle(template.id),
-            supportingAgents: template.supportingAgents.map((agent: string) => createChatHandle(agent)),
-            defaultResponder: template.defaultResponder ? createChatHandle(template.defaultResponder) : undefined
-        };
-    });

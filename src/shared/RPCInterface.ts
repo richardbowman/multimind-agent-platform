@@ -1,5 +1,5 @@
 import { CreateChannelParams } from 'src/shared/channelTypes';
-import { LogParam } from '../llm/LLMLogger';
+import { LLMLogEntry, LogParam } from '../llm/LLMLogger';
 import { ClientMessage, ClientProject } from "./types";
 import { ClientChannel } from "./types";
 import { ClientThread } from "./types";
@@ -10,6 +10,7 @@ import { UpdateStatus } from './UpdateStatus';
 import { UUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
 import { ClientError } from '@mattermost/client';
+import { GoalTemplate } from 'src/schemas/goalTemplateSchema';
 
 export interface LogEntry {
     timestamp: string;
@@ -34,6 +35,7 @@ export interface ServerMethods {
         logs: LogEntry[];
         total: number;
     }>;
+    getLLMLogsPaginated({ offset, limit }: { offset: number; limit: number }): Promise<LLMLogEntry[]>;
     minimizeWindow(): Promise<void>;
     maximizeWindow(): Promise<void>;
     closeWindow(): Promise<void>;
@@ -85,6 +87,8 @@ export interface ServerMethods {
     markTaskComplete(taskId: string, complete: boolean): Promise<ClientTask>;
     cancelTask(taskId: string): Promise<ClientTask>;
     
+    loadGoalTemplates(): Promise<GoalTemplate[]>;
+
     /**
      * Open developer tools (only available in development mode)
      */

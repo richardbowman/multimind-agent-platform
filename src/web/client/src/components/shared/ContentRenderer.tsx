@@ -31,7 +31,8 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
 }) => {
     // Handle CSV content
     if (mimeType === 'text/csv' || type === 'csv') {
-        return <CSVRenderer content={content} onAddToolbarActions={onAddToolbarActions} />;
+        // return <CSVRenderer content={content} onAddToolbarActions={onAddToolbarActions} />;
+        return <div/>
     }
 
     // Handle Mermaid diagrams

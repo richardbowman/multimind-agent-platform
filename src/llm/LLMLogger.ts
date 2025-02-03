@@ -133,4 +133,68 @@ export class LLMCallLogger extends EventEmitter {
             return {};
         }
     }
+
+    async getLogsPaginated(offset: number, limit: number): Promise<LLMLogEntry[]> {
+        try {
+            if (!fs.existsSync(this.logFile)) {
+                return [];
+            }
+
+            const content = await LLMCallLogger.fileQueue.enqueue(async () => {
+                return await fs.promises.readFile(this.logFile, 'utf8');
+            });
+
+            const lines = content.trim().split('\n');
+            const allEntries = lines.map(line => JSON.parse(line))
+                                  .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+            return allEntries.slice(offset, offset + limit);
+        } catch (err) {
+            Logger.error('Failed to read LLM logs:', err);
+            return [];
+        }
+    }
+
+    async getAllLogsPaginated(offset: number, limit: number): Promise<LLMLogEntry[]> {
+        try {
+            const logDir = path.join(getDataPath(), 'llm');
+            if (!fs.existsSync(logDir)) {
+                return [];
+            }
+
+            const files = await fs.promises.readdir(logDir);
+            const logs: Record<string, LLMLogEntry[]> = {};
+
+            // Collect all entries across all files
+            const allEntries: LLMLogEntry[] = [];
+
+            for (const file of files) {
+                if (!file.endsWith('.jsonl')) continue;
+
+                const content = await LLMCallLogger.fileQueue.enqueue(async () => {
+                    return await fs.promises.readFile(
+                        path.join(logDir, file),
+                        'utf8'
+                    );
+                });
+                const lines = content.trim().split('\n');
+                const serviceName = file.split('-')[0];
+                const entries = lines.map(line => ({
+                    ...JSON.parse(line),
+                    serviceName
+                }));
+                allEntries.push(...entries);
+            }
+
+            // Sort all entries by timestamp descending
+            allEntries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+
+            // Get the paginated slice
+            const paginatedEntries = allEntries.slice(offset, offset + limit);
+            return paginatedEntries;
+        } catch (err) {
+            Logger.error('Failed to read all LLM logs:', err);
+            return [];
+        }
+    }
 }

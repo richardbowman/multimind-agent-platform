@@ -29,5 +29,4 @@ export interface Artifact {
   content: string | Buffer | CalendarEvent[]; // The actual data, could be text, binary, or calendar events
   metadata?: Record<string, any>; // Optional additional information about the artifact
   tokenCount?: number; // Optional token count for the content
-  mimeType?: string; // MIME type of the content (e.g. 'text/plain', 'application/json')
 }

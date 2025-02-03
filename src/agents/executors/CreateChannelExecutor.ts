@@ -3,7 +3,7 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { GoalTemplate, GoalTemplates } from '../../schemas/goalTemplateSchema';
+import { GoalTemplate } from '../../schemas/goalTemplateSchema';
 import { TaskManager, TaskType } from '../../tools/taskManager';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ArtifactManager } from '../../tools/artifactManager';
@@ -130,7 +130,8 @@ Write in a professional but approachable tone.`;
 
     private async findBestTemplate(channelPurpose: string): Promise<GoalTemplate | undefined> {
         // Create a prompt for the LLM to select the best template
-        const templateOptions = GoalTemplates.map(t => 
+        const templates = await ServerRPCHandler.loadGoalTemplates();
+        const templateOptions = templates.map(t => 
             `Template: ${t.name}\nDescription: ${t.description}\nID: ${t.id}`
         ).join('\n\n');
 
@@ -155,7 +156,7 @@ Return ONLY the template ID as your response.`;
                 return undefined;
             }
 
-            return GoalTemplates.find(t => t.id === selectedId);
+            return templates.find(t => t.id === selectedId);
         } catch (error) {
             console.error('Error selecting template:', error);
             return undefined;

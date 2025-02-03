@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
-import { 
-    ListItem, 
-    ListItemText, 
+import {
+    ListItem,
+    ListItemText,
     ListItemButton,
     Box,
     Dialog,
@@ -25,6 +25,8 @@ import {
 import ArrowBackIosIcon from '@mui/icons-material/ArrowBackIos';
 import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
 import { useDataContext } from '../contexts/DataContext';
+import { useIPCService } from '../contexts/IPCContext';
+import { LLMLogEntry } from '../../../../llm/LLMLogger';
 
 interface FormattedDataViewProps {
     data: any;
@@ -34,7 +36,7 @@ export const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) =>
     if (typeof data === 'string') {
         // Format string with preserved newlines
         return (
-            <pre style={{ 
+            <pre style={{
                 margin: 0,
                 whiteSpace: 'pre-wrap',
                 wordWrap: 'break-word',
@@ -57,9 +59,9 @@ export const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) =>
     } else if (typeof data === 'object' && data !== null) {
         // Convert object to table
         return (
-            <TableContainer 
-                component={Paper} 
-                sx={{ 
+            <TableContainer
+                component={Paper}
+                sx={{
                     overflow: 'auto',
                     backgroundColor: 'background.paper',
                     border: '1px solid',
@@ -69,14 +71,14 @@ export const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) =>
                 <Table size="small" stickyHeader>
                     <TableHead>
                         <TableRow>
-                            <TableCell sx={{ 
+                            <TableCell sx={{
                                 fontWeight: 'bold',
                                 backgroundColor: 'background.default',
                                 color: 'text.primary'
                             }}>
                                 Key
                             </TableCell>
-                            <TableCell sx={{ 
+                            <TableCell sx={{
                                 fontWeight: 'bold',
                                 backgroundColor: 'background.default',
                                 color: 'text.primary'
@@ -88,7 +90,7 @@ export const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) =>
                     <TableBody>
                         {Object.entries(data).map(([key, value]) => (
                             <TableRow key={key}>
-                                <TableCell sx={{ 
+                                <TableCell sx={{
                                     fontWeight: 500,
                                     color: 'text.primary',
                                     borderBottom: '1px solid',
@@ -96,7 +98,7 @@ export const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) =>
                                 }}>
                                     {key}
                                 </TableCell>
-                                <TableCell sx={{ 
+                                <TableCell sx={{
                                     color: 'text.primary',
                                     borderBottom: '1px solid',
                                     borderColor: 'divider'
@@ -116,10 +118,10 @@ export const FormattedDataView: React.FC<FormattedDataViewProps> = ({ data }) =>
             </TableContainer>
         );
     }
-    
+
     // Fallback for other types
     return (
-        <pre style={{ 
+        <pre style={{
             margin: 0,
             whiteSpace: 'pre-wrap',
             wordWrap: 'break-word',
@@ -152,15 +154,39 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
     const [selectedLog, setSelectedLog] = useState<any>(null);
     const [selectedLogIndex, setSelectedLogIndex] = useState<number>(-1);
     const [tabValue, setTabValue] = useState(0);
-    const [allLogs, setAllLogs] = useState<any[]>([]);
+    const [allLogs, setAllLogs] = useState<LLMLogEntry[]>([]);
+    const [page, setPage] = useState(0);
+    const [hasMore, setHasMore] = useState(true);
+    const [paginatedLogs, setPaginatedLogs] = useState<LLMLogEntry[]>([]);
+    const ipcService = useIPCService();
+    const pageSize = 50;
+
+    const loadMoreLogs = async () => {
+        const newLogs = await fetchLogs(page * pageSize, pageSize);
+        if (newLogs.length > 0) {
+            setPaginatedLogs(prev => [...prev, ...newLogs]);
+            setPage(prev => prev + 1);
+        }
+        setHasMore(newLogs.length === pageSize);
+    };
+
+    const fetchLogs = async (offset: number, limit: number) => {
+        // This would call your backend API to get paginated logs
+        const data = await ipcService.getRPC().getLLMLogsPaginated({ offset, limit });
+        return data;
+    };
+
+    useEffect(() => {
+        loadMoreLogs();
+    }, []);
 
     const handleOpenDetails = (log: any, index: number) => {
         // Only create the sorted array if we don't have one yet
         if (allLogs.length === 0) {
             const logsArray = Object.entries(logs?.llm || {})
-                .flatMap(([service, entries]) => 
+                .flatMap(([service, entries]) =>
                     (Array.isArray(entries) ? [...entries] : [])
-                        .filter(log => 
+                        .filter(log =>
                             filterLog(JSON.stringify({
                                 method: log?.method,
                                 input: log?.input,
@@ -171,10 +197,10 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                         .map(log => ({ ...log, service }))
                 )
                 .sort((a, b) => b.timestamp - a.timestamp);
-            
+
             setAllLogs(logsArray);
         }
-        
+
         setSelectedLog(log);
         setSelectedLogIndex(allLogs.findIndex(l => l.timestamp === log.timestamp && l.service === log.service));
     };
@@ -193,41 +219,44 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
 
     return (
         <Box>
-            {Object.entries(logs?.llm || {})
-                .flatMap(([service, entries]) => 
-                    (Array.isArray(entries) ? [...entries] : [])
-                        .filter(log => 
-                            filterLog(JSON.stringify({
-                                method: log?.method,
-                                input: log?.input,
-                                output: log?.output,
-                                error: log?.error
-                            }))
-                        )
-                        .map(log => ({ ...log, service })) // Preserve service info
-                )
-                .sort((a, b) => b.timestamp - a.timestamp) // Sort by timestamp descending
-                .map((log, index) => (
-                    <div key={`${log.service}-${index}`} className="log-entry info">
-                                <ListItemButton onClick={() => handleOpenDetails(log, index)} sx={{ p: 0 }}>
-                                    <ListItemText
-                                        primary={
-                                            <>
-                                                <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
-                                                <span className="log-level">{log.service.toUpperCase()}</span>
-                                                <span className="log-method" dangerouslySetInnerHTML={{ __html: highlightText(log.method) }} />
-                                            </>
-                                        }
-                                        secondary={log.error ? 'Error occurred' : 'Success'}
-                                        sx={{ my: 0 }}
-                                    />
-                                </ListItemButton>
-                            </div>
-                        ))
-            }
-            
-            <Dialog 
-                open={!!selectedLog} 
+            {paginatedLogs.filter(log =>
+                filterLog(JSON.stringify({
+                    method: log?.method,
+                    input: log?.input,
+                    output: log?.output,
+                    error: log?.error
+                }))
+            ).map((log, index) => (
+                <div key={`${log.service}-${index}`} className="log-entry info">
+                <ListItemButton onClick={() => handleOpenDetails(log, index)} sx={{ p: 0 }}>
+                    <ListItemText
+                        primary={
+                            <>
+                                <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
+                                <span className="log-level">{log.error ? 'Error occurred' : 'Success'}</span>
+                                <span className="log-method" dangerouslySetInnerHTML={{ __html: highlightText(log.method) }} />
+                            </>
+                        }
+                        sx={{ my: 0 }}
+                    />
+                </ListItemButton>
+            </div>
+            ))}
+
+{hasMore && (
+                 <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                     <Button
+                         variant="outlined"
+                         onClick={loadMoreLogs}
+                         disabled={!hasMore}
+                     >
+                         Load More
+                     </Button>
+                 </Box>
+             )}
+
+            <Dialog
+                open={!!selectedLog}
                 onClose={handleCloseDetails}
                 maxWidth={false}
                 fullWidth
@@ -241,15 +270,15 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
             >
                 <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <Box>
-                        <IconButton 
-                            onClick={() => handleNavigate('prev')} 
+                        <IconButton
+                            onClick={() => handleNavigate('prev')}
                             disabled={selectedLogIndex <= 0}
                             sx={{ mr: 1 }}
                         >
                             <ArrowBackIosIcon />
                         </IconButton>
-                        <IconButton 
-                            onClick={() => handleNavigate('next')} 
+                        <IconButton
+                            onClick={() => handleNavigate('next')}
                             disabled={selectedLogIndex >= allLogs.length - 1}
                             sx={{ ml: 1 }}
                         >
@@ -267,8 +296,8 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                     display: 'flex',
                     flexDirection: 'column'
                 }}>
-                    <Tabs 
-                        value={tabValue} 
+                    <Tabs
+                        value={tabValue}
                         onChange={(_, newValue) => setTabValue(newValue)}
                         sx={{ mb: 2 }}
                     >
@@ -276,9 +305,9 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                         <Tab label="Output" />
                         {selectedLog?.error && <Tab label="Error" />}
                     </Tabs>
-                    
+
                     {tabValue === 0 && (
-                        <Box sx={{ 
+                        <Box sx={{
                             p: 2,
                             backgroundColor: 'background.paper',
                             borderRadius: '4px',
@@ -305,9 +334,9 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                             )}
                         </Box>
                     )}
-                    
+
                     {tabValue === 1 && (
-                        <Box sx={{ 
+                        <Box sx={{
                             p: 2,
                             backgroundColor: 'background.paper',
                             borderRadius: '4px',
@@ -340,9 +369,9 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                             )}
                         </Box>
                     )}
-                    
+
                     {tabValue === 2 && selectedLog?.error && (
-                        <Box sx={{ 
+                        <Box sx={{
                             p: 2,
                             backgroundColor: '#f5f5f5',
                             borderRadius: '4px',
@@ -351,7 +380,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                         }}>
                             <div>{typeof selectedLog.error === 'string' ? selectedLog.error : selectedLog.error.message || 'Unknown error'}</div>
                             {selectedLog.error.stack && (
-                                <pre style={{ 
+                                <pre style={{
                                     margin: 0,
                                     whiteSpace: 'pre-wrap',
                                     wordWrap: 'break-word',

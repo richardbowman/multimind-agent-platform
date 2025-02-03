@@ -9,54 +9,20 @@ import { ClientChannel } from "src/shared/types";
 import { ClientThread } from "src/shared/types";
 import { CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
 import { ChannelHandle, createChannelHandle } from "src/shared/channelTypes";
-import { ChatHandle, createChatHandle } from "src/types/chatHandle";
 import { getDataPath } from "../helpers/paths";
-import fs from 'fs';
-import path from 'path';
+import fs from 'node:fs/promises';
+import path from 'node:path';
 
-interface GoalTemplate {
-    id: ChannelHandle;
-    name: string;
-    description: string;
-    supportingAgents: ChatHandle[];
-    defaultResponder?: ChatHandle;
-    initialTasks: InitialTask[];
-}
-
-interface InitialTask {
-    description: string;
-    type: string;
-    dependsOn?: string[];
-    metadata?: Record<string, any>;
-}
-
-// Ensure templates directory exists
-const templatesDir = path.join(getDataPath(), 'goalTemplates');
-if (!fs.existsSync(templatesDir)) {
-    fs.mkdirSync(templatesDir, { recursive: true });
-}
-
-function loadGoalTemplates(): GoalTemplate[] {
-    return fs.readdirSync(templatesDir)
-        .filter(file => file.endsWith('.json'))
-        .map(file => {
-            const template = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf8'));
-            return {
-                ...template,
-                id: createChannelHandle(template.id),
-                supportingAgents: template.supportingAgents.map((agent: string) => createChatHandle(agent)),
-                defaultResponder: template.defaultResponder ? createChatHandle(template.defaultResponder) : undefined
-            };
-        });
-}
 import { ClientProject } from "src/shared/types";
 import { Project, Task, TaskManager, TaskType } from "src/tools/taskManager";
 import { LimitedRPCHandler } from "./LimitedRPCHandler";
 import { AppUpdater } from "electron-updater";
 import { createUUID, UUID } from "src/types/uuid";
-import { ChatHandle, createChatHandle, isChatHandle } from "src/types/chatHandle";
 import { Artifact } from "src/tools/artifact";
 import ical from "ical";
+import { GoalTemplate } from "src/schemas/goalTemplateSchema";
+import { createChatHandle, ChatHandle, isChatHandle } from "src/types/chatHandle";
+import { LLMLogEntry } from "src/llm/LLMLogger";
 
 export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods {
     constructor(private services: BackendServicesWithWindows) {
@@ -502,9 +468,36 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return ids;
     }
 
+    public static async loadGoalTemplates(): Promise<GoalTemplate[]> {
+        const templatesDir = path.join('dist', 'goalTemplates');
+
+        const dir = await fs.readdir(templatesDir);
+        const jsonFiles = dir.filter(file => file.endsWith('.json'));
+
+        return Promise.all(jsonFiles.map(async file => {
+            const template = JSON.parse(await fs.readFile(path.join(templatesDir, file), 'utf8'));
+            return {
+                ...template,
+                id: createChannelHandle(template.id),
+                supportingAgents: template.supportingAgents.map((agent: string) => createChatHandle(agent)),
+                defaultResponder: template.defaultResponder ? createChatHandle(template.defaultResponder) : undefined
+            };
+        }));
+    }
+    
+    async getLLMLogsPaginated({ offset, limit }: { offset: number; limit: number }): Promise<LLMLogEntry[]> {
+        const logs = await this.services.llmLogger.getAllLogsPaginated(offset, limit);
+        return logs;
+    }
+
+    public async loadGoalTemplates(): Promise<GoalTemplate[]> {
+        return ServerRPCHandler.loadGoalTemplates();
+    }
+
     public static async createChannelHelper(chatClient: ChatClient, taskManager: TaskManager, params: CreateChannelHandlerParams) : Promise<CreateChannelParams> {
         // Always include the RouterAgent in the channel members
         const router = createChatHandle('@router');
+        const templates = await this.loadGoalTemplates();
 
         let members = [...(params.members || [])];
         // Use the selected default responder or fallback to router-agent
@@ -514,7 +507,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         // If a goal template is specified, create a project with its tasks
         let projectId;
         if (params.goalTemplate) {
-            const template = loadGoalTemplates().find(t => t.id === params.goalTemplate);
+            const template = templates.find(t => t.id === params.goalTemplate);
             if (template) {
                 // Resolve agent handles to IDs
                 const resolvedAgents = await this.mapHandles(chatClient, template.supportingAgents);
@@ -616,7 +609,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 for (const filePath of result.filePaths) {
                     const fileName = path.basename(filePath);
                     const mimeType = mime.getType(filePath) || 'application/octet-stream';
-                    const fileData = await fs.promises.readFile(filePath);
+                    const fileData = await fs.readFile(filePath);
                     
                     // Determine if content should be treated as binary
                     const isBinary = mimeType.startsWith('image/') || 

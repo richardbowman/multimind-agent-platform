@@ -17,9 +17,10 @@ import {
     CardContent,
     CardActionArea
 } from '@mui/material';
-import { GoalTemplates } from '../../../../schemas/goalTemplateSchema';
+import { GoalTemplate } from '../../../../schemas/goalTemplateSchema';
 import { useDataContext } from '../contexts/DataContext';
 import { ChannelHandle, createChannelHandle } from '../../../../shared/channelTypes';
+import { useIPCService } from '../contexts/IPCContext';
 
 interface AddChannelDialogProps {
     open: boolean;
@@ -46,6 +47,8 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
     const [defaultResponderId, setDefaultResponderId] = useState<string | null>(null);
+    const [templates, setTemplates] = useState<GoalTemplate[]>([]);
+    const ipcService = useIPCService();
 
     useEffect(() => {
         if (initialData) {
@@ -62,6 +65,11 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             setDefaultResponderId(null);
         }
     }, [initialData]);
+
+    useEffect(() => {
+        ipcService.getRPC().loadGoalTemplates().then(setTemplates);
+    }, []);
+
     const [lastSelectedTemplateName, setLastSelectedTemplateName] = useState<string>('');
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
@@ -69,13 +77,13 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
 
     const handleTemplateSelect = (templateId: ChannelHandle) => {
         setSelectedTemplate(templateId);
-        setSelectedAgents(GoalTemplates.find(t => t.id === templateId)?.supportingAgents.map(idOrHandle => 
+        setSelectedAgents(templates.find(t => t.id === templateId)?.supportingAgents.map(idOrHandle => 
             idOrHandle.startsWith('@') 
                 ? webSocket.handles.find(h => h.handle === idOrHandle.slice(1))?.id || idOrHandle
                 : idOrHandle
         ) || []);
         
-        const template = GoalTemplates.find(t => t.id === templateId);
+        const template = templates.find(t => t.id === templateId);
         if (template?.defaultResponder) {
             setDefaultResponderId(
                 template.defaultResponder.startsWith('@')
@@ -171,7 +179,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                     />
                     <Typography variant="h6" sx={{ mb: 2 }}>Select Goal Template</Typography>
                     <Grid container spacing={2} sx={{ mb: 3 }}>
-                        {GoalTemplates.map(template => (
+                        {templates.map(template => (
                             <Grid item xs={4} key={template.id}>
                                 <Card 
                                     variant={selectedTemplate === template.id ? 'elevation' : 'outlined'}

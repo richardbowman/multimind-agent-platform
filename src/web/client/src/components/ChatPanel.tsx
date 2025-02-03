@@ -21,7 +21,6 @@ import Link from '@mui/material/Link';
 import { TaskDialog } from './TaskDialog';
 import { ClientProject } from '../../../../shared/types';
 import { CodeBlock } from './shared/CodeBlock';
-import { GoalTemplates } from '../../../../schemas/goalTemplateSchema';
 
 // Custom link component that opens links in system browser
 export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -410,22 +409,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             Project Planning
                         </Typography>
                         {(() => {
-                            const template = GoalTemplates.find(
-                                t => t.id === channels.find(c => c.id === currentChannelId)?.goalTemplate
-                            );
                             const projectId = channels.find(c => c.id === currentChannelId)?.projectId;
+                            //const project = await ipcService.getRPC().getProject(projectId);
                             const planningTasks = tasks.filter(t =>
                                 t.projectId === projectId &&
                                 t.type === 'planning'
                             );
 
-                            return template ? (
+                            return planningTasks ? (
                                 <Box>
                                     <Typography variant="h6" sx={{ mb: 1 }}>
-                                        {template.name}
+                                        todo
                                     </Typography>
                                     <Typography variant="body2" sx={{ mb: 2 }}>
-                                        {template.description}
+                                        todo
                                     </Typography>
 
                                     {planningTasks.length > 0 ? (

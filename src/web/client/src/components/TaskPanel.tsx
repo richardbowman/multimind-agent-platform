@@ -122,7 +122,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                         if (!userHandle) return false;
                         
                         if (viewMode === 'user') {
-                            return task.id === userHandle.id;
+                            return task.assignee === userHandle.id;
                         }
                         if (viewMode === 'steps') {
                             return task.type === 'step';
