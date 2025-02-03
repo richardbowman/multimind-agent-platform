@@ -1,28 +1,24 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useContext, useRef } from 'react';
 import WebSocketService from '../services/WebSocketService';
 import { ElectronIPCService } from '../services/ElectronIPCService';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 
 const IPCContext = createContext<BaseRPCService | null>(null);
 
-const _ipcService = (window as any).electron
-? new ElectronIPCService()
-: new WebSocketService();
-
-
 export const IPCProvider: React.FC<{
   children: React.ReactNode;
 }> = ({ children }) => {
+  const ipcService = useRef<BaseRPCService | null>(null);
 
-  const [ipcService] = useState<BaseRPCService>(_ipcService);
-  
-  console.log('IPC service initializing');
-  if (!ipcService) {
-    return null; // Or loading spinner
+  if (!ipcService.current) {
+    ipcService.current = (window as any).electron
+      ? new ElectronIPCService()
+      : new WebSocketService();
+    console.log('IPC service initializing');
   }
 
   return (
-    <IPCContext.Provider value={_ipcService}>
+    <IPCContext.Provider value={ipcService.current}>
       {children}
     </IPCContext.Provider>
   );
