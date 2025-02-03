@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { CSVRenderer } from './CSVRenderer';
 import { Mermaid } from './Mermaid';
 import ReactMarkdown from 'react-markdown';
