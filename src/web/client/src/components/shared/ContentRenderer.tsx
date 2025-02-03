@@ -8,7 +8,7 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Document, Page, pdfjs } from 'react-pdf';
-import pdfjsWorker from "pdfjs-dist/build/pdf.worker.entry";
+import * as pdfjsLib from 'pdfjs-dist/webpack.mjs';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
@@ -127,8 +127,10 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         const [pageNumber, setPageNumber] = useState(1);
         const [scale, setScale] = useState(1.0);
 
-        // Configure PDF worker using local build
-        pdfjs.GlobalWorkerOptions.workerSrc = pdfjsWorker;
+        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+            'pdfjs-dist/build/pdf.worker.min.mjs',
+            import.meta.url,
+          ).toString();
 
         const handleLoadSuccess = ({ numPages }: { numPages: number }) => {
             setNumPages(numPages);
@@ -155,7 +157,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                 
                 <Paper elevation={3} sx={{ p: 1, maxWidth: '100%', overflow: 'auto' }}>
                     <Document
-                        file={content}
+                        file={`data:${mimeType};base64,${content}`}
                         onLoadSuccess={handleLoadSuccess}
                     >
                         <Page 
