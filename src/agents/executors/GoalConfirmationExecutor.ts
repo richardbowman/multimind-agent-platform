@@ -48,14 +48,9 @@ export class GoalConfirmationExecutor implements StepExecutor {
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
 
         // Add content sections
-        promptBuilder.addContext({ contentType: ContentType.OVERALL_GOAL, params: params.overallGoal });
-
-        promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params: { goal, step, projectId } });
-
-        promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_EXCERPTS, params: params.context?.artifacts });
-        promptBuilder.addContext({ contentType: ContentType.CONVERSATION, params: params.context?.threadPosts });
-        promptBuilder.addContext({ contentType: ContentType.CHANNEL_GOALS, params: params.channelGoals });
-
+        params.overallGoal && promptBuilder.addContext({ contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal });
+        params.context?.artifacts && promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts });
+        promptBuilder.addContext({ contentType: ContentType.CHANNEL_GOALS, tasks: params.channelGoals });
         promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params: params });
 
         promptBuilder.addInstruction(`IMPORTANT RESPONSE INSTRUCTIONS:

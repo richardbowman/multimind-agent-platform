@@ -31,7 +31,10 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
             const records = parse(content, {
                 columns: true,
                 skip_empty_lines: true,
-                trim: true
+                trim: true,
+                relax_quotes: true,  // Allow quotes in unquoted fields
+                relax_column_count: true,  // Handle inconsistent column counts
+                bom: true  // Explicitly handle BOM
             });
 
             // Generate rows with IDs

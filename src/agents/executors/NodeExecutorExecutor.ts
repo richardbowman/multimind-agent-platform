@@ -14,6 +14,8 @@ import path from 'path';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { app } from 'electron';
+import { ModelType } from 'src/llm/LLMServiceFactory';
+import { ArtifactType } from 'src/tools/artifact';
 
 export class ConsoleError extends Error {
     public consoleOutput?: string;
@@ -137,8 +139,7 @@ You have access to project artifacts through the ARTIFACTS global variable. You 
 
 To create a new artifact:
 ARTIFACTS.push({
-    id: 'unique-id', // Will be auto-generated if omitted
-    type: 'data',    // Type of artifact (e.g. 'data', 'report', 'analysis')
+    type: 'data',    // Type of artifact (e.g. 'csv', 'document', 'webpage')
     content: '...',  // The actual content (string, JSON, etc)
     metadata: {      // Optional metadata
         mimeType: '...', // Optional MIME type (e.g. 'text/plain', 'application/json')
@@ -156,7 +157,7 @@ Common MIME types:
 
 The ARTIFACTS array contains objects with these properties:
 - id: Unique identifier
-- type: Type of artifact (e.g. 'file', 'data', 'image')
+- type: Type of artifact (${Object.values(ArtifactManager).join(", ")})
 - content: The actual content (string, JSON, etc)
 - metadata: Additional information about the artifact (sometimes contains a title)
 
@@ -177,6 +178,17 @@ const data = JSON.parse(artifact.content);
      const jsonData = jsonUtils.extractAndParseJsonBlocks(someText);
      // Returns array of parsed JSON objects from \`\`\`json blocks
 
+7. For CSV files, consider using looser parsing settings:
+
+// Parse looser CSV content using csv-parse if encountering errors
+const records = parse(cleanContent, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+    relax_quotes: true,  // Allow quotes in unquoted fields
+    relax_column_count: true,  // Handle inconsistent column counts
+    bom: true  // Explicitly handle BOM
+});
 
 ${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResult, null, 2)}
     
@@ -185,7 +197,8 @@ RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE ENCLOSED \`\`\`javascr
 
         let result = await this.modelHelpers.generate({
             message: params.stepGoal||params.message,
-            instructions: prompt
+            instructions: prompt,
+            model: ModelType.ADVANCED_REASONING
         });
         
         let executionResult, originalCode, correctedCode, reasoning;
@@ -212,7 +225,7 @@ Please fix the code and try again.`;
             });
 
             try {
-                correctedCode = StringUtils.extractCodeBlocks(result.message)[0];
+                correctedCode = StringUtils.extractCodeBlocks(retryResult.message)[0];
                 executionResult = await this.executeInWorker(correctedCode.code, params.context?.artifacts);
                 result = retryResult;
             } catch (retryError) {
@@ -230,7 +243,14 @@ Please fix the code and try again.`;
         const newArtifacts = executionResult.artifacts?.slice(originalArtifactCount) || [];
 
         for(const artifact of newArtifacts) {
-            await this.artifactManager.saveArtifact(artifact);
+            if (artifact.content) {
+                await this.artifactManager.saveArtifact(artifact);
+            } else {
+                executionResult.errors = [
+                    ...executionResult.errors,
+                    "Invalid artifact provided with no content"
+                ]
+            }
         }
 
         const responseData = {

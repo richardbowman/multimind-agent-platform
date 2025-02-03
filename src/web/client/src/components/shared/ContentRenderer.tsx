@@ -12,7 +12,7 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import { Artifact, CalendarEvent } from '../../../../../tools/artifact';
+import { Artifact, ArtifactType, CalendarEvent } from '../../../../../tools/artifact';
 
 interface ContentRendererProps {
     content: any;
@@ -35,13 +35,12 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     onAddToolbarActions 
 }) => {
     // Handle CSV content
-    if (mimeType === 'text/csv' || type === 'csv') {
-        // return <CSVRenderer content={content} onAddToolbarActions={onAddToolbarActions} />;
-        return <div/>
+    if (mimeType === 'text/csv' || type === 'csv' || type == ArtifactType.Spreadsheet) {
+        return <CSVRenderer content={content} onAddToolbarActions={onAddToolbarActions} />;
     }
 
     // Handle Mermaid diagrams
-    if (type === 'mermaid') {
+    if (type === 'mermaid' || type == ArtifactType.Diagram) {
         return <Mermaid content={content} />;
     }
     
@@ -91,7 +90,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     }
     
     // Handle calendar content
-    if (mimeType === 'text/calendar' || type === 'calendar') {
+    if (mimeType === 'text/calendar' || type === 'calendar' || type == ArtifactType.Calendar) {
         const localizer = momentLocalizer(moment);
         const events = (content as CalendarEvent[]).map(event => ({
             title: event.title,
@@ -178,6 +177,9 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         return <pre>Binary content</pre>;
     }
     
-    // Default to Markdown rendering
-    return <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>;
+    if (type === 'markdown' || metadata?.mimeType === 'text/markdown') {
+        return <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>;
+    } else {
+        return <pre>{content}</pre>;
+    }
 };

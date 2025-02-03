@@ -19,13 +19,22 @@ export interface CalendarEvent {
 }
 
 export interface CalendarArtifact extends Artifact {
-  type: 'calendar';
+  type: ArtifactType.Calendar;
   content: CalendarEvent[];
+}
+
+export enum ArtifactType {
+  Spreadsheet = "spreadsheet",
+  Document = "document",
+  Webpage = "webpage",
+  Diagram = "diagram",
+  Calendar = "calendar",
+  ProcedureGuide = "procedure-guide"
 }
 
 export interface Artifact {
   id: UUID;
-  type: string; // e.g., 'report', 'draft-email', 'calendar'
+  type: ArtifactType; // e.g., 'report', 'draft-email', 'calendar'
   content: string | Buffer | CalendarEvent[]; // The actual data, could be text, binary, or calendar events
   metadata?: Record<string, any>; // Optional additional information about the artifact
   tokenCount?: number; // Optional token count for the content

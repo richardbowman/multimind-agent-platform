@@ -102,8 +102,6 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         type = 'content',
         artifactId?: string
     ): Promise<void> {
-        Logger.progress(`Starting to process content chunks`, 0.1);
-        
         const splitter = new RecursiveCharacterTextSplitter({
             chunkSize: 2000,
             chunkOverlap: 100,
@@ -112,7 +110,6 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         const docId = crypto.randomUUID();
         // await saveToFile(projectId, type, docId, content);
 
-        Logger.progress(`Splitting content into chunks`, 0.3);
         const chunks = await splitter.createDocuments([content]);
 
         const addCollection: { ids: string[], metadatas: any[], documents: string[] } = {
@@ -121,7 +118,6 @@ class VectraService extends EventEmitter implements IVectorDatabase {
             documents: []
         };
 
-        Logger.progress(`Processing ${chunks.length} chunks`, 0.5);
         chunks.forEach((c, index) => {
             const chunkContent = c.pageContent;
             const hashId = this.computeHash(chunkContent);
@@ -149,10 +145,8 @@ class VectraService extends EventEmitter implements IVectorDatabase {
             addCollection.documents.push(chunkContent);
         });
 
-        Logger.progress(`Adding ${chunks.length} chunks to vector database`, 0.8);
         await this.addDocuments(addCollection);
         
-        Logger.progress(`Finished processing content chunks`, 1.0);
     }
 
     async clearCollection(): Promise<void> {

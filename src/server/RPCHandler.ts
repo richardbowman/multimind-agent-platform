@@ -619,7 +619,6 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                                    mimeType === 'application/octet-stream';
 
                     const artifact = {
-                        type: mimeType.split('/')[0],
                         content: isBinary ? fileData : fileData.toString('utf8'),
                         metadata: {
                             title: fileName,

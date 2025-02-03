@@ -9,6 +9,56 @@ import { asUUID, createUUID, UUID } from 'src/types/uuid';
 import * as pdf from 'pdf-parse';
 import { asError, isError } from 'src/types/types';
 
+// Get appropriate file extension and type based on MIME type
+const getFileInfo = (mimeType?: string): { extension: string, type: string } => {
+  if (!mimeType) return { extension: 'md', type: 'document' };
+  
+  const mimeToInfo: Record<string, { extension: string, type: string }> = {
+    'application/json': { extension: 'json', type: 'data' },
+    'text/plain': { extension: 'txt', type: 'document' },
+    'text/markdown': { extension: 'md', type: 'document' },
+    'text/html': { extension: 'html', type: 'webpage' },
+    'text/css': { extension: 'css', type: 'code' },
+    'text/javascript': { extension: 'js', type: 'code' },
+    'text/csv': { extension: 'csv', type: 'csv' },
+    'image/jpeg': { extension: 'jpg', type: 'image' },
+    'image/png': { extension: 'png', type: 'image' },
+    'image/gif': { extension: 'gif', type: 'image' },
+    'image/svg+xml': { extension: 'svg', type: 'image' },
+    'image/webp': { extension: 'webp', type: 'image' },
+    'application/pdf': { extension: 'pdf', type: 'document' },
+    'application/xml': { extension: 'xml', type: 'data' },
+    'application/yaml': { extension: 'yaml', type: 'data' },
+    'application/x-yaml': { extension: 'yaml', type: 'data' },
+    'application/vnd.ms-excel': { extension: 'xls', type: 'data' },
+    'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': { extension: 'xlsx', type: 'data' },
+    'application/vnd.ms-powerpoint': { extension: 'ppt', type: 'presentation' },
+    'application/vnd.openxmlformats-officedocument.presentationml.presentation': { extension: 'pptx', type: 'presentation' },
+    'application/msword': { extension: 'doc', type: 'document' },
+    'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { extension: 'docx', type: 'document' }
+  };
+
+  // Check for exact MIME type match
+  if (mimeToInfo[mimeType]) {
+    return mimeToInfo[mimeType];
+  }
+
+  // Check for MIME type category match
+  const category = mimeType.split('/')[0];
+  switch (category) {
+    case 'text':
+      return { extension: 'txt', type: 'document' };
+    case 'image':
+      return { extension: mimeType.split('/')[1] || 'bin', type: 'image' };
+    case 'audio':
+      return { extension: mimeType.split('/')[1] || 'bin', type: 'audio' };
+    case 'video':
+      return { extension: mimeType.split('/')[1] || 'bin', type: 'video' };
+    default:
+      return { extension: 'bin', type: 'file' };
+  }
+};
+
 export class ArtifactManager {
   private storageDir: string;
   private artifactMetadataFile: string;
@@ -64,15 +114,18 @@ export class ArtifactManager {
   async saveArtifact(artifactParam: Partial<Artifact>): Promise<Artifact> {
     // Set type based on MIME type if provided
     const mimeType = artifactParam.metadata?.mimeType;
-    const typeFromMime = mimeType ? mimeType.split('/')[0] : undefined;
+    const fileInfo = getFileInfo(mimeType);
+    // Use the type from fileInfo if no type was explicitly set
+    const type = artifactParam.type || fileInfo.type || 'file';
     
     const artifact = {
       id: createUUID(),
-      type: typeFromMime || artifactParam.type || 'file', // Default to 'file' if no type provided
+      type,
       ...artifactParam,
     } as Artifact;
+    
     const artifactDir = path.join(this.storageDir, artifact.id);
-
+    
     // Load existing metadata
     let metadata = await this.loadArtifactMetadata();
     let version = 1;
@@ -80,7 +133,8 @@ export class ArtifactManager {
       const existingVersion = metadata[artifact.id].version || 0;
       version = existingVersion + 1;
     }
-
+    
+    const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${fileInfo.extension}`);
     try {
       await this.fileQueue.enqueue(() =>
         fs.mkdir(artifactDir, { recursive: true })
@@ -101,60 +155,6 @@ export class ArtifactManager {
         artifact.content :
         JSON.stringify(artifact.content);
 
-    // Get appropriate file extension and type based on MIME type
-    const getFileInfo = (mimeType?: string): { extension: string, type: string } => {
-      if (!mimeType) return { extension: 'md', type: 'document' };
-      
-      const mimeToInfo: Record<string, { extension: string, type: string }> = {
-        'application/json': { extension: 'json', type: 'data' },
-        'text/plain': { extension: 'txt', type: 'document' },
-        'text/markdown': { extension: 'md', type: 'document' },
-        'text/html': { extension: 'html', type: 'document' },
-        'text/css': { extension: 'css', type: 'code' },
-        'text/javascript': { extension: 'js', type: 'code' },
-        'text/csv': { extension: 'csv', type: 'data' },
-        'image/jpeg': { extension: 'jpg', type: 'image' },
-        'image/png': { extension: 'png', type: 'image' },
-        'image/gif': { extension: 'gif', type: 'image' },
-        'image/svg+xml': { extension: 'svg', type: 'image' },
-        'image/webp': { extension: 'webp', type: 'image' },
-        'application/pdf': { extension: 'pdf', type: 'document' },
-        'application/xml': { extension: 'xml', type: 'data' },
-        'application/yaml': { extension: 'yaml', type: 'data' },
-        'application/x-yaml': { extension: 'yaml', type: 'data' },
-        'application/vnd.ms-excel': { extension: 'xls', type: 'data' },
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': { extension: 'xlsx', type: 'data' },
-        'application/vnd.ms-powerpoint': { extension: 'ppt', type: 'presentation' },
-        'application/vnd.openxmlformats-officedocument.presentationml.presentation': { extension: 'pptx', type: 'presentation' },
-        'application/msword': { extension: 'doc', type: 'document' },
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { extension: 'docx', type: 'document' }
-      };
-
-      // Check for exact MIME type match
-      if (mimeToInfo[mimeType]) {
-        return mimeToInfo[mimeType];
-      }
-
-      // Check for MIME type category match
-      const category = mimeType.split('/')[0];
-      switch (category) {
-        case 'text':
-          return { extension: 'txt', type: 'document' };
-        case 'image':
-          return { extension: mimeType.split('/')[1] || 'bin', type: 'image' };
-        case 'audio':
-          return { extension: mimeType.split('/')[1] || 'bin', type: 'audio' };
-        case 'video':
-          return { extension: mimeType.split('/')[1] || 'bin', type: 'video' };
-        default:
-          return { extension: 'bin', type: 'file' };
-      }
-    };
-
-    const fileInfo = getFileInfo(artifact.metadata?.mimeType);
-    // Use the type from fileInfo if no type was explicitly set
-    artifact.type = typeFromMime || artifactParam.type || fileInfo.type;
-    const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${fileInfo.extension}`);
     await this.fileQueue.enqueue(() =>
       //TODO: need to handle calendrevents
       fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
