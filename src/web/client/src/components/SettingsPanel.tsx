@@ -613,11 +613,8 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                 return (
                                     <AgentBuilder
                                         key={category}
-                                        id={category}
                                         settings={settings}
                                         onSettingsChange={setSettings}
-                                        metadata={metadataList}
-                                        renderInput={renderInput}
                                     />
                                 );
                             }
