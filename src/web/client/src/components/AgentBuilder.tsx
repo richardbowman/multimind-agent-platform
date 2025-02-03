@@ -4,7 +4,8 @@ import {
     Paper,
     Typography,
     Button,
-    FormControl
+    FormControl,
+    Chip
 } from '@mui/material';
 import { Settings } from '../../../../tools/settings';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
@@ -32,6 +33,12 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
     metadata,
     renderInput
 }) => {
+    // Combine both agent sources
+    const allAgents = {
+        ...(settings.agents || {}),
+        ...(settings.agentBuilder || {})
+    };
+
     return (
         <Paper
             sx={{
@@ -52,11 +59,21 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
             </Typography>
             
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                {Object.entries(settings.agentBuilder || {}).map(([agentId, agentConfig]) => (
+                {Object.entries(allAgents).map(([agentId, agentConfig]) => (
                     <Paper key={agentId} sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2 }}>
-                        <Typography variant="subtitle1" gutterBottom>
-                            {agentConfig.name || `Agent ${agentId}`}
-                        </Typography>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                {agentConfig.name || `Agent ${agentId}`}
+                            </Typography>
+                            {settings.agents?.[agentId] && (
+                                <Chip 
+                                    label="Existing Agent" 
+                                    color="primary" 
+                                    size="small"
+                                    sx={{ ml: 1 }}
+                                />
+                            )}
+                        </Box>
                         <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             {metadata.map(metadata => (
                                 <FormControl key={`${agentId}.${metadata.key}`} fullWidth>
