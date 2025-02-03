@@ -157,12 +157,15 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                         margin="dense"
                         label="Channel Name"
                         fullWidth
-                        value={channelName}
+                        value={channelName || ''}
                         onChange={(e) => {
                             const value = e.target.value;
                             const newName = createChannelHandle(value.startsWith('#') ? value : `#${value}`);
                             setChannelName(newName);
                             setChannelNameError(false);
+                        }}
+                        InputLabelProps={{
+                            shrink: !!channelName,
                         }}
                         error={channelNameError}
                         helperText={channelNameError ? "Channel name must start with # and not be empty" : "Channel names must start with #"}
