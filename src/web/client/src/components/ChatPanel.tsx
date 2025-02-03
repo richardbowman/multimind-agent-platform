@@ -711,7 +711,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                 <strong>User ID:</strong> {selectedMessage.user_id}
                             </Typography>
                             {selectedMessage.props && Object.entries(selectedMessage.props).map(([key, value]) => {
-                                const isProjectId = key === 'project-id';
+                                const isProjectIds = key === 'project-ids';
                                 return (
                                     <Box key={key} sx={{
                                         p: 1,
@@ -724,7 +724,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                         <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                                             {key}
                                         </Typography>
-                                        {isProjectId ? (
+                                        {isProjectIds ? (
                                             <Button
                                                 variant="text"
                                                 sx={{
@@ -736,7 +736,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                                     }
                                                 }}
                                                 onClick={() => {
-                                                    const projectTasks = tasks.filter(t => t.projectId === value);
+                                                    const projectTasks = tasks.filter(t => (t.props?.["project-ids"]||[]).includes(value));
                                                     if (projectTasks.length > 0) {
                                                         setSelectedMessage(null);
                                                         setMetadataDialogOpen(false);
