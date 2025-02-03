@@ -1,5 +1,5 @@
 import { BackendServicesWithWindows } from "../types/BackendServices";
-import { dialog } from 'electron';
+import { app, dialog } from 'electron';
 import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
 import mime from 'mime';
 import Logger from "../helpers/logger";
@@ -469,7 +469,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     public static async loadGoalTemplates(): Promise<GoalTemplate[]> {
-        const templatesDir = path.join('dist', 'goalTemplates');
+        const templatesDir = path.join(app.getAppPath(), 'dist', 'goalTemplates');
 
         const dir = await fs.readdir(templatesDir);
         const jsonFiles = dir.filter(file => file.endsWith('.json'));

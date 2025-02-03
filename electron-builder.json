@@ -25,7 +25,8 @@
       "private": false
     },
     "extraFiles": [
-      "docs/LICENSE.md"
+      "docs/LICENSE.md",
+      "dist/assets"
     ],
     "extraResources": [
       {

@@ -19,9 +19,10 @@ import { Agent } from "./agents/agents";
 import { createChannelHandle } from "./shared/channelTypes";
 import { createHash } from 'crypto';
 import { ArtifactType } from "./tools/artifact";
+import { app } from "electron";
 
 async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<void> {
-    const guidesDir = path.join("dist", "assets","procedure-guides");
+    const guidesDir = path.join(app.getAppPath(), 'dist', 'assets', "procedure-guides");
     
     if (!fs.existsSync(guidesDir)) {
         Logger.warn(`Procedure guides directory not found at ${guidesDir}`);
