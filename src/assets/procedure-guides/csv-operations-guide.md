@@ -1,28 +1,36 @@
-# CSV Operations Guide
+# CSV Operations Guide for Solver Agent
 
-## Best Practices for Working with CSV Files
+## Best Practices for Working with CSV Files in NodeExecutorExecutor
 
-When processing CSV files, follow these steps to ensure successful operations:
+When processing CSV files using the Solver agent's NodeExecutorExecutor, follow these steps:
 
 ### 1. Initial Analysis
 - Always start by reading just the headers first
 - Use the following code to extract headers:
-```python
-import csv
+```javascript
+const { parse } = safeRequire('csv-parse/sync');
 
-def get_headers(file_path):
-    with open(file_path, 'r', encoding='utf-8-sig') as f:
-        reader = csv.reader(f)
-        headers = next(reader)
-    return headers
+function getHeaders(csvContent) {
+    const records = parse(csvContent, {
+        columns: true,
+        skip_empty_lines: true,
+        trim: true,
+        relax_quotes: true,
+        relax_column_count: true,
+        bom: true
+    });
+    return Object.keys(records[0]);
+}
 ```
 
 ### 2. Handle BOM (Byte Order Mark)
 - Always set `bom: true` when parsing CSV files
-- Use UTF-8 encoding with BOM support:
-```python
-with open(file_path, 'r', encoding='utf-8-sig') as f:
-    # Process file
+- Use the following configuration:
+```javascript
+const records = parse(csvContent, {
+    bom: true,
+    // other options...
+});
 ```
 
 ### 3. Data Validation
@@ -31,13 +39,13 @@ with open(file_path, 'r', encoding='utf-8-sig') as f:
 - Handle missing values appropriately
 
 ### 4. Error Handling
-- Implement try-catch blocks for file operations
-- Validate file existence before processing
+- Implement try-catch blocks for CSV operations
+- Validate CSV content before processing
 - Handle encoding errors gracefully
 
 ### 5. Performance Considerations
-- Use streaming for large files
 - Process data in chunks when possible
+- Use streaming for large files (when available)
 - Monitor memory usage
 
 ### 6. Common Pitfalls
@@ -46,9 +54,57 @@ with open(file_path, 'r', encoding='utf-8-sig') as f:
 - Ignoring encoding issues
 - Not validating column counts
 
-### 7. Recommended Libraries
-- Python: `csv`, `pandas`
-- JavaScript: `csv-parser`, `papaparse`
-- Java: `opencsv`, `Apache Commons CSV`
+### 7. NodeExecutorExecutor Specific Notes
+- Access CSV files through the ARTIFACTS global variable
+- Create new artifacts for processed data:
+```javascript
+ARTIFACTS.push({
+    type: 'csv',
+    content: processedData,
+    metadata: {
+        title: 'Processed CSV Data',
+        description: 'Generated from analysis'
+    }
+});
+```
+
+### 8. Example Workflow
+```javascript
+// Get first CSV artifact
+const csvArtifact = ARTIFACTS.find(a => a.type === 'csv');
+if (!csvArtifact) throw new Error('No CSV artifact found');
+
+// Parse CSV content
+const records = parse(csvArtifact.content, {
+    columns: true,
+    skip_empty_lines: true,
+    trim: true,
+    relax_quotes: true,
+    relax_column_count: true,
+    bom: true
+});
+
+// Process data
+const processedData = records.map(record => ({
+    ...record,
+    processedField: someProcessingFunction(record.someField)
+}));
+
+// Save processed data as new artifact
+ARTIFACTS.push({
+    type: 'csv',
+    content: stringify(processedData, { header: true }),
+    metadata: {
+        title: 'Processed CSV Data',
+        description: 'Generated from analysis'
+    }
+});
+
+// Return summary
+provideResult({
+    recordCount: records.length,
+    processedCount: processedData.length
+});
+```
 
 Remember to always test your CSV processing code with various file formats and edge cases.
