@@ -83,7 +83,8 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
 
     useEffect(() => {
         if (onAddToolbarActions && artifact) {
-            const actions = [
+            // Define base actions that should always be present
+            const baseActions = [
                 {
                     icon: <EditIcon fontSize="small" />,
                     label: 'Edit Artifact',
@@ -100,9 +101,21 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                     onClick: handleExport
                 }
             ];
-            onAddToolbarActions(actions);
+            
+            // Get any additional actions from the content renderer
+            const additionalActions = onAddToolbarActions([]);
+            
+            // Combine actions, ensuring base actions are always present
+            const combinedActions = [
+                ...baseActions,
+                ...additionalActions.filter(action => 
+                    !baseActions.some(base => base.label === action.label)
+                )
+            ];
+            
+            onAddToolbarActions(combinedActions);
         }
-    }, [artifact.id]); // Only update when artifact ID changes
+    }, [artifact.id, onAddToolbarActions, onEdit, onDelete]); // Update when these dependencies change
     return (
         <Box component="main" sx={{ 
             flexGrow: 1, 
