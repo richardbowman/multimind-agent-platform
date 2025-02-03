@@ -62,8 +62,13 @@ export class ArtifactManager {
   }
 
   async saveArtifact(artifactParam: Partial<Artifact>): Promise<Artifact> {
+    // Set type based on MIME type if provided
+    const mimeType = artifactParam.metadata?.mimeType;
+    const typeFromMime = mimeType ? mimeType.split('/')[0] : undefined;
+    
     const artifact = {
       id: createUUID(),
+      type: typeFromMime || artifactParam.type || 'file', // Default to 'file' if no type provided
       ...artifactParam,
     } as Artifact;
     const artifactDir = path.join(this.storageDir, artifact.id);
