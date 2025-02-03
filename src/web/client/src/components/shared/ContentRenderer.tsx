@@ -30,10 +30,11 @@ interface ContentRendererProps {
 export const ContentRenderer: React.FC<ContentRendererProps> = ({ 
     content, 
     type, 
-    mimeType, 
     metadata,
     onAddToolbarActions 
 }) => {
+    const mimeType = metadata?.mimeType;
+    
     // Handle CSV content
     if (mimeType === 'text/csv' || type === 'csv' || type == ArtifactType.Spreadsheet) {
         return <CSVRenderer content={content} onAddToolbarActions={onAddToolbarActions} />;
