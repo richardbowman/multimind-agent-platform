@@ -13,6 +13,8 @@ import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
+import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Artifact, ArtifactType, CalendarEvent } from '../../../../../tools/artifact';
 
 interface ContentRendererProps {
@@ -146,7 +148,21 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                 alignItems: 'center',
                 p: 2
             }}>
-                <Box sx={{ mb: 1 }}>
+                <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
+                    <IconButton 
+                        onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))} 
+                        size="small"
+                        disabled={pageNumber === 1}
+                    >
+                        <NavigateBeforeIcon />
+                    </IconButton>
+                    <IconButton 
+                        onClick={() => setPageNumber(prev => Math.min(prev + 1, numPages || 1))} 
+                        size="small"
+                        disabled={pageNumber === numPages}
+                    >
+                        <NavigateNextIcon />
+                    </IconButton>
                     <IconButton onClick={zoomOut} size="small">
                         <ZoomOutIcon />
                     </IconButton>
