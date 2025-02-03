@@ -22,12 +22,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [editorOpen, setEditorOpen] = useState(false);
-    const [toolbarActions, setToolbarActions] = useState<Array<{
-        icon: React.ReactNode;
-        label: string;
-        onClick: () => void;
-        disabled?: boolean;
-    }>>([
+    const baseToolbarActions = useMemo(() => [
         {
             icon: <AttachFileIcon />,
             label: 'Upload File',
@@ -39,15 +34,10 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             icon: <DescriptionIcon />,
             label: 'Create New Artifact',
             onClick: () => setEditorOpen(true)
-        },
-        {
-            icon: <AttachFileIcon />,
-            label: 'Upload File',
-            onClick: async () => {
-                showFileDialog();
-            }
         }
-    ]);
+    ], [showFileDialog]);
+
+    const [toolbarActions, setToolbarActions] = useState(baseToolbarActions);
 
     const handleCreateArtifact = async (artifact: Artifact) => {
         // Update the selected artifact
@@ -215,31 +205,29 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     setEditorOpen(true);
                                     setSelectedArtifact(selectedArtifact);
                                 }}
-                                onAddToolbarActions={(actions) => {
-                                    setToolbarActions(prev => {
-                                        // Keep the first two base actions (Upload File and Create New Artifact)
-                                        const baseActions = [
-                                            {
-                                                icon: <AttachFileIcon />,
-                                                label: 'Upload File',
-                                                onClick: async () => {
-                                                    showFileDialog();
-                                                }
-                                            },
-                                            {
-                                                icon: <DescriptionIcon />,
-                                                label: 'Create New Artifact',
-                                                onClick: () => setEditorOpen(true)
+                                onAddToolbarActions={useCallback((actions) => {
+                                    // Keep the first two base actions (Upload File and Create New Artifact)
+                                    const baseActions = [
+                                        {
+                                            icon: <AttachFileIcon />,
+                                            label: 'Upload File',
+                                            onClick: async () => {
+                                                showFileDialog();
                                             }
-                                        ];
-                                        // Add any new actions after the base actions
-                                        // Filter out any duplicate actions based on label
-                                        const uniqueActions = actions.filter(action => 
-                                            !baseActions.some(base => base.label === action.label)
-                                        );
-                                        return [...baseActions, ...uniqueActions];
-                                    });
-                                }}
+                                        },
+                                        {
+                                            icon: <DescriptionIcon />,
+                                            label: 'Create New Artifact',
+                                            onClick: () => setEditorOpen(true)
+                                        }
+                                    ];
+                                    // Add any new actions after the base actions
+                                    // Filter out any duplicate actions based on label
+                                    const uniqueActions = actions.filter(action => 
+                                        !baseActions.some(base => base.label === action.label)
+                                    );
+                                    return [...baseActions, ...uniqueActions];
+                                }, [showFileDialog])}
                             />
                         </Box>
                     </Box>
