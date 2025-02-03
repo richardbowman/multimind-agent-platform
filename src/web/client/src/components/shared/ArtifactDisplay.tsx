@@ -77,29 +77,30 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
         window.URL.revokeObjectURL(url);
     };
 
-    // const baseActions = useMemo(() => [
-    //     {
-    //         icon: <EditIcon fontSize="small" />,
-    //         label: 'Edit Artifact',
-    //         onClick: () => onEdit && onEdit()
-    //     },
-    //     {
-    //         icon: <DeleteIcon fontSize="small" />,
-    //         label: 'Delete Artifact',
-    //         onClick: () => onDelete && onDelete()
-    //     },
-    //     {
-    //         icon: <DownloadIcon fontSize="small" />,
-    //         label: 'Export Artifact',
-    //         onClick: handleExport
-    //     }
-    // ], [onEdit, onDelete]);
+    const baseActions = useMemo(() => [
+        {
+            icon: <EditIcon fontSize="small" />,
+            label: 'Edit Artifact',
+            onClick: () => onEdit && onEdit()
+        },
+        {
+            icon: <DeleteIcon fontSize="small" />,
+            label: 'Delete Artifact',
+            onClick: () => onDelete && onDelete()
+        },
+        {
+            icon: <DownloadIcon fontSize="small" />,
+            label: 'Export Artifact',
+            onClick: handleExport
+        }
+    ], [onEdit, onDelete]);
 
-    // useEffect(() => {
-    //     if (artifact) {
-    //         addActions(baseActions);
-    //     }
-    // }, []);
+    const { registerActions, unregisterActions } = useToolbarActions();
+
+    useEffect(() => {
+        registerActions('artifact-display', baseActions);
+        return () => unregisterActions('artifact-display');
+    }, [baseActions, registerActions, unregisterActions]);
 
     return (
         <Box component="main" sx={{ 
