@@ -5,12 +5,12 @@
 When processing CSV files using the Solver agent's NodeExecutorExecutor, follow these steps:
 
 ### 1. Solver Agent Order of Operations
-- Always start with an initial code step where the only goal is only to print the headers.
-- Use the following code to extract headers:
+- Always start with an initial code step where the only goal is to print the headers and first few rows to understand the data format
+- Use the following code to extract headers and sample rows:
 ```javascript
 const { parse } = safeRequire('csv-parse/sync');
 
-function getHeaders(csvContent) {
+function getSampleData(csvContent, sampleRows = 2) {
     const records = parse(csvContent, {
         columns: true,
         skip_empty_lines: true,
@@ -19,13 +19,22 @@ function getHeaders(csvContent) {
         relax_column_count: true,
         bom: true
     });
-    return Object.keys(records[0]);
+    
+    const headers = Object.keys(records[0]);
+    const sample = records.slice(0, sampleRows);
+    
+    return {
+        headers,
+        sample
+    };
 }
 
 const csvArtifact = ARTIFACTS.find(a => a.type === 'csv');
 if (!csvArtifact) throw new Error('No CSV artifact found');
 
-provideResult(`The file contains the following headers:\n${getHeaders(csvArtifact.content).join('\n')}`);
+const { headers, sample } = getSampleData(csvArtifact.content);
+
+provideResult(`The file contains the following headers:\n${headers.join('\n')}\n\nSample rows:\n${JSON.stringify(sample, null, 2)}`);
 ```
 
 ### 2. Handle BOM (Byte Order Mark)
