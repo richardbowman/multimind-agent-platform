@@ -22,12 +22,7 @@ interface ContentRendererProps {
     type?: string;
     mimeType?: string;
     metadata?: Record<string, any>;
-    onAddToolbarActions?: (actions: Array<{
-        icon: React.ReactNode;
-        label: string;
-        onClick: () => void;
-        disabled?: boolean;
-    }>) => void;
+    const { addActions } = useToolbarActions();
 }
 
 export const ContentRenderer: React.FC<ContentRendererProps> = ({ 
@@ -143,7 +138,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
 
         // Add PDF actions to toolbar in a useEffect to avoid render issues
         useEffect(() => {
-            onAddToolbarActions?.([
+            addActions([
                 {
                     icon: <NavigateBeforeIcon />,
                     label: 'Previous Page',

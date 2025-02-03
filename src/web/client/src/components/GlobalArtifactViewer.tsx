@@ -37,17 +37,13 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         }
     ], [showFileDialog]);
 
-    const [toolbarActions, setToolbarActions] = useState<Array<{
-        icon: React.ReactNode;
-        label: string;
-        onClick: () => void;
-        disabled?: boolean;
-    }>>(baseToolbarActions);
+    const { actions, addActions, resetActions } = useToolbarActions();
 
     // Reset toolbar actions when artifact changes
     useEffect(() => {
-        setToolbarActions(baseToolbarActions);
-    }, [selectedArtifact?.id]);
+        resetActions();
+        addActions(baseToolbarActions);
+    }, [selectedArtifact?.id, resetActions, addActions]);
 
     const handleCreateArtifact = async (artifact: Artifact) => {
         // Update the selected artifact
@@ -203,7 +199,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 overflow: 'hidden',
                 position: 'relative'
             }}>
-                <ActionToolbar actions={toolbarActions} />
+                <ActionToolbar actions={actions} />
                 {selectedArtifact ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', overflow: 'hidden' }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto', pt: 1 }}>

@@ -14,18 +14,13 @@ interface ArtifactDisplayProps {
     onEdit?: () => void;
 }
 
-export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActions?: (actions: Array<{
-    icon: React.ReactNode;
-    label: string;
-    onClick: () => void;
-    disabled?: boolean;
-}>) => void }> = ({
+export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     artifact,
     showMetadata = true,
     onDelete,
-    onEdit,
-    onAddToolbarActions
+    onEdit
 }) => {
+    const { addActions } = useToolbarActions();
     const handleExport = () => {
         let fileContent = '';
         // Clean the filename by removing any existing extensions
@@ -100,11 +95,10 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
     ], [onEdit, onDelete]);
 
     useEffect(() => {
-        if (onAddToolbarActions && artifact) {
-            // Pass base actions to be merged with content-specific actions
-            onAddToolbarActions(baseActions);
+        if (artifact) {
+            addActions(baseActions);
         }
-    }, [artifact.id, baseActions, onAddToolbarActions]);
+    }, [artifact.id, baseActions, addActions]);
     return (
         <Box component="main" sx={{ 
             flexGrow: 1, 
