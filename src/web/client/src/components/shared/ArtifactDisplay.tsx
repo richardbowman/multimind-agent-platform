@@ -100,7 +100,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     useEffect(() => {
         registerActions('artifact-display', baseActions);
         return () => unregisterActions('artifact-display');
-    }, [baseActions, registerActions, unregisterActions]);
+    }, [registerActions, unregisterActions]);
 
     return (
         <Box component="main" sx={{ 
