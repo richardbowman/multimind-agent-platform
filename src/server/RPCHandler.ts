@@ -1,9 +1,6 @@
 import { BackendServicesWithWindows } from "../types/BackendServices";
-import crypto from 'crypto';
 import { dialog } from 'electron';
 import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
-import fs from 'fs';
-import path from 'path';
 import mime from 'mime';
 import Logger from "../helpers/logger";
 import { ChatClient, ChatPost } from "../chat/chatClient";
@@ -12,15 +9,6 @@ import { ClientChannel } from "src/shared/types";
 import { ClientThread } from "src/shared/types";
 import { CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
 import { GoalTemplates } from "src/schemas/goalTemplateSchema";
-import { getDataPath } from "../helpers/paths";
-import fs from 'fs';
-import path from 'path';
-
-// Ensure templates directory exists
-const templatesDir = path.join(getDataPath(), 'goalTemplates');
-if (!fs.existsSync(templatesDir)) {
-    fs.mkdirSync(templatesDir, { recursive: true });
-}
 import { ClientProject } from "src/shared/types";
 import { Project, Task, TaskManager, TaskType } from "src/tools/taskManager";
 import { LimitedRPCHandler } from "./LimitedRPCHandler";
