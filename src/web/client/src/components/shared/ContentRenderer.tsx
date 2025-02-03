@@ -141,6 +141,32 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         const zoomIn = () => setScale(prev => Math.min(prev + 0.2, 3));
         const zoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5));
 
+        // Add PDF actions to toolbar
+        onAddToolbarActions?.([
+            {
+                icon: <NavigateBeforeIcon />,
+                label: 'Previous Page',
+                onClick: () => setPageNumber(prev => Math.max(prev - 1, 1)),
+                disabled: pageNumber === 1
+            },
+            {
+                icon: <NavigateNextIcon />,
+                label: 'Next Page',
+                onClick: () => setPageNumber(prev => Math.min(prev + 1, numPages || 1)),
+                disabled: pageNumber === numPages
+            },
+            {
+                icon: <ZoomOutIcon />,
+                label: 'Zoom Out',
+                onClick: zoomOut
+            },
+            {
+                icon: <ZoomInIcon />,
+                label: 'Zoom In',
+                onClick: zoomIn
+            }
+        ]);
+
         return (
             <Box sx={{ 
                 display: 'flex', 
@@ -148,28 +174,6 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                 alignItems: 'center',
                 p: 2
             }}>
-                <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
-                    <IconButton 
-                        onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))} 
-                        size="small"
-                        disabled={pageNumber === 1}
-                    >
-                        <NavigateBeforeIcon />
-                    </IconButton>
-                    <IconButton 
-                        onClick={() => setPageNumber(prev => Math.min(prev + 1, numPages || 1))} 
-                        size="small"
-                        disabled={pageNumber === numPages}
-                    >
-                        <NavigateNextIcon />
-                    </IconButton>
-                    <IconButton onClick={zoomOut} size="small">
-                        <ZoomOutIcon />
-                    </IconButton>
-                    <IconButton onClick={zoomIn} size="small">
-                        <ZoomInIcon />
-                    </IconButton>
-                </Box>
                 
                 <Paper elevation={3} sx={{ p: 1, maxWidth: '100%', overflow: 'auto' }}>
                     <Document
@@ -188,6 +192,31 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                 <Typography variant="caption" sx={{ mt: 1 }}>
                     Page {pageNumber} of {numPages}
                 </Typography>
+                
+                {!onAddToolbarActions && (
+                    <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
+                        <IconButton 
+                            onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))} 
+                            size="small"
+                            disabled={pageNumber === 1}
+                        >
+                            <NavigateBeforeIcon />
+                        </IconButton>
+                        <IconButton 
+                            onClick={() => setPageNumber(prev => Math.min(prev + 1, numPages || 1))} 
+                            size="small"
+                            disabled={pageNumber === numPages}
+                        >
+                            <NavigateNextIcon />
+                        </IconButton>
+                        <IconButton onClick={zoomOut} size="small">
+                            <ZoomOutIcon />
+                        </IconButton>
+                        <IconButton onClick={zoomIn} size="small">
+                            <ZoomInIcon />
+                        </IconButton>
+                    </Box>
+                )}
             </Box>
         );
     }
