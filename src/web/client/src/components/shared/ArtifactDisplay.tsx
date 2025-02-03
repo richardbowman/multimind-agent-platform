@@ -101,20 +101,10 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
 
     useEffect(() => {
         if (onAddToolbarActions && artifact) {
-            // Get any additional actions from the content renderer
-            const additionalActions = onAddToolbarActions([]) || [];
-            
-            // Combine actions, ensuring base actions are always present
-            const combinedActions = [
-                ...baseActions,
-                ...additionalActions.filter(action => 
-                    !baseActions.some(base => base.label === action.label)
-                )
-            ];
-            
-            onAddToolbarActions(combinedActions);
+            // Pass base actions first, then let content renderer add its own
+            onAddToolbarActions(baseActions);
         }
-    }, [artifact.id, baseActions, onAddToolbarActions]); // Update when these dependencies change
+    }, [artifact.id, baseActions, onAddToolbarActions]);
     return (
         <Box component="main" sx={{ 
             flexGrow: 1, 
