@@ -18,11 +18,10 @@ export class SolverAgent extends StepBasedAgent {
     constructor(params: AgentConstructorParams) {
         super(params);
 
+        this.modelHelpers.setPurpose('An expert at solving complex problems through careful reasoning who can write JavaScript code.');
+
         this.planner = null;
         this.supportsDelegation = true;
-
-        // Set purpose and instructions
-        this.modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning who can write code.`);
         // Define standard sequences for different scenarios
         const standardProblemSolvingSequence = [
             { 
@@ -66,7 +65,7 @@ export class SolverAgent extends StepBasedAgent {
             },
             {
                 type: ExecutorType.NODE_EXECUTION,
-                description: "Write and execute code to analyze or prototype solution"
+                description: "Write and execute JavaScript code to analyze or prototype solution"
             },
             {
                 type: ExecutorType.THINKING,
@@ -114,7 +113,7 @@ export class SolverAgent extends StepBasedAgent {
 
         this.modelHelpers.addStepSequence(
             'code-focused',
-            'Sequence for problems requiring code execution',
+            'Sequence for problems requiring JavaScript code execution',
             codeFocusedSequence
         );
 

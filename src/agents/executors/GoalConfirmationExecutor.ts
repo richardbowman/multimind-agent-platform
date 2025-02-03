@@ -57,8 +57,10 @@ export class GoalConfirmationExecutor implements StepExecutor {
             YOU MUST ELIMINATE acronyms or other terminology that may be ambigous or confusing to other agents.
 
             1. Determine if the goal, or any terminology used is ambiguous.
-            2. If the goal or terminology is ambiguous, respond with the additional information you need and understanding=false
-            3. If the goal and terminology is clear, respond with understanding=true. Restate the user's goal to be as clear and unambiguous as possible.`);
+            2. If the goal or terminology is ambiguous, respond with the additional information you need and understanding=false (only available in conversation mode)
+            3. If the goal and terminology is clear, respond with understanding=true. Restate the user's goal to be as clear and unambiguous as possible. Do not pose a question because the agent will move forward.
+            
+            Try not to be pedantic. Be sensible in helping refine the goal yourself.`);
             
         // Build and execute prompt
         const result = await this.modelHelpers.generate<GoalConfirmationResponse>({

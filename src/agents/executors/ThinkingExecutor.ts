@@ -40,6 +40,7 @@ export class ThinkingExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.ThinkingResponse);
 
         const promptBuilder = this.modelHelpers.createPrompt();
+        promptBuilder.addContext({contentType: ContentType.ABOUT});
         promptBuilder.addInstruction(`You are a thinking step in a broader agentic workflow.
 Given a problem, break it down into logical steps and reason through it carefully.
 Consider multiple angles and potential implications. You cannot run code, but you can recommend it (make sure to strongly recommend it in all caps).`);

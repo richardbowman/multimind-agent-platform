@@ -248,7 +248,7 @@ Please fix the code and try again.`;
                 await this.artifactManager.saveArtifact(artifact);
             } else {
                 executionResult.errors = [
-                    ...executionResult.errors,
+                    ...executionResult.errors||[],
                     "Invalid artifact provided with no content"
                 ]
             }

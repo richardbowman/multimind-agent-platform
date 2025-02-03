@@ -34,7 +34,6 @@ export class KnowledgeCheckExecutor implements StepExecutor {
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
         this.vectorDB = params.vectorDB!;
-        this.modelHelpers.setPurpose(`You are a research specialist crafting search queries.`);
         this.modelHelpers.setFinalInstructions(`Use only the provided search results to answer. Do not make up any information.`);
     }
 
@@ -46,7 +45,7 @@ export class KnowledgeCheckExecutor implements StepExecutor {
     private async executeQuick(stepInstructions: string, goal: string, stepType: string, projectId: string, previousResult?: any, artifacts?: Artifact[]): Promise<StepResult> {
         const querySchema = await   getGeneratedSchema(SchemaType.QuickQueriesResponse);
 
-        const queryPrompt = `Given the overall goal and the user's request, generate 2-3 different search queries that will help find relevant information.
+        const queryPrompt = `Agent Purpose: ${this.modelHelpers.getPurpose()}. Given the overall goal and the user's request, generate 2-3 different search queries that will help find relevant information.
         Overall Goal : ${goal}
         `;
 
@@ -82,7 +81,7 @@ export class KnowledgeCheckExecutor implements StepExecutor {
         // only include relevant items
         searchResults = searchResults.filter(s => s.score > 0.5);
 
-        const analysisPrompt = `You are helping search for existing information for: "${goal}"
+        const analysisPrompt = `Your are a step in an agent. Agent's purpose: ${this.modelHelpers.getPurpose()}. You are helping search for existing information for: "${goal}"
 
 ATTACHED KNOWLEDGE BASE ARTIFACTS:
 ${artifacts?.map(a => `ID: ${a.id}
@@ -104,37 +103,36 @@ Analyze relevant results (skipping irrelevant results):
 1. Extract key findings and their sources only from what's provided (do not make up information)
 2. Identify any information gaps`;
 
-        const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
-        const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
-        const analysis = await this.modelHelpers.generate<ResearchResponse>({
+        // const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
+        // const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
+        const analysis = await this.modelHelpers.generate({
             message: stepInstructions,
-            instructions: analysisInstructions
+            instructions: analysisPrompt
         });
 
-        const responseMessage = `## Existing Knowlegdebase Results (Quick)
+//         const responseMessage = `## Existing Knowlegdebase Results (Quick)
 
-### Search Queries Used
-${queryResult.queries.map(q => `- "${q}"`).join('\n')}
+// ### Search Queries Used
+// ${queryResult.queries.map(q => `- "${q}"`).join('\n')}
 
-### Key Findings
-${analysis.keyFindings?.map(f => `
-- **Finding:** ${f.finding}
-  - *Sources:* ${f.sources.join(', ')}
-  - *Relevance:* ${f.relevance}`).join('\n')||"(None found)"}
+// ### Key Findings
+// ${analysis.keyFindings?.map(f => `
+// - **Finding:** ${f.finding}
+//   - *Sources:* ${f.sources.join(', ')}
+//   - *Relevance:* ${f.relevance}`).join('\n')||"(None found)"}
 
-### Information Gaps
-${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
+// ### Information Gaps
+// ${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
 
         return {
             type: "research",
             finished: true,
             replan: ReplanType.Allow,
             response: {
-                message: responseMessage,
+                message: analysis.message,
                 data: {
                     queries: queryResult.queries,
-                    searchResults,
-                    analysis
+                    searchResults
                 }
             }
         };

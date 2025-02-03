@@ -82,8 +82,7 @@ export class PromptRegistry {
     }
 
     private renderAboutAgent() {
-        return `🤖 Agent: ${this.modelHelpers.messagingHandle}
-📝 Purpose: ${this.modelHelpers.getPurpose()}`
+        return `📝 Purpose: ${this.modelHelpers.getPurpose()}`
     };
 
     private renderIntent({params} : IntentContent) {
@@ -175,7 +174,7 @@ ${this.modelHelpers.getFinalInstructions()}
                 }
             }
             // Default renderer for unknown types
-            return `Step ${index + 1} (${stepResult.type}):\n${stepResult.message}`;
+            return `Step ${index + 1} (${stepResult.type}):\n${stepResult.message||stepResult.reasoning}}`;
         }).join('\n') + "\n";
     }
 

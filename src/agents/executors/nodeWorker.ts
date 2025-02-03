@@ -7,6 +7,7 @@ import streamTransform from 'stream-transform';
 import csvGenerate from 'csv-generate';
 import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
 import Chart from 'chart.js/auto';
+import moment from 'moment';
 
 interface WorkerMessage {
     type: string;
@@ -119,17 +120,11 @@ try {
         'stream-transform': streamTransform,
         'csv-generate': csvGenerate,
         'chartjs-node-canvas': { ChartJSNodeCanvas },
-        'chart.js/auto': Chart
+        'chart.js/auto': Chart,
+        'moment': moment
     };
 
-    const ALLOWED_MODULE_NAMES = [
-        'csv-parse/sync',
-        'csv-stringify/sync',
-        'stream-transform',
-        'csv-generate',
-        'chartjs-node-canvas',
-        'chart.js/auto'
-    ] as readonly string[];
+    const ALLOWED_MODULE_NAMES = Object.keys(allowedModules) as readonly string[];
     const requireWrapper = (module: string) => {
         if (!ALLOWED_MODULE_NAMES.includes(module as any)) {
             throw new Error(`Module ${module} is not allowed`);
