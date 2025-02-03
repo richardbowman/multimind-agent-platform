@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useState, ReactNode } from 'react';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
+import { EventEmitter } from 'events';
 
 interface ToolbarAction {
     icon: ReactNode;
@@ -9,35 +10,41 @@ interface ToolbarAction {
 
 interface ToolbarActionsContextType {
     actions: ToolbarAction[];
-    setActions: (actions: ToolbarAction[]) => void;
-    addActions: (actions: ToolbarAction[]) => void;
-    resetActions: () => void;
+    registerActions: (source: string, actions: ToolbarAction[]) => void;
+    unregisterActions: (source: string) => void;
+    updateActionState: (label: string, state: Partial<ToolbarAction>) => void;
 }
 
 const ToolbarActionsContext = createContext<ToolbarActionsContextType>({
     actions: [],
-    setActions: () => {},
-    addActions: () => {},
-    resetActions: () => {}
+    registerActions: () => {},
+    unregisterActions: () => {},
+    updateActionState: () => {}
 });
 
 export const ToolbarActionsProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     const [actions, setActions] = useState<ToolbarAction[]>([]);
+    const actionSources = useRef<Record<string, ToolbarAction[]>>({});
 
-    const addActions = (newActions: ToolbarAction[]) => {
-        setActions(prev => [
-            ...prev.filter(prevAction =>
-                !newActions.some(newAction => newAction.label === prevAction.label)
-            ),
-            ...newActions
-        ]);
-    };
+    const registerActions = useCallback((source: string, newActions: ToolbarAction[]) => {
+        actionSources.current[source] = newActions;
+        setActions(Object.values(actionSources.current).flat());
+    }, []);
 
-    const resetActions = () => setActions([]);
+    const unregisterActions = useCallback((source: string) => {
+        delete actionSources.current[source];
+        setActions(Object.values(actionSources.current).flat());
+    }, []);
+
+    const updateActionState = useCallback((label: string, state: Partial<ToolbarAction>) => {
+        setActions(prev => prev.map(action => 
+            action.label === label ? { ...action, ...state } : action
+        ));
+    }, []);
 
     return (
         <ToolbarActionsContext.Provider
-            value={{ actions, setActions, addActions, resetActions }}
+            value={{ actions, registerActions, unregisterActions, updateActionState }}
         >
             {children}
         </ToolbarActionsContext.Provider>

@@ -30,7 +30,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     type, 
     metadata
 }) => {
-    const { addActions } = useToolbarActions();
+    const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
     const mimeType = metadata?.mimeType;
     
     // Handle CSV content

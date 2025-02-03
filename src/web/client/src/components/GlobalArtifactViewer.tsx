@@ -38,13 +38,12 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         }
     ], [showFileDialog]);
 
-    const { actions, addActions, resetActions } = useToolbarActions();
+    const { registerActions, unregisterActions } = useToolbarActions();
 
-    // Reset toolbar actions when artifact changes
     useEffect(() => {
-        resetActions();
-        addActions(baseToolbarActions);
-    }, [selectedArtifact?.id, resetActions, addActions]);
+        registerActions('global-artifact-viewer', baseToolbarActions);
+        return () => unregisterActions('global-artifact-viewer');
+    }, [registerActions, unregisterActions]);
 
     const handleCreateArtifact = async (artifact: Artifact) => {
         // Update the selected artifact
