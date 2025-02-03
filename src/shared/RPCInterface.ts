@@ -47,7 +47,7 @@ export interface ServerMethods {
     getArtifacts(params: { channelId: string; threadId: string | null }): Promise<any[]>;
     getAllArtifacts(): Promise<any[]>;
     deleteArtifact(artifactId: string): Promise<any[]>;
-    saveArtifact(artifact: Artifact): Promise<any>;
+    saveArtifact(artifact: Artifact): Promise<Artifact>;
     addArtifactToChannel(channelId: string, artifactId: string): Promise<void>;
     removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void>;
     getSettings(): Promise<any>;

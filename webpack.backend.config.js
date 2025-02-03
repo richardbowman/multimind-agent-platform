@@ -4,6 +4,10 @@ const fs = require('fs');
 const { ConcatSource } = require('webpack-sources');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
+const pdfjsDistPath = path.dirname(require.resolve('pdfjs-dist/package.json'));
+const pdfWorkerPath = path.join(pdfjsDistPath, 'build', 'pdf.worker.mjs');
+console.log(`PDF DIST PATH: ${pdfWorkerPath}`);
+
 class IncludeAllModulesPlugin {
   constructor(options) {
     this.directories = options.directories;
@@ -105,7 +109,11 @@ module.exports = {
         {
           from: path.resolve(__dirname, 'src/assets/procedure-guides'),
           to: path.resolve(__dirname, 'dist/assets/procedure-guides')
-        }
+        },
+        {
+          from: pdfWorkerPath,
+          to: './pdf.worker.mjs'
+        },
       ]
     })
   ]

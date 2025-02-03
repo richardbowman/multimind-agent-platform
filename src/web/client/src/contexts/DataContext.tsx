@@ -72,11 +72,7 @@ export const DataProvider: React.FC<{
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ClientChannel[]>([]);
   const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);
-  const [currentChannelId, _setCurrentChannelId] = useState<string | null>(() => {
-    // Try to get last used channel from localStorage
-    const lastChannel = localStorage.getItem('lastChannelId');
-    return lastChannel || null;
-  });
+  const [currentChannelId, _setCurrentChannelId] = useState<string | null>(null);
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
 
 
@@ -148,6 +144,9 @@ export const DataProvider: React.FC<{
     if (needsConfig === false) {
         // Trigger initial data fetch when backend is ready
         try {
+            const lastChannel = localStorage.getItem('lastChannelId');
+            setCurrentChannelId(lastChannel);
+
             fetchChannels();
             fetchHandles();
             fetchAllArtifacts();

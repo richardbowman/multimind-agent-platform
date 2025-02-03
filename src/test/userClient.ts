@@ -376,7 +376,7 @@ export async function setupUserAgent(UserClient: LocalTestClient, storage: Local
 
     async function loadTasks() {
         const posts = storage.posts.filter(post => post.channel_id === currentChannelId && (post.getRootId() === currentThreadId || post.id === currentThreadId || (currentThreadId === null && !post.getRootId())));
-        const projectIds = [...new Set(posts.map(p => p.props["project-id"]).filter(id => id !== undefined))];
+        const projectIds = [...new Set(posts.map(p => p.props["project-ids"]||[]).flat().filter(id => id !== undefined))];
         let projects = [];
         tasks = [];
         for (let projectId of projectIds) {

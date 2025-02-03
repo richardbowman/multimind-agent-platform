@@ -19,6 +19,7 @@ export class SolverAgent extends StepBasedAgent {
         super(params);
 
         this.planner = null;
+        this.supportsDelegation = true;
 
         // Set purpose and instructions
         this.modelHelpers.setPurpose(`You are an expert at solving complex problems through careful reasoning who can write code.`);

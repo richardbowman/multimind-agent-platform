@@ -88,6 +88,7 @@ export abstract class Agent {
     public readonly messagingHandle?: string;
     public readonly userId: UUID;
     public readonly description?: string;
+    public supportsDelegation: boolean = false;
 
     protected readonly chatClient: ChatClient;
     protected readonly threadSummaries: Map<string, ThreadSummary> = new Map();
@@ -258,7 +259,7 @@ export abstract class Agent {
         const responseProps = {
             ...postProps,
             "artifact-ids": artifactIds,
-            ...(response.projectId && { "project-id": response.projectId })
+            ...(response.projectId && { "project-ids": [response.projectId] })
         };
 
         const reply = await this.chatClient.replyThreaded(post, response.message, responseProps);
@@ -314,7 +315,7 @@ export abstract class Agent {
                     // continue responding to chats i initally responded to, but don't respond to myself
                     if (posts.length > 1 && posts[1].user_id === this.userId && post.id !== this.userId) {
                         // Get all available actions for this response type
-                        const projectIds = posts.map(p => p.props["project-id"]).filter(id => id !== undefined);
+                        const projectIds = [...new Set(posts.map(p => p.props["project-ids"]||[]).flat().filter(id => id !== undefined))];
                         const projects: Project[] = [];
                         for (const projectId of projectIds) {
                             const project = this.projects.getProject(projectId);

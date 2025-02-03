@@ -97,22 +97,27 @@ export abstract class StepBasedAgent extends Agent {
 
     protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {
         const isMine = task.assignee === this.userId;
-        // if (isMine && eventType == TaskEventType.Assigned && task.type == TaskType.Standard) {
-        //     const project = await this.projects.getProject(task.projectId);
-        //     this.planSteps(task.projectId, [{
-        //         message: "Researchers completed tasks."
-        //     }]);
-        //     await this.executeNextStep({
-        //         projectId: task.projectId
-        //     });
-        // }
-
 
         // jump-start the step execution if an async step finishes
         if (isMine && eventType === TaskEventType.Completed && task.type === TaskType.Step && (task as StepTask).props?.result?.async) {
-            await this.executeNextStep({
+            const posts = (task as StepTask).props?.userPostId ? [await this.chatClient.getPost((task as StepTask).props?.userPostId!)]: [{
+                id: undefined,
+                message: `Async task completed ${task.description}`
+            }];
+    
+            const nextStepParams = {
                 projectId: task.projectId
-            });
+            }
+
+            // Handle response to existing project
+            const nextTask = this.projects.getNextTask(task.projectId, TaskType.Step);
+    
+            if (!nextTask) {
+                Logger.info("No remaining tasks, planning new steps");
+                const plan = await this.planSteps(task.projectId, posts, this.getPartialPost(posts[0].id && posts[0], nextStepParams));
+            }
+
+            await this.executeNextStep(nextStepParams);
         }
 
         super.taskNotification(task, eventType);
@@ -533,7 +538,8 @@ export abstract class StepBasedAgent extends Agent {
                 props: {
                     ...task.props,
                     result: stepResult,
-                    awaitingResponse: stepResult.needsUserInput
+                    awaitingResponse: stepResult.needsUserInput,
+                    userPostId: userPost?.id
                 }
             } as Partial<StepTask>);
 
@@ -568,7 +574,7 @@ export abstract class StepBasedAgent extends Agent {
                     message: stepResult.response?.message
                 }
                 const props = {
-                    "project-id": stepResult.projectId || projectId,
+                    "project-ids": [stepResult.projectId, projectId],
                     "artifact-ids": artifactList
                 };
                 if (params.partialPost) {

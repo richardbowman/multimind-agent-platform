@@ -13694,6 +13694,7 @@ __metadata:
     openai: "npm:^4.78.1"
     path: "npm:^0.12.7"
     pdf-parse: "npm:^1.1.1"
+    pdfjs-dist: "npm:4.8.69"
     playwright: "npm:^1.49.1"
     playwright-extra: "npm:^4.3.6"
     puppeteer-extra-plugin-stealth: "npm:^2.11.2"

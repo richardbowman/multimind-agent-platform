@@ -355,7 +355,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
 
         // Extract project IDs from posts
         const projectIds = [
-            ...new Set(posts.map(p => p.props["project-id"])),
+            ...new Set(posts.map(p => p.props["project-ids"]||[]).flat()),
             channelData.projectId
         ].filter(id => id != undefined);
         
@@ -424,8 +424,8 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             artifact.content = Buffer.from(artifact.content, 'base64');
         }
         
-        await this.services.artifactManager.saveArtifact(artifact);
-        return this.processArtifactContent(artifact);
+        const savedArtifact = await this.services.artifactManager.saveArtifact(artifact);
+        return this.processArtifactContent(savedArtifact);
     }
 
     async addArtifactToChannel(channelId: UUID, artifactId: UUID): Promise<void> {

@@ -17,13 +17,13 @@ export class ContentWriter extends Agent {
     }
 
     protected async handleChannel(params: HandlerParams): Promise<void> {
-        let projectId = params.userPost.props["project-id"];
-        if (!projectId) {
+        let projectIds = params.userPost.props["project-ids"];
+        if (!projectIds) {
             Logger.warn("No project ID provided in content creation message");
         }
 
         try {
-            let project = projectId ? await this.projects.getProject(projectId) : undefined;
+            let project = projectIds ? await this.projects.getProject(projectIds[0]) : undefined;
             if (!project || !project.metadata.tags?.includes("writing-request")) {
                 // Create new project if it doesn't exist
                 const newProject : CreateProjectParams = {
@@ -222,7 +222,7 @@ export class ContentWriter extends Agent {
                         `${mergedContent.totalTokenUsage.outputTokens} output`
                 },
                 {
-                    "project-id": project.id,
+                    "project-ids": [project.id],
                     "artifact-ids": completedTasks
                         .map(t => t.props?.result?.response?.contentBlockId)
                         .filter(Boolean)

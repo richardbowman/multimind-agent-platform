@@ -12,13 +12,17 @@ import { StepResult } from "../interfaces/StepResult";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { LinkRef } from "src/helpers/scrapeHelper";
 import { prev } from "cheerio/dist/commonjs/api/traversing";
+import { Settings } from "src/tools/settings";
+import { StringUtils } from "src/utils/StringUtils";
 
 @StepExecutorDecorator(ExecutorType.SELECT_LINKS, 'Analyzes and selects relevant links to follow')
 export class LinkSelectionExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
+    private settings: Settings;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
+        this.settings = params.settings;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
@@ -83,16 +87,16 @@ export class LinkSelectionExecutor implements StepExecutor {
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(`You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
 
-Given the following web search results and links from existing pages you've scraped, select 1-3 URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them. If you don't think any are relevant, return an empty array.`);
+Given the following web search results and links from existing pages you've scraped, select 1-${this.settings.maxFollows} URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them. If you don't think any are relevant, return an empty array.`);
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const message = `Links from previously scraped pages:
 ${previousLinks?.map(l => `- ${l.href}: ${l.text}`).join('\n')}
 
-Search Results:
+Search Results (${searchResults.length} found}):
 ${searchResults && searchResults
                 .slice(0, 10)
-                .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${sr.description.slice(0, 200)}`)
+                .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${StringUtils.truncateWithEllipsis(sr.description, 200)}`)
                 .join("\n\n")}`;
 
 

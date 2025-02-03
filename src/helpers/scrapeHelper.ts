@@ -53,7 +53,7 @@ class ScrapeHelper {
             });
             
             // Initialize tab pool
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < 10; i++) {
                 const context = await this.browser.newContext({
                     javaScriptEnabled: true,
                     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
@@ -68,7 +68,7 @@ class ScrapeHelper {
         
         if (this.settings.scrapingProvider === 'electron' && this.electronWindows.length === 0) {
             // Create pool of 3 Electron windows for parallel scraping
-            for (let i = 0; i < 3; i++) {
+            for (let i = 0; i < 10; i++) {
                 const window = new BrowserWindow({
                     width: 1920,
                     height: 1080,

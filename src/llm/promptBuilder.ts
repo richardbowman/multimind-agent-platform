@@ -111,7 +111,7 @@ ${params.stepGoal && `CURRENT STEP GOAL: ${params.stepGoal}`}`;
         }
 
         if (params.executionMode) {
-            output += `⚙️ Execution Mode:\n${params.executionMode}\n\n`;
+            output += `⚙️ Execution Mode:\n${params.executionMode === 'task' ? 'You are running asynchronously as a background task. You cannot ask questions of the user, and will need to make assumptions.' : 'You are in conversation mode speaking with the user.'}\n\n`;
         }
 
         // if (params.context) {
@@ -159,7 +159,10 @@ ${this.modelHelpers.getFinalInstructions()}
                     }
                 }
                 // Default renderer for unknown types
-                return `- STEP ${index + 1} of ${filteredSteps.length} ${index+1==filteredSteps.length?"[LAST COMPLETED STEP]":""}: [${step.props.stepType}]: ${stepResult?.response.message}`;
+                return `- STEP ${index + 1} of ${filteredSteps.length} ${index+1==filteredSteps.length?"[LAST COMPLETED STEP]":""}:
+   Step Type [${step.props.stepType}]
+   Step Description: ${step.description}
+   Step Result: ${stepResult?.response.message}`;
             }).join('\n') + "\n";
     }
 

@@ -89,7 +89,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
         }
 
         // Add existing artifacts from previous results
-        promptBuilder.addContext({contentType: ContentType.ARTIFACTS_FULL, artifacts: params.context?.artifacts||[]});
+        promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts||[]});
 
         // Add execution parameters
         promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});

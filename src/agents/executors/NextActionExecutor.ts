@@ -25,7 +25,7 @@ export type WithReasoning<T extends ModelResponse> = T & {
     reasoning: string;
 };
 
-@StepExecutorDecorator(ExecutorType.NEXT_STEP, 'Generate focused questions to understand user goals')
+@StepExecutorDecorator(ExecutorType.NEXT_STEP, 'Generate focused questions to understand user goals', false)
 export class NextActionExecutor implements StepExecutor {
     readonly allowReplan: boolean = false;
     readonly alwaysComplete: boolean = true;
@@ -73,7 +73,7 @@ export class NextActionExecutor implements StepExecutor {
 
         const schema = await getGeneratedSchema(SchemaType.NextActionResponse);
 
-        const project = params.context?.projects?.filter(p => p.metadata.tags?.includes("agent-internal-steps"))[0];
+        const project = this.projects.getProject(params.projectId);
         const tasks = project ? this.projects.getAllTasks(project.id) : [];
 
         const formatCompletedTasks = (tasks: Task[]) => {

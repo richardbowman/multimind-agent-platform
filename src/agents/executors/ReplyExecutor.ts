@@ -8,6 +8,9 @@ import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/ex
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ILLMService } from 'src/llm/ILLMService';
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { ContentType } from 'src/llm/promptBuilder';
+import { Artifact } from 'src/tools/artifact';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
 
 /**
  * Executor that generates user-friendly responses to messages.
@@ -38,6 +41,9 @@ export class ReplyExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         const promptBuilder = this.modelHelpers.createPrompt();
 
+        promptBuilder.addContext({contentType: ContentType.ABOUT});
+        promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params});
+
         // Add core instructions
         promptBuilder.addInstruction("Generate a user-friendly, conversational reply based on the context.");
         promptBuilder.addInstruction("Key requirements:");
@@ -49,36 +55,13 @@ export class ReplyExecutor implements StepExecutor {
         // Add project context
         const project = this.taskManager.getProject(params.projectId);
         if (project) {
-            promptBuilder.addContent(ContentType.TASKS, {
-                tasks: Object.values(project.tasks)
-            });
-            
-            // Add any relevant artifacts
-            if (project.props?.artifactIds) {
-                const artifacts = await Promise.all(
-                    project.props.artifactIds.map(id => 
-                        this.artifactManager.loadArtifact(id)
-                    )
-                );
-                promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, {
-                    artifacts: artifacts.filter(a => a !== null) as Artifact[]
-                });
-            }
+            promptBuilder.addContext({contentType: ContentType.TASKS, tasks: Object.values(project.tasks)});
         }
-
-        // Add execution parameters
-        promptBuilder.addContext({
-            contentType: ContentType.EXECUTE_PARAMS, 
-            params
-        });
-
+        // Add any relevant artifacts
+        params.context?.artifacts && promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context.artifacts});
+        
         // Add previous results if available
-        if (params.previousResult) {
-            promptBuilder.addContext({
-                contentType: ContentType.STEP_RESPONSE,
-                responses: params.previousResult
-            });
-        }
+        params.previousResult && promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult});
 
         const prompt = promptBuilder.build();
 

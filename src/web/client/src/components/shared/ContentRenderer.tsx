@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CSVRenderer } from './CSVRenderer';
 import { Mermaid } from './Mermaid';
 import ReactMarkdown from 'react-markdown';
@@ -123,6 +123,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         const numPages = useRef<number | null>(null);
         const pageNumber = useRef(1);
         const [scale, setScale] = useState(1.0);
+        const [renderTrigger, setRenderTrigger] = useState(false);
 
         pdfjs.GlobalWorkerOptions.workerSrc = new URL(
             'pdfjs-dist/build/pdf.worker.min.mjs',
@@ -144,12 +145,14 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
             pageNumber.current = Math.max(pageNumber.current - 1, 1);
             updateActionState('Previous Page', { disabled: pageNumber.current === 1 });
             updateActionState('Next Page', { disabled: pageNumber.current === numPages.current });
+            setRenderTrigger(prev => !prev); // Trigger re-render
         }, []);
 
         const handleNextPage = useCallback(() => {
             pageNumber.current = Math.min(pageNumber.current + 1, numPages.current || 1);
             updateActionState('Previous Page', { disabled: pageNumber.current === 1 });
             updateActionState('Next Page', { disabled: pageNumber.current === numPages.current });
+            setRenderTrigger(prev => !prev); // Trigger re-render
         }, []);
 
         // Register actions once on mount
@@ -159,13 +162,13 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                     icon: <NavigateBeforeIcon />,
                     label: 'Previous Page',
                     onClick: handlePreviousPage,
-                    disabled: pageNumber === 1
+                    disabled: pageNumber.current === 1
                 },
                 {
                     icon: <NavigateNextIcon />,
                     label: 'Next Page',
                     onClick: handleNextPage,
-                    disabled: pageNumber === numPages
+                    disabled: pageNumber.current === numPages
                 },
                 {
                     icon: <ZoomOutIcon />,

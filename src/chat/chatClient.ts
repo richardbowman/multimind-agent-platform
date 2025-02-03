@@ -77,7 +77,7 @@ export interface ProjectChainResponse {
 }
 
 export interface ConversationContext extends Record<string, any> {
-    "project-id"?: string;
+    "project-ids"?: string[];
     "conversation-root"?: string;
     "artifact-ids"?: string[];
 }
@@ -93,6 +93,7 @@ export interface Attachment {
 }
 
 export interface Message {
+    id: UUID;
     message: string;
     props?: ConversationContext;
     attachments?: Attachment[];

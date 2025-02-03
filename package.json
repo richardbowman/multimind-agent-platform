@@ -150,6 +150,7 @@
     "jest-mock": "^29.7.0",
     "mermaid": "^11.4.1",
     "nodemon": "^3.1.9",
+    "pdfjs-dist": "4.8.69",
     "raw-loader": "^4.0.2",
     "react": "19.0.0",
     "react-big-calendar": "^1.17.1",

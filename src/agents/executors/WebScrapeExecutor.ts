@@ -78,6 +78,7 @@ export class WebScrapeExecutor implements StepExecutor {
                     const webPage = await this.getStoredWebpage(url);
                     const existingSummary = await this.getStoredSummary(url);
                     if (webPage && existingSummary) {
+                        result.artifacts.push(webPage);
                         result.summaries.push(existingSummary);
                         result.extractedLinks = [...new Set([
                             ...result.extractedLinks,

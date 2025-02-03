@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
-import { Artifact } from '../../../../tools/artifact';
+import { Artifact, ArtifactType } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
 import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper } from '@mui/material';
 import { ArtifactEditor } from './ArtifactEditor';
@@ -11,6 +11,7 @@ import DescriptionIcon from '@mui/icons-material/Description';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { useToolbarActions } from '../contexts/ToolbarActionsContext';
+import { useIPCService } from '../contexts/IPCContext';
 
 export interface DrawerPage {
     drawerOpen: boolean;
@@ -23,6 +24,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [editorOpen, setEditorOpen] = useState(false);
+    const ipcService = useIPCService();
+
     const baseToolbarActions = useMemo(() => [
         {
             icon: <AttachFileIcon />,
@@ -115,17 +118,17 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             reader.onload = async (e) => {
                 const content = e.target?.result;
                 if (content) {
-                    const artifact: Artifact = {
-                        id: crypto.randomUUID() as UUID,
-                        type: ArtifactType.Document,
+                    const artifact = await ipcService.getRPC().saveArtifact({
                         content: content,
                         metadata: {
+                            title: file.name,
                             fileName: file.name,
-                            fileType: file.type,
+                            mimeType: file.type,
                             size: file.size,
                             lastModified: file.lastModified
                         }
-                    };
+                    })
+
                     await handleCreateArtifact(artifact);
                 }
             };

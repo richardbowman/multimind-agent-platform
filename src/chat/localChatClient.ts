@@ -355,7 +355,7 @@ export class LocalTestClient implements ChatClient {
         // Merge any existing props with the project ID
         const postProps = {
             ...(props || {}),
-            ...(projectId ? { 'project-id': projectId } : {}),
+            ...(projectId ? { 'project-ids': [projectId] } : {}),
             ...(artifacts&&artifacts.length > 0 ? {"artifact-ids": artifacts} : {})
         };
 

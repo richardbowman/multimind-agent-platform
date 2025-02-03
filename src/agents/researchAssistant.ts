@@ -26,6 +26,7 @@ export class ResearchAssistant extends StepBasedAgent {
 
     constructor(params: AgentConstructorParams) {
         super(params);
+        this.supportsDelegation = true;
 
         this.searchHelper = SearchHelper.create(params.settings, this.artifactManager);
         this.scrapeHelper = new ScrapeHelper(this.artifactManager, params.settings);
