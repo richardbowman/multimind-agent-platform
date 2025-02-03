@@ -304,12 +304,11 @@ export class PromptBuilder implements InputPrompt {
     async addOutputInstructions(outputType: OutputType, schema?: SchemaType, specialInstructions?: string) {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schema) {
             const schemaDef = await getGeneratedSchema(schema);
-            this.addInstruction(`Please respond two code blocks. One enclosed \`\`\`json block format that follows this schema: ${JSON.stringify(schemaDef, null, 2)}. 
+            this.addInstruction(`Please respond two code blocks. One enclosed \`\`\`json block format that follows this schema: \`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n 
             Then, provide a separately enclosed \`\`\`markdown block. ${specialInstructions || ''}`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE && schema) {
             const schemaDef = await getGeneratedSchema(schema);
-            this.addInstruction(`Please respond with one enclosed \`\`\`json block format that follows this schema: ${JSON.stringify(schemaDef, null, 2)}. 
-             ${specialInstructions || ''}`);
+            this.addInstruction(`Please respond with one enclosed \`\`\`json block format that follows this schema: \`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`json\n\n${specialInstructions || ''}`);
         }
     }
     private contentSections: Map<ContentType, any> = new Map();

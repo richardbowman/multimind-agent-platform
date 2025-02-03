@@ -5,4 +5,6 @@ export interface NextActionResponse {
     taskDescription: string;
     /** The sequence you are planning to follow (or "none") */
     sequence: string;
+    /** Revised user goal */
+    revisedUserGoal?: string;
 }

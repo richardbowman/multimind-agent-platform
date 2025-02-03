@@ -101,6 +101,7 @@ export class NextActionExecutor implements StepExecutor {
         const prompt = this.modelHelpers.createPrompt();
         prompt.addContext(ContentType.PURPOSE);
         prompt.addContext({ contentType: ContentType.AGENT_OVERVIEWS, agents: agentList||[]});
+        prompt.addContext({ contentType: ContentType.GOALS_FULL, params })
         prompt.addContext({ contentType: ContentType.INTENT, params })
         if (params.steps) {
             prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
@@ -116,7 +117,7 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
         prompt.addInstruction(`
 - IN YOUR REASONING, describe this process:
 - Review the STEP HISTORY to see what you've already done, don't keep repeating your action.
-- Review the user's message.
+- Review the user's message, and see if their goal has changed from the original intent. If so restate their new goal in the "revisedUserGoal" field.
 - Explain each step and why it would or would not make sense to be the next action.
 - Make sure you don't go into a loop, don't do the same action over and over again.
 - Determine the next Action Type from the AVAILABLE ACTION TYPES that the user would most benefit from.
@@ -166,6 +167,7 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
 
         return {
             finished: true,
+            goal: response.revisedUserGoal,
             response: {
                 data: planResponse
             }

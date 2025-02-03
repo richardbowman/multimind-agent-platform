@@ -1075,6 +1075,10 @@
           "description": "A supported action type",
           "type": "string"
         },
+        "revisedUserGoal": {
+          "description": "Revised user goal",
+          "type": "string"
+        },
         "sequence": {
           "description": "The sequence you are planning to follow (or \"none\")",
           "type": "string"
@@ -1749,6 +1753,9 @@
     "TaskCreationResponse": {
       "additionalProperties": false,
       "properties": {
+        "action": {
+          "$ref": "#/definitions/UpdateActions"
+        },
         "agents": {
           "items": {},
           "type": "array"
@@ -1780,9 +1787,14 @@
         },
         "taskDescription": {
           "type": "string"
+        },
+        "taskId": {
+          "type": "number"
         }
       },
       "required": [
+        "action",
+        "taskId",
         "taskDescription",
         "recurrencePattern",
         "isRecurring",
@@ -1887,6 +1899,14 @@
         "conclusion"
       ],
       "type": "object"
+    },
+    "UpdateActions": {
+      "enum": [
+        "create",
+        "update",
+        "delete"
+      ],
+      "type": "string"
     },
     "UrlExtractionResponse": {
       "additionalProperties": false,

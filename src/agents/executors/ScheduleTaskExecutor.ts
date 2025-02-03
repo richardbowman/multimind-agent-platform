@@ -9,13 +9,13 @@ import Logger from '../../helpers/logger';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ContentType } from 'src/llm/promptBuilder';
-import { TaskCreationResponse } from '../../schemas/taskCreation';
+import { TaskCreationResponse, UpdateActions } from '../../schemas/taskCreation';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { UUID } from 'src/types/uuid';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ChatClient } from 'src/chat/chatClient';
 
-@StepExecutorDecorator(ExecutorType.CREATE_TASK, 'Create or update a task')
+@StepExecutorDecorator(ExecutorType.CREATE_TASK, 'Create, update, and delete a task')
 export class ScheduleTaskExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
@@ -86,7 +86,7 @@ params.context?.artifacts });
                 threadPosts: params.context?.threadPosts || []
             });
 
-            const { taskId, taskDescription, recurrencePattern, isRecurring, assignee, responseMessage, removeTask } = response;                
+            const { action, taskId, taskDescription, recurrencePattern, isRecurring, assignee, responseMessage } = response;                
                                                                                                                                      
              // Map string pattern to enum                                                                                           
              const pattern = {                                                                                                       
@@ -100,7 +100,7 @@ params.context?.artifacts });
              // Handle assignment                                                                                                    
              let assigneeId: UUID | undefined;                                                                                       
              if (assignee === '@user') {                                                                                             
-                 assigneeId = this.userId;                                                                                           
+                 assigneeId = Object.entries(await this.chatClient.getHandles()).find(h => h[1] === assignee)![0] as UUID;
              } else {                                                                                                                
                  // Find agent by messaging handle                                                                                   
                  const agent = params.agents?.find(a => a.messagingHandle === assignee);                                             
@@ -118,17 +118,17 @@ params.context?.artifacts });
              }                                                                                                                       
                                                                                                                                      
              let task;
-             if (removeTask && taskId) {
+             if (action === UpdateActions.Delete && taskId) {
                  // Remove existing task
-                 const existingTask = channelProject.tasks[taskId];
+                 const existingTask = channelProject.tasks[taskId-1];
                  if (!existingTask) {
                      throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
                  }
                  
-                 await this.taskManager.cancelTask(taskId);
-             } else if (taskId) {
+                 await this.taskManager.cancelTask(existingTask.id);
+             } else if (action === UpdateActions.Update && taskId) {
                  // Update existing task
-                 const existingTask = channelProject.tasks[taskId];
+                 const existingTask = channelProject.tasks[taskId-1];
                  if (!existingTask) {
                      throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
                  }
@@ -141,7 +141,7 @@ params.context?.artifacts });
                      recurrencePattern: pattern || existingTask.recurrencePattern,
                      lastRunDate: isRecurring ? new Date() : existingTask.lastRunDate
                  });
-             } else {
+             } else if (action === UpdateActions.Create) {
                  // Create new task
                  task = await this.taskManager.addTask(channelProject, {
                      description: taskDescription,
@@ -152,6 +152,8 @@ params.context?.artifacts });
                      lastRunDate: isRecurring ? new Date() : undefined,
                      complete: false
                  });
+             } else {
+                Logger.error("Improper response, need to handle");
              }
 
              return {
@@ -159,7 +161,6 @@ params.context?.artifacts });
                 finished: params.executionMode === "task" ? true : true,
                 needsUserInput: false,
                 projectId: channelProject.id,
-                replan: ReplanType.Allow,
                 response: {
                     message: responseMessage
                 }
