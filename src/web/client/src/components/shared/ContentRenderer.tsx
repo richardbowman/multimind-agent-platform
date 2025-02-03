@@ -120,8 +120,8 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
 
     // Handle PDF content
     if (mimeType === 'application/pdf' || type === 'pdf') {
-        const [numPages, setNumPages] = useState<number | null>(null);
-        const [pageNumber, setPageNumber] = useState(1);
+        const numPages = useRef<number | null>(null);
+        const pageNumber = useRef(1);
         const [scale, setScale] = useState(1.0);
 
         pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -129,8 +129,11 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
             import.meta.url,
           ).toString();
 
-        const handleLoadSuccess = ({ numPages }: { numPages: number }) => {
-            setNumPages(numPages);
+        const handleLoadSuccess = ({ numPages: totalPages }: { numPages: number }) => {
+            numPages.current = totalPages;
+            // Update action states after loading
+            updateActionState('Previous Page', { disabled: pageNumber.current === 1 });
+            updateActionState('Next Page', { disabled: pageNumber.current === totalPages });
         };
 
         const zoomIn = () => setScale(prev => Math.min(prev + 0.2, 3));
@@ -138,14 +141,16 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
 
         // Create stable action handlers that don't change on re-render
         const handlePreviousPage = useCallback(() => {
-            setPageNumber(prev => Math.max(prev - 1, 1));
+            pageNumber.current = Math.max(pageNumber.current - 1, 1);
+            updateActionState('Previous Page', { disabled: pageNumber.current === 1 });
+            updateActionState('Next Page', { disabled: pageNumber.current === numPages.current });
         }, []);
 
         const handleNextPage = useCallback(() => {
-            setPageNumber(prev => {
-                return Math.min(prev + 1, numPages || 1)
-            });
-        }, [numPages]);
+            pageNumber.current = Math.min(pageNumber.current + 1, numPages.current || 1);
+            updateActionState('Previous Page', { disabled: pageNumber.current === 1 });
+            updateActionState('Next Page', { disabled: pageNumber.current === numPages.current });
+        }, []);
 
         // Register actions once on mount
         useEffect(() => {
@@ -178,11 +183,11 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
             return () => unregisterActions('pdf-renderer');
         }, [registerActions, unregisterActions]);
 
-        // Update action states when page number changes
+        // Initial action state setup
         useEffect(() => {
-            updateActionState('Previous Page', { disabled: pageNumber === 1 });
-            updateActionState('Next Page', { disabled: pageNumber === numPages });
-        }, [pageNumber, numPages, updateActionState]);
+            updateActionState('Previous Page', { disabled: pageNumber.current === 1 });
+            updateActionState('Next Page', { disabled: pageNumber.current === numPages.current });
+        }, [updateActionState]);
 
         return (
             <Box sx={{ 
@@ -198,7 +203,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                         onLoadSuccess={handleLoadSuccess}
                     >
                         <Page 
-                            pageNumber={pageNumber} 
+                            pageNumber={pageNumber.current} 
                             scale={scale}
                             renderAnnotationLayer={false}
                             renderTextLayer={false}
@@ -207,22 +212,22 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                 </Paper>
                 
                 <Typography variant="caption" sx={{ mt: 1 }}>
-                    Page {pageNumber} of {numPages}
+                    Page {pageNumber.current} of {numPages.current}
                 </Typography>
                 
                 {(
                     <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
                         <IconButton 
-                            onClick={() => setPageNumber(prev => Math.max(prev - 1, 1))} 
+                            onClick={handlePreviousPage}
                             size="small"
-                            disabled={pageNumber === 1}
+                            disabled={pageNumber.current === 1}
                         >
                             <NavigateBeforeIcon />
                         </IconButton>
                         <IconButton 
-                            onClick={() => setPageNumber(prev => Math.min(prev + 1, numPages || 1))} 
+                            onClick={handleNextPage}
                             size="small"
-                            disabled={pageNumber === numPages}
+                            disabled={pageNumber.current === numPages.current}
                         >
                             <NavigateNextIcon />
                         </IconButton>
