@@ -161,19 +161,29 @@ class ScrapeHelper {
                 htmlContent = await page.content();
                 title = await page.title();
             } else if (this.settings.scrapingProvider === 'electron') {
-                if (!this.electronWindow) {
-                    throw new Error('Electron window not initialized');
-                }
+                // Get a window from the pool or create new one
+                const window = this.electronWindowPool.pop() || new BrowserWindow({
+                    width: 1920,
+                    height: 1080,
+                    webPreferences: {
+                        webSecurity: false
+                    },
+                    show: this.settings.displayScrapeBrowser
+                });
+                
+                this.activeWindows.add(window);
+                const webContents = window.webContents;
+
                 // Wait for DOM ready with timeout fallback
-                const webContents = this.electronWindow.webContents;
                 await Promise.race([
                     new Promise<void>(resolve => webContents.once('dom-ready', resolve)),
                     new Promise<void>((_, reject) => setTimeout(() => reject(new Error('DOM ready timeout')), this.settings.pageScrapeTimeout*1000))
                 ]).catch(error => {
                     Logger.warn(`DOM ready event timed out for ${url}:`, error);
                 });
+
                 try {
-                    await this.electronWindow.loadURL(url);
+                    await window.loadURL(url);
                 } catch (e) {
                     Logger.error(`Failed to load URL in Electron: ${url}`, e);
                 }
@@ -181,6 +191,10 @@ class ScrapeHelper {
                 actualUrl = webContents.getURL();
                 htmlContent = await webContents.executeJavaScript('document.body.innerHTML');
                 title = await webContents.executeJavaScript('document.title');
+
+                // Return window to pool
+                this.activeWindows.delete(window);
+                this.electronWindowPool.push(window);
             } else {
                 throw new Error(`Unsupported scraping provder ${this.settings.scrapingProvider}`)
             }
@@ -241,6 +255,17 @@ class ScrapeHelper {
                         }
                     } catch (error) {
                         Logger.warn('Error returning context to pool:', error);
+                    }
+                }
+            } else if (this.settings.scrapingProvider === 'electron') {
+                // Clean up any stray windows
+                for (const window of this.electronWindows) {
+                    if (!this.activeWindows.has(window) && !window.isDestroyed()) {
+                        try {
+                            window.close();
+                        } catch (error) {
+                            Logger.warn('Error closing Electron window:', error);
+                        }
                     }
                 }
             }
