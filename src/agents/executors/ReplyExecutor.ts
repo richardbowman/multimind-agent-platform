@@ -35,12 +35,57 @@ export class ReplyExecutor implements StepExecutor {
         this.artifactManager = params.artifactManager!;
     }
 
-    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
-        const project = await this.getProjectWithPlan(projectId);
+    async execute(params: ExecuteParams): Promise<StepResult> {
+        const promptBuilder = this.modelHelpers.createPrompt();
+
+        // Add core instructions
+        promptBuilder.addInstruction("Generate a user-friendly, conversational reply based on the context.");
+        promptBuilder.addInstruction("Key requirements:");
+        promptBuilder.addInstruction("- Maintain a professional yet approachable tone");
+        promptBuilder.addInstruction("- Keep responses clear and concise");
+        promptBuilder.addInstruction("- Reference relevant project context when appropriate");
+        promptBuilder.addInstruction("- If asking follow-up questions, make them specific and actionable");
+
+        // Add project context
+        const project = this.taskManager.getProject(params.projectId);
+        if (project) {
+            promptBuilder.addContent(ContentType.TASKS, {
+                tasks: Object.values(project.tasks)
+            });
+            
+            // Add any relevant artifacts
+            if (project.props?.artifactIds) {
+                const artifacts = await Promise.all(
+                    project.props.artifactIds.map(id => 
+                        this.artifactManager.loadArtifact(id)
+                    )
+                );
+                promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, {
+                    artifacts: artifacts.filter(a => a !== null) as Artifact[]
+                });
+            }
+        }
+
+        // Add execution parameters
+        promptBuilder.addContext({
+            contentType: ContentType.EXECUTE_PARAMS, 
+            params
+        });
+
+        // Add previous results if available
+        if (params.previousResult) {
+            promptBuilder.addContext({
+                contentType: ContentType.STEP_RESPONSE,
+                responses: params.previousResult
+            });
+        }
+
+        const prompt = promptBuilder.build();
+
         const reply = await this.modelHelpers.generate({
-            message: `${step} [${goal}]`,
-            instructions: "Generate a user friendly reply",
-            projects: [project]
+            message: params.message || params.stepGoal,
+            instructions: prompt,
+            threadPosts: params.context?.threadPosts
         });
 
         return {
@@ -48,18 +93,5 @@ export class ReplyExecutor implements StepExecutor {
             needsUserInput: true,
             response: reply
         };
-    }
-
-    private async getProjectWithPlan(projectId: string): Promise<OnboardingProject> {
-        const project = this.taskManager.getProject(projectId) as OnboardingProject;
-        if (!project) {
-            throw new Error(`Project ${projectId} not found`);
-        }
-
-        if (project.props?.businessPlanId) {
-            project.props.existingPlan = await this.artifactManager.loadArtifact(project.props.businessPlanId);
-        }
-
-        return project;
     }
 }
