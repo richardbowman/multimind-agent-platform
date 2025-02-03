@@ -16,6 +16,41 @@ import { createUUID, UUID } from "./types/uuid";
 import { ConfigurationError } from "./errors/ConfigurationError";
 import { Agent } from "./agents/agents";
 import { createChannelHandle } from "./shared/channelTypes";
+import fs from 'fs';
+import path from 'path';
+
+async function loadJobAids(artifactManager: ArtifactManager): Promise<void> {
+    const jobAidsDir = path.join(__dirname, '../assets/job-aids');
+    
+    if (!fs.existsSync(jobAidsDir)) {
+        Logger.warn(`Job aids directory not found at ${jobAidsDir}`);
+        return;
+    }
+
+    const files = fs.readdirSync(jobAidsDir);
+    
+    for (const file of files) {
+        if (path.extname(file).toLowerCase() === '.md') {
+            const filePath = path.join(jobAidsDir, file);
+            const content = fs.readFileSync(filePath, 'utf-8');
+            const artifactId = createUUID();
+
+            await artifactManager.addArtifact({
+                id: artifactId,
+                type: 'job-aid',
+                content: content,
+                metadata: {
+                    title: path.basename(file, '.md'),
+                    description: 'Job aid document',
+                    created: new Date().toISOString(),
+                    source: filePath
+                }
+            });
+
+            Logger.info(`Loaded job aid: ${file}`);
+        }
+    }
+}
 
 export async function initializeBackend(settingsManager: SettingsManager, options: { 
     reindex?: boolean
@@ -151,6 +186,9 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         await artifactManager.indexArtifacts();
         process.exit(0);
     }
+
+    // Load job aids
+    await loadJobAids(artifactManager);
 
     return {
         chatClient: userClient,
