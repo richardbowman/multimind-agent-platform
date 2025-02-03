@@ -133,9 +133,6 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 )}
                             </Box>
                         </Box>
-                    </Paper>
-                    </Paper>
-                ))}
 
                 {/* Edit Agent Dialog */}
                 <Dialog
@@ -227,7 +224,9 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                         </Button>
                     </DialogActions>
                 </Dialog>
+                    </Paper>
                 ))}
+
                 
                 <Button 
                     variant="contained" 
