@@ -205,7 +205,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     setEditorOpen(true);
                                     setSelectedArtifact(selectedArtifact);
                                 }}
-                                onAddToolbarActions={useCallback((actions) => {
+                                onAddToolbarActions={(actions) => {
                                     // Keep the first two base actions (Upload File and Create New Artifact)
                                     const baseActions = [
                                         {
@@ -227,7 +227,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                         !baseActions.some(base => base.label === action.label)
                                     );
                                     return [...baseActions, ...uniqueActions];
-                                }, [showFileDialog])}
+                                }}
                             />
                         </Box>
                     </Box>
