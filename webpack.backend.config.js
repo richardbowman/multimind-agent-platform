@@ -97,6 +97,10 @@ module.exports = {
         {
           from: path.resolve(__dirname, 'src/config/agents.json5'),
           to: path.resolve(__dirname, 'dist/agents.json5')
+        },
+        {
+          from: path.resolve(__dirname, 'src/schemas/goalTemplates'),
+          to: path.resolve(__dirname, 'dist/goalTemplates')
         }
       ]
     })

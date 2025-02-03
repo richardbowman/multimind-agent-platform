@@ -63,7 +63,8 @@ import fs from 'fs';
 import path from 'path';
 import { createChannelHandle, createChatHandle } from "src/shared/channelTypes";
 
-const templatesDir = path.join(__dirname, 'goalTemplates');
+import { getDataPath } from '../helpers/paths';
+const templatesDir = path.join(getDataPath(), 'goalTemplates');
 
 export const GoalTemplates: GoalTemplate[] = fs.readdirSync(templatesDir)
     .filter(file => file.endsWith('.json'))
