@@ -25,6 +25,8 @@ class ScrapeHelper {
     private artifactManager: ArtifactManager;
     private settings: Settings;
     private electronWindow: Electron.BrowserWindow|null = null;
+    private activeTabs: Set<any> = new Set(); // Track active tabs
+    private tabPool: any[] = []; // Pool of available tabs
 
     constructor(artifactManager: ArtifactManager, settings: Settings) {
         this.artifactManager = artifactManager;
@@ -34,8 +36,31 @@ class ScrapeHelper {
     async initialize(): Promise<void> {
         // Only initialize browser when actually scraping
         if (this.settings.scrapingProvider === 'puppeteer' && !this.browser) {
-            this.browser = await chromium.launch({ headless: true });
-    }
+            this.browser = await chromium.launch({ 
+                headless: true,
+                args: [
+                    '--disable-dev-shm-usage',
+                    '--no-sandbox',
+                    '--disable-setuid-sandbox',
+                    '--disable-accelerated-2d-canvas',
+                    '--disable-gpu'
+                ]
+            });
+            
+            // Initialize tab pool
+            for (let i = 0; i < 3; i++) {
+                const context = await this.browser.newContext({
+                    javaScriptEnabled: true,
+                    userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+                    viewport: { width: 1920, height: 1080 },
+                    deviceScaleFactor: 1,
+                    isMobile: false,
+                    hasTouch: false,
+                });
+                this.tabPool.push(context);
+            }
+        }
+        
         if (this.settings.scrapingProvider === 'electron' && !this.electronWindow) {
             this.electronWindow = new BrowserWindow({
                 width: 1920,
@@ -81,9 +106,11 @@ class ScrapeHelper {
         }
 
         let page, actualUrl: string, htmlContent: string, title: string, screenshot: Buffer | undefined = undefined;
+        let context: any = null;
         try {
             if (this.settings.scrapingProvider === 'puppeteer') {
-                const context = await this.browser!.newContext({
+                // Get a context from the pool or create new one
+                context = this.tabPool.pop() || await this.browser!.newContext({
                     javaScriptEnabled: true,
                     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
                     viewport: { width: 1920, height: 1080 },
@@ -91,6 +118,8 @@ class ScrapeHelper {
                     isMobile: false,
                     hasTouch: false,
                 });
+                
+                this.activeTabs.add(context);
                 page = await context.newPage();
 
                 // Navigate to the URL and wait for network idle
@@ -195,16 +224,27 @@ class ScrapeHelper {
             Logger.error(`Error scraping page "${url}":`, error);
             throw error;
         } finally {
-            if (this.settings.scrapingProvider === 'puppeteer' && page) {
-                try {
-                    await page.close();
-                } catch (error) {
-                    Logger.warn('Error closing page:', error);
+            if (this.settings.scrapingProvider === 'puppeteer') {
+                if (page) {
+                    try {
+                        await page.close();
+                    } catch (error) {
+                        Logger.warn('Error closing page:', error);
+                    }
+                }
+                
+                if (context) {
+                    try {
+                        this.activeTabs.delete(context);
+                        // Return context to pool if it's still valid
+                        if (!context.isClosed()) {
+                            this.tabPool.push(context);
+                        }
+                    } catch (error) {
+                        Logger.warn('Error returning context to pool:', error);
+                    }
                 }
             }
-            
-            // Ensure cleanup happens even if there's an error
-            await this.cleanup();
         }
     }
 
