@@ -4,8 +4,8 @@
 
 When processing CSV files using the Solver agent's NodeExecutorExecutor, follow these steps:
 
-### 1. Initial Analysis
-- Always start by reading just the headers first
+### 1. Solver Agent Order of Operations
+- Always start with an initial code step where the only goal is only to print the headers.
 - Use the following code to extract headers:
 ```javascript
 const { parse } = safeRequire('csv-parse/sync');
@@ -21,6 +21,11 @@ function getHeaders(csvContent) {
     });
     return Object.keys(records[0]);
 }
+
+const csvArtifact = ARTIFACTS.find(a => a.type === 'csv');
+if (!csvArtifact) throw new Error('No CSV artifact found');
+
+provideResult(`The file contains the following headers:\n${getHeaders(csvArtifact.content).join('\n')}`);
 ```
 
 ### 2. Handle BOM (Byte Order Mark)
