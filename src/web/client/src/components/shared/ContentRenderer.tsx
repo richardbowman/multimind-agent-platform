@@ -1,12 +1,17 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { CSVRenderer } from './CSVRenderer';
 import { Mermaid } from './Mermaid';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { Box, Paper, Typography } from '@mui/material';
+import { Box, Paper, Typography, IconButton } from '@mui/material';
 import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { Document, Page, pdfjs } from 'react-pdf';
+import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
+import 'react-pdf/dist/esm/Page/TextLayer.css';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import { Artifact, CalendarEvent } from '../../../../../tools/artifact';
 
 interface ContentRendererProps {
@@ -113,6 +118,59 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
 
     if (type === "javascript") {
         return <pre>{content}</pre>;
+    }
+
+    // Handle PDF content
+    if (mimeType === 'application/pdf' || type === 'pdf') {
+        const [numPages, setNumPages] = useState<number | null>(null);
+        const [pageNumber, setPageNumber] = useState(1);
+        const [scale, setScale] = useState(1.0);
+
+        // Configure PDF worker
+        pdfjs.GlobalWorkerOptions.workerSrc = `//cdnjs.cloudflare.com/ajax/libs/pdf.js/${pdfjs.version}/pdf.worker.js`;
+
+        const handleLoadSuccess = ({ numPages }: { numPages: number }) => {
+            setNumPages(numPages);
+        };
+
+        const zoomIn = () => setScale(prev => Math.min(prev + 0.2, 3));
+        const zoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5));
+
+        return (
+            <Box sx={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                alignItems: 'center',
+                p: 2
+            }}>
+                <Box sx={{ mb: 1 }}>
+                    <IconButton onClick={zoomOut} size="small">
+                        <ZoomOutIcon />
+                    </IconButton>
+                    <IconButton onClick={zoomIn} size="small">
+                        <ZoomInIcon />
+                    </IconButton>
+                </Box>
+                
+                <Paper elevation={3} sx={{ p: 1, maxWidth: '100%', overflow: 'auto' }}>
+                    <Document
+                        file={content}
+                        onLoadSuccess={handleLoadSuccess}
+                    >
+                        <Page 
+                            pageNumber={pageNumber} 
+                            scale={scale}
+                            renderAnnotationLayer={false}
+                            renderTextLayer={false}
+                        />
+                    </Document>
+                </Paper>
+                
+                <Typography variant="caption" sx={{ mt: 1 }}>
+                    Page {pageNumber} of {numPages}
+                </Typography>
+            </Box>
+        );
     }
 
     // Handle binary content
