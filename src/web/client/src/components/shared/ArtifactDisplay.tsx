@@ -102,18 +102,21 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
                 }
             ];
             
-            // Get any additional actions from the content renderer
-            const additionalActions = onAddToolbarActions([]);
-            
-            // Combine actions, ensuring base actions are always present
-            const combinedActions = [
-                ...baseActions,
-                ...additionalActions.filter(action => 
-                    !baseActions.some(base => base.label === action.label)
-                )
-            ];
-            
-            onAddToolbarActions(combinedActions);
+            // Only proceed if onAddToolbarActions is defined
+            if (onAddToolbarActions) {
+                // Get any additional actions from the content renderer
+                const additionalActions = onAddToolbarActions([]) || [];
+                
+                // Combine actions, ensuring base actions are always present
+                const combinedActions = [
+                    ...baseActions,
+                    ...additionalActions.filter(action => 
+                        !baseActions.some(base => base.label === action.label)
+                    )
+                ];
+                
+                onAddToolbarActions(combinedActions);
+            }
         }
     }, [artifact.id, onAddToolbarActions, onEdit, onDelete]); // Update when these dependencies change
     return (
