@@ -27,7 +27,9 @@ class ScrapeHelper {
     private browser: Browser | null = null;
     private artifactManager: ArtifactManager;
     private settings: Settings;
-    private electronWindow: Electron.BrowserWindow|null = null;
+    private electronWindows: BrowserWindow[] = [];
+    private electronWindowPool: BrowserWindow[] = [];
+    private activeWindows: Set<BrowserWindow> = new Set();
     private activeTabs: Set<any> = new Set(); // Track active tabs
     private tabPool: any[] = []; // Pool of available tabs
 
@@ -64,15 +66,20 @@ class ScrapeHelper {
             }
         }
         
-        if (this.settings.scrapingProvider === 'electron' && !this.electronWindow) {
-            this.electronWindow = new BrowserWindow({
-                width: 1920,
-                height: 1080,
-                webPreferences: {
-                    webSecurity: false
-                },
-                show: this.settings.displayScrapeBrowser
-            });
+        if (this.settings.scrapingProvider === 'electron' && this.electronWindows.length === 0) {
+            // Create pool of 3 Electron windows for parallel scraping
+            for (let i = 0; i < 3; i++) {
+                const window = new BrowserWindow({
+                    width: 1920,
+                    height: 1080,
+                    webPreferences: {
+                        webSecurity: false
+                    },
+                    show: this.settings.displayScrapeBrowser
+                });
+                this.electronWindows.push(window);
+                this.electronWindowPool.push(window);
+            }
         }
     }
 
