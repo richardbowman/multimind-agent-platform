@@ -81,44 +81,40 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
         window.URL.revokeObjectURL(url);
     };
 
+    const baseActions = useMemo(() => [
+        {
+            icon: <EditIcon fontSize="small" />,
+            label: 'Edit Artifact',
+            onClick: () => onEdit && onEdit()
+        },
+        {
+            icon: <DeleteIcon fontSize="small" />,
+            label: 'Delete Artifact',
+            onClick: () => onDelete && onDelete()
+        },
+        {
+            icon: <DownloadIcon fontSize="small" />,
+            label: 'Export Artifact',
+            onClick: handleExport
+        }
+    ], [onEdit, onDelete]);
+
     useEffect(() => {
         if (onAddToolbarActions && artifact) {
-            // Define base actions that should always be present
-            const baseActions = [
-                {
-                    icon: <EditIcon fontSize="small" />,
-                    label: 'Edit Artifact',
-                    onClick: () => onEdit && onEdit()
-                },
-                {
-                    icon: <DeleteIcon fontSize="small" />,
-                    label: 'Delete Artifact',
-                    onClick: () => onDelete && onDelete()
-                },
-                {
-                    icon: <DownloadIcon fontSize="small" />,
-                    label: 'Export Artifact',
-                    onClick: handleExport
-                }
+            // Get any additional actions from the content renderer
+            const additionalActions = onAddToolbarActions([]) || [];
+            
+            // Combine actions, ensuring base actions are always present
+            const combinedActions = [
+                ...baseActions,
+                ...additionalActions.filter(action => 
+                    !baseActions.some(base => base.label === action.label)
+                )
             ];
             
-            // Only proceed if onAddToolbarActions is defined
-            if (onAddToolbarActions) {
-                // Get any additional actions from the content renderer
-                const additionalActions = onAddToolbarActions([]) || [];
-                
-                // Combine actions, ensuring base actions are always present
-                const combinedActions = [
-                    ...baseActions,
-                    ...additionalActions.filter(action => 
-                        !baseActions.some(base => base.label === action.label)
-                    )
-                ];
-                
-                onAddToolbarActions(combinedActions);
-            }
+            onAddToolbarActions(combinedActions);
         }
-    }, [artifact.id, onAddToolbarActions, onEdit, onDelete]); // Update when these dependencies change
+    }, [artifact.id, baseActions, onAddToolbarActions]); // Update when these dependencies change
     return (
         <Box component="main" sx={{ 
             flexGrow: 1, 
