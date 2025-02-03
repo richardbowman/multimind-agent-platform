@@ -8,7 +8,47 @@ import { ClientMessage, ClientTask } from "src/shared/types";
 import { ClientChannel } from "src/shared/types";
 import { ClientThread } from "src/shared/types";
 import { CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
-import { GoalTemplates } from "src/schemas/goalTemplateSchema";
+import { ChannelHandle, createChannelHandle } from "src/shared/channelTypes";
+import { ChatHandle, createChatHandle } from "src/types/chatHandle";
+import { getDataPath } from "../helpers/paths";
+import fs from 'fs';
+import path from 'path';
+
+interface GoalTemplate {
+    id: ChannelHandle;
+    name: string;
+    description: string;
+    supportingAgents: ChatHandle[];
+    defaultResponder?: ChatHandle;
+    initialTasks: InitialTask[];
+}
+
+interface InitialTask {
+    description: string;
+    type: string;
+    dependsOn?: string[];
+    metadata?: Record<string, any>;
+}
+
+// Ensure templates directory exists
+const templatesDir = path.join(getDataPath(), 'goalTemplates');
+if (!fs.existsSync(templatesDir)) {
+    fs.mkdirSync(templatesDir, { recursive: true });
+}
+
+function loadGoalTemplates(): GoalTemplate[] {
+    return fs.readdirSync(templatesDir)
+        .filter(file => file.endsWith('.json'))
+        .map(file => {
+            const template = JSON.parse(fs.readFileSync(path.join(templatesDir, file), 'utf8'));
+            return {
+                ...template,
+                id: createChannelHandle(template.id),
+                supportingAgents: template.supportingAgents.map((agent: string) => createChatHandle(agent)),
+                defaultResponder: template.defaultResponder ? createChatHandle(template.defaultResponder) : undefined
+            };
+        });
+}
 import { ClientProject } from "src/shared/types";
 import { Project, Task, TaskManager, TaskType } from "src/tools/taskManager";
 import { LimitedRPCHandler } from "./LimitedRPCHandler";
@@ -474,7 +514,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         // If a goal template is specified, create a project with its tasks
         let projectId;
         if (params.goalTemplate) {
-            const template = GoalTemplates.find(t => t.id === params.goalTemplate);
+            const template = loadGoalTemplates().find(t => t.id === params.goalTemplate);
             if (template) {
                 // Resolve agent handles to IDs
                 const resolvedAgents = await this.mapHandles(chatClient, template.supportingAgents);
