@@ -28,11 +28,22 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
         return;
     }
 
-    const files = fs.readdirSync(jobAidsDir);
+    const files = fs.readdirSync(guidesDir);
     
+    // Get existing guides from artifact manager
+    const existingGuides = await artifactManager.getArtifactsByType(ArtifactType.ProcedureGuide);
+    const existingGuideSources = new Set(existingGuides.map(g => g.metadata?.source));
+
     for (const file of files) {
         if (path.extname(file).toLowerCase() === '.md') {
-            const filePath = path.join(jobAidsDir, file);
+            const filePath = path.join(guidesDir, file);
+            
+            // Skip if this guide already exists
+            if (existingGuideSources.has(filePath)) {
+                Logger.debug(`Procedure guide already exists: ${file}`);
+                continue;
+            }
+
             const content = fs.readFileSync(filePath, 'utf-8');
             const artifactId = createUUID();
 
@@ -42,7 +53,7 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
                 content: content,
                 metadata: {
                     title: path.basename(file, '.md'),
-                    description: 'Job aid document',
+                    description: 'Procedure guide document',
                     created: new Date().toISOString(),
                     source: filePath
                 }
