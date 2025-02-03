@@ -52,7 +52,11 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
 
     useEffect(() => {
         if (initialData) {
-            setChannelName(initialData.name);
+            // Ensure channel name starts with #
+            const name = initialData.name?.startsWith('#') 
+                ? initialData.name 
+                : `#${initialData.name || ''}`;
+            setChannelName(createChannelHandle(name));
             setDescription(initialData.description);
             setSelectedAgents(initialData.members);
             setSelectedTemplate(initialData.goalTemplate);
