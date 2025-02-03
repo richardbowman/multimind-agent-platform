@@ -211,15 +211,6 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     setEditorOpen(true);
                                     setSelectedArtifact(selectedArtifact);
                                 }}
-                                onAddToolbarActions={(actions = []) => {
-                                    // Use functional update to ensure we get latest state
-                                    setToolbarActions(prev => [
-                                        ...baseToolbarActions,
-                                        ...actions.filter(action => 
-                                            !baseToolbarActions.some(base => base.label === action.label)
-                                        )
-                                    ]);
-                                }}
                             />
                         </Box>
                     </Box>
