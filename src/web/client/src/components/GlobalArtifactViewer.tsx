@@ -38,7 +38,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         }
     ], [showFileDialog]);
 
-    const { registerActions, unregisterActions } = useToolbarActions();
+    const { actions: toolbarActions, registerActions, unregisterActions } = useToolbarActions();
 
     useEffect(() => {
         registerActions('global-artifact-viewer', baseToolbarActions);
@@ -199,7 +199,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 overflow: 'hidden',
                 position: 'relative'
             }}>
-                <ActionToolbar actions={actions} />
+                <ActionToolbar actions={toolbarActions} />
                 {selectedArtifact ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', overflow: 'hidden' }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto', pt: 1 }}>
