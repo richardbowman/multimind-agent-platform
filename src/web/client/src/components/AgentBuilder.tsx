@@ -133,7 +133,9 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 )}
                             </Box>
                         </Box>
-                </Paper>
+                        </Paper>
+                    ))}
+                ))}
 
                 {/* Edit Agent Dialog */}
                 <Dialog
