@@ -41,6 +41,7 @@ import { DrawerPage } from './GlobalArtifactViewer';
 import packageJson from '../../../../../package.json';
 import licenseText from '../../../../../docs/LICENSE.md';
 import { ActionToolbar } from './shared/ActionToolbar';
+import { AgentBuilder } from './AgentBuilder';
 import { EmbedderModelInfo } from '../../../../llm/ILLMService';
 import { asError, isError } from '../../../../types/types';
 
@@ -610,67 +611,14 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             // Special handling for Agent Builder
                             if (category === 'Agent Builder') {
                                 return (
-                                    <Paper
+                                    <AgentBuilder
                                         key={category}
                                         id={category}
-                                        sx={{
-                                            p: 3,
-                                            bgcolor: 'background.paper',
-                                            borderRadius: 2,
-                                            boxShadow: 1,
-                                            mb: 3
-                                        }}
-                                    >
-                                        <Typography variant="h6" gutterBottom sx={{
-                                            mb: 2,
-                                            pb: 1,
-                                            borderBottom: '1px solid',
-                                            borderColor: 'divider'
-                                        }}>
-                                            {category}
-                                        </Typography>
-                                        
-                                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
-                                            {Object.entries(settings.agentBuilder || {}).map(([agentId, agentConfig]) => (
-                                                <Paper key={agentId} sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2 }}>
-                                                    <Typography variant="subtitle1" gutterBottom>
-                                                        {agentConfig.name || `Agent ${agentId}`}
-                                                    </Typography>
-                                                    <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-                                                        {metadataList.map(metadata => (
-                                                            <FormControl key={`${agentId}.${metadata.key}`} fullWidth>
-                                                                {renderInput({
-                                                                    ...metadata,
-                                                                    key: `agentBuilder.${agentId}.${metadata.key}`
-                                                                })}
-                                                                {metadata.description && (
-                                                                    <Typography variant="caption" color="text.secondary" sx={{ mt: 0.5 }}>
-                                                                        {metadata.description}
-                                                                    </Typography>
-                                                                )}
-                                                            </FormControl>
-                                                        ))}
-                                                    </Box>
-                                                </Paper>
-                                            ))}
-                                            
-                                            <Button 
-                                                variant="contained" 
-                                                onClick={() => {
-                                                    const newAgentId = `agent-${Date.now()}`;
-                                                    setSettings(prev => ({
-                                                        ...prev,
-                                                        agentBuilder: {
-                                                            ...prev.agentBuilder,
-                                                            [newAgentId]: new AgentBuilderConfig()
-                                                        }
-                                                    }));
-                                                }}
-                                            >
-                                                Add New Agent
-                                            </Button>
-                                        </Box>
-                                    </Paper>
+                                        settings={settings}
+                                        onSettingsChange={setSettings}
+                                        metadata={metadataList}
+                                        renderInput={renderInput}
+                                    />
                                 );
                             }
                             // Filter model settings based on selected provider
