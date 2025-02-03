@@ -205,7 +205,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     setEditorOpen(true);
                                     setSelectedArtifact(selectedArtifact);
                                 }}
-                                onAddToolbarActions={(actions) => {
+                                onAddToolbarActions={(actions = []) => {
                                     // Keep the first two base actions (Upload File and Create New Artifact)
                                     const baseActions = [
                                         {
@@ -223,9 +223,11 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     ];
                                     // Add any new actions after the base actions
                                     // Filter out any duplicate actions based on label
-                                    const uniqueActions = actions.filter(action => 
-                                        !baseActions.some(base => base.label === action.label)
-                                    );
+                                    const uniqueActions = Array.isArray(actions) 
+                                        ? actions.filter(action => 
+                                            !baseActions.some(base => base.label === action.label)
+                                          )
+                                        : [];
                                     return [...baseActions, ...uniqueActions];
                                 }}
                             />
