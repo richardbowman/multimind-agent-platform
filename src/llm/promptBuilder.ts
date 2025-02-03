@@ -213,16 +213,20 @@ ${this.modelHelpers.getFinalInstructions()}
     private renderArtifactExcerpts({artifacts}: ArtifactsExcerptsContent): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
+            const size = typeof artifact.content === 'string'
+                ? `${artifact.content.length} characters`
+                : `${artifact.content.length} bytes`;
+
             let content = typeof artifact.content === 'string'
                 ? artifact.content
-                : `[Binary data - ${artifact.content.length} bytes]`;
+                : `[Binary data - ${size}]`;
 
             // Truncate string content to 1000 chars
             if (typeof content === 'string' && content.length > 1000) {
                 content = content.substring(0, 1000) + '... [truncated]';
             }
 
-            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
+            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'} [Size: ${size}]\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
         }).join('\n\n');
     }
 
