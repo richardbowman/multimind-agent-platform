@@ -101,6 +101,10 @@ module.exports = {
         {
           from: path.resolve(__dirname, 'src/schemas/goalTemplates'),
           to: path.resolve(__dirname, 'dist/goalTemplates')
+        },
+        {
+          from: path.resolve(__dirname, 'src/assets/job-aids'),
+          to: path.resolve(__dirname, 'dist/assets/job-aids')
         }
       ]
     })
