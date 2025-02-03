@@ -18,9 +18,10 @@ import { Agent } from "./agents/agents";
 import { createChannelHandle } from "./shared/channelTypes";
 import fs from 'fs';
 import path from 'path';
+import { ArtifactType } from "./tools/artifact";
 
 async function loadJobAids(artifactManager: ArtifactManager): Promise<void> {
-    const jobAidsDir = path.join(__dirname, '../assets/job-aids');
+    const jobAidsDir = path.join("assets","job-aids");
     
     if (!fs.existsSync(jobAidsDir)) {
         Logger.warn(`Job aids directory not found at ${jobAidsDir}`);
@@ -35,9 +36,9 @@ async function loadJobAids(artifactManager: ArtifactManager): Promise<void> {
             const content = fs.readFileSync(filePath, 'utf-8');
             const artifactId = createUUID();
 
-            await artifactManager.addArtifact({
+            await artifactManager.saveArtifact({
                 id: artifactId,
-                type: 'job-aid',
+                type: ArtifactType.ProcedureGuide,
                 content: content,
                 metadata: {
                     title: path.basename(file, '.md'),
