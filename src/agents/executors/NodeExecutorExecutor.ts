@@ -130,6 +130,7 @@ IMPORTANT RULES FOR CODE:
 
 1. You can use core Node.js modules as well as ONLY THE FOLLOWING SPECIFIC packages using a globally provided 'safeRequire' function:
 - node-csv: csv-parse/sync, csv-generate, csv-stringify/sync, stream-transform
+- charting: chartjs-node-canvas, chart.js/auto
 - for example "const { parse } = safeRequire('csv-parse/sync');" or "const { stringify } = safeRequire('csv-stringify/sync');"
 
 2. You are running in a web worker thread. The main execution code cannot use a 'return' statement.

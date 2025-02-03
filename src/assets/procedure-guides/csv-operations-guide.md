@@ -68,7 +68,52 @@ ARTIFACTS.push({
 });
 ```
 
-### 8. Example Workflow
+### 8. Charting Example
+```javascript
+// Create a chart from processed data
+const { ChartJSNodeCanvas } = safeRequire('chartjs-node-canvas');
+const Chart = safeRequire('chart.js/auto');
+
+const width = 800;
+const height = 600;
+const chartJSNodeCanvas = new ChartJSNodeCanvas({ width, height });
+
+const chartConfig = {
+    type: 'bar',
+    data: {
+        labels: processedData.map(d => d.label),
+        datasets: [{
+            label: 'My Dataset',
+            data: processedData.map(d => d.value),
+            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+            borderColor: 'rgba(75, 192, 192, 1)',
+            borderWidth: 1
+        }]
+    },
+    options: {
+        scales: {
+            y: {
+                beginAtZero: true
+            }
+        }
+    }
+};
+
+const imageBuffer = await chartJSNodeCanvas.renderToBuffer(chartConfig);
+
+// Save chart as image artifact
+ARTIFACTS.push({
+    type: 'image',
+    content: imageBuffer,
+    metadata: {
+        title: 'Data Visualization Chart',
+        description: 'Generated chart from processed data',
+        mimeType: 'image/png'
+    }
+});
+```
+
+### 9. Example Workflow
 ```javascript
 // Get first CSV artifact
 const csvArtifact = ARTIFACTS.find(a => a.type === 'csv');
