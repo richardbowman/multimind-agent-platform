@@ -9,6 +9,7 @@ import { useDataContext, DataProvider } from './contexts/DataContext';
 import { IPCProvider, useIPCService } from './contexts/IPCContext';
 import { SnackbarProvider, useSnackbar } from './contexts/SnackbarContext';
 import { LogProvider } from './contexts/LogContext';
+import { ToolbarActionsProvider } from './contexts/ToolbarActionsContext';
 import { ChatPanel } from './components/ChatPanel';
 import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
@@ -270,7 +271,9 @@ const App: React.FC = () => {
             <SnackbarProvider>
                 <DataProvider>
                     <LogProvider>
-                        <AppContent />
+                        <ToolbarActionsProvider>
+                            <AppContent />
+                        </ToolbarActionsProvider>
                     </LogProvider>
                 </DataProvider>
             </SnackbarProvider>
