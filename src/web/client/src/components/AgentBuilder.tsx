@@ -15,11 +15,13 @@ import {
     Divider,
     IconButton,
     Tooltip,
-    Collapse
+    Dialog,
+    DialogTitle,
+    DialogContent,
+    DialogActions
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import EditIcon from '@mui/icons-material/Edit';
 import { Settings } from '../../../../tools/settings';
 
 interface AgentBuilderProps {
@@ -37,17 +39,33 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
         ...(settings.agentBuilder || {})
     };
 
-    const handleAgentChange = (agentId: string, field: string, value: any) => {
-        onSettingsChange({
-            ...settings,
-            agentBuilder: {
-                ...settings.agentBuilder,
-                [agentId]: {
-                    ...settings.agentBuilder?.[agentId],
-                    [field]: value
+    const [editingAgentId, setEditingAgentId] = useState<string | null>(null);
+    const [agentForm, setAgentForm] = useState<any>({});
+
+    const handleEditClick = (agentId: string) => {
+        setEditingAgentId(agentId);
+        setAgentForm(settings.agentBuilder?.[agentId] || {});
+    };
+
+    const handleFormChange = (field: string, value: any) => {
+        setAgentForm(prev => ({
+            ...prev,
+            [field]: value
+        }));
+    };
+
+    const handleSaveAgent = () => {
+        if (editingAgentId) {
+            onSettingsChange({
+                ...settings,
+                agentBuilder: {
+                    ...settings.agentBuilder,
+                    [editingAgentId]: agentForm
                 }
-            }
-        });
+            });
+            setEditingAgentId(null);
+            setAgentForm({});
+        }
     };
 
     const handleDeleteAgent = (agentId: string) => {
@@ -81,25 +99,10 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {Object.entries(allAgents).map(([agentId, agentConfig]) => (
                     <Paper key={agentId} sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2 }}>
-                        <Box 
-                            sx={{ 
-                                display: 'flex', 
-                                justifyContent: 'space-between', 
-                                alignItems: 'center',
-                                cursor: 'pointer'
-                            }}
-                            onClick={() => handleAgentChange(agentId, '_expanded', !agentConfig._expanded)}
-                        >
-                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-                                {agentConfig._expanded ? (
-                                    <ExpandLessIcon fontSize="small" />
-                                ) : (
-                                    <ExpandMoreIcon fontSize="small" />
-                                )}
-                                <Typography variant="subtitle1" gutterBottom>
-                                    {agentConfig.name || `Agent ${agentId}`}
-                                </Typography>
-                            </Box>
+                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                            <Typography variant="subtitle1" gutterBottom>
+                                {agentConfig.name || `Agent ${agentId}`}
+                            </Typography>
                             <Box>
                                 {settings.agents?.[agentId] && (
                                     <Chip 
@@ -109,13 +112,18 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                         sx={{ ml: 1 }}
                                     />
                                 )}
+                                <Tooltip title="Edit Agent">
+                                    <IconButton
+                                        onClick={() => handleEditClick(agentId)}
+                                        size="small"
+                                    >
+                                        <EditIcon fontSize="small" />
+                                    </IconButton>
+                                </Tooltip>
                                 {!settings.agents?.[agentId] && (
                                     <Tooltip title="Delete Agent">
                                         <IconButton
-                                            onClick={(e) => {
-                                                e.stopPropagation();
-                                                handleDeleteAgent(agentId);
-                                            }}
+                                            onClick={() => handleDeleteAgent(agentId)}
                                             color="error"
                                             size="small"
                                         >
@@ -125,22 +133,30 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 )}
                             </Box>
                         </Box>
-                        
-                        <Collapse in={agentConfig._expanded}>
-                            <Divider sx={{ my: 2 }} />
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                </Paper>
+
+                {/* Edit Agent Dialog */}
+                <Dialog
+                    open={editingAgentId === agentId}
+                    onClose={() => setEditingAgentId(null)}
+                    maxWidth="sm"
+                    fullWidth
+                >
+                    <DialogTitle>Edit Agent</DialogTitle>
+                    <DialogContent>
+                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
                             <TextField
                                 label="Agent Name"
-                                value={agentConfig.name || ''}
-                                onChange={(e) => handleAgentChange(agentId, 'name', e.target.value)}
+                                value={agentForm.name || ''}
+                                onChange={(e) => handleFormChange('name', e.target.value)}
                                 fullWidth
                                 margin="normal"
                             />
 
                             <TextField
                                 label="Description"
-                                value={agentConfig.description || ''}
-                                onChange={(e) => handleAgentChange(agentId, 'description', e.target.value)}
+                                value={agentForm.description || ''}
+                                onChange={(e) => handleFormChange('description', e.target.value)}
                                 fullWidth
                                 margin="normal"
                                 multiline
@@ -149,8 +165,8 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
 
                             <TextField
                                 label="Purpose"
-                                value={agentConfig.purpose || ''}
-                                onChange={(e) => handleAgentChange(agentId, 'purpose', e.target.value)}
+                                value={agentForm.purpose || ''}
+                                onChange={(e) => handleFormChange('purpose', e.target.value)}
                                 fullWidth
                                 margin="normal"
                                 multiline
@@ -160,8 +176,8 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
 
                             <TextField
                                 label="Final Instructions"
-                                value={agentConfig.finalInstructions || ''}
-                                onChange={(e) => handleAgentChange(agentId, 'finalInstructions', e.target.value)}
+                                value={agentForm.finalInstructions || ''}
+                                onChange={(e) => handleFormChange('finalInstructions', e.target.value)}
                                 fullWidth
                                 margin="normal"
                                 multiline
@@ -172,9 +188,9 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                             <FormControl fullWidth margin="normal">
                                 <InputLabel>Planner Type</InputLabel>
                                 <Select
-                                    value={agentConfig.plannerType || 'nextStep'}
+                                    value={agentForm.plannerType || 'nextStep'}
                                     label="Planner Type"
-                                    onChange={(e) => handleAgentChange(agentId, 'plannerType', e.target.value)}
+                                    onChange={(e) => handleFormChange('plannerType', e.target.value)}
                                 >
                                     <MenuItem value="nextStep">Next Step</MenuItem>
                                 </Select>
@@ -182,8 +198,8 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
 
                             <TextField
                                 label="Auto Respond Channels"
-                                value={agentConfig.autoRespondChannelIds || ''}
-                                onChange={(e) => handleAgentChange(agentId, 'autoRespondChannelIds', e.target.value)}
+                                value={agentForm.autoRespondChannelIds || ''}
+                                onChange={(e) => handleFormChange('autoRespondChannelIds', e.target.value)}
                                 fullWidth
                                 margin="normal"
                                 helperText="Comma separated list of channel IDs"
@@ -192,15 +208,23 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                             <FormControlLabel
                                 control={
                                     <Checkbox
-                                        checked={agentConfig.enabled ?? true}
-                                        onChange={(e) => handleAgentChange(agentId, 'enabled', e.target.checked)}
+                                        checked={agentForm.enabled ?? true}
+                                        onChange={(e) => handleFormChange('enabled', e.target.checked)}
                                     />
                                 }
                                 label="Enabled"
                             />
                         </Box>
-                    </Collapse>
-                </Paper>
+                    </DialogContent>
+                    <DialogActions>
+                        <Button onClick={() => setEditingAgentId(null)}>
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSaveAgent} variant="contained">
+                            Save
+                        </Button>
+                    </DialogActions>
+                </Dialog>
                 ))}
                 
                 <Button 
