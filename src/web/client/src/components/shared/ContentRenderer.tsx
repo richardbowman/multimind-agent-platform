@@ -137,40 +137,35 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         const zoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5));
 
         // Add PDF actions to toolbar in a useEffect to avoid render issues
-        useEffect(() => {
-            const pdfActions = [
-                {
-                    icon: <NavigateBeforeIcon />,
-                    label: 'Previous Page',
-                    onClick: () => setPageNumber(prev => Math.max(prev - 1, 1)),
-                    disabled: pageNumber === 1
-                },
-                {
-                    icon: <NavigateNextIcon />,
-                    label: 'Next Page',
-                    onClick: () => setPageNumber(prev => Math.min(prev + 1, numPages || 1)),
-                    disabled: pageNumber === numPages
-                },
-                {
-                    icon: <ZoomOutIcon />,
-                    label: 'Zoom Out',
-                    onClick: zoomOut
-                },
-                {
-                    icon: <ZoomInIcon />,
-                    label: 'Zoom In',
-                    onClick: zoomIn
-                }
-            ];
+        const pdfActions = useMemo(() => [
+            {
+                icon: <NavigateBeforeIcon />,
+                label: 'Previous Page',
+                onClick: () => setPageNumber(prev => Math.max(prev - 1, 1)),
+                disabled: pageNumber === 1
+            },
+            {
+                icon: <NavigateNextIcon />,
+                label: 'Next Page',
+                onClick: () => setPageNumber(prev => Math.min(prev + 1, numPages || 1)),
+                disabled: pageNumber === numPages
+            },
+            {
+                icon: <ZoomOutIcon />,
+                label: 'Zoom Out',
+                onClick: zoomOut
+            },
+            {
+                icon: <ZoomInIcon />,
+                label: 'Zoom In',
+                onClick: zoomIn
+            }
+        ], [numPages, pageNumber, zoomIn, zoomOut]);
 
+        useEffect(() => {
             registerActions('pdf-renderer', pdfActions);
             return () => unregisterActions('pdf-renderer');
-        }, [registerActions, unregisterActions]);
-
-        useEffect(() => {
-            updateActionState('Previous Page', { disabled: pageNumber === 1 });
-            updateActionState('Next Page', { disabled: pageNumber === numPages });
-        }, [pageNumber, numPages, updateActionState]);
+        }, [pdfActions, registerActions, unregisterActions]);
 
         return (
             <Box sx={{ 

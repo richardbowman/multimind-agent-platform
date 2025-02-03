@@ -1,5 +1,4 @@
-import React, { createContext, useContext, useState, ReactNode, useCallback, useEffect } from 'react';
-import { EventEmitter } from 'events';
+import React, { createContext, useContext, useState, ReactNode, useCallback, useRef } from 'react';
 
 interface ToolbarAction {
     icon: ReactNode;
@@ -25,21 +24,40 @@ const ToolbarActionsContext = createContext<ToolbarActionsContextType>({
 export const ToolbarActionsProvider: React.FC<{children: ReactNode}> = ({ children }) => {
     const [actions, setActions] = useState<ToolbarAction[]>([]);
     const actionSources = useRef<Record<string, ToolbarAction[]>>({});
+    const actionsRef = useRef(actions);
+    actionsRef.current = actions;
 
     const registerActions = useCallback((source: string, newActions: ToolbarAction[]) => {
+        // Only update if actions actually changed
+        const currentActions = actionSources.current[source];
+        if (currentActions && currentActions.length === newActions.length &&
+            currentActions.every((a, i) => a.label === newActions[i].label)) {
+            return;
+        }
+        
         actionSources.current[source] = newActions;
-        setActions(Object.values(actionSources.current).flat());
+        const allActions = Object.values(actionSources.current).flat();
+        setActions(allActions);
     }, []);
 
     const unregisterActions = useCallback((source: string) => {
+        if (!actionSources.current[source]) return;
         delete actionSources.current[source];
-        setActions(Object.values(actionSources.current).flat());
+        const allActions = Object.values(actionSources.current).flat();
+        setActions(allActions);
     }, []);
 
     const updateActionState = useCallback((label: string, state: Partial<ToolbarAction>) => {
-        setActions(prev => prev.map(action => 
-            action.label === label ? { ...action, ...state } : action
-        ));
+        setActions(prev => {
+            const newActions = prev.map(action => 
+                action.label === label ? { ...action, ...state } : action
+            );
+            // Only update if state actually changed
+            if (prev.some((a, i) => a.disabled !== newActions[i].disabled)) {
+                return newActions;
+            }
+            return prev;
+        });
     }, []);
 
     return (
