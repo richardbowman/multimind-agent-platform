@@ -101,48 +101,60 @@ export class ArtifactManager {
         artifact.content :
         JSON.stringify(artifact.content);
 
-    // Get appropriate file extension based on MIME type
-    const getFileExtension = (mimeType?: string): string => {
-      if (!mimeType) return 'md';
+    // Get appropriate file extension and type based on MIME type
+    const getFileInfo = (mimeType?: string): { extension: string, type: string } => {
+      if (!mimeType) return { extension: 'md', type: 'document' };
       
-      const mimeToExt: Record<string, string> = {
-        'application/json': 'json',
-        'text/plain': 'txt',
-        'text/markdown': 'md',
-        'text/html': 'html',
-        'text/css': 'css',
-        'text/javascript': 'js',
-        'text/csv': 'csv',
-        'image/jpeg': 'jpg',
-        'image/png': 'png',
-        'image/gif': 'gif',
-        'image/svg+xml': 'svg',
-        'image/webp': 'webp',
-        'application/pdf': 'pdf',
-        'application/xml': 'xml',
-        'application/yaml': 'yaml',
-        'application/x-yaml': 'yaml'
+      const mimeToInfo: Record<string, { extension: string, type: string }> = {
+        'application/json': { extension: 'json', type: 'data' },
+        'text/plain': { extension: 'txt', type: 'document' },
+        'text/markdown': { extension: 'md', type: 'document' },
+        'text/html': { extension: 'html', type: 'document' },
+        'text/css': { extension: 'css', type: 'code' },
+        'text/javascript': { extension: 'js', type: 'code' },
+        'text/csv': { extension: 'csv', type: 'data' },
+        'image/jpeg': { extension: 'jpg', type: 'image' },
+        'image/png': { extension: 'png', type: 'image' },
+        'image/gif': { extension: 'gif', type: 'image' },
+        'image/svg+xml': { extension: 'svg', type: 'image' },
+        'image/webp': { extension: 'webp', type: 'image' },
+        'application/pdf': { extension: 'pdf', type: 'document' },
+        'application/xml': { extension: 'xml', type: 'data' },
+        'application/yaml': { extension: 'yaml', type: 'data' },
+        'application/x-yaml': { extension: 'yaml', type: 'data' },
+        'application/vnd.ms-excel': { extension: 'xls', type: 'data' },
+        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet': { extension: 'xlsx', type: 'data' },
+        'application/vnd.ms-powerpoint': { extension: 'ppt', type: 'presentation' },
+        'application/vnd.openxmlformats-officedocument.presentationml.presentation': { extension: 'pptx', type: 'presentation' },
+        'application/msword': { extension: 'doc', type: 'document' },
+        'application/vnd.openxmlformats-officedocument.wordprocessingml.document': { extension: 'docx', type: 'document' }
       };
 
       // Check for exact MIME type match
-      if (mimeToExt[mimeType]) {
-        return mimeToExt[mimeType];
+      if (mimeToInfo[mimeType]) {
+        return mimeToInfo[mimeType];
       }
 
       // Check for MIME type category match
       const category = mimeType.split('/')[0];
       switch (category) {
         case 'text':
-          return 'txt';
+          return { extension: 'txt', type: 'document' };
         case 'image':
-          return mimeType.split('/')[1] || 'bin';
+          return { extension: mimeType.split('/')[1] || 'bin', type: 'image' };
+        case 'audio':
+          return { extension: mimeType.split('/')[1] || 'bin', type: 'audio' };
+        case 'video':
+          return { extension: mimeType.split('/')[1] || 'bin', type: 'video' };
         default:
-          return 'bin';
+          return { extension: 'bin', type: 'file' };
       }
     };
 
-    const extension = getFileExtension(artifact.metadata?.mimeType);
-    const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${extension}`);
+    const fileInfo = getFileInfo(artifact.metadata?.mimeType);
+    // Use the type from fileInfo if no type was explicitly set
+    artifact.type = typeFromMime || artifactParam.type || fileInfo.type;
+    const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${fileInfo.extension}`);
     await this.fileQueue.enqueue(() =>
       //TODO: need to handle calendrevents
       fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
