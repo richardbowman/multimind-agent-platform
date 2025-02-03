@@ -1,0 +1,26 @@
+{
+    "id": "#web-research",
+    "name": "Web Research Channel",
+    "description": "Template for setting up a web research channel with a research manager",
+    "supportingAgents": [
+        "@research",
+        "@research-assistant"
+    ],
+    "defaultResponder": "@research",
+    "initialTasks": [
+        {
+            "description": "Define research goals and objectives",
+            "type": "planning"
+        },
+        {
+            "description": "Gather initial research data from web sources",
+            "type": "data-gathering",
+            "dependsOn": ["define-research-goals"]
+        },
+        {
+            "description": "Analyze gathered data and generate insights",
+            "type": "analysis",
+            "dependsOn": ["gather-initial-research-data"]
+        }
+    ]
+}

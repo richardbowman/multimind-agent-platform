@@ -1,0 +1,18 @@
+{
+    "id": "#product",
+    "name": "Software Development Project",
+    "description": "Template for managing a software development project",
+    "supportingAgents": ["@product"],
+    "defaultResponder": "@product",
+    "initialTasks": [
+        {
+            "description": "Understand the product vision and product requirements to generate product requirements",
+            "type": "planning"
+        },
+        {
+            "description": "Understand desired technologies to use, and document a technical plan",
+            "type": "setup",
+            "dependsOn": ["define-project-requirements"]
+        }
+    ]
+}

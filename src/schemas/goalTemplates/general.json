@@ -1,0 +1,8 @@
+{
+    "id": "#general",
+    "name": "Chat Channel",
+    "description": "Template for setting up a chat channel with an AI assistant",
+    "supportingAgents": ["@ai"],
+    "defaultResponder": "@ai",
+    "initialTasks": []
+}

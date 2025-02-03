@@ -1,0 +1,29 @@
+{
+    "id": "#onboarding",
+    "name": "Onboarding Channel",
+    "description": "Template for initializing an onboarding for new projects",
+    "supportingAgents": ["@onboarding"],
+    "defaultResponder": "@onboarding",
+    "initialTasks": [
+        {
+            "description": "Select an on-boarding template based on high-level goal",
+            "type": "onboarding",
+            "metadata": {
+                "agent": "@onboarding"
+            }
+        },
+        {
+            "description": "Generate an onboarding plan using the onboarding agent",
+            "type": "onboarding",
+            "dependsOn": ["gather-existing-documents"],
+            "metadata": {
+                "agent": "@onboarding"
+            }
+        },
+        {
+            "description": "Create necessary communication channels for usage based on the user goal",
+            "type": "communication",
+            "dependsOn": ["generate-channel"]
+        }
+    ]
+}
