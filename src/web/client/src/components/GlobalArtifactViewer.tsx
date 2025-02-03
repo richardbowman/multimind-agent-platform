@@ -206,29 +206,12 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     setSelectedArtifact(selectedArtifact);
                                 }}
                                 onAddToolbarActions={(actions = []) => {
-                                    // Keep the first two base actions (Upload File and Create New Artifact)
-                                    const baseActions = [
-                                        {
-                                            icon: <AttachFileIcon />,
-                                            label: 'Upload File',
-                                            onClick: async () => {
-                                                showFileDialog();
-                                            }
-                                        },
-                                        {
-                                            icon: <DescriptionIcon />,
-                                            label: 'Create New Artifact',
-                                            onClick: () => setEditorOpen(true)
-                                        }
-                                    ];
-                                    // Add any new actions after the base actions
-                                    // Filter out any duplicate actions based on label
-                                    const uniqueActions = Array.isArray(actions) 
-                                        ? actions.filter(action => 
-                                            !baseActions.some(base => base.label === action.label)
-                                          )
-                                        : [];
-                                    return [...baseActions, ...uniqueActions];
+                                    setToolbarActions([
+                                        ...baseToolbarActions,
+                                        ...actions.filter(action => 
+                                            !baseToolbarActions.some(base => base.label === action.label)
+                                        )
+                                    ]);
                                 }}
                             />
                         </Box>

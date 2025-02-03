@@ -101,7 +101,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps & { onAddToolbarActi
 
     useEffect(() => {
         if (onAddToolbarActions && artifact) {
-            // Pass base actions first, then let content renderer add its own
+            // Pass base actions to be merged with content-specific actions
             onAddToolbarActions(baseActions);
         }
     }, [artifact.id, baseActions, onAddToolbarActions]);
