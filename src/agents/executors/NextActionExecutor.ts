@@ -141,14 +141,14 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);
 
         // Create new task for the next action
-        if (response.actionType) {
+        if (response.nextAction) {
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
-                description: response.taskDescription || response.actionType,
+                description: response.taskDescription || response.nextAction,
                 creator: this.userId,
                 order: currentTasks.length, // Add to end of current tasks
                 props: {
-                    stepType: response.actionType
+                    stepType: response.nextAction
                 }
             };
             await this.projects.addTask(project, newTask);
@@ -158,7 +158,7 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
         const planResponse: PlanStepsResponse = {
             reasoning: response.reasoning,
             steps: response.action ? [{
-                actionType: response.actionType,
+                actionType: response.nextAction,
                 context: response.taskDescription
             }] : []
         };

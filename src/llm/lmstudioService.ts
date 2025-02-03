@@ -24,7 +24,7 @@ class MyEmbedder implements IEmbeddingFunction {
     async generate(texts: string[]): Promise<number[][]> {
         const embeddings: number[][] = [];
         for (let i=0; i<texts.length; i++) {
-            Logger.progress(`Indexing documents (Chunk ${i+1} of ${texts.length})`, i+1 / texts.length);
+            Logger.progress(`Indexing documents (Chunk ${i+1} of ${texts.length})`, (i+1)/ texts.length);
             const modelEmbedding = await this.embeddingModel.embedString(texts[i]);
             embeddings.push(modelEmbedding.embedding);
         }

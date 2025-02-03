@@ -60,6 +60,10 @@ export class SolverAgent extends StepBasedAgent {
                 description: "Confirm understanding of the coding problem"
             },
             {
+                type: ExecutorType.CHECK_KNOWLEDGE,
+                description: "Check existing knowledgebase for procedure guides"
+            },
+            {
                 type: ExecutorType.NODE_EXECUTION,
                 description: "Write and execute code to analyze or prototype solution"
             },
@@ -81,6 +85,25 @@ export class SolverAgent extends StepBasedAgent {
             }
         ];
 
+        const simpleSequence = [
+            { 
+                type: ExecutorType.GOAL_CONFIRMATION,
+                description: "Confirm understanding of the problem and goals"
+            },
+            {
+                type: ExecutorType.CHECK_KNOWLEDGE,
+                description: "Check existing knowledgebase for relevant information"
+            },
+            {
+                type: ExecutorType.THINKING,
+                description: "Develop approach to solving the problem"
+            },
+            {
+                type: ExecutorType.FINAL_RESPONSE,
+                description: "Provide final answer to the user"
+            }
+        ];
+
         // Add sequences to modelHelpers
         this.modelHelpers.addStepSequence(
             'standard-problem-solving',
@@ -94,20 +117,18 @@ export class SolverAgent extends StepBasedAgent {
             codeFocusedSequence
         );
 
+        this.modelHelpers.addStepSequence(
+            'simple-problem-solving',
+            'Sequence for problems that don\'t appear to require codign or deep reasoning',
+            simpleSequence
+        );
+
         this.modelHelpers.setFinalInstructions(`SOLVING INSTRUCTIONS
         Use the appropriate sequence based on problem context:
         - For complex problems: Use the standard-problem-solving sequence
         - For coding problems: Use the code-focused sequence
         
-        Adapt your approach to the complexity of each problem, using more cycles as needed.
-        
-        You have access to project artifacts through the ARTIFACTS global variable when using Node.js code execution.
-        Artifacts are available as an array of objects with these properties:
-        - id: Unique identifier
-        - name: Human-readable name
-        - type: Type of artifact (e.g. 'file', 'data', 'image')
-        - content: The actual content (string, JSON, etc)
-        - metadata: Additional information about the artifact`);
+        Adapt your approach to the complexity of each problem, using more cycles as needed.`);
 
         // Register executors using getExecutorParams
         this.registerStepExecutor(new GoalConfirmationExecutor(this.getExecutorParams()));

@@ -1071,8 +1071,8 @@
     "NextActionResponse": {
       "additionalProperties": false,
       "properties": {
-        "actionType": {
-          "description": "A supported action type",
+        "nextAction": {
+          "description": "The action to perform next",
           "type": "string"
         },
         "revisedUserGoal": {
@@ -1089,7 +1089,7 @@
         }
       },
       "required": [
-        "actionType",
+        "nextAction",
         "taskDescription",
         "sequence"
       ],

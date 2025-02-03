@@ -305,7 +305,7 @@ export class ArtifactManager {
     Logger.info(`Indexing ${artifacts.length} artifacts`);
 
     for (let i = 0; i < artifacts.length; i++) {
-      Logger.progress(`Indexing ${i} of ${artifacts.length} artifacts`, i/artifacts.length);
+      Logger.progress(`Indexing ${i} of ${artifacts.length} artifacts`, (i+1)/artifacts.length);
       await this.indexArtifact(artifacts[i]);
     }
 

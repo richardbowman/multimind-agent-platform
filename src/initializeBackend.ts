@@ -9,20 +9,19 @@ import { BackendServices } from "./types/BackendServices";
 import { LogReader } from "./server/LogReader";
 import { SettingsManager } from "./tools/settingsManager";
 import { getDataPath } from "./helpers/paths";
-import path from "path";
+import fs from 'node:fs';
+import path from "node:path";
 import { sleep } from "./utils/sleep";
 import { ServerRPCHandler } from "./server/RPCHandler";
 import { createUUID, UUID } from "./types/uuid";
 import { ConfigurationError } from "./errors/ConfigurationError";
 import { Agent } from "./agents/agents";
 import { createChannelHandle } from "./shared/channelTypes";
-import fs from 'fs';
-import path from 'path';
 import { createHash } from 'crypto';
 import { ArtifactType } from "./tools/artifact";
 
 async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<void> {
-    const guidesDir = path.join("assets","procedure-guides");
+    const guidesDir = path.join("dist", "assets","procedure-guides");
     
     if (!fs.existsSync(guidesDir)) {
         Logger.warn(`Procedure guides directory not found at ${guidesDir}`);
@@ -32,10 +31,12 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
     const files = fs.readdirSync(guidesDir);
     
     // Get existing guides from artifact manager
-    const existingGuides = await artifactManager.getArtifactsByType(ArtifactType.ProcedureGuide);
+    const existingGuides = await artifactManager.getArtifacts({type: ArtifactType.ProcedureGuide});
     const existingGuideMap = new Map(existingGuides.map(g => [g.metadata?.source, g]));
 
-    for (const file of files) {
+    for(let i=0; i<files.length; i++) {
+        const file = files[i];
+        Logger.progress(`Loading procedure guides for agents (${i+1} of ${files.length}`, (i+1)/files.length);
         if (path.extname(file).toLowerCase() === '.md') {
             const filePath = path.join(guidesDir, file);
             const content = fs.readFileSync(filePath, 'utf-8');
@@ -46,7 +47,7 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
             if (existingGuide) {
                 const existingHash = existingGuide.metadata?.contentHash;
                 if (existingHash === contentHash) {
-                    Logger.debug(`Procedure guide unchanged: ${file}`);
+                    Logger.info(`Procedure guide unchanged: ${file}`);
                     continue;
                 }
                 Logger.info(`Updating procedure guide: ${file}`);
@@ -59,6 +60,7 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
                 content: content,
                 metadata: {
                     title: path.basename(file, '.md'),
+                    mimeType: 'text/markdown',
                     description: 'Procedure guide document',
                     created: new Date().toISOString(),
                     source: filePath,
