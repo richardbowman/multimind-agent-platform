@@ -109,12 +109,17 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
         }
 
         try {
+            // Convert defaultResponderId to handle
+            const defaultResponder = defaultResponderId 
+                ? webSocket.handles.find(h => h.id === defaultResponderId)?.handle || defaultResponderId
+                : undefined;
+
             const params = {
                 name: channelName,
                 description,
                 members: selectedAgents,
                 goalTemplate: selectedTemplate,
-                defaultResponderId: defaultResponderId || undefined
+                defaultResponder
             };
 
             if (editingChannelId) {
