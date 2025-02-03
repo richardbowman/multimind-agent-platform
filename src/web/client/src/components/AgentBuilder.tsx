@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Box,
     Paper,
@@ -14,9 +14,12 @@ import {
     Checkbox,
     Divider,
     IconButton,
-    Tooltip
+    Tooltip,
+    Collapse
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Settings } from '../../../../tools/settings';
 
 interface AgentBuilderProps {
@@ -78,10 +81,25 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 3 }}>
                 {Object.entries(allAgents).map(([agentId, agentConfig]) => (
                     <Paper key={agentId} sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2 }}>
-                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="subtitle1" gutterBottom>
-                                {agentConfig.name || `Agent ${agentId}`}
-                            </Typography>
+                        <Box 
+                            sx={{ 
+                                display: 'flex', 
+                                justifyContent: 'space-between', 
+                                alignItems: 'center',
+                                cursor: 'pointer'
+                            }}
+                            onClick={() => handleAgentChange(agentId, '_expanded', !agentConfig._expanded)}
+                        >
+                            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                                {agentConfig._expanded ? (
+                                    <ExpandLessIcon fontSize="small" />
+                                ) : (
+                                    <ExpandMoreIcon fontSize="small" />
+                                )}
+                                <Typography variant="subtitle1" gutterBottom>
+                                    {agentConfig.name || `Agent ${agentId}`}
+                                </Typography>
+                            </Box>
                             <Box>
                                 {settings.agents?.[agentId] && (
                                     <Chip 
@@ -94,7 +112,10 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 {!settings.agents?.[agentId] && (
                                     <Tooltip title="Delete Agent">
                                         <IconButton
-                                            onClick={() => handleDeleteAgent(agentId)}
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                handleDeleteAgent(agentId);
+                                            }}
                                             color="error"
                                             size="small"
                                         >
@@ -105,9 +126,9 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                             </Box>
                         </Box>
                         
-                        <Divider sx={{ my: 2 }} />
-
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                        <Collapse in={agentConfig._expanded}>
+                            <Divider sx={{ my: 2 }} />
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <TextField
                                 label="Agent Name"
                                 value={agentConfig.name || ''}
@@ -178,7 +199,8 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 label="Enabled"
                             />
                         </Box>
-                    </Paper>
+                    </Collapse>
+                </Paper>
                 ))}
                 
                 <Button 
