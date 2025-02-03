@@ -10,6 +10,7 @@ import FolderIcon from '@mui/icons-material/Folder';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { ActionToolbar } from './shared/ActionToolbar';
+import { useToolbarActions } from '../contexts/ToolbarActionsContext';
 
 export interface DrawerPage {
     drawerOpen: boolean;

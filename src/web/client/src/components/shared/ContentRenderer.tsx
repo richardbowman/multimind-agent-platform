@@ -16,6 +16,7 @@ import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { Artifact, ArtifactType, CalendarEvent } from '../../../../../tools/artifact';
+import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 
 interface ContentRendererProps {
     content: any;
@@ -136,32 +137,32 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         const zoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5));
 
         // Add PDF actions to toolbar in a useEffect to avoid render issues
-        useEffect(() => {
-            addActions([
-                {
-                    icon: <NavigateBeforeIcon />,
-                    label: 'Previous Page',
-                    onClick: () => setPageNumber(prev => Math.max(prev - 1, 1)),
-                    disabled: pageNumber === 1
-                },
-                {
-                    icon: <NavigateNextIcon />,
-                    label: 'Next Page',
-                    onClick: () => setPageNumber(prev => Math.min(prev + 1, numPages || 1)),
-                    disabled: pageNumber === numPages
-                },
-                {
-                    icon: <ZoomOutIcon />,
-                    label: 'Zoom Out',
-                    onClick: zoomOut
-                },
-                {
-                    icon: <ZoomInIcon />,
-                    label: 'Zoom In',
-                    onClick: zoomIn
-                }
-            ]);
-        }, [pageNumber, numPages, zoomIn, zoomOut, addActions]);
+        // useEffect(() => {
+        //     addActions([
+        //         {
+        //             icon: <NavigateBeforeIcon />,
+        //             label: 'Previous Page',
+        //             onClick: () => setPageNumber(prev => Math.max(prev - 1, 1)),
+        //             disabled: pageNumber === 1
+        //         },
+        //         {
+        //             icon: <NavigateNextIcon />,
+        //             label: 'Next Page',
+        //             onClick: () => setPageNumber(prev => Math.min(prev + 1, numPages || 1)),
+        //             disabled: pageNumber === numPages
+        //         },
+        //         {
+        //             icon: <ZoomOutIcon />,
+        //             label: 'Zoom Out',
+        //             onClick: zoomOut
+        //         },
+        //         {
+        //             icon: <ZoomInIcon />,
+        //             label: 'Zoom In',
+        //             onClick: zoomIn
+        //         }
+        //     ]);
+        // }, []);
 
         return (
             <Box sx={{ 

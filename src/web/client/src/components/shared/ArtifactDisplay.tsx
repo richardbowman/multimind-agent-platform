@@ -6,6 +6,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DownloadIcon from '@mui/icons-material/Download';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { ContentRenderer } from './ContentRenderer';
+import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 
 interface ArtifactDisplayProps {
     artifact: Artifact;
@@ -76,29 +77,30 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
         window.URL.revokeObjectURL(url);
     };
 
-    const baseActions = useMemo(() => [
-        {
-            icon: <EditIcon fontSize="small" />,
-            label: 'Edit Artifact',
-            onClick: () => onEdit && onEdit()
-        },
-        {
-            icon: <DeleteIcon fontSize="small" />,
-            label: 'Delete Artifact',
-            onClick: () => onDelete && onDelete()
-        },
-        {
-            icon: <DownloadIcon fontSize="small" />,
-            label: 'Export Artifact',
-            onClick: handleExport
-        }
-    ], [onEdit, onDelete]);
+    // const baseActions = useMemo(() => [
+    //     {
+    //         icon: <EditIcon fontSize="small" />,
+    //         label: 'Edit Artifact',
+    //         onClick: () => onEdit && onEdit()
+    //     },
+    //     {
+    //         icon: <DeleteIcon fontSize="small" />,
+    //         label: 'Delete Artifact',
+    //         onClick: () => onDelete && onDelete()
+    //     },
+    //     {
+    //         icon: <DownloadIcon fontSize="small" />,
+    //         label: 'Export Artifact',
+    //         onClick: handleExport
+    //     }
+    // ], [onEdit, onDelete]);
 
-    useEffect(() => {
-        if (artifact) {
-            addActions(baseActions);
-        }
-    }, [artifact.id, baseActions, addActions]);
+    // useEffect(() => {
+    //     if (artifact) {
+    //         addActions(baseActions);
+    //     }
+    // }, []);
+
     return (
         <Box component="main" sx={{ 
             flexGrow: 1, 
@@ -151,7 +153,6 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     content={artifact.content}
                     type={artifact.type}
                     metadata={artifact.metadata}
-                    onAddToolbarActions={onAddToolbarActions}
                 />
             </div>
         </Box>
