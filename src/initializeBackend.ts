@@ -18,6 +18,7 @@ import { Agent } from "./agents/agents";
 import { createChannelHandle } from "./shared/channelTypes";
 import fs from 'fs';
 import path from 'path';
+import { createHash } from 'crypto';
 import { ArtifactType } from "./tools/artifact";
 
 async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<void> {
@@ -32,19 +33,24 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
     
     // Get existing guides from artifact manager
     const existingGuides = await artifactManager.getArtifactsByType(ArtifactType.ProcedureGuide);
-    const existingGuideSources = new Set(existingGuides.map(g => g.metadata?.source));
+    const existingGuideMap = new Map(existingGuides.map(g => [g.metadata?.source, g]));
 
     for (const file of files) {
         if (path.extname(file).toLowerCase() === '.md') {
             const filePath = path.join(guidesDir, file);
-            
-            // Skip if this guide already exists
-            if (existingGuideSources.has(filePath)) {
-                Logger.debug(`Procedure guide already exists: ${file}`);
-                continue;
-            }
-
             const content = fs.readFileSync(filePath, 'utf-8');
+            const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
+            
+            // Check if guide exists and has same content
+            const existingGuide = existingGuideMap.get(filePath);
+            if (existingGuide) {
+                const existingHash = existingGuide.metadata?.contentHash;
+                if (existingHash === contentHash) {
+                    Logger.debug(`Procedure guide unchanged: ${file}`);
+                    continue;
+                }
+                Logger.info(`Updating procedure guide: ${file}`);
+            }
             const artifactId = createUUID();
 
             await artifactManager.saveArtifact({
@@ -55,7 +61,8 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
                     title: path.basename(file, '.md'),
                     description: 'Procedure guide document',
                     created: new Date().toISOString(),
-                    source: filePath
+                    source: filePath,
+                    contentHash: contentHash
                 }
             });
 
