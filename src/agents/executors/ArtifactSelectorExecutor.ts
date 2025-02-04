@@ -120,19 +120,28 @@ ${JSON.stringify(schema, null, 2)}
 
 
     private extractLinksFromArtifact(artifact: Artifact): LinkRef[] {
-        const turndownService = new TurndownService();
-        turndownService.use(gfm);
-
-        // Convert HTML to Markdown to easily extract links
-        const markdown = turndownService.turndown(artifact.content.toString());
-
-        // Extract all markdown links [text](url)
-        const linkRegex = /\[(.*?)\]\((.*?)\)/g;
-        const matches = [...markdown.matchAll(linkRegex)];
-
-        return matches.map(match => ({
-            text: match[1]?.trim() || '',
-            href: match[2]?.trim() || ''
-        })).filter(link => link.href.trim() !== '');
+        // Parse HTML content directly using marked
+        const { marked } = await import('marked');
+        const tokens = marked.lexer(artifact.content.toString());
+        
+        // Extract links from parsed tokens
+        const links: LinkRef[] = [];
+        
+        const extractLinks = (tokens: any[]) => {
+            for (const token of tokens) {
+                if (token.type === 'link') {
+                    links.push({
+                        text: token.text || '',
+                        href: token.href || ''
+                    });
+                }
+                if (token.tokens) {
+                    extractLinks(token.tokens);
+                }
+            }
+        };
+        
+        extractLinks(tokens);
+        return links.filter(link => link.href.trim() !== '');
     }
 }
