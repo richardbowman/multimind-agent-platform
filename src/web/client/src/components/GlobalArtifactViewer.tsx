@@ -9,6 +9,8 @@ import { ArtifactCard } from './ArtifactCard';
 import FolderIcon from '@mui/icons-material/Folder';
 import DescriptionIcon from '@mui/icons-material/Description';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
+import DeleteIcon from '@mui/icons-material/Delete';
+import Checkbox from '@mui/material/Checkbox';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { useToolbarActions } from '../contexts/ToolbarActionsContext';
 import { useIPCService } from '../contexts/IPCContext';
@@ -20,7 +22,7 @@ export interface DrawerPage {
 
 export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
     const { allArtifacts, fetchAllArtifacts, deleteArtifact, showFileDialog } = useDataContext();
-    const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
+    const [selectedArtifacts, setSelectedArtifacts] = useState<Artifact[]>([]);
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [editorOpen, setEditorOpen] = useState(false);
@@ -38,8 +40,14 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             icon: <DescriptionIcon />,
             label: 'Create New Artifact',
             onClick: () => setEditorOpen(true)
+        },
+        {
+            icon: <DeleteIcon />,
+            label: 'Delete Selected',
+            onClick: () => setDeleteConfirmOpen(true),
+            disabled: selectedArtifacts.length === 0
         }
-    ], [showFileDialog]);
+    ], [showFileDialog, selectedArtifacts.length]);
 
     const { actions: toolbarActions, registerActions, unregisterActions } = useToolbarActions();
 
@@ -86,9 +94,9 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     };
 
     const handleDelete = async () => {
-        if (selectedArtifact) {
-            await deleteArtifact(selectedArtifact.id);
-            setSelectedArtifact(null);
+        if (selectedArtifacts.length > 0) {
+            await Promise.all(selectedArtifacts.map(artifact => deleteArtifact(artifact.id)));
+            setSelectedArtifacts([]);
             fetchAllArtifacts();
             setDeleteConfirmOpen(false);
         }
@@ -196,16 +204,33 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                         <AccordionDetails>
                             <List>
                                 {artifacts.map(artifact => (
-                                    <ArtifactCard
-                                        key={artifact.id}
-                                        artifact={artifact}
-                                        selected={selectedArtifact?.id === artifact.id}
-                                        onClick={() => setSelectedArtifact(artifact)}
-                                        onEdit={() => {
-                                            setEditorOpen(true);
-                                            setSelectedArtifact(artifact);
-                                        }}
-                                    />
+                                    <Box key={artifact.id} sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Checkbox
+                                            checked={selectedArtifacts.some(a => a.id === artifact.id)}
+                                            onChange={(e) => {
+                                                if (e.target.checked) {
+                                                    setSelectedArtifacts(prev => [...prev, artifact]);
+                                                } else {
+                                                    setSelectedArtifacts(prev => prev.filter(a => a.id !== artifact.id));
+                                                }
+                                            }}
+                                        />
+                                        <ArtifactCard
+                                            artifact={artifact}
+                                            selected={selectedArtifacts.some(a => a.id === artifact.id)}
+                                            onClick={() => {
+                                                setSelectedArtifacts(prev => 
+                                                    prev.some(a => a.id === artifact.id)
+                                                        ? prev.filter(a => a.id !== artifact.id)
+                                                        : [...prev, artifact]
+                                                );
+                                            }}
+                                            onEdit={() => {
+                                                setEditorOpen(true);
+                                                setSelectedArtifacts([artifact]);
+                                            }}
+                                        />
+                                    </Box>
                                 ))}
                             </List>
                         </AccordionDetails>
@@ -223,16 +248,16 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 position: 'relative'
             }}>
                 <ActionToolbar actions={toolbarActions} />
-                {selectedArtifact ? (
+                {selectedArtifacts.length === 1 ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', overflow: 'hidden' }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto', pt: 1 }}>
                             <ArtifactDisplay 
-                                artifact={selectedArtifact} 
+                                artifact={selectedArtifacts[0]} 
                                 showMetadata={true}
                                 onDelete={() => setDeleteConfirmOpen(true)}
                                 onEdit={() => {
                                     setEditorOpen(true);
-                                    setSelectedArtifact(selectedArtifact);
+                                    setSelectedArtifacts([selectedArtifacts[0]]);
                                 }}
                             />
                         </Box>
@@ -263,13 +288,13 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             </Box>
 
 
-            {selectedArtifact ? (
+            {selectedArtifacts.length === 1 ? (
                 <ArtifactEditor
                     open={editorOpen}
                     onClose={() => setEditorOpen(false)}
                     onCreate={handleCreateArtifact}
                     onUpdate={handleCreateArtifact}
-                    artifact={selectedArtifact}
+                    artifact={selectedArtifacts[0]}
                 />
             ) : (
                 <ArtifactEditor
