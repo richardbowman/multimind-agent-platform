@@ -531,24 +531,27 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                                     // Combine audio chunks
                                     const audioBlob = new Blob(chunks, { type: 'audio/webm' });
 
-                                    // Convert WebM to WAV using AudioContext
+                                    // Convert WebM to WAV using AudioContext and resample to 16kHz
                                     const audioContext = new AudioContext();
                                     const arrayBuffer = await audioBlob.arrayBuffer();
                                     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
                                     
-                                    // Create a WAV file from the decoded audio
+                                    // Create a new AudioContext at 16kHz
+                                    const targetSampleRate = 16000;
+                                    const offlineContext = new OfflineAudioContext(
+                                        audioBuffer.numberOfChannels,
+                                        audioBuffer.length * (targetSampleRate / audioBuffer.sampleRate),
+                                        targetSampleRate
+                                    );
+                                    
+                                    // Create a buffer source and connect it
+                                    const source = offlineContext.createBufferSource();
+                                    source.buffer = audioBuffer;
+                                    source.connect(offlineContext.destination);
+                                    source.start();
+                                    
+                                    // Render the audio at 16kHz
                                     const wavBlob = await new Promise<Blob>(resolve => {
-                                        const offlineContext = new OfflineAudioContext(
-                                            audioBuffer.numberOfChannels,
-                                            audioBuffer.length,
-                                            audioBuffer.sampleRate
-                                        );
-                                        
-                                        const source = offlineContext.createBufferSource();
-                                        source.buffer = audioBuffer;
-                                        source.connect(offlineContext.destination);
-                                        source.start();
-                                        
                                         offlineContext.startRendering().then(renderedBuffer => {
                                             const wavBytes = audioBufferToWav(renderedBuffer);
                                             resolve(new Blob([wavBytes], { type: 'audio/wav' }));
