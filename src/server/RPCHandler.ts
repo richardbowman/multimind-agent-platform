@@ -693,9 +693,25 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             // Decode base64 to buffer
             const audioBuffer = Buffer.from(audioBase64, 'base64');
             
-            // Save audio buffer to temporary file
+            // Create proper WAV file using wav package
             const audioFilePath = path.join(tempDir, `audio_${Date.now()}.wav`);
-            await fs.writeFile(audioFilePath, audioBuffer);
+            const { Writer } = await import('wav');
+            const writer = new Writer({
+                sampleRate: 16000,
+                channels: 1,
+                bitDepth: 16
+            });
+            
+            const writeStream = fs.createWriteStream(audioFilePath);
+            writer.pipe(writeStream);
+            writer.write(audioBuffer);
+            writer.end();
+            
+            // Wait for file to finish writing
+            await new Promise((resolve, reject) => {
+                writeStream.on('finish', resolve);
+                writeStream.on('error', reject);
+            });
 
             // Transcribe audio using Whisper
             const { nodewhisper } = await import('nodejs-whisper');
