@@ -517,7 +517,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             <Box sx={{
                                 position: 'relative',
                                 overflow: 'hidden',
-                                maxHeight: expandedMessages.has(message.id) ? 'none' : '4.5em'
+                                maxHeight: expandedMessages.has(message.id) ? 'none' : '4.5em',
+                                ...(message.props?.partial && {
+                                    borderLeft: '4px solid',
+                                    borderColor: 'primary.main',
+                                    pl: 2,
+                                    mb: 1
+                                })
                             }}>
                                 <ReactMarkdown
                                     remarkPlugins={[remarkGfm]}
@@ -527,6 +533,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                             <div {...props} />
                                         ),
                                         code({node, inline, className, children, ...props}) {
+                                            if (message.props?.partial) {
+                                                return (
+                                                    <Box component="span" sx={{
+                                                        bgcolor: 'background.default',
+                                                        p: '2px 4px',
+                                                        borderRadius: 1,
+                                                        fontFamily: 'monospace'
+                                                    }}>
+                                                        {children}
+                                                    </Box>
+                                                );
+                                            }
                                             const match = /language-(\w+)(?:\s*\[hidden\])?/.exec(className || '');
                                             const content = String(children).replace(/\n$/, '');
                                             const isHidden = className?.includes('[hidden]');
@@ -610,7 +628,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                         </Button>
                                     </Box>
                                 )}
-                                {message.inProgress && <Spinner />}
+                                {(message.inProgress || message.props?.partial) && (
+                                    <Box sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center',
+                                        gap: 1,
+                                        mt: 1
+                                    }}>
+                                        <Spinner size={20} />
+                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
+                                            Streaming response...
+                                        </Typography>
+                                    </Box>
+                                )}
                                 {expandedMessages.has(message.id) && !currentThreadId && messages.some(m => m.props?.['root-id'] === message.id) && (
                                     <Box
                                         onClick={() => setCurrentThreadId(message.id)}
