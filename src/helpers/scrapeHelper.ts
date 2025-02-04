@@ -178,14 +178,20 @@ class ScrapeHelper {
                 title = await page.title();
             } else if (this.settings.scrapingProvider === 'electron') {
                 // Get a window from the pool or create new one
-                const window = this.electronWindowPool.pop() || new BrowserWindow({
-                    width: 1920,
-                    height: 1080,
-                    webPreferences: {
-                        webSecurity: false
-                    },
-                    show: this.settings.displayScrapeBrowser
-                });
+                let window: BrowserWindow | null = this.electronWindowPool.pop() || null;
+                
+                // Create new window if pool is empty or window is destroyed
+                if (!window || window.isDestroyed()) {
+                    window = new BrowserWindow({
+                        width: 1920,
+                        height: 1080,
+                        webPreferences: {
+                            webSecurity: false
+                        },
+                        show: this.settings.displayScrapeBrowser
+                    });
+                    this.electronWindows.push(window);
+                }
                 
                 this.activeWindows.add(window);
                 const webContents = window.webContents;
@@ -208,10 +214,17 @@ class ScrapeHelper {
                 htmlContent = await webContents.executeJavaScript('document.body.innerHTML');
                 title = await webContents.executeJavaScript('document.title');
 
-                // Return window to pool if it's not destroyed
-                if (!window.isDestroyed()) {
-                    this.activeWindows.delete(window);
-                    this.electronWindowPool.push(window);
+                // Clean up window
+                try {
+                    if (window && !window.isDestroyed()) {
+                        this.activeWindows.delete(window);
+                        this.electronWindowPool.push(window);
+                    }
+                } catch (error) {
+                    Logger.warn('Error returning Electron window to pool:', error);
+                    if (window && !window.isDestroyed()) {
+                        window.close();
+                    }
                 }
             } else {
                 throw new Error(`Unsupported scraping provder ${this.settings.scrapingProvider}`)
@@ -276,16 +289,22 @@ class ScrapeHelper {
                     }
                 }
             } else if (this.settings.scrapingProvider === 'electron') {
-                // Clean up any stray windows that aren't destroyed
+                // Clean up any stray windows
                 for (const window of this.electronWindows) {
                     try {
-                        if (!window.isDestroyed() && !this.activeWindows.has(window)) {
-                            window.close();
+                        if (window && !window.isDestroyed()) {
+                            if (!this.activeWindows.has(window)) {
+                                window.close();
+                            }
                         }
                     } catch (error) {
                         Logger.warn('Error closing Electron window:', error);
                     }
                 }
+                // Clear window collections
+                this.electronWindows = [];
+                this.electronWindowPool = [];
+                this.activeWindows.clear();
             }
         }
     }
