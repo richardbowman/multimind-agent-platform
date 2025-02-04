@@ -697,15 +697,26 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             // Create proper WAV file using wav package
             const audioFilePath = path.join(tempDir, `audio_${Date.now()}.wav`);
             const { Writer } = await import('wav');
+            
+            // Create a new WAV file writer with proper format
             const writer = new Writer({
                 sampleRate: 16000,
                 channels: 1,
-                bitDepth: 16
+                bitDepth: 16,
+                format: 1, // PCM format
+                byteRate: 32000, // sampleRate * channels * (bitDepth/8)
+                blockAlign: 2 // channels * (bitDepth/8)
             });
             
             const writeStream = fs.createWriteStream(audioFilePath);
             writer.pipe(writeStream);
-            writer.write(audioBuffer);
+            
+            // Write the audio data in chunks to ensure proper encoding
+            const chunkSize = 1024;
+            for (let i = 0; i < audioBuffer.length; i += chunkSize) {
+                const chunk = audioBuffer.slice(i, i + chunkSize);
+                writer.write(chunk);
+            }
             writer.end();
             
             // Wait for file to finish writing
@@ -718,10 +729,17 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             const { Reader } = await import('wav');
             const reader = new Reader();
             const readStream = fs.createReadStream(audioFilePath);
-            readStream.pipe(reader);
             
             await new Promise((resolve, reject) => {
+                readStream.pipe(reader);
+                
                 reader.on('format', (format) => {
+                    // Verify the format is valid
+                    if (!format || !format.sampleRate || !format.channels || !format.bitDepth) {
+                        reject(new Error('Invalid WAV file format'));
+                        return;
+                    }
+                    
                     const durationSeconds = (reader.readableLength * 8) / (format.sampleRate * format.channels * format.bitDepth);
                     Logger.info(`WAV file analysis:`, {
                         sampleRate: format.sampleRate,
@@ -729,11 +747,20 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                         bitsPerSample: format.bitDepth,
                         byteRate: format.byteRate,
                         durationSeconds: durationSeconds.toFixed(2),
-                        fileSizeBytes: reader.readableLength
+                        fileSizeBytes: reader.readableLength,
+                        valid: true
                     });
                     resolve(null);
                 });
-                reader.on('error', reject);
+                
+                reader.on('error', (err) => {
+                    Logger.error('WAV file read error:', err);
+                    reject(new Error('Failed to read WAV file'));
+                });
+                
+                reader.on('invalid', () => {
+                    reject(new Error('Invalid WAV file format'));
+                });
             });
 
             // Transcribe audio using Whisper
