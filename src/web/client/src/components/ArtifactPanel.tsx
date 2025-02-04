@@ -1,8 +1,8 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
-import AddIcon from '@mui/icons-material/Add';
-import RemoveIcon from '@mui/icons-material/Remove';
+import PushPinIcon from '@mui/icons-material/PushPin';
+import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { Box, Typography, List, Drawer, styled, useTheme, Divider, IconButton, Button } from '@mui/material';
@@ -112,20 +112,19 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                                 disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === 0
                             },
                             {
-                                icon: <AddIcon />,
-                                label: 'Add to Channel',
+                                icon: artifacts.find(a => a.id === selectedArtifact.id)?.metadata?.channelIds?.includes(currentChannelId) 
+                                    ? <PushPinIcon /> 
+                                    : <PushPinOutlinedIcon />,
+                                label: artifacts.find(a => a.id === selectedArtifact.id)?.metadata?.channelIds?.includes(currentChannelId) 
+                                    ? 'Unpin from Channel' 
+                                    : 'Pin to Channel',
                                 onClick: () => {
                                     if (currentChannelId && selectedArtifact) {
-                                        addArtifactToChannel(currentChannelId, selectedArtifact.id);
-                                    }
-                                }
-                            },
-                            {
-                                icon: <RemoveIcon />,
-                                label: 'Remove from Channel',
-                                onClick: () => {
-                                    if (currentChannelId && selectedArtifact) {
-                                        removeArtifactFromChannel(currentChannelId, selectedArtifact.id);
+                                        if (artifacts.find(a => a.id === selectedArtifact.id)?.metadata?.channelIds?.includes(currentChannelId)) {
+                                            removeArtifactFromChannel(currentChannelId, selectedArtifact.id);
+                                        } else {
+                                            addArtifactToChannel(currentChannelId, selectedArtifact.id);
+                                        }
                                     }
                                 }
                             },
