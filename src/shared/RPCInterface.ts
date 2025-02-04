@@ -39,7 +39,8 @@ export interface ServerMethods {
     minimizeWindow(): Promise<void>;
     maximizeWindow(): Promise<void>;
     closeWindow(): Promise<void>;
-    getWindowState(): Promise<'maximized' | 'normal'>;
+    getWindowState(): Promise<'maximized' | 'normal' | 'fullscreen'>;
+    toggleFullScreen(): Promise<void>;
     getMessages(params: { channelId: string; threadId: string | null; limit?: number }): Promise<ClientMessage[]>;
     getChannels(): Promise<ClientChannel[]>;
     getThreads(params: { channelId: string }): Promise<ClientThread[]>;
