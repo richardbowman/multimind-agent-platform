@@ -153,9 +153,16 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                 {Object.entries(allAgents).map(([agentId, agentConfig]) => (
                     <Paper key={agentId} sx={{ p: 2, bgcolor: 'background.paper', borderRadius: 2 }}>
                         <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <Typography variant="subtitle1" gutterBottom>
-                                {agentConfig.name || `Agent ${agentId}`}
-                            </Typography>
+                            <Box>
+                                <Typography variant="subtitle1" gutterBottom>
+                                    {agentConfig.name || `Agent ${agentId}`}
+                                </Typography>
+                                {agentConfig.className && (
+                                    <Typography variant="caption" color="text.secondary">
+                                        Class: {agentConfig.className}
+                                    </Typography>
+                                )}
+                            </Box>
                             <Box>
                                 {settings.agents?.[agentId] && (
                                     <Chip 
