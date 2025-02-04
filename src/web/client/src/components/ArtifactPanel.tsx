@@ -137,7 +137,15 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
             </Typography>
             <Divider sx={{ mb: 2 }} />
             <List>
-                {(artifacts || []).map((artifact: Artifact) => (
+                {(artifacts || []).sort((a, b) => {
+                    const aPinned = isPinned(a);
+                    const bPinned = isPinned(b);
+                    // Pinned items come first
+                    if (aPinned && !bPinned) return -1;
+                    if (!aPinned && bPinned) return 1;
+                    // Otherwise maintain original order
+                    return 0;
+                }).map((artifact: Artifact) => (
                     <ArtifactCard
                         key={artifact.id}
                         artifact={artifact}
