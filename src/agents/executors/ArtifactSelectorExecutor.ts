@@ -11,6 +11,10 @@ import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import TurndownService from 'turndown';
 import { gfm } from 'turndown-plugin-gfm';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
+import { StringUtils } from 'src/utils/StringUtils';
+import JSON5 from 'json5';
 
 export interface ArtifactSelectionResponse extends StepResponse {
     type: StepResponseType.WebPage;
@@ -33,7 +37,7 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
 
     async execute(params: ExecuteParams): Promise<StepResult<ArtifactSelectionResponse>> {
         // Get all available artifacts
-        const allArtifacts = params.context?.artifacts||[];//await this.artifactManager.getArtifacts();
+        const allArtifacts = params.context?.artifacts||[];
 
         if (!allArtifacts.length) {
             return {
@@ -49,54 +53,68 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
             };
         }
 
-        // Generate prompt to select relevant artifacts
+        // Generate structured prompt
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(`Your task is to select the most relevant artifacts from the available collection based on the user's request.`);
         prompt.addContext({contentType: ContentType.PURPOSE});
         prompt.addContext({contentType: ContentType.GOALS_FULL, params});
         prompt.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
-        prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts});
-        prompt.addInstruction(`Please select the most relevant artifacts for the current task and explain your reasoning.`);
+        prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: allArtifacts});
 
-        const selectionResponse = await this.modelHelpers.generate({
-            instructions: prompt.build(),
-            message: params.stepGoal,
-            model: ModelType.REASONING
-        });
+        const schema = await getGeneratedSchema(SchemaType.ArtifactSelectionResponse);
+        
+        prompt.addInstruction(`OUTPUT INSTRUCTIONS:
+1. Respond with a JSON object matching this schema:
+${JSON.stringify(schema, null, 2)}
+2. The artifactIndexes field should contain the list numbers (1-N) from the ARTIFACTS EXCERPTS above
+3. Include a clear selectionReason explaining why these artifacts were chosen`);
 
-        // Parse the response to get selected artifact IDs
-        const selectedIds = this.extractArtifactIds(selectionResponse.message);
-        const selectedArtifacts = allArtifacts.filter(artifact => selectedIds.includes(artifact.id));
+        try {
+            const unstructuredResult = await this.modelHelpers.generate({
+                message: params.message || params.stepGoal,
+                instructions: prompt,
+                threadPosts: params.context?.threadPosts,
+                model: ModelType.REASONING
+            });
 
-        // Extract links from all selected artifacts
-        const allLinks = selectedArtifacts.flatMap(artifact => 
-            this.extractLinksFromArtifact(artifact)
-        );
+            const json = StringUtils.extractAndParseJsonBlock<{artifactIndexes: number[], selectionReason: string}>(unstructuredResult.message, schema);
+            
+            // Convert indexes to artifact IDs (indexes are 1-based)
+            const selectedArtifacts = json.artifactIndexes
+                .filter(index => index > 0 && index <= allArtifacts.length)
+                .map(index => allArtifacts[index - 1]);
 
-        return {
-            finished: true,
-            type: StepResultType.WebScrapeStepResult,
-            artifactIds: selectedArtifacts.map(a => a.id),
-            response: {
-                type: StepResponseType.WebPage,
-                message: `Selected ${selectedArtifacts.length} artifacts with ${allLinks.length} links:\n\n${selectionResponse.message}`,
-                data: {
-                    selectedArtifacts,
-                    selectionReason: selectionResponse.message,
-                    links: allLinks
+            // Extract links from all selected artifacts
+            const allLinks = selectedArtifacts.flatMap(artifact => 
+                this.extractLinksFromArtifact(artifact)
+            );
+
+            return {
+                finished: true,
+                type: StepResultType.WebScrapeStepResult,
+                artifactIds: selectedArtifacts.map(a => a.id),
+                response: {
+                    type: StepResponseType.WebPage,
+                    message: `Selected ${selectedArtifacts.length} artifacts with ${allLinks.length} links:\n\n${json.selectionReason}`,
+                    data: {
+                        selectedArtifacts,
+                        selectionReason: json.selectionReason,
+                        links: allLinks
+                    }
                 }
-            }
-        };
+            };
+        } catch (error) {
+            return {
+                finished: true,
+                needsUserInput: true,
+                response: {
+                    type: StepResponseType.WebPage,
+                    message: 'Failed to select artifacts. Please try again later.'
+                }
+            };
+        }
     }
 
-    private extractArtifactIds(message: string): string[] {
-        // Simple regex to extract artifact IDs from the message
-        const idRegex = /Artifact ID:\s*([a-f0-9]{8}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{4}-[a-f0-9]{12})/gi;
-        const matches = message.match(idRegex);
-        return matches 
-            ? matches.map(m => m.replace('Artifact ID:', '').trim())
-            : [];
-    }
 
     private extractLinksFromArtifact(artifact: Artifact): string[] {
         const turndownService = new TurndownService();
