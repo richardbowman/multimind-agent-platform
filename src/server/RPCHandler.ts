@@ -701,7 +701,8 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             // Convert WebM to WAV
             const { downloadWav } = await import('webm-to-wav-converter');
             const audioFilePath = path.join(tempDir, `audio_${Date.now()}.wav`);
-            await downloadWav(audioBuffer, audioFilePath, {
+            const audioBlob = new Blob([audioBuffer], { type: 'audio/webm' });
+            await downloadWav(audioBlob, audioFilePath, {
                 sampleRate: 16000,
                 channels: 1
             });
