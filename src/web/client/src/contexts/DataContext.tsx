@@ -261,15 +261,23 @@ export const DataProvider: React.FC<{
 
   const addArtifactToChannel = useCallback(async (channelId: string, artifactId: string) => {
     await ipcService.getRPC().addArtifactToChannel(channelId, artifactId);
-    // Refresh artifacts after adding
-    await fetchArtifacts(channelId, currentThreadId);
-  }, [currentThreadId]);
+    // Update channels state
+    setChannels(prevChannels => prevChannels.map(channel => 
+      channel.id === channelId 
+        ? { ...channel, artifactIds: [...(channel.artifactIds || []), artifactId] }
+        : channel
+    ));
+  }, []);
 
   const removeArtifactFromChannel = useCallback(async (channelId: string, artifactId: string) => {
     await ipcService.getRPC().removeArtifactFromChannel(channelId, artifactId);
-    // Refresh artifacts after removing
-    await fetchArtifacts(channelId, currentThreadId);
-  }, [currentThreadId]);
+    // Update channels state
+    setChannels(prevChannels => prevChannels.map(channel => 
+      channel.id === channelId 
+        ? { ...channel, artifactIds: (channel.artifactIds || []).filter(id => id !== artifactId) }
+        : channel
+    ));
+  }, []);
 
   const fetchLogs = useCallback(async (logType: 'llm' | 'system' | 'api', params?: {
     limit?: number;
