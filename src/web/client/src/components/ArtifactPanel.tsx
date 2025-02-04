@@ -97,7 +97,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
             >
                 <DrawerHeader/>
                 {selectedArtifact && (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
+                    <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                         <ActionToolbar actions={[
                             {
                                 icon: <ChevronLeftIcon />,
