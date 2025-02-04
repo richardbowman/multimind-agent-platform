@@ -79,7 +79,7 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
         const selectedArtifacts = allArtifacts.filter(artifact => selectedIds.includes(artifact.id));
 
         // Extract links from all selected artifacts
-        const allLinks = selectedArtifacts.flatMap(artifact => 
+        const allLinks = selectedArtifacts.flatMap(artifact =>
             this.extractLinksFromArtifact(artifact)
         );
 
@@ -108,7 +108,7 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
             : [];
     }
 
-    private extractLinksFromArtifact(artifact: Artifact): string[] {
+    private extractLinksFromArtifact(artifact: Artifact): LinkRef[] {
         if (typeof artifact.content !== 'string') {
             return [];
         }
@@ -120,17 +120,20 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
         const markdown = turndownService.turndown(artifact.content);
 
         // Extract all markdown links [text](url)
-        const linkRegex = /\[.*?\]\((.*?)\)/g;
-        const matches = markdown.match(linkRegex);
+        const linkRegex = /\[(.*?)\]\((.*?)\)/g;
+        let matches;
+        const links: LinkRef[] = [];
 
-        if (!matches) {
-            return [];
+        while ((matches = linkRegex.exec(markdown)) !== null) {
+            const [_, title, url] = matches;
+            if (url.trim()) {
+                links.push({
+                    title: title.trim() || url, // Use URL as title if no title provided
+                    url: url.trim()
+                });
+            }
         }
 
-        // Extract just the URLs from the markdown links
-        return matches.map(match => {
-            const urlMatch = match.match(/\((.*?)\)/);
-            return urlMatch ? urlMatch[1] : '';
-        }).filter(url => url.trim() !== '');
+        return links;
     }
 }
