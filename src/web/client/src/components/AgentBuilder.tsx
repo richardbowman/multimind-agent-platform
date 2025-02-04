@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
     Box,
     Paper,
@@ -22,7 +22,7 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import { Settings } from '../../../../tools/settings';
+import { Settings, ExecutorType } from '../../../../tools/settings';
 
 interface AgentBuilderProps {
     settings: Settings;
@@ -40,7 +40,16 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
     };
 
     const [editingAgentId, setEditingAgentId] = useState<string | null>(null);
-    const [agentForm, setAgentForm] = useState<any>({});
+    const [agentForm, setAgentForm] = useState<any>({
+        executors: []
+    });
+
+    const executorOptions = useMemo(() => 
+        Object.values(ExecutorType).map(type => ({
+            value: type,
+            label: type
+        })), 
+    []);
 
     const handleEditClick = (agentId: string) => {
         setEditingAgentId(agentId);
@@ -53,7 +62,8 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
             finalInstructions: agentConfig?.finalInstructions || '',
             plannerType: agentConfig?.plannerType || 'nextStep',
             autoRespondChannelIds: agentConfig?.autoRespondChannelIds || '',
-            enabled: agentConfig?.enabled ?? true
+            enabled: agentConfig?.enabled ?? true,
+            executors: agentConfig?.executors || []
         });
     };
 
@@ -158,7 +168,14 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                 >
                     <DialogTitle>Edit Agent</DialogTitle>
                     <DialogContent>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, pt: 2 }}>
+                        <Box sx={{ 
+                            display: 'grid',
+                            gridTemplateColumns: '1fr 1fr',
+                            gap: 3,
+                            pt: 2
+                        }}>
+                            {/* Left Column */}
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
                             <TextField
                                 label="Agent Name"
                                 value={agentForm.name || ''}
@@ -228,6 +245,85 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 }
                                 label="Enabled"
                             />
+                            </Box>
+
+                            {/* Right Column - Executors */}
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
+                                <Typography variant="subtitle1" gutterBottom>
+                                    Executors
+                                </Typography>
+                                
+                                {agentForm.executors?.map((executor: any, index: number) => (
+                                    <Paper key={index} sx={{ p: 2, mb: 1 }}>
+                                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                                            <FormControl fullWidth size="small">
+                                                <InputLabel>Executor Type</InputLabel>
+                                                <Select
+                                                    value={executor.className || ''}
+                                                    label="Executor Type"
+                                                    onChange={(e) => {
+                                                        const newExecutors = [...agentForm.executors];
+                                                        newExecutors[index].className = e.target.value;
+                                                        handleFormChange('executors', newExecutors);
+                                                    }}
+                                                >
+                                                    {executorOptions.map(option => (
+                                                        <MenuItem key={option.value} value={option.value}>
+                                                            {option.label}
+                                                        </MenuItem>
+                                                    ))}
+                                                </Select>
+                                            </FormControl>
+
+                                            <IconButton
+                                                onClick={() => {
+                                                    const newExecutors = [...agentForm.executors];
+                                                    newExecutors.splice(index, 1);
+                                                    handleFormChange('executors', newExecutors);
+                                                }}
+                                                size="small"
+                                                color="error"
+                                            >
+                                                <DeleteIcon fontSize="small" />
+                                            </IconButton>
+                                        </Box>
+
+                                        <TextField
+                                            label="Configuration (JSON)"
+                                            value={JSON.stringify(executor.config || {}, null, 2)}
+                                            onChange={(e) => {
+                                                try {
+                                                    const newExecutors = [...agentForm.executors];
+                                                    newExecutors[index].config = JSON.parse(e.target.value);
+                                                    handleFormChange('executors', newExecutors);
+                                                } catch (error) {
+                                                    // Invalid JSON - ignore
+                                                }
+                                            }}
+                                            fullWidth
+                                            margin="normal"
+                                            multiline
+                                            rows={3}
+                                            sx={{ mt: 1 }}
+                                        />
+                                    </Paper>
+                                ))}
+
+                                <Button 
+                                    variant="outlined" 
+                                    size="small"
+                                    onClick={() => {
+                                        const newExecutors = [...(agentForm.executors || [])];
+                                        newExecutors.push({
+                                            className: '',
+                                            config: {}
+                                        });
+                                        handleFormChange('executors', newExecutors);
+                                    }}
+                                >
+                                    Add Executor
+                                </Button>
+                            </Box>
                         </Box>
                     </DialogContent>
                     <DialogActions>
@@ -258,7 +354,8 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                     finalInstructions: '',
                                     plannerType: 'nextStep',
                                     autoRespondChannelIds: '',
-                                    enabled: true
+                                    enabled: true,
+                                    executors: []
                                 }
                             }
                         });
