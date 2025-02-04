@@ -169,6 +169,13 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                         value={channelName || ''}
                         onChange={(e) => {
                             const value = e.target.value;
+                            // Allow empty value for backspace
+                            if (value === '') {
+                                setChannelName(null);
+                                setChannelNameError(true);
+                                return;
+                            }
+                            // Only add # if it's not already there
                             const newName = createChannelHandle(value.startsWith('#') ? value : `#${value}`);
                             setChannelName(newName);
                             setChannelNameError(false);
