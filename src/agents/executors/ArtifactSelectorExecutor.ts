@@ -9,12 +9,15 @@ import { ModelHelpers } from "src/llm/modelHelpers";
 import { ContentType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
+import TurndownService from 'turndown';
+import { gfm } from 'turndown-plugin-gfm';
 
 export interface ArtifactSelectionResponse extends StepResponse {
     type: StepResponseType.WebPage;
     data: {
         selectedArtifacts: Artifact[];
         selectionReason: string;
+        links: string[];
     };
 }
 
@@ -74,16 +77,22 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
         const selectedIds = this.extractArtifactIds(selectionResponse.message);
         const selectedArtifacts = allArtifacts.filter(artifact => selectedIds.includes(artifact.id));
 
+        // Extract links from all selected artifacts
+        const allLinks = selectedArtifacts.flatMap(artifact => 
+            this.extractLinksFromArtifact(artifact)
+        );
+
         return {
             finished: true,
             type: StepResultType.WebScrapeStepResult,
             artifactIds: selectedArtifacts.map(a => a.id),
             response: {
                 type: StepResponseType.WebPage,
-                message: `Selected ${selectedArtifacts.length} artifacts:\n\n${selectionResponse.message}`,
+                message: `Selected ${selectedArtifacts.length} artifacts with ${allLinks.length} links:\n\n${selectionResponse.message}`,
                 data: {
                     selectedArtifacts,
-                    selectionReason: selectionResponse.message
+                    selectionReason: selectionResponse.message,
+                    links: allLinks
                 }
             }
         };
@@ -96,5 +105,31 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
         return matches 
             ? matches.map(m => m.replace('Artifact ID:', '').trim())
             : [];
+    }
+
+    private extractLinksFromArtifact(artifact: Artifact): string[] {
+        if (typeof artifact.content !== 'string') {
+            return [];
+        }
+
+        const turndownService = new TurndownService();
+        turndownService.use(gfm);
+
+        // Convert HTML to Markdown to easily extract links
+        const markdown = turndownService.turndown(artifact.content);
+
+        // Extract all markdown links [text](url)
+        const linkRegex = /\[.*?\]\((.*?)\)/g;
+        const matches = markdown.match(linkRegex);
+
+        if (!matches) {
+            return [];
+        }
+
+        // Extract just the URLs from the markdown links
+        return matches.map(match => {
+            const urlMatch = match.match(/\((.*?)\)/);
+            return urlMatch ? urlMatch[1] : '';
+        }).filter(url => url.trim() !== '');
     }
 }
