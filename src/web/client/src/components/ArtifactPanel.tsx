@@ -43,8 +43,14 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     const prevThreadId = useRef<string | null>(null);
 
     const isPinned = useCallback((artifact?: Artifact) => {
+        if (!currentChannelId) return false;
         const targetArtifact = artifact || selectedArtifact;
-        return targetArtifact && artifacts.find(a => a.id === targetArtifact.id)?.metadata?.channelIds?.includes(currentChannelId);
+        if (!targetArtifact) return false;
+        
+        // Check both the artifact's metadata and the artifacts list
+        const artifactInList = artifacts.find(a => a.id === targetArtifact.id);
+        return artifactInList?.metadata?.channelIds?.includes(currentChannelId) || 
+               targetArtifact.metadata?.channelIds?.includes(currentChannelId);
     }, [selectedArtifact, artifacts, currentChannelId]);
 
     useEffect(() => {
@@ -103,14 +109,31 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     }, [selectedArtifact, artifacts, currentChannelId, isPinned, registerActions, unregisterActions]);
 
     // Update pin state when artifact or channel changes
+    // Initialize pinned state when artifacts or channel changes
     useEffect(() => {
-        if (selectedArtifact) {
-            updateActionState('artifact-panel-pin', { 
-                icon: isPinned(selectedArtifact) ? <PushPinIcon /> : <PushPinOutlinedIcon />,
-                label: isPinned(selectedArtifact) ? 'Unpin from Channel' : 'Pin to Channel'
+        if (artifacts && currentChannelId) {
+            // Update the pin state for all artifacts
+            artifacts.forEach(artifact => {
+                if (artifact.metadata?.channelIds?.includes(currentChannelId)) {
+                    // Ensure the artifact is marked as pinned
+                    if (!artifact.metadata.channelIds.includes(currentChannelId)) {
+                        artifact.metadata.channelIds = [
+                            ...(artifact.metadata.channelIds || []),
+                            currentChannelId
+                        ];
+                    }
+                }
             });
+
+            // Update the selected artifact's pin state if it exists
+            if (selectedArtifact) {
+                updateActionState('artifact-panel-pin', { 
+                    icon: isPinned(selectedArtifact) ? <PushPinIcon /> : <PushPinOutlinedIcon />,
+                    label: isPinned(selectedArtifact) ? 'Unpin from Channel' : 'Pin to Channel'
+                });
+            }
         }
-    }, [selectedArtifact, isPinned, updateActionState, artifacts]);
+    }, [artifacts, currentChannelId, selectedArtifact, isPinned, updateActionState]);
 
     const handleArtifactClick = (artifact: Artifact) => {
         setSelectedArtifact(artifact);
