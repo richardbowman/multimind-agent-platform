@@ -714,6 +714,23 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 writeStream.on('error', reject);
             });
 
+            // Read and analyze the WAV file
+            const { readFileSync } = await import('fs');
+            const { WaveFile } = await import('wavefile');
+            const wavData = readFileSync(audioFilePath);
+            const wav = new WaveFile(wavData);
+            
+            // Log WAV file stats
+            const durationSeconds = wav.data.samples.length / wav.fmt.sampleRate;
+            Logger.info(`WAV file analysis:`, {
+                sampleRate: wav.fmt.sampleRate,
+                channels: wav.fmt.numChannels,
+                bitsPerSample: wav.fmt.bitsPerSample,
+                byteRate: wav.fmt.byteRate,
+                durationSeconds: durationSeconds.toFixed(2),
+                fileSizeBytes: wavData.length
+            });
+
             // Transcribe audio using Whisper
             const { nodewhisper } = await import('nodejs-whisper');
             const transcription = await nodewhisper(audioFilePath, {
