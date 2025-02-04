@@ -101,10 +101,19 @@ class ScrapeHelper {
                 this.browser = null;
             }
             
-            if (this.electronWindow) {
-                this.electronWindow.close();
-                this.electronWindow = null;
+            // Clean up all Electron windows
+            for (const window of this.electronWindows) {
+                try {
+                    if (!window.isDestroyed()) {
+                        window.close();
+                    }
+                } catch (error) {
+                    Logger.warn('Error closing Electron window:', error);
+                }
             }
+            this.electronWindows = [];
+            this.electronWindowPool = [];
+            this.activeWindows.clear();
         } catch (error) {
             Logger.error('Error during cleanup:', error);
         }
@@ -199,9 +208,11 @@ class ScrapeHelper {
                 htmlContent = await webContents.executeJavaScript('document.body.innerHTML');
                 title = await webContents.executeJavaScript('document.title');
 
-                // Return window to pool
-                this.activeWindows.delete(window);
-                this.electronWindowPool.push(window);
+                // Return window to pool if it's not destroyed
+                if (!window.isDestroyed()) {
+                    this.activeWindows.delete(window);
+                    this.electronWindowPool.push(window);
+                }
             } else {
                 throw new Error(`Unsupported scraping provder ${this.settings.scrapingProvider}`)
             }
@@ -265,14 +276,14 @@ class ScrapeHelper {
                     }
                 }
             } else if (this.settings.scrapingProvider === 'electron') {
-                // Clean up any stray windows
+                // Clean up any stray windows that aren't destroyed
                 for (const window of this.electronWindows) {
-                    if (!this.activeWindows.has(window) && !window.isDestroyed()) {
-                        try {
+                    try {
+                        if (!window.isDestroyed() && !this.activeWindows.has(window)) {
                             window.close();
-                        } catch (error) {
-                            Logger.warn('Error closing Electron window:', error);
                         }
+                    } catch (error) {
+                        Logger.warn('Error closing Electron window:', error);
                     }
                 }
             }
