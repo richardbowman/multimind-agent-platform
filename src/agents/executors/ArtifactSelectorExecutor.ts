@@ -49,7 +49,8 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionS
                     message: 'No artifacts available to select from',
                     data: {
                         selectedArtifacts: [],
-                        selectionReason: 'No artifacts available'
+                        selectionReason: 'No artifacts available',
+                        extractedLinks: []
                     }
                 }
             };
@@ -82,9 +83,9 @@ ${JSON.stringify(schema, null, 2)}
             const json = StringUtils.extractAndParseJsonBlock<ArtifactSelectionResponse>(unstructuredResult.message, schema);
             
             // Convert indexes to artifact IDs (indexes are 1-based)
-            const selectedArtifacts = json.artifactIndexes
+            const selectedArtifacts = json?.artifactIndexes
                 .filter(index => index > 0 && index <= allArtifacts.length)
-                .map(index => allArtifacts[index - 1]);
+                .map(index => allArtifacts[index - 1])||[];
 
             // Extract links from all selected artifacts
             const allLinks = selectedArtifacts.flatMap(artifact => 
@@ -101,10 +102,10 @@ ${JSON.stringify(schema, null, 2)}
                     data: {
                         selectedArtifacts,
                         selectionReason: json?.selectionReason||"[Unknown reason]",
-                        links: allLinks
+                        extractedLinks: allLinks
                     }
                 }
-            };
+            };e
         } catch (error) {
             return {
                 finished: true,
@@ -131,7 +132,7 @@ ${JSON.stringify(schema, null, 2)}
 
         return matches.map(match => ({
             text: match[1]?.trim() || '',
-            url: match[2]?.trim() || ''
-        })).filter(link => link.url.trim() !== '');
+            href: match[2]?.trim() || ''
+        })).filter(link => link.href.trim() !== '');
     }
 }
