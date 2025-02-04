@@ -699,9 +699,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             await fsPromises.writeFile(webmFilePath, audioBuffer);
 
             // Convert WebM to WAV
-            const { convertWebmToWav } = await import('webm-to-wav-converter');
+            const { downloadWav } = await import('webm-to-wav-converter');
             const audioFilePath = path.join(tempDir, `audio_${Date.now()}.wav`);
-            await convertWebmToWav(webmFilePath, audioFilePath, {
+            await downloadWav(audioBuffer, audioFilePath, {
                 sampleRate: 16000,
                 channels: 1
             });
