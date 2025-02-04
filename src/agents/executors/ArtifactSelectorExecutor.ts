@@ -10,14 +10,14 @@ import { ContentType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import TurndownService from 'turndown';
-import { LinkRef } from "src/helpers/scrapeHelper";
+import { gfm } from 'turndown-plugin-gfm';
 
 export interface ArtifactSelectionResponse extends StepResponse {
     type: StepResponseType.WebPage;
     data: {
         selectedArtifacts: Artifact[];
         selectionReason: string;
-        extractedLinks: LinkRef[];
+        links: string[];
     };
 }
 
@@ -25,7 +25,6 @@ export interface ArtifactSelectionResponse extends StepResponse {
 export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionResponse> {
     private artifactManager: ArtifactManager;
     private modelHelpers: ModelHelpers;
-    turndownService: any;
 
     constructor(params: ExecutorConstructorParams) {
         this.artifactManager = params.artifactManager;
@@ -33,15 +32,8 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<ArtifactSelectionResponse>> {
-        if (!this.turndownService) {
-            this.turndownService = new TurndownService();
-            // Use dynamic import with proper ES module handling
-            const gfm = (await import('turndown-plugin-gfm')).gfm;
-            this.turndownService.use(gfm);
-        }
-
         // Get all available artifacts
-        const allArtifacts = await this.artifactManager.getArtifacts();
+        const allArtifacts = params.context?.artifacts||[];//await this.artifactManager.getArtifacts();
 
         if (!allArtifacts.length) {
             return {
@@ -63,16 +55,7 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
         prompt.addContext({contentType: ContentType.PURPOSE});
         prompt.addContext({contentType: ContentType.GOALS_FULL, params});
         prompt.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
-        
-        // Add artifact summaries to the prompt
-        const artifactSummaries = allArtifacts.map(artifact => 
-            `Artifact ID: ${artifact.id}\n` +
-            `Type: ${artifact.type}\n` +
-            `Summary: ${artifact.metadata?.title || 'No title'}\n` +
-            `Created: ${new Date(artifact.metadata?.createDate || Date.now()).toLocaleDateString()}\n`
-        ).join('\n---\n');
-
-        prompt.addInstruction(`Available Artifacts:\n${artifactSummaries}`);
+        prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts});
         prompt.addInstruction(`Please select the most relevant artifacts for the current task and explain your reasoning.`);
 
         const selectionResponse = await this.modelHelpers.generate({
@@ -86,7 +69,7 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
         const selectedArtifacts = allArtifacts.filter(artifact => selectedIds.includes(artifact.id));
 
         // Extract links from all selected artifacts
-        const allLinks = selectedArtifacts.flatMap(artifact =>
+        const allLinks = selectedArtifacts.flatMap(artifact => 
             this.extractLinksFromArtifact(artifact)
         );
 
@@ -100,7 +83,7 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
                 data: {
                     selectedArtifacts,
                     selectionReason: selectionResponse.message,
-                    extractedLinks: allLinks
+                    links: allLinks
                 }
             }
         };
@@ -115,29 +98,25 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
             : [];
     }
 
-    private async extractLinksFromArtifact(artifact: Artifact): Promise<LinkRef[]> {
-        if (typeof artifact.content !== 'string') {
+    private extractLinksFromArtifact(artifact: Artifact): string[] {
+        const turndownService = new TurndownService();
+        turndownService.use(gfm);
+
+        // Convert HTML to Markdown to easily extract links
+        const markdown = turndownService.turndown(artifact.content.toString());
+
+        // Extract all markdown links [text](url)
+        const linkRegex = /\[.*?\]\((.*?)\)/g;
+        const matches = markdown.match(linkRegex);
+
+        if (!matches) {
             return [];
         }
 
-        // Convert HTML to Markdown to easily extract links
-        const markdown = this.turndownService.turndown(artifact.content);
-
-        // Extract all markdown links [text](url)
-        const linkRegex = /\[(.*?)\]\((.*?)\)/g;
-        let matches;
-        const links: LinkRef[] = [];
-
-        while ((matches = linkRegex.exec(markdown)) !== null) {
-            const [_, title, url] = matches;
-            if (url.trim()) {
-                links.push({
-                    title: title.trim() || url, // Use URL as title if no title provided
-                    url: url.trim()
-                });
-            }
-        }
-
-        return links;
+        // Extract just the URLs from the markdown links
+        return matches.map(match => {
+            const urlMatch = match.match(/\((.*?)\)/);
+            return urlMatch ? urlMatch[1] : '';
+        }).filter(url => url.trim() !== '');
     }
 }
