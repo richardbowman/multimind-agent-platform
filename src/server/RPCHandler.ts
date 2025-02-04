@@ -23,6 +23,7 @@ import ical from "ical";
 import { GoalTemplate } from "src/schemas/goalTemplateSchema";
 import { createChatHandle, ChatHandle, isChatHandle } from "src/types/chatHandle";
 import { LLMLogEntry } from "src/llm/LLMLogger";
+import { fileFromPath } from "openai";
 
 export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods {
     constructor(private services: BackendServicesWithWindows) {
@@ -469,7 +470,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     public static async loadGoalTemplates(): Promise<GoalTemplate[]> {
-        const templatesDir = path.join(app.getAppPath(), 'dist', 'goalTemplates');
+        const templatesDir = path.join(app.getAppPath(), 'dist', 'assets', 'goal-templates');
 
         const dir = await fs.readdir(templatesDir);
         const jsonFiles = dir.filter(file => file.endsWith('.json'));
@@ -671,5 +672,51 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         }
 
         return { ...artifact, content };
+    }
+
+    async transcribeAndSendAudio({
+        audioBuffer,
+        channelId,
+        threadId,
+        language
+    }: {
+        audioBuffer: Buffer;
+        channelId: UUID;
+        threadId?: UUID;
+        language?: string;
+    }): Promise<ClientMessage> {
+        try {
+            // Transcribe audio using Whisper
+            const audioFilePath = 'TODO';
+
+            const { nodewhisper } = await import('nodejs-whisper');
+            const transcription = await nodewhisper(audioFilePath, {
+                modelName: 'base',
+                autoDownloadModelName: 'base',
+                removeWavFileAfterTranscription: true,
+                whisperOptions: {
+                    outputInJsonFull: true
+                }
+            });
+
+            // Send transcription as message
+            const message = {
+                channel_id: channelId,
+                thread_id: threadId || null,
+                message: transcription.text,
+                props: {
+                    transcription: {
+                        language: transcription.language,
+                        duration: transcription.duration,
+                        segments: transcription.segments
+                    }
+                }
+            };
+
+            return await this.sendMessage(message);
+        } catch (error) {
+            Logger.error('Failed to transcribe audio:', error);
+            throw new Error('Audio transcription failed');
+        }
     }
 }
