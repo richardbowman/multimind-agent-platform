@@ -676,7 +676,26 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     async getExecutorTypes(): Promise<string[]> {
-        return Object.values(ExecutorType);
+        try {
+            // Use require.context to dynamically load executors from the executors directory
+            const executorContext = require.context('../executors', true, /\.ts$/);
+            const executorTypes: string[] = [];
+            
+            // Iterate through all executor files
+            executorContext.keys().forEach((key) => {
+                const module = executorContext(key);
+                // Get the default export or named Executor class
+                const ExecutorClass = module.default || module.Executor;
+                if (ExecutorClass && ExecutorClass.name) {
+                    executorTypes.push(ExecutorClass.name);
+                }
+            });
+
+            return executorTypes;
+        } catch (error) {
+            Logger.error('Failed to load executor types:', error);
+            return [];
+        }
     }
 
     async transcribeAndSendAudio({
