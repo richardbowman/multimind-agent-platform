@@ -21,6 +21,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [input, setInput] = useState('');
     const [suggestions, setSuggestions] = useState<Array<{title: string, type: string, id: string}>>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
+    const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
+    const [showAssetDialog, setShowAssetDialog] = useState(false);
     const [pendingArtifacts, setPendingArtifacts] = useState<Artifact[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -230,23 +232,99 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     return (
         <div className="command-input">
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <label 
-                    htmlFor="file-upload"
-                    style={{
-                        cursor: 'pointer',
-                        padding: '8px',
-                        borderRadius: '4px',
-                        backgroundColor: '#444',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center'
-                    }}
-                >
-                    <div onClick={async () => {
-                        showFileDialog();
-                    }}>
-                    📎</div>
-                </label>
+                <div style={{ position: 'relative' }}>
+                    <button
+                        style={{
+                            cursor: 'pointer',
+                            padding: '8px',
+                            borderRadius: '4px',
+                            backgroundColor: '#444',
+                            border: 'none',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: '#fff'
+                        }}
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            setShowAttachmentMenu(prev => !prev);
+                        }}
+                    >
+                        📎
+                    </button>
+                    {showAttachmentMenu && (
+                        <div
+                            style={{
+                                position: 'absolute',
+                                bottom: '100%',
+                                left: 0,
+                                backgroundColor: '#2a2a2a',
+                                border: '1px solid #444',
+                                borderRadius: '4px',
+                                padding: '8px',
+                                zIndex: 1000,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '4px'
+                            }}
+                        >
+                            <button
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    border: 'none',
+                                    backgroundColor: '#444',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    whiteSpace: 'nowrap'
+                                }}
+                                onClick={() => {
+                                    showFileDialog();
+                                    setShowAttachmentMenu(false);
+                                }}
+                            >
+                                Attach File
+                            </button>
+                            <button
+                                style={{
+                                    padding: '8px 16px',
+                                    borderRadius: '4px',
+                                    border: 'none',
+                                    backgroundColor: '#444',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    textAlign: 'left',
+                                    whiteSpace: 'nowrap'
+                                }}
+                                onClick={() => {
+                                    setShowAssetDialog(true);
+                                    setShowAttachmentMenu(false);
+                                }}
+                            >
+                                Attach Asset
+                            </button>
+                        </div>
+                    )}
+                </div>
+                {showAssetDialog && (
+                    <AssetSelectionDialog
+                        assets={allArtifacts}
+                        onSelect={(assetIds) => {
+                            const newArtifacts = allArtifacts.filter(a => 
+                                assetIds.includes(a.id)
+                            );
+                            setPendingArtifacts(prev => [
+                                ...prev,
+                                ...newArtifacts.filter(newArtifact => 
+                                    !prev.some(existing => existing.id === newArtifact.id)
+                                )
+                            ]);
+                            setShowAssetDialog(false);
+                        }}
+                        onClose={() => setShowAssetDialog(false)}
+                    />
+                )}
                 <textarea
                 ref={inputRef}
                 value={input}
