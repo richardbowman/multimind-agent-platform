@@ -694,30 +694,24 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             // Decode base64 to buffer
             const audioBuffer = Buffer.from(audioBase64, 'base64');
             
-            // Create proper WAV file using wav package
+            // Save the WebM file first
+            const webmFilePath = path.join(tempDir, `audio_${Date.now()}.webm`);
+            await fsPromises.writeFile(webmFilePath, audioBuffer);
+
+            // Convert WebM to WAV
+            const { convertWebmToWav } = await import('webm-to-wav-converter');
             const audioFilePath = path.join(tempDir, `audio_${Date.now()}.wav`);
-            const { Writer } = await import('wav');
-            
-            // Create a new WAV file writer with proper format
-            const writer = new Writer({
+            await convertWebmToWav(webmFilePath, audioFilePath, {
                 sampleRate: 16000,
-                channels: 1,
-                bitDepth: 16,
-                format: 1, // PCM format
-                byteRate: 32000, // sampleRate * channels * (bitDepth/8)
-                blockAlign: 2 // channels * (bitDepth/8)
+                channels: 1
             });
-            
-            const writeStream = fs.createWriteStream(audioFilePath);
-            writer.pipe(writeStream);
-            
-            // Write the audio data in chunks to ensure proper encoding
-            const chunkSize = 1024;
-            for (let i = 0; i < audioBuffer.length; i += chunkSize) {
-                const chunk = audioBuffer.slice(i, i + chunkSize);
-                writer.write(chunk);
+
+            // Clean up the WebM file
+            try {
+                await fsPromises.unlink(webmFilePath);
+            } catch (cleanupError) {
+                Logger.warn('Failed to clean up temp WebM file:', cleanupError);
             }
-            writer.end();
             
             // Wait for file to finish writing
             await new Promise((resolve, reject) => {
