@@ -10,14 +10,15 @@ import { ContentType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import TurndownService from 'turndown';
-import { gfm } from 'turndown-plugin-gfm';
+import gfm from 'remark-gfm';
+import { LinkRef } from "src/helpers/scrapeHelper";
 
 export interface ArtifactSelectionResponse extends StepResponse {
     type: StepResponseType.WebPage;
     data: {
         selectedArtifacts: Artifact[];
         selectionReason: string;
-        links: string[];
+        extractedLinks: LinkRef[];
     };
 }
 
@@ -92,7 +93,7 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
                 data: {
                     selectedArtifacts,
                     selectionReason: selectionResponse.message,
-                    links: allLinks
+                    extractedLinks: allLinks
                 }
             }
         };
