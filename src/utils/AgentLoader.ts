@@ -11,13 +11,6 @@ import path from "path";
 import { UUID } from 'src/types/uuid';
 import { parseAsync } from '@babel/core';
 
-export enum ExecutorType {
-    CodeExecutor = "CodeExecutor",
-    ShellExecutor = "ShellExecutor", 
-    BrowserExecutor = "BrowserExecutor",
-    FileExecutor = "FileExecutor",
-    ChatExecutor = "ChatExecutor"
-}
 
 export interface AgentLoaderParams {
     llmService: ILLMService;

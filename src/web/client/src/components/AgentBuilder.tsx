@@ -44,12 +44,23 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
         executors: []
     });
 
-    const executorOptions = useMemo(() => 
-        Object.values(ExecutorType).map(type => ({
-            value: type,
-            label: type
-        })), 
-    []);
+    const [executorOptions, setExecutorOptions] = useState<{value: string, label: string}[]>([]);
+
+    useEffect(() => {
+        const fetchExecutorTypes = async () => {
+            try {
+                const types = await window.ipcService.getExecutorTypes();
+                setExecutorOptions(types.map(type => ({
+                    value: type,
+                    label: type
+                })));
+            } catch (error) {
+                console.error('Failed to fetch executor types:', error);
+            }
+        };
+        
+        fetchExecutorTypes();
+    }, []);
 
     const handleEditClick = (agentId: string) => {
         setEditingAgentId(agentId);
