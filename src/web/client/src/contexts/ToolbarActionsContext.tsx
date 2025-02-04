@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, ReactNode, useCallback, useRef } from 'react';
 
 interface ToolbarAction {
+    id: string;
     icon: ReactNode;
     label: string;
     onClick: () => void;
@@ -47,10 +48,10 @@ export const ToolbarActionsProvider: React.FC<{children: ReactNode}> = ({ childr
         setActions(allActions);
     }, []);
 
-    const updateActionState = useCallback((label: string, state: Partial<ToolbarAction>) => {
+    const updateActionState = useCallback((id: string, state: Partial<ToolbarAction>) => {
         setActions(prev => {
             const newActions = prev.map(action => 
-                action.label === label ? { ...action, ...state } : action
+                action.id === id ? { ...action, ...state } : action
             );
             // Only update if state actually changed
             if (prev.some((a, i) => a.disabled !== newActions[i].disabled)) {

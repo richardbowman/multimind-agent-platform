@@ -82,16 +82,19 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
 
     const baseActions = useMemo(() => [
         {
+            id: 'artifact-display-edit',
             icon: <EditIcon fontSize="small" />,
             label: 'Edit Artifact',
             onClick: () => onEdit && onEdit()
         },
         {
+            id: 'artifact-display-delete', 
             icon: <DeleteIcon fontSize="small" />,
             label: 'Delete Artifact',
             onClick: () => onDelete && onDelete()
         },
         {
+            id: 'artifact-display-export',
             icon: <DownloadIcon fontSize="small" />,
             label: 'Export Artifact',
             onClick: handleExport
@@ -107,8 +110,8 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
 
     // Update action states based on props
     useEffect(() => {
-        updateActionState('Edit Artifact', { disabled: !onEdit });
-        updateActionState('Delete Artifact', { disabled: !onDelete });
+        updateActionState('artifact-display-edit', { disabled: !onEdit });
+        updateActionState('artifact-display-delete', { disabled: !onDelete });
     }, [onEdit, onDelete, updateActionState]);
 
     return (
