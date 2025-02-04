@@ -15,18 +15,20 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StringUtils } from 'src/utils/StringUtils';
 import JSON5 from 'json5';
+import { ArtifactSelectionResponse } from "src/schemas/ArtifactSelectionResponse";
+import { LinkRef } from "src/helpers/scrapeHelper";
 
-export interface ArtifactSelectionResponse extends StepResponse {
+export interface ArtifactSelectionStepResponse extends StepResponse {
     type: StepResponseType.WebPage;
-    data: {
+    data?: {
         selectedArtifacts: Artifact[];
         selectionReason: string;
-        links: string[];
+        extractedLinks: LinkRef[];
     };
 }
 
 @StepExecutorDecorator(ExecutorType.ARTIFACT_SELECTOR, 'Selects relevant artifacts from existing collection')
-export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionResponse> {
+export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionStepResponse> {
     private artifactManager: ArtifactManager;
     private modelHelpers: ModelHelpers;
 
@@ -35,7 +37,7 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
         this.modelHelpers = params.modelHelpers;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult<ArtifactSelectionResponse>> {
+    async execute(params: ExecuteParams): Promise<StepResult<ArtifactSelectionStepResponse>> {
         // Get all available artifacts
         const allArtifacts = params.context?.artifacts||[];
 
@@ -77,7 +79,7 @@ ${JSON.stringify(schema, null, 2)}
                 model: ModelType.REASONING
             });
 
-            const json = StringUtils.extractAndParseJsonBlock<{artifactIndexes: number[], selectionReason: string}>(unstructuredResult.message, schema);
+            const json = StringUtils.extractAndParseJsonBlock<ArtifactSelectionResponse>(unstructuredResult.message, schema);
             
             // Convert indexes to artifact IDs (indexes are 1-based)
             const selectedArtifacts = json.artifactIndexes
@@ -98,7 +100,7 @@ ${JSON.stringify(schema, null, 2)}
                     message: `Selected ${selectedArtifacts.length} artifacts with ${allLinks.length} links:\n\n${json.selectionReason}`,
                     data: {
                         selectedArtifacts,
-                        selectionReason: json.selectionReason,
+                        selectionReason: json?.selectionReason||"[Unknown reason]",
                         links: allLinks
                     }
                 }
