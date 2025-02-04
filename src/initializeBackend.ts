@@ -30,15 +30,15 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
     }
 
     const files = fs.readdirSync(guidesDir);
+    const markdownFiles = files.filter(f => path.extname(f).toLowerCase() === '.md');
     
     // Get existing guides from artifact manager
     const existingGuides = await artifactManager.getArtifacts({type: ArtifactType.ProcedureGuide});
     const existingGuideMap = new Map(existingGuides.map(g => [g.metadata?.source, g]));
 
-    for(let i=0; i<files.length; i++) {
-        const file = files[i];
-        Logger.progress(`Loading procedure guides for agents (${i+1} of ${files.length})`, (i+1)/files.length);
-        if (path.extname(file).toLowerCase() === '.md') {
+    for(let i=0; i<markdownFiles.length; i++) {
+        const file = markdownFiles[i];
+        Logger.progress(`Loading procedure guides for agents (${i+1} of ${markdownFiles.length})`, (i+1)/markdownFiles.length);
             const filePath = path.join(guidesDir, file);
             const content = fs.readFileSync(filePath, 'utf-8');
             const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
