@@ -108,6 +108,7 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
         if (onAddToolbarActions && rows.length > 0) {
             onAddToolbarActions([
                 {
+                    id: 'csv-renderer-save',
                     icon: <SaveIcon fontSize="small" />,
                     label: 'Save CSV',
                     onClick: handleSave,

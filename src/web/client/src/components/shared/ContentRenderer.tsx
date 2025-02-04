@@ -144,8 +144,8 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         // Create stable action handlers that don't change on re-render
         const handlePreviousPage = useCallback(() => {
             pageNumber.current = Math.max(pageNumber.current - 1, 1);
-            updateActionState('Previous Page', { disabled: pageNumber.current === 1 });
-            updateActionState('Next Page', { disabled: pageNumber.current === numPages.current });
+            updateActionState('pdf-renderer-prev', { disabled: pageNumber.current === 1 });
+            updateActionState('pdf-renderer-next', { disabled: pageNumber.current === numPages.current });
             setRenderTrigger(prev => !prev); // Trigger re-render
         }, []);
 
@@ -160,23 +160,27 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         useEffect(() => {
             const pdfActions = [
                 {
+                    id: 'pdf-renderer-prev',
                     icon: <NavigateBeforeIcon />,
                     label: 'Previous Page',
                     onClick: handlePreviousPage,
                     disabled: pageNumber.current === 1
                 },
                 {
+                    id: 'pdf-renderer-next',
                     icon: <NavigateNextIcon />,
                     label: 'Next Page',
                     onClick: handleNextPage,
                     disabled: pageNumber.current === numPages
                 },
                 {
+                    id: 'pdf-renderer-zoom-out',
                     icon: <ZoomOutIcon />,
                     label: 'Zoom Out',
                     onClick: zoomOut
                 },
                 {
+                    id: 'pdf-renderer-zoom-in',
                     icon: <ZoomInIcon />,
                     label: 'Zoom In',
                     onClick: zoomIn
