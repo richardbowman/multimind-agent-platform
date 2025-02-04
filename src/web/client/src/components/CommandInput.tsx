@@ -4,6 +4,8 @@ import { Artifact } from '../../../../tools/artifact';
 import { Settings } from 'electron';
 import { AssetSelectionDialog } from './AssetSelectionDialog';
 import Attachment from '@mui/icons-material/Attachment';
+import Mic from '@mui/icons-material/Mic';
+import Stop from '@mui/icons-material/Stop';
 
 interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: string[]) => void;
@@ -26,6 +28,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
     const [showAssetDialog, setShowAssetDialog] = useState(false);
     const [pendingArtifacts, setPendingArtifacts] = useState<Artifact[]>([]);
+    const [isRecording, setIsRecording] = useState(false);
+    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder|null>(null);
+    const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { settings, channels, handles, pendingFiles, resetPendingFiles, allArtifacts, showFileDialog } = useDataContext();
@@ -424,6 +429,82 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 </div>
             )}
             </div>
+            <button
+                style={{
+                    cursor: 'pointer',
+                    padding: '8px 12px',
+                    borderRadius: '6px',
+                    backgroundColor: isRecording ? '#ff4444' : '#444',
+                    border: 'none',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#fff',
+                    transition: 'all 0.2s ease'
+                }}
+                onClick={async () => {
+                    if (isRecording) {
+                        // Stop recording
+                        mediaRecorder?.stop();
+                        setIsRecording(false);
+                        return;
+                    }
+
+                    try {
+                        // Start recording
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        const recorder = new MediaRecorder(stream);
+                        setMediaRecorder(recorder);
+                        setAudioChunks([]);
+
+                        recorder.ondataavailable = (e) => {
+                            setAudioChunks((prev) => [...prev, e.data]);
+                        };
+
+                        recorder.onstop = async () => {
+                            // Combine audio chunks
+                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                            
+                            // Convert to buffer
+                            const arrayBuffer = await audioBlob.arrayBuffer();
+                            const audioBuffer = Buffer.from(arrayBuffer);
+
+                            // Send for transcription
+                            if (currentChannel) {
+                                try {
+                                    const message = await window.electron.transcribeAndSendAudio({
+                                        audioBuffer,
+                                        channelId: currentChannel,
+                                        threadId: null,
+                                        language: 'en'
+                                    });
+                                    onSendMessage(message.message);
+                                } catch (error) {
+                                    console.error('Transcription failed:', error);
+                                }
+                            }
+
+                            // Clean up
+                            stream.getTracks().forEach(track => track.stop());
+                            setMediaRecorder(null);
+                            setAudioChunks([]);
+                        };
+
+                        recorder.start();
+                        setIsRecording(true);
+                    } catch (error) {
+                        console.error('Error starting recording:', error);
+                    }
+                }}
+                onMouseEnter={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff6666' : '#555';
+                }}
+                onMouseLeave={(e) => {
+                    (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff4444' : '#444';
+                }}
+            >
+                {isRecording ? <Stop /> : <Mic />}
+            </button>
             {pendingFiles.length > 0 && (
                 <div style={{ 
                     display: 'flex', 
