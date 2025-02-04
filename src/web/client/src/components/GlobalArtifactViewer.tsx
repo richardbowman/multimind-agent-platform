@@ -43,9 +43,11 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         },
         {
             icon: <DeleteIcon />,
-            label: 'Delete Selected',
+            label: `Delete Selected (${selectedArtifacts.length})`,
             onClick: () => setDeleteConfirmOpen(true),
-            disabled: selectedArtifacts.length === 0
+            disabled: selectedArtifacts.length === 0,
+            color: 'error',
+            variant: 'outlined'
         }
     ], [showFileDialog, selectedArtifacts.length]);
 
@@ -275,7 +277,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                     <DialogTitle>Delete Artifact</DialogTitle>
                     <DialogContent>
                         <DialogContentText>
-                            Are you sure you want to delete this artifact? This action cannot be undone.
+                            Are you sure you want to delete {selectedArtifacts.length} selected artifact{selectedArtifacts.length > 1 ? 's' : ''}? This action cannot be undone.
                         </DialogContentText>
                     </DialogContent>
                     <DialogActions>
