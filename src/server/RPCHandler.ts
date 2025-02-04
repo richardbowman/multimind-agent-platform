@@ -8,12 +8,10 @@ import { ClientMessage, ClientTask } from "src/shared/types";
 import { ClientChannel } from "src/shared/types";
 import { ClientThread } from "src/shared/types";
 import { CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
-import { ChannelHandle, createChannelHandle } from "src/shared/channelTypes";
+import { createChannelHandle } from "src/shared/channelTypes";
 import { getDataPath } from "../helpers/paths";
-import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
 import path from 'node:path';
-
 import { ClientProject } from "src/shared/types";
 import { Project, Task, TaskManager, TaskType } from "src/tools/taskManager";
 import { LimitedRPCHandler } from "./LimitedRPCHandler";
@@ -24,7 +22,6 @@ import ical from "ical";
 import { GoalTemplate } from "src/schemas/goalTemplateSchema";
 import { createChatHandle, ChatHandle, isChatHandle } from "src/types/chatHandle";
 import { LLMLogEntry } from "src/llm/LLMLogger";
-import { fileFromPath } from "openai";
 
 export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods {
     constructor(private services: BackendServicesWithWindows) {
@@ -678,18 +675,8 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     async getExecutorTypes(): Promise<string[]> {
         try {
             // Use require.context to dynamically load executors from the executors directory
-            const executorContext = require.context('../executors', true, /\.ts$/);
-            const executorTypes: string[] = [];
-            
-            // Iterate through all executor files
-            executorContext.keys().forEach((key) => {
-                const module = executorContext(key);
-                // Get the default export or named Executor class
-                const ExecutorClass = module.default || module.Executor;
-                if (ExecutorClass && ExecutorClass.name) {
-                    executorTypes.push(ExecutorClass.name);
-                }
-            });
+            const settings = await this.getSettings();
+            const executorTypes = [...new Set(Object.values(settings.agents).flatMap(a => a.config?.executors).map(e => e?.className))];
 
             return executorTypes;
         } catch (error) {
