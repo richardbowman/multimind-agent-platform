@@ -675,12 +675,12 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     async transcribeAndSendAudio({
-        audioBuffer,
+        audioBase64,
         channelId,
         threadId,
         language
     }: {
-        audioBuffer: Buffer;
+        audioBase64: string;
         channelId: UUID;
         threadId?: UUID;
         language?: string;
@@ -690,6 +690,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             const tempDir = path.join(getDataPath(), 'temp');
             await fs.mkdir(tempDir, { recursive: true });
 
+            // Decode base64 to buffer
+            const audioBuffer = Buffer.from(audioBase64, 'base64');
+            
             // Save audio buffer to temporary file
             const audioFilePath = path.join(tempDir, `audio_${Date.now()}.wav`);
             await fs.writeFile(audioFilePath, audioBuffer);

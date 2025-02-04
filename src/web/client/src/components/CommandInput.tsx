@@ -466,14 +466,27 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                                 // Combine audio chunks
                                 const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
 
-                                // Convert to buffer
-                                const audioBuffer = await audioBlob.arrayBuffer();
+                                // Convert to base64
+                                const reader = new FileReader();
+                                const audioBase64 = await new Promise<string>((resolve, reject) => {
+                                    reader.onload = () => {
+                                        if (typeof reader.result === 'string') {
+                                            // Remove data URL prefix
+                                            const base64 = reader.result.split(',')[1];
+                                            resolve(base64);
+                                        } else {
+                                            reject(new Error('Failed to read audio as base64'));
+                                        }
+                                    };
+                                    reader.onerror = reject;
+                                    reader.readAsDataURL(audioBlob);
+                                });
 
                                 // Send for transcription
                                 if (currentChannel) {
                                     try {
                                         const message = await ipcService.getRPC().transcribeAndSendAudio({
-                                            audioBuffer,
+                                            audioBase64,
                                             channelId: currentChannel,
                                             threadId: null,
                                             language: 'en'

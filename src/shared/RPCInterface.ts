@@ -108,7 +108,7 @@ export interface ServerMethods {
         threadId,
         language
     }: {
-        audioBuffer: Buffer;
+        audioBase64: string;
         channelId: UUID;
         threadId?: UUID;
         language?: string;
