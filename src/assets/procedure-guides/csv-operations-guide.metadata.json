@@ -1,0 +1,21 @@
+{
+    "title": "CSV Operations Guide",
+    "mimeType": "text/markdown",
+    "description": "Best practices and examples for working with CSV files in the Solver agent's NodeExecutorExecutor",
+    "created": "2025-02-04T00:00:00.000Z",
+    "source": "csv-operations-guide.md",
+    "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+    "tags": [
+        "CSV",
+        "data processing",
+        "NodeExecutorExecutor",
+        "Solver agent",
+        "data validation"
+    ],
+    "author": "Solver Agent Team",
+    "version": "1.0.0",
+    "relatedGuides": [
+        "batch-llm-processing-guide.md",
+        "data-validation-guide.md"
+    ]
+}
