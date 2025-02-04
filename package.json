@@ -180,3 +180,9 @@
   },
   "packageManager": "yarn@4.6.0"
 }
+{
+  "scripts": {
+    "download-whisper-models": "node scripts/download-whisper-models.js",
+    "build": "npm run download-whisper-models && electron-builder"
+  }
+}
