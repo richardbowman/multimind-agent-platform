@@ -12,6 +12,7 @@ import LanguageIcon from '@mui/icons-material/Language';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import PushPinIcon from '@mui/icons-material/PushPin';
 
 interface ArtifactCardProps {
     artifact: any;
@@ -19,6 +20,7 @@ interface ArtifactCardProps {
     onClick?: () => void;
     onAddClick?: (e: React.MouseEvent) => void;
     onRemoveClick?: (e: React.MouseEvent) => void;
+    isPinned?: boolean;
 }
 
 export const ArtifactCard: React.FC<ArtifactCardProps> = ({ 
@@ -68,6 +70,16 @@ export const ArtifactCard: React.FC<ArtifactCardProps> = ({
                     color: selected ? 'rgba(255, 255, 255, 0.7)' : 'text.secondary'
                 }}
             />
+            {isPinned && (
+                <PushPinIcon 
+                    fontSize="small" 
+                    sx={{ 
+                        mr: 1, 
+                        color: selected ? '#fff' : 'text.secondary',
+                        opacity: 0.7
+                    }} 
+                />
+            )}
             <ChevronRightIcon sx={{ color: selected ? '#fff' : 'text.secondary' }} />
         </ListItem>
     );

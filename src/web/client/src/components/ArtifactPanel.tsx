@@ -154,6 +154,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                                 removeArtifactFromChannel(currentChannelId, artifact.id);
                             }
                         }}
+                        isPinned={isPinned(artifact)}
                     />
                 ))}
             </List>
