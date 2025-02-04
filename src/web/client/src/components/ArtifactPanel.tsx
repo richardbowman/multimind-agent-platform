@@ -42,8 +42,9 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     const prevChannelId = useRef<string | null>(null);
     const prevThreadId = useRef<string | null>(null);
 
-    const isPinned = useCallback(() => {
-        return selectedArtifact && artifacts.find(a => a.id === selectedArtifact.id)?.metadata?.channelIds?.includes(currentChannelId);
+    const isPinned = useCallback((artifact?: Artifact) => {
+        const targetArtifact = artifact || selectedArtifact;
+        return targetArtifact && artifacts.find(a => a.id === targetArtifact.id)?.metadata?.channelIds?.includes(currentChannelId);
     }, [selectedArtifact, artifacts, currentChannelId]);
 
     useEffect(() => {
@@ -63,11 +64,12 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                 disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === 0
             },
             {
-                icon: isPinned() ? <PushPinIcon /> : <PushPinOutlinedIcon />,
-                label: isPinned() ? 'Unpin from Channel' : 'Pin to Channel',
+                id: 'artifact-panel-pin',
+                icon: isPinned(selectedArtifact) ? <PushPinIcon /> : <PushPinOutlinedIcon />,
+                label: isPinned(selectedArtifact) ? 'Unpin from Channel' : 'Pin to Channel',
                 onClick: () => {
                     if (currentChannelId && selectedArtifact) {
-                        if (isPinned()) {
+                        if (isPinned(selectedArtifact)) {
                             removeArtifactFromChannel(currentChannelId, selectedArtifact.id);
                         } else {
                             addArtifactToChannel(currentChannelId, selectedArtifact.id);
@@ -104,11 +106,11 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     useEffect(() => {
         if (selectedArtifact) {
             updateActionState('artifact-panel-pin', { 
-                icon: isPinned() ? <PushPinIcon /> : <PushPinOutlinedIcon />,
-                label: isPinned() ? 'Unpin from Channel' : 'Pin to Channel'
+                icon: isPinned(selectedArtifact) ? <PushPinIcon /> : <PushPinOutlinedIcon />,
+                label: isPinned(selectedArtifact) ? 'Unpin from Channel' : 'Pin to Channel'
             });
         }
-    }, [selectedArtifact, isPinned, updateActionState]);
+    }, [selectedArtifact, isPinned, updateActionState, artifacts]);
 
     const handleArtifactClick = (artifact: Artifact) => {
         setSelectedArtifact(artifact);
