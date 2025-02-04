@@ -714,21 +714,26 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 writeStream.on('error', reject);
             });
 
-            // Read and analyze the WAV file
-            const { readFileSync } = await import('fs');
-            const { WaveFile } = await import('wavefile');
-            const wavData = readFileSync(audioFilePath);
-            const wav = new WaveFile(wavData);
+            // Read and analyze the WAV file using the existing Writer/Reader
+            const { Reader } = await import('wav');
+            const reader = new Reader();
+            const readStream = fs.createReadStream(audioFilePath);
+            readStream.pipe(reader);
             
-            // Log WAV file stats
-            const durationSeconds = wav.data.samples.length / wav.fmt.sampleRate;
-            Logger.info(`WAV file analysis:`, {
-                sampleRate: wav.fmt.sampleRate,
-                channels: wav.fmt.numChannels,
-                bitsPerSample: wav.fmt.bitsPerSample,
-                byteRate: wav.fmt.byteRate,
-                durationSeconds: durationSeconds.toFixed(2),
-                fileSizeBytes: wavData.length
+            await new Promise((resolve, reject) => {
+                reader.on('format', (format) => {
+                    const durationSeconds = (reader.readableLength * 8) / (format.sampleRate * format.channels * format.bitDepth);
+                    Logger.info(`WAV file analysis:`, {
+                        sampleRate: format.sampleRate,
+                        channels: format.channels,
+                        bitsPerSample: format.bitDepth,
+                        byteRate: format.byteRate,
+                        durationSeconds: durationSeconds.toFixed(2),
+                        fileSizeBytes: reader.readableLength
+                    });
+                    resolve(null);
+                });
+                reader.on('error', reject);
             });
 
             // Transcribe audio using Whisper
