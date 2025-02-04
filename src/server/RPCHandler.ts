@@ -686,9 +686,15 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         language?: string;
     }): Promise<ClientMessage> {
         try {
-            // Transcribe audio using Whisper
-            const audioFilePath = 'TODO';
+            // Create temp directory if it doesn't exist
+            const tempDir = path.join(getDataPath(), 'temp');
+            await fs.mkdir(tempDir, { recursive: true });
 
+            // Save audio buffer to temporary file
+            const audioFilePath = path.join(tempDir, `audio_${Date.now()}.wav`);
+            await fs.writeFile(audioFilePath, audioBuffer);
+
+            // Transcribe audio using Whisper
             const { nodewhisper } = await import('nodejs-whisper');
             const transcription = await nodewhisper(audioFilePath, {
                 modelName: 'base',
@@ -698,6 +704,13 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                     outputInJsonFull: true
                 }
             });
+
+            // Clean up the temp file
+            try {
+                await fs.unlink(audioFilePath);
+            } catch (cleanupError) {
+                Logger.warn('Failed to clean up temp audio file:', cleanupError);
+            }
 
             // Send transcription as message
             const message = {
