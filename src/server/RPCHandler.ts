@@ -10,7 +10,8 @@ import { ClientThread } from "src/shared/types";
 import { CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
 import { ChannelHandle, createChannelHandle } from "src/shared/channelTypes";
 import { getDataPath } from "../helpers/paths";
-import fs from 'node:fs/promises';
+import fs from 'node:fs';
+import fsPromises from 'node:fs/promises';
 import path from 'node:path';
 
 import { ClientProject } from "src/shared/types";
@@ -472,11 +473,11 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     public static async loadGoalTemplates(): Promise<GoalTemplate[]> {
         const templatesDir = path.join(app.getAppPath(), 'dist', 'assets', 'goal-templates');
 
-        const dir = await fs.readdir(templatesDir);
+        const dir = await fsPromises.readdir(templatesDir);
         const jsonFiles = dir.filter(file => file.endsWith('.json'));
 
         return Promise.all(jsonFiles.map(async file => {
-            const template = JSON.parse(await fs.readFile(path.join(templatesDir, file), 'utf8'));
+            const template = JSON.parse(await fsPromises.readFile(path.join(templatesDir, file), 'utf8'));
             return {
                 ...template,
                 id: createChannelHandle(template.id),
@@ -607,7 +608,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 for (const filePath of result.filePaths) {
                     const fileName = path.basename(filePath);
                     const mimeType = mime.getType(filePath) || 'application/octet-stream';
-                    const fileData = await fs.readFile(filePath);
+                    const fileData = await fsPromises.readFile(filePath);
                     
                     // Determine if content should be treated as binary
                     const isBinary = mimeType.startsWith('image/') || 
@@ -688,7 +689,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         try {
             // Create temp directory if it doesn't exist
             const tempDir = path.join(getDataPath(), 'temp');
-            await fs.mkdir(tempDir, { recursive: true });
+            await fsPromises.mkdir(tempDir, { recursive: true });
 
             // Decode base64 to buffer
             const audioBuffer = Buffer.from(audioBase64, 'base64');
@@ -728,7 +729,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
 
             // Clean up the temp file
             try {
-                await fs.unlink(audioFilePath);
+                await fsPromises.unlink(audioFilePath);
             } catch (cleanupError) {
                 Logger.warn('Failed to clean up temp audio file:', cleanupError);
             }
