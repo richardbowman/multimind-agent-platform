@@ -10,7 +10,6 @@ import { ContentType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import TurndownService from 'turndown';
-import gfm from 'remark-gfm';
 import { LinkRef } from "src/helpers/scrapeHelper";
 
 export interface ArtifactSelectionResponse extends StepResponse {
@@ -26,6 +25,7 @@ export interface ArtifactSelectionResponse extends StepResponse {
 export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionResponse> {
     private artifactManager: ArtifactManager;
     private modelHelpers: ModelHelpers;
+    turndownService: any;
 
     constructor(params: ExecutorConstructorParams) {
         this.artifactManager = params.artifactManager;
@@ -33,6 +33,12 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<ArtifactSelectionResponse>> {
+        if (!this.turndownService) {
+            this.turndownService = new TurndownService();
+            const gfm = await import('remark-gfm');
+            this.turndownService.use(gfm);
+        }
+
         // Get all available artifacts
         const allArtifacts = await this.artifactManager.getArtifacts();
 
@@ -108,16 +114,13 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
             : [];
     }
 
-    private extractLinksFromArtifact(artifact: Artifact): LinkRef[] {
+    private async extractLinksFromArtifact(artifact: Artifact): Promise<LinkRef[]> {
         if (typeof artifact.content !== 'string') {
             return [];
         }
 
-        const turndownService = new TurndownService();
-        turndownService.use(gfm);
-
         // Convert HTML to Markdown to easily extract links
-        const markdown = turndownService.turndown(artifact.content);
+        const markdown = this.turndownService.turndown(artifact.content);
 
         // Extract all markdown links [text](url)
         const linkRegex = /\[(.*?)\]\((.*?)\)/g;
