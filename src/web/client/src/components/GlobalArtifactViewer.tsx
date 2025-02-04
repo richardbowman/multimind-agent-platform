@@ -51,7 +51,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         }
     ], [showFileDialog, selectedArtifacts.length]);
 
-    const { actions: toolbarActions, registerActions, unregisterActions } = useToolbarActions();
+    const { actions: toolbarActions, registerActions, unregisterActions, updateActionState } = useToolbarActions();
 
     useEffect(() => {
         registerActions('global-artifact-viewer', baseToolbarActions);
@@ -99,6 +99,10 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         if (selectedArtifacts.length > 0) {
             await Promise.all(selectedArtifacts.map(artifact => deleteArtifact(artifact.id)));
             setSelectedArtifacts([]);
+            updateActionState('Delete Selected', {
+                disabled: true,
+                label: 'Delete Selected (0)'
+            });
             fetchAllArtifacts();
             setDeleteConfirmOpen(false);
         }
@@ -210,22 +214,28 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                         <Checkbox
                                             checked={selectedArtifacts.some(a => a.id === artifact.id)}
                                             onChange={(e) => {
-                                                if (e.target.checked) {
-                                                    setSelectedArtifacts(prev => [...prev, artifact]);
-                                                } else {
-                                                    setSelectedArtifacts(prev => prev.filter(a => a.id !== artifact.id));
-                                                }
+                                                const newSelection = e.target.checked
+                                                    ? [...selectedArtifacts, artifact]
+                                                    : selectedArtifacts.filter(a => a.id !== artifact.id);
+                                                setSelectedArtifacts(newSelection);
+                                                updateActionState('Delete Selected', {
+                                                    disabled: newSelection.length === 0,
+                                                    label: `Delete Selected (${newSelection.length})`
+                                                });
                                             }}
                                         />
                                         <ArtifactCard
                                             artifact={artifact}
                                             selected={selectedArtifacts.some(a => a.id === artifact.id)}
                                             onClick={() => {
-                                                setSelectedArtifacts(prev => 
-                                                    prev.some(a => a.id === artifact.id)
-                                                        ? prev.filter(a => a.id !== artifact.id)
-                                                        : [...prev, artifact]
-                                                );
+                                                const newSelection = selectedArtifacts.some(a => a.id === artifact.id)
+                                                    ? selectedArtifacts.filter(a => a.id !== artifact.id)
+                                                    : [...selectedArtifacts, artifact];
+                                                setSelectedArtifacts(newSelection);
+                                                updateActionState('Delete Selected', {
+                                                    disabled: newSelection.length === 0,
+                                                    label: `Delete Selected (${newSelection.length})`
+                                                });
                                             }}
                                             onEdit={() => {
                                                 setEditorOpen(true);
