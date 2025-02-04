@@ -76,6 +76,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                 }
             },
             {
+                id: 'artifact-panel-next',
                 icon: <ChevronRightIcon />,
                 label: 'Next Artifact',
                 onClick: () => {
@@ -88,6 +89,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                 disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === artifacts.length - 1
             },
             {
+                id: 'artifact-panel-close',
                 icon: <CloseIcon />,
                 label: 'Close',
                 onClick: () => setDrawerOpen(false)
@@ -101,7 +103,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     // Update pin state when artifact or channel changes
     useEffect(() => {
         if (selectedArtifact) {
-            updateActionState('Pin to Channel', { 
+            updateActionState('artifact-panel-pin', { 
                 icon: isPinned() ? <PushPinIcon /> : <PushPinOutlinedIcon />,
                 label: isPinned() ? 'Unpin from Channel' : 'Pin to Channel'
             });
