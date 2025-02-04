@@ -83,11 +83,19 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
 
     const handleTemplateSelect = (templateId: ChannelHandle) => {
         setSelectedTemplate(templateId);
-        setSelectedAgents(templates.find(t => t.id === templateId)?.supportingAgents.map(idOrHandle => 
-            idOrHandle.startsWith('@') 
-                ? webSocket.handles.find(h => h.handle === idOrHandle.slice(1))?.id || idOrHandle
-                : idOrHandle
-        ) || []);
+        const template = templates.find(t => t.id === templateId);
+        if (template) {
+            const agentIds = template.supportingAgents.map(idOrHandle => {
+                if (idOrHandle.startsWith('@')) {
+                    const handle = webSocket.handles.find(h => h.handle === idOrHandle.slice(1));
+                    return handle?.id || idOrHandle;
+                }
+                return idOrHandle;
+            });
+            setSelectedAgents(agentIds);
+        } else {
+            setSelectedAgents([]);
+        }
         
         const template = templates.find(t => t.id === templateId);
         if (template?.defaultResponder) {
