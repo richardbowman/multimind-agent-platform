@@ -694,57 +694,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             // Decode base64 to buffer
             const audioBuffer = Buffer.from(audioBase64, 'base64');
             
-            // Save the WebM file first
-            const webmFilePath = path.join(tempDir, `audio_${Date.now()}.webm`);
-            await fsPromises.writeFile(webmFilePath, audioBuffer);
-
             // Save the WAV file
             const audioFilePath = path.join(tempDir, `audio_${Date.now()}.wav`);
             await fsPromises.writeFile(audioFilePath, audioBuffer);
-            
-            // Wait for file to finish writing
-            await new Promise((resolve, reject) => {
-                writeStream.on('finish', resolve);
-                writeStream.on('error', reject);
-            });
-
-            // Read and analyze the WAV file using the existing Writer/Reader
-            const { Reader } = await import('wav');
-            const reader = new Reader();
-            const readStream = fs.createReadStream(audioFilePath);
-            
-            await new Promise((resolve, reject) => {
-                readStream.pipe(reader);
-                
-                reader.on('format', (format) => {
-                    // Verify the format is valid
-                    if (!format || !format.sampleRate || !format.channels || !format.bitDepth) {
-                        reject(new Error('Invalid WAV file format'));
-                        return;
-                    }
-                    
-                    const durationSeconds = (reader.readableLength * 8) / (format.sampleRate * format.channels * format.bitDepth);
-                    Logger.info(`WAV file analysis:`, {
-                        sampleRate: format.sampleRate,
-                        channels: format.channels,
-                        bitsPerSample: format.bitDepth,
-                        byteRate: format.byteRate,
-                        durationSeconds: durationSeconds.toFixed(2),
-                        fileSizeBytes: reader.readableLength,
-                        valid: true
-                    });
-                    resolve(null);
-                });
-                
-                reader.on('error', (err) => {
-                    Logger.error('WAV file read error:', err);
-                    reject(new Error('Failed to read WAV file'));
-                });
-                
-                reader.on('invalid', () => {
-                    reject(new Error('Invalid WAV file format'));
-                });
-            });
 
             // Transcribe audio using Whisper
             const { nodewhisper } = await import('nodejs-whisper');
@@ -755,29 +707,16 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 withCuda: false,
                 logger: Logger,
                 whisperOptions: {
-                    outputInJsonFull: true
+                    outputInText: true,
+                    outputInSrt: false
                 }
             });
-
-            // Clean up the temp file
-            try {
-                await fsPromises.unlink(audioFilePath);
-            } catch (cleanupError) {
-                Logger.warn('Failed to clean up temp audio file:', cleanupError);
-            }
 
             // Send transcription as message
             const message = {
                 channel_id: channelId,
                 thread_id: threadId || null,
-                message: transcription.text,
-                props: {
-                    transcription: {
-                        language: transcription.language,
-                        duration: transcription.duration,
-                        segments: transcription.segments
-                    }
-                }
+                message: transcription
             };
 
             return await this.sendMessage(message);
