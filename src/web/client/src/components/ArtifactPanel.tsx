@@ -1,4 +1,5 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { useToolbarActions } from '../contexts/ToolbarActionsContext';
 import { Artifact } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
 import PushPinIcon from '@mui/icons-material/PushPin';
@@ -35,16 +36,77 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     } = useDataContext();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const [toolbarActions, setToolbarActions] = useState<Array<{
-        icon: React.ReactNode;
-        label: string;
-        onClick: () => void;
-        disabled?: boolean;
-    }>>([]);
+    const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
     const theme = useTheme();
     
     const prevChannelId = useRef<string | null>(null);
     const prevThreadId = useRef<string | null>(null);
+
+    const isPinned = useCallback(() => {
+        return selectedArtifact && artifacts.find(a => a.id === selectedArtifact.id)?.metadata?.channelIds?.includes(currentChannelId);
+    }, [selectedArtifact, artifacts, currentChannelId]);
+
+    useEffect(() => {
+        if (!selectedArtifact) return;
+
+        const navigationActions = [
+            {
+                icon: <ChevronLeftIcon />,
+                label: 'Previous Artifact',
+                onClick: () => {
+                    const currentIndex = artifacts.findIndex(a => a.id === selectedArtifact.id);
+                    const prevArtifact = artifacts[currentIndex - 1];
+                    if (prevArtifact) {
+                        setSelectedArtifact(prevArtifact);
+                    }
+                },
+                disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === 0
+            },
+            {
+                icon: isPinned() ? <PushPinIcon /> : <PushPinOutlinedIcon />,
+                label: isPinned() ? 'Unpin from Channel' : 'Pin to Channel',
+                onClick: () => {
+                    if (currentChannelId && selectedArtifact) {
+                        if (isPinned()) {
+                            removeArtifactFromChannel(currentChannelId, selectedArtifact.id);
+                        } else {
+                            addArtifactToChannel(currentChannelId, selectedArtifact.id);
+                        }
+                    }
+                }
+            },
+            {
+                icon: <ChevronRightIcon />,
+                label: 'Next Artifact',
+                onClick: () => {
+                    const currentIndex = artifacts.findIndex(a => a.id === selectedArtifact.id);
+                    const nextArtifact = artifacts[currentIndex + 1];
+                    if (nextArtifact) {
+                        setSelectedArtifact(nextArtifact);
+                    }
+                },
+                disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === artifacts.length - 1
+            },
+            {
+                icon: <CloseIcon />,
+                label: 'Close',
+                onClick: () => setDrawerOpen(false)
+            }
+        ];
+
+        registerActions('artifact-panel', navigationActions);
+        return () => unregisterActions('artifact-panel');
+    }, [selectedArtifact, artifacts, currentChannelId, isPinned, registerActions, unregisterActions]);
+
+    // Update pin state when artifact or channel changes
+    useEffect(() => {
+        if (selectedArtifact) {
+            updateActionState('Pin to Channel', { 
+                icon: isPinned() ? <PushPinIcon /> : <PushPinOutlinedIcon />,
+                label: isPinned() ? 'Unpin from Channel' : 'Pin to Channel'
+            });
+        }
+    }, [selectedArtifact, isPinned, updateActionState]);
 
     const handleArtifactClick = (artifact: Artifact) => {
         setSelectedArtifact(artifact);
@@ -98,65 +160,13 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                 <DrawerHeader/>
                 {selectedArtifact && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <ActionToolbar actions={[
-                            {
-                                icon: <ChevronLeftIcon />,
-                                label: 'Previous Artifact',
-                                onClick: () => {
-                                    const currentIndex = artifacts.findIndex(a => a.id === selectedArtifact.id);
-                                    const prevArtifact = artifacts[currentIndex - 1];
-                                    if (prevArtifact) {
-                                        setSelectedArtifact(prevArtifact);
-                                    }
-                                },
-                                disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === 0
-                            },
-                            {
-                                icon: artifacts.find(a => a.id === selectedArtifact.id)?.metadata?.channelIds?.includes(currentChannelId) 
-                                    ? <PushPinIcon /> 
-                                    : <PushPinOutlinedIcon />,
-                                label: artifacts.find(a => a.id === selectedArtifact.id)?.metadata?.channelIds?.includes(currentChannelId) 
-                                    ? 'Unpin from Channel' 
-                                    : 'Pin to Channel',
-                                onClick: () => {
-                                    if (currentChannelId && selectedArtifact) {
-                                        if (artifacts.find(a => a.id === selectedArtifact.id)?.metadata?.channelIds?.includes(currentChannelId)) {
-                                            removeArtifactFromChannel(currentChannelId, selectedArtifact.id);
-                                        } else {
-                                            addArtifactToChannel(currentChannelId, selectedArtifact.id);
-                                        }
-                                    }
-                                }
-                            },
-                            {
-                                icon: <ChevronRightIcon />,
-                                label: 'Next Artifact',
-                                onClick: () => {
-                                    const currentIndex = artifacts.findIndex(a => a.id === selectedArtifact.id);
-                                    const nextArtifact = artifacts[currentIndex + 1];
-                                    if (nextArtifact) {
-                                        setSelectedArtifact(nextArtifact);
-                                    }
-                                },
-                                disabled: artifacts.findIndex(a => a.id === selectedArtifact.id) === artifacts.length - 1
-                            },
-                            {
-                                icon: <CloseIcon />,
-                                label: 'Close',
-                                onClick: () => setDrawerOpen(false)
-                            },
-                            ...(toolbarActions || [])
-                        ]} />
+                        <ActionToolbar />
                         <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
                             <ArtifactDisplay
                                 artifact={selectedArtifact}
                                 onDelete={() => setDrawerOpen(false)}
                                 onEdit={() => {
                                     // Handle edit action
-                                }}
-                                onAddToolbarActions={(actions) => {
-                                    // Only set the additional actions, keep the core navigation actions
-                                    setToolbarActions(actions);
                                 }}
                             />
                         </Box>
