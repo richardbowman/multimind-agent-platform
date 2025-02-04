@@ -467,27 +467,10 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                                 // Combine audio chunks
                                 const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
 
-                                // Convert to base64
-                                const reader = new FileReader();
-                                const audioBase64 = await new Promise<string>((resolve, reject) => {
-                                    reader.onload = () => {
-                                        if (typeof reader.result === 'string') {
-                                            // Remove data URL prefix
-                                            const base64 = reader.result.split(',')[1];
-                                            resolve(base64);
-                                        } else {
-                                            reject(new Error('Failed to read audio as base64'));
-                                        }
-                                    };
-                                    reader.onerror = reject;
-                                    reader.readAsDataURL(audioBlob);
-                                });
-
                                 // Convert WebM to WAV using webm-to-wav
-                                const { webmToWav } = await import('webm-to-wav');
-                                const wavBlob = await webmToWav(audioBlob, {
-                                    sampleRate: 16000,
-                                    channels: 1
+                                const { getWaveBlob } = await import('webm-to-wav-converter');
+                                const wavBlob = await getWaveBlob(audioBlob, false, {
+                                    sampleRate: 16000
                                 });
 
                                 // Convert WAV to base64
