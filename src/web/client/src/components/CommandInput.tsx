@@ -6,10 +6,11 @@ import { AssetSelectionDialog } from './AssetSelectionDialog';
 import Attachment from '@mui/icons-material/Attachment';
 import Mic from '@mui/icons-material/Mic';
 import Stop from '@mui/icons-material/Stop';
+import { useIPCService } from '../contexts/IPCContext';
 
 interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: string[]) => void;
-    currentChannel: string|null;
+    currentChannel: string | null;
     settings: Settings;
 }
 
@@ -22,26 +23,27 @@ const COMMANDS = [
 ];
 
 export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSendMessage }) => {
+    const ipcService = useIPCService();
     const [input, setInput] = useState('');
-    const [suggestions, setSuggestions] = useState<Array<{title: string, type: string, id: string}>>([]);
+    const [suggestions, setSuggestions] = useState<Array<{ title: string, type: string, id: string }>>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
     const [showAssetDialog, setShowAssetDialog] = useState(false);
     const [pendingArtifacts, setPendingArtifacts] = useState<Artifact[]>([]);
     const [isRecording, setIsRecording] = useState(false);
-    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder|null>(null);
+    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const [audioChunks, setAudioChunks] = useState<Blob[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const { settings, channels, handles, pendingFiles, resetPendingFiles, allArtifacts, showFileDialog } = useDataContext();
-    
+
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {
         if (!currentChannel) return handles.map(h => h.handle);
-        
+
         const channel = channels.find(c => c.id === currentChannel);
         if (!channel || !channel.members) return handles.map(h => h.handle);
-        
+
         // Filter handles to only those in the current channel
         return handles
             .filter(h => channel.members.includes(h.id))
@@ -81,7 +83,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     // Show artifact suggestions
                     const searchTerm = value.slice(5).toLowerCase();
                     const filtered = allArtifacts
-                        .filter(artifact => 
+                        .filter(artifact =>
                             artifact.type?.toLowerCase().includes(searchTerm) ||
                             artifact.id?.toLowerCase().includes(searchTerm) ||
                             artifact.metadata?.title?.toLowerCase().includes(searchTerm)
@@ -106,7 +108,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 const lastWord = value.split(' ').pop() || '';
                 if (lastWord.startsWith('@')) {
                     const filtered = userHandles
-                        .filter(handle => 
+                        .filter(handle =>
                             handle.toLowerCase().startsWith(lastWord.toLowerCase())
                         )
                         .map(handle => ({
@@ -136,7 +138,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 setShowSuggestions(false);
                 return;
             }
-            
+
             // Handle /add command with artifact IDs
             if (input.trim().startsWith('/add')) {
                 const artifactIds = input
@@ -144,27 +146,27 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     .split(',') // Split multiple artifact IDs
                     .map(id => id.trim())
                     .filter(id => id.length > 0);
-                
+
                 // Find full artifact info including titles
-                const newArtifacts = allArtifacts.filter(a => 
+                const newArtifacts = allArtifacts.filter(a =>
                     artifactIds.includes(a.id)
                 );
-                
+
                 // Add to existing pending artifacts if any
                 const updatedArtifacts = [
                     ...pendingArtifacts,
-                    ...newArtifacts.filter(newArtifact => 
+                    ...newArtifacts.filter(newArtifact =>
                         !pendingArtifacts.some(existing => existing.id === newArtifact.id)
                     )
                 ];
-                
+
                 // Store the artifacts for the next message
                 setPendingArtifacts(updatedArtifacts);
                 setInput('');
                 setShowSuggestions(false);
                 event.preventDefault();
                 event.stopPropagation();
-    
+
                 return;
             }
 
@@ -205,15 +207,15 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
         }
     };
 
-    const handleSuggestionClick = (suggestion: {title: string, type: string, id: string}) => {
+    const handleSuggestionClick = (suggestion: { title: string, type: string, id: string }) => {
         if (suggestion.type === 'artifact') {
             // Artifact suggestion - add to current input
             const currentInput = input.startsWith('/add') ? input : '/add ';
             const existingIds = currentInput.slice(5).split(',').map(id => id.trim());
-            
+
             // Add new ID if not already present
             if (!existingIds.includes(suggestion.id)) {
-                const newInput = existingIds[0] 
+                const newInput = existingIds[0]
                     ? `${currentInput},${suggestion.id}`
                     : `${currentInput}${suggestion.id}`;
                 setInput(newInput);
@@ -265,7 +267,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                             (e.currentTarget as HTMLElement).style.backgroundColor = '#444';
                         }}
                     >
-                        <Attachment/>
+                        <Attachment />
                         {pendingArtifacts.length > 0 || pendingFiles.length > 0 && (
                             <div style={{
                                 position: 'absolute',
@@ -345,12 +347,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     <AssetSelectionDialog
                         assets={allArtifacts}
                         onSelect={(assetIds) => {
-                            const newArtifacts = allArtifacts.filter(a => 
+                            const newArtifacts = allArtifacts.filter(a =>
                                 assetIds.includes(a.id)
                             );
                             setPendingArtifacts(prev => [
                                 ...prev,
-                                ...newArtifacts.filter(newArtifact => 
+                                ...newArtifacts.filter(newArtifact =>
                                     !prev.some(existing => existing.id === newArtifact.id)
                                 )
                             ]);
@@ -360,161 +362,160 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     />
                 )}
                 <textarea
-                ref={inputRef}
-                value={input}
-                onChange={handleInputChange}
-                onKeyDown={handleKeyPress}
-                placeholder={
-                    pendingArtifacts.length > 0 || pendingFiles.length > 0
-                        ? `Attachments ready (${pendingArtifacts.length} artifacts, ${pendingFiles.length} file attachments)... Type your message`
-                        : "Type a message... (Use / for commands, @ for mentions)"
-                }
-                rows={1}
-                style={{
-                    width: '100%',
-                    minHeight: '40px',
-                    maxHeight: '200px',
-                    resize: 'none',
-                    overflowY: 'hidden',
-                    padding: '8px',
-                    borderRadius: '4px',
-                    border: '1px solid #ccc',
-                    fontFamily: 'inherit',
-                    fontSize: 'inherit',
-                    lineHeight: '1.5'
-                }}
-                onInput={(e) => {
-                    const target = e.target as HTMLTextAreaElement;
-                    target.style.height = 'auto';
-                    target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
-                }}
-            />
-            {showSuggestions && (
-                <div 
-                    ref={suggestionsRef} 
-                    className="suggestions-dropdown"
+                    ref={inputRef}
+                    value={input}
+                    onChange={handleInputChange}
+                    onKeyDown={handleKeyPress}
+                    placeholder={
+                        pendingArtifacts.length > 0 || pendingFiles.length > 0
+                            ? `Attachments ready (${pendingArtifacts.length} artifacts, ${pendingFiles.length} file attachments)... Type your message`
+                            : "Type a message... (Use / for commands, @ for mentions)"
+                    }
+                    rows={1}
                     style={{
-                        position: 'absolute',
-                        bottom: '100%',
-                        left: 0,
-                        right: 0,
-                        backgroundColor: '#2a2a2a',
-                        border: '1px solid #444',
+                        width: '100%',
+                        minHeight: '40px',
+                        maxHeight: '200px',
+                        resize: 'none',
+                        overflowY: 'hidden',
+                        padding: '8px',
                         borderRadius: '4px',
-                        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                        zIndex: 1000,
-                        maxHeight: suggestions.length > 5 ? '400px' : '200px',
-                        overflowY: 'auto',
-                        color: '#fff'
+                        border: '1px solid #ccc',
+                        fontFamily: 'inherit',
+                        fontSize: 'inherit',
+                        lineHeight: '1.5'
+                    }}
+                    onInput={(e) => {
+                        const target = e.target as HTMLTextAreaElement;
+                        target.style.height = 'auto';
+                        target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
+                    }}
+                />
+                {showSuggestions && (
+                    <div
+                        ref={suggestionsRef}
+                        className="suggestions-dropdown"
+                        style={{
+                            position: 'absolute',
+                            bottom: '100%',
+                            left: 0,
+                            right: 0,
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #444',
+                            borderRadius: '4px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            zIndex: 1000,
+                            maxHeight: suggestions.length > 5 ? '400px' : '200px',
+                            overflowY: 'auto',
+                            color: '#fff'
+                        }}
+                    >
+                        {suggestions.map((suggest, index) => (
+                            <div
+                                key={index}
+                                className="suggestion-item"
+                                onClick={() => handleSuggestionClick(suggest)}
+                                style={{
+                                    padding: '8px 12px',
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid #444',
+                                    color: '#fff',
+                                    transition: 'background-color 0.2s'
+                                }}
+                            >
+                                <div style={{ fontWeight: 'bold' }}>{suggest.title}</div>
+                                <div style={{ fontSize: '0.9em', color: '#aaa' }}>Type: {suggest.type}</div>
+                                <div style={{ fontSize: '0.8em', color: '#888' }}>ID: {suggest.id}</div>
+                            </div>
+                        ))}
+                    </div>
+                )}
+                <button
+                    style={{
+                        cursor: 'pointer',
+                        padding: '8px 12px',
+                        borderRadius: '6px',
+                        backgroundColor: isRecording ? '#ff4444' : '#444',
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        transition: 'all 0.2s ease'
+                    }}
+                    onClick={async () => {
+                        if (isRecording) {
+                            // Stop recording
+                            mediaRecorder?.stop();
+                            setIsRecording(false);
+                            return;
+                        }
+
+                        try {
+                            // Start recording
+                            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                            const recorder = new MediaRecorder(stream);
+                            setMediaRecorder(recorder);
+                            setAudioChunks([]);
+
+                            recorder.ondataavailable = (e) => {
+                                setAudioChunks((prev) => [...prev, e.data]);
+                            };
+
+                            recorder.onstop = async () => {
+                                // Combine audio chunks
+                                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+
+                                // Convert to buffer
+                                const audioBuffer = await audioBlob.arrayBuffer();
+
+                                // Send for transcription
+                                if (currentChannel) {
+                                    try {
+                                        const message = await ipcService.getRPC().transcribeAndSendAudio({
+                                            audioBuffer,
+                                            channelId: currentChannel,
+                                            threadId: null,
+                                            language: 'en'
+                                        });
+                                        onSendMessage(message.message);
+                                    } catch (error) {
+                                        console.error('Transcription failed:', error);
+                                    }
+                                }
+
+                                // Clean up
+                                stream.getTracks().forEach(track => track.stop());
+                                setMediaRecorder(null);
+                                setAudioChunks([]);
+                            };
+
+                            recorder.start();
+                            setIsRecording(true);
+                        } catch (error) {
+                            console.error('Error starting recording:', error);
+                        }
+                    }}
+                    onMouseEnter={(e) => {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff6666' : '#555';
+                    }}
+                    onMouseLeave={(e) => {
+                        (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff4444' : '#444';
                     }}
                 >
-                    {suggestions.map((suggest, index) => (
-                        <div
-                            key={index}
-                            className="suggestion-item"
-                            onClick={() => handleSuggestionClick(suggest)}
-                            style={{
-                                padding: '8px 12px',
-                                cursor: 'pointer',
-                                borderBottom: '1px solid #444',
-                                color: '#fff',
-                                transition: 'background-color 0.2s'
-                            }}
-                        >
-                            <div style={{ fontWeight: 'bold' }}>{suggest.title}</div>
-                            <div style={{ fontSize: '0.9em', color: '#aaa' }}>Type: {suggest.type}</div>
-                            <div style={{ fontSize: '0.8em', color: '#888' }}>ID: {suggest.id}</div>
-                        </div>
-                    ))}
-                </div>
-            )}
+                    {isRecording ? <Stop /> : <Mic />}
+                </button>
             </div>
-            <button
-                style={{
-                    cursor: 'pointer',
-                    padding: '8px 12px',
-                    borderRadius: '6px',
-                    backgroundColor: isRecording ? '#ff4444' : '#444',
-                    border: 'none',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: '#fff',
-                    transition: 'all 0.2s ease'
-                }}
-                onClick={async () => {
-                    if (isRecording) {
-                        // Stop recording
-                        mediaRecorder?.stop();
-                        setIsRecording(false);
-                        return;
-                    }
-
-                    try {
-                        // Start recording
-                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                        const recorder = new MediaRecorder(stream);
-                        setMediaRecorder(recorder);
-                        setAudioChunks([]);
-
-                        recorder.ondataavailable = (e) => {
-                            setAudioChunks((prev) => [...prev, e.data]);
-                        };
-
-                        recorder.onstop = async () => {
-                            // Combine audio chunks
-                            const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-                            
-                            // Convert to buffer
-                            const arrayBuffer = await audioBlob.arrayBuffer();
-                            const audioBuffer = Buffer.from(arrayBuffer);
-
-                            // Send for transcription
-                            if (currentChannel) {
-                                try {
-                                    const message = await window.electron.transcribeAndSendAudio({
-                                        audioBuffer,
-                                        channelId: currentChannel,
-                                        threadId: null,
-                                        language: 'en'
-                                    });
-                                    onSendMessage(message.message);
-                                } catch (error) {
-                                    console.error('Transcription failed:', error);
-                                }
-                            }
-
-                            // Clean up
-                            stream.getTracks().forEach(track => track.stop());
-                            setMediaRecorder(null);
-                            setAudioChunks([]);
-                        };
-
-                        recorder.start();
-                        setIsRecording(true);
-                    } catch (error) {
-                        console.error('Error starting recording:', error);
-                    }
-                }}
-                onMouseEnter={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff6666' : '#555';
-                }}
-                onMouseLeave={(e) => {
-                    (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff4444' : '#444';
-                }}
-            >
-                {isRecording ? <Stop /> : <Mic />}
-            </button>
             {pendingFiles.length > 0 && (
-                <div style={{ 
-                    display: 'flex', 
-                    gap: '8px', 
+                <div style={{
+                    display: 'flex',
+                    gap: '8px',
                     marginTop: '8px',
                     overflowX: 'auto',
                     padding: '8px 0'
                 }}>
                     {pendingFiles.map((file, index) => (
-                        <div 
+                        <div
                             key={index}
                             style={{
                                 position: 'relative',
@@ -528,11 +529,10 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                             <img
                                 src={
                                     file.metadata?.mimeType?.startsWith('image/')
-                                        ? `data:${file.metadata?.mimeType};base64,${
-                                            typeof file.content === 'string'
-                                                ? file.content.replace(/^data:image\/\w+;base64,/, '')
-                                                : btoa(String.fromCharCode(...new Uint8Array(file.content as ArrayBuffer)))
-                                          }`
+                                        ? `data:${file.metadata?.mimeType};base64,${typeof file.content === 'string'
+                                            ? file.content.replace(/^data:image\/\w+;base64,/, '')
+                                            : btoa(String.fromCharCode(...new Uint8Array(file.content as ArrayBuffer)))
+                                        }`
                                         : ''
                                 }
                                 alt={file.metadata?.title || 'Image preview'}
@@ -544,7 +544,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                             />
                             <button
                                 onClick={() => {
-                                    setPendingFiles(prev => 
+                                    setPendingFiles(prev =>
                                         prev.filter((_, i) => i !== index)
                                     );
                                 }}
