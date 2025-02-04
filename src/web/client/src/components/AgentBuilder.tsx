@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
     Box,
     Paper,
@@ -22,7 +22,8 @@ import {
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-import { Settings, ExecutorType } from '../../../../tools/settings';
+import { Settings } from '../../../../tools/settings';
+import { useIPCService } from '../contexts/IPCContext';
 
 interface AgentBuilderProps {
     settings: Settings;
@@ -39,6 +40,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
         ...(settings.agentBuilder || {})
     };
 
+    const ipcService = useIPCService();
     const [editingAgentId, setEditingAgentId] = useState<string | null>(null);
     const [agentForm, setAgentForm] = useState<any>({
         executors: []
@@ -49,7 +51,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
     useEffect(() => {
         const fetchExecutorTypes = async () => {
             try {
-                const types = await window.ipcService.getExecutorTypes();
+                const types = await ipcService.getRPC().getExecutorTypes();
                 setExecutorOptions(types.map(type => ({
                     value: type,
                     label: type
