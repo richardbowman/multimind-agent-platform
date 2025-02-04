@@ -176,6 +176,7 @@ export interface StepSequenceConfig {
     description?: string;
     steps: Array<{
         executor: string;
+        description?: string;
         config?: Record<string, any>;
     }>;
 }
