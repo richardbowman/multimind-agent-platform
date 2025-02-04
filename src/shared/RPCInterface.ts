@@ -93,6 +93,26 @@ export interface ServerMethods {
      * Open developer tools (only available in development mode)
      */
     openDevTools(): Promise<void>;
+
+    /**
+     * Transcribe audio and send as message
+     * @param audioBuffer - Buffer containing audio data
+     * @param channelId - Channel ID to send message to
+     * @param threadId - Optional thread ID to reply to
+     * @param language - Optional language code for transcription
+     * @returns Promise resolving to the created message
+     */
+    transcribeAndSendAudio({
+        audioBuffer, 
+        channelId,
+        threadId,
+        language
+    }: {
+        audioBuffer: Buffer;
+        channelId: UUID;
+        threadId?: UUID;
+        language?: string;
+    }): Promise<ClientMessage>;
 }
 
 export interface ClientMethods {
