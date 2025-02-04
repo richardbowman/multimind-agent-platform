@@ -700,7 +700,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
 
             // Transcribe audio using Whisper
             const { nodewhisper } = await import('nodejs-whisper');
-            const transcription = await nodewhisper(audioFilePath, {
+            let transcription = await nodewhisper(audioFilePath, {
                 modelName: 'tiny.en',
                 autoDownloadModelName: 'tiny.en',
                 removeWavFileAfterTranscription: true,
@@ -711,6 +711,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                     outputInSrt: false
                 }
             });
+
+            // Clean up transcription by removing timestamps
+            transcription = transcription.replace(/\[\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\] /g, '');
 
             // Send transcription as message
             const message = {
