@@ -68,6 +68,12 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
         setEditingAgentId(agentId);
         // Get the agent config from either agentBuilder or agents
         const agentConfig = settings.agentBuilder?.[agentId] || settings.agents?.[agentId];
+        // Ensure executors array exists and has proper structure
+        const executors = agentConfig?.executors?.map(executor => ({
+            className: executor.className || '',
+            config: executor.config || {}
+        })) || [];
+        
         setAgentForm({
             name: agentConfig?.name || '',
             description: agentConfig?.description || '',
@@ -76,7 +82,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
             plannerType: agentConfig?.plannerType || 'nextStep',
             autoRespondChannelIds: agentConfig?.autoRespondChannelIds || '',
             enabled: agentConfig?.enabled ?? true,
-            executors: agentConfig?.executors || []
+            executors: executors
         });
     };
 
