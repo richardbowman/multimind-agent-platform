@@ -2,6 +2,7 @@ import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent, useLayo
 import { useDataContext } from '../contexts/DataContext';
 import { Artifact } from '../../../../tools/artifact';
 import { Settings } from 'electron';
+import { AssetSelectionDialog } from './AssetSelectionDialog';
 
 interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: string[]) => void;
