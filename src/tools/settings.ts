@@ -170,6 +170,16 @@ export enum PlannerType {
     NextStep = "nextStep"
 }
 
+export interface StepSequenceConfig {
+    id: string;
+    name: string;
+    description?: string;
+    steps: Array<{
+        executor: string;
+        config?: Record<string, any>;
+    }>;
+}
+
 export interface AgentConfig {
     purpose: string;
     finalInstructions: string;
@@ -178,6 +188,7 @@ export interface AgentConfig {
         className: string;
         config?: Record<string, any>;
     }[];
+    stepSequences?: StepSequenceConfig[];
 }
 
 export class LLMModels {

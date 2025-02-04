@@ -7,9 +7,11 @@ import { MultiStepPlanner } from "./planners/multiStepPlanner";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { parseAndMergeNestedHeaders } from "@mattermost/client/lib/client4";
 import { NextActionExecutor } from "./executors/NextActionExecutor";
+import { StepSequence } from "src/llm/modelHelpers";
 
 export class ConfigurableAgent extends StepBasedAgent {
     agentName: string | undefined;
+    private stepSequences: StepSequence[] = [];
 
     constructor(params: AgentConstructorParams, planner?: Planner) {
         super(params, planner);
@@ -36,8 +38,23 @@ export class ConfigurableAgent extends StepBasedAgent {
 
         await this.initializeFromConfig(agentConfig);
 
+        // Initialize step sequences from config if present
+        if (agentConfig.stepSequences) {
+            this.stepSequences = agentConfig.stepSequences.map(seq => ({
+                ...seq,
+                steps: seq.steps.map(step => ({
+                    ...step,
+                    executor: this.stepExecutors.get(step.executor)
+                }))
+            }));
+        }
+
         if (this.planner === null) {
             this.registerStepExecutor(new NextActionExecutor(this.getExecutorParams(), this.stepExecutors));
         }
+    }
+
+    getStepSequences(): StepSequence[] {
+        return this.stepSequences;
     }
 }
