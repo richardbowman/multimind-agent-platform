@@ -454,7 +454,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         try {
                             // Start recording
                             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                            const recorder = new MediaRecorder(stream);
+                            const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                             setMediaRecorder(recorder);
                             setAudioChunks([]);
 
@@ -464,7 +464,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
 
                             recorder.onstop = async () => {
                                 // Combine audio chunks
-                                const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+                                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
 
                                 // Convert to base64
                                 const reader = new FileReader();
