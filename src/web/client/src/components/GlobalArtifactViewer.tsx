@@ -207,10 +207,22 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                             <Typography>{type} ({artifacts.length})</Typography>
                         </AccordionSummary>
                         <AccordionDetails>
-                            <List>
+                            <List sx={{ 
+                                width: '100%',
+                                padding: 0
+                            }}>
                                 {artifacts.map(artifact => (
-                                    <Box key={artifact.id} sx={{ display: 'flex', alignItems: 'center' }}>
+                                    <Box key={artifact.id} sx={{ 
+                                        display: 'flex', 
+                                        alignItems: 'center',
+                                        width: '100%',
+                                        paddingRight: '8px'
+                                    }}>
                                         <Checkbox
+                                            sx={{ 
+                                                padding: '4px',
+                                                marginRight: '-4px' // Compensate for checkbox padding
+                                            }}
                                             checked={selectedArtifacts.some(a => a.id === artifact.id)}
                                             onChange={(e) => {
                                                 const newSelection = e.target.checked
