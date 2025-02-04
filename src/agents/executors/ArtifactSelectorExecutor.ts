@@ -118,7 +118,7 @@ ${JSON.stringify(schema, null, 2)}
     }
 
 
-    private extractLinksFromArtifact(artifact: Artifact): string[] {
+    private extractLinksFromArtifact(artifact: Artifact): LinkRef[] {
         const turndownService = new TurndownService();
         turndownService.use(gfm);
 
@@ -126,17 +126,12 @@ ${JSON.stringify(schema, null, 2)}
         const markdown = turndownService.turndown(artifact.content.toString());
 
         // Extract all markdown links [text](url)
-        const linkRegex = /\[.*?\]\((.*?)\)/g;
-        const matches = markdown.match(linkRegex);
+        const linkRegex = /\[(.*?)\]\((.*?)\)/g;
+        const matches = [...markdown.matchAll(linkRegex)];
 
-        if (!matches) {
-            return [];
-        }
-
-        // Extract just the URLs from the markdown links
-        return matches.map(match => {
-            const urlMatch = match.match(/\((.*?)\)/);
-            return urlMatch ? urlMatch[1] : '';
-        }).filter(url => url.trim() !== '');
+        return matches.map(match => ({
+            text: match[1]?.trim() || '',
+            url: match[2]?.trim() || ''
+        })).filter(link => link.url.trim() !== '');
     }
 }
