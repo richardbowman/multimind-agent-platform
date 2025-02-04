@@ -188,7 +188,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                 <Dialog
                     open={editingAgentId === agentId}
                     onClose={() => setEditingAgentId(null)}
-                    maxWidth="sm"
+                    maxWidth="lg"
                     fullWidth
                 >
                     <DialogTitle>Edit Agent</DialogTitle>
