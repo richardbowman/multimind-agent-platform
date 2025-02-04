@@ -237,21 +237,60 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                     <button
                         style={{
                             cursor: 'pointer',
-                            padding: '8px',
-                            borderRadius: '4px',
+                            padding: '8px 12px',
+                            borderRadius: '6px',
                             backgroundColor: '#444',
                             border: 'none',
                             display: 'flex',
                             alignItems: 'center',
                             justifyContent: 'center',
-                            color: '#fff'
+                            color: '#fff',
+                            transition: 'all 0.2s ease',
+                            position: 'relative'
                         }}
                         onClick={(e) => {
                             e.stopPropagation();
                             setShowAttachmentMenu(prev => !prev);
                         }}
+                        onMouseEnter={(e) => {
+                            (e.currentTarget as HTMLElement).style.backgroundColor = '#555';
+                        }}
+                        onMouseLeave={(e) => {
+                            (e.currentTarget as HTMLElement).style.backgroundColor = '#444';
+                        }}
                     >
-                        📎
+                        <svg 
+                            xmlns="http://www.w3.org/2000/svg" 
+                            width="24" 
+                            height="24" 
+                            viewBox="0 0 24 24"
+                            fill="currentColor"
+                            style={{
+                                transform: 'rotate(45deg)',
+                                opacity: 0.8
+                            }}
+                        >
+                            <path d="M16.5 6v11.5c0 2.21-1.79 4-4 4s-4-1.79-4-4V5c0-1.38 1.12-2.5 2.5-2.5s2.5 1.12 2.5 2.5v10.5c0 .55-.45 1-1 1s-1-.45-1-1V6H10v9.5c0 1.38 1.12 2.5 2.5 2.5s2.5-1.12 2.5-2.5V5c0-2.21 1.79-4 4-4s4 1.79 4 4v12.5c0 3.04-2.46 5.5-5.5 5.5S13 20.54 13 17.5V6h-1.5v11.5c0 2.21 1.79 4 4 4s4-1.79 4-4V5c0-1.38-1.12-2.5-2.5-2.5S15 3.62 15 5v12.5c0 .55.45 1 1 1s1-.45 1-1V6h-1.5z"/>
+                        </svg>
+                        {pendingArtifacts.length > 0 || pendingFiles.length > 0 && (
+                            <div style={{
+                                position: 'absolute',
+                                top: '-4px',
+                                right: '-4px',
+                                backgroundColor: '#646cff',
+                                color: '#fff',
+                                borderRadius: '50%',
+                                width: '16px',
+                                height: '16px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                fontSize: '10px',
+                                fontWeight: 'bold'
+                            }}>
+                                {pendingArtifacts.length + pendingFiles.length}
+                            </div>
+                        )}
                     </button>
                     {showAttachmentMenu && (
                         <div
