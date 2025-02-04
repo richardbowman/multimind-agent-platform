@@ -60,7 +60,15 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                 : `#${initialData.name || ''}`;
             setChannelName(createChannelHandle(name));
             setDescription(initialData.description);
-            setSelectedAgents(initialData.members);
+            // Convert member IDs to handles if needed
+            const agents = initialData.members.map(idOrHandle => {
+                if (idOrHandle.startsWith('@')) {
+                    const handle = webSocket.handles.find(h => h.handle === idOrHandle.slice(1));
+                    return handle?.id || idOrHandle;
+                }
+                return idOrHandle;
+            });
+            setSelectedAgents(agents);
             setSelectedTemplate(initialData.goalTemplate);
             setDefaultResponderId(initialData.defaultResponderId);
         } else {
@@ -70,7 +78,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             setSelectedTemplate(null);
             setDefaultResponderId(null);
         }
-    }, [initialData]);
+    }, [initialData, webSocket.handles]);
 
     useEffect(() => {
         ipcService.getRPC().loadGoalTemplates().then(setTemplates);
@@ -246,11 +254,18 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                     <Autocomplete
                         multiple
                         options={webSocket.handles}
-                        value={webSocket.handles.filter(handle => selectedAgents.includes(handle.id))}
+                        value={webSocket.handles.filter(handle => 
+                            selectedAgents.includes(handle.id) || 
+                            selectedAgents.includes(`@${handle.handle}`)
+                        )}
                         onChange={(_, newValue) => {
                             setSelectedAgents(newValue.map(handle => handle.id));
                         }}
                         getOptionLabel={(option) => option.handle}
+                        isOptionEqualToValue={(option, value) => 
+                            option.id === value.id || 
+                            `@${option.handle}` === value.id
+                        }
                         renderInput={(params) => (
                             <TextField
                                 {...params}
