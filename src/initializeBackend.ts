@@ -55,7 +55,9 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
             }
             const artifactId = createUUID();
 
-            const metadata = {
+            // Try to load metadata file if it exists
+            const metadataPath = path.join(guidesDir, `${path.basename(file, '.md')}.metadata.json`);
+            let metadata: Record<string, any> = {
                 title: path.basename(file, '.md'),
                 mimeType: 'text/markdown',
                 description: 'Procedure guide document',
@@ -64,9 +66,14 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
                 contentHash: contentHash
             };
 
-            // Save metadata file
-            const metadataPath = path.join(guidesDir, `${path.basename(file, '.md')}.metadata.json`);
-            fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+            if (fs.existsSync(metadataPath)) {
+                try {
+                    const loadedMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+                    metadata = { ...metadata, ...loadedMetadata };
+                } catch (error) {
+                    Logger.warn(`Failed to load metadata from ${metadataPath}: ${error}`);
+                }
+            }
 
             await artifactManager.saveArtifact({
                 id: artifactId,
