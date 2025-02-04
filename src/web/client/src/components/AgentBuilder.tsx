@@ -18,8 +18,11 @@ import {
     Dialog,
     DialogTitle,
     DialogContent,
-    DialogActions
+    DialogActions,
+    Collapse
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import { Settings } from '../../../../tools/settings';
@@ -313,24 +316,39 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                             </IconButton>
                                         </Box>
 
-                                        <TextField
-                                            label="Configuration (JSON)"
-                                            value={JSON.stringify(executor.config || {}, null, 2)}
-                                            onChange={(e) => {
-                                                try {
+                                        <Box sx={{ mt: 1 }}>
+                                            <Button
+                                                size="small"
+                                                startIcon={executor.showConfig ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                                onClick={() => {
                                                     const newExecutors = [...agentForm.executors];
-                                                    newExecutors[index].config = JSON.parse(e.target.value);
+                                                    newExecutors[index].showConfig = !executor.showConfig;
                                                     handleFormChange('executors', newExecutors);
-                                                } catch (error) {
-                                                    // Invalid JSON - ignore
-                                                }
-                                            }}
-                                            fullWidth
-                                            margin="normal"
-                                            multiline
-                                            rows={3}
-                                            sx={{ mt: 1 }}
-                                        />
+                                                }}
+                                            >
+                                                {executor.showConfig ? 'Hide' : 'Show'} Configuration
+                                            </Button>
+                                            
+                                            <Collapse in={executor.showConfig}>
+                                                <TextField
+                                                    label="Configuration (JSON)"
+                                                    value={JSON.stringify(executor.config || {}, null, 2)}
+                                                    onChange={(e) => {
+                                                        try {
+                                                            const newExecutors = [...agentForm.executors];
+                                                            newExecutors[index].config = JSON.parse(e.target.value);
+                                                            handleFormChange('executors', newExecutors);
+                                                        } catch (error) {
+                                                            // Invalid JSON - ignore
+                                                        }
+                                                    }}
+                                                    fullWidth
+                                                    margin="normal"
+                                                    multiline
+                                                    rows={3}
+                                                />
+                                            </Collapse>
+                                        </Box>
                                     </Paper>
                                 ))}
 
