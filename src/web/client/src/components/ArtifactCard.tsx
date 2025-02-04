@@ -28,7 +28,8 @@ export const ArtifactCard: React.FC<ArtifactCardProps> = ({
     selected = false,
     onClick,
     onAddClick,
-    onRemoveClick
+    onRemoveClick,
+    isPinned
 }) => {
     return (
         <ListItem 
