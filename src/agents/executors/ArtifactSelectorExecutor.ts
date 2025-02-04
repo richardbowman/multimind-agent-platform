@@ -8,6 +8,7 @@ import { Artifact } from "src/tools/artifact";
 import { ModelHelpers } from "src/llm/modelHelpers";
 import { ContentType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
+import { ExecutorType } from "../interfaces/ExecutorType";
 
 export interface ArtifactSelectionResponse extends StepResponse {
     type: StepResponseType.WebPage;
@@ -17,7 +18,7 @@ export interface ArtifactSelectionResponse extends StepResponse {
     };
 }
 
-@StepExecutorDecorator('ARTIFACT_SELECTOR', 'Selects relevant artifacts from existing collection')
+@StepExecutorDecorator(ExecutorType.ARTIFACT_SELECTOR, 'Selects relevant artifacts from existing collection')
 export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionResponse> {
     private artifactManager: ArtifactManager;
     private modelHelpers: ModelHelpers;
