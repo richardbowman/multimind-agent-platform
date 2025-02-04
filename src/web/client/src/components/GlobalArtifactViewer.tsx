@@ -43,7 +43,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         },
         {
             icon: <DeleteIcon />,
-            label: `Delete Selected (${selectedArtifacts.length})`,
+            label: `Delete Selected`,
             onClick: () => setDeleteConfirmOpen(true),
             disabled: selectedArtifacts.length === 0,
             color: 'error',
@@ -60,7 +60,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
 
     const handleCreateArtifact = async (artifact: Artifact) => {
         // Update the selected artifact
-        setSelectedArtifact(artifact);
+        setSelectedArtifacts([artifact]);
         
         // Update the artifact in the folders list
         setArtifactFolders(prevFolders => {
@@ -100,8 +100,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             await Promise.all(selectedArtifacts.map(artifact => deleteArtifact(artifact.id)));
             setSelectedArtifacts([]);
             updateActionState('Delete Selected', {
-                disabled: true,
-                label: 'Delete Selected (0)'
+                disabled: true
             });
             fetchAllArtifacts();
             setDeleteConfirmOpen(false);
@@ -220,7 +219,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                                 setSelectedArtifacts(newSelection);
                                                 updateActionState('Delete Selected', {
                                                     disabled: newSelection.length === 0,
-                                                    label: `Delete Selected (${newSelection.length})`
+                                                    label: `Delete Selected`
                                                 });
                                             }}
                                         />
@@ -234,7 +233,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                                 setSelectedArtifacts(newSelection);
                                                 updateActionState('Delete Selected', {
                                                     disabled: newSelection.length === 0,
-                                                    label: `Delete Selected (${newSelection.length})`
+                                                    label: `Delete Selected`
                                                 });
                                             }}
                                             onEdit={() => {
