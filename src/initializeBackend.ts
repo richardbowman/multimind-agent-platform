@@ -37,7 +37,7 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
 
     for(let i=0; i<files.length; i++) {
         const file = files[i];
-        Logger.progress(`Loading procedure guides for agents (${i+1} of ${files.length}`, (i+1)/files.length);
+        Logger.progress(`Loading procedure guides for agents (${i+1} of ${files.length})`, (i+1)/files.length);
         if (path.extname(file).toLowerCase() === '.md') {
             const filePath = path.join(guidesDir, file);
             const content = fs.readFileSync(filePath, 'utf-8');
