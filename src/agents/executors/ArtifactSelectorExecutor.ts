@@ -35,7 +35,8 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionR
     async execute(params: ExecuteParams): Promise<StepResult<ArtifactSelectionResponse>> {
         if (!this.turndownService) {
             this.turndownService = new TurndownService();
-            const gfm = await import('remark-gfm');
+            // Use dynamic import with proper ES module handling
+            const gfm = (await import('turndown-plugin-gfm')).gfm;
             this.turndownService.use(gfm);
         }
 
