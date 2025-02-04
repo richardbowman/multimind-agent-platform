@@ -55,18 +55,24 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
             }
             const artifactId = createUUID();
 
+            const metadata = {
+                title: path.basename(file, '.md'),
+                mimeType: 'text/markdown',
+                description: 'Procedure guide document',
+                created: new Date().toISOString(),
+                source: filePath,
+                contentHash: contentHash
+            };
+
+            // Save metadata file
+            const metadataPath = path.join(guidesDir, `${path.basename(file, '.md')}.metadata.json`);
+            fs.writeFileSync(metadataPath, JSON.stringify(metadata, null, 2));
+
             await artifactManager.saveArtifact({
                 id: artifactId,
                 type: ArtifactType.ProcedureGuide,
                 content: content,
-                metadata: {
-                    title: path.basename(file, '.md'),
-                    mimeType: 'text/markdown',
-                    description: 'Procedure guide document',
-                    created: new Date().toISOString(),
-                    source: filePath,
-                    contentHash: contentHash
-                }
+                metadata: metadata
             });
 
             Logger.info(`Loaded procedure guide: ${file}`);
