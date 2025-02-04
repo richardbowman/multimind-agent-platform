@@ -227,6 +227,16 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                             artifact={artifact}
                                             selected={selectedArtifacts.some(a => a.id === artifact.id)}
                                             onClick={() => {
+                                                // Single select when clicking the card
+                                                setSelectedArtifacts([artifact]);
+                                                updateActionState('Delete Selected', {
+                                                    disabled: false,
+                                                    label: `Delete Selected`
+                                                });
+                                            }}
+                                            onCheckboxClick={(e) => {
+                                                e.stopPropagation();
+                                                // Multi-select when clicking checkbox
                                                 const newSelection = selectedArtifacts.some(a => a.id === artifact.id)
                                                     ? selectedArtifacts.filter(a => a.id !== artifact.id)
                                                     : [...selectedArtifacts, artifact];
