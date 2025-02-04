@@ -36,7 +36,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     } = useDataContext();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const [drawerOpen, setDrawerOpen] = useState(false);
-    const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
+    const { actions, registerActions, unregisterActions, updateActionState } = useToolbarActions();
     const theme = useTheme();
     
     const prevChannelId = useRef<string | null>(null);
@@ -160,7 +160,7 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
                 <DrawerHeader/>
                 {selectedArtifact && (
                     <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <ActionToolbar />
+                        <ActionToolbar actions={actions}/>
                         <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
                             <ArtifactDisplay
                                 artifact={selectedArtifact}
