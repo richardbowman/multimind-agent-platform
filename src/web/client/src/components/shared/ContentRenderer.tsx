@@ -263,7 +263,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         return <pre>Binary content</pre>;
     }
     
-    if (type === 'markdown' || metadata?.mimeType === 'text/markdown') {
+    if (type === 'markdown' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown') {
         return <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>;
     } else {
         return <pre>{content}</pre>;

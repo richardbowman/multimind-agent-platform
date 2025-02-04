@@ -58,6 +58,13 @@ export class LogManager extends EventEmitter {
         this.log('warn', warnMsg);
     }
 
+    public debug(message: string, error?: any): void {
+        const warnMsg = error ?.message
+            ? `${message}\nError: ${error.message}\nStack: ${error.stack}`
+            : message;
+        this.log('debug', warnMsg);
+    }
+
     public verbose(message: string, error?: any): void {
         const verboseMsg = error?.message 
             ? `${message}\nError: ${error.message}\nStack: ${error.stack}`

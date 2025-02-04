@@ -93,6 +93,131 @@
       ],
       "type": "object"
     },
+    "BarChartData": {
+      "additionalProperties": false,
+      "description": "Represents data for a bar chart visualization",
+      "properties": {
+        "metadata": {
+          "additionalProperties": false,
+          "description": "Optional metadata",
+          "properties": {
+            "generatedAt": {
+              "description": "Timestamp of when data was generated",
+              "format": "date-time",
+              "type": "string"
+            },
+            "source": {
+              "description": "Source of the data",
+              "type": "string"
+            }
+          },
+          "type": "object"
+        },
+        "series": {
+          "description": "Array of data series",
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "color": {
+                "description": "Color for this series (optional)",
+                "type": "string"
+              },
+              "data": {
+                "description": "Array of values for each category",
+                "items": {
+                  "type": "number"
+                },
+                "type": "array"
+              },
+              "name": {
+                "description": "Name of the data series",
+                "type": "string"
+              }
+            },
+            "required": [
+              "name",
+              "data"
+            ],
+            "type": "object"
+          },
+          "type": "array"
+        },
+        "style": {
+          "additionalProperties": false,
+          "description": "Optional styling configuration",
+          "properties": {
+            "backgroundColor": {
+              "description": "Background color",
+              "type": "string"
+            },
+            "height": {
+              "description": "Chart height in pixels",
+              "type": "number"
+            },
+            "width": {
+              "description": "Chart width in pixels",
+              "type": "number"
+            }
+          },
+          "type": "object"
+        },
+        "title": {
+          "description": "Title of the chart",
+          "type": "string"
+        },
+        "xAxis": {
+          "additionalProperties": false,
+          "description": "X-axis configuration",
+          "properties": {
+            "categories": {
+              "description": "Categories/labels for each bar",
+              "items": {
+                "type": "string"
+              },
+              "type": "array"
+            },
+            "label": {
+              "description": "Label for the x-axis",
+              "type": "string"
+            }
+          },
+          "required": [
+            "label",
+            "categories"
+          ],
+          "type": "object"
+        },
+        "yAxis": {
+          "additionalProperties": false,
+          "description": "Y-axis configuration",
+          "properties": {
+            "label": {
+              "description": "Label for the y-axis",
+              "type": "string"
+            },
+            "max": {
+              "description": "Maximum value for y-axis (optional)",
+              "type": "number"
+            },
+            "min": {
+              "description": "Minimum value for y-axis (optional)",
+              "type": "number"
+            }
+          },
+          "required": [
+            "label"
+          ],
+          "type": "object"
+        }
+      },
+      "required": [
+        "title",
+        "xAxis",
+        "yAxis",
+        "series"
+      ],
+      "type": "object"
+    },
     "BrainstormIdea": {
       "additionalProperties": false,
       "properties": {
@@ -1706,7 +1831,8 @@
         "GoalAndPlanResponse",
         "PlanStepsResponse",
         "IntentionsResponse",
-        "TaskCreationResponse"
+        "TaskCreationResponse",
+        "BarChartData"
       ],
       "type": "string"
     },

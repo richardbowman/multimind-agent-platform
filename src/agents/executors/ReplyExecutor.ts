@@ -61,7 +61,7 @@ export class ReplyExecutor implements StepExecutor {
         params.context?.artifacts && promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context.artifacts});
         
         // Add previous results if available
-        params.previousResult && promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult});
+        params.previousResponses && promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses});
 
         const prompt = promptBuilder.build();
 

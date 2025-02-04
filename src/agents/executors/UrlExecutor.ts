@@ -72,11 +72,11 @@ export class UrlExecutor implements StepExecutor {
     private async extractUrls(params: ExecuteParams): Promise<string[]> {
         try {
             // Get available links from previous results
-            const availableLinks = (params.previousResult || [])
+            const availableLinks = (params.previousResponses || [])
                 .flatMap(r => r.data?.availableLinks || [])
                 .filter(Boolean);
 
-            const previousMessages = (params.previousResult || [])
+            const previousMessages = (params.previousResponses || [])
                 .map(r => r.message)
                 .filter(Boolean);
 

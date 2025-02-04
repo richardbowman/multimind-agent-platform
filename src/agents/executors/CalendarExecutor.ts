@@ -43,7 +43,7 @@ export class CalendarExecutor implements StepExecutor {
 
       prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts||[]});
 
-      prompt.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult||[]});
+      prompt.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses||[]});
 
       const instructions = new StructuredOutputPrompt(schema, prompt.build());
 

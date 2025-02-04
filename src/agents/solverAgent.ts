@@ -68,12 +68,31 @@ export class SolverAgent extends StepBasedAgent {
                 description: "Write and execute JavaScript code to analyze or prototype solution"
             },
             {
-                type: ExecutorType.THINKING,
-                description: "Analyze code results and develop follow-up approach"
+                type: ExecutorType.VALIDATION,
+                description: "Verify code correctness and results"
+            },
+            {
+                type: ExecutorType.FINAL_RESPONSE,
+                description: "Provide final code solution and explanation"
+            }
+        ];
+
+        const csvFocusedSequence = [
+            { 
+                type: ExecutorType.GOAL_CONFIRMATION,
+                description: "Confirm understanding of the spreadsheet problem"
+            },
+            {
+                type: ExecutorType.CHECK_KNOWLEDGE,
+                description: "Check existing knowledgebase for procedure guides"
             },
             {
                 type: ExecutorType.NODE_EXECUTION,
-                description: "Write and execute code based on the results of the first code execution"
+                description: "Learn CSV file structure by printing column headers and first couple of rows to learn structure (VERY IMPORTANT STEP)"
+            },
+            {
+                type: ExecutorType.NODE_EXECUTION,
+                description: "Write JavaScript to solve the user goal using the insight from the initial headers and sample rows coding step"
             },
             {
                 type: ExecutorType.VALIDATION,
@@ -109,6 +128,12 @@ export class SolverAgent extends StepBasedAgent {
             'standard-problem-solving',
             'Standard sequence for solving complex problems',
             standardProblemSolvingSequence
+        );
+
+        this.modelHelpers.addStepSequence(
+            'csv-focused',
+            'Sequence for problems working with CSV spreadsheets',
+            csvFocusedSequence
         );
 
         this.modelHelpers.addStepSequence(

@@ -5,8 +5,6 @@ import csvParse from 'csv-parse/sync';
 import csvStringify from 'csv-stringify/sync';
 import streamTransform from 'stream-transform';
 import csvGenerate from 'csv-generate';
-import { ChartJSNodeCanvas } from 'chartjs-node-canvas';
-import Chart from 'chart.js/auto';
 import moment from 'moment';
 
 interface WorkerMessage {
@@ -119,8 +117,6 @@ try {
         'csv-stringify/sync': csvStringify,
         'stream-transform': streamTransform,
         'csv-generate': csvGenerate,
-        'chartjs-node-canvas': { ChartJSNodeCanvas },
-        'chart.js/auto': Chart,
         'moment': moment
     };
 

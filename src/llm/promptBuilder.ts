@@ -8,6 +8,7 @@ import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelContent, Conten
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { IntentionsResponse } from "src/schemas/goalAndPlan";
 import { ExecutorType } from "src/agents/interfaces/ExecutorType";
+import { StringUtils } from "src/utils/StringUtils";
 
 export interface ContentRenderer<T> {
     (content: T): string;
@@ -66,7 +67,7 @@ export class PromptRegistry {
         
         this.registerRenderer(ContentType.TASKS, this.renderTasks.bind(this));
 
-        this.registerRenderer(ContentType.STEP_RESPONSE, this.renderStepResults.bind(this));
+        this.registerRenderer(ContentType.STEP_RESPONSE, this.renderStepResponses.bind(this));
         this.registerRenderer(ContentType.STEPS, this.renderSteps.bind(this));
         this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
         this.registerRenderer(ContentType.AGENT_CAPABILITIES, this.renderAgentCapabilities.bind(this));
@@ -76,8 +77,8 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.CHANNEL_GOALS, this.renderChannelGoals.bind(this));
 
         // Register type-specific step result renderers
-        this.registerStepResultRenderer(StepResponseType.Validation, this.renderValidationStep.bind(this));
-        this.registerStepResultRenderer(StepResponseType.Question, this.renderQuestionStep.bind(this));
+        this.registerStepResponseRenderer(StepResponseType.Validation, this.renderValidationStep.bind(this));
+        this.registerStepResponseRenderer(StepResponseType.Question, this.renderQuestionStep.bind(this));
         // Add more type-specific renderers as needed
     }
 
@@ -86,7 +87,7 @@ export class PromptRegistry {
     };
 
     private renderIntent({params} : IntentContent) {
-        const intents = params.previousResult?.filter(r => r.type === StepResponseType.Intent).slice(-1);
+        const intents = params.previousResponses?.filter(r => r.type === StepResponseType.Intent).slice(-1);
         if (intents?.length == 1) {
             const intent = intents[0].data as IntentionsResponse;
             return `🤖 My Intention: ${intent.intention}\nWorking Plan: ${intent.plan.map((p, i) => (i+1)===intent.currentFocus? ` - **CURRENT GOAL: ${p}**` :` - ${p}`).join('\n')}`
@@ -120,10 +121,10 @@ ${params.stepGoal && `CURRENT STEP GOAL: ${params.stepGoal}`}`;
         return output;
     }
 
-    private stepResultRenderers = new Map<StepResponseType, ContentRenderer<StepResponse>>();
+    private stepResponseRenderers = new Map<StepResponseType, ContentRenderer<StepResponse>>();
 
-    registerStepResultRenderer(type: StepResponseType, renderer: ContentRenderer<StepResponse>): void {
-        this.stepResultRenderers.set(type, renderer);
+    registerStepResponseRenderer(type: StepResponseType, renderer: ContentRenderer<StepResponse>): void {
+        this.stepResponseRenderers.set(type, renderer);
     }
 
     renderOverallGoal({goal}: OverallGoalContent) {
@@ -152,7 +153,7 @@ ${this.modelHelpers.getFinalInstructions()}
             filteredSteps.map((step, index) => {
                 const stepResult = step.props.result!;
                 if (stepResult.response.type) {
-                    const typeRenderer = this.stepResultRenderers.get(stepResult.response.type);
+                    const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type);
                     if (typeRenderer) {
                         return typeRenderer(stepResult.response);
                     }
@@ -165,16 +166,17 @@ ${this.modelHelpers.getFinalInstructions()}
             }).join('\n') + "\n";
     }
 
-    private renderStepResults({responses} : StepResponseContent): string {
-        return "📝 Past Step Results:\n" + responses.map((stepResult, index) => {
+    private renderStepResponses({responses} : StepResponseContent): string {
+        return "📝 Past Step Responses:\n" + responses.filter(r => r).map((stepResult, index) => {
+            let body;
             if (stepResult.type) {
-                const typeRenderer = this.stepResultRenderers.get(stepResult.type!);
+                const typeRenderer = this.stepResponseRenderers.get(stepResult.type!);
                 if (typeRenderer) {
-                    return typeRenderer(stepResult);
+                    body = typeRenderer(stepResult);
                 }
             }
             // Default renderer for unknown types
-            return `Step ${index + 1} (${stepResult.type}):\n${stepResult.message||stepResult.reasoning}}`;
+            return `Step ${index + 1} (${stepResult.type}):\n<stepInformation>${body|stepResult.message||stepResult.reasoning}</stepInformation>`;
         }).join('\n') + "\n";
     }
 
@@ -220,19 +222,16 @@ ${this.modelHelpers.getFinalInstructions()}
                 ? artifact.content
                 : `[Binary data - ${size}]`;
 
-            // Truncate string content to 1000 chars
-            if (typeof content === 'string' && content.length > 1000) {
-                content = content.substring(0, 1000) + '... [truncated]';
-            }
+            content = StringUtils.truncateWithEllipsis(content, 1000, `[truncated to 1000 characters out of total size: ${size}]`);
 
             return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'} [Size: ${size}]\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
         }).join('\n\n');
     }
 
-    private renderArtifactTitles({artifacts}: ArtifactsTitlesContent): string {
+    private renderArtifactTitles({artifacts}: ArtifactsTitlesContent, offset: number = 0): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
-            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}`;
+            return `Artifact Index:${index + offset} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}`;
         }).join('\n\n');
     }
 
@@ -328,6 +327,10 @@ export class PromptBuilder implements InputPrompt {
 
     registerRenderer<T>(contentType: ContentType, renderer: ContentRenderer<T>): void {
         this.registry.registerRenderer(contentType, renderer);
+    }
+
+    registerStepResultRenderer<T extends StepResponse>(responseType: StepResponseType, renderer: ContentRenderer<T>): void {
+        this.registry.registerStepResponseRenderer(responseType, renderer);
     }
 
     /**

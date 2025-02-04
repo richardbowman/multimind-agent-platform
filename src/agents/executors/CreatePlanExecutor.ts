@@ -52,7 +52,7 @@ export class CreatePlanExecutor implements StepExecutor {
         const project = this.taskManager.getProject(params.projectId) as OnboardingProject;
         
         // Check for template ID in prior step responses and priorResults
-        const templateResult = params.previousResult?.find(r => 
+        const templateResult = params.previousResponses?.find(r => 
             r.templateId
         );
         
@@ -154,9 +154,9 @@ export class CreatePlanExecutor implements StepExecutor {
     }
 
     private getAnswersForTemplate(params: ExecuteParams): QAAnswers[] {
-        if (!params.previousResult) return [];
+        if (!params.previousResponses) return [];
         
         // Return all answers regardless of template association
-        return params.previousResult.map(r => r.data?.answers as QAAnswers[]).flat().filter(a => a?.answer);
+        return params.previousResponses.map(r => r.data?.answers as QAAnswers[]).flat().filter(a => a?.answer);
     }
 }

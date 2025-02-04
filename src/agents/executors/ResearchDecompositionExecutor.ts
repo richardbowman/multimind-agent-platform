@@ -42,10 +42,10 @@ export class ResearchDecompositionExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const { goal, projectId, previousResult } = params;
+        const { goal, projectId, previousResponses: previousResponses } = params;
         
         // Extract any relevant context from previous results
-        const previousContext = previousResult?.length ? previousResult
+        const previousContext = previousResponses?.length ? previousResponses
             .map(function processContext<M extends ModelResponse>(result: M) { return result.reasoning || result.message })
             .filter(Boolean)
             .join('\n\n') : '';

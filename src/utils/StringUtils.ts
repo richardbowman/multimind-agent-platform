@@ -82,9 +82,9 @@ export namespace StringUtils {
      * @param maxLength Maximum length of the text before truncation
      * @returns Truncated text with ellipsis if necessary
      */
-    export function truncateWithEllipsis(text: string, maxLength: number): string {
+    export function truncateWithEllipsis(text: string, maxLength: number, truncateMessage?: string): string {
         if (text?.length > maxLength) {
-            return text.substring(0, maxLength - 3) + "...";
+            return text.substring(0, maxLength - 3) + `...${truncateMessage}`;
         } else {
             return text;
         }

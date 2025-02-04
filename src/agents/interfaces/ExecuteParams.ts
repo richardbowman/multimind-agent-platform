@@ -17,7 +17,7 @@ export interface ExecuteParams {
     readonly step: string;
     readonly stepId: UUID;
     readonly projectId: UUID;
-    readonly previousResult?: StepResponse[];
+    readonly previousResponses?: StepResponse[];
     readonly channelGoals: Task[];
     readonly steps: StepTask[],
     readonly mode?: 'quick' | 'detailed';

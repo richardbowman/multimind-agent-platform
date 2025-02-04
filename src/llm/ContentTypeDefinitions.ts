@@ -17,6 +17,7 @@ export interface ArtifactsExcerptsContent {
 export interface ArtifactsTitlesContent {
     contentType: ContentType.ARTIFACTS_TITLES;
     artifacts: Artifact[];
+    offset: number;
 }
 
 export interface ArtifactsFullContent {

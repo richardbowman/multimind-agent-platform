@@ -38,7 +38,7 @@ export class OutlineExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.ContentOutline);
 
         // Check if we have a previous outline result
-        const previousOutline = params. previousResult?.find?.(
+        const previousOutline = params. previousResponses?.find?.(
             (result) => result.type === 'draft-outline'
         );
 
@@ -96,7 +96,7 @@ Also provide a confidence score (0-100) in your assessment and a brief summary o
 Given a content goal and research findings, create a well-structured outline.
 Break the content into logical sections with clear descriptions and key points.
 
-${params.previousResult ? `Use these research findings to inform the outline:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
+${params.previousResponses ? `Use these research findings to inform the outline:\n${JSON.stringify(params.previousResponses, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const result = await this.modelHelpers.generate<ContentOutline>({

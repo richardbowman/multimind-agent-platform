@@ -39,10 +39,10 @@ export class KnowledgeCheckExecutor implements StepExecutor {
 
     async execute(params: ExecuteParams): Promise<StepResult> {
         const mode = params.mode as ('quick' | 'detailed') || 'quick';
-        return this.executeQuick(params.stepGoal||params.message||params.goal, params.goal, params.step, params.projectId, params.previousResult, params.context?.artifacts);
+        return this.executeQuick(params.stepGoal||params.message||params.goal, params.goal, params.step, params.projectId, params.previousResponses, params.context?.artifacts);
     }
 
-    private async executeQuick(stepInstructions: string, goal: string, stepType: string, projectId: string, previousResult?: any, artifacts?: Artifact[]): Promise<StepResult> {
+    private async executeQuick(stepInstructions: string, goal: string, stepType: string, projectId: string, previousResponses?: any, artifacts?: Artifact[]): Promise<StepResult> {
         const querySchema = await   getGeneratedSchema(SchemaType.QuickQueriesResponse);
 
         const queryPrompt = `Agent Purpose: ${this.modelHelpers.getPurpose()}. Given the overall goal and the user's request, generate 2-3 different search queries that will help find relevant information.

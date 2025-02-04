@@ -577,13 +577,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                                     // Send for transcription
                                     if (currentChannel) {
                                         try {
-                                            const message = await ipcService.getRPC().transcribeAndSendAudio({
+                                            await ipcService.getRPC().transcribeAndSendAudio({
                                                 audioBase64: wavBase64,
                                                 channelId: currentChannel,
                                                 threadId: null,
                                                 language: 'en'
                                             });
-                                            onSendMessage(message.message);
                                         } catch (error) {
                                             console.error('Transcription failed:', error);
                                         }

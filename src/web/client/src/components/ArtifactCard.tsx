@@ -45,7 +45,8 @@ export const ArtifactCard: React.FC<ArtifactCardProps> = ({
                     bgcolor: selected 
                         ? 'primary.dark' 
                         : 'action.hover'
-                }
+                },
+                overflow: 'hidden'
             }}
             onClick={onClick}
         >

@@ -136,7 +136,7 @@ describe('ValidationExecutor', () => {
 
             const paramsWithAttempts: ExecuteParams = {
                 ...baseParams,
-                previousResult: [{
+                previousResponses: [{
                     message: 'Previous validation attempt',
                     metadata: {
                         validationAttempts: 2

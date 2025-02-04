@@ -43,6 +43,8 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     editingChannelId,
     initialData
 }) => {
+    const ipcService = useIPCService();
+    const {handles, deleteChannel, createChannel, fetchChannels} = useDataContext();
     const [channelName, setChannelName] = useState<ChannelHandle|null>(null);
     const [channelNameError, setChannelNameError] = useState(false);
     const [description, setDescription] = useState('');
@@ -50,7 +52,6 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
     const [defaultResponderId, setDefaultResponderId] = useState<string | null>(null);
     const [templates, setTemplates] = useState<GoalTemplate[]>([]);
-    const ipcService = useIPCService();
 
     useEffect(() => {
         if (initialData) {
@@ -63,7 +64,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             // Convert member IDs to handles if needed
             const agents = initialData.members.map(idOrHandle => {
                 if (idOrHandle.startsWith('@')) {
-                    const handle = webSocket.handles.find(h => h.handle === idOrHandle.slice(1));
+                    const handle = handles.find(h => h.handle === idOrHandle.slice(1));
                     return handle?.id || idOrHandle;
                 }
                 return idOrHandle;
@@ -78,7 +79,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             setSelectedTemplate(null);
             setDefaultResponderId(null);
         }
-    }, [initialData, webSocket.handles]);
+    }, [initialData, handles]);
 
     useEffect(() => {
         ipcService.getRPC().loadGoalTemplates().then(setTemplates);
@@ -87,15 +88,13 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     const [lastSelectedTemplateName, setLastSelectedTemplateName] = useState<string>('');
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
 
-    const webSocket = useDataContext();
-
     const handleTemplateSelect = (templateId: ChannelHandle) => {
         setSelectedTemplate(templateId);
         const selectedTemplate = templates.find(t => t.id === templateId);
         if (selectedTemplate) {
             const agentIds = selectedTemplate.supportingAgents.map(idOrHandle => {
                 if (idOrHandle.startsWith('@')) {
-                    const handle = webSocket.handles.find(h => h.handle === idOrHandle.slice(1));
+                    const handle = handles.find(h => h.handle === idOrHandle.slice(1));
                     return handle?.id || idOrHandle;
                 }
                 return idOrHandle;
@@ -108,7 +107,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
         if (selectedTemplate?.defaultResponder) {
             setDefaultResponderId(
                 selectedTemplate.defaultResponder.startsWith('@')
-                    ? webSocket.handles.find(h => h.handle === selectedTemplate.defaultResponder.slice(1))?.id || selectedTemplate.defaultResponder
+                    ? handles.find(h => h.handle === selectedTemplate.defaultResponder.slice(1))?.id || selectedTemplate.defaultResponder
                     : selectedTemplate.defaultResponder
             );
         }
@@ -128,7 +127,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
         try {
             // Convert defaultResponderId to handle
             const defaultResponder = defaultResponderId 
-                ? webSocket.handles.find(h => h.id === defaultResponderId)?.handle || defaultResponderId
+                ? handles.find(h => h.id === defaultResponderId)?.handle || defaultResponderId
                 : undefined;
 
             const params = {
@@ -140,14 +139,14 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             };
 
             if (editingChannelId) {
-                await webSocket.deleteChannel(editingChannelId);
-                await webSocket.createChannel(params);
+                await deleteChannel(editingChannelId);
+                await createChannel(params);
             } else {
-                await webSocket.createChannel(params);
+                await createChannel(params);
             }
 
             onClose();
-            webSocket.fetchChannels();
+            fetchChannels();
         } catch (error) {
             console.error('Failed to save channel:', error);
         }
@@ -156,8 +155,8 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     const handleDeleteChannel = async () => {
         if (editingChannelId) {
             try {
-                await webSocket.deleteChannel(editingChannelId);
-                webSocket.fetchChannels();
+                await deleteChannel(editingChannelId);
+                fetchChannels();
                 setDeleteConfirmOpen(false);
                 onClose();
             } catch (error) {
@@ -240,7 +239,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                                                     .map(idOrHandle => 
                                                         idOrHandle.startsWith('@') 
                                                             ? idOrHandle 
-                                                            : webSocket.handles.find(h => h.id === idOrHandle)?.handle || 'Unknown'
+                                                            : handles.find(h => h.id === idOrHandle)?.handle || 'Unknown'
                                                     )
                                                     .join(', ')}
                                             </Typography>
@@ -253,18 +252,15 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
 
                     <Autocomplete
                         multiple
-                        options={webSocket.handles}
-                        value={webSocket.handles.filter(handle => 
-                            selectedAgents.includes(handle.id) || 
-                            selectedAgents.includes(`@${handle.handle}`)
+                        options={handles}
+                        value={handles.filter(handle => selectedAgents.includes(handle.handle)
                         )}
                         onChange={(_, newValue) => {
-                            setSelectedAgents(newValue.map(handle => handle.id));
+                            setSelectedAgents(newValue.map(handle => handle.handle));
                         }}
                         getOptionLabel={(option) => option.handle}
                         isOptionEqualToValue={(option, value) => 
-                            option.id === value.id || 
-                            `@${option.handle}` === value.id
+                            option.handle === value.id
                         }
                         renderInput={(params) => (
                             <TextField
@@ -304,7 +300,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                                 <MenuItem key={agentId} value={agentId}>
                                     {agentId.startsWith('@') 
                                         ? agentId 
-                                        : webSocket.handles.find(h => h.id === agentId)?.handle || 'Unknown'}
+                                        : handles.find(h => h.id === agentId)?.handle || 'Unknown'}
                                 </MenuItem>
                             ))}
                         </Select>

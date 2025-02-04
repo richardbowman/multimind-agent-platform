@@ -31,14 +31,14 @@ export class RefutingExecutor implements StepExecutor {
 
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResponses?: any): Promise<StepResult> {
         const schema = await getGeneratedSchema(SchemaType.RefutingResponse);
 
         const prompt = `You are a critical thinker tasked with finding potential flaws in an argument or conclusion.
 Think deeply about the problem and explain detailed reasoning in the response. Consider possible counterarguments and evaluate their validity.
 Provide a balanced analysis and final verdict.
 
-${previousResult ? `Specifically analyze these previous conclusions:\n${JSON.stringify(previousResult, null, 2)}` : ''}`;
+${previousResponses ? `Specifically analyze these previous conclusions:\n${JSON.stringify(previousResponses, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const result = await this.modelHelpers.generate<RefutingResponse>({

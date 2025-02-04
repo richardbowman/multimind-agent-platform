@@ -47,8 +47,8 @@ import { ContentType } from 'src/llm/promptBuilder';
          }});
 
          // Add previous results if available
-         if (params.previousResult) {
-             promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult});
+         if (params.previousResponses) {
+             promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses});
          }
 
          const prompt = promptBuilder.build();

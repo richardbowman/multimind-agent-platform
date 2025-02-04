@@ -58,20 +58,14 @@ export class GenerateArtifactExecutor implements StepExecutor {
 2. Replace an EXISTING document (specify artifactId and set operation to "replace")
 3. Append to an EXISTING document (specify artifactId and set operation to "append")`);
 
-        promptBuilder.addInstruction(`Provide:
-- artifactId: ID of document to modify (only required for replace/append operations)
-- operation: Must be "create" for new documents, "replace" or "append" for existing ones
-- title: Document title
-- type: Document type - must be one of: "markdown", "csv", or "mermaid"`);
-
         promptBuilder.addInstruction(`CONTENT FORMATTING RULES:
 - For markdown: Use standard Markdown syntax
 - For csv: Provide comma-separated values with header row
 - For mermaid: Provide Mermaid diagram syntax only`);
 
         promptBuilder.addInstruction(`IMPORTANT RULES:
-- For NEW documents: Use operation="create" and omit artifactId
-- For EXISTING documents: Use operation="replace" or "append" and provide artifactId`);
+- For NEW documents: Use operation="create" and omit artifactIndex
+- For EXISTING documents: Use operation="replace" or "append" and provide "artifactIndex" field with the list number of the Attached Artifacts list from above.`);
 
         // Add Q&A context from project metadata
         try {
@@ -95,8 +89,8 @@ export class GenerateArtifactExecutor implements StepExecutor {
         promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
 
         // Add previous results if available
-        if (params.previousResult) {
-            promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult});
+        if (params.previousResponses) {
+            promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses});
         }
 
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);

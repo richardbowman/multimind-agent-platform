@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { ModelMessageResponse } from '../../schemas/ModelResponse';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -13,6 +13,11 @@ import { BarChartData } from 'src/schemas/BarChartData';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StringUtils } from 'src/utils/StringUtils';
+import { ContentType } from 'src/llm/promptBuilder';
+
+export interface ChartResponse extends StepResponse {
+    data?: BarChartData;
+}
 
 /**
  * Executor that generates and manages chart data artifacts.
@@ -25,8 +30,8 @@ import { StringUtils } from 'src/utils/StringUtils';
  * - Provides confirmation messages for operations
  * - Handles errors gracefully with logging
  */
-@StepExecutorDecorator(ExecutorType.GENERATE_CHART, 'Create/revise chart data in structured formats')
-export class GenerateChartExecutor implements StepExecutor {
+@StepExecutorDecorator(ExecutorType.GENERATE_CHART, 'Create/revise bar charts')
+export class GenerateChartExecutor implements StepExecutor<ChartResponse> {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
 
@@ -35,7 +40,7 @@ export class GenerateChartExecutor implements StepExecutor {
         this.artifactManager = params.artifactManager!;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<ChartResponse>> {
         const promptBuilder = this.modelHelpers.createPrompt();
 
         // Add core instructions
@@ -70,12 +75,10 @@ export class GenerateChartExecutor implements StepExecutor {
 1. Provide the chart data in a JSON code block that matches this schema:
 ${JSON.stringify(schema, null, 2)}`);
 
-        const prompt = promptBuilder.build();
-
         try {
             const unstructuredResult = await this.modelHelpers.generate<ModelMessageResponse>({
                 message: params.message || params.stepGoal,
-                instructions: prompt,
+                instructions: promptBuilder,
                 threadPosts: params.context?.threadPosts
             });
 
@@ -85,33 +88,42 @@ ${JSON.stringify(schema, null, 2)}`);
                 schema
             );
 
-            // Prepare the artifact
-            const artifact: Partial<Artifact> = {
-                type: 'chart-data',
-                content: JSON.stringify(chartData),
-                metadata: {
-                    title: chartData.title,
-                    chartType: 'bar',
-                    projectId: params.projectId
-                }
-            };
+            if (chartData) {
+                // Prepare the artifact
+                const artifact: Partial<Artifact> = {
+                    type: 'chart-data',
+                    content: JSON.stringify(chartData),
+                    metadata: {
+                        title: chartData.title,
+                        chartType: 'bar',
+                        projectId: params.projectId
+                    }
+                };
 
-            // Save the artifact
-            const savedArtifact = await this.artifactManager.saveArtifact(artifact);
+                // Save the artifact
+                const savedArtifact = await this.artifactManager.saveArtifact(artifact);
 
-            return {
-                type: "generate-chart",
-                finished: true,
-                artifactIds: [savedArtifact?.id],
-                response: unstructuredResult
-            };
+                return {
+                    type: StepResultType.GenerateChartResult,
+                    finished: true,
+                    artifactIds: [savedArtifact?.id],
+                    response: {
+                        type: StepResponseType.ChartResponse,
+                        message: unstructuredResult.message,
+                        data: chartData
+                    }
+                };
+            } else {
+                throw new Error("Could not find chart data in the response: ${unstructuredResult}");
+            }
         } catch (error) {
             Logger.error('Error generating chart:', error);
             return {
-                type: "generate-chart",
+                type: StepResultType.GenerateChartResult,
                 finished: true,
                 needsUserInput: true,
                 response: {
+                    type: StepResponseType.ChartResponse,
                     message: 'Failed to generate the chart. Please try again later.'
                 }
             };

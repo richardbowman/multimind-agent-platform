@@ -38,8 +38,8 @@ export class BrainstormExecutor implements StepExecutor {
         promptBuilder.addInstruction("Based on this analysis, set isComplete to true if brainstorming should conclude, or false if more ideas are needed. Make sure your message to the user communicates if you want want additional feedback");
 
         // Add previous results if available
-        if (params.previousResult) {
-            promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult||[]});
+        if (params.previousResponses) {
+            promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses||[]});
         }
 
         // Add artifacts if available

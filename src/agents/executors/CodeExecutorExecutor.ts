@@ -86,7 +86,7 @@ const a = 1 + 2;
 console.log(\`The answer is \$\{a\}\`);
 a;  // send 3 back as the answer
 
-${params.previousResult ? `Consider this previous result:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
+${params.previousResponses ? `Consider this previous result:\n${JSON.stringify(params.previousResponses, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         let result = await this.modelHelpers.generate<CodeExecutionResponse>({

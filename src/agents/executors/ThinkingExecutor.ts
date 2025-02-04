@@ -45,8 +45,8 @@ export class ThinkingExecutor implements StepExecutor {
 Given a problem, break it down into logical steps and reason through it carefully.
 Consider multiple angles and potential implications. You cannot run code, but you can recommend it (make sure to strongly recommend it in all caps).`);
 
-        if (params.previousResult) {
-            promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult});
+        if (params.previousResponses) {
+            promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses});
         }
 
         promptBuilder.addContext({contentType: ContentType.GOALS_FULL, params});

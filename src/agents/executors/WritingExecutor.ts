@@ -47,7 +47,7 @@ export class AssignWritersExecutor implements StepExecutor {
 Break down the content into sections that can be assigned to writers.
 For each section, provide a clear title, description, key points to cover, and relevant research findings.
 
-${params.previousResult ? `Use these materials to inform the task planning:\n${JSON.stringify(params.previousResult, null, 2)}` : ''}`;
+${params.previousResponses ? `Use these materials to inform the task planning:\n${JSON.stringify(params.previousResponses, null, 2)}` : ''}`;
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const result = await this.modelHelpers.generate<WritingResponse>({

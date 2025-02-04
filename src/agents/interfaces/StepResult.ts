@@ -13,13 +13,18 @@ export enum StepResultType {
     Debug = "Debug",
     Delegation = "Delegation",
     Calendar = "Calendar",
-    GenerateIntention = "GenerateIntention"
+    GenerateIntention = "GenerateIntention",
+    WebScrapeStepResult = "WebScrapeStepResult",
+    GenerateChartResult = "GenerateChartResult"
 }
 
 export enum StepResponseType {
-    Intent,
-    Validation,
-    Question
+    Intent = "intent",
+    Validation = "validation",
+    Question = "question",
+    CodeResult = "code-result",
+    WebPage = "web-page",
+    ChartResponse = "ChartResponse"
 
 }
 
@@ -29,13 +34,17 @@ export enum ReplanType {
     Force = "force"
 }
 
+export interface StepResponseData extends Record<string, any> { 
+
+};
+
 export interface StepResponse {
     type?: StepResponseType;
     message?: string;
-    data?: Record<string, any>;
+    data?: StepResponseData;
 }
 
-export interface StepResult {
+export interface StepResult<TypedStepResponse extends StepResponse> {
     type?: StepResultType;
     projectId?: UUID;
     taskId?: UUID;
@@ -45,5 +54,5 @@ export interface StepResult {
     async?: boolean;
     replan?: ReplanType;
     needsUserInput?: boolean;
-    response: StepResponse;
+    response: TypedStepResponse;
 }

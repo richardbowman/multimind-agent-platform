@@ -207,8 +207,8 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
         return response.links || [];
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResult?: any): Promise<StepResult> {
-        const { searchQuery, category } = await this.generateSearchQuery(goal, step, previousResult);
+    async executeOld(goal: string, step: string, projectId: string, previousResponses?: any): Promise<StepResult> {
+        const { searchQuery, category } = await this.generateSearchQuery(goal, step, previousResponses);
         const searchResults = await this.searchHelper.search(searchQuery, category);
 
         if (searchResults.length === 0) {
@@ -219,7 +219,7 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
             };
         }
 
-        const selectedUrls = await this.selectRelevantSearchResults(step, goal, searchResults, previousResult);
+        const selectedUrls = await this.selectRelevantSearchResults(step, goal, searchResults, previousResponses);
         if (selectedUrls.length === 0) {
             return {
                 type: 'no_relevant_results', finished: true, response: {
@@ -286,11 +286,11 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
         };
     }
 
-    private async generateSearchQuery(goal: string, task: string, previousResult?: any): Promise<SearchQueryResponse> {
+    private async generateSearchQuery(goal: string, task: string, previousResponses?: any): Promise<SearchQueryResponse> {
         const schema = await getGeneratedSchema(SchemaType.SearchQueryResponse);
 
-        const previousFindings = previousResult?.data?.analysis?.keyFindings || [];
-        const previousGaps = previousResult?.data?.analysis?.gaps || [];
+        const previousFindings = previousResponses?.data?.analysis?.keyFindings || [];
+        const previousGaps = previousResponses?.data?.analysis?.gaps || [];
 
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}.
 Consider these specific goals we're trying to achieve: ${task}
@@ -317,11 +317,11 @@ Focus on filling knowledge gaps and expanding on existing findings.`;
         task: string,
         goal: string,
         searchResults: { title: string, url: string, description: string }[],
-        previousResult?: any
+        previousResponses?: any
     ): Promise<string[]> {
         const schema = await getGeneratedSchema(SchemaType.WebSearchResponse);
 
-        const previousFindings = previousResult?.data?.analysis?.keyFindings || [];
+        const previousFindings = previousResponses?.data?.analysis?.keyFindings || [];
 
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
 

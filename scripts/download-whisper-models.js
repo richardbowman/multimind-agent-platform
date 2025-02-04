@@ -18,6 +18,7 @@ async function downloadModels() {
         const transcription = await nodewhisper(sampleAudioPath, {
             modelName: 'tiny.en',
             modelDir,
+            autoDownloadModelName: 'tiny.en',
             removeWavFileAfterTranscription: false,
             withCuda: false,
             logger: console,

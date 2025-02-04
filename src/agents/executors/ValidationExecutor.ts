@@ -39,7 +39,7 @@ export class ValidationExecutor implements StepExecutor {
         const schema = generatedSchemaDef.ValidationResult;
 
         // Get validation attempt count from most recent validation result
-        const validationResults = params.previousResult?.filter(r => 
+        const validationResults = params.previousResponses?.filter(r => 
             r.data?.validationAttempts !== undefined
         ) || [];
         
@@ -58,7 +58,7 @@ Analyze the previous steps and their results to determine if a reasonable effort
         promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
 
         // Add previous results if available
-        promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResult||[]});
+        promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses||[]});
 
         // Add previous results if available
         promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts||[]});

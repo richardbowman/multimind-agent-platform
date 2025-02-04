@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact, ArtifactType } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
-import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper } from '@mui/material';
+import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, ListItem } from '@mui/material';
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -215,13 +215,12 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     <Box key={artifact.id} sx={{ 
                                         display: 'flex', 
                                         alignItems: 'center',
-                                        width: '100%',
-                                        paddingRight: '8px'
+                                        padding: 0,
+                                        overflow: 'hidden'
                                     }}>
                                         <Checkbox
                                             sx={{ 
-                                                padding: '4px',
-                                                marginRight: '-4px' // Compensate for checkbox padding
+                                                padding: '4px'
                                             }}
                                             checked={selectedArtifacts.some(a => a.id === artifact.id)}
                                             onChange={(e) => {

@@ -3,8 +3,6 @@
     "mimeType": "text/markdown",
     "description": "Guide for handling mathematical operations and letter counting challenges with LLMs",
     "created": "2025-02-04T00:00:00.000Z",
-    "source": "llm_math_letter_guide.md",
-    "contentHash": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
     "tags": [
         "LLM",
         "math",

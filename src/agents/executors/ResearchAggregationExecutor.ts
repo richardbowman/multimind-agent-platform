@@ -42,7 +42,7 @@ export class ResearchAggregationExecutor implements StepExecutor {
         this.vectorDB = params.vectorDB!;
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResults?: any[]): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResponses?: any[]): Promise<StepResult> {
         const aggregatedData = await this.aggregateResults(goal, projectId);
         const schema = await getGeneratedSchema(SchemaType.ResearchArtifactResponse);
 
@@ -71,7 +71,7 @@ And put the report inside of \`\`\`markdown tags.`;
         if (docBlocks.length > 0) {
             const artifact = await this.artifactManager.saveArtifact({
                 type: 'report',
-                content: docBlocks.length>0?docBlocks[0]:"(No content provided)",
+                content: docBlocks.length>0?docBlocks[0].code:"(No content provided)",
                 tokenCount: result._usage?.outputTokens,
                 metadata: {
                     title: title,

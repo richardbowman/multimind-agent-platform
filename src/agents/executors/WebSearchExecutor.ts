@@ -22,7 +22,7 @@ export class SearchExecutor implements StepExecutor {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult> {
-        const { searchQuery, category } = await this.generateSearchQuery(params.goal, params.stepGoal, params.previousResult);
+        const { searchQuery, category } = await this.generateSearchQuery(params.goal, params.stepGoal, params.previousResponses);
         const searchResults = await this.searchHelper.search(searchQuery, category);
 
         return {
@@ -38,11 +38,11 @@ export class SearchExecutor implements StepExecutor {
         };
     }
 
-    private async generateSearchQuery(goal: string, task: string, previousResult?: any): Promise<SearchQueryResponse> {
+    private async generateSearchQuery(goal: string, task: string, previousResponses?: any): Promise<SearchQueryResponse> {
         const schema = await getGeneratedSchema(SchemaType.SearchQueryResponse);
 
-        const previousFindings = previousResult?.data?.analysis?.keyFindings || [];
-        const previousGaps = previousResult?.data?.analysis?.gaps || [];
+        const previousFindings = previousResponses?.data?.analysis?.keyFindings || [];
+        const previousGaps = previousResponses?.data?.analysis?.gaps || [];
 
         const systemPrompt = `You are a research assistant. Our overall goal is ${goal}.
     Consider these specific goals we're trying to achieve: ${task}

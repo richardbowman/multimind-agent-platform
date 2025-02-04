@@ -47,5 +47,6 @@ export enum SchemaType {
     GoalAndPlanResponse = "GoalAndPlanResponse",
     PlanStepsResponse = "PlanStepsResponse",
     IntentionsResponse = "IntentionsResponse",
-    TaskCreationResponse = "TaskCreationResponse"
+    TaskCreationResponse = "TaskCreationResponse",
+    BarChartData = "BarChartData"
 }

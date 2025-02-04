@@ -6,11 +6,11 @@ import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { StepExecutor } from "../interfaces/StepExecutor";
-import { StepResult } from "../interfaces/StepResult";
+import { StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
 import { ModelMessageResponse } from "src/schemas/ModelResponse";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { createUUID } from "src/types/uuid";
-import { Artifact } from "src/tools/artifact";
+import { Artifact, ArtifactType } from "src/tools/artifact";
 import { ModelHelpers, WithTokens } from "src/llm/modelHelpers";
 import { ContentType, OutputType } from "src/llm/promptBuilder";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
@@ -23,6 +23,12 @@ export interface ScrapeResult {
     artifacts: Artifact[];
     summaries: SummaryResponse[];
     extractedLinks: LinkRef[];
+    error?: string;
+}
+
+export interface ScrapeStepResponse extends StepResponse {
+    type: StepResponseType.WebPage;
+    data: ScrapeResult;
 }
 
 interface SummaryResponse extends WebScrapeSummaryResponse {
@@ -30,7 +36,7 @@ interface SummaryResponse extends WebScrapeSummaryResponse {
 }
 
 @StepExecutorDecorator(ExecutorType.WEB_SCRAPE, 'Scrapes and summarizes webpage content')
-export class WebScrapeExecutor implements StepExecutor {
+export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
     private scrapeHelper: ScrapeHelper;
     private llmService: ILLMService;
     private artifactManager: ArtifactManager;
@@ -44,19 +50,28 @@ export class WebScrapeExecutor implements StepExecutor {
         this.modelHelpers = params.modelHelpers;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<ScrapeStepResponse>> {
         // First try to extract URLs from stepGoal
         let selectedUrls = [...new Set(StringUtils.extractUrls(params.goal))];
 
-        // If no URLs in stepGoal, check previousResult (LinkSelectionExecutor)
+        // If no URLs in stepGoal, check previousResponses (LinkSelectionExecutor)
         if (!selectedUrls?.length) {
-            selectedUrls = params.previousResult?.map(r => r.data?.selectedUrls).filter(s => s).slice(-1)[0];
+            selectedUrls = params.previousResponses?.map(r => r.data?.selectedUrls).filter(s => s).slice(-1)[0];
         }
 
         if (!selectedUrls?.length) {
             return {
                 finished: true,
-                response: { message: 'No URLs to scrape' }
+                response: { 
+                    type: StepResponseType.WebPage,
+                    message: 'No URLs to scrape',
+                    data: {
+                        artifacts: [],
+                        summaries: [],
+                        extractedLinks: [],
+                        error: 'No URLs to scrape'
+                    }
+                }
             };
         }
 
@@ -112,7 +127,7 @@ export class WebScrapeExecutor implements StepExecutor {
                 if (summaryResponse.relevant) {
                     const artifact = await this.artifactManager.saveArtifact({
                         id: createUUID(),
-                        type: 'summary',
+                        type: ArtifactType.Document,
                         content: summaryResponse.summary,
                         metadata: {
                             title: `Summary Report for ${title}`,
@@ -136,9 +151,10 @@ export class WebScrapeExecutor implements StepExecutor {
 
         return {
             finished: true,
-            type: 'webpage_scrape',
+            type: StepResultType.WebScrapeStepResult,
             artifactIds: result.artifacts.map(a => a.id),
             response: {
+                type: StepResponseType.WebPage,
                 message: `Scraped ${result.artifacts.length} pages:\n\n${result.summaries.map(s => s.summary).join('\n\n---\n\n')}`,
                 data: {
                     artifacts: result.artifacts,
@@ -180,12 +196,12 @@ export class WebScrapeExecutor implements StepExecutor {
 
     private async summarizeContent(task: string, content: string, params: ExecuteParams): Promise<WithTokens<SummaryResponse>> {
         const prompt = this.modelHelpers.createPrompt();
-        prompt.addContent(ContentType.PURPOSE);
         prompt.addInstruction(`You are a step in an agent. The goal is to summarize a web search result.
-        If the page is relevant to the goals, create a report in Markdown of all of the specific information from the provided web page.
-        If the page is not relevant, specify the 'relevant' flag as false.`);
-        prompt.addContent(ContentType.OVERALL_GOAL, params.overallGoal);
-        prompt.addContent(ContentType.EXECUTE_PARAMS, params);
+            If the page is relevant to the goals, create a report in Markdown of all of the specific information from the provided web page.
+            If the page is not relevant, specify the 'relevant' flag as false.`);
+        prompt.addContext({contentType: ContentType.PURPOSE});
+        prompt.addContext({contentType: ContentType.GOALS_FULL, params});
+        prompt.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
         await prompt.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, SchemaType.WebScrapeSummaryResponse);
 
         const userPrompt = "Web Search Result:" + content;
@@ -197,11 +213,12 @@ export class WebScrapeExecutor implements StepExecutor {
             model: ModelType.DOCUMENT
         });
 
-        const jsonBlocks = StringUtils.extractAndParseJsonBlocks(summary.message);
+        const schema = await getGeneratedSchema(SchemaType.WebScrapeSummaryResponse);
+        const jsonBlock = StringUtils.extractAndParseJsonBlock(summary.message, schema);
         const markdownBlocks = StringUtils.extractCodeBlocks(summary.message, "markdown");
 
         return {
-            ...jsonBlocks[0] as WebScrapeSummaryResponse,
+            ...jsonBlock as WebScrapeSummaryResponse,
             summary: markdownBlocks[0].code
         };
     }

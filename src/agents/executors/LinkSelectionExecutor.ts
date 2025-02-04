@@ -28,12 +28,12 @@ export class LinkSelectionExecutor implements StepExecutor {
     async execute(params: ExecuteParams): Promise<StepResult> {
         // Get all previously scraped URLs from WebScrapeExecutor results
         const alreadyScrapedUrls = new Set(
-            params.previousResult?.flatMap(r => r.data?.artifacts?.map(a => a.metadata?.url))
+            params.previousResponses?.flatMap(r => r.data?.artifacts?.map(a => a.metadata?.url))
                 .filter(u => u) || []
         );
 
         // Filter search results and scraped links to remove already scraped URLs
-        const searchResults = params.previousResult
+        const searchResults = params.previousResponses
             ?.map(r => r.data?.searchResults)
             .filter(s => s)
             .slice(-1)[0]
@@ -41,7 +41,7 @@ export class LinkSelectionExecutor implements StepExecutor {
 
         // Deduplicate links based on href property
         const uniqueLinksMap = new Map<string, LinkRef>();
-        params.previousResult
+        params.previousResponses
             ?.map(r => r.data?.extractedLinks)
             .flat()
             .filter(s => s && !alreadyScrapedUrls.has(s.href))

@@ -1,7 +1,7 @@
 import { Worker } from 'worker_threads';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResponseData, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -11,11 +11,14 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import path from 'path';
-import { StringUtils } from 'src/utils/StringUtils';
+import { CodeBlock, StringUtils } from 'src/utils/StringUtils';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { app } from 'electron';
 import { ModelType } from 'src/llm/LLMServiceFactory';
-import { ArtifactType } from 'src/tools/artifact';
+import { Artifact, ArtifactType } from 'src/tools/artifact';
+import { ContentType } from 'src/llm/promptBuilder';
+import { ids } from 'webpack';
+import { UUID } from 'src/types/uuid';
 
 export class ConsoleError extends Error {
     public consoleOutput?: string;
@@ -24,6 +27,30 @@ export class ConsoleError extends Error {
         super(message);
         this.consoleOutput = consoleOutput;
     }
+}
+
+export interface ArtifactInfo {
+    title: string;
+    id: UUID;
+}
+
+export interface CodeResultData {
+    returnValue?: any;
+    consoleOutput?: string;
+    code?: string;
+    error?: string;
+    artifacts: ArtifactInfo[];
+}
+
+export interface CodeResult extends StepResponse {
+    type: StepResponseType.CodeResult;
+    data: CodeResultData;
+}
+
+export interface WorkerResult {
+    returnValue: any;
+    consoleOutput: string;
+    artifacts: Partial<Artifact>[];
 }
 
 /**
@@ -37,7 +64,7 @@ export class ConsoleError extends Error {
  * - Supports console.log capture for debugging
  */
 @StepExecutorDecorator(ExecutorType.NODE_EXECUTION, 'Execute Node.js code in a worker thread using provided packages (you may not install)')
-export class NodeExecutorExecutor implements StepExecutor {
+export class NodeExecutorExecutor implements StepExecutor<CodeResult> {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
     private llmService: ILLMService;
@@ -48,7 +75,31 @@ export class NodeExecutorExecutor implements StepExecutor {
         this.llmService = params.llmService;
     }
 
-    private getWorker() : string {
+    private renderResult(data: CodeResultData) {
+        return `**Code:**
+\`\`\`javascript
+${data.code}
+\`\`\`
+
+${data.returnValue ? `**Execution Result:**
+\`\`\`
+${StringUtils.truncate(JSON.stringify(data.returnValue, null, 2), 2000)}
+\`\`\`` : ''}
+
+${data.error ? `The previous attempt failed. It resulted in this error: ${data.error}` : ""}
+        
+${data.consoleOutput ? `**Console Output:**
+\`\`\`
+${StringUtils.truncateWithEllipsis(data.consoleOutput, 2000)}
+\`\`\`` : ''}
+
+${data.artifacts ? `The code created ${data.artifacts.length} artifacts:
+${data.artifacts.map(a => `- ID [${a.id}] ${a.title}`).join("\n")}` : ""}
+`
+
+    };
+
+    private getWorker(): string {
         if (process.versions['electron']) {
             if (app) {
                 return path.join(app.getAppPath(), "dist", "nodeWorker.js");
@@ -57,11 +108,11 @@ export class NodeExecutorExecutor implements StepExecutor {
         return path.join(__dirname, "nodeWorker");
     }
 
-    private async executeInWorker(code: string, artifacts: any[] = []): Promise<{returnValue: any, consoleOutput: string, artifacts: any[]}> {
+    private async executeInWorker(code: string, artifacts: any[] = []): Promise<WorkerResult> {
         const _this = this;
         return new Promise((resolve, reject) => {
             const worker = new Worker(this.getWorker(), {
-                workerData: { 
+                workerData: {
                     code,
                     artifacts
                 }
@@ -70,7 +121,7 @@ export class NodeExecutorExecutor implements StepExecutor {
             const timeout = setTimeout(() => {
                 worker.terminate();
                 reject(new Error('Execution timed out after 5 minutes'));
-            }, 5*60*1000);
+            }, 5 * 60 * 1000);
 
             let consoleOutput = '';
 
@@ -82,12 +133,12 @@ export class NodeExecutorExecutor implements StepExecutor {
                     clearTimeout(timeout);
                     reject(error);
                 } else if (message.type == 'generate') {
-                     const response = await _this.modelHelpers.generate({
+                    const response = await _this.modelHelpers.generate({
                         instructions: message.instructions,
                         message: message.message
                     })
                     worker.postMessage({
-                        type: 'generateResponse', 
+                        type: 'generateResponse',
                         message: response.message
                     });
                 } else if (message.type === 'result') {
@@ -116,7 +167,7 @@ export class NodeExecutorExecutor implements StepExecutor {
         });
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<CodeResult>> {
         const schema = await getGeneratedSchema(SchemaType.CodeExecutionResponse);
 
         const prompt = `You are a Node.js programming step running as part of a broader agent.
@@ -130,8 +181,8 @@ IMPORTANT RULES FOR CODE:
 
 1. You can use core Node.js modules as well as ONLY THE FOLLOWING SPECIFIC packages using a globally provided 'safeRequire' function:
 - node-csv: csv-parse/sync, csv-generate, csv-stringify/sync, stream-transform
-- charting: chartjs-node-canvas, chart.js/auto
-- for example "const { parse } = safeRequire('csv-parse/sync');" or "const { stringify } = safeRequire('csv-stringify/sync');"
+    const { parse } = safeRequire('csv-parse/sync');
+    const { stringify } = safeRequire('csv-stringify/sync');
 
 2. You are running in a web worker thread. The main execution code cannot use a 'return' statement.
 
@@ -191,108 +242,84 @@ const records = parse(cleanContent, {
     bom: true  // Explicitly handle BOM
 });
 
-${params.previousResult ? `PREVIOUS STEPS:\n${JSON.stringify(params.previousResult, null, 2)}
-    
-    
-RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE ENCLOSED \`\`\`javascript CODE BLOCK.` : ''}`;
+RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE ENCLOSED \`\`\`javascript CODE BLOCK.`;
+
+        const promptBuilder = this.modelHelpers.createPrompt();
+        promptBuilder.addInstruction(prompt);
+        params.context?.artifacts && promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts, offset: 0})
+
+        //todo: this only needs to get added once (or we need to not associate to registry)
+        promptBuilder.registerStepResultRenderer<CodeResult>(StepResponseType.CodeResult, (response: CodeResult) => {
+            return this.renderResult(response.data);
+        });
+
+        params.previousResponses && promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses});
 
         let result = await this.modelHelpers.generate({
-            message: params.stepGoal||params.message,
-            instructions: prompt,
+            message: params.stepGoal || params.message,
+            instructions: promptBuilder,
             model: ModelType.ADVANCED_REASONING
         });
-        
-        let executionResult, originalCode, correctedCode, reasoning;
+
+        let stepResult: CodeResult, originalCode: CodeBlock | undefined, reasoning: string, newArtifacts;
         try {
             originalCode = StringUtils.extractCodeBlocks(result.message, "javascript")[0];
             if (originalCode === undefined) throw new Error("No code found");
 
             reasoning = StringUtils.extractNonCodeContent(result.message);
 
-            executionResult = await this.executeInWorker(originalCode.code, params.context?.artifacts);
+            const { consoleOutput, returnValue, artifacts } = await this.executeInWorker(originalCode.code, params.context?.artifacts);
+
+            // Get original artifact count
+            const originalArtifactCount = params.context?.artifacts?.length || 0;
+
+            // Find any new artifacts that were created
+            const newArtifacts = artifacts?.slice(originalArtifactCount) || [];
+            const savedArtifacts : Artifact[] = [];
+
+            for (const artifact of newArtifacts) {
+                if (artifact.content) {
+                    savedArtifacts.push(await this.artifactManager.saveArtifact(artifact));
+                } else {
+                    throw new ConsoleError("Invalid artifact provided with no content", consoleOutput);
+                }
+            }
+
+            const data : CodeResultData = {
+                code: originalCode.code,
+                consoleOutput,
+                returnValue,
+                artifacts: savedArtifacts.map<ArtifactInfo>(a => ({id: a.id, title: a.metadata?.title||"[No title generated]"}))
+            }
+
+            return {
+                type: StepResultType.CodeGenerationStep,
+                finished: true,
+                replan: ReplanType.Allow,
+                artifactIds: savedArtifacts && savedArtifacts?.map(a => a.id).filter(id => id !== undefined),
+                response: {
+                    type: StepResponseType.CodeResult,
+                    message: this.renderResult(data),
+                    data
+                }
+            };
         } catch (error) {
-            // If there's an error, try again with error feedback
-            const errorPrompt = `${prompt}
-The previous attempt resulted in this error:
-${typeof error === "object" ? (error as any)?.message || "[Not provided]" : "[Not an error message]"}
-
-The previous attempt output the following console logs:
-${StringUtils.truncate((error as ConsoleError)?.consoleOutput||"[Not provided]", 500)}
-
-Please fix the code and try again.`;
-            let retryResult = await this.modelHelpers.generate({
-                message: params.stepGoal || params.message,
-                instructions: errorPrompt
-            });
-
-            try {
-                correctedCode = StringUtils.extractCodeBlocks(retryResult.message)[0];
-                executionResult = await this.executeInWorker(correctedCode.code, params.context?.artifacts);
-                result = retryResult;
-            } catch (retryError) {
-                executionResult = {
-                    returnValue: `Error: ${typeof error === "object" ? (error as any)?.message || "[Not provided]" : "[Not an error message]"}`,
-                    consoleOutput: (retryError as ConsoleError).consoleOutput?.trim()
-                };
+            const data : CodeResultData = {
+                code: originalCode?.code,
+                consoleOutput: (error as ConsoleError)?.consoleOutput,
+                error: typeof error === "object" ? (error as any)?.message || "[Not provided]" : "[Not an error message]"
             }
+
+            return {
+                type: StepResultType.CodeGenerationStep,
+                finished: true,
+                replan: ReplanType.Allow,
+                response: {
+                    type: StepResponseType.CodeResult,
+                    message: this.renderResult(data),
+                    data
+                }
+            };
         }
-
-        // Get original artifact count
-        const originalArtifactCount = params.context?.artifacts?.length || 0;
-        
-        // Find any new artifacts that were created
-        const newArtifacts = executionResult.artifacts?.slice(originalArtifactCount) || [];
-
-        for(const artifact of newArtifacts) {
-            if (artifact.content) {
-                await this.artifactManager.saveArtifact(artifact);
-            } else {
-                executionResult.errors = [
-                    ...executionResult.errors||[],
-                    "Invalid artifact provided with no content"
-                ]
-            }
-        }
-
-        const responseData = {
-            ...result,
-            executionResult: {
-                ...executionResult,
-                artifacts: executionResult.artifacts?.map(a => a.id)
-            },
-            newArtifacts: newArtifacts.map(a => a.id)
-        };
-
-        return {
-            type: StepResultType.CodeGenerationStep,
-            finished: true,
-            replan: ReplanType.Allow,
-            artifactIds: newArtifacts.map(a => a.id),
-            response: {
-                message: `**Code:**
-\`\`\`javascript
-${originalCode.code}
-\`\`\`
-
-${correctedCode && `Corrected code:
-\`\`\`javascript
-${correctedCode.code}
-\`\`\``}
-
-**Explanation:**
-${reasoning}
-
-**Execution Result:**
-\`\`\`
-${StringUtils.truncate(JSON.stringify(executionResult.returnValue, null, 2), 1000)}
-\`\`\`
-
-${executionResult.consoleOutput ? `**Console Output:**
-\`\`\`
-${StringUtils.truncate(executionResult.consoleOutput, 1000)}
-\`\`\`` : ''}`,
-                data: responseData
-            }
-        };
     }
 }

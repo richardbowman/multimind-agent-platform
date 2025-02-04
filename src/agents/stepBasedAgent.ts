@@ -4,14 +4,14 @@ import 'reflect-metadata';
 import { ChatPost, isValidChatPost, Message } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { AddTaskParams, Project, Task, TaskStatus, TaskType } from '../tools/taskManager';
+import { AddTaskParams, Project, Task, TaskManager, TaskStatus, TaskType } from '../tools/taskManager';
 import { Planner } from './planners/planner';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import Logger from '../helpers/logger';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { InMemoryPost } from 'src/chat/localChatClient';
 import { AgentConfig } from 'src/tools/settings';
-import { ReplanType, StepResult } from './interfaces/StepResult';
+import { ReplanType, StepResponse, StepResult } from './interfaces/StepResult';
 import { StepExecutor } from './interfaces/StepExecutor';
 import { ExecuteNextStepParams } from './interfaces/ExecuteNextStepParams';
 import { ExecuteStepParams, StepTask } from './interfaces/ExecuteStepParams';
@@ -19,6 +19,7 @@ import { pathExists } from 'fs-extra';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ExecutorType } from './interfaces/ExecutorType';
 import { exec } from 'child_process';
+import { UUID } from 'src/types/uuid';
 
 interface ExecutorCapability {
     stepType: string;
@@ -95,6 +96,19 @@ export abstract class StepBasedAgent extends Agent {
         }
     }
 
+    static getRootTask(taskId: UUID, projects: TaskManager): Task | null {
+        const task = projects.getTaskById(taskId);
+        if (!task) return null;
+   
+        const project = projects.getProject(task.projectId);
+        if (!project.metadata.parentTaskId) {
+            return task; // This is the root task
+        }
+   
+        // Recursively find the root task
+        return StepBasedAgent.getRootTask(project.metadata.parentTaskId, projects);
+    }
+   
     protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {
         const isMine = task.assignee === this.userId;
 
@@ -118,6 +132,19 @@ export abstract class StepBasedAgent extends Agent {
             }
 
             await this.executeNextStep(nextStepParams);
+        } else if (task.creator === this.userId) {
+            const parentTask = StepBasedAgent.getRootTask(task.id, this.projects);
+
+            if (parentTask && parentTask.creator === this.userId && parentTask.type === TaskType.Step) {
+                const postId = (parentTask as StepTask).props.userPostId;
+                const post = await this.chatClient.getPost(postId);
+                const posts : ChatPost[]|undefined = postId && await this.chatClient.getThreadChain(post);
+                if (posts) {
+                    const partial = posts.find(p => p.props?.partial);
+                    if (partial) this.chatClient.updatePost(partial.id, task.description);
+                    else this.reply(post, {message: task.description}, { partial: true });
+                }
+            }
         }
 
         super.taskNotification(task, eventType);
@@ -314,20 +341,28 @@ export abstract class StepBasedAgent extends Agent {
             const tasks = Object.values(project.tasks);
             const completedResults = tasks
                 .filter(t => t.complete)
-                .map(t => t.props?.result?.response)
-                .filter(r => r);
+                .filter(t => t.type === TaskType.Step)
+                .map(t => (t as StepTask<StepResponse>).props?.result)
+                .filter(r => r !== undefined);
+
+            const completedResponses = completedResults
+                .map(t => t.response);
 
             // Combine all results into one
-            const combinedResult = completedResults
-                .map(r => r.message || r.reasoning || '')
+            const combinedResult = completedResponses?.map(r => r?.message || r?.reasoning)
                 .filter(msg => msg)
                 .join('\n\n');
+
+            // Get artifacts associated to the subproject
+            const childArtifactIds = completedResults.flatMap(r => r.artifactIds).filter(r => r !== undefined);
+
 
             await this.projects.updateTask(parentTask.id, {
                 props: {
                     ...parentTask.props,
                     result: {
                         ...parentTask.props?.result,
+                        artifactIds: [...new Set([...parentTask.props?.result?.artifactIds||[], ...childArtifactIds])],
                         response: {
                             message: combinedResult,
                             subProjectResults: completedResults
@@ -491,7 +526,7 @@ export abstract class StepBasedAgent extends Agent {
                     stepId: task.id,
                     channelGoals,
                     projectId: projectId,
-                    previousResult: priorResults,
+                    previousResponses: priorResults,
                     steps: priorSteps,
                     message: userPost?.message,
                     stepGoal: task.description,

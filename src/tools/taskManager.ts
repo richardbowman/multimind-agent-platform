@@ -52,7 +52,7 @@ export interface Task extends Readonly<AddTaskParams> {
     readonly description: string;
     readonly type: TaskType;
     readonly category: string;
-    readonly creator: string;
+    readonly creator: UUID;
     readonly assignee?: string;
     readonly status: TaskStatus;
     /** @deprecated Use status field instead */
