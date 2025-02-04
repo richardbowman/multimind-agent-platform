@@ -675,6 +675,10 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return { ...artifact, content };
     }
 
+    async getExecutorTypes(): Promise<string[]> {
+        return Object.values(ExecutorType);
+    }
+
     async transcribeAndSendAudio({
         audioBase64,
         channelId,

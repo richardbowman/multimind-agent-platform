@@ -113,6 +113,12 @@ export interface ServerMethods {
         threadId?: UUID;
         language?: string;
     }): Promise<ClientMessage>;
+
+    /**
+     * Get available executor types for agent configuration
+     * @returns Promise resolving to array of executor type strings
+     */
+    getExecutorTypes(): Promise<string[]>;
 }
 
 export interface ClientMethods {
