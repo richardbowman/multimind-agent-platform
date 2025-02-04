@@ -515,10 +515,12 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                             const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                             setMediaRecorder(recorder);
-                            setAudioChunks([]);
+                            
+                            // Use local array to collect chunks
+                            const chunks: Blob[] = [];
 
                             recorder.ondataavailable = (e) => {
-                                setAudioChunks((prev) => [...prev, e.data]);
+                                chunks.push(e.data);
                             };
 
                             // Store the stream so we can clean it up later
@@ -527,7 +529,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                             recorder.onstop = async () => {
                                 try {
                                     // Combine audio chunks
-                                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                                    const audioBlob = new Blob(chunks, { type: 'audio/webm' });
 
                                     // Convert WebM to WAV using AudioContext
                                     const audioContext = new AudioContext();
