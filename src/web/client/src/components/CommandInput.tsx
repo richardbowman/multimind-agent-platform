@@ -1,4 +1,53 @@
 import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent, useLayoutEffect } from 'react';
+
+// Helper function to convert AudioBuffer to WAV
+function audioBufferToWav(buffer: AudioBuffer): Uint8Array {
+    const numChannels = buffer.numberOfChannels;
+    const length = buffer.length;
+    const sampleRate = buffer.sampleRate;
+    const bytesPerSample = 2;
+    const bitsPerSample = 16;
+    const blockAlign = numChannels * bytesPerSample;
+    const byteRate = sampleRate * blockAlign;
+    const dataSize = length * blockAlign;
+
+    const bufferSize = 44 + dataSize;
+    const arrayBuffer = new ArrayBuffer(bufferSize);
+    const view = new DataView(arrayBuffer);
+
+    // Write WAV header
+    writeString(view, 0, 'RIFF'); // RIFF header
+    view.setUint32(4, 36 + dataSize, true); // File size
+    writeString(view, 8, 'WAVE'); // WAVE header
+    writeString(view, 12, 'fmt '); // fmt chunk
+    view.setUint32(16, 16, true); // fmt chunk size
+    view.setUint16(20, 1, true); // PCM format
+    view.setUint16(22, numChannels, true); // Number of channels
+    view.setUint32(24, sampleRate, true); // Sample rate
+    view.setUint32(28, byteRate, true); // Byte rate
+    view.setUint16(32, blockAlign, true); // Block align
+    view.setUint16(34, bitsPerSample, true); // Bits per sample
+    writeString(view, 36, 'data'); // data chunk
+    view.setUint32(40, dataSize, true); // data chunk size
+
+    // Write audio data
+    let offset = 44;
+    for (let i = 0; i < length; i++) {
+        for (let channel = 0; channel < numChannels; channel++) {
+            const sample = Math.max(-1, Math.min(1, buffer.getChannelData(channel)[i]));
+            view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+            offset += 2;
+        }
+    }
+
+    return new Uint8Array(arrayBuffer);
+}
+
+function writeString(view: DataView, offset: number, string: string) {
+    for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+    }
+}
 import { useDataContext } from '../contexts/DataContext';
 import { Artifact } from '../../../../tools/artifact';
 import { Settings } from 'electron';
@@ -482,11 +531,51 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                                     reader.readAsDataURL(audioBlob);
                                 });
 
+                                // Convert WebM to WAV using the browser's AudioContext
+                                const audioContext = new AudioContext();
+                                const arrayBuffer = await audioBlob.arrayBuffer();
+                                const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                                
+                                // Create a WAV file from the decoded audio
+                                const wavBlob = await new Promise<Blob>(resolve => {
+                                    const offlineContext = new OfflineAudioContext(
+                                        audioBuffer.numberOfChannels,
+                                        audioBuffer.length,
+                                        audioBuffer.sampleRate
+                                    );
+                                    
+                                    const source = offlineContext.createBufferSource();
+                                    source.buffer = audioBuffer;
+                                    source.connect(offlineContext.destination);
+                                    source.start();
+                                    
+                                    offlineContext.startRendering().then(renderedBuffer => {
+                                        const wavBytes = audioBufferToWav(renderedBuffer);
+                                        resolve(new Blob([wavBytes], { type: 'audio/wav' }));
+                                    });
+                                });
+
+                                // Convert WAV to base64
+                                const wavBase64 = await new Promise<string>((resolve, reject) => {
+                                    const reader = new FileReader();
+                                    reader.onload = () => {
+                                        if (typeof reader.result === 'string') {
+                                            // Remove data URL prefix
+                                            const base64 = reader.result.split(',')[1];
+                                            resolve(base64);
+                                        } else {
+                                            reject(new Error('Failed to read WAV as base64'));
+                                        }
+                                    };
+                                    reader.onerror = reject;
+                                    reader.readAsDataURL(wavBlob);
+                                });
+
                                 // Send for transcription
                                 if (currentChannel) {
                                     try {
                                         const message = await ipcService.getRPC().transcribeAndSendAudio({
-                                            audioBase64,
+                                            audioBase64: wavBase64,
                                             channelId: currentChannel,
                                             threadId: null,
                                             language: 'en'

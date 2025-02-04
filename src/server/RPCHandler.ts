@@ -698,21 +698,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             const webmFilePath = path.join(tempDir, `audio_${Date.now()}.webm`);
             await fsPromises.writeFile(webmFilePath, audioBuffer);
 
-            // Convert WebM to WAV
-            const { downloadWav } = await import('webm-to-wav-converter');
+            // Save the WAV file
             const audioFilePath = path.join(tempDir, `audio_${Date.now()}.wav`);
-            const audioBlob = new Blob([audioBuffer], { type: 'audio/webm' });
-            await downloadWav(audioBlob, audioFilePath, {
-                sampleRate: 16000,
-                channels: 1
-            });
-
-            // Clean up the WebM file
-            try {
-                await fsPromises.unlink(webmFilePath);
-            } catch (cleanupError) {
-                Logger.warn('Failed to clean up temp WebM file:', cleanupError);
-            }
+            await fsPromises.writeFile(audioFilePath, audioBuffer);
             
             // Wait for file to finish writing
             await new Promise((resolve, reject) => {
