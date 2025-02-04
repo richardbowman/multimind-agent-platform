@@ -1,4 +1,6 @@
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Artifact } from '../../../../../tools/artifact';
 import { Box } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -21,6 +23,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     onDelete,
     onEdit
 }) => {
+    const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
     const { addActions } = useToolbarActions();
     const handleExport = () => {
         let fileContent = '';
@@ -125,7 +128,30 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                 </div>
             </div>
             <div className="artifact-content" style={{display: "flex", flexDirection:"column", overflow: "hidden"}}>
-                {showMetadata && (
+                {showMetadata && artifact.metadata && (
+                    <div style={{ 
+                        marginBottom: '1rem',
+                        borderBottom: '1px solid #444',
+                        paddingBottom: '0.5rem'
+                    }}>
+                        <button 
+                            onClick={() => setIsMetadataExpanded(!isMetadataExpanded)}
+                            style={{
+                                background: 'none',
+                                border: 'none',
+                                color: '#aaa',
+                                cursor: 'pointer',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '0.5rem',
+                                padding: '0.25rem 0',
+                                fontSize: '0.875rem'
+                            }}
+                        >
+                            {isMetadataExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+                            Metadata
+                        </button>
+                        {isMetadataExpanded && (
                     <table style={{ 
                         width: '100%',
                         fontSize: '0.875rem',
@@ -155,6 +181,8 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                             }
                         </tbody>
                     </table>
+                        )}
+                    </div>
                 )}
                 <ContentRenderer 
                     content={artifact.content}
