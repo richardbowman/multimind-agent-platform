@@ -62,6 +62,15 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
         return () => document.removeEventListener('mousedown', handleClickOutside);
     }, []);
 
+    // Cleanup recording when component unmounts
+    useEffect(() => {
+        return () => {
+            if (mediaRecorder && mediaRecorder.state === 'recording') {
+                mediaRecorder.stop();
+            }
+        };
+    }, [mediaRecorder]);
+
     const simulateTyping = (text: string, index: number = 0) => {
         if (index < text.length) {
             setInput((prev) => prev + text[index]);
@@ -463,51 +472,59 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                                 setAudioChunks((prev) => [...prev, e.data]);
                             };
 
+                            // Store the stream so we can clean it up later
+                            const currentStream = stream;
+
                             recorder.onstop = async () => {
-                                // Combine audio chunks
-                                const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+                                try {
+                                    // Combine audio chunks
+                                    const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
 
-                                // Convert WebM to WAV using webm-to-wav
-                                const { getWaveBlob } = await import('webm-to-wav-converter');
-                                const wavBlob = await getWaveBlob(audioBlob, false, {
-                                    sampleRate: 16000
-                                });
+                                    // Convert WebM to WAV using webm-to-wav
+                                    const { getWaveBlob } = await import('webm-to-wav-converter');
+                                    const wavBlob = await getWaveBlob(audioBlob, false, {
+                                        sampleRate: 16000
+                                    });
 
-                                // Convert WAV to base64
-                                const wavBase64 = await new Promise<string>((resolve, reject) => {
-                                    const reader = new FileReader();
-                                    reader.onload = () => {
-                                        if (typeof reader.result === 'string') {
-                                            // Remove data URL prefix
-                                            const base64 = reader.result.split(',')[1];
-                                            resolve(base64);
-                                        } else {
-                                            reject(new Error('Failed to read WAV as base64'));
+                                    // Convert WAV to base64
+                                    const wavBase64 = await new Promise<string>((resolve, reject) => {
+                                        const reader = new FileReader();
+                                        reader.onload = () => {
+                                            if (typeof reader.result === 'string') {
+                                                // Remove data URL prefix
+                                                const base64 = reader.result.split(',')[1];
+                                                resolve(base64);
+                                            } else {
+                                                reject(new Error('Failed to read WAV as base64'));
+                                            }
+                                        };
+                                        reader.onerror = reject;
+                                        reader.readAsDataURL(wavBlob);
+                                    });
+
+                                    // Send for transcription
+                                    if (currentChannel) {
+                                        try {
+                                            const message = await ipcService.getRPC().transcribeAndSendAudio({
+                                                audioBase64: wavBase64,
+                                                channelId: currentChannel,
+                                                threadId: null,
+                                                language: 'en'
+                                            });
+                                            onSendMessage(message.message);
+                                        } catch (error) {
+                                            console.error('Transcription failed:', error);
                                         }
-                                    };
-                                    reader.onerror = reject;
-                                    reader.readAsDataURL(wavBlob);
-                                });
-
-                                // Send for transcription
-                                if (currentChannel) {
-                                    try {
-                                        const message = await ipcService.getRPC().transcribeAndSendAudio({
-                                            audioBase64: wavBase64,
-                                            channelId: currentChannel,
-                                            threadId: null,
-                                            language: 'en'
-                                        });
-                                        onSendMessage(message.message);
-                                    } catch (error) {
-                                        console.error('Transcription failed:', error);
                                     }
+                                } catch (error) {
+                                    console.error('Error processing audio:', error);
+                                } finally {
+                                    // Clean up
+                                    currentStream.getTracks().forEach(track => track.stop());
+                                    setMediaRecorder(null);
+                                    setAudioChunks([]);
+                                    setIsRecording(false);
                                 }
-
-                                // Clean up
-                                stream.getTracks().forEach(track => track.stop());
-                                setMediaRecorder(null);
-                                setAudioChunks([]);
                             };
 
                             recorder.start();
