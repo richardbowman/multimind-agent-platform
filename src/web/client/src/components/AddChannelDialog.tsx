@@ -15,7 +15,9 @@ import {
     Typography, Grid,
     Card,
     CardContent,
-    CardActionArea
+    CardActionArea,
+    Autocomplete,
+    Chip
 } from '@mui/material';
 import { GoalTemplate } from '../../../../schemas/goalTemplateSchema';
 import { useDataContext } from '../contexts/DataContext';
@@ -234,31 +236,39 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                         ))}
                     </Grid>
 
-                    <FormControl fullWidth sx={{ mb: 2 }}>
-                        <InputLabel>Add Agents</InputLabel>
-                        <Select
-                            multiple
-                            value={selectedAgents}
-                            onChange={(e) => setSelectedAgents(e.target.value as string[])}
-                            renderValue={(selected) => (selected as string[])
-                                .map(idOrHandle => 
-                                    idOrHandle.startsWith('@') 
-                                        ? idOrHandle 
-                                        : webSocket.handles.find(h => h.id === idOrHandle)?.handle || 'Unknown'
-                                )
-                                .join(', ')}
-                        >
-                            {webSocket.handles.map((handle) => {
-                                const isSelected = selectedAgents.includes(handle.id);
-                                return (
-                                    <MenuItem key={handle.id} value={handle.id}>
-                                        <Checkbox checked={isSelected} />
-                                        <ListItemText primary={handle.handle} />
-                                    </MenuItem>
-                                );
-                            })}
-                        </Select>
-                    </FormControl>
+                    <Autocomplete
+                        multiple
+                        options={webSocket.handles}
+                        value={webSocket.handles.filter(handle => selectedAgents.includes(handle.id))}
+                        onChange={(_, newValue) => {
+                            setSelectedAgents(newValue.map(handle => handle.id));
+                        }}
+                        getOptionLabel={(option) => option.handle}
+                        renderInput={(params) => (
+                            <TextField
+                                {...params}
+                                label="Add Agents"
+                                placeholder="Type to search agents..."
+                            />
+                        )}
+                        renderTags={(value, getTagProps) =>
+                            value.map((option, index) => (
+                                <Chip
+                                    {...getTagProps({ index })}
+                                    key={option.id}
+                                    label={option.handle}
+                                    size="small"
+                                    sx={{ mr: 1 }}
+                                />
+                            ))
+                        }
+                        renderOption={(props, option) => (
+                            <li {...props} key={option.id}>
+                                {option.handle}
+                            </li>
+                        )}
+                        sx={{ mb: 2 }}
+                    />
 
                     <FormControl fullWidth>
                         <InputLabel>Default Responding Agent</InputLabel>
