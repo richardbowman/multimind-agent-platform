@@ -9,10 +9,11 @@ import { useIPCService } from '../contexts/IPCContext';
 import HomeIcon from '@mui/icons-material/Home';
 import ChatIcon from '@mui/icons-material/Chat';
 import { Box } from '@mui/material';
+import { UUID } from '../../../../types/uuid';
 
 interface CommandInputProps {
-    onSendMessage: (message: string, artifactIds?: string[]) => void;
-    currentChannel: string | null;
+    onSendMessage: (message: string, artifactIds?: UUID[]) => void;
+    currentChannel: UUID | null;
     settings: Settings;
     showWelcome: boolean;
     onToggleWelcome: () => void;
@@ -49,7 +50,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         resetPendingFiles, 
         allArtifacts, 
         showFileDialog,
-        currentThread,
+        currentThreadId,
         tasks 
     } = useDataContext();
 
@@ -191,7 +192,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             onSendMessage(input.trim(), [
                 ...pendingArtifacts.map(a => a.id),
                 ...pendingFiles.map(a => a.id)
-            ], currentThread);
+            ], currentThreadId);
             setPendingArtifacts([]);
             resetPendingFiles();
             setInput('');
@@ -495,7 +496,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                 )}
                 <MicrophoneButton 
                     currentChannel={currentChannel} 
-                    currentThread={currentThread || undefined} 
+                    currentThread={currentThreadId || undefined} 
                 />
             </div>
             {(pendingFiles.length > 0 || pendingArtifacts.length > 0) && (

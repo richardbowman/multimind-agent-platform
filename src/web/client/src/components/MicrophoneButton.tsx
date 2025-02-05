@@ -2,10 +2,11 @@ import React, { useState, useEffect } from 'react';
 import Mic from '@mui/icons-material/Mic';
 import Stop from '@mui/icons-material/Stop';
 import { useIPCService } from '../contexts/IPCContext';
+import { UUID } from 'crypto';
 
 interface MicrophoneButtonProps {
-    currentChannel: string | null;
-    currentThread?: string;
+    currentChannel: UUID | null;
+    currentThread?: UUID;
 }
 
 export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({ currentChannel, currentThread }) => {
