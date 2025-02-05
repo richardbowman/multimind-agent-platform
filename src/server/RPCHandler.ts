@@ -4,7 +4,7 @@ import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
 import mime from 'mime';
 import Logger from "../helpers/logger";
 import { ChatClient, ChatPost } from "../chat/chatClient";
-import { ClientMessage, ClientTask } from "src/shared/types";
+import { ClientMessage } from "src/shared/types";
 import { ClientChannel } from "src/shared/types";
 import { ClientThread } from "src/shared/types";
 import { CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
@@ -28,7 +28,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         super(services);
     }
 
-    async markTaskComplete(taskId: string, complete: boolean): Promise<ClientTask> {
+    async markTaskComplete(taskId: string, complete: boolean): Promise<Task> {
         const task = await this.services.taskManager.completeTask(taskId);
         return {
             id: task.id,
@@ -46,7 +46,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         };
     }
 
-    async cancelTask(taskId: string): Promise<ClientTask> {
+    async cancelTask(taskId: string): Promise<Task> {
         const task = await this.services.taskManager.cancelTask(taskId);
         return {
             id: task.id,
@@ -458,7 +458,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return handles;
     }
 
-    private static async mapHandles(chatClient: ChatClient, agentList: (UUID|ChatHandle)[]) : Promise<UUID[]> {
+    private static async mapHandles(chatClient: ChatClient, agentList: ChatHandle[]) : Promise<UUID[]> {
         const ids : UUID[] = [];
         const handles = await chatClient.getHandles();
         if (!handles) {
