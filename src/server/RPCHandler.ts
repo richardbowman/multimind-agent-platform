@@ -337,7 +337,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             name: channel.name.replace('#', ''),
             description: channel.description,
             members: channel.members || [],
-            projectId: channel.projectId
+            artifactIds: channel.artifactIds,
+            projectId: channel.projectId,
+            goalTemplate: channel.goalTemplateId
         }));
     }
 
