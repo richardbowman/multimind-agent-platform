@@ -1,10 +1,14 @@
-import * as tts from '@mintplex-labs/piper-tts-web';
-import type { LogParam } from '../../../../llm/LLMLogger';
-import { type DataContextMethods } from '../contexts/DataContext';
-import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/types';
+import * as ort from 'onnxruntime-web';
 
 // Default voice ID for TTS
 const DEFAULT_VOICE_ID = 'en_US-hfc_female-medium';
+ort.env.wasm.wasmPaths = '/';
+
+import * as tts from '@mintplex-labs/piper-tts-web';
+import type { LogParam } from '../../../../llm/LLMLogger';
+import { type DataContextMethods } from '../contexts/DataContext';
+import { ClientChannel, ClientMessage } from '../../../../shared/types';
+
 
 // Initialize TTS system
 let ttsInitialized = false;
