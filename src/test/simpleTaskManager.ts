@@ -163,6 +163,8 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async getNextTaskForUser(userId: string): Promise<Task | null> {
+        const now = Date.now();
+        
         for (const projectId in this.projects) {
             const project : Project = this.projects[projectId];
             const userTasks = Object.values<Task>(project.tasks || [])
@@ -177,6 +179,11 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                         return false;
                     }
 
+                    // If task has a due date, check if it's in the future
+                    if (t.dueDate && new Date(t.dueDate).getTime() < now) {
+                        return false;
+                    }
+
                     // If task depends on another task, check if dependency is completed
                     if (t.dependsOn) {
                         const dependentTask = project.tasks[t.dependsOn];
@@ -187,7 +194,16 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
                     return true;
                 })
-                .sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity));
+                .sort((a, b) => {
+                    // Sort by due date first (earlier dates first)
+                    const aDue = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
+                    const bDue = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+                    if (aDue !== bDue) {
+                        return aDue - bDue;
+                    }
+                    // Then by order
+                    return (a.order ?? Infinity) - (b.order ?? Infinity);
+                });
 
             if (userTasks.length > 0) {
                 return userTasks[0];
