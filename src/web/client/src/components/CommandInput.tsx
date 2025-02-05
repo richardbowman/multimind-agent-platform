@@ -1,6 +1,4 @@
 import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent, useLayoutEffect } from 'react';
-
-
 import { useDataContext } from '../contexts/DataContext';
 import { Artifact } from '../../../../tools/artifact';
 import { Settings } from 'electron';
@@ -8,11 +6,15 @@ import { AssetSelectionDialog } from './AssetSelectionDialog';
 import Attachment from '@mui/icons-material/Attachment';
 import { MicrophoneButton } from './MicrophoneButton';
 import { useIPCService } from '../contexts/IPCContext';
+import HomeIcon from '@mui/icons-material/Home';
+import ChatIcon from '@mui/icons-material/Chat';
 
 interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: string[]) => void;
     currentChannel: string | null;
     settings: Settings;
+    showWelcome: boolean;
+    onToggleWelcome: () => void;
 }
 
 const COMMANDS = [
@@ -23,7 +25,12 @@ const COMMANDS = [
     { command: '/add', description: 'Attach artifacts to message' }
 ];
 
-export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSendMessage }) => {
+export const CommandInput: React.FC<CommandInputProps> = ({ 
+    currentChannel, 
+    onSendMessage, 
+    showWelcome, 
+    onToggleWelcome 
+}) => {
     const ipcService = useIPCService();
     const [input, setInput] = useState('');
     const [suggestions, setSuggestions] = useState<Array<{ title: string, type: string, id: string }>>([]);
@@ -438,6 +445,25 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         ))}
                     </div>
                 )}
+                <button
+                    onClick={onToggleWelcome}
+                    style={{
+                        cursor: 'pointer',
+                        padding: '8px',
+                        borderRadius: '6px',
+                        backgroundColor: '#444',
+                        border: 'none',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        color: '#fff',
+                        transition: 'all 0.2s ease',
+                        marginLeft: '8px'
+                    }}
+                    title={showWelcome ? "Switch to Chat View" : "Switch to Welcome View"}
+                >
+                    {showWelcome ? <ChatIcon /> : <HomeIcon />}
+                </button>
                 <MicrophoneButton 
                     currentChannel={currentChannel} 
                     currentThread={currentThread || undefined} 

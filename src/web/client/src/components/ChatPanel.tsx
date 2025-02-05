@@ -727,14 +727,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             </Box>
             )}
             <Box sx={{ display: 'flex', gap: 1, p: 2 }}>
-                <Button 
-                    variant="outlined"
-                    onClick={onSwitchToWelcome}
-                    sx={{ mr: 2 }}
-                >
-                    Back to Welcome
-                </Button>
-                <CommandInput onSendMessage={handleSendMessage} currentChannel={currentChannelId} />
+                <CommandInput 
+                    onSendMessage={handleSendMessage} 
+                    currentChannel={currentChannelId} 
+                    showWelcome={showWelcome}
+                    onToggleWelcome={onSwitchToWelcome}
+                />
             </Box>
 
             <Dialog
