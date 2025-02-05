@@ -732,6 +732,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                     currentChannel={currentChannelId} 
                     showWelcome={showWelcome}
                     onToggleWelcome={onSwitchToWelcome}
+                    sx={{flex: 1}}
                 />
             </Box>
 
