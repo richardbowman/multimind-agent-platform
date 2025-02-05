@@ -11,6 +11,28 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ContentType } from 'src/llm/promptBuilder';
 import { TaskCreationResponse, UpdateActions } from '../../schemas/taskCreation';
+import { Duration } from 'luxon';
+
+// Helper function to parse due dates from either ISO strings or duration strings
+function parseDueDate(dueDate: string): Date {
+    // Try parsing as ISO date first
+    const isoDate = new Date(dueDate);
+    if (!isNaN(isoDate.getTime())) {
+        return isoDate;
+    }
+
+    // Try parsing as duration string (e.g. "2 days", "1 week", "3 months")
+    try {
+        const duration = Duration.fromISO(dueDate) || Duration.fromObject({ [dueDate.split(' ')[1]]: parseInt(dueDate.split(' ')[0]) });
+        if (duration.isValid) {
+            return new Date(Date.now() + duration.as('milliseconds'));
+        }
+    } catch (e) {
+        // Fall through to error
+    }
+
+    throw new Error(`Invalid due date format: ${dueDate}. Must be ISO date string or duration (e.g. "2 days")`);
+}
 import { TaskListResponse } from '../../schemas/taskList';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { UUID } from 'src/types/uuid';
@@ -153,8 +175,8 @@ params.context?.artifacts });
                      throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
                  }
                  
-                 // Parse due date if provided
-                 const parsedDueDate = dueDate ? new Date(dueDate) : undefined;
+                 // Parse due date if provided - handles both ISO strings and duration strings
+                 const parsedDueDate = dueDate ? parseDueDate(dueDate) : undefined;
                  
                  task = await this.taskManager.updateTask(taskId, {
                      ...existingTask,
