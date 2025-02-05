@@ -25,6 +25,9 @@ interface APICall {
     protocol?: 'http' | 'sse' | 'websocket';
     events?: { type: string, data: any, timestamp: number }[]; // For SSE
     messages?: { type: 'send' | 'receive', data: any, timestamp: number }[]; // For WebSocket
+    frameId?: string; // ID of the frame that made the request
+    parentFrameId?: string; // ID of parent frame for iframes
+    frameUrl?: string; // URL of the frame document
 }
 
 interface APIScrapeResponse extends StepResponse {
@@ -93,7 +96,10 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                     statusCode: 0,
                     timestamp: Date.now(),
                     protocol: params.request.url.startsWith('ws') ? 'websocket' : 
-                             params.request.url.endsWith('/events') ? 'sse' : 'http'
+                             params.request.url.endsWith('/events') ? 'sse' : 'http',
+                    frameId: params.frameId,
+                    parentFrameId: params.parentFrameId,
+                    frameUrl: params.documentURL
                 };
                 this.apiCalls.push(apiCall);
                 if (this.apiCalls.length % 10 == 0) executeParams.partialResponse(`Logging ${params.request.url}, request ${this.apiCalls.length}...`)
@@ -157,6 +163,7 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
         _debugger.sendCommand('Network.enable');
         _debugger.sendCommand('Network.enableWebSockets');
         _debugger.sendCommand('Network.enableEventSource');
+        _debugger.sendCommand('Page.enable');
     }
 
     private async saveAPICallsAsArtifact(projectId: string): Promise<{allCalls: Artifact, largestPayloads: Artifact[]}> {
@@ -253,11 +260,13 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
         const {allCalls, largestPayloads} = await this.saveAPICallsAsArtifact(params.projectId);
 
         // Generate a summary of the captured calls
+        const iframeCalls = this.apiCalls.filter(c => c.frameId && c.parentFrameId);
         let summary = `Captured ${this.apiCalls.length} API calls. ` +
             `Most common endpoint: ${this.getMostCommonEndpoint()}\n\n` +
             `Significant JSON payloads found: ${largestPayloads.length}\n` +
             `WebSocket connections: ${this.apiCalls.filter(c => c.protocol === 'websocket').length}\n` +
-            `SSE connections: ${this.apiCalls.filter(c => c.protocol === 'sse').length}\n`;
+            `SSE connections: ${this.apiCalls.filter(c => c.protocol === 'sse').length}\n` +
+            `Iframe requests: ${iframeCalls.length}\n`;
 
         if (largestPayloads.length > 0) {
             summary += `Top 3 largest payloads:\n` +
