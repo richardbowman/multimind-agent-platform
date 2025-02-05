@@ -80,18 +80,21 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
         window.URL.revokeObjectURL(url);
     };
 
+    const artifactRef = useRef(artifact);
+    artifactRef.current = artifact;
+
     const baseActions = useMemo(() => [
         {
             id: 'artifact-display-edit',
             icon: <EditIcon fontSize="small" />,
             label: 'Edit Artifact',
-            onClick: () => onEdit && onEdit()
+            onClick: () => onEdit && onEdit(artifactRef.current)
         },
         {
             id: 'artifact-display-delete', 
             icon: <DeleteIcon fontSize="small" />,
             label: 'Delete Artifact',
-            onClick: () => onDelete && onDelete()
+            onClick: () => onDelete && onDelete(artifactRef.current)
         },
         {
             id: 'artifact-display-export',
@@ -99,7 +102,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
             label: 'Export Artifact',
             onClick: handleExport
         }
-    ], [onEdit, onDelete]);
+    ], [onEdit, onDelete, handleExport]);
 
     const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
 
