@@ -29,6 +29,7 @@ import {
     FormControlLabel,
     Checkbox
 } from '@mui/material';
+import { useDropzone } from 'react-dropzone';
 import MenuIcon from '@mui/icons-material/Menu';
 import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
@@ -70,6 +71,48 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const [availableModels, setAvailableModels] = useState<Record<string, ModelInfo[]>>({});
     const [availableEmbedders, setAvailableEmbedders] = useState<Record<string, EmbedderModelInfo[]>>({});
     const [modelFetchError, setModelFetchError] = useState<string>('');
+    const [isUploadingModel, setIsUploadingModel] = useState(false);
+    const [uploadError, setUploadError] = useState<string>('');
+
+    const { getRootProps, getInputProps, isDragActive } = useDropzone({
+        accept: {
+            'application/octet-stream': ['.gguf']
+        },
+        maxFiles: 1,
+        onDrop: async (acceptedFiles) => {
+            if (acceptedFiles.length > 0) {
+                const file = acceptedFiles[0];
+                try {
+                    setIsUploadingModel(true);
+                    setUploadError('');
+                    
+                    // Upload the GGUF file
+                    const result = await ipcService.getRPC().uploadGGUFModel(file.path);
+                    
+                    if (result.error) {
+                        throw new Error(result.error);
+                    }
+
+                    // Update the model list
+                    const models = await ipcService.getRPC().getAvailableModels('llama_cpp');
+                    setAvailableModels(prev => ({
+                        ...prev,
+                        llama_cpp: models
+                    }));
+
+                    // Set the new model as selected
+                    handleChange('models.conversation.llama_cpp', result.modelId);
+                    
+                    setSuccessMessage(`Model ${file.name} uploaded successfully`);
+                } catch (error) {
+                    console.error('Failed to upload model:', error);
+                    setUploadError(`Failed to upload model: ${error instanceof Error ? error.message : 'Unknown error'}`);
+                } finally {
+                    setIsUploadingModel(false);
+                }
+            }
+        }
+    });
 
     useEffect(() => {
         const fetchModels = async () => {
@@ -669,6 +712,44 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                                 )}
                                             </FormControl>
                                         ))}
+                                    
+                                        {category === 'LLM Settings' && settings.providers?.chat === 'llama_cpp' && (
+                                            <Box 
+                                                {...getRootProps()}
+                                                sx={{
+                                                    border: '2px dashed',
+                                                    borderColor: isDragActive ? 'primary.main' : 'divider',
+                                                    borderRadius: 2,
+                                                    p: 3,
+                                                    textAlign: 'center',
+                                                    cursor: 'pointer',
+                                                    backgroundColor: isDragActive ? 'action.hover' : 'background.paper',
+                                                    '&:hover': {
+                                                        backgroundColor: 'action.hover'
+                                                    }
+                                                }}
+                                            >
+                                                <input {...getInputProps()} />
+                                                {isUploadingModel ? (
+                                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
+                                                        <CircularProgress size={24} />
+                                                        <Typography>Uploading model...</Typography>
+                                                    </Box>
+                                                ) : (
+                                                    <>
+                                                        <Typography>Drag & drop a GGUF model file here, or click to select</Typography>
+                                                        <Typography variant="caption" color="text.secondary">
+                                                            Supported formats: .gguf
+                                                        </Typography>
+                                                    </>
+                                                )}
+                                                {uploadError && (
+                                                    <Alert severity="error" sx={{ mt: 2 }}>
+                                                        {uploadError}
+                                                    </Alert>
+                                                )}
+                                            </Box>
+                                        )}
                                     </Box>
                                 </Paper>
                             );
