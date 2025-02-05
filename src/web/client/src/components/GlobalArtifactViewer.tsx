@@ -30,6 +30,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
 
     const baseToolbarActions = useMemo(() => [
         {
+            id: 'upload-file',
             icon: <AttachFileIcon />,
             label: 'Upload File',
             onClick: async () => {
@@ -37,13 +38,15 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             }
         },
         {
+            id: 'create-artifact',
             icon: <DescriptionIcon />,
             label: 'Create New Artifact',
             onClick: () => setEditorOpen(true)
         },
         {
+            id: 'delete-selected',
             icon: <DeleteIcon />,
-            label: `Delete Selected`,
+            label: `Delete Selected (${selectedArtifacts.length})`,
             onClick: () => setDeleteConfirmOpen(true),
             disabled: selectedArtifacts.length === 0,
             color: 'error',
@@ -99,8 +102,9 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         if (selectedArtifacts.length > 0) {
             await Promise.all(selectedArtifacts.map(artifact => deleteArtifact(artifact.id)));
             setSelectedArtifacts([]);
-            updateActionState('Delete Selected', {
-                disabled: true
+            updateActionState('delete-selected', {
+                disabled: true,
+                label: 'Delete Selected (0)'
             });
             fetchAllArtifacts();
             setDeleteConfirmOpen(false);
@@ -228,9 +232,9 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                                     ? [...selectedArtifacts, artifact]
                                                     : selectedArtifacts.filter(a => a.id !== artifact.id);
                                                 setSelectedArtifacts(newSelection);
-                                                updateActionState('Delete Selected', {
+                                                updateActionState('delete-selected', {
                                                     disabled: newSelection.length === 0,
-                                                    label: `Delete Selected`
+                                                    label: `Delete Selected (${newSelection.length})`
                                                 });
                                             }}
                                         />
@@ -240,9 +244,9 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                             onClick={() => {
                                                 // Single select when clicking the card
                                                 setSelectedArtifacts([artifact]);
-                                                updateActionState('Delete Selected', {
+                                                updateActionState('delete-selected', {
                                                     disabled: false,
-                                                    label: `Delete Selected`
+                                                    label: `Delete Selected (1)`
                                                 });
                                             }}
                                             onCheckboxClick={(e) => {
