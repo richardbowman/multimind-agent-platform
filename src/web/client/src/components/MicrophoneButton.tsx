@@ -5,7 +5,7 @@ import { useIPCService } from '../contexts/IPCContext';
 import { useDataContext } from '../contexts/DataContext';
 
 export const MicrophoneButton: React.FC = () => {
-    const { currentChannel, currentThreadId } = useDataContext();
+    const { currentChannelId, currentThreadId } = useDataContext();
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const ipcService = useIPCService();
@@ -111,11 +111,11 @@ export const MicrophoneButton: React.FC = () => {
                     });
 
                     // Send for transcription
-                    if (currentChannel) {
+                    if (currentChannelId ) {
                         try {
                             await ipcService.getRPC().transcribeAndSendAudio({
                                 audioBase64: wavBase64,
-                                channelId: currentChannel,
+                                channelId: currentChannelId,
                                 threadId: currentThreadId || null,
                                 language: 'en'
                             });
