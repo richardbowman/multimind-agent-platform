@@ -62,6 +62,9 @@ export const MicrophoneButton: React.FC = () => {
             // Store the stream so we can clean it up later
             const currentStream = stream;
 
+            // Get thread ID before starting recording
+            const threadId = currentThreadId || null;
+            
             recorder.onstop = async () => {
                 try {
                     // Combine audio chunks
@@ -110,14 +113,12 @@ export const MicrophoneButton: React.FC = () => {
                         reader.readAsDataURL(wavBlob);
                     });
 
-                    // Send for transcription - get fresh thread ID from context
-                    const { currentThreadId: freshThreadId } = useDataContext();
                     if (currentChannelId) {
                         try {
                             await ipcService.getRPC().transcribeAndSendAudio({
                                 audioBase64: wavBase64,
                                 channelId: currentChannelId,
-                                threadId: freshThreadId || null, 
+                                threadId: threadId,
                                 language: 'en'
                             });
                         } catch (error) {
