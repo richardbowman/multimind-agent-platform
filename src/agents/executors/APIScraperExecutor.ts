@@ -11,6 +11,7 @@ import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { session, BrowserWindow } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
+import { StringUtils } from "src/utils/StringUtils";
 
 interface APICall {
     url: string;
