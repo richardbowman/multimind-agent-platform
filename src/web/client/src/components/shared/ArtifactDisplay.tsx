@@ -202,7 +202,19 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                                             color: '#ddd',
                                             wordBreak: 'break-word'
                                         }}>
-                                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : value}
+                                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : 
+                                                (key.toLowerCase().includes('url') && typeof value === 'string' && value.startsWith('http') ? 
+                                                    <a 
+                                                        href={value} 
+                                                        target="_blank" 
+                                                        rel="noopener noreferrer"
+                                                        style={{ color: '#90caf9', textDecoration: 'none' }}
+                                                    >
+                                                        {value}
+                                                    </a> : 
+                                                    value
+                                                )
+                                            }
                                         </td>
                                     </tr>
                                 ))
