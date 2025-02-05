@@ -49,7 +49,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         resetPendingFiles, 
         allArtifacts, 
         showFileDialog,
-        currentThread 
+        currentThread,
+        tasks 
     } = useDataContext();
 
     // Get handles filtered by current channel members
@@ -446,50 +447,52 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                         ))}
                     </div>
                 )}
-                <div style={{
-                    display: 'flex',
-                    backgroundColor: '#444',
-                    borderRadius: '6px',
-                    padding: '4px',
-                    marginLeft: '8px'
-                }}>
-                    <button
-                        onClick={() => onToggleWelcome(false)}
-                        style={{
-                            cursor: 'pointer',
-                            padding: '6px 8px',
-                            border: 'none',
-                            borderRadius: '4px',
-                            backgroundColor: showWelcome ? 'transparent' : '#646cff',
-                            color: showWelcome ? '#aaa' : '#fff',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s ease'
-                        }}
-                        title="Switch to Chat View"
-                    >
-                        <ChatIcon fontSize="small" />
-                    </button>
-                    <button
-                        onClick={() => onToggleWelcome(true)}
-                        style={{
-                            cursor: 'pointer',
-                            padding: '6px 8px',
-                            border: 'none',
-                            borderRadius: '4px',
-                            backgroundColor: showWelcome ? '#646cff' : 'transparent',
-                            color: showWelcome ? '#fff' : '#aaa',
-                            display: 'flex',
-                            alignItems: 'center',
-                            justifyContent: 'center',
-                            transition: 'all 0.2s ease'
-                        }}
-                        title="Switch to Welcome View"
-                    >
-                        <HomeIcon fontSize="small" />
-                    </button>
-                </div>
+                {tasks && tasks.length > 0 && (
+                    <div style={{
+                        display: 'flex',
+                        backgroundColor: '#444',
+                        borderRadius: '6px',
+                        padding: '4px',
+                        marginLeft: '8px'
+                    }}>
+                        <button
+                            onClick={() => onToggleWelcome(false)}
+                            style={{
+                                cursor: 'pointer',
+                                padding: '6px 8px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                backgroundColor: showWelcome ? 'transparent' : '#646cff',
+                                color: showWelcome ? '#aaa' : '#fff',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s ease'
+                            }}
+                            title="Switch to Chat View"
+                        >
+                            <ChatIcon fontSize="small" />
+                        </button>
+                        <button
+                            onClick={() => onToggleWelcome(true)}
+                            style={{
+                                cursor: 'pointer',
+                                padding: '6px 8px',
+                                border: 'none',
+                                borderRadius: '4px',
+                                backgroundColor: showWelcome ? '#646cff' : 'transparent',
+                                color: showWelcome ? '#fff' : '#aaa',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                transition: 'all 0.2s ease'
+                            }}
+                            title="Switch to Welcome View"
+                        >
+                            <HomeIcon fontSize="small" />
+                        </button>
+                    </div>
+                )}
                 <MicrophoneButton 
                     currentChannel={currentChannel} 
                     currentThread={currentThread || undefined} 
