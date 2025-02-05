@@ -7,7 +7,7 @@ import { useDataContext } from '../contexts/DataContext';
 export const MicrophoneButton: React.FC = () => {
     const { currentChannelId, currentThreadId } = useDataContext();
     const isRecordingRef = useRef(false); // Add a ref to track recording state
-    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+    const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const silenceTimer = useRef<number | null>(null);
     const silenceDetectionInterval = useRef<number | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -58,12 +58,12 @@ export const MicrophoneButton: React.FC = () => {
     
     const handleRecording = async () => {
         // If already recording, stop and clean up
-        if (isRecordingRef.current && mediaRecorder) {
+        if (isRecordingRef.current && mediaRecorderRef.current) {
             try {
                 isRecordingRef.current = false; // Update the ref
-                mediaRecorder.stop();
-                mediaRecorder.stream.getTracks().forEach(track => track.stop());
-                setMediaRecorder(null);
+                mediaRecorderRef.current.stop();
+                mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
+                mediaRecorderRef.current = null;
                 stopSilenceDetection();
                 return;
             } catch (error) {
@@ -74,7 +74,7 @@ export const MicrophoneButton: React.FC = () => {
             try {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-                setMediaRecorder(recorder);
+                mediaRecorderRef.current = recorder;
                 isRecordingRef.current = true; // Update the ref
                 
                 // Store the stream so we can clean it up later
@@ -157,7 +157,7 @@ export const MicrophoneButton: React.FC = () => {
                         if (audioContextRef.current) {
                             audioContextRef.current.close();
                         }
-                        setMediaRecorder(null);
+                        mediaRecorderRef.current = null;
                         isRecordingRef.current = false;
                         stopSilenceDetection();
                     }
