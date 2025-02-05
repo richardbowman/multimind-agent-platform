@@ -6,10 +6,10 @@ import { useDataContext } from '../contexts/DataContext';
 
 export const MicrophoneButton: React.FC = () => {
     const { currentChannelId, currentThreadId } = useDataContext();
-    const [isRecording, setIsRecording] = useState(false);
     const isRecordingRef = useRef(false); // Add a ref to track recording state
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const silenceTimer = useRef<number | null>(null);
+    const silenceDetectionInterval = useRef<number | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
     const analyserRef = useRef<AnalyserNode | null>(null);
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
@@ -32,7 +32,7 @@ export const MicrophoneButton: React.FC = () => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.ctrlKey && e.code === 'Space') {
                 e.preventDefault();
-                if (!isRecording) {
+                if (!isRecordingRef.current) {
                     handleRecording();
                 }
             }
@@ -41,7 +41,7 @@ export const MicrophoneButton: React.FC = () => {
         const handleKeyUp = (e: KeyboardEvent) => {
             if (e.ctrlKey && e.code === 'Space') {
                 e.preventDefault();
-                if (isRecording) {
+                if (isRecordingRef.current) {
                     handleRecording();
                 }
             }
@@ -54,15 +54,14 @@ export const MicrophoneButton: React.FC = () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [isRecording]);
+    }, [isRecordingRef.current]);
     
     const handleRecording = async () => {
         // If already recording, stop and clean up
-        if (isRecording && mediaRecorder) {
+        if (isRecordingRef.current && mediaRecorder) {
             try {
-                mediaRecorder.stop();
-                setIsRecording(false);
                 isRecordingRef.current = false; // Update the ref
+                mediaRecorder.stop();
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
                 setMediaRecorder(null);
                 stopSilenceDetection();
@@ -70,161 +69,157 @@ export const MicrophoneButton: React.FC = () => {
             } catch (error) {
                 console.error('Error stopping recording:', error);
             }
-        }
-
-        // Start new recording
-        try {
-            const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-            const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
-            setMediaRecorder(recorder);
-            setIsRecording(true);
-            isRecordingRef.current = true; // Update the ref
-            
-            // Store the stream so we can clean it up later
-            const currentStream = stream;
-            const threadId = currentThreadIdRef.current;
-            
-            // Store chunks in a local array
-            const chunks: Blob[] = [];
-            
-            recorder.ondataavailable = (e) => {
-                chunks.push(e.data);
-            };
-
-            recorder.onstop = async () => {
-                try {
-                    // Combine audio chunks
-                    const audioBlob = new Blob(chunks, { type: 'audio/webm' });
-
-                    // Convert WebM to WAV using AudioContext and resample to 16kHz
-                    const audioContext = new AudioContext();
-                    setIsRecording(false);
-                    const arrayBuffer = await audioBlob.arrayBuffer();
-                    const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-                    
-                    // Create a new AudioContext at 16kHz
-                    const targetSampleRate = 16000;
-                    const offlineContext = new OfflineAudioContext(
-                        audioBuffer.numberOfChannels,
-                        audioBuffer.length * (targetSampleRate / audioBuffer.sampleRate),
-                        targetSampleRate
-                    );
-                    
-                    // Create a buffer source and connect it
-                    const source = offlineContext.createBufferSource();
-                    source.buffer = audioBuffer;
-                    source.connect(offlineContext.destination);
-                    source.start();
-                    
-                    // Render the audio at 16kHz
-                    const wavBlob = await new Promise<Blob>(resolve => {
-                        offlineContext.startRendering().then(renderedBuffer => {
-                            const wavBytes = audioBufferToWav(renderedBuffer);
-                            resolve(new Blob([wavBytes], { type: 'audio/wav' }));
-                        });
-                    });
-
-                    // Convert WAV to base64
-                    const wavBase64 = await new Promise<string>((resolve, reject) => {
-                        const reader = new FileReader();
-                        reader.onload = () => {
-                            if (typeof reader.result === 'string') {
-                                // Remove data URL prefix
-                                const base64 = reader.result.split(',')[1];
-                                resolve(base64);
-                            } else {
-                                reject(new Error('Failed to read WAV as base64'));
-                            }
-                        };
-                        reader.onerror = reject;
-                        reader.readAsDataURL(wavBlob);
-                    });
-
-                    if (currentChannelId) {
-                        try {
-                            await ipcService.getRPC().transcribeAndSendAudio({
-                                audioBase64: wavBase64,
-                                channelId: currentChannelId,
-                                threadId: threadId,
-                                language: 'en'
-                            });
-                        } catch (error) {
-                            console.error('Transcription failed:', error);
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error processing audio:', error);
-                } finally {
-                    // Clean up
-                    currentStream.getTracks().forEach(track => track.stop());
-                    if (audioContextRef.current) {
-                        audioContextRef.current.close();
-                    }
-                    setMediaRecorder(null);
-                    setIsRecording(false);
-                    stopSilenceDetection();
-                }
-            };
-
-            // Setup audio analysis for silence detection
+        } else {
+            // Start new recording
             try {
-                console.log('Initializing audio context and analyser');
-                audioContextRef.current = new AudioContext();
+                const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                setMediaRecorder(recorder);
+                isRecordingRef.current = true; // Update the ref
                 
-                // Wait for audio context to be ready
-                await new Promise(resolve => setTimeout(resolve, 100));
+                // Store the stream so we can clean it up later
+                const currentStream = stream;
+                const threadId = currentThreadIdRef.current;
                 
-                analyserRef.current = audioContextRef.current.createAnalyser();
-                analyserRef.current.fftSize = ANALYZER_FFT_SIZE;
-                analyserRef.current.smoothingTimeConstant = 0.8; // Smoother volume changes
+                // Store chunks in a local array
+                const chunks: Blob[] = [];
                 
-                // Create a new MediaStream from the original stream
-                const audioStream = new MediaStream();
-                stream.getAudioTracks().forEach(track => audioStream.addTrack(track));
-                
-                sourceRef.current = audioContextRef.current.createMediaStreamSource(audioStream);
-                
-                // Add a gain node to boost quiet signals
-                const gainNode = audioContextRef.current.createGain();
-                gainNode.gain.value = 2.0; // Boost signal by 2x
-                
-                // Connect nodes: source -> gain -> analyser
-                sourceRef.current.connect(gainNode);
-                gainNode.connect(analyserRef.current);
-                
-                // Add a small delay to ensure audio is flowing
-                await new Promise(resolve => setTimeout(resolve, 200));
-            
-                console.log('Audio analysis setup complete');
-            } catch (error) {
-                console.error('Error setting up audio analysis:', error);
-                // Fall back to manual stop if analysis fails
-                setTimeout(() => {
-                    if (isRecording) {
-                        handleRecording();
-                    }
-                }, 10000); // Auto-stop after 10 seconds
-            }
-            
-            // Start recording with 100ms time slices for better silence detection
-            recorder.start(100);
+                recorder.ondataavailable = (e) => {
+                    chunks.push(e.data);
+                };
 
-            // Start silence detection after a short delay to ensure everything is ready
-            setTimeout(() => {
-                if (isRecordingRef.current && analyserRef.current) {
-                    startSilenceDetection();
+                recorder.onstop = async () => {
+                    try {
+                        // Combine audio chunks
+                        const audioBlob = new Blob(chunks, { type: 'audio/webm' });
+
+                        // Convert WebM to WAV using AudioContext and resample to 16kHz
+                        const audioContext = new AudioContext();
+                        isRecordingRef.current = false;
+                        const arrayBuffer = await audioBlob.arrayBuffer();
+                        const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+                        
+                        // Create a new AudioContext at 16kHz
+                        const targetSampleRate = 16000;
+                        const offlineContext = new OfflineAudioContext(
+                            audioBuffer.numberOfChannels,
+                            audioBuffer.length * (targetSampleRate / audioBuffer.sampleRate),
+                            targetSampleRate
+                        );
+                        
+                        // Create a buffer source and connect it
+                        const source = offlineContext.createBufferSource();
+                        source.buffer = audioBuffer;
+                        source.connect(offlineContext.destination);
+                        source.start();
+                        
+                        // Render the audio at 16kHz
+                        const wavBlob = await new Promise<Blob>(resolve => {
+                            offlineContext.startRendering().then(renderedBuffer => {
+                                const wavBytes = audioBufferToWav(renderedBuffer);
+                                resolve(new Blob([wavBytes], { type: 'audio/wav' }));
+                            });
+                        });
+
+                        // Convert WAV to base64
+                        const wavBase64 = await new Promise<string>((resolve, reject) => {
+                            const reader = new FileReader();
+                            reader.onload = () => {
+                                if (typeof reader.result === 'string') {
+                                    // Remove data URL prefix
+                                    const base64 = reader.result.split(',')[1];
+                                    resolve(base64);
+                                } else {
+                                    reject(new Error('Failed to read WAV as base64'));
+                                }
+                            };
+                            reader.onerror = reject;
+                            reader.readAsDataURL(wavBlob);
+                        });
+
+                        if (currentChannelId) {
+                            try {
+                                await ipcService.getRPC().transcribeAndSendAudio({
+                                    audioBase64: wavBase64,
+                                    channelId: currentChannelId,
+                                    threadId: threadId,
+                                    language: 'en'
+                                });
+                            } catch (error) {
+                                console.error('Transcription failed:', error);
+                            }
+                        }
+                    } catch (error) {
+                        console.error('Error processing audio:', error);
+                    } finally {
+                        // Clean up
+                        currentStream.getTracks().forEach(track => track.stop());
+                        if (audioContextRef.current) {
+                            audioContextRef.current.close();
+                        }
+                        setMediaRecorder(null);
+                        isRecordingRef.current = false;
+                        stopSilenceDetection();
+                    }
+                };
+
+                // Setup audio analysis for silence detection
+                try {
+                    console.log('Initializing audio context and analyser');
+                    audioContextRef.current = new AudioContext();
+                    
+                    // Wait for audio context to be ready
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                    
+                    analyserRef.current = audioContextRef.current.createAnalyser();
+                    analyserRef.current.fftSize = ANALYZER_FFT_SIZE;
+                    analyserRef.current.smoothingTimeConstant = 0.8; // Smoother volume changes
+                    
+                    // Create a new MediaStream from the original stream
+                    const audioStream = new MediaStream();
+                    stream.getAudioTracks().forEach(track => audioStream.addTrack(track));
+                    
+                    sourceRef.current = audioContextRef.current.createMediaStreamSource(audioStream);
+                    
+                    // Add a gain node to boost quiet signals
+                    const gainNode = audioContextRef.current.createGain();
+                    gainNode.gain.value = 2.0; // Boost signal by 2x
+                    
+                    // Connect nodes: source -> gain -> analyser
+                    sourceRef.current.connect(gainNode);
+                    gainNode.connect(analyserRef.current);
+                    
+                    // Add a small delay to ensure audio is flowing
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                
+                    console.log('Audio analysis setup complete');
+                } catch (error) {
+                    console.error('Error setting up audio analysis:', error);
+                    // Fall back to manual stop if analysis fails
+                    setTimeout(() => {
+                        if (isRecordingRef.current) {
+                            handleRecording();
+                        }
+                    }, 10000); // Auto-stop after 10 seconds
                 }
-            }, 500);
-        } catch (error) {
-            console.error('Error starting recording:', error);
+                
+                // Start recording with 100ms time slices for better silence detection
+                recorder.start(100);
+
+                // Start silence detection after a short delay to ensure everything is ready
+                setTimeout(() => {
+                    if (isRecordingRef.current && analyserRef.current) {
+                        startSilenceDetection();
+                    }
+                }, 500);
+            } catch (error) {
+                console.error('Error starting recording:', error);
+            }
         }
     };
-
-    // Helper function to convert AudioBuffer to WAV
-    const silenceDetectionInterval = useRef<number | null>(null);
-
+    
     const startSilenceDetection = useCallback(() => {
-        if (!isRecording) {
+        if (!isRecordingRef.current) {
             console.log('Not starting silence detection - recording not active');
             return;
         }
@@ -237,7 +232,7 @@ export const MicrophoneButton: React.FC = () => {
         console.log('Starting silence detection');
 
         const checkSilence = async () => {
-            if (!analyserRef.current || !isRecording) {
+            if (!analyserRef.current || !isRecordingRef.current) {
                 console.log('Silence detection stopped - analyser not ready or recording ended');
                 return;
             }
@@ -276,7 +271,7 @@ export const MicrophoneButton: React.FC = () => {
             const dB = rms > 0 ? 20 * Math.log10(rms) : MIN_VALID_VOLUME;
             
             // Debug log the raw audio data
-            console.log('Audio samples:', Array.from(dataArray).slice(0, 10));
+            // console.log('Audio samples:', Array.from(dataArray).slice(0, 10));
             
             // Skip if volume is too low to be valid
             if (dB < MIN_VALID_VOLUME) {
@@ -284,23 +279,23 @@ export const MicrophoneButton: React.FC = () => {
                 return;
             }
             
-            console.log(`Audio level: ${dB.toFixed(2)} dB`); // Debug log
+            // console.log(`Audio level: ${dB.toFixed(2)} dB`); // Debug log
             
             // Only consider it silence if we've had valid sound first
             if (dB > SOUND_THRESHOLD) {
-                console.log(`Active speech detected (${dB.toFixed(2)} dB > ${SOUND_THRESHOLD} dB)`);
+                // console.log(`Active speech detected (${dB.toFixed(2)} dB > ${SOUND_THRESHOLD} dB)`);
                 if (silenceTimer.current) {
                     console.log('Resetting silence timer');
                     window.clearTimeout(silenceTimer.current);
                     silenceTimer.current = null;
                 }
             } else if (dB < SILENCE_THRESHOLD && dB > MIN_VALID_VOLUME) {
-                console.log(`Quiet period detected (${dB.toFixed(2)} dB < ${SILENCE_THRESHOLD} dB)`);
+                // console.log(`Quiet period detected (${dB.toFixed(2)} dB < ${SILENCE_THRESHOLD} dB)`);
                 if (!silenceTimer.current) {
                     console.log(`Starting silence timer (${SILENCE_DURATION}ms)`);
                     silenceTimer.current = window.setTimeout(() => {
                         console.log('Silence duration reached, stopping recording');
-                        if (isRecording) {
+                        if (isRecordingRef.current) {
                             handleRecording();
                         }
                     }, SILENCE_DURATION);
@@ -310,7 +305,7 @@ export const MicrophoneButton: React.FC = () => {
 
         // Start checking every 100ms
         silenceDetectionInterval.current = window.setInterval(checkSilence, 100);
-    }, [isRecording]);
+    }, [isRecordingRef.current]);
 
     const stopSilenceDetection = () => {
         if (silenceTimer.current) {
@@ -329,7 +324,7 @@ export const MicrophoneButton: React.FC = () => {
                 cursor: 'pointer',
                 padding: '8px 12px',
                 borderRadius: '6px',
-                backgroundColor: isRecording ? '#ff4444' : '#444',
+                backgroundColor: isRecordingRef.current ? '#ff4444' : '#444',
                 border: 'none',
                 display: 'flex',
                 alignItems: 'center',
@@ -339,13 +334,13 @@ export const MicrophoneButton: React.FC = () => {
             }}
             onClick={handleRecording}
             onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff6666' : '#555';
+                (e.currentTarget as HTMLElement).style.backgroundColor = isRecordingRef.current ? '#ff6666' : '#555';
             }}
             onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff4444' : '#444';
+                (e.currentTarget as HTMLElement).style.backgroundColor = isRecordingRef.current ? '#ff4444' : '#444';
             }}
         >
-            {isRecording ? <Stop /> : <Mic />}
+            {isRecordingRef.current ? <Stop /> : <Mic />}
         </button>
     );
 };
