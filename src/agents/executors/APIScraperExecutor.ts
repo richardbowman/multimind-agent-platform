@@ -76,9 +76,9 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
             throw new Error('Browser window not initialized');
         }
 
-        const debugger = this.browserWindow.webContents.debugger;
+        const _debugger = this.browserWindow.webContents.debugger;
 
-        debugger.on('message', (event, method, params) => {
+        _debugger.on('message', (event, method, params) => {
             if (method === 'Network.requestWillBeSent') {
                 const apiCall: APICall = {
                     url: params.request.url,
@@ -97,27 +97,22 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                 if (call) {
                     call.responseHeaders = params.response.headers;
                     call.statusCode = params.response.status;
-                }
-            }
-            else if (method === 'Network.loadingFinished') {
-                const call = this.apiCalls.find(c => c.url === params.requestId);
-                if (call) {
-                    debugger.sendCommand('Network.getResponseBody', { requestId: params.requestId })
-                        .then(response => {
-                            try {
-                                call.responseBody = JSON.parse(response.body);
-                            } catch {
-                                call.responseBody = response.body;
-                            }
-                        })
-                        .catch(err => {
-                            console.error('Error getting response body:', err);
-                        });
+                    _debugger.sendCommand('Network.getResponseBody', { requestId: params.requestId })
+                    .then(response => {
+                        try {
+                            call.responseBody = JSON.parse(response.body);
+                        } catch {
+                            call.responseBody = response.body;
+                        }
+                    })
+                    .catch(err => {
+                        console.error('Error getting response body:', err);
+                    });
                 }
             }
         });
 
-        debugger.sendCommand('Network.enable');
+        _debugger.sendCommand('Network.enable');
     }
 
     private async saveAPICallsAsArtifact(projectId: string): Promise<{allCalls: Artifact, largestPayloads: Artifact[]}> {
@@ -155,26 +150,23 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                             sourceUrl: call.url,
                             sizeBytes: size,
                             statusCode: call.statusCode,
-                            method: call.method
+                            method: call.method,
+                            projectId: projectId
                         }
                     });
                 }
             }
         }
 
-        // Sort payloads by size descending
-        largestPayloads.sort((a, b) => (b.metadata?.sizeBytes || 0) - (a.metadata?.sizeBytes || 0));
+        // Sort payloads by size descending and keep top 10 payloads
+        const payloads = largestPayloads.sort((a, b) => (b.metadata?.sizeBytes || 0) - (a.metadata?.sizeBytes || 0)).slice(0,10);
 
         // Save artifacts
-        const savedAllCalls = await this.artifactManager.saveArtifact(allCallsArtifact, projectId);
-        const savedPayloads = await Promise.all(
-            largestPayloads.map(payload => 
-                this.artifactManager.saveArtifact(payload, projectId)
-            )
-        );
+        // const savedAllCalls = await this.artifactManager.saveArtifact(allCallsArtifact, projectId);
+        const savedPayloads = await Promise.all(payloads.map(payload => this.artifactManager.saveArtifact(payload)));
 
         return {
-            allCalls: savedAllCalls,
+            allCalls: allCallsArtifact, //savedAllCalls,
             largestPayloads: savedPayloads
         };
     }
