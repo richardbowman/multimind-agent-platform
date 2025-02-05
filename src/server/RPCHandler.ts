@@ -546,6 +546,17 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                     defaultResponder = template.defaultResponder;
                 }
             }
+        } else {
+            // Create project ID anyhow to store channel tasks
+            const project = await taskManager.createProject({
+                name: params.name,
+                tasks: [],
+                metadata: {
+                    description: params.description || '',
+                    tags: ["channel-goals"]
+                }
+            });
+            projectId = project.id;
         }
 
         if (!defaultResponder) defaultResponder = createChatHandle('@router');
