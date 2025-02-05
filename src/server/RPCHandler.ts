@@ -752,6 +752,11 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             // Clean up transcription by removing timestamps
             transcription = transcription.replace(/\[\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\] /g, '');
 
+            // If transcription is blank audio, don't create a post
+            if (transcription.trim() === '[BLANK_AUDIO]') {
+                return null;
+            }
+
             // Send transcription as message with thread context
             const message = {
                 channel_id: channelId,
