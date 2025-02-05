@@ -51,11 +51,24 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
             webPreferences: {
                 nodeIntegration: false,
                 contextIsolation: true,
-                sandbox: true
+                sandbox: true,
+                webSecurity: true,
+                partition: 'persist:api-scraper'
             }
         });
 
-        return this.browserWindow.webContents.session;
+        const session = this.browserWindow.webContents.session;
+        
+        // Enable webRequest API with proper permissions
+        session.webRequest.onBeforeSendHeaders((details, callback) => {
+            callback({ requestHeaders: details.requestHeaders });
+        });
+
+        session.webRequest.onHeadersReceived((details, callback) => {
+            callback({ responseHeaders: details.responseHeaders });
+        });
+
+        return session;
     }
 
     private setupAPIMonitoring(session: Electron.Session) {
@@ -89,27 +102,22 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
             callback({ cancel: false });
         });
 
-        session.webRequest.onResponseStarted((details) => {
+        session.webRequest.onCompleted(async (details) => {
             if (details.resourceType === 'xhr' || details.resourceType === 'fetch') {
-                const filter = session.webRequest.filterResponseData(details.requestId);
-                let data = '';
-
-                filter.on('data', (chunk) => {
-                    data += chunk.toString();
-                });
-
-                filter.on('end', () => {
+                try {
+                    const response = await session.webRequest.getResponseBody(details.requestId);
                     const call = this.apiCalls.find(c => c.url === details.url);
                     if (call) {
                         call.statusCode = details.statusCode;
                         try {
-                            call.responseBody = JSON.parse(data);
+                            call.responseBody = JSON.parse(response.data);
                         } catch {
-                            call.responseBody = data;
+                            call.responseBody = response.data;
                         }
                     }
-                    filter.close();
-                });
+                } catch (error) {
+                    console.error('Error getting response body:', error);
+                }
             }
         });
     }
