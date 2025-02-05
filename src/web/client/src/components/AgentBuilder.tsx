@@ -19,7 +19,9 @@ import {
     DialogTitle,
     DialogContent,
     DialogActions,
-    Collapse
+    Collapse,
+    Tabs,
+    Tab
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -50,6 +52,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
     });
 
     const [executorOptions, setExecutorOptions] = useState<{value: string, label: string}[]>([]);
+    const [currentTab, setCurrentTab] = useState(0);
 
     useEffect(() => {
         const fetchExecutorTypes = async () => {
@@ -193,6 +196,130 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 )}
                             </Box>
                         </Box>
+                        )}
+
+                        {currentTab === 1 && (
+                            <Box sx={{ pt: 2 }}>
+                                <Typography variant="h6" gutterBottom>
+                                    Step Sequences
+                                </Typography>
+                                <Typography color="text.secondary" sx={{ mb: 3 }}>
+                                    Define common workflows and step sequences for this agent
+                                </Typography>
+
+                                {agentForm.config?.stepSequences?.map((sequence: any, index: number) => (
+                                    <Paper key={index} sx={{ p: 2, mb: 2 }}>
+                                        <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                            <Box>
+                                                <Typography variant="subtitle1">{sequence.name}</Typography>
+                                                <Typography variant="body2" color="text.secondary">
+                                                    {sequence.description}
+                                                </Typography>
+                                            </Box>
+                                            <IconButton
+                                                onClick={() => {
+                                                    const newSequences = [...agentForm.config.stepSequences];
+                                                    newSequences.splice(index, 1);
+                                                    handleFormChange('config', {
+                                                        ...agentForm.config,
+                                                        stepSequences: newSequences
+                                                    });
+                                                }}
+                                                color="error"
+                                            >
+                                                <DeleteIcon />
+                                            </IconButton>
+                                        </Box>
+                                        
+                                        <Box sx={{ mt: 2 }}>
+                                            {sequence.steps.map((step: any, stepIndex: number) => (
+                                                <Box key={stepIndex} sx={{ display: 'flex', gap: 2, mb: 1 }}>
+                                                    <TextField
+                                                        label="Executor"
+                                                        value={step.executor}
+                                                        onChange={(e) => {
+                                                            const newSequences = [...agentForm.config.stepSequences];
+                                                            newSequences[index].steps[stepIndex].executor = e.target.value;
+                                                            handleFormChange('config', {
+                                                                ...agentForm.config,
+                                                                stepSequences: newSequences
+                                                            });
+                                                        }}
+                                                        fullWidth
+                                                        size="small"
+                                                    />
+                                                    <TextField
+                                                        label="Description"
+                                                        value={step.description}
+                                                        onChange={(e) => {
+                                                            const newSequences = [...agentForm.config.stepSequences];
+                                                            newSequences[index].steps[stepIndex].description = e.target.value;
+                                                            handleFormChange('config', {
+                                                                ...agentForm.config,
+                                                                stepSequences: newSequences
+                                                            });
+                                                        }}
+                                                        fullWidth
+                                                        size="small"
+                                                    />
+                                                    <IconButton
+                                                        onClick={() => {
+                                                            const newSequences = [...agentForm.config.stepSequences];
+                                                            newSequences[index].steps.splice(stepIndex, 1);
+                                                            handleFormChange('config', {
+                                                                ...agentForm.config,
+                                                                stepSequences: newSequences
+                                                            });
+                                                        }}
+                                                        color="error"
+                                                    >
+                                                        <DeleteIcon />
+                                                    </IconButton>
+                                                </Box>
+                                            ))}
+                                            <Button
+                                                variant="outlined"
+                                                size="small"
+                                                onClick={() => {
+                                                    const newSequences = [...agentForm.config.stepSequences];
+                                                    newSequences[index].steps.push({
+                                                        executor: '',
+                                                        description: ''
+                                                    });
+                                                    handleFormChange('config', {
+                                                        ...agentForm.config,
+                                                        stepSequences: newSequences
+                                                    });
+                                                }}
+                                            >
+                                                Add Step
+                                            </Button>
+                                        </Box>
+                                    </Paper>
+                                ))}
+
+                                <Button
+                                    variant="contained"
+                                    size="small"
+                                    onClick={() => {
+                                        handleFormChange('config', {
+                                            ...agentForm.config,
+                                            stepSequences: [
+                                                ...(agentForm.config?.stepSequences || []),
+                                                {
+                                                    id: `sequence-${Date.now()}`,
+                                                    name: 'New Sequence',
+                                                    description: '',
+                                                    steps: []
+                                                }
+                                            ]
+                                        });
+                                    }}
+                                >
+                                    Add New Sequence
+                                </Button>
+                            </Box>
+                        )}
 
                 {/* Edit Agent Dialog */}
                 <Dialog
@@ -203,6 +330,14 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                 >
                     <DialogTitle>Edit Agent</DialogTitle>
                     <DialogContent>
+                        <Box sx={{ borderBottom: 1, borderColor: 'divider', mb: 2 }}>
+                            <Tabs value={currentTab} onChange={(e, newValue) => setCurrentTab(newValue)}>
+                                <Tab label="Agent Configuration" />
+                                <Tab label="Step Sequences" />
+                            </Tabs>
+                        </Box>
+
+                        {currentTab === 0 && (
                         <Box sx={{ 
                             display: 'grid',
                             gridTemplateColumns: '1fr 1fr',
