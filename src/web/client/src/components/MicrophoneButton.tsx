@@ -169,34 +169,7 @@ export const MicrophoneButton: React.FC = () => {
         }
     };
 
-    return (
-        <button
-            style={{
-                cursor: 'pointer',
-                padding: '8px 12px',
-                borderRadius: '6px',
-                backgroundColor: isRecording ? '#ff4444' : '#444',
-                border: 'none',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                color: '#fff',
-                transition: 'all 0.2s ease'
-            }}
-            onClick={handleRecording}
-            onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff6666' : '#555';
-            }}
-            onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff4444' : '#444';
-            }}
-        >
-            {isRecording ? <Stop /> : <Mic />}
-        </button>
-    );
-};
-
-// Helper function to convert AudioBuffer to WAV
+    // Helper function to convert AudioBuffer to WAV
     const startSilenceDetection = useCallback(() => {
         const checkSilence = () => {
             if (!analyserRef.current) return;
@@ -245,6 +218,35 @@ export const MicrophoneButton: React.FC = () => {
             silenceTimer.current = null;
         }
     };
+
+    return (
+        <button
+            style={{
+                cursor: 'pointer',
+                padding: '8px 12px',
+                borderRadius: '6px',
+                backgroundColor: isRecording ? '#ff4444' : '#444',
+                border: 'none',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                color: '#fff',
+                transition: 'all 0.2s ease'
+            }}
+            onClick={handleRecording}
+            onMouseEnter={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff6666' : '#555';
+            }}
+            onMouseLeave={(e) => {
+                (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff4444' : '#444';
+            }}
+        >
+            {isRecording ? <Stop /> : <Mic />}
+        </button>
+    );
+};
+
+
 
 function audioBufferToWav(buffer: AudioBuffer): Uint8Array {
     const numChannels = buffer.numberOfChannels;
