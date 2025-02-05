@@ -120,6 +120,13 @@ export interface ServerMethods {
      * @returns Promise resolving to array of executor type strings
      */
     getExecutorTypes(): Promise<string[]>;
+    
+    /**
+     * Upload and register a GGUF model file
+     * @param filePath - Path to the GGUF model file
+     * @returns Promise resolving to the model ID and any error
+     */
+    uploadGGUFModel(filePath: string): Promise<{ modelId: string, error?: string }>;
 }
 
 export interface ClientMethods {

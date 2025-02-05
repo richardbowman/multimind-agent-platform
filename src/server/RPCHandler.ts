@@ -697,6 +697,37 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return { ...artifact, content };
     }
 
+    async uploadGGUFModel(filePath: string): Promise<{ modelId: string, error?: string }> {
+        try {
+            // Get the models directory path
+            const modelsDir = path.join(getDataPath(), 'models');
+            await fsPromises.mkdir(modelsDir, { recursive: true });
+
+            // Get the filename and validate it's a GGUF file
+            const fileName = path.basename(filePath);
+            if (!fileName.endsWith('.gguf')) {
+                return { modelId: '', error: 'Only .gguf files are supported' };
+            }
+
+            // Create a unique model ID based on filename
+            const modelId = fileName.replace(/\.gguf$/i, '').toLowerCase().replace(/[^a-z0-9]/g, '-');
+            const destPath = path.join(modelsDir, fileName);
+
+            // Copy the file to models directory
+            await fsPromises.copyFile(filePath, destPath);
+
+            // TODO: Register the model with LlamaCPP
+
+            return { modelId };
+        } catch (error) {
+            console.error('Failed to upload GGUF model:', error);
+            return { 
+                modelId: '', 
+                error: error instanceof Error ? error.message : 'Failed to upload model' 
+            };
+        }
+    }
+
     async getExecutorTypes(): Promise<string[]> {
         try {
             // Use require.context to dynamically load executors from the executors directory
