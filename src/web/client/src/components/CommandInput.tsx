@@ -33,7 +33,16 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
     const [pendingArtifacts, setPendingArtifacts] = useState<Artifact[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    const { settings, channels, handles, pendingFiles, resetPendingFiles, allArtifacts, showFileDialog } = useDataContext();
+    const { 
+        settings, 
+        channels, 
+        handles, 
+        pendingFiles, 
+        resetPendingFiles, 
+        allArtifacts, 
+        showFileDialog,
+        currentThread 
+    } = useDataContext();
 
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {
@@ -173,7 +182,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
             onSendMessage(input.trim(), [
                 ...pendingArtifacts.map(a => a.id),
                 ...pendingFiles.map(a => a.id)
-            ]);
+            ], currentThread);
             setPendingArtifacts([]);
             resetPendingFiles();
             setInput('');
