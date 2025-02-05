@@ -206,7 +206,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 }}
             >
                 <Toolbar /> {/* For spacing under app bar */}
-                <Box sx={{ px: 2, pb: 1 }}>
+                <Box sx={{ p: 1 }}>
                     <TextField
                         fullWidth
                         variant="outlined"

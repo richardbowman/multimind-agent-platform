@@ -30,7 +30,7 @@ interface ExecutorCapability {
 }
 
 export abstract class StepBasedAgent extends Agent {
-    protected stepExecutors: Map<string, StepExecutor> = new Map();
+    protected stepExecutors: Map<string, StepExecutor<StepResponse>> = new Map();
     protected planner: Planner | null;
 
     constructor(params: AgentConstructorParams, planner?: Planner) {
@@ -114,8 +114,8 @@ export abstract class StepBasedAgent extends Agent {
         const isMine = task.assignee === this.userId;
 
         // jump-start the step execution if an async step finishes
-        if (isMine && eventType === TaskEventType.Completed && task.type === TaskType.Step && (task as StepTask).props?.result?.async) {
-            const posts = (task as StepTask).props?.userPostId ? [await this.chatClient.getPost((task as StepTask).props?.userPostId!)]: [{
+        if (isMine && eventType === TaskEventType.Completed && task.type === TaskType.Step && (task as StepTask<StepResponse>).props?.result?.async) {
+            const posts = (task as StepTask<StepResponse>).props?.userPostId ? [await this.chatClient.getPost((task as StepTask<StepResponse>).props?.userPostId!)]: [{
                 id: undefined,
                 message: `Async task completed ${task.description}`
             }];
@@ -133,11 +133,11 @@ export abstract class StepBasedAgent extends Agent {
             }
 
             await this.executeNextStep(nextStepParams);
-        } else if (task.creator === this.userId) {
+        } else if (task.creator === this.userId && task.type === TaskType.Standard) {
             const parentTask = StepBasedAgent.getRootTask(task.id, this.projects);
 
             if (parentTask && parentTask.creator === this.userId && parentTask.type === TaskType.Step) {
-                const postId = (parentTask as StepTask).props.userPostId;
+                const postId = (parentTask as StepTask<StepResponse>).props.userPostId;
                 const post = postId && await this.chatClient.getPost(postId);
                 const posts : ChatPost[]|undefined = post && await this.chatClient.getThreadChain(post);
                 if (posts) {
@@ -233,7 +233,7 @@ export abstract class StepBasedAgent extends Agent {
         await this.executeNextStep(execParams);
     }
 
-    protected registerStepExecutor(executor: StepExecutor): void {
+    protected registerStepExecutor(executor: StepExecutor<StepResponse>): void {
         const metadata = getExecutorMetadata(executor.constructor);
         if (metadata) {
             // Use decorator metadata if available
@@ -310,7 +310,7 @@ export abstract class StepBasedAgent extends Agent {
     protected async executeNextStep(params: ExecuteNextStepParams): Promise<void> {
         const { projectId } = params;
 
-        const task = this.projects.getNextTask(projectId, TaskType.Step) as StepTask;
+        const task = this.projects.getNextTask(projectId, TaskType.Step) as StepTask<StepResponse>;
 
         if (!task) {
             Logger.warn('No tasks found to execute');
@@ -446,7 +446,7 @@ export abstract class StepBasedAgent extends Agent {
         return partialResponse;
     }
 
-    protected async executeStep(params: ExecuteStepParams): Promise<void> {
+    protected async executeStep(params: ExecuteStepParams<StepResponse>): Promise<void> {
         const { projectId, task, userPost, context } = params;
         try {
             const executor = this.stepExecutors.get(task.props.stepType);
@@ -490,7 +490,7 @@ export abstract class StepBasedAgent extends Agent {
             const tasks = this.projects.getAllTasks(projectId);
             const priorSteps = tasks
                 .filter(t => t.type === "step")
-                .map(t => t as StepTask)
+                .map(t => t as StepTask<StepResponse>)
                 .filter(t => (t.complete || t.inProgress))
                 .sort((a, b) => (a.order || 0) - (b.order || 0));
 
@@ -514,7 +514,7 @@ export abstract class StepBasedAgent extends Agent {
                 replyTo = await this.chatClient.getPost(project.metadata.originalPostId);
             }
 
-            let stepResult: StepResult;
+            let stepResult: StepResult<StepResponse>;
 
             if (executor.execute) {
                 stepResult = await executor.execute({
@@ -574,7 +574,7 @@ export abstract class StepBasedAgent extends Agent {
                     awaitingResponse: stepResult.needsUserInput,
                     userPostId: userPost?.id
                 }
-            } as Partial<StepTask>);
+            } as Partial<StepTask<StepResponse>>);
 
             // If this was a validation step, check if we need more work
             if (task.props.stepType === 'validation') {

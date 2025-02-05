@@ -258,6 +258,53 @@ export const CommandInput: React.FC<CommandInputProps> = ({
 
     return (
         <Box sx={{flex: 1}}>
+            {showSuggestions && (
+                    <div style={{
+                        position: 'relative',
+                        display: 'flex',
+                        gap: '8px',
+                        alignItems: 'center',
+                        width: '100%'
+                    }}>
+                    <div
+                        ref={suggestionsRef}
+                        className="suggestions-dropdown"
+                        style={{
+                            position: 'absolute',
+                            bottom: 'calc(100% + 8px)',
+                            left: 0,
+                            right: 0,
+                            backgroundColor: '#2a2a2a',
+                            border: '1px solid #444',
+                            borderRadius: '4px',
+                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
+                            zIndex: 1000,
+                            maxHeight: suggestions.length > 5 ? '400px' : '200px',
+                            overflowY: 'auto',
+                            color: '#fff'
+                        }}
+                    >
+                        {suggestions.map((suggest, index) => (
+                            <div
+                                key={index}
+                                className="suggestion-item"
+                                onClick={() => handleSuggestionClick(suggest)}
+                                style={{
+                                    padding: '8px 12px',
+                                    cursor: 'pointer',
+                                    borderBottom: '1px solid #444',
+                                    color: '#fff',
+                                    transition: 'background-color 0.2s'
+                                }}
+                            >
+                                <div style={{ fontWeight: 'bold' }}>{suggest.title}</div>
+                                <div style={{ fontSize: '0.9em', color: '#aaa' }}>Type: {suggest.type}</div>
+                                <div style={{ fontSize: '0.8em', color: '#888' }}>ID: {suggest.id}</div>
+                            </div>
+                        ))}
+                    </div>
+                    </div>
+                )}
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <div style={{ position: 'relative' }}>
                     <button
@@ -409,45 +456,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                         target.style.height = `${Math.min(target.scrollHeight, 200)}px`;
                     }}
                 />
-                {showSuggestions && (
-                    <div
-                        ref={suggestionsRef}
-                        className="suggestions-dropdown"
-                        style={{
-                            position: 'absolute',
-                            bottom: '100%',
-                            left: 0,
-                            right: 0,
-                            backgroundColor: '#2a2a2a',
-                            border: '1px solid #444',
-                            borderRadius: '4px',
-                            boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-                            zIndex: 1000,
-                            maxHeight: suggestions.length > 5 ? '400px' : '200px',
-                            overflowY: 'auto',
-                            color: '#fff'
-                        }}
-                    >
-                        {suggestions.map((suggest, index) => (
-                            <div
-                                key={index}
-                                className="suggestion-item"
-                                onClick={() => handleSuggestionClick(suggest)}
-                                style={{
-                                    padding: '8px 12px',
-                                    cursor: 'pointer',
-                                    borderBottom: '1px solid #444',
-                                    color: '#fff',
-                                    transition: 'background-color 0.2s'
-                                }}
-                            >
-                                <div style={{ fontWeight: 'bold' }}>{suggest.title}</div>
-                                <div style={{ fontSize: '0.9em', color: '#aaa' }}>Type: {suggest.type}</div>
-                                <div style={{ fontSize: '0.8em', color: '#888' }}>ID: {suggest.id}</div>
-                            </div>
-                        ))}
-                    </div>
-                )}
                 {tasks && tasks.length > 0 && (
                     <div style={{
                         display: 'flex',

@@ -46,6 +46,8 @@ export interface StepResponse {
     type?: StepResponseType;
     message?: string;
     data?: StepResponseData;
+    reasoning?: string;
+    status?: string;
 }
 
 export interface StepResult<TypedStepResponse extends StepResponse> {

@@ -37,5 +37,6 @@ export enum ExecutorType {
     LIST_TEMPLATES = 'list-templates',
     CREATE_TASK = "create-task",
     GENERATE_CHART = "generate-chart",
-    ARTIFACT_SELECTOR = "artifact-selector"
+    ARTIFACT_SELECTOR = "artifact-selector",
+    API_SCRAPER = "api-scraper"
 }

@@ -38,7 +38,7 @@ module.exports = {
     path: path.resolve(__dirname, 'dist'),
     filename: 'main.electron.js'
   },
-  devtool: 'inline-source-map',
+  devtool: 'eval-source-map',
   module: {
     rules: [
       {
@@ -74,9 +74,7 @@ module.exports = {
   },
   output: {
     path: path.resolve(__dirname, 'dist'),
-    filename: 'main.electron.js',
-    devtoolModuleFilenameTemplate: 'file://[absolute-resource-path]',
-    sourceMapFilename: '[file].map[query]'
+    filename: 'main.electron.js'
   },
   externals: [nodeExternals({
     allowlist: [

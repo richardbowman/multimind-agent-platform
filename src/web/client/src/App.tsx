@@ -184,7 +184,7 @@ const AppContent: React.FC = () => {
                 flexDirection: 'column',
                 marginTop: '64px' // Account for AppBar height
             }}>
-                {currentTab === 'chat' && (
+                {currentTab === 'chat' ? (
                     <>
                         <Drawer
                             variant="persistent"

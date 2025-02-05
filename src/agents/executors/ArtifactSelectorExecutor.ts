@@ -29,7 +29,7 @@ export interface ArtifactSelectionStepResponse extends StepResponse {
     };
 }
 
-@StepExecutorDecorator(ExecutorType.ARTIFACT_SELECTOR, 'Selects relevant artifacts from existing collection')
+@StepExecutorDecorator(ExecutorType.ARTIFACT_SELECTOR, 'Review relevant artifacts from attachments and get all of the embedded links.')
 export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionStepResponse> {
     private artifactManager: ArtifactManager;
     private modelHelpers: ModelHelpers;
@@ -90,7 +90,7 @@ ${JSON.stringify(schema, null, 2)}
                 .map(index => allArtifacts[index - 1])||[];
 
             // Extract links from all selected artifacts
-            const allLinks = selectedArtifacts.flatMap(artifact => {
+            const allLinks : LinkRef[] = selectedArtifacts.flatMap(artifact => {
                 if (artifact.type === ArtifactType.Spreadsheet) {
                     try {
                         // Parse CSV content
@@ -103,7 +103,7 @@ ${JSON.stringify(schema, null, 2)}
                         return records.flatMap(record => 
                             Object.values(record).flatMap(value => 
                                 StringUtils.extractUrls(value?.toString() || '')
-                            )
+                            ).map(link => ({ href: link } as LinkRef))
                         );
                     } catch (error) {
                         console.error('Error parsing CSV artifact:', error);

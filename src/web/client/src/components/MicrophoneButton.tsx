@@ -15,9 +15,6 @@ export const MicrophoneButton: React.FC = () => {
     useEffect(() => {
         currentThreadIdRef.current = currentThreadId;
     }, [currentThreadId]);
-    
-
-    console.log('MICROPHONE', currentChannelId, currentThreadId);
 
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -71,7 +68,6 @@ export const MicrophoneButton: React.FC = () => {
             // Store the stream so we can clean it up later
             const currentStream = stream;
             const threadId = currentThreadIdRef.current;
-            console.log('MICROPHONE INNER', currentChannelId, threadId);
             
             recorder.onstop = async () => {
                 try {

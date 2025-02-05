@@ -5,14 +5,14 @@ import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { StepExecutor } from "../interfaces/StepExecutor";
-import { StepResult } from "../interfaces/StepResult";
+import { ReplanType, StepResponse, StepResult } from "../interfaces/StepResult";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { ExecutorType } from "../interfaces/ExecutorType";
 
 @StepExecutorDecorator(ExecutorType.WEB_SEARCH, 'Performs web searches and generates search queries')
-export class SearchExecutor implements StepExecutor {
+export class WebSearchExecutor implements StepExecutor<StepResponse> {
     private searchHelper: SearchHelper;
     private modelHelpers: ModelHelpers;
 

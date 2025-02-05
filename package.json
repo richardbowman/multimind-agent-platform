@@ -33,7 +33,7 @@
     "watch:worker": "webpack --config webpack.worker.config.js --watch --mode development",
     "watch:app": "concurrently \"npm run watch:web\" \"npm run watch:server\" \"npm run watch:worker\"",
     "electron:dev": "concurrently \"npm run watch:web\" \"npm run watch:server\" \"yarn watch:schemas\" \"yarn watch:worker\" \"wait-on dist/main.electron.js dist/web/bundle.js && yarn electron:start:dev\"",
-    "electron:start:dev": "nodemon --watch 'dist/main.electron.js' --delay 3 --inspect --exec \"electron . --dev-mode\"",
+    "electron:start:dev": "nodemon --watch 'dist/main.electron.js' --delay 3 --exec \"electron . --dev-mode --inspect\"",
     "electron:build": "yarn run download-whisper-models && electron-builder",
     "electron:package": "yarn build:clean && yarn electron:build",
     "electron:package:all": "electron-builder build --mac --win --linux",

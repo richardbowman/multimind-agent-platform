@@ -9,6 +9,7 @@ import { Artifact } from '../../../../tools/artifact';
 import { Settings } from '../../../../tools/settings';
 import { ConfigurationError } from '../../../../errors/ConfigurationError';
 import { ClientError } from '@mattermost/client';
+import { UUID } from '../../../../types/uuid';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 
@@ -25,8 +26,8 @@ export interface DataContextMethods {
     api: any[];
   };
   handles: Array<{ id: string, handle: string }>;
-  currentChannelId: string | null;
-  currentThreadId: string | null;
+  currentChannelId: UUID | null;
+  currentThreadId: UUID | null;
   isLoading: boolean;
   needsConfig: boolean | null;
   settings: Settings | null;

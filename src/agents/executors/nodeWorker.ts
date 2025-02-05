@@ -101,6 +101,12 @@ try {
 
     (global as any).provideResult = (result: any) => {
         originalConsole.log("provide result called", result);
+
+        parentPort?.postMessage({
+            type: 'console',
+            data: capturedOutput.trim()
+        });
+
         parentPort?.postMessage({
             type: "result",
             data: {

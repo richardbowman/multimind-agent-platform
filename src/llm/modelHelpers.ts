@@ -14,6 +14,7 @@ import { SearchResult } from "./IVectorDatabase";
 import { PromptBuilder, PromptRegistry } from "./promptBuilder";
 import { isObject } from "src/types/types";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
+import { ExecutorType } from "src/agents/interfaces/ExecutorType";
 
 export interface ModelHelpersParams {
     llmService: ILLMService;
@@ -107,7 +108,7 @@ export class ModelHelpers {
         return this.finalInstructions;
     }
 
-    addStepSequence(name: string, description: string, steps: { type: string, description: string }[]) {
+    addStepSequence(name: string, description: string, steps: { type: ExecutorType, description: string }[]) {
         this.stepSequences.push(new StepSequence(name, description, steps));
     }
 

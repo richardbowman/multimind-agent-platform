@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { ArtifactType } from '../../tools/artifact';
+import { ArtifactType } from '../../../../tools/artifact';
 
 interface AssetSelectionDialogProps {
     assets: Array<{
@@ -23,15 +23,15 @@ export const AssetSelectionDialog: React.FC<AssetSelectionDialogProps> = ({ asse
     const filteredAssets = assets.filter(asset => {
         const matchesSearch = asset.metadata.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (asset.metadata.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
-        
-        const matchesType = selectedTypes.length === 0 || 
+
+        const matchesType = selectedTypes.length === 0 ||
             (asset.metadata.type && selectedTypes.includes(asset.metadata.type));
-            
+
         return matchesSearch && matchesType;
     });
 
     const handleSelect = (assetId: string) => {
-        setSelectedAssets(prev => 
+        setSelectedAssets(prev =>
             prev.includes(assetId)
                 ? prev.filter(id => id !== assetId)
                 : [...prev, assetId]
@@ -61,7 +61,7 @@ export const AssetSelectionDialog: React.FC<AssetSelectionDialogProps> = ({ asse
                 borderRight: '1px solid #444'
             }}>
                 <h4 style={{ margin: '0 0 10px 0' }}>Filters</h4>
-                
+
                 {/* Search */}
                 <input
                     type="text"
@@ -101,7 +101,6 @@ export const AssetSelectionDialog: React.FC<AssetSelectionDialogProps> = ({ asse
                         </div>
                     ))}
                 </div>
-                </div>
             </div>
 
             {/* Main Content */}
@@ -111,84 +110,85 @@ export const AssetSelectionDialog: React.FC<AssetSelectionDialogProps> = ({ asse
                 flexDirection: 'column'
             }}>
                 <h3 style={{ margin: '0 0 20px 0' }}>Select Assets</h3>
-            <div style={{
-                flex: 1,
-                overflowY: 'auto',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
-                gap: '10px',
-                padding: '10px'
-            }}>
-                {filteredAssets.map(asset => (
-                    <div
-                        key={asset.id}
+                <div style={{
+                    flex: 1,
+                    overflowY: 'auto',
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))',
+                    gap: '10px',
+                    padding: '10px'
+                }}>
+                    {filteredAssets.map(asset => (
+                        <div
+                            key={asset.id}
+                            style={{
+                                border: selectedAssets.includes(asset.id) ? '2px solid #646cff' : '1px solid #444',
+                                borderRadius: '4px',
+                                padding: '10px',
+                                cursor: 'pointer',
+                                backgroundColor: selectedAssets.includes(asset.id) ? '#333' : '#2a2a2a',
+                                transition: 'all 0.2s'
+                            }}
+                            onClick={() => handleSelect(asset.id)}
+                        >
+                            {asset.metadata.previewUrl && (
+                                <img
+                                    src={asset.metadata.previewUrl}
+                                    alt={asset.metadata.title}
+                                    style={{
+                                        width: '100%',
+                                        height: '100px',
+                                        objectFit: 'cover',
+                                        borderRadius: '4px',
+                                        marginBottom: '8px'
+                                    }}
+                                />
+                            )}
+                            <div style={{ fontSize: '0.9em' }}>{asset.metadata.title}</div>
+                            {asset.metadata.description && (
+                                <div style={{ fontSize: '0.8em', color: '#aaa' }}>
+                                    {asset.metadata.description}
+                                </div>
+                            )}
+                        </div>
+                    ))}
+                </div>
+                <div style={{
+                    display: 'flex',
+                    justifyContent: 'flex-end',
+                    gap: '10px',
+                    marginTop: '20px'
+                }}>
+                    <button
+                        onClick={onClose}
                         style={{
-                            border: selectedAssets.includes(asset.id) ? '2px solid #646cff' : '1px solid #444',
+                            padding: '8px 16px',
                             borderRadius: '4px',
-                            padding: '10px',
-                            cursor: 'pointer',
-                            backgroundColor: selectedAssets.includes(asset.id) ? '#333' : '#2a2a2a',
-                            transition: 'all 0.2s'
+                            border: '1px solid #444',
+                            backgroundColor: 'transparent',
+                            color: '#fff',
+                            cursor: 'pointer'
                         }}
-                        onClick={() => handleSelect(asset.id)}
                     >
-                        {asset.metadata.previewUrl && (
-                            <img
-                                src={asset.metadata.previewUrl}
-                                alt={asset.metadata.title}
-                                style={{
-                                    width: '100%',
-                                    height: '100px',
-                                    objectFit: 'cover',
-                                    borderRadius: '4px',
-                                    marginBottom: '8px'
-                                }}
-                            />
-                        )}
-                        <div style={{ fontSize: '0.9em' }}>{asset.metadata.title}</div>
-                        {asset.metadata.description && (
-                            <div style={{ fontSize: '0.8em', color: '#aaa' }}>
-                                {asset.metadata.description}
-                            </div>
-                        )}
-                    </div>
-                ))}
-            </div>
-            <div style={{
-                display: 'flex',
-                justifyContent: 'flex-end',
-                gap: '10px',
-                marginTop: '20px'
-            }}>
-                <button
-                    onClick={onClose}
-                    style={{
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        border: '1px solid #444',
-                        backgroundColor: 'transparent',
-                        color: '#fff',
-                        cursor: 'pointer'
-                    }}
-                >
-                    Cancel
-                </button>
-                <button
-                    onClick={() => {
-                        onSelect(selectedAssets);
-                        onClose();
-                    }}
-                    style={{
-                        padding: '8px 16px',
-                        borderRadius: '4px',
-                        border: 'none',
-                        backgroundColor: '#646cff',
-                        color: '#fff',
-                        cursor: 'pointer'
-                    }}
-                >
-                    Attach Selected
-                </button>
+                        Cancel
+                    </button>
+                    <button
+                        onClick={() => {
+                            onSelect(selectedAssets);
+                            onClose();
+                        }}
+                        style={{
+                            padding: '8px 16px',
+                            borderRadius: '4px',
+                            border: 'none',
+                            backgroundColor: '#646cff',
+                            color: '#fff',
+                            cursor: 'pointer'
+                        }}
+                    >
+                        Attach Selected
+                    </button>
+                </div>
             </div>
         </div>
     );
