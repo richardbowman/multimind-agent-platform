@@ -17,11 +17,22 @@ interface ArtifactDisplayProps {
     onEdit?: () => void;
 }
 
+interface ArtifactDisplayProps {
+    artifact: Artifact;
+    showMetadata?: boolean;
+    onDelete?: (artifact: Artifact) => void;
+    onEdit?: (artifact: Artifact) => void;
+    isSelected?: boolean;
+    onSelect?: (artifact: Artifact, selected: boolean) => void;
+}
+
 export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     artifact,
     showMetadata = true,
     onDelete,
-    onEdit
+    onEdit,
+    isSelected = false,
+    onSelect
 }) => {
     const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
     const { addActions } = useToolbarActions();
@@ -118,14 +129,25 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     }, [onEdit, onDelete, updateActionState]);
 
     return (
-        <Box component="main" sx={{ 
-            flexGrow: 1, 
-            display: 'flex',
-            flexDirection: "column",
-            flex: 1,
-            position: 'relative',
-            height: (artifact.metadata?.format === 'csv' || artifact.type === 'csv') ? '100%': undefined
-        }}>
+        <Box 
+            component="main" 
+            sx={{ 
+                flexGrow: 1, 
+                display: 'flex',
+                flexDirection: "column",
+                flex: 1,
+                position: 'relative',
+                height: (artifact.metadata?.format === 'csv' || artifact.type === 'csv') ? '100%': undefined,
+                cursor: 'pointer',
+                border: isSelected ? '2px solid #1976d2' : '1px solid #444',
+                borderRadius: '4px',
+                padding: '8px',
+                '&:hover': {
+                    backgroundColor: '#1e1e1e'
+                }
+            }}
+            onClick={() => onSelect && onSelect(artifact, !isSelected)}
+        >
             <div className="artifact-detail-header">
                 <h2>{artifact.metadata?.title || artifact.id}</h2>
                 <div className="artifact-meta">
