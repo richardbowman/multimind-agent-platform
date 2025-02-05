@@ -10,12 +10,95 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ContentType } from 'src/llm/promptBuilder';
 import { TaskCreationResponse, UpdateActions } from '../../schemas/taskCreation';
+import { TaskListResponse } from '../../schemas/taskList';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { UUID } from 'src/types/uuid';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ChatClient } from 'src/chat/chatClient';
 
 @StepExecutorDecorator(ExecutorType.CREATE_TASK, 'Create, update, and delete a task')
+@StepExecutorDecorator(ExecutorType.VIEW_TASKS, 'View tasks for a specific user or agent')
+export class ViewTaskExecutor implements StepExecutor {
+    private taskManager: TaskManager;
+    private chatClient: ChatClient;
+
+    constructor(params: ExecutorConstructorParams) {
+        this.taskManager = params.taskManager!;
+        this.chatClient = params.chatClient;
+    }
+
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
+        const { goal, step, projectId } = params;
+        const schema = await getGeneratedSchema(SchemaType.TaskListResponse);
+
+        // Get handle from context
+        const handle = params.context?.handle;
+        if (!handle) {
+            return {
+                type: "view_tasks",
+                finished: true,
+                response: {
+                    message: 'No user/agent handle provided to view tasks'
+                }
+            };
+        }
+
+        // Get user ID from handle
+        const handles = await this.chatClient.getHandles();
+        const userId = Object.entries(handles).find(([id, h]) => h === handle)?.[0] as UUID | undefined;
+        
+        if (!userId) {
+            return {
+                type: "view_tasks",
+                finished: true,
+                response: {
+                    message: `Could not find user/agent with handle ${handle}`
+                }
+            };
+        }
+
+        // Find all projects with tasks assigned to this user
+        const allProjects = this.taskManager.getAllProjects();
+        const userTasks = allProjects
+            .flatMap(project => 
+                Object.values(project.tasks)
+                    .filter(task => task.assignee === userId)
+                    .map(task => ({
+                        ...task,
+                        projectName: project.name
+                    }))
+            );
+
+        if (userTasks.length === 0) {
+            return {
+                type: "view_tasks",
+                finished: true,
+                response: {
+                    message: `No tasks found for ${handle}`
+                }
+            };
+        }
+
+        // Format task list
+        const taskList = userTasks.map(task => ({
+            id: task.id,
+            description: task.description,
+            project: task.projectName,
+            status: task.status,
+            dueDate: task.dueDate?.toISOString().split('T')[0] || 'No due date'
+        }));
+
+        return {
+            type: "view_tasks",
+            finished: true,
+            response: {
+                message: `Here are the tasks for ${handle}:`,
+                tasks: taskList
+            }
+        };
+    }
+}
+
 export class ScheduleTaskExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
