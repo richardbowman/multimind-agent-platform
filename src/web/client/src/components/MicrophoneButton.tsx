@@ -2,14 +2,10 @@ import React, { useState, useEffect } from 'react';
 import Mic from '@mui/icons-material/Mic';
 import Stop from '@mui/icons-material/Stop';
 import { useIPCService } from '../contexts/IPCContext';
-import { UUID } from 'crypto';
+import { useDataContext } from '../contexts/DataContext';
 
-interface MicrophoneButtonProps {
-    currentChannel: UUID | null;
-    currentThread?: UUID;
-}
-
-export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({ currentChannel, currentThread }) => {
+export const MicrophoneButton: React.FC = () => {
+    const { currentChannel, currentThreadId } = useDataContext();
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const ipcService = useIPCService();
@@ -120,7 +116,7 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({ currentChann
                             await ipcService.getRPC().transcribeAndSendAudio({
                                 audioBase64: wavBase64,
                                 channelId: currentChannel,
-                                threadId: currentThread || null,
+                                threadId: currentThreadId || null,
                                 language: 'en'
                             });
                         } catch (error) {
