@@ -1,6 +1,10 @@
+import * as tts from '@mintplex-labs/piper-tts-web';
 import type { LogParam } from '../../../../llm/LLMLogger';
 import { type DataContextMethods } from '../contexts/DataContext';
 import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/types';
+
+// Default voice ID for TTS
+const DEFAULT_VOICE_ID = 'en_US-hfc_female-medium';
 import { SnackbarContextType } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { ClientMethods } from '../../../../shared/RPCInterface';
@@ -18,6 +22,23 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 
     async onMessage(messages: ClientMessage[]) {
+        // Check for messages with verbal conversation flag
+        for (const message of messages) {
+            if (message.props?.verbalConversation === true) {
+                try {
+                    const wav = await tts.predict({
+                        text: message.message,
+                        voiceId: DEFAULT_VOICE_ID,
+                    });
+                    const audio = new Audio();
+                    audio.src = URL.createObjectURL(wav);
+                    audio.play();
+                } catch (error) {
+                    console.error('Error playing TTS:', error);
+                }
+            }
+        }
+
         // Find the latest message from a different channel/thread or not the current thread root
         const latestMessage = messages
             .filter(message =>
