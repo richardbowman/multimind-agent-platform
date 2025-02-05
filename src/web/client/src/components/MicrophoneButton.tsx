@@ -258,6 +258,7 @@ export const MicrophoneButton: React.FC = () => {
         }
 
         console.log('Starting silence detection');
+        let hasHeardSpeech = false;
 
         const checkSilence = async () => {
             if (!analyserRef.current || !isRecordingRef.current) {
@@ -298,27 +299,25 @@ export const MicrophoneButton: React.FC = () => {
             const rms = Math.sqrt(sum / validSamples);
             const dB = rms > 0 ? 20 * Math.log10(rms) : MIN_VALID_VOLUME;
             
-            // Debug log the raw audio data
-            // console.log('Audio samples:', Array.from(dataArray).slice(0, 10));
-            
             // Skip if volume is too low to be valid
             if (dB < MIN_VALID_VOLUME) {
                 console.log(`Invalid audio level detected: ${dB.toFixed(2)} dB`);
                 return;
             }
             
-            // console.log(`Audio level: ${dB.toFixed(2)} dB`); // Debug log
-            
-            // Only consider it silence if we've had valid sound first
+            // Only start the silence timer after we've heard speech
             if (dB > SOUND_THRESHOLD) {
-                // console.log(`Active speech detected (${dB.toFixed(2)} dB > ${SOUND_THRESHOLD} dB)`);
+                if (!hasHeardSpeech) {
+                    console.log('First speech detected, starting silence detection');
+                    hasHeardSpeech = true;
+                }
+                
                 if (silenceTimer.current) {
                     console.log('Resetting silence timer');
                     window.clearTimeout(silenceTimer.current);
                     silenceTimer.current = null;
                 }
-            } else if (dB < SILENCE_THRESHOLD && dB > MIN_VALID_VOLUME) {
-                // console.log(`Quiet period detected (${dB.toFixed(2)} dB < ${SILENCE_THRESHOLD} dB)`);
+            } else if (hasHeardSpeech && dB < SILENCE_THRESHOLD && dB > MIN_VALID_VOLUME) {
                 if (!silenceTimer.current) {
                     console.log(`Starting silence timer (${SILENCE_DURATION}ms)`);
                     silenceTimer.current = window.setTimeout(() => {
