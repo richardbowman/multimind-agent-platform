@@ -168,6 +168,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                 <Typography variant="body1">
                                     <strong>Last Updated:</strong> {new Date(selectedTask.updatedAt).toLocaleString()}
                                 </Typography>
+                                {selectedTask.props?.dueDate && (
+                                    <Typography variant="body1">
+                                        <strong>Due Date:</strong> {new Date(selectedTask.props.dueDate).toLocaleString()}
+                                    </Typography>
+                                )}
                                 <Typography variant="body1">
                                     <strong>Type:</strong> {selectedTask.type}
                                     {selectedTask.props?.stepType && ` (${selectedTask.props.stepType})`}
