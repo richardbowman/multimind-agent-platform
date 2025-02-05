@@ -117,7 +117,7 @@ export const MicrophoneButton: React.FC = () => {
                         reader.readAsDataURL(wavBlob);
                     });
 
-                    if (currentChannelId && currentThreadId) {
+                    if (currentChannelId) {
                         try {
                             await ipcService.getRPC().transcribeAndSendAudio({
                                 audioBase64: wavBase64,
