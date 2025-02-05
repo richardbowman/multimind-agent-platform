@@ -430,7 +430,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                             {sequence.steps.map((step: any, stepIndex: number) => (
                                                 <Box key={stepIndex} sx={{ display: 'flex', gap: 2, mb: 1 }}>
                                                     <Autocomplete
-                                                        value={step.executor}
+                                                        value={step.executor || ''}
                                                         onChange={(e, newValue) => {
                                                             const newSequences = [...agentForm.config.stepSequences];
                                                             newSequences[index].steps[stepIndex].executor = newValue || '';
@@ -439,7 +439,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                                                 stepSequences: newSequences
                                                             });
                                                         }}
-                                                        options={executorOptions.map(option => option.value)}
+                                                        options={executorOptions?.map(option => option.value) || []}
                                                         renderInput={(params) => (
                                                             <TextField
                                                                 {...params}
