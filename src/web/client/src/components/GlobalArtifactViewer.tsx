@@ -189,10 +189,10 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 anchor="left"
                 open={drawerOpen}
                 sx={{
-                    width: 250,
+                    width: 350,
                     flexShrink: 0,
                     '& .MuiDrawer-paper': {
-                        width: 250,
+                        width: 350,
                         boxSizing: 'border-box',
                         backgroundColor: '#2a2a2a',
                         borderRight: '1px solid #444'
@@ -273,7 +273,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                marginLeft: drawerOpen ? 0 : '-250px', 
+                marginLeft: drawerOpen ? 0 : `-350oh i px`, 
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
                 flex: 1,
                 overflow: 'hidden',
