@@ -60,7 +60,8 @@ export const MicrophoneButton: React.FC = () => {
         // If already recording, stop and clean up
         if (isRecordingRef.current && mediaRecorderRef.current) {
             try {
-                isRecordingRef.current = false; // Update the ref
+                setIsRecording(false);
+                isRecordingRef.current = false; // Update both state and ref
                 mediaRecorderRef.current.stop();
                 mediaRecorderRef.current.stream.getTracks().forEach(track => track.stop());
                 mediaRecorderRef.current = null;
@@ -75,7 +76,8 @@ export const MicrophoneButton: React.FC = () => {
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
                 mediaRecorderRef.current = recorder;
-                isRecordingRef.current = true; // Update the ref
+                setIsRecording(true);
+                isRecordingRef.current = true; // Update both state and ref
                 
                 // Store the stream so we can clean it up later
                 const currentStream = stream;
@@ -95,7 +97,8 @@ export const MicrophoneButton: React.FC = () => {
 
                         // Convert WebM to WAV using AudioContext and resample to 16kHz
                         const audioContext = new AudioContext();
-                        isRecordingRef.current = false;
+                        setIsRecording(false);
+                        isRecordingRef.current = false; // Update both state and ref
                         const arrayBuffer = await audioBlob.arrayBuffer();
                         const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
                         
@@ -158,7 +161,8 @@ export const MicrophoneButton: React.FC = () => {
                             audioContextRef.current.close();
                         }
                         mediaRecorderRef.current = null;
-                        isRecordingRef.current = false;
+                        setIsRecording(false);
+                        isRecordingRef.current = false; // Update both state and ref
                         stopSilenceDetection();
                     }
                 };
@@ -324,7 +328,7 @@ export const MicrophoneButton: React.FC = () => {
                 cursor: 'pointer',
                 padding: '8px 12px',
                 borderRadius: '6px',
-                backgroundColor: isRecordingRef.current ? '#ff4444' : '#444',
+                backgroundColor: isRecording ? '#ff4444' : '#444',
                 border: 'none',
                 display: 'flex',
                 alignItems: 'center',
@@ -334,13 +338,13 @@ export const MicrophoneButton: React.FC = () => {
             }}
             onClick={handleRecording}
             onMouseEnter={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = isRecordingRef.current ? '#ff6666' : '#555';
+                (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff6666' : '#555';
             }}
             onMouseLeave={(e) => {
-                (e.currentTarget as HTMLElement).style.backgroundColor = isRecordingRef.current ? '#ff4444' : '#444';
+                (e.currentTarget as HTMLElement).style.backgroundColor = isRecording ? '#ff4444' : '#444';
             }}
         >
-            {isRecordingRef.current ? <Stop /> : <Mic />}
+            {isRecording ? <Stop /> : <Mic />}
         </button>
     );
 };
