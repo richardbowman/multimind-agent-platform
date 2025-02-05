@@ -438,7 +438,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                         ))}
                     </div>
                 )}
-                <MicrophoneButton currentChannel={currentChannel} />
+                <MicrophoneButton currentChannel={currentChannel} currentThread={currentThread} />
             </div>
             {(pendingFiles.length > 0 || pendingArtifacts.length > 0) && (
                 <div style={{

@@ -5,6 +5,7 @@ import { useIPCService } from '../contexts/IPCContext';
 
 interface MicrophoneButtonProps {
     currentChannel: string | null;
+    currentThread?: string | null;
 }
 
 export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({ currentChannel }) => {
@@ -118,7 +119,7 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({ currentChann
                             await ipcService.getRPC().transcribeAndSendAudio({
                                 audioBase64: wavBase64,
                                 channelId: currentChannel,
-                                threadId: null,
+                                threadId: currentThread || null,
                                 language: 'en'
                             });
                         } catch (error) {
