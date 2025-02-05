@@ -749,11 +749,14 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 }
             });
 
-            // Clean up transcription by removing timestamps
-            transcription = transcription.replace(/\[\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\] /g, '');
+            // Clean up transcription by removing timestamps and blank audio markers
+            transcription = transcription
+                .replace(/\[\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\] /g, '')
+                .replace(/\[BLANK_AUDIO\]/g, '')
+                .trim();
 
-            // If transcription is blank audio, don't create a post
-            if (transcription.trim() === '[BLANK_AUDIO]') {
+            // If transcription is empty after cleaning, don't create a post
+            if (!transcription) {
                 return null;
             }
 
