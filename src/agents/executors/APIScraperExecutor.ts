@@ -72,7 +72,7 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
         });
     }
 
-    private setupAPIMonitoring() {
+    private setupAPIMonitoring(executeParams: ExecuteParams) {
         this.apiCalls = [];
 
         if (!this.browserWindow) {
@@ -96,6 +96,7 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                              params.request.url.endsWith('/events') ? 'sse' : 'http'
                 };
                 this.apiCalls.push(apiCall);
+                if (this.apiCalls.length % 10 == 0) executeParams.partialResponse(`Logging ${params.request.url}, request ${this.apiCalls.length}...`)
             }
             else if (method === 'Network.responseReceived') {
                 const call = this.apiCalls.find(c => c.url === params.response.url);
@@ -218,7 +219,7 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
         try {
             await this.createBrowserSession();
             // Setup monitoring
-            this.setupAPIMonitoring();
+            this.setupAPIMonitoring(params);
 
             // Extract URLs from step goal or previous responses
             let urlsToScrape = StringUtils.extractUrls(params.stepGoal);
