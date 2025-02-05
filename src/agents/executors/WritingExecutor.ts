@@ -40,7 +40,7 @@ export class AssignWritersExecutor implements StepExecutor {
         this.taskManager = params.taskManager!;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.WritingResponse);
 
         const prompt = `You are planning content writing tasks.

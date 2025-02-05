@@ -30,7 +30,7 @@ export class TemplateSelectorExecutor implements StepExecutor {
         this.onboardingConsultant = onboardingConsultant;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.TemplateSelectionResponse);
 
         // Get available templates

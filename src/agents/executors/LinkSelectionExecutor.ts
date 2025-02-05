@@ -8,7 +8,7 @@ import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { StepExecutor } from "../interfaces/StepExecutor";
-import { StepResult } from "../interfaces/StepResult";
+import { ReplanType, StepResponse, StepResult } from "../interfaces/StepResult";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { LinkRef } from "src/helpers/scrapeHelper";
 import { prev } from "cheerio/dist/commonjs/api/traversing";
@@ -16,7 +16,7 @@ import { Settings } from "src/tools/settings";
 import { StringUtils } from "src/utils/StringUtils";
 
 @StepExecutorDecorator(ExecutorType.SELECT_LINKS, 'Analyzes and selects relevant links to follow')
-export class LinkSelectionExecutor implements StepExecutor {
+export class LinkSelectionExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private settings: Settings;
 
@@ -25,7 +25,7 @@ export class LinkSelectionExecutor implements StepExecutor {
         this.settings = params.settings;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         // Get all previously scraped URLs from WebScrapeExecutor results
         const alreadyScrapedUrls = new Set(
             params.previousResponses?.flatMap(r => r.data?.artifacts?.map(a => a.metadata?.url))
@@ -69,6 +69,7 @@ export class LinkSelectionExecutor implements StepExecutor {
         return {
             finished: true,
             type: 'selected_links',
+            replan: ReplanType.Allow,
             response: {
                 status: `Selected ${selectedUrls.length} relevant links`,
                 data: { selectedUrls }
@@ -93,11 +94,11 @@ Given the following web search results and links from existing pages you've scra
         const message = `Links from previously scraped pages:
 ${previousLinks?.map(l => `- ${l.href}: ${l.text}`).join('\n')}
 
-Search Results (${searchResults.length} found}):
+${searchResults&&`Search Results (${searchResults.length} found}):
 ${searchResults && searchResults
                 .slice(0, 10)
                 .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${StringUtils.truncateWithEllipsis(sr.description, 200)}`)
-                .join("\n\n")}`;
+                .join("\n\n")}`}`;
 
 
         const response = await this.modelHelpers.generate<WebSearchResponse>({

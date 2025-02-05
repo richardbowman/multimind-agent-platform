@@ -152,31 +152,32 @@ ${this.modelHelpers.getFinalInstructions()}
         return "# 📝 STEP HISTORY:\n" + 
             filteredSteps.map((step, index) => {
                 const stepResult = step.props.result!;
+                let body;
                 if (stepResult.response.type) {
                     const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type);
                     if (typeRenderer) {
-                        return typeRenderer(stepResult.response);
+                        body = typeRenderer(stepResult.response);
                     }
                 }
                 // Default renderer for unknown types
                 return `- STEP ${index + 1} of ${filteredSteps.length} ${index+1==filteredSteps.length?"[LAST COMPLETED STEP]":""}:
    Step Type [${step.props.stepType}]
    Step Description: ${step.description}
-   Step Result: ${stepResult?.response.message}`;
+   Step Result: <stepInformation>${body||stepResult.response.message||stepResult.response.reasoning||stepResult.response.status}}</stepInformation>`;
             }).join('\n') + "\n";
     }
 
     private renderStepResponses({responses} : StepResponseContent): string {
-        return "📝 Past Step Responses:\n" + responses.filter(r => r).map((stepResult, index) => {
+        return "📝 Past Step Responses:\n" + responses.filter(r => r).map((stepResponse, index) => {
             let body;
-            if (stepResult.type) {
-                const typeRenderer = this.stepResponseRenderers.get(stepResult.type!);
+            if (stepResponse.type) {
+                const typeRenderer = this.stepResponseRenderers.get(stepResponse.type!);
                 if (typeRenderer) {
-                    body = typeRenderer(stepResult);
+                    body = typeRenderer(stepResponse);
                 }
             }
             // Default renderer for unknown types
-            return `Step ${index + 1} (${stepResult.type}):\n<stepInformation>${body|stepResult.message||stepResult.reasoning}</stepInformation>`;
+            return `Step ${index + 1} (${stepResponse.type}):\n<stepInformation>${body||stepResponse.message||stepResponse.reasoning||stepResponse.status}}</stepInformation>`;
         }).join('\n') + "\n";
     }
 
@@ -212,7 +213,7 @@ ${this.modelHelpers.getFinalInstructions()}
     }
 
     private renderArtifactExcerpts({artifacts}: ArtifactsExcerptsContent): string {
-        if (!artifacts || artifacts.length === 0) return '';
+        if (!artifacts || artifacts.length === 0) return '📁 Attached Artifacts: NONE ATTACHED';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
             const size = typeof artifact.content === 'string'
                 ? `${artifact.content.length} characters`

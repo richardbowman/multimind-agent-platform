@@ -6,7 +6,7 @@ import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { StepExecutor } from "../interfaces/StepExecutor";
-import { StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
 import { ModelMessageResponse } from "src/schemas/ModelResponse";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { createUUID } from "src/types/uuid";
@@ -151,6 +151,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
 
         return {
             finished: true,
+            replan: ReplanType.Allow,
             type: StepResultType.WebScrapeStepResult,
             artifactIds: result.artifacts.map(a => a.id),
             response: {

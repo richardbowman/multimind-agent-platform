@@ -21,7 +21,7 @@ export class DelegationExecutor implements StepExecutor {
         this.taskManager = params.taskManager!;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = {
             type: 'object',
             properties: {

@@ -207,7 +207,7 @@ You can select up to ${MAX_FOLLOWS} URLs that are most relevant to our goal but 
         return response.links || [];
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResponses?: any): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResponses?: any): Promise<StepResult<StepResponse>> {
         const { searchQuery, category } = await this.generateSearchQuery(goal, step, previousResponses);
         const searchResults = await this.searchHelper.search(searchQuery, category);
 

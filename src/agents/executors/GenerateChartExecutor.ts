@@ -108,7 +108,7 @@ ${JSON.stringify(schema, null, 2)}`);
                     finished: true,
                     artifactIds: [savedArtifact?.id],
                     response: {
-                        type: StepResponseType.ChartResponse,
+                        type: StepResponseType.Chart,
                         message: unstructuredResult.message,
                         data: chartData
                     }
@@ -123,7 +123,7 @@ ${JSON.stringify(schema, null, 2)}`);
                 finished: true,
                 needsUserInput: true,
                 response: {
-                    type: StepResponseType.ChartResponse,
+                    type: StepResponseType.Chart,
                     message: 'Failed to generate the chart. Please try again later.'
                 }
             };

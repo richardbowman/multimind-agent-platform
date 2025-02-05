@@ -39,7 +39,7 @@ export class EditingExecutor implements StepExecutor {
         this.taskManager = params.taskManager!;
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResponses?: any): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string, previousResponses?: any): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.EditingResponse);
 
         // Get the project metadata to find the content artifact

@@ -82,7 +82,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         return message;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.IntakeQuestionsResponse);
         
         const project = this.taskManager.getProject(params.projectId);

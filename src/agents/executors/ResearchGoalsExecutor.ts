@@ -21,7 +21,7 @@ export class ResearchGoalsExecutor implements StepExecutor {
         this.taskManager = params.taskManager!;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.ResearchUnderstandingResponse);
 
         const previousContext = params.previousResponses && params.previousResponses.length > 0 ? 

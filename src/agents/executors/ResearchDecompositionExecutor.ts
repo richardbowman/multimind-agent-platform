@@ -41,7 +41,7 @@ export class ResearchDecompositionExecutor implements StepExecutor {
         this.taskManager = params.taskManager!;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const { goal, projectId, previousResponses: previousResponses } = params;
         
         // Extract any relevant context from previous results

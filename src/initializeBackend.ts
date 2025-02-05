@@ -23,7 +23,7 @@ import { app } from "electron";
 
 async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<void> {
     const guidesDir = path.join(app.getAppPath(), 'dist', 'assets', "procedure-guides");
-    
+
     if (!fs.existsSync(guidesDir)) {
         Logger.warn(`Procedure guides directory not found at ${guidesDir}`);
         return;
@@ -31,63 +31,62 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
 
     const files = fs.readdirSync(guidesDir);
     const markdownFiles = files.filter(f => path.extname(f).toLowerCase() === '.md');
-    
+
     // Get existing guides from artifact manager
-    const existingGuides = await artifactManager.getArtifacts({type: ArtifactType.ProcedureGuide});
+    const existingGuides = await artifactManager.getArtifacts({ type: ArtifactType.ProcedureGuide });
     const existingGuideMap = new Map(existingGuides.map(g => [g.metadata?.source, g]));
 
-    for(let i=0; i<markdownFiles.length; i++) {
+    for (let i = 0; i < markdownFiles.length; i++) {
         const file = markdownFiles[i];
-        Logger.progress(`Loading procedure guides for agents (${i+1} of ${markdownFiles.length})`, (i+1)/markdownFiles.length);
-            const filePath = path.join(guidesDir, file);
-            const content = fs.readFileSync(filePath, 'utf-8');
-            const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
-            
-            // Check if guide exists and has same content
-            const existingGuide = existingGuideMap.get(filePath);
-            if (existingGuide) {
-                const existingHash = existingGuide.metadata?.contentHash;
-                if (existingHash === contentHash) {
-                    Logger.info(`Procedure guide unchanged: ${file}`);
-                    continue;
-                }
-                Logger.info(`Updating procedure guide: ${file}`);
+        Logger.progress(`Loading procedure guides for agents (${i + 1} of ${markdownFiles.length})`, (i + 1) / markdownFiles.length);
+        const filePath = path.join(guidesDir, file);
+        const content = fs.readFileSync(filePath, 'utf-8');
+        const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
+
+        // Check if guide exists and has same content
+        const existingGuide = existingGuideMap.get(filePath);
+        if (existingGuide) {
+            const existingHash = existingGuide.metadata?.contentHash;
+            if (existingHash === contentHash) {
+                Logger.info(`Procedure guide unchanged: ${file}`);
+                continue;
             }
-            const artifactId = createUUID();
-
-            // Try to load metadata file if it exists
-            const metadataPath = path.join(guidesDir, `${path.basename(file, '.md')}.metadata.json`);
-            let metadata: Record<string, any> = {
-                title: path.basename(file, '.md'),
-                mimeType: 'text/markdown',
-                description: 'Procedure guide document',
-                created: new Date().toISOString(),
-                source: filePath,
-                contentHash: contentHash
-            };
-
-            if (fs.existsSync(metadataPath)) {
-                try {
-                    const loadedMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
-                    metadata = { ...metadata, ...loadedMetadata };
-                } catch (error) {
-                    Logger.warn(`Failed to load metadata from ${metadataPath}: ${error}`);
-                }
-            }
-
-            await artifactManager.saveArtifact({
-                id: artifactId,
-                type: ArtifactType.ProcedureGuide,
-                content: content,
-                metadata: metadata
-            });
-
-            Logger.info(`Loaded procedure guide: ${file}`);
+            Logger.info(`Updating procedure guide: ${file}`);
         }
+        const artifactId = createUUID();
+
+        // Try to load metadata file if it exists
+        const metadataPath = path.join(guidesDir, `${path.basename(file, '.md')}.metadata.json`);
+        let metadata: Record<string, any> = {
+            title: path.basename(file, '.md'),
+            mimeType: 'text/markdown',
+            description: 'Procedure guide document',
+            created: new Date().toISOString(),
+            source: filePath,
+            contentHash: contentHash
+        };
+
+        if (fs.existsSync(metadataPath)) {
+            try {
+                const loadedMetadata = JSON.parse(fs.readFileSync(metadataPath, 'utf-8'));
+                metadata = { ...metadata, ...loadedMetadata };
+            } catch (error) {
+                Logger.warn(`Failed to load metadata from ${metadataPath}: ${error}`);
+            }
+        }
+
+        await artifactManager.saveArtifact({
+            id: artifactId,
+            type: ArtifactType.ProcedureGuide,
+            content: content,
+            metadata: metadata
+        });
+
+        Logger.info(`Loaded procedure guide: ${file}`);
     }
 }
 
-export async function initializeBackend(settingsManager: SettingsManager, options: { 
+export async function initializeBackend(settingsManager: SettingsManager, options: {
     reindex?: boolean
 } = {}): Promise<BackendServices> {
 
@@ -109,50 +108,50 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             throw new ConfigurationError("No chat model is selected");
         }
 
-//        Logger.progress('Initializing LLM services...', 0.1);
+        //        Logger.progress('Initializing LLM services...', 0.1);
 
-const embeddingService = LLMServiceFactory.createEmbeddingService(_s);
-Logger.progress('Initializing embedding model...', 0.2);
+        const embeddingService = LLMServiceFactory.createEmbeddingService(_s);
+        Logger.progress('Initializing embedding model...', 0.2);
 
 
-await embeddingService.initializeEmbeddingModel(_s.models.embeddings[_s.providers.embeddings]);
+        await embeddingService.initializeEmbeddingModel(_s.models.embeddings[_s.providers.embeddings]);
 
-await sleep();
+        await sleep();
 
-Logger.progress('Initializing chat model...', 0.3);
-const chatService = LLMServiceFactory.createService(_s);
-await chatService.initializeChatModel(_s.models.conversation[_s.providers.chat]);
-await sleep();
+        Logger.progress('Initializing chat model...', 0.3);
+        const chatService = LLMServiceFactory.createService(_s);
+        await chatService.initializeChatModel(_s.models.conversation[_s.providers.chat]);
+        await sleep();
 
-Logger.progress('Loading vector database', 0.3);
+        Logger.progress('Loading vector database', 0.3);
         const vectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
         const artifactManager = new ArtifactManager(vectorDB);
-    
+
         await sleep();
 
         vectorDB.on("needsReindex", async () => {
             Logger.progress("Reindexing vector database", 0.4);
             await artifactManager.indexArtifacts();
         });
-    
+
         await vectorDB.initializeCollection(_s.chromaCollection);
-    
+
         const dataDir = getDataPath();
-    
+
         const chatStorage = new LocalChatStorage(path.join(dataDir, "chats.json"));
         const tasks = new SimpleTaskManager(path.join(dataDir, "tasks.json"));
-    
+
         // Load previously saved tasks
         Logger.progress("Loading tasks", 0.6);
         await tasks.load();
         await sleep();
-    
+
         Logger.progress("Loading chats", 0.6);
         await chatStorage.load();
         await sleep();
-    
+
         // Handle graceful shutdown
-        async function shutdown() : Promise<void> {
+        async function shutdown(): Promise<void> {
             console.log('Shutting down gracefully...');
             try {
                 if (chatService.shutdown) await chatService.shutdown();
@@ -162,23 +161,23 @@ Logger.progress('Loading vector database', 0.3);
                 process.exit(1);
             }
         }
-    
+
         process.on('SIGTERM', shutdown);
         process.on('SIGINT', shutdown);
 
-                // Handle reindex option
-                if (options.reindex) {
-                    Logger.info("Reindexing artifacts...");
-                    await artifactManager.indexArtifacts();
-                    process.exit(0);
-                }
-            
-                // Load procedure guides
-                await loadProcedureGuides(artifactManager);
-        
+        // Handle reindex option
+        if (options.reindex) {
+            Logger.info("Reindexing artifacts...");
+            await artifactManager.indexArtifacts();
+            process.exit(0);
+        }
 
-        const agents : Agents = {agents: {}};
-    
+        // Load procedure guides
+        await loadProcedureGuides(artifactManager);
+
+
+        const agents: Agents = { agents: {} };
+
         // Load all agents dynamically
         const agentObjects = await AgentLoader.loadAgents({
             llmService: chatService,
@@ -189,7 +188,7 @@ Logger.progress('Loading vector database', 0.3);
             settingsManager: settingsManager,
             agents: agents
         });
-    
+
         // Initialize all agents
         for (const [name, agent] of agentObjects.entries()) {
             if (agent.initialize) {
@@ -198,13 +197,13 @@ Logger.progress('Loading vector database', 0.3);
             }
             agents.agents[agent.userId] = agent;
         }
-    
+
         chatStorage.announceChannels();
-    
+
         const USER_ID = createUUID("bd1c9698-ce26-41e4-819f-83982891456e");
         const userClient = new LocalTestClient(USER_ID, "@user", chatStorage);
         userClient.registerHandle("@user");
-    
+
         if (!Object.values(chatStorage.channelNames).includes("#general")) {
             // Create RPC handler and use it to create channel
             const mappedParams = await ServerRPCHandler.createChannelHelper(userClient, tasks, {
@@ -214,7 +213,7 @@ Logger.progress('Loading vector database', 0.3);
             });
             await userClient.createChannel(mappedParams);
         }
-    
+
         if (!Object.values(chatStorage.channelNames).includes("#onboarding")) {
             // Create RPC handler and use it to create channel
             const mappedParams = await ServerRPCHandler.createChannelHelper(userClient, tasks, {
@@ -224,8 +223,8 @@ Logger.progress('Loading vector database', 0.3);
             });
             await userClient.createChannel(mappedParams);
         }
-    
-    
+
+
         return {
             chatClient: userClient,
             taskManager: tasks,
@@ -242,5 +241,5 @@ Logger.progress('Loading vector database', 0.3);
         throw error;
     }
 
-    
+
 }

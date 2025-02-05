@@ -25,7 +25,7 @@ export class ListTemplatesExecutor implements StepExecutor {
         this.onboardingConsultant = onboardingConsultant;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         // Get available templates
         const templates = this.onboardingConsultant.getAvailableTemplates();
 

@@ -4,7 +4,7 @@ import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorPara
 import { StepExecutor } from "../interfaces/StepExecutor";
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
 import { ArtifactManager } from "src/tools/artifactManager";
-import { Artifact } from "src/tools/artifact";
+import { Artifact, ArtifactType } from "src/tools/artifact";
 import { ModelHelpers } from "src/llm/modelHelpers";
 import { ContentType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
@@ -102,7 +102,7 @@ ${JSON.stringify(schema, null, 2)}
                         // Extract links from all columns that might contain URLs
                         return records.flatMap(record => 
                             Object.values(record).flatMap(value => 
-                                StringUtils.extractLinksFromText(value?.toString() || '')
+                                StringUtils.extractUrls(value?.toString() || '')
                             )
                         );
                     } catch (error) {
@@ -130,7 +130,7 @@ ${json.selectionReason}. Now I need to select the relevant links from the links 
                         extractedLinks: allLinks
                     }
                 }
-            };e
+            };
         } catch (error) {
             return {
                 finished: true,

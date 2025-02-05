@@ -20,7 +20,7 @@ export class BrainstormExecutor implements StepExecutor {
 
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const promptBuilder = this.modelHelpers.createPrompt();
         
         // Add core instructions

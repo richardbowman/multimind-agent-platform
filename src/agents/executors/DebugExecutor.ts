@@ -24,7 +24,7 @@ import { ContentType } from 'src/llm/promptBuilder';
          this.modelHelpers = params.modelHelpers;
      }
 
-     async execute(params: ExecuteParams): Promise<StepResult> {
+     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
          const promptBuilder = this.modelHelpers.createPrompt();
 
          // Add core instructions

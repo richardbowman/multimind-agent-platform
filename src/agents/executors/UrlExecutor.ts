@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResult } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { LinkRef } from '../../helpers/scrapeHelper';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -23,7 +23,7 @@ export class UrlExecutor implements StepExecutor {
         this.modelHelpers = params.modelHelpers!;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const { step, projectId, message, context } = params;
         
         try {
@@ -48,6 +48,7 @@ export class UrlExecutor implements StepExecutor {
             return {
                 finished: true,
                 type: 'url_extraction',
+                replan: ReplanType.Allow,
                 response: {
                     message: allUrls.length > 0 
                         ? "Found links:\n"+allUrls.map(a => " - " + a).join('\n')
@@ -62,6 +63,7 @@ export class UrlExecutor implements StepExecutor {
             return {
                 type: 'webpage_error',
                 finished: true,
+                replan: ReplanType.Allow,
                 response: {
                     message: `Error looking for links: ${error}`
                 }

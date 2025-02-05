@@ -93,6 +93,37 @@
       ],
       "type": "object"
     },
+    "ArtifactSelectionResponse": {
+      "additionalProperties": false,
+      "description": "Response schema for artifact selection operations",
+      "properties": {
+        "artifactIndexes": {
+          "description": "Array of 1-based indexes indicating which artifacts to select",
+          "examples": [
+            [
+              1,
+              3
+            ]
+          ],
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "selectionReason": {
+          "description": "Detailed explanation of why these artifacts were selected",
+          "examples": [
+            "Selected these artifacts because they contain the most relevant information about project timelines"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactIndexes",
+        "selectionReason"
+      ],
+      "type": "object"
+    },
     "BarChartData": {
       "additionalProperties": false,
       "description": "Represents data for a bar chart visualization",
@@ -1832,7 +1863,8 @@
         "PlanStepsResponse",
         "IntentionsResponse",
         "TaskCreationResponse",
-        "BarChartData"
+        "BarChartData",
+        "ArtifactSelectionResponse"
       ],
       "type": "string"
     },

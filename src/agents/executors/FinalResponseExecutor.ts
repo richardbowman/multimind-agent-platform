@@ -48,14 +48,15 @@ Include relevant details from all steps while maintaining clarity and coherence.
 
         const promptBuilder = this.modelHelpers.createPrompt();
         promptBuilder.registerStepResultRenderer<ScrapeStepResponse>(StepResponseType.WebPage, (response: ScrapeStepResponse) => {
-           return response.data.summaries.map((s, i) => `{$i+1} of ${response.data.summaries.length}: Date: ${s.date}\nSummary: \`\`\`\n${s.summary}\n\`\`\`\n`).join('\n') + "\n";
+            const validSummaries = response.data.summaries?.filter(s => s.date && s.summary);
+            return validSummaries?.map((s, i) => `{$i+1} of ${response.data.summaries.length}: Date: ${s.date}\nSummary: \`\`\`\n${s.summary}\n\`\`\`\n`).join('\n') + "\n";
         });
 
         promptBuilder.addInstruction(instructions);
-        promptBuilder.addContext({contentType: ContentType.PURPOSE});
+        promptBuilder.addContext({ contentType: ContentType.PURPOSE });
 
-        params.context?.artifacts && promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts});
-        params.previousResponses && promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses});
+        params.context?.artifacts && promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts });
+        params.previousResponses && promptBuilder.addContext({ contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses });
 
         // Add output instructions for multiple content types
         promptBuilder.addInstruction(`OUTPUT INSTRUCTIONS:

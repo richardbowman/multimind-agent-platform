@@ -28,7 +28,7 @@ export class CalendarExecutor implements StepExecutor {
     this.artifactManager = params.artifactManager;
   }
 
-  async execute(params: ExecuteParams): Promise<StepResult> {
+  async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
     try {
       // Get the schema for structured output
       const schema = await getGeneratedSchema(SchemaType.CalendarResponse);

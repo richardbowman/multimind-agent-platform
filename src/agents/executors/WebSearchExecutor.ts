@@ -21,13 +21,14 @@ export class SearchExecutor implements StepExecutor {
         this.modelHelpers = params.modelHelpers;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const { searchQuery, category } = await this.generateSearchQuery(params.goal, params.stepGoal, params.previousResponses);
         const searchResults = await this.searchHelper.search(searchQuery, category);
 
         return {
             finished: true,
             type: 'search_results',
+            replan: ReplanType.Allow,
             response: {
                 status: `Found ${searchResults.length} search results`,
                 data: {

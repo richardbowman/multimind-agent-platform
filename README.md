@@ -140,7 +140,7 @@ The `StepBasedAgent` class provides a framework for creating agents that break d
 
 ```typescript
 export class ThinkingExecutor implements StepExecutor {
-    async execute(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async execute(goal: string, step: string, projectId: string): Promise<StepResult<StepResponse>> {
         // Implementation
     }
 }

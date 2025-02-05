@@ -20,6 +20,7 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ExecutorType } from './interfaces/ExecutorType';
 import { exec } from 'child_process';
 import { UUID } from 'src/types/uuid';
+import { ArrayUtils } from 'src/utils/ArrayUtils';
 
 interface ExecutorCapability {
     stepType: string;
@@ -128,7 +129,7 @@ export abstract class StepBasedAgent extends Agent {
     
             if (!nextTask) {
                 Logger.info("No remaining tasks, planning new steps");
-                const plan = await this.planSteps(task.projectId, posts, this.getPartialPost(posts[0].id && posts[0], nextStepParams));
+                const plan = await this.planSteps(nextStepParams);
             }
 
             await this.executeNextStep(nextStepParams);
@@ -137,8 +138,8 @@ export abstract class StepBasedAgent extends Agent {
 
             if (parentTask && parentTask.creator === this.userId && parentTask.type === TaskType.Step) {
                 const postId = (parentTask as StepTask).props.userPostId;
-                const post = await this.chatClient.getPost(postId);
-                const posts : ChatPost[]|undefined = postId && await this.chatClient.getThreadChain(post);
+                const post = postId && await this.chatClient.getPost(postId);
+                const posts : ChatPost[]|undefined = post && await this.chatClient.getThreadChain(post);
                 if (posts) {
                     const partial = posts.find(p => p.props?.partial);
                     if (partial) this.chatClient.updatePost(partial.id, task.description);
@@ -175,7 +176,7 @@ export abstract class StepBasedAgent extends Agent {
                 threadPosts: params.threadPosts
             }
         };
-        const plan = await this.planSteps(projectId, posts, this.getPartialPost(params.userPost, execParams));
+        const plan = await this.planSteps(execParams);
         await this.executeNextStep(execParams);
     }
 
@@ -203,10 +204,7 @@ export abstract class StepBasedAgent extends Agent {
                     threadPosts: params.threadPosts
                 }
             };
-            const plan = await this.planSteps(projectId,
-                [params.rootPost || { message: "(missing root post)" }, ...params.threadPosts || [], params.userPost],
-                this.getPartialPost(params.rootPost, execParams)
-            );
+            const plan = await this.planSteps(execParams);
             await this.executeNextStep(execParams);
             return;
         }
@@ -228,10 +226,7 @@ export abstract class StepBasedAgent extends Agent {
 
         if (!task) {
             Logger.info("No remaining tasks, planning new steps");
-            const plan = await this.planSteps(projectId,
-                [params.rootPost || { message: "(missing root post)" }, ...params.threadPosts || [],
-                params.userPost],
-                this.getPartialPost(params.rootPost, execParams));
+            const plan = await this.planSteps(execParams);
         }
 
         // Continue with existing tasks without replanning
@@ -268,16 +263,17 @@ export abstract class StepBasedAgent extends Agent {
         return capabilities;
     }
 
-    protected async planSteps(projectId: string, posts: Message[], partialPostFn: Function): Promise<PlanStepsResponse> {
-        const project = await this.projects.getProject(projectId);
-        const handlerParams: PlannerParams = {
+    protected async planSteps(params: ExecuteNextStepParams): Promise<PlanStepsResponse> {
+        const project = await this.projects.getProject(params.projectId);
+        const plannerParams: PlannerParams = {
             projects: [project],
-            threadPosts: posts?.slice(0, -1),
-            userPost: posts?.[posts?.length - 1]
+            threadPosts: params.context?.threadPosts,
+            userPost: params.userPost,
+            artifacts: params.context?.artifacts
         };
 
         if (this.planner === null) {
-            const goal = `Perform planning for user's goal: ${handlerParams.userPost.message}`;
+            const goal = `Perform planning for user's goal: ${plannerParams.userPost.message}`;
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
                 description: goal,
@@ -296,15 +292,17 @@ export abstract class StepBasedAgent extends Agent {
                 }]
             }
         } else {
-
-            const steps = await this.planner.planSteps(handlerParams);
+            const steps = await this.planner.planSteps(plannerParams);
 
             // Send a progress message about the next steps
             const nextStepsMessage = steps.steps ?
                 steps.steps.map((step, index) => `${index + 1}. ${step.actionType}`)
                     .join('\n') : "No steps provided";
 
-            await partialPostFn(`🔄 Planning next steps:\n${nextStepsMessage}`);
+            if (isValidChatPost(params.userPost)) {
+                const partialPostFn = this.getPartialPost(params.userPost, params);
+                await partialPostFn(`🔄 Planning next steps:\n${nextStepsMessage}`);
+            }
             return steps;
         }
     }
@@ -588,10 +586,7 @@ export abstract class StepBasedAgent extends Agent {
                         `${stepResult.missingAspects.map((aspect: string) => `- ${aspect}`).join('\n')}`;
 
                     //TODO: hacky, we don't really post this message
-                    await this.planSteps(project.id, [InMemoryPost.fromLoad({
-                        ...userPost,
-                        message: planningPrompt
-                    })], this.getPartialPost(replyTo, params));
+                    await this.planSteps(params);
                 }
             }
 
@@ -634,17 +629,13 @@ export abstract class StepBasedAgent extends Agent {
                 if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
                     //TODO: hacky, we don't really post this message
                     if (!this.planner || this.planner.allowReplan) {
-                        await this.planSteps(project.id, [InMemoryPost.fromLoad({
-                            ...userPost,
-                            message: `Replanning requested after ${stepResult.type} step completed`
-                        })], this.getPartialPost(replyTo, params));
+                        await this.planSteps(params);
                     }
                 }
 
                 if (!stepResult.needsUserInput) {
                     const stepArtifacts = await this.mapRequestedArtifacts(artifactList);
-                    const fullArtifactList = [...stepArtifacts, ...params.context?.artifacts || []];
-
+                    const fullArtifactList = ArrayUtils.deduplicateById([...stepArtifacts, ...params.context?.artifacts || []]);
 
                     await this.executeNextStep({
                         projectId,

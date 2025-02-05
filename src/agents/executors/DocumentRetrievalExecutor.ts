@@ -24,7 +24,7 @@ export class DocumentRetrievalExecutor implements StepExecutor {
         this.modelHelpers.setFinalInstructions(`Return the exact document content that was requested. If multiple documents are requested, return them in order.`);
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         // Extract the document request from the message
         const documentRequest = params.stepGoal || params.message;
         

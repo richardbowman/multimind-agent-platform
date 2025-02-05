@@ -36,7 +36,7 @@ export class ComplexProjectExecutor implements StepExecutor {
         return message;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         //TODO: convert to automated typescript schema
         const schema = {
             type: 'object',

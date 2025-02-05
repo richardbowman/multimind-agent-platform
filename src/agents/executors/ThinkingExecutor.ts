@@ -36,7 +36,7 @@ export class ThinkingExecutor implements StepExecutor {
 
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.ThinkingResponse);
 
         const promptBuilder = this.modelHelpers.createPrompt();

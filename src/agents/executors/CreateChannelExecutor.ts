@@ -34,7 +34,7 @@ export class CreateChannelExecutor implements StepExecutor {
         return await this.chatClient.createChannel(mappedParams);
     }
 
-    async execute(params: ExecuteParams & { executionMode: 'conversation' | 'task' }): Promise<StepResult> {
+    async execute(params: ExecuteParams & { executionMode: 'conversation' | 'task' }): Promise<StepResult<StepResponse>> {
         const { goal, context } = params;
         
         // Extract channel creation requirements from the goal

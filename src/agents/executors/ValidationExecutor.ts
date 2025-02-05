@@ -35,7 +35,7 @@ export class ValidationExecutor implements StepExecutor {
 
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = generatedSchemaDef.ValidationResult;
 
         // Get validation attempt count from most recent validation result

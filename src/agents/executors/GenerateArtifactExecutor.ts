@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResponse, StepResponseType, StepResult, WithMessage } from '../interfaces/StepResult';
 import { ModelMessageResponse, RequestArtifacts } from '../../schemas/ModelResponse';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -20,6 +20,18 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StringUtils } from 'src/utils/StringUtils';
 import JSON5 from 'json5';
+
+
+export interface ArtifactGenerationStepData {
+
+}
+
+export interface ArtifactGenerationStepResponse extends StepResponse {
+    type: StepResponseType.GeneratedArtifact;
+    data?: ArtifactGenerationStepData;
+}
+
+
 /**
  * Executor that generates and manages Markdown document artifacts.
  * Key capabilities:
@@ -35,7 +47,7 @@ import JSON5 from 'json5';
  * - Preserves existing IDs during revisions
  */
 @StepExecutorDecorator(ExecutorType.GENERATE_ARTIFACT, 'Create/revise a Markdown document, Mermaid diagram, or spreadsheet (CSV)')
-export class GenerateArtifactExecutor implements StepExecutor {
+export class GenerateArtifactExecutor implements StepExecutor<ArtifactGenerationStepResponse> {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
 
@@ -48,7 +60,7 @@ export class GenerateArtifactExecutor implements StepExecutor {
         this.taskManager = params.taskManager;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
         const promptBuilder = this.modelHelpers.createPrompt();
 
         // Add core instructions
@@ -109,20 +121,18 @@ for the file attributes`);
         promptBuilder.addInstruction(`4. You may only provide one content type per response. If you need to provide multiple content types, please respond suggesting other content types to generate.`);
         promptBuilder.addInstruction(`If you are appending to a CSV file, make sure you include the exactly same column structure for the new rows.`);
 
-        const prompt = promptBuilder.build();
-
         try {
-            const unstructuredResult = await this.modelHelpers.generate<ModelMessageResponse>({
+            const unstructuredResult = await this.modelHelpers.generate({
                 message: params.message || params.stepGoal,
-                instructions: prompt,
+                instructions: promptBuilder,
                 threadPosts: params.context?.threadPosts
             });
 
-            const json = StringUtils.extractAndParseJsonBlock(unstructuredResult.message, schema);
+            const json = StringUtils.extractAndParseJsonBlock<ArtifactGenerationResponse>(unstructuredResult.message, schema);
             const md = StringUtils.extractCodeBlocks(unstructuredResult.message).filter(b => b.type !== 'json');
             const result = {
                 ...json
-            } as ArtifactGenerationResponse & { content: string };
+            } as WithMessage<ArtifactGenerationResponse> & { content: string };
 
             if (md && md.length == 0) {
                 Logger.error(`No code block found in the response: ${unstructuredResult.message}`);
@@ -165,7 +175,10 @@ for the file attributes`);
                     type: "generate-artifact",
                     finished: true,
                     artifactIds: [artifact?.id],
-                    response: unstructuredResult
+                    response: {
+                        type: StepResponseType.GeneratedArtifact,
+                        message: unstructuredResult.message
+                    }
                 };
             }
         } catch (error) {

@@ -24,8 +24,8 @@ export enum StepResponseType {
     Question = "question",
     CodeResult = "code-result",
     WebPage = "web-page",
-    ChartResponse = "ChartResponse"
-
+    Chart = "chart",
+    GeneratedArtifact = "generated-artifact"
 }
 
 export enum ReplanType {
@@ -33,6 +33,10 @@ export enum ReplanType {
     Allow = "allow", 
     Force = "force"
 }
+
+export type WithMessage<T> = T & {
+    message?: string;
+};
 
 export interface StepResponseData extends Record<string, any> { 
 

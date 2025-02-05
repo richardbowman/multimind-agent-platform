@@ -39,7 +39,7 @@ export interface CreateChannelParams {
     members?: UUID[];
     defaultResponderId?: UUID;
     projectId?: UUID;
-    goalTemplate?: UUID;
+    goalTemplate?: ChannelHandle;
     artifactIds?: UUID[];
 }
 
@@ -52,4 +52,5 @@ export interface ChannelData {
     members?: UUID[];
     defaultResponderId?: string;
     artifactIds?: UUID[];
+    goalTemplateId?: ChannelHandle;
 }

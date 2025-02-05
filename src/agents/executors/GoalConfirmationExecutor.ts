@@ -37,7 +37,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
         this.chatClient = params.chatClient;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const { goal, step, projectId } = params;
         const schema = await getGeneratedSchema(SchemaType.GoalConfirmationResponse);
 

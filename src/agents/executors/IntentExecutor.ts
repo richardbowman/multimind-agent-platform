@@ -31,7 +31,7 @@ export class EstablishIntentExecutor implements StepExecutor {
 
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.IntentionsResponse);
 
         // Create prompt using PromptBuilder

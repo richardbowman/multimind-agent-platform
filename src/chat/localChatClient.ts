@@ -256,7 +256,9 @@ export class LocalTestClient implements ChatClient {
                     description: channelData.description,
                     members: channelData?.members,
                     defaultResponderId: channelData?.defaultResponderId,
-                    projectId: channelData?.projectId
+                    projectId: channelData?.projectId,
+                    artifactIds: channelData?.artifactIds,
+                    goalTemplateId: channelData?.goalTemplateId
                 };
             })
         );

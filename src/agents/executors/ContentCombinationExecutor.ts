@@ -19,7 +19,7 @@ export class ContentCombinationExecutor implements StepExecutor {
         this.taskManager = params.taskManager;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const { projectId } = params;
         const project = this.taskManager.getProject(projectId);
         

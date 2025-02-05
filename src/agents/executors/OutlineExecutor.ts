@@ -34,7 +34,7 @@ export class OutlineExecutor implements StepExecutor {
 
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.ContentOutline);
 
         // Check if we have a previous outline result

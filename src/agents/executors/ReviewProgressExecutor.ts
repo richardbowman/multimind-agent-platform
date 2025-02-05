@@ -26,7 +26,7 @@ export class ReviewProgressExecutor implements StepExecutor {
         this.artifactManager = params.artifactManager!;
     }
 
-    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult> {
+    async executeOld(goal: string, step: string, projectId: string): Promise<StepResult<StepResponse>> {
         const project = await this.getProjectWithPlan(projectId);
         const tasks = this.taskManager.getAllTasks(projectId);
 

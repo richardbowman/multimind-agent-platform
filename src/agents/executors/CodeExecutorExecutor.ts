@@ -71,7 +71,7 @@ export class CodeExecutorExecutor implements StepExecutor {
         }
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.CodeExecutionResponse);
 
         const prompt = `You are a JavaScript programming expert.

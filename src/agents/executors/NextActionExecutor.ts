@@ -46,7 +46,7 @@ export class NextActionExecutor implements StepExecutor {
         this.chatClient = params.chatClient;
     }
     
-    public async execute(params: ExecuteParams): Promise<StepResult> {
+    public async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         // Get channel data including any project goals
         const channelData = params.context?.channelId ? await this.chatClient.getChannelData(params.context?.channelId) : undefined;
 

@@ -46,7 +46,7 @@ export class AnswerQuestionsExecutor implements StepExecutor {
         this.taskManager = params.taskManager!;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.AnswerAnalysisResponse);
 
         const project = this.taskManager.getProject(params.projectId) as OnboardingProject;

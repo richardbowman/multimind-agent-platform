@@ -11,13 +11,13 @@ import { Project, Task } from "src/tools/taskManager";
 
 export interface ArtifactsExcerptsContent {
     contentType: ContentType.ARTIFACTS_EXCERPTS;
-    artifacts: Artifact[];
+    artifacts: Artifact[]|undefined;
 }
 
 export interface ArtifactsTitlesContent {
     contentType: ContentType.ARTIFACTS_TITLES;
     artifacts: Artifact[];
-    offset: number;
+    offset?: number;
 }
 
 export interface ArtifactsFullContent {
@@ -120,7 +120,7 @@ export interface FullGoalsContent {
 
 export interface StepsContent {
     contentType: ContentType.STEPS;
-    steps: StepTask[];
+    steps: StepTask<StepResponse>[];
 }
 
 export interface TasksContent {

@@ -50,6 +50,7 @@ export interface ClientChannel {
     members: UUID[];
     projectId?: UUID;
     defaultResponderId?: UUID;
+    artifactIds: UUID[];
     goalTemplate: ChannelHandle;
 }
 import { ChatHandle } from 'src/types/chatHandle';
