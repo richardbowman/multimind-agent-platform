@@ -21,7 +21,8 @@ import {
     DialogActions,
     Collapse,
     Tabs,
-    Tab
+    Tab,
+    Autocomplete
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
@@ -428,19 +429,27 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                         <Box sx={{ mt: 2 }}>
                                             {sequence.steps.map((step: any, stepIndex: number) => (
                                                 <Box key={stepIndex} sx={{ display: 'flex', gap: 2, mb: 1 }}>
-                                                    <TextField
-                                                        label="Executor"
+                                                    <Autocomplete
                                                         value={step.executor}
-                                                        onChange={(e) => {
+                                                        onChange={(e, newValue) => {
                                                             const newSequences = [...agentForm.config.stepSequences];
-                                                            newSequences[index].steps[stepIndex].executor = e.target.value;
+                                                            newSequences[index].steps[stepIndex].executor = newValue || '';
                                                             handleFormChange('config', {
                                                                 ...agentForm.config,
                                                                 stepSequences: newSequences
                                                             });
                                                         }}
+                                                        options={executorOptions.map(option => option.value)}
+                                                        renderInput={(params) => (
+                                                            <TextField
+                                                                {...params}
+                                                                label="Executor"
+                                                                fullWidth
+                                                                size="small"
+                                                            />
+                                                        )}
+                                                        freeSolo
                                                         fullWidth
-                                                        size="small"
                                                     />
                                                     <TextField
                                                         label="Description"
