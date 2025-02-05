@@ -193,14 +193,13 @@ export const MicrophoneButton: React.FC = () => {
                 await new Promise(resolve => setTimeout(resolve, 200));
                 
                 console.log('Audio analysis setup complete');
-                // Start analyzing audio and get cleanup function
-                const stopDetection = startSilenceDetection();
+                // Wait a bit longer to ensure audio is flowing
+                await new Promise(resolve => setTimeout(resolve, 500));
                 
-                // Return cleanup function to stop detection when component unmounts
-                return () => {
-                    stopDetection();
-                    stopSilenceDetection();
-                };
+                console.log('Audio analysis setup complete');
+                
+                // Start silence detection after everything is ready
+                startSilenceDetection();
             } catch (error) {
                 console.error('Error setting up audio analysis:', error);
                 // Fall back to manual stop if analysis fails
@@ -213,9 +212,6 @@ export const MicrophoneButton: React.FC = () => {
             
             // Start recording with 100ms time slices for better silence detection
             recorder.start(100);
-            
-            // Start silence detection
-            startSilenceDetection();
         } catch (error) {
             console.error('Error starting recording:', error);
         }
@@ -225,9 +221,15 @@ export const MicrophoneButton: React.FC = () => {
     const silenceDetectionInterval = useRef<number | null>(null);
 
     const startSilenceDetection = useCallback(() => {
+        // Only start if we have all the required components
+        if (!analyserRef.current || !isRecording) {
+            console.log('Cannot start silence detection - analyser not ready or not recording');
+            return;
+        }
+
         const checkSilence = async () => {
             if (!analyserRef.current || !isRecording) {
-                console.log('Analyser not initialized or recording stopped');
+                console.log('Silence detection stopped - analyser not ready or recording ended');
                 return;
             }
             
