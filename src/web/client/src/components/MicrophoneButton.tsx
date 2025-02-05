@@ -153,14 +153,20 @@ export const MicrophoneButton: React.FC = () => {
             };
 
             // Setup audio analysis for silence detection
-            audioContextRef.current = new AudioContext();
-            analyserRef.current = audioContextRef.current.createAnalyser();
-            analyserRef.current.fftSize = ANALYZER_FFT_SIZE;
-            sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
-            sourceRef.current.connect(analyserRef.current);
-            
-            // Start analyzing audio
-            startSilenceDetection();
+            try {
+                console.log('Initializing audio context and analyser');
+                audioContextRef.current = new AudioContext();
+                analyserRef.current = audioContextRef.current.createAnalyser();
+                analyserRef.current.fftSize = ANALYZER_FFT_SIZE;
+                sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
+                sourceRef.current.connect(analyserRef.current);
+                
+                console.log('Audio analysis setup complete');
+                // Start analyzing audio
+                startSilenceDetection();
+            } catch (error) {
+                console.error('Error setting up audio analysis:', error);
+            }
             
             recorder.start();
             setIsRecording(true);
@@ -172,7 +178,10 @@ export const MicrophoneButton: React.FC = () => {
     // Helper function to convert AudioBuffer to WAV
     const startSilenceDetection = useCallback(() => {
         const checkSilence = () => {
-            if (!analyserRef.current) return;
+            if (!analyserRef.current) {
+                console.log('Analyser not initialized');
+                return;
+            }
             
             const bufferLength = analyserRef.current.frequencyBinCount;
             const dataArray = new Float32Array(bufferLength);
@@ -186,18 +195,23 @@ export const MicrophoneButton: React.FC = () => {
             const rms = Math.sqrt(sum / bufferLength);
             const dB = 20 * Math.log10(rms);
             
+            console.log(`Audio level: ${dB.toFixed(2)} dB`); // Debug log
+            
             if (dB < SILENCE_THRESHOLD) {
-                // Silence detected
+                console.log(`Silence detected (${dB.toFixed(2)} dB < ${SILENCE_THRESHOLD} dB)`);
                 if (!silenceTimer.current) {
+                    console.log(`Starting silence timer (${SILENCE_DURATION}ms)`);
                     silenceTimer.current = window.setTimeout(() => {
+                        console.log('Silence duration reached, stopping recording');
                         if (isRecording) {
                             handleRecording();
                         }
                     }, SILENCE_DURATION);
                 }
             } else {
-                // Sound detected, reset timer
+                console.log(`Sound detected (${dB.toFixed(2)} dB)`);
                 if (silenceTimer.current) {
+                    console.log('Resetting silence timer');
                     window.clearTimeout(silenceTimer.current);
                     silenceTimer.current = null;
                 }
