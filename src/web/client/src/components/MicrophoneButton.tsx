@@ -8,6 +8,10 @@ interface MicrophoneButtonProps {
 }
 
 export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({ currentChannel }) => {
+    const [isRecording, setIsRecording] = useState(false);
+    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+    const ipcService = useIPCService();
+    
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.ctrlKey && e.code === 'Space') {
@@ -35,10 +39,7 @@ export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({ currentChann
             window.removeEventListener('keyup', handleKeyUp);
         };
     }, [isRecording]);
-    const [isRecording, setIsRecording] = useState(false);
-    const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
-    const ipcService = useIPCService();
-
+    
     const handleRecording = async () => {
         if (isRecording) {
             // Stop recording
