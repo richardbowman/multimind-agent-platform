@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Artifact } from '../../../../tools/artifact';
+import { Artifact, ArtifactType } from '../../../../tools/artifact';
 import { Button, TextField, Select, MenuItem, Box, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
 import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
@@ -19,7 +19,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
     onUpdate, 
     artifact 
 }) => {
-    const [artifactType, setArtifactType] = useState('text');
+    const [artifactType, setArtifactType] = useState(ArtifactType.Document);
     const [artifactContent, setArtifactContent] = useState('');
     const [title, setTitle] = useState('');
     const [metadata, setMetadata] = useState('{}');
@@ -107,12 +107,12 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
                         label="Artifact Type"
                         fullWidth
                     >
-                        <MenuItem value="text">Text</MenuItem>
-                        <MenuItem value="csv">CSV Spreadsheet</MenuItem>
-                        <MenuItem value="code">Code</MenuItem>
-                        <MenuItem value="report">Report</MenuItem>
-                        <MenuItem value="document">Document</MenuItem>
-                        <MenuItem value="image">Image</MenuItem>
+                        <MenuItem value={ArtifactType.Document}>Document</MenuItem>
+                        <MenuItem value={ArtifactType.Spreadsheet}>Spreadsheet</MenuItem>
+                        <MenuItem value={ArtifactType.Webpage}>Webpage</MenuItem>
+                        <MenuItem value={ArtifactType.Diagram}>Diagram</MenuItem>
+                        <MenuItem value={ArtifactType.Calendar}>Calendar</MenuItem>
+                        <MenuItem value={ArtifactType.ProcedureGuide}>Procedure Guide</MenuItem>
                     </Select>
 
                     <TextField

@@ -91,7 +91,7 @@ ${JSON.stringify(schema, null, 2)}
 
             // Extract links from all selected artifacts
             const allLinks = selectedArtifacts.flatMap(artifact => {
-                if (artifact.type === 'spreadsheet') {
+                if (artifact.type === ArtifactType.Spreadsheet) {
                     try {
                         // Parse CSV content
                         const records = parse(artifact.content.toString(), {
