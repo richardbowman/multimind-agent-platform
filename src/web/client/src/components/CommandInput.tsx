@@ -431,7 +431,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 )}
                 <MicrophoneButton currentChannel={currentChannel} />
             </div>
-            {pendingFiles.length > 0 && (
+            {(pendingFiles.length > 0 || pendingArtifacts.length > 0) && (
                 <div style={{
                     display: 'flex',
                     gap: '8px',
@@ -441,7 +441,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                 }}>
                     {pendingFiles.map((file, index) => (
                         <div
-                            key={index}
+                            key={`file-${index}`}
                             style={{
                                 position: 'relative',
                                 width: '100px',
@@ -470,6 +470,66 @@ export const CommandInput: React.FC<CommandInputProps> = ({ currentChannel, onSe
                             <button
                                 onClick={() => {
                                     setPendingFiles(prev =>
+                                        prev.filter((_, i) => i !== index)
+                                    );
+                                }}
+                                style={{
+                                    position: 'absolute',
+                                    top: '4px',
+                                    right: '4px',
+                                    background: 'rgba(0,0,0,0.7)',
+                                    border: 'none',
+                                    borderRadius: '50%',
+                                    width: '20px',
+                                    height: '20px',
+                                    color: '#fff',
+                                    cursor: 'pointer',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}
+                            >
+                                ×
+                            </button>
+                        </div>
+                    ))}
+                    {pendingArtifacts.map((artifact, index) => (
+                        <div
+                            key={`artifact-${index}`}
+                            style={{
+                                position: 'relative',
+                                width: '150px',
+                                height: '100px',
+                                borderRadius: '4px',
+                                backgroundColor: '#2a2a2a',
+                                padding: '8px',
+                                flexShrink: 0,
+                                display: 'flex',
+                                flexDirection: 'column',
+                                gap: '4px'
+                            }}
+                        >
+                            <div style={{
+                                fontSize: '0.9em',
+                                fontWeight: 'bold',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }}>
+                                {artifact.metadata?.title || 'Untitled Artifact'}
+                            </div>
+                            <div style={{
+                                fontSize: '0.8em',
+                                color: '#aaa',
+                                whiteSpace: 'nowrap',
+                                overflow: 'hidden',
+                                textOverflow: 'ellipsis'
+                            }}>
+                                {artifact.type}
+                            </div>
+                            <button
+                                onClick={() => {
+                                    setPendingArtifacts(prev =>
                                         prev.filter((_, i) => i !== index)
                                     );
                                 }}
