@@ -22,6 +22,9 @@ interface APICall {
     responseBody: any;
     statusCode: number;
     timestamp: number;
+    protocol?: 'http' | 'sse' | 'websocket';
+    events?: { type: string, data: any, timestamp: number }[]; // For SSE
+    messages?: { type: 'send' | 'receive', data: any, timestamp: number }[]; // For WebSocket
 }
 
 interface APIScrapeResponse extends StepResponse {
@@ -88,7 +91,9 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                     responseHeaders: {},
                     responseBody: null,
                     statusCode: 0,
-                    timestamp: Date.now()
+                    timestamp: Date.now(),
+                    protocol: params.request.url.startsWith('ws') ? 'websocket' : 
+                             params.request.url.endsWith('/events') ? 'sse' : 'http'
                 };
                 this.apiCalls.push(apiCall);
             }
@@ -97,22 +102,60 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                 if (call) {
                     call.responseHeaders = params.response.headers;
                     call.statusCode = params.response.status;
-                    _debugger.sendCommand('Network.getResponseBody', { requestId: params.requestId })
-                    .then(response => {
-                        try {
-                            call.responseBody = JSON.parse(response.body);
-                        } catch {
-                            call.responseBody = response.body;
-                        }
-                    })
-                    .catch(err => {
-                        console.error('Error getting response body:', err);
+                    
+                    if (call.protocol === 'http') {
+                        _debugger.sendCommand('Network.getResponseBody', { requestId: params.requestId })
+                        .then(response => {
+                            try {
+                                call.responseBody = JSON.parse(response.body);
+                            } catch {
+                                call.responseBody = response.body;
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error getting response body:', err);
+                        });
+                    }
+                }
+            }
+            else if (method === 'Network.webSocketFrameSent') {
+                const call = this.apiCalls.find(c => c.url === params.requestId);
+                if (call) {
+                    if (!call.messages) call.messages = [];
+                    call.messages.push({
+                        type: 'send',
+                        data: params.response.payloadData,
+                        timestamp: Date.now()
+                    });
+                }
+            }
+            else if (method === 'Network.webSocketFrameReceived') {
+                const call = this.apiCalls.find(c => c.url === params.requestId);
+                if (call) {
+                    if (!call.messages) call.messages = [];
+                    call.messages.push({
+                        type: 'receive',
+                        data: params.response.payloadData,
+                        timestamp: Date.now()
+                    });
+                }
+            }
+            else if (method === 'Network.eventSourceMessageReceived') {
+                const call = this.apiCalls.find(c => c.url === params.requestId);
+                if (call) {
+                    if (!call.events) call.events = [];
+                    call.events.push({
+                        type: params.eventName || 'message',
+                        data: params.data,
+                        timestamp: Date.now()
                     });
                 }
             }
         });
 
         _debugger.sendCommand('Network.enable');
+        _debugger.sendCommand('Network.enableWebSockets');
+        _debugger.sendCommand('Network.enableEventSource');
     }
 
     private async saveAPICallsAsArtifact(projectId: string): Promise<{allCalls: Artifact, largestPayloads: Artifact[]}> {
@@ -211,7 +254,9 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
         // Generate a summary of the captured calls
         let summary = `Captured ${this.apiCalls.length} API calls. ` +
             `Most common endpoint: ${this.getMostCommonEndpoint()}\n\n` +
-            `Significant JSON payloads found: ${largestPayloads.length}\n`;
+            `Significant JSON payloads found: ${largestPayloads.length}\n` +
+            `WebSocket connections: ${this.apiCalls.filter(c => c.protocol === 'websocket').length}\n` +
+            `SSE connections: ${this.apiCalls.filter(c => c.protocol === 'sse').length}\n`;
 
         if (largestPayloads.length > 0) {
             summary += `Top 3 largest payloads:\n` +
