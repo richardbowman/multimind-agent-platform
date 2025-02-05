@@ -5,6 +5,23 @@ import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/typ
 
 // Default voice ID for TTS
 const DEFAULT_VOICE_ID = 'en_US-hfc_female-medium';
+
+// Initialize TTS system
+let ttsInitialized = false;
+async function initializeTTS() {
+    if (!ttsInitialized) {
+        try {
+            // Download the model in advance
+            await tts.download(DEFAULT_VOICE_ID);
+            ttsInitialized = true;
+        } catch (error) {
+            console.error('Error initializing TTS:', error);
+        }
+    }
+}
+
+// Initialize on module load
+initializeTTS();
 import { SnackbarContextType } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { ClientMethods } from '../../../../shared/RPCInterface';
@@ -26,6 +43,9 @@ class ClientMethodsImplementation implements ClientMethods {
         for (const message of messages) {
             if (message.props?.verbalConversation === true) {
                 try {
+                    // Ensure TTS is initialized
+                    await initializeTTS();
+                    
                     const wav = await tts.predict({
                         text: message.message,
                         voiceId: DEFAULT_VOICE_ID,
