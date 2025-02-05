@@ -61,9 +61,6 @@ export const MicrophoneButton: React.FC = () => {
 
             // Store the stream so we can clean it up later
             const currentStream = stream;
-
-            // Get thread ID before starting recording
-            const threadId = currentThreadId || null;
             
             recorder.onstop = async () => {
                 try {
@@ -118,7 +115,7 @@ export const MicrophoneButton: React.FC = () => {
                             await ipcService.getRPC().transcribeAndSendAudio({
                                 audioBase64: wavBase64,
                                 channelId: currentChannelId,
-                                threadId: threadId,
+                                threadId: currentThreadId,
                                 language: 'en'
                             });
                         } catch (error) {
