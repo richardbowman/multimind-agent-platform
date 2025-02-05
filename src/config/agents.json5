@@ -132,15 +132,15 @@
               "description": "For incoming new user requests, check existing knowledge base and validate.",
               "steps": [
                 {
-                  "executor": "GOAL_CONFIRMATION",
+                  "executor": "goal-confirmation",
                   "description": "Confirm and restate the user's goal clearly with context for other steps."
                 },
                 {
-                  "executor": "CHECK_KNOWLEDGE",
+                  "executor": "check-knowledge",
                   "description": "Check existing knowledge base"
                 },
                 {
-                  "executor": "VALIDATION",
+                  "executor": "validation",
                   "description": "Validate information"
                 }
               ]
@@ -151,15 +151,15 @@
               "description": "If the task includes a specific complete URL, download and process relevant links.",
               "steps": [
                 {
-                  "executor": "URL_EXTRACT",
+                  "executor": "url-extract",
                   "description": "Extract the URLs from the task information"
                 },
                 {
-                  "executor": "WEB_SCRAPE",
+                  "executor": "web-scrape",
                   "description": "Scrape provided URL"
                 },
                 {
-                  "executor": "SELECT_LINKS",
+                  "executor": "select-links",
                   "description": "Select child links from this page"
                 },
                 {
@@ -167,7 +167,7 @@
                   "description": "Scrape selected child links"
                 },
                 {
-                  "executor": "FINAL_RESPONSE",
+                  "executor": "final-response",
                   "description": "Provide final response"
                 }
               ]
@@ -178,7 +178,7 @@
               "description": "If the task mentions references to document(s) you can use to review.",
               "steps": [
                 {
-                  "executor": "ARTIFACT_SELECTOR",
+                  "executor": "artifact-selector",
                   "description": "Find and review the most relevant documents available"
                 },
                 {
@@ -201,7 +201,7 @@
               "description": "Search, process links, and provide final response.",
               "steps": [
                 {
-                  "executor": "WEB_SEARCH",
+                  "executor": "web-search",
                   "description": "Perform web search"
                 },
                 {
@@ -289,15 +289,15 @@
                   "description": "Confirm the API data extraction goal"
                 },
                 {
-                  "executor": "API_SCRAPER",
+                  "executor": "api-scraper",
                   "description": "Capture API calls and responses"
                 },
                 {
-                  "executor": "DATA_ANALYSIS",
+                  "executor": "data-analysis",
                   "description": "Analyze captured API data"
                 },
                 {
-                  "executor": "GENERATE_ARTIFACT",
+                  "executor": "generate-artifact",
                   "description": "Create structured report from API data"
                 }
               ]
