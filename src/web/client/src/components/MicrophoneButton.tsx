@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import Mic from '@mui/icons-material/Mic';
 import Stop from '@mui/icons-material/Stop';
 import { useIPCService } from '../contexts/IPCContext';
@@ -8,6 +8,15 @@ export const MicrophoneButton: React.FC = () => {
     const { currentChannelId, currentThreadId } = useDataContext();
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+    const silenceTimer = useRef<number | null>(null);
+    const audioContextRef = useRef<AudioContext | null>(null);
+    const analyserRef = useRef<AnalyserNode | null>(null);
+    const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
+    
+    // Silence detection parameters
+    const SILENCE_THRESHOLD = -50; // dB (adjust based on mic sensitivity)
+    const SILENCE_DURATION = 2000; // ms of silence before stopping
+    const ANALYZER_FFT_SIZE = 2048;
     const ipcService = useIPCService();
     const currentThreadIdRef = useRef(currentThreadId);
     
@@ -134,11 +143,25 @@ export const MicrophoneButton: React.FC = () => {
                 } finally {
                     // Clean up
                     currentStream.getTracks().forEach(track => track.stop());
+                    if (audioContextRef.current) {
+                        audioContextRef.current.close();
+                    }
                     setMediaRecorder(null);
                     setIsRecording(false);
+                    stopSilenceDetection();
                 }
             };
 
+            // Setup audio analysis for silence detection
+            audioContextRef.current = new AudioContext();
+            analyserRef.current = audioContextRef.current.createAnalyser();
+            analyserRef.current.fftSize = ANALYZER_FFT_SIZE;
+            sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
+            sourceRef.current.connect(analyserRef.current);
+            
+            // Start analyzing audio
+            startSilenceDetection();
+            
             recorder.start();
             setIsRecording(true);
         } catch (error) {
@@ -174,6 +197,55 @@ export const MicrophoneButton: React.FC = () => {
 };
 
 // Helper function to convert AudioBuffer to WAV
+    const startSilenceDetection = useCallback(() => {
+        const checkSilence = () => {
+            if (!analyserRef.current) return;
+            
+            const bufferLength = analyserRef.current.frequencyBinCount;
+            const dataArray = new Float32Array(bufferLength);
+            analyserRef.current.getFloatTimeDomainData(dataArray);
+            
+            // Calculate RMS (root mean square) of the audio signal
+            let sum = 0;
+            for (let i = 0; i < bufferLength; i++) {
+                sum += dataArray[i] * dataArray[i];
+            }
+            const rms = Math.sqrt(sum / bufferLength);
+            const dB = 20 * Math.log10(rms);
+            
+            if (dB < SILENCE_THRESHOLD) {
+                // Silence detected
+                if (!silenceTimer.current) {
+                    silenceTimer.current = window.setTimeout(() => {
+                        if (isRecording) {
+                            handleRecording();
+                        }
+                    }, SILENCE_DURATION);
+                }
+            } else {
+                // Sound detected, reset timer
+                if (silenceTimer.current) {
+                    window.clearTimeout(silenceTimer.current);
+                    silenceTimer.current = null;
+                }
+            }
+            
+            // Continue monitoring
+            if (isRecording) {
+                requestAnimationFrame(checkSilence);
+            }
+        };
+        
+        checkSilence();
+    }, [isRecording]);
+
+    const stopSilenceDetection = () => {
+        if (silenceTimer.current) {
+            window.clearTimeout(silenceTimer.current);
+            silenceTimer.current = null;
+        }
+    };
+
 function audioBufferToWav(buffer: AudioBuffer): Uint8Array {
     const numChannels = buffer.numberOfChannels;
     const length = buffer.length;
