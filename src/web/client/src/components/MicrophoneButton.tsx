@@ -184,8 +184,14 @@ export const MicrophoneButton: React.FC = () => {
                 await new Promise(resolve => setTimeout(resolve, 200));
                 
                 console.log('Audio analysis setup complete');
-                // Start analyzing audio
-                startSilenceDetection();
+                // Start analyzing audio and get cleanup function
+                const stopDetection = startSilenceDetection();
+                
+                // Return cleanup function to stop detection when component unmounts
+                return () => {
+                    stopDetection();
+                    stopSilenceDetection();
+                };
             } catch (error) {
                 console.error('Error setting up audio analysis:', error);
                 // Fall back to manual stop if analysis fails
@@ -275,14 +281,15 @@ export const MicrophoneButton: React.FC = () => {
                     }, SILENCE_DURATION);
                 }
             }
-            
-            // Continue monitoring
-            if (isRecording) {
-                requestAnimationFrame(checkSilence);
-            }
         };
+
+        // Start checking every 100ms
+        const intervalId = setInterval(checkSilence, 100);
         
-        checkSilence();
+        // Return cleanup function
+        return () => {
+            clearInterval(intervalId);
+        };
     }, [isRecording]);
 
     const stopSilenceDetection = () => {
