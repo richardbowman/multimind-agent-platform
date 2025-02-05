@@ -225,6 +225,15 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         }
     }, [messages]);
 
+    // Show welcome panel only if there are remaining tasks in the channel
+    useEffect(() => {
+        if (currentChannelId) {
+            const channelTasks = tasks.filter(t => t.channelId === currentChannelId);
+            const hasRemainingTasks = channelTasks.some(t => !t.complete);
+            onSwitchToWelcome(hasRemainingTasks);
+        }
+    }, [currentChannelId, tasks]);
+
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
     const handleSendMessage = async (content: string, artifactIds?: string) => {
