@@ -353,7 +353,38 @@ export class AgentBuilderConfig {
     enabled: boolean = true;
 }
 
+export class TTSSettings {
+    @ClientSettings({
+        label: 'Voice ID',
+        category: 'Text-to-Speech',
+        type: 'select',
+        options: [
+            'en_US-hfc_female-medium',
+            'en_US-amy-medium',
+            'en_US-joe-medium',
+            'en_US-libritts-high'
+        ],
+        description: 'Voice model to use for text-to-speech'
+    })
+    voiceId: string = 'en_US-hfc_female-medium';
+
+    @ClientSettings({
+        label: 'Enable TTS',
+        category: 'Text-to-Speech',
+        type: 'boolean',
+        description: 'Enable text-to-speech for incoming messages'
+    })
+    enabled: boolean = true;
+}
+
 export class Settings {
+    @ClientSettings({
+        label: 'Text-to-Speech',
+        category: 'Text-to-Speech',
+        type: 'section'
+    })
+    tts: TTSSettings = new TTSSettings();
+
     @ClientSettings({
         label: 'Agent Builder',
         category: 'Agent Builder',

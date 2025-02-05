@@ -1,10 +1,9 @@
 import * as ort from 'onnxruntime-web';
 
-// Default voice ID for TTS
-const DEFAULT_VOICE_ID = 'en_US-hfc_female-medium';
 ort.env.wasm.wasmPaths = '/';
 
 import * as tts from '@mintplex-labs/piper-tts-web';
+import { settings } from '../contexts/SettingsContext';
 import type { LogParam } from '../../../../llm/LLMLogger';
 import { type DataContextMethods } from '../contexts/DataContext';
 import { ClientChannel, ClientMessage } from '../../../../shared/types';
@@ -54,9 +53,11 @@ class ClientMethodsImplementation implements ClientMethods {
                     // Ensure TTS is initialized
                     await initializeTTS();
                     
+                    if (!settings.tts.enabled) return;
+            
                     const wav = await tts.predict({
                         text: message.message,
-                        voiceId: DEFAULT_VOICE_ID,
+                        voiceId: settings.tts.voiceId,
                     });
                     const audio = new Audio();
                     audio.src = URL.createObjectURL(wav);
