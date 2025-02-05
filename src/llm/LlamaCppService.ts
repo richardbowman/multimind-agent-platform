@@ -392,17 +392,38 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                             const filePath = path.join(modelDir, fileName);
                             const stats = await fs.stat(filePath);
                             
-                            // For local models, use the filename as both repo and model name
+                            // Verify it's a valid GGUF file
+                            const fd = await fs.open(filePath, 'r');
+                            const buffer = Buffer.alloc(4);
+                            await fd.read(buffer, 0, 4, 0);
+                            await fd.close();
+                            
+                            const magic = buffer.toString('utf8');
+                            if (magic !== 'GGUF') {
+                                Logger.warn(`Invalid GGUF file: ${fileName}`);
+                                continue;
+                            }
+
+                            // Create a more descriptive ID
+                            const baseName = fileName.replace(/\.gguf$/i, '');
+                            const modelId = `local/${baseName}`;
+                            
                             localModels.push({
-                                id: fileName,
-                                name: fileName,
-                                path: filePath, // Store actual local path
+                                id: modelId,
+                                name: baseName,
+                                path: filePath,
                                 size: (stats.size / 1024 / 1024).toFixed(2) + ' MB',
                                 lastModified: stats.mtime,
-                                repo: fileName // Use filename as repo for local models
+                                isLocal: true,
+                                author: 'Local',
+                                description: 'Locally uploaded model',
+                                ggufFiles: [{
+                                    filename: fileName,
+                                    size: (stats.size / 1024 / 1024).toFixed(2) + ' MB'
+                                }]
                             });
                         } catch (error) {
-                            Logger.warn(`Could not get stats for model ${fileName}:`, error);
+                            Logger.warn(`Could not process model ${fileName}:`, error);
                         }
                     }
                 }
@@ -418,9 +439,13 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 Logger.warn('Could not fetch remote models:', error);
             }
 
-            // Combine and sort models
+            // Combine models with clear local/remote distinction
             const combinedModels = [
-                ...localModels,
+                ...localModels.map(model => ({
+                    ...model,
+                    type: 'local',
+                    label: 'Local Model'
+                })),
                 ...remoteModels.flatMap(model => 
                     model.ggufFiles.map(file => ({
                         id: `${model.id}/${file.filename}`,
@@ -428,22 +453,29 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                         size: file.size,
                         lastModified: new Date(model.lastModified),
                         isLocal: false,
+                        type: 'remote',
+                        label: 'Remote Model',
                         author: model.author,
                         downloads: model.downloads,
                         likes: model.likes,
                         ggufFiles: model.ggufFiles,
-                        repo: model.id
+                        repo: model.id,
+                        description: model.description || `Model from ${model.author}`
                     }))
                 )
             ];
 
-            // Sort by name, with local models first
+            // Sort with local models first, then by name
             return combinedModels.sort((a, b) => {
                 if (a.isLocal === b.isLocal) {
                     return a.name.localeCompare(b.name);
                 }
                 return a.isLocal ? -1 : 1;
-            });
+            }).map(model => ({
+                ...model,
+                // Add a display name that shows the source
+                displayName: model.isLocal ? `Local: ${model.name}` : `Remote: ${model.name}`
+            }));
         } catch (error) {
             await this.logger.logCall('getAvailableModels', {}, null, error);
             throw error;
