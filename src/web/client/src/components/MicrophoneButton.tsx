@@ -222,10 +222,12 @@ export const MicrophoneButton: React.FC = () => {
     };
 
     // Helper function to convert AudioBuffer to WAV
+    const silenceDetectionInterval = useRef<number | null>(null);
+
     const startSilenceDetection = useCallback(() => {
         const checkSilence = async () => {
-            if (!analyserRef.current) {
-                console.log('Analyser not initialized');
+            if (!analyserRef.current || !isRecording) {
+                console.log('Analyser not initialized or recording stopped');
                 return;
             }
             
@@ -296,18 +298,17 @@ export const MicrophoneButton: React.FC = () => {
         };
 
         // Start checking every 100ms
-        const intervalId = setInterval(checkSilence, 100);
-        
-        // Return cleanup function
-        return () => {
-            clearInterval(intervalId);
-        };
+        silenceDetectionInterval.current = window.setInterval(checkSilence, 100);
     }, [isRecording]);
 
     const stopSilenceDetection = () => {
         if (silenceTimer.current) {
             window.clearTimeout(silenceTimer.current);
             silenceTimer.current = null;
+        }
+        if (silenceDetectionInterval.current) {
+            window.clearInterval(silenceDetectionInterval.current);
+            silenceDetectionInterval.current = null;
         }
     };
 
