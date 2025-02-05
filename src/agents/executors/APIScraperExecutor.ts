@@ -186,8 +186,7 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                 urlsToScrape = params.previousResponses
                     .map(r => r.data?.selectedUrls)
                     .filter(s => s)
-                    .flat()
-                    .slice(-1)[0] || [];
+                    .flat() || [];
             }
 
             if (!urlsToScrape.length) {
