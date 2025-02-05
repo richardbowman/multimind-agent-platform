@@ -180,8 +180,34 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
             // Setup monitoring
             this.setupAPIMonitoring(browserSession);
 
-        // Wait for API calls to be captured
-        await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
+            // Extract URLs from step goal or previous responses
+            let urlsToScrape = StringUtils.extractUrls(params.stepGoal);
+            if (!urlsToScrape.length && params.previousResponses) {
+                urlsToScrape = params.previousResponses
+                    .map(r => r.data?.selectedUrls)
+                    .filter(s => s)
+                    .flat()
+                    .slice(-1)[0] || [];
+            }
+
+            if (!urlsToScrape.length) {
+                return {
+                    finished: true,
+                    response: {
+                        type: StepResponseType.WebPage,
+                        message: 'No URLs provided to scrape'
+                    }
+                };
+            }
+
+            // Load each URL and wait for API calls
+            for (const url of urlsToScrape) {
+                if (this.browserWindow) {
+                    await this.browserWindow.loadURL(url);
+                    // Wait for page to load and API calls to complete
+                    await new Promise(resolve => setTimeout(resolve, 5000)); // Wait 5 seconds per page
+                }
+            }
 
         // Save captured API calls and payloads
         const {allCalls, largestPayloads} = await this.saveAPICallsAsArtifact(params.projectId);
