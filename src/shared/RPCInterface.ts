@@ -3,7 +3,6 @@ import { LLMLogEntry, LogParam } from '../llm/LLMLogger';
 import { ClientMessage, ClientProject } from "./types";
 import { ClientChannel } from "./types";
 import { ClientThread } from "./types";
-import { ClientTask } from './types';
 import { EmbedderModelInfo } from 'src/llm/ILLMService';
 import { ModelInfo } from 'src/llm/types';
 import { UpdateStatus } from './UpdateStatus';
@@ -11,6 +10,7 @@ import { UUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
 import { ClientError } from '@mattermost/client';
 import { GoalTemplate } from 'src/schemas/goalTemplateSchema';
+import { Task } from 'src/tools/taskManager';
 
 export interface LogEntry {
     timestamp: string;
@@ -44,7 +44,7 @@ export interface ServerMethods {
     getMessages(params: { channelId: string; threadId: string | null; limit?: number }): Promise<ClientMessage[]>;
     getChannels(): Promise<ClientChannel[]>;
     getThreads(params: { channelId: string }): Promise<ClientThread[]>;
-    getTasks(params: { channelId: string; threadId: string | null }): Promise<ClientTask[]>;
+    getTasks(params: { channelId: string; threadId: string | null }): Promise<Task[]>;
     getArtifacts(params: { channelId: string; threadId: string | null }): Promise<any[]>;
     getAllArtifacts(): Promise<any[]>;
     deleteArtifact(artifactId: string): Promise<any[]>;
@@ -85,8 +85,8 @@ export interface ServerMethods {
     getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]|ClientError>;
     rebuildVectorDB(): Promise<void>;
     getProject(projectId: string): Promise<ClientProject>;
-    markTaskComplete(taskId: string, complete: boolean): Promise<ClientTask>;
-    cancelTask(taskId: string): Promise<ClientTask>;
+    markTaskComplete(taskId: string, complete: boolean): Promise<Task>;
+    cancelTask(taskId: string): Promise<Task>;
     
     loadGoalTemplates(): Promise<GoalTemplate[]>;
 
@@ -126,7 +126,7 @@ export interface ClientMethods {
     onMessage(messages: ClientMessage[]): void;
     onLogUpdate(update: LogParam): void;
     onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }): void;
-    onTaskUpdate(task: ClientTask): void;
+    onTaskUpdate(task: Task): void;
     onProjectUpdate(project: ClientProject): void;
     onFilesAttached(artifacts: Artifact[]): void;
     

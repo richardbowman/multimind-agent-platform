@@ -767,7 +767,8 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 message: transcription,
                 props: {
                     'transcription': true,
-                    'language': language || 'en'
+                    'language': language || 'en',
+                    'verbalConversation': true
                 }
             };
 
