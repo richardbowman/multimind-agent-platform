@@ -48,7 +48,10 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
     const ipcService = useIPCService();
     const [editingAgentId, setEditingAgentId] = useState<string | null>(null);
     const [agentForm, setAgentForm] = useState<any>({
-        executors: []
+        executors: [],
+        config: {
+            stepSequences: []
+        }
     });
 
     const [executorOptions, setExecutorOptions] = useState<{value: string, label: string}[]>([]);
@@ -94,7 +97,10 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
             plannerType: agentConfig.config?.plannerType || 'nextStep',
             autoRespondChannelIds: agentConfig.config?.autoRespondChannelIds || '',
             enabled: agentConfig.enabled ?? true,
-            executors: executors
+            executors: executors,
+            config: {
+                stepSequences: agentConfig.config?.stepSequences || []
+            }
         });
     };
 
