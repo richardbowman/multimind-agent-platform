@@ -9,7 +9,7 @@ interface WelcomePanelProps {
 }
 
 export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitchToChat }) => {
-    const { currentChannelId, channels, tasks } = useDataContext();
+    const { currentChannelId, channels, tasks, sendMessage } = useDataContext();
     const ipcService = useIPCService();
 
     const channel = channels.find(c => c.id === currentChannelId);
@@ -73,7 +73,15 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                             <Button 
                                 variant="contained" 
                                 fullWidth
-                                onClick={() => onStartTask(task.id)}
+                                onClick={() => {
+                                    onStartTask(task.id);
+                                    sendMessage({
+                                        channel_id: currentChannelId,
+                                        message: `I'd like to get started on task: ${task.description}`,
+                                        user_id: 'system', // Or use actual user ID
+                                        create_at: Date.now()
+                                    });
+                                }}
                                 disabled={task.inProgress}
                             >
                                 {task.inProgress ? 'In Progress...' : 'Start Task'}
