@@ -14,10 +14,11 @@ export const MicrophoneButton: React.FC = () => {
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
     
     // Silence detection parameters
-    const SILENCE_THRESHOLD = -45; // dB (adjust based on mic sensitivity)
-    const SILENCE_DURATION = 2000; // ms of silence before stopping
+    const SILENCE_THRESHOLD = -60; // Lower threshold for better sensitivity
+    const SILENCE_DURATION = 3000; // Longer duration before stopping
     const ANALYZER_FFT_SIZE = 2048;
-    const MIN_VALID_VOLUME = -90; // dB - anything below this is considered invalid/no signal
+    const MIN_VALID_VOLUME = -100; // Allow for quieter signals
+    const SOUND_THRESHOLD = -50; // Minimum dB to consider as active speech
     const ipcService = useIPCService();
     const currentThreadIdRef = useRef(currentThreadId);
     
@@ -254,8 +255,16 @@ export const MicrophoneButton: React.FC = () => {
             
             console.log(`Audio level: ${dB.toFixed(2)} dB`); // Debug log
             
-            if (dB < SILENCE_THRESHOLD && dB > MIN_VALID_VOLUME) {
-                console.log(`Silence detected (${dB.toFixed(2)} dB < ${SILENCE_THRESHOLD} dB)`);
+            // Only consider it silence if we've had valid sound first
+            if (dB > SOUND_THRESHOLD) {
+                console.log(`Active speech detected (${dB.toFixed(2)} dB > ${SOUND_THRESHOLD} dB)`);
+                if (silenceTimer.current) {
+                    console.log('Resetting silence timer');
+                    window.clearTimeout(silenceTimer.current);
+                    silenceTimer.current = null;
+                }
+            } else if (dB < SILENCE_THRESHOLD && dB > MIN_VALID_VOLUME) {
+                console.log(`Quiet period detected (${dB.toFixed(2)} dB < ${SILENCE_THRESHOLD} dB)`);
                 if (!silenceTimer.current) {
                     console.log(`Starting silence timer (${SILENCE_DURATION}ms)`);
                     silenceTimer.current = window.setTimeout(() => {
@@ -264,13 +273,6 @@ export const MicrophoneButton: React.FC = () => {
                             handleRecording();
                         }
                     }, SILENCE_DURATION);
-                }
-            } else {
-                console.log(`Sound detected (${dB.toFixed(2)} dB)`);
-                if (silenceTimer.current) {
-                    console.log('Resetting silence timer');
-                    window.clearTimeout(silenceTimer.current);
-                    silenceTimer.current = null;
                 }
             }
             
