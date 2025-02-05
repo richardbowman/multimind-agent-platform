@@ -5,6 +5,7 @@ import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { TaskManager, RecurrencePattern } from '../../tools/taskManager';
+import { TaskStatus } from 'src/schemas/TaskStatus';
 import Logger from '../../helpers/logger';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
@@ -16,89 +17,7 @@ import { UUID } from 'src/types/uuid';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ChatClient } from 'src/chat/chatClient';
 
-@StepExecutorDecorator(ExecutorType.CREATE_TASK, 'Create, update, and delete a task')
-@StepExecutorDecorator(ExecutorType.VIEW_TASKS, 'View tasks for a specific user or agent')
-export class ViewTaskExecutor implements StepExecutor {
-    private taskManager: TaskManager;
-    private chatClient: ChatClient;
-
-    constructor(params: ExecutorConstructorParams) {
-        this.taskManager = params.taskManager!;
-        this.chatClient = params.chatClient;
-    }
-
-    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        const { goal, step, projectId } = params;
-        const schema = await getGeneratedSchema(SchemaType.TaskListResponse);
-
-        // Get handle from context
-        const handle = params.context?.handle;
-        if (!handle) {
-            return {
-                type: "view_tasks",
-                finished: true,
-                response: {
-                    message: 'No user/agent handle provided to view tasks'
-                }
-            };
-        }
-
-        // Get user ID from handle
-        const handles = await this.chatClient.getHandles();
-        const userId = Object.entries(handles).find(([id, h]) => h === handle)?.[0] as UUID | undefined;
-        
-        if (!userId) {
-            return {
-                type: "view_tasks",
-                finished: true,
-                response: {
-                    message: `Could not find user/agent with handle ${handle}`
-                }
-            };
-        }
-
-        // Find all projects with tasks assigned to this user
-        const allProjects = this.taskManager.getAllProjects();
-        const userTasks = allProjects
-            .flatMap(project => 
-                Object.values(project.tasks)
-                    .filter(task => task.assignee === userId)
-                    .map(task => ({
-                        ...task,
-                        projectName: project.name
-                    }))
-            );
-
-        if (userTasks.length === 0) {
-            return {
-                type: "view_tasks",
-                finished: true,
-                response: {
-                    message: `No tasks found for ${handle}`
-                }
-            };
-        }
-
-        // Format task list
-        const taskList = userTasks.map(task => ({
-            id: task.id,
-            description: task.description,
-            project: task.projectName,
-            status: task.status,
-            dueDate: task.dueDate?.toISOString().split('T')[0] || 'No due date'
-        }));
-
-        return {
-            type: "view_tasks",
-            finished: true,
-            response: {
-                message: `Here are the tasks for ${handle}:`,
-                tasks: taskList
-            }
-        };
-    }
-}
-
+@StepExecutorDecorator(ExecutorType.CREATE_TASK, 'Create, update, complete, cancel, and delete a task')
 export class ScheduleTaskExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
@@ -133,7 +52,8 @@ export class ScheduleTaskExecutor implements StepExecutor {
                 tasks: Object.values(channelProject.tasks)                                                                          
             });                                                                                                                     
         }                                                                                                                           
-                                                                                                                                    
+                                           
+        params.previousResponses && promptBuilder.addContext({ contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses });
         promptBuilder.addContext({ contentType: ContentType.CHANNEL_GOALS, tasks: params.channelGoals });                           
         params.overallGoal && promptBuilder.addContext({ contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal });        
         promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params});                                               
@@ -141,7 +61,7 @@ export class ScheduleTaskExecutor implements StepExecutor {
 params.context?.artifacts });                                                                                                       
         params.agents && promptBuilder.addContext({ contentType: ContentType.AGENT_OVERVIEWS, agents: params.agents });             
                                                                                                                                     
-        promptBuilder.addInstruction(`Create, update, or remove a task based on this goal.                                                   
+        promptBuilder.addInstruction(`Create, update, complete, or remove a task based on this goal.                                                   
             If this is an update to an existing task, specify:                                                                      
             1. The task ID to update                                                                                                
             2. Updated task description                                                                                             
@@ -213,15 +133,22 @@ params.context?.artifacts });
              let task;
              if (action === UpdateActions.Delete && taskId) {
                  // Remove existing task
-                 const existingTask = channelProject.tasks[taskId-1];
+                 const existingTask = this.taskManager.getTaskById(taskId);
                  if (!existingTask) {
                      throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
                  }
                  
                  await this.taskManager.cancelTask(existingTask.id);
-             } else if (action === UpdateActions.Update && taskId) {
+            } else if (action === UpdateActions.Complete && taskId) {
+                // Complete task
+                const existingTask = this.taskManager.getTaskById(taskId);
+                if (!existingTask) {
+                    throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
+                }
+                this.taskManager.completeTask(existingTask.id);
+            } else if (action === UpdateActions.Update && taskId) {
                  // Update existing task
-                 const existingTask = channelProject.tasks[taskId-1];
+                 const existingTask = this.taskManager.getTaskById(taskId);
                  if (!existingTask) {
                      throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
                  }
@@ -229,7 +156,7 @@ params.context?.artifacts });
                  // Parse due date if provided
                  const parsedDueDate = dueDate ? new Date(dueDate) : undefined;
                  
-                 task = await this.taskManager.updateTask(channelProject.id, {
+                 task = await this.taskManager.updateTask(taskId, {
                      ...existingTask,
                      description: taskDescription || existingTask.description,
                      assignee: assigneeId || existingTask.assignee,
