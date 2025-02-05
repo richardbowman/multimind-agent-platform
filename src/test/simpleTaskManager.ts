@@ -495,10 +495,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                         task.status !== TaskStatus.Completed && 
                         task.status !== TaskStatus.Cancelled) {
                         Logger.info(`Task ${taskId} has missed its due date of ${new Date(dueDate).toISOString()}`);
-                        // Mark task as overdue
-                        await this.updateTask(taskId, {
-                            status: TaskStatus.Overdue
-                        });
+                        
                         // Emit event for missed due date
                         this.emit('taskMissedDueDate', { 
                             task, 
