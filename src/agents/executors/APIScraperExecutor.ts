@@ -37,10 +37,24 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
     private modelHelpers: ModelHelpers;
     private apiCalls: APICall[] = [];
     private monitoringSession: Electron.Session | null = null;
+    private browserWindow: BrowserWindow | null = null;
 
     constructor(params: ExecutorConstructorParams) {
         this.artifactManager = params.artifactManager;
         this.modelHelpers = params.modelHelpers;
+    }
+
+    private async createBrowserSession(): Promise<Electron.Session> {
+        this.browserWindow = new BrowserWindow({
+            show: false, // Run in headless mode
+            webPreferences: {
+                nodeIntegration: false,
+                contextIsolation: true,
+                sandbox: true
+            }
+        });
+
+        return this.browserWindow.webContents.session;
     }
 
     private setupAPIMonitoring(session: Electron.Session) {
