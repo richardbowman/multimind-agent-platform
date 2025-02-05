@@ -3,7 +3,8 @@ import { useDropzone } from 'react-dropzone';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact, ArtifactType } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
-import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, ListItem } from '@mui/material';
+import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, ListItem, TextField } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
 import FolderIcon from '@mui/icons-material/Folder';
@@ -24,6 +25,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const { allArtifacts, fetchAllArtifacts, deleteArtifact, showFileDialog } = useDataContext();
     const [selectedArtifacts, setSelectedArtifacts] = useState<Artifact[]>([]);
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
+    const [filterText, setFilterText] = useState('');
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [editorOpen, setEditorOpen] = useState(false);
     const ipcService = useIPCService();
@@ -204,6 +206,19 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 }}
             >
                 <Toolbar /> {/* For spacing under app bar */}
+                <Box sx={{ px: 2, pb: 1 }}>
+                    <TextField
+                        fullWidth
+                        variant="outlined"
+                        size="small"
+                        placeholder="Search artifacts..."
+                        value={filterText}
+                        onChange={(e) => setFilterText(e.target.value)}
+                        InputProps={{
+                            startAdornment: <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
+                        }}
+                    />
+                </Box>
                 {Object.entries(artifactFolders).map(([type, artifacts]) => (
                     <Accordion key={type}>
                         <AccordionSummary>
@@ -215,7 +230,15 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 width: '100%',
                                 padding: 0
                             }}>
-                                {artifacts.map(artifact => (
+                                {artifacts.filter(artifact => {
+                                    if (!filterText) return true;
+                                    const searchText = filterText.toLowerCase();
+                                    return (
+                                        artifact.metadata?.title?.toLowerCase().includes(searchText) ||
+                                        artifact.type.toLowerCase().includes(searchText) ||
+                                        artifact.content.toString().toLowerCase().includes(searchText)
+                                    );
+                                }).map(artifact => (
                                     <Box key={artifact.id} sx={{ 
                                         display: 'flex', 
                                         alignItems: 'center',
