@@ -18,6 +18,7 @@ import JSON5 from 'json5';
 import { ArtifactSelectionResponse } from "src/schemas/ArtifactSelectionResponse";
 import { LinkRef } from "src/helpers/scrapeHelper";
 import { marked } from "marked";
+import { parse } from 'csv-parse/sync';
 
 export interface ArtifactSelectionStepResponse extends StepResponse {
     type: StepResponseType.WebPage;
@@ -89,9 +90,30 @@ ${JSON.stringify(schema, null, 2)}
                 .map(index => allArtifacts[index - 1])||[];
 
             // Extract links from all selected artifacts
-            const allLinks = selectedArtifacts.flatMap(artifact => 
-                StringUtils.extractLinksFromMarkdown(artifact.content.toString())
-            );
+            const allLinks = selectedArtifacts.flatMap(artifact => {
+                if (artifact.type === 'spreadsheet') {
+                    try {
+                        // Parse CSV content
+                        const records = parse(artifact.content.toString(), {
+                            columns: true,
+                            skip_empty_lines: true
+                        });
+                        
+                        // Extract links from all columns that might contain URLs
+                        return records.flatMap(record => 
+                            Object.values(record).flatMap(value => 
+                                StringUtils.extractLinksFromText(value?.toString() || '')
+                            )
+                        );
+                    } catch (error) {
+                        console.error('Error parsing CSV artifact:', error);
+                        return [];
+                    }
+                } else {
+                    // Handle markdown/text content
+                    return StringUtils.extractLinksFromMarkdown(artifact.content.toString());
+                }
+            });
 
             return {
                 finished: true,
