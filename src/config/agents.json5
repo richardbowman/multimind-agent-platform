@@ -163,7 +163,7 @@
                   "description": "Select child links from this page"
                 },
                 {
-                  "executor": "WEB_SCRAPE",
+                  "executor": "web-scrape",
                   "description": "Scrape selected child links"
                 },
                 {
@@ -182,7 +182,7 @@
                   "description": "Find and review the most relevant documents available"
                 },
                 {
-                  "executor": "SELECT_LINKS",
+                  "executor": "select-links",
                   "description": "Select child links found in the document"
                 },
                 {
@@ -190,7 +190,7 @@
                   "description": "Scrape selected child links"
                 },
                 {
-                  "executor": "FINAL_RESPONSE",
+                  "executor": "final-response",
                   "description": "Provide final response"
                 }
               ]
@@ -224,7 +224,7 @@
               "description": "For follow-up requests, process deeper.",
               "steps": [
                 {
-                  "executor": "ARTIFACT_SELECTOR",
+                  "executor": "artifact-selector",
                   "description": "Select child links from this page"
                 },
                 {
@@ -285,7 +285,7 @@
               "description": "Extract and analyze data from APIs",
               "steps": [
                 {
-                  "executor": "GOAL_CONFIRMATION",
+                  "executor": "goal-confirmation",
                   "description": "Confirm the API data extraction goal"
                 },
                 {
