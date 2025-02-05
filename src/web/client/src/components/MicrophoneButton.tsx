@@ -5,7 +5,7 @@ import { useIPCService } from '../contexts/IPCContext';
 
 interface MicrophoneButtonProps {
     currentChannel: string | null;
-    currentThread?: string | null;
+    currentThread?: string;
 }
 
 export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({ currentChannel, currentThread }) => {
