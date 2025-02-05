@@ -77,13 +77,6 @@ export const MicrophoneButton: React.FC = () => {
             setMediaRecorder(recorder);
             setIsRecording(true);
             
-            // Use local array to collect chunks
-            const chunks: Blob[] = [];
-
-            recorder.ondataavailable = (e) => {
-                chunks.push(e.data);
-            };
-
             // Store the stream so we can clean it up later
             const currentStream = stream;
             const threadId = currentThreadIdRef.current;
