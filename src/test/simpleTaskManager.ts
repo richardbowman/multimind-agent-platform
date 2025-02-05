@@ -1,7 +1,8 @@
 import cron from 'node-cron';
 import fs from 'fs/promises';
 import * as Events from 'events';
-import { AddTaskParams, CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager, TaskStatus, TaskType } from '../tools/taskManager';
+import { AddTaskParams, CreateProjectParams, Project, ProjectMetadata, RecurrencePattern, RecurringTask, Task, TaskManager, TaskType } from '../tools/taskManager';
+import { TaskStatus } from 'src/schemas/TaskStatus';
 import Logger from 'src/helpers/logger';
 import { ContentProject } from 'src/agents/contentManager';
 import { AsyncQueue } from '../helpers/asyncQueue';
@@ -495,7 +496,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         );
 
         // Schedule regular checks
-        cron.schedule('*/5 * * * *', async () => {
+        cron.schedule('*/1 * * * *', async () => {
             try {
                 await this.checkMissedTasks();
             } catch (err) {
