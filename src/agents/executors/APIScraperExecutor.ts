@@ -99,8 +99,9 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
         });
     }
 
-    private async saveAPICallsAsArtifact(projectId: string): Promise<Artifact> {
-        const artifact: Artifact = {
+    private async saveAPICallsAsArtifact(projectId: string): Promise<{allCalls: Artifact, largestPayload?: Artifact}> {
+        // Save all API calls
+        const allCallsArtifact: Artifact = {
             id: uuidv4(),
             type: ArtifactType.Document,
             content: JSON.stringify(this.apiCalls, null, 2),
@@ -112,7 +113,46 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
             }
         };
 
-        return this.artifactManager.saveArtifact(artifact, projectId);
+        // Find the largest JSON payload
+        let largestPayload: Artifact | undefined;
+        let largestSize = 0;
+
+        for (const call of this.apiCalls) {
+            if (typeof call.responseBody === 'object' && call.responseBody !== null) {
+                const jsonStr = JSON.stringify(call.responseBody);
+                const size = jsonStr.length;
+                
+                if (size > largestSize) {
+                    largestSize = size;
+                    largestPayload = {
+                        id: uuidv4(),
+                        type: ArtifactType.Document,
+                        content: jsonStr,
+                        metadata: {
+                            title: `Largest JSON Payload from ${new URL(call.url).pathname}`,
+                            description: `Largest JSON payload captured during API scraping`,
+                            timestamp: new Date().toISOString(),
+                            sourceUrl: call.url,
+                            sizeBytes: size,
+                            statusCode: call.statusCode
+                        }
+                    };
+                }
+            }
+        }
+
+        // Save artifacts
+        const savedAllCalls = await this.artifactManager.saveArtifact(allCallsArtifact, projectId);
+        let savedLargestPayload: Artifact | undefined;
+        
+        if (largestPayload) {
+            savedLargestPayload = await this.artifactManager.saveArtifact(largestPayload, projectId);
+        }
+
+        return {
+            allCalls: savedAllCalls,
+            largestPayload: savedLargestPayload
+        };
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<APIScrapeResponse>> {
@@ -133,16 +173,20 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
         // Wait for API calls to be captured
         await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
 
-        // Save captured API calls as an artifact
-        const artifact = await this.saveAPICallsAsArtifact(params.projectId);
+        // Save captured API calls and largest payload
+        const {allCalls, largestPayload} = await this.saveAPICallsAsArtifact(params.projectId);
 
         // Generate a summary of the captured calls
-        const summary = `Captured ${this.apiCalls.length} API calls. ` +
+        let summary = `Captured ${this.apiCalls.length} API calls. ` +
             `Most common endpoint: ${this.getMostCommonEndpoint()}`;
+            
+        if (largestPayload) {
+            summary += `\nLargest JSON payload: ${largestPayload.metadata?.title} (${largestPayload.metadata?.sizeBytes} bytes)`;
+        }
 
         return {
             finished: true,
-            artifactIds: [artifact.id],
+            artifactIds: [allCalls.id, ...(largestPayload ? [largestPayload.id] : [])],
             response: {
                 type: StepResponseType.WebPage,
                 message: `Successfully captured ${this.apiCalls.length} API calls`,
