@@ -8,6 +8,7 @@ import { MicrophoneButton } from './MicrophoneButton';
 import { useIPCService } from '../contexts/IPCContext';
 import HomeIcon from '@mui/icons-material/Home';
 import ChatIcon from '@mui/icons-material/Chat';
+import { Box } from '@mui/material';
 
 interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: string[]) => void;
@@ -254,7 +255,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     };
 
     return (
-        <div className="command-input">
+        <Box sx={{flex: 1}}>
             <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                 <div style={{ position: 'relative' }}>
                     <button
@@ -618,6 +619,6 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                     ))}
                 </div>
             )}
-        </div>
+        </Box>
     );
 };
