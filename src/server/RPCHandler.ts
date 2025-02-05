@@ -236,6 +236,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     async sendMessage(message: Partial<ClientMessage>): Promise<ClientMessage> {
+        // If thread_id is provided, send as reply
         if (message.thread_id) {
             return await this.services.chatClient.postReply(
                 message.thread_id,
@@ -243,13 +244,24 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 message.message!,
                 message.props
             );
-        } else {
-            return await this.services.chatClient.postInChannel(
+        }
+        
+        // If directed_at is provided, send as direct message
+        if (message.directed_at) {
+            return await this.services.chatClient.postDirectMessage(
+                message.directed_at,
                 message.channel_id!,
                 message.message!,
                 message.props
             );
         }
+        
+        // Otherwise send as regular channel message
+        return await this.services.chatClient.postInChannel(
+            message.channel_id!,
+            message.message!,
+            message.props
+        );
     }
 
     async getMessages({ channelId, threadId, limit }: { channelId: string; threadId: string | null; limit?: number }): Promise<ClientMessage[]> {
@@ -698,6 +710,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         threadId?: UUID;
         language?: string;
     }): Promise<ClientMessage> {
+        if (!channelId) {
+            throw new Error('Channel ID is required');
+        }
         try {
             // Create temp directory if it doesn't exist
             const tempDir = path.join(getDataPath(), 'temp');
@@ -726,14 +741,23 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             // Clean up transcription by removing timestamps
             transcription = transcription.replace(/\[\d{2}:\d{2}:\d{2}\.\d{3} --> \d{2}:\d{2}:\d{2}\.\d{3}\] /g, '');
 
-            // Send transcription as message
+            // Send transcription as message with thread context
             const message = {
                 channel_id: channelId,
                 thread_id: threadId || null,
-                message: transcription
+                message: transcription,
+                props: {
+                    'transcription': true,
+                    'language': language || 'en'
+                }
             };
 
-            return await this.sendMessage(message);
+            try {
+                return await this.sendMessage(message);
+            } catch (error) {
+                Logger.error('Failed to send transcribed message:', error);
+                throw new Error('Failed to send message');
+            }
         } catch (error) {
             Logger.error('Failed to transcribe audio:', error);
             throw new Error('Audio transcription failed');
