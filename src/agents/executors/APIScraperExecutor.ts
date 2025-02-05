@@ -137,7 +137,7 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
         };
 
         // Find and save all significant JSON payloads
-        const largestPayloads: Artifact[] = [];
+        const largestPayloads: Partial<Artifact>[] = [];
         const payloadSizeThreshold = 1024; // 1KB minimum size
 
         for (const call of this.apiCalls) {
@@ -146,12 +146,12 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                 const size = jsonStr.length;
                 
                 if (size >= payloadSizeThreshold) {
-                    const payloadArtifact = {
-                        id: uuidv4(),
-                        type: ArtifactType.Document,
+                    largestPayloads.push({
+                        type: ArtifactType.APIData,
                         content: jsonStr,
                         metadata: {
                             title: `JSON Payload from ${new URL(call.url).pathname}`,
+                            mimeType: 'application/json',
                             description: `JSON payload captured during API scraping`,
                             timestamp: new Date().toISOString(),
                             sourceUrl: call.url,
@@ -159,8 +159,7 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                             statusCode: call.statusCode,
                             method: call.method
                         }
-                    };
-                    largestPayloads.push(payloadArtifact);
+                    });
                 }
             }
         }
@@ -239,7 +238,7 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
 
         return {
             finished: true,
-            artifactIds: [allCalls.id, ...(largestPayload ? [largestPayload.id] : [])],
+            artifactIds: [...largestPayloads.map(a => a.id)],
             response: {
                 type: StepResponseType.WebPage,
                 message: `Successfully captured ${this.apiCalls.length} API calls`,
