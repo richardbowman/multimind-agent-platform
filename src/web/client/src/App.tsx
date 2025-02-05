@@ -184,17 +184,8 @@ const AppContent: React.FC = () => {
                 flexDirection: 'column',
                 marginTop: '64px' // Account for AppBar height
             }}>
-                {currentTab === 'chat' ? (
-                    showWelcome ? (
-                        <WelcomePanel 
-                            onStartTask={(taskId) => {
-                                // Handle task start
-                                setShowWelcome(false);
-                            }}
-                            onSwitchToChat={() => setShowWelcome(false)}
-                        />
-                    ) : (
-                        <>
+                {currentTab === 'chat' && (
+                    <>
                         <Drawer
                             variant="persistent"
                             anchor="left"
@@ -228,6 +219,8 @@ const AppContent: React.FC = () => {
                             <ChatPanel
                                 leftDrawerOpen={leftDrawerOpen}
                                 rightDrawerOpen={rightDrawerOpen}
+                                showWelcome={showWelcome}
+                                onSwitchToWelcome={setShowWelcome}
                             />
                         </Main>
 

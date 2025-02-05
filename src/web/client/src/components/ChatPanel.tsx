@@ -44,7 +44,7 @@ interface ChatPanelProps {
     onSwitchToWelcome: () => void;
 }
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen, showWelcome, onSwitchToWelcome }) => {
     const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useDataContext();
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
     const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
@@ -303,17 +303,26 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             mr: rightDrawerOpen ? '300px' : 0,
             transition: 'all 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
         }}>
-            <Box
-                ref={messagesContainerRef}
-                sx={{
-                    flex: 1,
-                    overflowY: 'auto',
-                    p: 2,
-                    bgcolor: 'background.paper',
-                    width: '100%'
-                }}
-                onScroll={checkScrollPosition}
-            >
+            {showWelcome ? (
+                <WelcomePanel 
+                    onStartTask={(taskId) => {
+                        // Handle task start
+                        onSwitchToWelcome(false);
+                    }}
+                    onSwitchToChat={() => onSwitchToWelcome(false)}
+                />
+            ) : (
+                <Box
+                    ref={messagesContainerRef}
+                    sx={{
+                        flex: 1,
+                        overflowY: 'auto',
+                        p: 2,
+                        bgcolor: 'background.paper',
+                        width: '100%'
+                    }}
+                    onScroll={checkScrollPosition}
+                >
                 {/* Project Overview Card - Only show when not in thread view */}
                 {currentProject && !currentThreadId && (
                     <Paper
@@ -714,6 +723,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 )}
                 <div ref={messagesEndRef} />
             </Box>
+            )}
             <Box sx={{ display: 'flex', gap: 1, p: 2 }}>
                 <Button 
                     variant="outlined"
