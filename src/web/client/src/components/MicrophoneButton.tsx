@@ -8,7 +8,7 @@ interface MicrophoneButtonProps {
     currentThread?: string | null;
 }
 
-export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({ currentChannel }) => {
+export const MicrophoneButton: React.FC<MicrophoneButtonProps> = ({ currentChannel, currentThread }) => {
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const ipcService = useIPCService();
