@@ -113,6 +113,10 @@ module.exports = {
           from: pdfWorkerPath,
           to: './pdf.worker.mjs'
         },
+        {
+          from: path.resolve(__dirname, 'node_modules/onnxruntime-web/dist/*.wasm'),
+          to: '[name][ext]'
+        }
       ]
     })
   ]
