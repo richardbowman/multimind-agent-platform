@@ -445,25 +445,50 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                         ))}
                     </div>
                 )}
-                <button
-                    onClick={onToggleWelcome}
-                    style={{
-                        cursor: 'pointer',
-                        padding: '8px',
-                        borderRadius: '6px',
-                        backgroundColor: '#444',
-                        border: 'none',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: '#fff',
-                        transition: 'all 0.2s ease',
-                        marginLeft: '8px'
-                    }}
-                    title={showWelcome ? "Switch to Chat View" : "Switch to Welcome View"}
-                >
-                    {showWelcome ? <ChatIcon /> : <HomeIcon />}
-                </button>
+                <div style={{
+                    display: 'flex',
+                    backgroundColor: '#444',
+                    borderRadius: '6px',
+                    padding: '4px',
+                    marginLeft: '8px'
+                }}>
+                    <button
+                        onClick={() => onToggleWelcome(false)}
+                        style={{
+                            cursor: 'pointer',
+                            padding: '6px 8px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            backgroundColor: showWelcome ? 'transparent' : '#646cff',
+                            color: showWelcome ? '#aaa' : '#fff',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease'
+                        }}
+                        title="Switch to Chat View"
+                    >
+                        <ChatIcon fontSize="small" />
+                    </button>
+                    <button
+                        onClick={() => onToggleWelcome(true)}
+                        style={{
+                            cursor: 'pointer',
+                            padding: '6px 8px',
+                            border: 'none',
+                            borderRadius: '4px',
+                            backgroundColor: showWelcome ? '#646cff' : 'transparent',
+                            color: showWelcome ? '#fff' : '#aaa',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            transition: 'all 0.2s ease'
+                        }}
+                        title="Switch to Welcome View"
+                    >
+                        <HomeIcon fontSize="small" />
+                    </button>
+                </div>
                 <MicrophoneButton 
                     currentChannel={currentChannel} 
                     currentThread={currentThread || undefined} 
