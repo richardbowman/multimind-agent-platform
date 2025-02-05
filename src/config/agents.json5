@@ -86,15 +86,158 @@
         "enabled": true
       },
       "ResearchAssistant": {
-        "className": "ResearchAssistant",
-        "sourcePath": "researchAssistant.ts",
+        "className": "ConfigurableAgent",
+        "sourcePath": "configurableAgent.ts",
         "userId": "90b9c45a-e79e-43e7-b4f5-3e852cd723a4",
         "handle": "@research-assistant",
         "description": "Conducts simple web research and information gathering. Part of the research manager's team (who can help breakdown and review more complex research tasks).",
         "enabled": true,
         "config": {
-          "maxSearches": 3,
-          "maxDepth": 2
+          "purpose": "You are a research assistant who performs web searches to meet the goal.",
+          "finalInstructions": "IN YOUR REASONING, Explain the step strategies you considered.",
+          "plannerType": "nextStep",
+          "executors": [
+            {
+              "className": "UrlExecutor"
+            },
+            {
+              "className": "GoalConfirmationExecutor"
+            },
+            {
+              "className": "SearchExecutor"
+            },
+            {
+              "className": "LinkSelectionExecutor"
+            },
+            {
+              "className": "ArtifactSelectorExecutor"
+            },
+            {
+              "className": "WebScrapeExecutor"
+            },
+            {
+              "className": "ValidationExecutor"
+            },
+            {
+              "className": "KnowledgeCheckExecutor"
+            },
+            {
+              "className": "FinalResponseExecutor"
+            }
+          ],
+          "stepSequences": [
+            {
+              "id": "NEW-USER",
+              "name": "New User",
+              "description": "For incoming new user requests, check existing knowledge base and validate.",
+              "steps": [
+                {
+                  "executor": "GOAL_CONFIRMATION",
+                  "description": "Confirm and restate the user's goal clearly with context for other steps."
+                },
+                {
+                  "executor": "CHECK_KNOWLEDGE",
+                  "description": "Check existing knowledge base"
+                },
+                {
+                  "executor": "VALIDATION",
+                  "description": "Validate information"
+                }
+              ]
+            },
+            {
+              "id": "PROVIDED-URL",
+              "name": "Provided URL",
+              "description": "If the task includes a specific complete URL, download and process relevant links.",
+              "steps": [
+                {
+                  "executor": "URL_EXTRACT",
+                  "description": "Extract the URLs from the task information"
+                },
+                {
+                  "executor": "WEB_SCRAPE",
+                  "description": "Scrape provided URL"
+                },
+                {
+                  "executor": "SELECT_LINKS",
+                  "description": "Select child links from this page"
+                },
+                {
+                  "executor": "WEB_SCRAPE",
+                  "description": "Scrape selected child links"
+                },
+                {
+                  "executor": "FINAL_RESPONSE",
+                  "description": "Provide final response"
+                }
+              ]
+            },
+            {
+              "id": "PROVIDED-DOCUMENT",
+              "name": "Provided Document",
+              "description": "If the task mentions references to document(s) you can use to review.",
+              "steps": [
+                {
+                  "executor": "ARTIFACT_SELECTOR",
+                  "description": "Find and review the most relevant documents available"
+                },
+                {
+                  "executor": "SELECT_LINKS",
+                  "description": "Select child links found in the document"
+                },
+                {
+                  "executor": "WEB_SCRAPE",
+                  "description": "Scrape selected child links"
+                },
+                {
+                  "executor": "FINAL_RESPONSE",
+                  "description": "Provide final response"
+                }
+              ]
+            },
+            {
+              "id": "NO-EXISTING-KNOWLEDGE",
+              "name": "No Existing Knowledge",
+              "description": "Search, process links, and provide final response.",
+              "steps": [
+                {
+                  "executor": "WEB_SEARCH",
+                  "description": "Perform web search"
+                },
+                {
+                  "executor": "SELECT_LINKS",
+                  "description": "Select child links from search results"
+                },
+                {
+                  "executor": "WEB_SCRAPE",
+                  "description": "Scrape selected child links"
+                },
+                {
+                  "executor": "FINAL_RESPONSE",
+                  "description": "Provide final response"
+                }
+              ]
+            },
+            {
+              "id": "FOLLOW-UP",
+              "name": "Follow Up",
+              "description": "For follow-up requests, process deeper.",
+              "steps": [
+                {
+                  "executor": "ARTIFACT_SELECTOR",
+                  "description": "Select child links from this page"
+                },
+                {
+                  "executor": "SELECT_LINKS",
+                  "description": "Scrape selected child links"
+                },
+                {
+                  "executor": "FINAL_RESPONSE",
+                  "description": "Provide final response"
+                }
+              ]
+            }
+          ]
         }
       },
       "ResearchManager": {
