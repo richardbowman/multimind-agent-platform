@@ -7,6 +7,7 @@ import { useDataContext } from '../contexts/DataContext';
 export const MicrophoneButton: React.FC = () => {
     const { currentChannelId, currentThreadId } = useDataContext();
     const [isRecording, setIsRecording] = useState(false);
+    const isRecordingRef = useRef(false); // Add a ref to track recording state
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const silenceTimer = useRef<number | null>(null);
     const audioContextRef = useRef<AudioContext | null>(null);
@@ -61,6 +62,7 @@ export const MicrophoneButton: React.FC = () => {
             try {
                 mediaRecorder.stop();
                 setIsRecording(false);
+                isRecordingRef.current = false; // Update the ref
                 mediaRecorder.stream.getTracks().forEach(track => track.stop());
                 setMediaRecorder(null);
                 stopSilenceDetection();
@@ -76,6 +78,7 @@ export const MicrophoneButton: React.FC = () => {
             const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
             setMediaRecorder(recorder);
             setIsRecording(true);
+            isRecordingRef.current = true; // Update the ref
             
             // Store the stream so we can clean it up later
             const currentStream = stream;
@@ -208,7 +211,7 @@ export const MicrophoneButton: React.FC = () => {
 
             // Start silence detection after a short delay to ensure everything is ready
             setTimeout(() => {
-                if (isRecording && analyserRef.current) {
+                if (isRecordingRef.current && analyserRef.current) {
                     startSilenceDetection();
                 }
             }, 500);
