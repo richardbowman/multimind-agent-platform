@@ -11,7 +11,7 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ContentType } from 'src/llm/promptBuilder';
 import { TaskCreationResponse, UpdateActions } from '../../schemas/taskCreation';
-import { Duration } from 'luxon';
+import moment from 'moment';
 
 // Helper function to parse due dates from either ISO strings or duration strings
 function parseDueDate(dueDate: string): Date {
@@ -23,9 +23,9 @@ function parseDueDate(dueDate: string): Date {
 
     // Try parsing as duration string (e.g. "2 days", "1 week", "3 months")
     try {
-        const duration = Duration.fromISO(dueDate) || Duration.fromObject({ [dueDate.split(' ')[1]]: parseInt(dueDate.split(' ')[0]) });
-        if (duration.isValid) {
-            return new Date(Date.now() + duration.as('milliseconds'));
+        const duration = moment.duration(dueDate);
+        if (duration.isValid()) {
+            return moment().add(duration).toDate();
         }
     } catch (e) {
         // Fall through to error
