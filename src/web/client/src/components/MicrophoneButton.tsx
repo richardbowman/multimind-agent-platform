@@ -10,6 +10,9 @@ export const MicrophoneButton: React.FC = () => {
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const ipcService = useIPCService();
     
+
+    console.log('MICROPHONE', currentChannelId, currentThreadId);
+
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.ctrlKey && e.code === 'Space') {
@@ -61,6 +64,8 @@ export const MicrophoneButton: React.FC = () => {
 
             // Store the stream so we can clean it up later
             const currentStream = stream;
+            const threadId = currentThreadId;
+            console.log('MICROPHONE INNER', currentChannelId, currentThreadId);
             
             recorder.onstop = async () => {
                 try {
@@ -110,12 +115,12 @@ export const MicrophoneButton: React.FC = () => {
                         reader.readAsDataURL(wavBlob);
                     });
 
-                    if (currentChannelId) {
+                    if (currentChannelId && currentThreadId) {
                         try {
                             await ipcService.getRPC().transcribeAndSendAudio({
                                 audioBase64: wavBase64,
                                 channelId: currentChannelId,
-                                threadId: currentThreadId,
+                                threadId: threadId,
                                 language: 'en'
                             });
                         } catch (error) {
