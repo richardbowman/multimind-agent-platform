@@ -45,6 +45,9 @@
               "className": "ScheduleTaskExecutor"
             },
             {
+              "className": "ViewTasksExecutor"
+            },
+            {
               "className": "KnowledgeCheckExecutor"
             }
           ]

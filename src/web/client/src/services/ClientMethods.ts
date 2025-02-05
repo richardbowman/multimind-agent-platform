@@ -30,6 +30,7 @@ import { SnackbarContextType } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { ClientMethods } from '../../../../shared/RPCInterface';
 import { Artifact } from '../../../../tools/artifact';
+import { message } from 'blessed';
 
 class ClientMethodsImplementation implements ClientMethods {
     constructor(private snackbarContext: SnackbarContextType, private contextMethods: DataContextMethods) { };
@@ -44,8 +45,11 @@ class ClientMethodsImplementation implements ClientMethods {
 
     async onMessage(messages: ClientMessage[]) {
         // Check for messages with verbal conversation flag
+        const userHandle = this.contextMethods.handles.find(h => h.handle === '@user');
         for (const message of messages) {
-            if (message.props?.verbalConversation === true) {
+            const rootPost = this.contextMethods.messages.find(m => message.props?.["root-id"] === m.id)
+
+            if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id) {
                 try {
                     // Ensure TTS is initialized
                     await initializeTTS();

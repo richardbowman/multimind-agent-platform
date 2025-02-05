@@ -8,13 +8,6 @@ export enum RecurrencePattern {
     Monthly,
 }
 
-export enum TaskStatus {
-    Pending = "pending",
-    InProgress = "inProgress",
-    Completed = "completed",
-    Cancelled = "cancelled"
-}
-
 export enum TaskType {
     Standard = "standard",
     Recurring = "recurring",
@@ -23,11 +16,12 @@ export enum TaskType {
 }
 
 import { UUID } from 'src/types/uuid';
+import { TaskStatus } from '../schemas/TaskStatus';
 
 export interface AddTaskParams {
     id?: UUID;
     description: string;
-    type: TaskType;
+    type?: TaskType;    // will default to Standard
     category?: string;
     creator: string;
     assignee?: string;
@@ -44,6 +38,8 @@ export interface AddTaskParams {
 export interface TaskMetadata extends Readonly<Record<string, any>> {
     readonly clientProjectId?: UUID;
     readonly attachedArtifactIds?: UUID[];
+    readonly dueDate?: Date;
+    readonly announceChannelId?: UUID;
 }
 
 export interface Task extends Readonly<AddTaskParams> {
@@ -53,7 +49,7 @@ export interface Task extends Readonly<AddTaskParams> {
     readonly type: TaskType;
     readonly category: string;
     readonly creator: UUID;
-    readonly assignee?: string;
+    readonly assignee?: UUID;
     readonly status: TaskStatus;
     /** @deprecated Use status field instead */
     readonly complete?: boolean;

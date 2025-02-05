@@ -13,13 +13,15 @@ import fs from 'node:fs';
 import path from "node:path";
 import { sleep } from "./utils/sleep";
 import { ServerRPCHandler } from "./server/RPCHandler";
-import { createUUID, UUID } from "./types/uuid";
+import { asUUID, createUUID, UUID } from "./types/uuid";
 import { ConfigurationError } from "./errors/ConfigurationError";
 import { Agent } from "./agents/agents";
 import { createChannelHandle } from "./shared/channelTypes";
 import { createHash } from 'crypto';
 import { ArtifactType } from "./tools/artifact";
 import { app } from "electron";
+import { runInThisContext } from "node:vm";
+import { Message } from "./chat/chatClient";
 
 async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<void> {
     const guidesDir = path.join(app.getAppPath(), 'dist', 'assets', "procedure-guides");
@@ -225,6 +227,24 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             await userClient.createChannel(mappedParams);
         }
 
+        tasks.on("taskMissedDueDate", async ({ project, task, dueDate }) => {
+            const assignedAgent = agents.agents[task.assignee];
+            if (assignedAgent) {
+                assignedAgent.processTaskQueue();
+            } else if (task.assignee === USER_ID) {
+                let post: Message | undefined = undefined;
+                if (task.props?.announceChannelId !== undefined) {
+                    const handles = await userClient.getHandles();
+                    const creatorHandle = handles[task.creator];
+                    const assigneeHandle = task.assignee && handles[task.assignee];
+                    const channelId = asUUID(task.props.announceChannelId);
+                    await tasks.markTaskInProgress(task);
+                    await userClient.postInChannel(channelId,
+                        `@user This is a scheduled task reminder for the task ${task.id} created by ${creatorHandle} ${task.description} ${assigneeHandle ? `assigned to ${assigneeHandle}` : ''}}`);
+                }
+            }
+        })
+        tasks.startScheduler();
 
         return {
             chatClient: userClient,

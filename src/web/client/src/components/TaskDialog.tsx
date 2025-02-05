@@ -33,7 +33,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     setSelectedTask,
     tasks
 }) => {
-    const { fetchTasks, handles, tasks: allTasks } = useDataContext();
+    const { handles, tasks: allTasks } = useDataContext();
     const ipcService = useIPCService();
     const [projectDetails, setProjectDetails] = useState<any>(null);
 
@@ -163,19 +163,19 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                         'Not Started'}
                                 </Typography>
                                 <Typography variant="body1">
-                                    <strong>Created At:</strong> {new Date(selectedTask.createdAt).toLocaleString()}
+                                    <strong>Created At:</strong> {new Date(selectedTask.props?.createdAt).toLocaleString()}
                                 </Typography>
                                 <Typography variant="body1">
-                                    <strong>Last Updated:</strong> {new Date(selectedTask.updatedAt).toLocaleString()}
+                                    <strong>Last Updated:</strong> {new Date(selectedTask.props?.updatedAt).toLocaleString()}
                                 </Typography>
                                 {selectedTask.props?.dueDate && (
                                     <Typography variant="body1">
-                                        <strong>Due Date:</strong> {new Date(selectedTask.props.dueDate).toLocaleString()}
+                                        <strong>Due Date:</strong> {new Date(selectedTask.props?.dueDate).toLocaleString()}
                                     </Typography>
                                 )}
                                 <Typography variant="body1">
                                     <strong>Type:</strong> {selectedTask.type}
-                                    {selectedTask.props?.stepType && ` (${selectedTask.props.stepType})`}
+                                    {selectedTask.props?.stepType && ` (${selectedTask.props?.stepType})`}
                                 </Typography>
                                 <Typography variant="body1">
                                     <strong>Assignee:</strong> {selectedTask.assignee ? (handles.find(h => h.id === selectedTask.assignee)?.handle || selectedTask.assignee) : 'Unassigned'}

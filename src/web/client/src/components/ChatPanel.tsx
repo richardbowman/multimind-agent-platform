@@ -114,14 +114,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         if (messagesContainerRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
             const newIsAtBottom = scrollHeight - (scrollTop + clientHeight) < 200;
-            console.debug('Setting isAtBottom:', newIsAtBottom, isAtBottom);
+            // console.debug('Setting isAtBottom:', newIsAtBottom, isAtBottom);
             setIsAtBottom(newIsAtBottom);
         }
     }, []);
 
     const scrollToBottom = useCallback(() => {
         if (isAtBottom && messagesEndRef.current) {
-            console.debug('scrollToBottom activated');
+            // console.debug('scrollToBottom activated');
             setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 500);
         }
     }, [isAtBottom, messagesEndRef]);
@@ -171,12 +171,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 : !message.props?.['root-id'])
         );
 
-        console.debug('Messages changed - relevant messages:', relevantMessages.length);
-        console.debug('isAtBottom:', isAtBottom);
+        // console.debug('Messages changed - relevant messages:', relevantMessages.length);
+        // console.debug('isAtBottom:', isAtBottom);
 
         if (relevantMessages.length > 0) {
             if (isAtBottom) {
-                console.debug('Scrolling to bottom');
+                // console.debug('Scrolling to bottom');
                 scrollToBottom();
             } else {
                 console.debug('Not scrolling - user is not at bottom');
@@ -193,8 +193,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 : !message.props?.['root-id'])
         );
 
-        console.debug('Messages changed - relevant messages:', relevantMessages.length);
-        console.debug('isAtBottom:', isAtBottom);
+        // console.debug('Messages changed - relevant messages:', relevantMessages.length);
+        // console.debug('isAtBottom:', isAtBottom);
 
         if (relevantMessages.length > 0) {
             console.debug('Scrolling to bottom');
@@ -212,8 +212,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 : !m.props?.['root-id'])
         );
 
-        console.debug('Checking in-progress messages:', hasRelevantInProgress);
-        console.debug('isAtBottom:', isAtBottom);
+        // console.debug('Checking in-progress messages:', hasRelevantInProgress);
+        // console.debug('isAtBottom:', isAtBottom);
 
         if (hasRelevantInProgress) {
             if (isAtBottom) {

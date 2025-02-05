@@ -27,8 +27,14 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             id: createUUID(),
             category: "",
             status: TaskStatus.Pending,
+            type: TaskType.Standard,
             ...addTask,
-            projectId: project.id
+            projectId: project.id,
+            props: {
+                ...addTask.props,
+                createdAt: new Date(),
+                updatedAt: new Date()
+            }
         }
 
         // Set order to be after existing tasks if not specified
@@ -180,7 +186,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     }
 
                     // If task has a due date, check if it's in the future
-                    if (t.dueDate && new Date(t.dueDate).getTime() < now) {
+                    if (t.props?.dueDate && new Date(t.props?.dueDate).getTime() > now) {
                         return false;
                     }
 
@@ -196,8 +202,8 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 })
                 .sort((a, b) => {
                     // Sort by due date first (earlier dates first)
-                    const aDue = a.dueDate ? new Date(a.dueDate).getTime() : Infinity;
-                    const bDue = b.dueDate ? new Date(b.dueDate).getTime() : Infinity;
+                    const aDue = a.props?.dueDate ? new Date(a.props?.dueDate).getTime() : Infinity;
+                    const bDue = b.props?.dueDate ? new Date(b.props?.dueDate).getTime() : Infinity;
                     if (aDue !== bDue) {
                         return aDue - bDue;
                     }
@@ -413,7 +419,12 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     // Ensure these properties can't be changed
                     id: existingTask.id,
                     projectId: existingTask.projectId,
-                    type: existingTask.type
+                    type: existingTask.type,
+                    props: {
+                        ...existingTask.props,
+                        ...updates.props,
+                        updatedAt: new Date()
+                    }
                 };
 
                 // Validate task properties
@@ -507,7 +518,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 // Check for missed due dates on non-recurring tasks
                 if (!task.isRecurring && task.dueDate) {
                     const dueDate = new Date(task.dueDate).getTime();
-                    if (dueDate > lastCheck && dueDate <= now && 
+                    if (dueDate <= now && 
                         task.status !== TaskStatus.Completed && 
                         task.status !== TaskStatus.Cancelled) {
                         Logger.info(`Task ${taskId} has missed its due date of ${new Date(dueDate).toISOString()}`);

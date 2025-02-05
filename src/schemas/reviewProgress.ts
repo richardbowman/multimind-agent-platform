@@ -1,7 +1,7 @@
 /**
  * Represents the status of a task in the review process
  */
-export type TaskStatus = "Not Started" | "In Progress" | "Blocked" | "Complete";
+export type TaskReviewStatus = "Not Started" | "In Progress" | "Blocked" | "Complete";
 
 /**
  * Interface for individual task progress details
@@ -15,7 +15,7 @@ export interface TaskProgress {
     /**
      * Current status of the task
      */
-    status: TaskStatus;
+    status: TaskReviewStatus;
 
     /**
      * Detailed analysis of the task's current state

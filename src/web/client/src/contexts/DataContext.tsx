@@ -1,22 +1,22 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
-import { ClientChannel, ClientMessage, ClientTask } from '../../../../shared/types';
+import { ClientChannel, ClientMessage } from '../../../../shared/types';
 import { CreateChannelParams } from '../../../../shared/channelTypes';
 import { useSnackbar } from './SnackbarContext';
 import { useIPCService } from './IPCContext';
 import { useClientMethods } from '../services/ClientMethods';
 import { Artifact } from '../../../../tools/artifact';
 import { Settings } from '../../../../tools/settings';
-import { ConfigurationError } from '../../../../errors/ConfigurationError';
 import { ClientError } from '@mattermost/client';
 import { UUID } from '../../../../types/uuid';
+import { Task } from '../../../../tools/taskManager';
 const DataContext = createContext<DataContextMethods | null>(null);
 
 
 export interface DataContextMethods {
   messages: ClientMessage[];
   channels: ClientChannel[];
-  tasks: ClientTask[];
+  tasks: Task[];
   allArtifacts: Artifact[];
   currentThreadArtifacts: Artifact[];
   pendingFiles: Artifact[];
@@ -33,7 +33,7 @@ export interface DataContextMethods {
   settings: Settings | null;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   fetchChannels: () => Promise<void>;
-  fetchTasks: (channelId: string, threadId: string | null) => Promise<void>;
+  fetchTasks: (channelId: string, threadId: string | null) => Promise<Task[]>;
   fetchArtifacts: (channelId: string, threadId: string | null) => Promise<void>;
   fetchAllArtifacts: () => Promise<void>;
   fetchLogs: (logType: 'llm' | 'system' | 'api') => Promise<void>;
@@ -55,7 +55,7 @@ export interface DataContextMethods {
   updateSettings: (settings: any) => Promise<Settings|ClientError>;
   createChannel: (params: CreateChannelParams) => Promise<string>;
   deleteChannel: (channelId: string) => Promise<void>;
-  setTasks: React.Dispatch<React.SetStateAction<ClientTask[]>>;
+  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
   markTaskComplete: (taskId: string, complete: boolean) => Promise<void>;
   addPendingFiles: (artifacts: Artifact[]) => Promise<void>;
   resetPendingFiles: () => void;
@@ -86,7 +86,7 @@ export const DataProvider: React.FC<{
     }
     _setCurrentChannelId(channelId);
   }, []);
-  const [tasks, setTasks] = useState<ClientTask[]>([]);
+  const [tasks, setTasks] = useState<Task[]>([]);
   const [currentThreadArtifacts, setCurrentThreadArtifacts] = useState<any[]>([]);
   const [allArtifacts, setAllArtifacts] = useState<any[]>([]);
   const [pendingFiles, setPendingFiles] = useState<Artifact[]>([]);

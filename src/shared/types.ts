@@ -1,31 +1,11 @@
 
 import { UUID } from 'src/types/uuid';
-import { TaskStatus } from 'src/tools/taskManager';
-
-export interface ClientTask {
-    id: UUID;
-    projectId: UUID;
-    description: string;
-    type: string;
-    assignee?: string;
-    status: TaskStatus;
-    inProgress?: boolean;
-    complete?: boolean;
-    threadId?: string;
-    createdAt?: string;
-    updatedAt?: string;
-    dependsOn?: string;
-    props?: {
-        stepType?: string;
-        [key: string]: any;
-    };
-}
 
 export interface ClientProject {
     id: UUID;
     name: string;
     props?: Record<string, any>;
-    tasks: ClientTask[];
+    tasks: Task[];
     metadata: {
         createdAt: Date;
         updatedAt: Date;
@@ -55,6 +35,7 @@ export interface ClientChannel {
 }
 import { ChatHandle } from 'src/types/chatHandle';
 import { ChannelHandle } from './channelTypes';
+import { Task } from 'src/tools/taskManager';
 
 export interface ClientMessage {
     id: string;

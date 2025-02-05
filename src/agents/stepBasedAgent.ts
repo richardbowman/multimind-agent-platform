@@ -4,7 +4,8 @@ import 'reflect-metadata';
 import { ChatPost, isValidChatPost, Message } from '../chat/chatClient';
 import { HandleActivity, HandlerParams, ResponseType } from './agents';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
-import { AddTaskParams, Project, Task, TaskManager, TaskStatus, TaskType } from '../tools/taskManager';
+import { AddTaskParams, Project, Task, TaskManager, TaskType } from '../tools/taskManager';
+import { TaskStatus } from 'src/schemas/TaskStatus';
 import { Planner } from './planners/planner';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import Logger from '../helpers/logger';
@@ -13,13 +14,13 @@ import { InMemoryPost } from 'src/chat/localChatClient';
 import { AgentConfig } from 'src/tools/settings';
 import { ReplanType, StepResponse, StepResult } from './interfaces/StepResult';
 import { StepExecutor } from './interfaces/StepExecutor';
-import { ExecuteNextStepParams } from './interfaces/ExecuteNextStepParams';
+import { ExecuteContext, ExecuteNextStepParams } from './interfaces/ExecuteNextStepParams';
 import { ExecuteStepParams, StepTask } from './interfaces/ExecuteStepParams';
 import { pathExists } from 'fs-extra';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ExecutorType } from './interfaces/ExecutorType';
 import { exec } from 'child_process';
-import { UUID } from 'src/types/uuid';
+import { asUUID, UUID } from 'src/types/uuid';
 import { ArrayUtils } from 'src/utils/ArrayUtils';
 
 interface ExecutorCapability {
@@ -394,23 +395,34 @@ export abstract class StepBasedAgent extends Agent {
                 }
             });
 
+            let context : Partial<ExecuteContext>= {};
+            let post : Message|undefined = undefined;
+            if (task.props?.announceChannelId !== undefined) {
+                const handles = await this.chatClient.getHandles();
+                const creatorHandle = handles[task.creator];
+                const assigneeHandle = task.assignee && handles[task.assignee];
+
+                context.channelId = asUUID(task.props.announceChannelId);
+                post = await this.chatClient.postInChannel(context.channelId, 
+                    `@user This is a scheduled task reminder for the task ${task.id} created by ${creatorHandle} ${task.description} ${assigneeHandle ? `assigned to ${assigneeHandle}` : ''}}`);
+                context.threadId = post.id;
+            }
+
             const parentProject = await this.projects.getProject(task.projectId);
 
             const artifacts = task.props?.attachedArtifactIds?.length || 0 > 0 ? await this.mapRequestedArtifacts(task.props?.attachedArtifactIds!) : [];
 
             const execParams: ExecuteNextStepParams = {
                 projectId,
+                userPost: post,
                 context: {
+                    ...context,
                     projects: [parentProject],
-                    artifacts
+                    artifacts,
                 }
             };
 
-            const plan = await this.planSteps(projectId, [{
-                message: task.description
-            }],
-                this.getPartialPost(undefined, execParams)
-            );
+            const plan = await this.planSteps(execParams);
 
             await this.executeNextStep(execParams);
 

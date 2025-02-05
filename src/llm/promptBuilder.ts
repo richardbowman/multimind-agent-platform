@@ -77,8 +77,9 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.CHANNEL_GOALS, this.renderChannelGoals.bind(this));
 
         // Register type-specific step result renderers
-        this.registerStepResponseRenderer(StepResponseType.Validation, this.renderValidationStep.bind(this));
-        this.registerStepResponseRenderer(StepResponseType.Question, this.renderQuestionStep.bind(this));
+        this.registerStepResponseRenderer(StepResponseType.Validation, this.renderValidationResponse.bind(this));
+        this.registerStepResponseRenderer(StepResponseType.Question, this.renderQuestionResponse.bind(this));
+        this.registerStepResponseRenderer(StepResponseType.Tasks, this.renderTasksResponse.bind(this));
         // Add more type-specific renderers as needed
     }
 
@@ -177,11 +178,11 @@ ${this.modelHelpers.getFinalInstructions()}
                 }
             }
             // Default renderer for unknown types
-            return `Step ${index + 1} (${stepResponse.type}):\n<stepInformation>${body||stepResponse.message||stepResponse.reasoning||stepResponse.status}}</stepInformation>`;
+            return `Step ${index + 1} (${stepResponse.type}):\n<stepInformation>${body||stepResponse.message||stepResponse.reasoning||stepResponse.status}</stepInformation>`;
         }).join('\n') + "\n";
     }
 
-    private renderValidationStep(response : StepResponse): string {
+    private renderValidationResponse(response : StepResponse): string {
         const metadata = response.data;
         return `🔍 Validation Step:\n` +
             `- Attempts: ${metadata?.validationAttempts || 1}\n` +
@@ -189,8 +190,12 @@ ${this.modelHelpers.getFinalInstructions()}
             `- Result: ${response.message}`;
     }
 
-    private renderQuestionStep(response : StepResponse): string {
+    private renderQuestionResponse(response : StepResponse): string {
         return ` -❓Question: ${response.message}\n`
+    }
+
+    private renderTasksResponse(response : StepResponse): string {
+        return ` - 📁 Tasks for ${response.data?.messagingHandle||"[unknown]"} (${response.data?.tasks.length}): ${response.data?.tasks?.map((t, i) => `  TASK ${i+1}. ID:[${t.id}] ${t.description}`).join("\n")}\n\n`
     }
 
     registerRenderer<T>(contentType: ContentType, renderer: ContentRenderer<T>): void {
@@ -275,7 +280,7 @@ ${this.modelHelpers.getFinalInstructions()}
             Object.values(tasks)
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
                 .map((task, index) =>
-                    `${index + 1}. ${task.description} (${task.complete ? 'completed' : 'pending'})`
+                    `${index + 1}. ${task.description} (${task.status})`
                 ).join('\n');
         return output;
     }
@@ -290,7 +295,7 @@ ${this.modelHelpers.getFinalInstructions()}
             Object.values(tasks)
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
                 .map((task, index) =>
-                    `${index + 1}. ${task.description} (${task.complete ? 'completed' : 'pending'})`
+                    `${index + 1}. ID:[${task.id}] ${task.description} (${task.status})`
                 ).join('\n');;
     }
 

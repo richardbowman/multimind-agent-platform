@@ -9,15 +9,15 @@ import { Calendar, momentLocalizer } from 'react-big-calendar';
 import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Document, Page, pdfjs } from 'react-pdf';
-import * as pdfjsLib from 'pdfjs-dist/webpack.mjs';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import NavigateBeforeIcon from '@mui/icons-material/NavigateBefore';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import { Artifact, ArtifactType, CalendarEvent } from '../../../../../tools/artifact';
+import { ArtifactType, CalendarEvent } from '../../../../../tools/artifact';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
+import { StringUtils } from '../../../../../utils/StringUtils';
 
 interface ContentRendererProps {
     content: any;
@@ -115,7 +115,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         );
     }
 
-    if (type === "javascript") {
+    if (type === "javascript" || type === ArtifactType.APIData || mimeType === "application/json") {
         return <pre>{content}</pre>;
     }
 
@@ -267,8 +267,8 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         return <pre>Binary content</pre>;
     }
     
-    if (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown') {
-        return <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>;
+    if (content.length < 1024*10 && (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown')) {
+        return <ReactMarkdown remarkPlugins={[remarkGfm]}>content</ReactMarkdown>;
     } else {
         return <pre>{content}</pre>;
     }

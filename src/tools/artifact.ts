@@ -29,7 +29,8 @@ export enum ArtifactType {
   Webpage = "webpage",
   Diagram = "diagram",
   Calendar = "calendar",
-  ProcedureGuide = "procedure-guide"
+  ProcedureGuide = "procedure-guide",
+  APIData = "api-data"
 }
 
 export interface Artifact {

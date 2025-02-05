@@ -1,19 +1,21 @@
-import { ChatHandle } from "src/types/chatHandle";
-import { UUID } from "src/types/uuid";
-
 export enum UpdateActions {
     Create = "create",
     Update = "update",
-    Delete = "delete"
+    Delete = "delete",
+    Complete = 'complete'
 }
+
+export type TaskCreationResponseRecurrence = 'One-time' | 'Daily' | 'Weekly' | 'Monthly';
 
 export interface TaskCreationResponse {
     action: UpdateActions,
-    taskId: number;
+    /** UUID of task to update/delete, blank if creating */
+    taskId?: string;
     taskDescription: string;
-    recurrencePattern: 'Daily' | 'Weekly' | 'Monthly' | 'One-time' | 'None';
-    isRecurring: boolean;
-    assignee: '@user' | ChatHandle; // Use string for chat handles
-    agents: any[];
+    recurrencePattern: TaskCreationResponseRecurrence;
+    /** The @user handle or agent handle starting with @ */
+    assignee: string;
     responseMessage: string;
+    /** Either a ISO-formatted Date/Time or a ISO Duration field */
+    dueDate: string;
 }

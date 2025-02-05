@@ -45,7 +45,7 @@ export interface HandlerParams extends GenerateParams {
 }
 
 export interface PlannerParams extends GenerateParams {
-    userPost: Message;
+    userPost?: Message;
     rootPost?: Message;
     threadPosts?: Message[];
 }

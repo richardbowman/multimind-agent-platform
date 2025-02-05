@@ -24,8 +24,8 @@ export interface ExecuteParams {
     readonly executionMode: 'conversation' | 'task';
     readonly agents?: Agent[];
     readonly context?: {
-        readonly channelId?: string;
-        readonly threadId?: string;
+        readonly channelId?: UUID;
+        readonly threadId?: UUID;
         readonly artifacts?: Artifact[];
         readonly projects?: Project[];
         readonly threadPosts?: ChatPost[];
