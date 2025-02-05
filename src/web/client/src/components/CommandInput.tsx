@@ -6,8 +6,7 @@ import { Artifact } from '../../../../tools/artifact';
 import { Settings } from 'electron';
 import { AssetSelectionDialog } from './AssetSelectionDialog';
 import Attachment from '@mui/icons-material/Attachment';
-import Mic from '@mui/icons-material/Mic';
-import Stop from '@mui/icons-material/Stop';
+import { MicrophoneButton } from './MicrophoneButton';
 import { useIPCService } from '../contexts/IPCContext';
 
 interface CommandInputProps {
