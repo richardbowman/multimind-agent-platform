@@ -44,7 +44,8 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
         const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
 
         // Check if guide exists and has same content
-        const existingGuide = existingGuideMap.get(filePath);
+        const relativePath = path.relative(app.getAppPath(), filePath);
+        const existingGuide = existingGuideMap.get(relativePath);
         if (existingGuide) {
             const existingHash = existingGuide.metadata?.contentHash;
             if (existingHash === contentHash) {
@@ -62,7 +63,7 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
             mimeType: 'text/markdown',
             description: 'Procedure guide document',
             created: new Date().toISOString(),
-            source: filePath,
+            source: path.relative(app.getAppPath(), filePath),
             contentHash: contentHash
         };
 
