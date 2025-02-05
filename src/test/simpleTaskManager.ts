@@ -460,30 +460,52 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             const project = this.projects[projectId];
             for (const taskId in project.tasks) {
                 const task = project.tasks[taskId];
-                if (!task.isRecurring || !task.lastRunDate) continue;
+                
+                // Check for missed recurring tasks
+                if (task.isRecurring && task.lastRunDate) {
+                    const lastRun = new Date(task.lastRunDate).getTime();
+                    let nextRun = lastRun;
 
-                const lastRun = new Date(task.lastRunDate).getTime();
-                let nextRun = lastRun;
+                    // Calculate when the next run should have been
+                    switch (task.recurrencePattern) {
+                        case RecurrencePattern.Daily:
+                            nextRun = new Date(task.lastRunDate).setHours(24, 0, 0, 0);
+                            break;
+                        case RecurrencePattern.Weekly:
+                            nextRun = lastRun + (7 * 24 * 60 * 60 * 1000);
+                            break;
+                        case RecurrencePattern.Monthly:
+                            const nextMonth = new Date(lastRun);
+                            nextMonth.setMonth(nextMonth.getMonth() + 1);
+                            nextRun = nextMonth.getTime();
+                            break;
+                    }
 
-                // Calculate when the next run should have been
-                switch (task.recurrencePattern) {
-                    case RecurrencePattern.Daily:
-                        nextRun = new Date(task.lastRunDate).setHours(24, 0, 0, 0);
-                        break;
-                    case RecurrencePattern.Weekly:
-                        nextRun = lastRun + (7 * 24 * 60 * 60 * 1000);
-                        break;
-                    case RecurrencePattern.Monthly:
-                        const nextMonth = new Date(lastRun);
-                        nextMonth.setMonth(nextMonth.getMonth() + 1);
-                        nextRun = nextMonth.getTime();
-                        break;
+                    // If next run should have happened between last check and now
+                    if (nextRun > lastCheck && nextRun <= now) {
+                        Logger.info(`Executing missed recurring task ${taskId} from ${new Date(nextRun).toISOString()}`);
+                        await this.scheduleRecurringTask(taskId, new Date(nextRun));
+                    }
                 }
 
-                // If next run should have happened between last check and now
-                if (nextRun > lastCheck && nextRun <= now) {
-                    Logger.info(`Executing missed recurring task ${taskId} from ${new Date(nextRun).toISOString()}`);
-                    await this.scheduleRecurringTask(taskId, new Date(nextRun));
+                // Check for missed due dates on non-recurring tasks
+                if (!task.isRecurring && task.dueDate) {
+                    const dueDate = new Date(task.dueDate).getTime();
+                    if (dueDate > lastCheck && dueDate <= now && 
+                        task.status !== TaskStatus.Completed && 
+                        task.status !== TaskStatus.Cancelled) {
+                        Logger.info(`Task ${taskId} has missed its due date of ${new Date(dueDate).toISOString()}`);
+                        // Mark task as overdue
+                        await this.updateTask(taskId, {
+                            status: TaskStatus.Overdue
+                        });
+                        // Emit event for missed due date
+                        this.emit('taskMissedDueDate', { 
+                            task, 
+                            project,
+                            dueDate: new Date(dueDate) 
+                        });
+                    }
                 }
             }
         }
