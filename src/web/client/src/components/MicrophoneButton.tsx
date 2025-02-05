@@ -56,18 +56,26 @@ export const MicrophoneButton: React.FC = () => {
     }, [isRecording]);
     
     const handleRecording = async () => {
-        if (isRecording) {
-            // Stop recording
-            mediaRecorder?.stop();
-            setIsRecording(false);
-            return;
+        // If already recording, stop and clean up
+        if (isRecording && mediaRecorder) {
+            try {
+                mediaRecorder.stop();
+                setIsRecording(false);
+                mediaRecorder.stream.getTracks().forEach(track => track.stop());
+                setMediaRecorder(null);
+                stopSilenceDetection();
+                return;
+            } catch (error) {
+                console.error('Error stopping recording:', error);
+            }
         }
 
+        // Start new recording
         try {
-            // Start recording
             const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
             const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
             setMediaRecorder(recorder);
+            setIsRecording(true);
             
             // Use local array to collect chunks
             const chunks: Blob[] = [];
@@ -80,6 +88,13 @@ export const MicrophoneButton: React.FC = () => {
             const currentStream = stream;
             const threadId = currentThreadIdRef.current;
             
+            // Store chunks in a local array
+            const chunks: Blob[] = [];
+            
+            recorder.ondataavailable = (e) => {
+                chunks.push(e.data);
+            };
+
             recorder.onstop = async () => {
                 try {
                     // Combine audio chunks
@@ -87,6 +102,7 @@ export const MicrophoneButton: React.FC = () => {
 
                     // Convert WebM to WAV using AudioContext and resample to 16kHz
                     const audioContext = new AudioContext();
+                    setIsRecording(false);
                     const arrayBuffer = await audioBlob.arrayBuffer();
                     const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
                     
@@ -202,8 +218,11 @@ export const MicrophoneButton: React.FC = () => {
                 }, 10000); // Auto-stop after 10 seconds
             }
             
-            recorder.start();
-            setIsRecording(true);
+            // Start recording with 100ms time slices for better silence detection
+            recorder.start(100);
+            
+            // Start silence detection
+            startSilenceDetection();
         } catch (error) {
             console.error('Error starting recording:', error);
         }
