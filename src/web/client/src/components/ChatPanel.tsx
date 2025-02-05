@@ -21,6 +21,7 @@ import Link from '@mui/material/Link';
 import { TaskDialog } from './TaskDialog';
 import { ClientProject } from '../../../../shared/types';
 import { CodeBlock } from './shared/CodeBlock';
+import { WelcomePanel } from './WelcomePanel.tsx';
 
 // Custom link component that opens links in system browser
 export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -42,6 +43,7 @@ interface ChatPanelProps {
     leftDrawerOpen: boolean;
     rightDrawerOpen: boolean;
     onSwitchToWelcome: () => void;
+    showWelcome: boolean;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen, showWelcome, onSwitchToWelcome }) => {
@@ -727,7 +729,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             <Box sx={{ display: 'flex', gap: 1, p: 2 }}>
                 <Button 
                     variant="outlined"
-                    onClick={props.onSwitchToWelcome}
+                    onClick={onSwitchToWelcome}
                     sx={{ mr: 2 }}
                 >
                     Back to Welcome
