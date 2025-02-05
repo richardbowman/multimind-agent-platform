@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Mic from '@mui/icons-material/Mic';
 import Stop from '@mui/icons-material/Stop';
 import { useIPCService } from '../contexts/IPCContext';
@@ -9,6 +9,12 @@ export const MicrophoneButton: React.FC = () => {
     const [isRecording, setIsRecording] = useState(false);
     const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
     const ipcService = useIPCService();
+    const currentThreadIdRef = useRef(currentThreadId);
+    
+    // Keep the ref updated with the latest thread ID
+    useEffect(() => {
+        currentThreadIdRef.current = currentThreadId;
+    }, [currentThreadId]);
     
 
     console.log('MICROPHONE', currentChannelId, currentThreadId);
@@ -64,8 +70,8 @@ export const MicrophoneButton: React.FC = () => {
 
             // Store the stream so we can clean it up later
             const currentStream = stream;
-            const threadId = currentThreadId;
-            console.log('MICROPHONE INNER', currentChannelId, currentThreadId);
+            const threadId = currentThreadIdRef.current;
+            console.log('MICROPHONE INNER', currentChannelId, threadId);
             
             recorder.onstop = async () => {
                 try {
