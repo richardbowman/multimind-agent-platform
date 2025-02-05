@@ -55,7 +55,7 @@ export const MicrophoneButton: React.FC = () => {
             window.removeEventListener('keydown', handleKeyDown);
             window.removeEventListener('keyup', handleKeyUp);
         };
-    }, [isRecordingRef.current]);
+    }, [isRecording]);
     
     const handleRecording = async () => {
         // If already recording, stop and clean up
@@ -310,7 +310,7 @@ export const MicrophoneButton: React.FC = () => {
 
         // Start checking every 100ms
         silenceDetectionInterval.current = window.setInterval(checkSilence, 100);
-    }, [isRecordingRef.current]);
+    }, [isRecordingRef]);
 
     const stopSilenceDetection = () => {
         if (silenceTimer.current) {
