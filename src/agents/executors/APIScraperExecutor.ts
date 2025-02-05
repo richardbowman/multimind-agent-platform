@@ -45,7 +45,7 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
         this.modelHelpers = params.modelHelpers;
     }
 
-    private async createBrowserSession(): Promise<Electron.Session> {
+    private async createBrowserSession(): Promise<void> {
         this.browserWindow = new BrowserWindow({
             show: false, // Run in headless mode
             webPreferences: {
@@ -57,31 +57,34 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
             }
         });
 
-        const session = this.browserWindow.webContents.session;
-        
-        // Enable webRequest API with proper permissions
-        session.webRequest.onBeforeSendHeaders((details, callback) => {
-            callback({ requestHeaders: details.requestHeaders });
-        });
+        try {
+            await this.browserWindow.webContents.debugger.attach('1.3');
+        } catch (err) {
+            console.error('Debugger attach failed:', err);
+            throw err;
+        }
 
-        session.webRequest.onHeadersReceived((details, callback) => {
-            callback({ responseHeaders: details.responseHeaders });
+        this.browserWindow.webContents.debugger.on('detach', (event, reason) => {
+            console.log('Debugger detached due to:', reason);
         });
-
-        return session;
     }
 
-    private setupAPIMonitoring(session: Electron.Session) {
+    private setupAPIMonitoring() {
         this.apiCalls = [];
-        this.monitoringSession = session;
 
-        session.webRequest.onBeforeRequest((details, callback) => {
-            if (details.resourceType === 'xhr' || details.resourceType === 'fetch') {
+        if (!this.browserWindow) {
+            throw new Error('Browser window not initialized');
+        }
+
+        const debugger = this.browserWindow.webContents.debugger;
+
+        debugger.on('message', (event, method, params) => {
+            if (method === 'Network.requestWillBeSent') {
                 const apiCall: APICall = {
-                    url: details.url,
-                    method: details.method,
-                    requestHeaders: details.requestHeaders,
-                    requestBody: details.uploadData ? details.uploadData[0]?.bytes?.toString() : undefined,
+                    url: params.request.url,
+                    method: params.request.method,
+                    requestHeaders: params.request.headers,
+                    requestBody: params.request.postData,
                     responseHeaders: {},
                     responseBody: null,
                     statusCode: 0,
@@ -89,37 +92,32 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                 };
                 this.apiCalls.push(apiCall);
             }
-            callback({ cancel: false });
-        });
-
-        session.webRequest.onHeadersReceived((details, callback) => {
-            if (details.resourceType === 'xhr' || details.resourceType === 'fetch') {
-                const call = this.apiCalls.find(c => c.url === details.url);
+            else if (method === 'Network.responseReceived') {
+                const call = this.apiCalls.find(c => c.url === params.response.url);
                 if (call) {
-                    call.responseHeaders = details.responseHeaders || {};
+                    call.responseHeaders = params.response.headers;
+                    call.statusCode = params.response.status;
                 }
             }
-            callback({ cancel: false });
+            else if (method === 'Network.loadingFinished') {
+                const call = this.apiCalls.find(c => c.url === params.requestId);
+                if (call) {
+                    debugger.sendCommand('Network.getResponseBody', { requestId: params.requestId })
+                        .then(response => {
+                            try {
+                                call.responseBody = JSON.parse(response.body);
+                            } catch {
+                                call.responseBody = response.body;
+                            }
+                        })
+                        .catch(err => {
+                            console.error('Error getting response body:', err);
+                        });
+                }
+            }
         });
 
-        session.webRequest.onCompleted(async (details) => {
-            if (details.resourceType === 'xhr' || details.resourceType === 'fetch') {
-                try {
-                    const response = await session.webRequest.getResponseBody(details.requestId);
-                    const call = this.apiCalls.find(c => c.url === details.url);
-                    if (call) {
-                        call.statusCode = details.statusCode;
-                        try {
-                            call.responseBody = JSON.parse(response.data);
-                        } catch {
-                            call.responseBody = response.data;
-                        }
-                    }
-                } catch (error) {
-                    console.error('Error getting response body:', error);
-                }
-            }
-        });
+        debugger.sendCommand('Network.enable');
     }
 
     private async saveAPICallsAsArtifact(projectId: string): Promise<{allCalls: Artifact, largestPayloads: Artifact[]}> {
@@ -183,9 +181,9 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
 
     async execute(params: ExecuteParams): Promise<StepResult<APIScrapeResponse>> {
         try {
-            const browserSession = await this.createBrowserSession();
+            await this.createBrowserSession();
             // Setup monitoring
-            this.setupAPIMonitoring(browserSession);
+            this.setupAPIMonitoring();
 
             // Extract URLs from step goal or previous responses
             let urlsToScrape = StringUtils.extractUrls(params.stepGoal);
