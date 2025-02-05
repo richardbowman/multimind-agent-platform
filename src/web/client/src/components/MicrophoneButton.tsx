@@ -157,17 +157,30 @@ export const MicrophoneButton: React.FC = () => {
             try {
                 console.log('Initializing audio context and analyser');
                 audioContextRef.current = new AudioContext();
+                
+                // Wait for audio context to be ready
+                await new Promise(resolve => setTimeout(resolve, 100));
+                
                 analyserRef.current = audioContextRef.current.createAnalyser();
                 analyserRef.current.fftSize = ANALYZER_FFT_SIZE;
                 analyserRef.current.smoothingTimeConstant = 0.8; // Smoother volume changes
-                sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
-                sourceRef.current.connect(analyserRef.current);
+                
+                // Create a new MediaStream from the original stream
+                const audioStream = new MediaStream();
+                stream.getAudioTracks().forEach(track => audioStream.addTrack(track));
+                
+                sourceRef.current = audioContextRef.current.createMediaStreamSource(audioStream);
                 
                 // Add a gain node to boost quiet signals
                 const gainNode = audioContextRef.current.createGain();
                 gainNode.gain.value = 2.0; // Boost signal by 2x
+                
+                // Connect nodes: source -> gain -> analyser
                 sourceRef.current.connect(gainNode);
                 gainNode.connect(analyserRef.current);
+                
+                // Add a small delay to ensure audio is flowing
+                await new Promise(resolve => setTimeout(resolve, 200));
                 
                 console.log('Audio analysis setup complete');
                 // Start analyzing audio
@@ -216,12 +229,22 @@ export const MicrophoneButton: React.FC = () => {
             
             // If we have no valid samples, skip this analysis
             if (validSamples === 0) {
-                console.log('No valid audio samples detected');
+                console.log('No valid audio samples detected - checking audio stream');
+                // Check if audio stream is still active
+                if (sourceRef.current?.mediaStream?.active === false) {
+                    console.log('Audio stream is not active');
+                    return;
+                }
+                // Wait a bit and try again
+                await new Promise(resolve => setTimeout(resolve, 100));
                 return;
             }
             
             const rms = Math.sqrt(sum / validSamples);
             const dB = rms > 0 ? 20 * Math.log10(rms) : MIN_VALID_VOLUME;
+            
+            // Debug log the raw audio data
+            console.log('Audio samples:', Array.from(dataArray).slice(0, 10));
             
             // Skip if volume is too low to be valid
             if (dB < MIN_VALID_VOLUME) {
