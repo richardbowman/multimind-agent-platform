@@ -110,7 +110,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const checkScrollPosition = useCallback(() => {
         if (messagesContainerRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
-            const newIsAtBottom = scrollHeight - (scrollTop + clientHeight) < 50;
+            const newIsAtBottom = scrollHeight - (scrollTop + clientHeight) < 200;
             console.debug('Setting isAtBottom:', newIsAtBottom, isAtBottom);
             setIsAtBottom(newIsAtBottom);
         }
