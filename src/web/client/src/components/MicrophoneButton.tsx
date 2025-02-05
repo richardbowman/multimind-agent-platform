@@ -204,7 +204,7 @@ export const MicrophoneButton: React.FC = () => {
 
     // Helper function to convert AudioBuffer to WAV
     const startSilenceDetection = useCallback(() => {
-        const checkSilence = () => {
+        const checkSilence = async () => {
             if (!analyserRef.current) {
                 console.log('Analyser not initialized');
                 return;
