@@ -6,7 +6,8 @@ import { useDataContext } from '../contexts/DataContext';
 
 export const MicrophoneButton: React.FC = () => {
     const { currentChannelId, currentThreadId } = useDataContext();
-    const isRecordingRef = useRef(false); // Add a ref to track recording state
+    const [isRecording, setIsRecording] = useState(false);
+    const isRecordingRef = useRef(false); // Ref for immediate access
     const mediaRecorderRef = useRef<MediaRecorder | null>(null);
     const silenceTimer = useRef<number | null>(null);
     const silenceDetectionInterval = useRef<number | null>(null);
