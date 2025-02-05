@@ -191,15 +191,8 @@ export const MicrophoneButton: React.FC = () => {
                 
                 // Add a small delay to ensure audio is flowing
                 await new Promise(resolve => setTimeout(resolve, 200));
-                
+            
                 console.log('Audio analysis setup complete');
-                // Wait a bit longer to ensure audio is flowing
-                await new Promise(resolve => setTimeout(resolve, 500));
-                
-                console.log('Audio analysis setup complete');
-                
-                // Start silence detection after everything is ready
-                startSilenceDetection();
             } catch (error) {
                 console.error('Error setting up audio analysis:', error);
                 // Fall back to manual stop if analysis fails
@@ -212,6 +205,13 @@ export const MicrophoneButton: React.FC = () => {
             
             // Start recording with 100ms time slices for better silence detection
             recorder.start(100);
+
+            // Start silence detection after a short delay to ensure everything is ready
+            setTimeout(() => {
+                if (isRecording && analyserRef.current) {
+                    startSilenceDetection();
+                }
+            }, 500);
         } catch (error) {
             console.error('Error starting recording:', error);
         }
@@ -221,11 +221,17 @@ export const MicrophoneButton: React.FC = () => {
     const silenceDetectionInterval = useRef<number | null>(null);
 
     const startSilenceDetection = useCallback(() => {
-        // Only start if we have all the required components
-        if (!analyserRef.current || !isRecording) {
-            console.log('Cannot start silence detection - analyser not ready or not recording');
+        if (!isRecording) {
+            console.log('Not starting silence detection - recording not active');
             return;
         }
+
+        if (!analyserRef.current) {
+            console.error('Analyser not initialized - cannot start silence detection');
+            return;
+        }
+
+        console.log('Starting silence detection');
 
         const checkSilence = async () => {
             if (!analyserRef.current || !isRecording) {
