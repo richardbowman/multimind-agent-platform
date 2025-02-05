@@ -9,7 +9,7 @@ import { ModelHelpers } from "src/llm/modelHelpers";
 import { ContentType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
-import { session } from 'electron';
+import { session, BrowserWindow } from 'electron';
 import { v4 as uuidv4 } from 'uuid';
 
 interface APICall {
@@ -156,19 +156,10 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<APIScrapeResponse>> {
-        if (!params.context?.browserSession) {
-            return {
-                finished: true,
-                needsUserInput: true,
-                response: {
-                    type: StepResponseType.WebPage,
-                    message: 'No browser session available for API scraping'
-                }
-            };
-        }
-
-        // Setup monitoring
-        this.setupAPIMonitoring(params.context.browserSession);
+        try {
+            const browserSession = await this.createBrowserSession();
+            // Setup monitoring
+            this.setupAPIMonitoring(browserSession);
 
         // Wait for API calls to be captured
         await new Promise(resolve => setTimeout(resolve, 10000)); // Wait 10 seconds
@@ -184,6 +175,12 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
             summary += `\nLargest JSON payload: ${largestPayload.metadata?.title} (${largestPayload.metadata?.sizeBytes} bytes)`;
         }
 
+        // Clean up browser window
+        if (this.browserWindow) {
+            this.browserWindow.close();
+            this.browserWindow = null;
+        }
+
         return {
             finished: true,
             artifactIds: [allCalls.id, ...(largestPayload ? [largestPayload.id] : [])],
@@ -196,6 +193,16 @@ export class APIScraperExecutor implements StepExecutor<APIScrapeResponse> {
                 }
             }
         };
+        } catch (error) {
+            return {
+                finished: true,
+                needsUserInput: true,
+                response: {
+                    type: StepResponseType.WebPage,
+                    message: `Failed to create browser session: ${error}`
+                }
+            };
+        }
     }
 
     private getMostCommonEndpoint(): string {
