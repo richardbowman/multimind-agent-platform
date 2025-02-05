@@ -30,16 +30,25 @@ export const MicrophoneButton: React.FC = () => {
     }, [currentThreadId]);
 
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
+        const handleKeyDown = async (e: KeyboardEvent) => {
             if (e.ctrlKey && e.code === 'Space') {
                 e.preventDefault();
                 if (!isRecordingRef.current) {
-                    handleRecording();
+                    try {
+                        // Ensure we have proper permissions
+                        const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+                        stream.getTracks().forEach(track => track.stop());
+                        
+                        // Start recording after permissions are confirmed
+                        handleRecording();
+                    } catch (error) {
+                        console.error('Error getting audio permissions:', error);
+                    }
                 }
             }
         };
 
-        const handleKeyUp = (e: KeyboardEvent) => {
+        const handleKeyUp = async (e: KeyboardEvent) => {
             if (e.ctrlKey && e.code === 'Space') {
                 e.preventDefault();
                 if (isRecordingRef.current) {
@@ -74,8 +83,22 @@ export const MicrophoneButton: React.FC = () => {
         } else {
             // Start new recording
             try {
+                // Check if MediaRecorder is supported
+                if (!MediaRecorder.isTypeSupported('audio/webm')) {
+                    throw new Error('audio/webm format not supported');
+                }
+
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-                const recorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+                const recorder = new MediaRecorder(stream, { 
+                    mimeType: 'audio/webm',
+                    audioBitsPerSecond: 128000 // Set a reasonable bitrate
+                });
+            
+                // Verify recorder is ready
+                if (!recorder) {
+                    throw new Error('Failed to create MediaRecorder');
+                }
+            
                 mediaRecorderRef.current = recorder;
                 setIsRecording(true);
                 isRecordingRef.current = true; // Update both state and ref
