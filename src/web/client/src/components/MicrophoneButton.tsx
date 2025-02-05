@@ -110,13 +110,14 @@ export const MicrophoneButton: React.FC = () => {
                         reader.readAsDataURL(wavBlob);
                     });
 
-                    // Send for transcription
-                    if (currentChannelId ) {
+                    // Send for transcription - get fresh thread ID from context
+                    const { currentThreadId: freshThreadId } = useDataContext();
+                    if (currentChannelId) {
                         try {
                             await ipcService.getRPC().transcribeAndSendAudio({
                                 audioBase64: wavBase64,
                                 channelId: currentChannelId,
-                                threadId: currentThreadId || null,
+                                threadId: freshThreadId || null, 
                                 language: 'en'
                             });
                         } catch (error) {
