@@ -14,9 +14,10 @@ export const MicrophoneButton: React.FC = () => {
     const sourceRef = useRef<MediaStreamAudioSourceNode | null>(null);
     
     // Silence detection parameters
-    const SILENCE_THRESHOLD = -50; // dB (adjust based on mic sensitivity)
+    const SILENCE_THRESHOLD = -45; // dB (adjust based on mic sensitivity)
     const SILENCE_DURATION = 2000; // ms of silence before stopping
     const ANALYZER_FFT_SIZE = 2048;
+    const MIN_VALID_VOLUME = -90; // dB - anything below this is considered invalid/no signal
     const ipcService = useIPCService();
     const currentThreadIdRef = useRef(currentThreadId);
     
@@ -158,14 +159,27 @@ export const MicrophoneButton: React.FC = () => {
                 audioContextRef.current = new AudioContext();
                 analyserRef.current = audioContextRef.current.createAnalyser();
                 analyserRef.current.fftSize = ANALYZER_FFT_SIZE;
+                analyserRef.current.smoothingTimeConstant = 0.8; // Smoother volume changes
                 sourceRef.current = audioContextRef.current.createMediaStreamSource(stream);
                 sourceRef.current.connect(analyserRef.current);
+                
+                // Add a gain node to boost quiet signals
+                const gainNode = audioContextRef.current.createGain();
+                gainNode.gain.value = 2.0; // Boost signal by 2x
+                sourceRef.current.connect(gainNode);
+                gainNode.connect(analyserRef.current);
                 
                 console.log('Audio analysis setup complete');
                 // Start analyzing audio
                 startSilenceDetection();
             } catch (error) {
                 console.error('Error setting up audio analysis:', error);
+                // Fall back to manual stop if analysis fails
+                setTimeout(() => {
+                    if (isRecording) {
+                        handleRecording();
+                    }
+                }, 10000); // Auto-stop after 10 seconds
             }
             
             recorder.start();
@@ -189,15 +203,35 @@ export const MicrophoneButton: React.FC = () => {
             
             // Calculate RMS (root mean square) of the audio signal
             let sum = 0;
+            let validSamples = 0;
+            
             for (let i = 0; i < bufferLength; i++) {
-                sum += dataArray[i] * dataArray[i];
+                const sample = dataArray[i];
+                // Only count valid samples (non-zero, non-NaN)
+                if (sample !== 0 && !isNaN(sample)) {
+                    sum += sample * sample;
+                    validSamples++;
+                }
             }
-            const rms = Math.sqrt(sum / bufferLength);
-            const dB = 20 * Math.log10(rms);
+            
+            // If we have no valid samples, skip this analysis
+            if (validSamples === 0) {
+                console.log('No valid audio samples detected');
+                return;
+            }
+            
+            const rms = Math.sqrt(sum / validSamples);
+            const dB = rms > 0 ? 20 * Math.log10(rms) : MIN_VALID_VOLUME;
+            
+            // Skip if volume is too low to be valid
+            if (dB < MIN_VALID_VOLUME) {
+                console.log(`Invalid audio level detected: ${dB.toFixed(2)} dB`);
+                return;
+            }
             
             console.log(`Audio level: ${dB.toFixed(2)} dB`); // Debug log
             
-            if (dB < SILENCE_THRESHOLD) {
+            if (dB < SILENCE_THRESHOLD && dB > MIN_VALID_VOLUME) {
                 console.log(`Silence detected (${dB.toFixed(2)} dB < ${SILENCE_THRESHOLD} dB)`);
                 if (!silenceTimer.current) {
                     console.log(`Starting silence timer (${SILENCE_DURATION}ms)`);
