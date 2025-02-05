@@ -41,6 +41,7 @@ export const CustomLink = ({ href, children }: { href?: string, children: React.
 interface ChatPanelProps {
     leftDrawerOpen: boolean;
     rightDrawerOpen: boolean;
+    onSwitchToWelcome: () => void;
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen }) => {
@@ -713,7 +714,16 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 )}
                 <div ref={messagesEndRef} />
             </Box>
-            <CommandInput onSendMessage={handleSendMessage} currentChannel={currentChannelId} />
+            <Box sx={{ display: 'flex', gap: 1, p: 2 }}>
+                <Button 
+                    variant="outlined"
+                    onClick={props.onSwitchToWelcome}
+                    sx={{ mr: 2 }}
+                >
+                    Back to Welcome
+                </Button>
+                <CommandInput onSendMessage={handleSendMessage} currentChannel={currentChannelId} />
+            </Box>
 
             <Dialog
                 open={metadataDialogOpen}

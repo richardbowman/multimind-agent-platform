@@ -11,6 +11,7 @@ import { SnackbarProvider, useSnackbar } from './contexts/SnackbarContext';
 import { LogProvider } from './contexts/LogContext';
 import { ToolbarActionsProvider } from './contexts/ToolbarActionsContext';
 import { ChatPanel } from './components/ChatPanel';
+import { WelcomePanel } from './components/WelcomePanel';
 import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
 import { TaskPanel } from './components/TaskPanel';
@@ -60,6 +61,7 @@ const AppContent: React.FC = () => {
 
     const ipcService = useIPCService();
     const [currentTab, setCurrentTab] = useState<'chat' | 'artifacts' | 'logs' | 'settings' | 'none'>('none');
+    const [showWelcome, setShowWelcome] = useState(true);
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
     const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
 
@@ -183,7 +185,16 @@ const AppContent: React.FC = () => {
                 marginTop: '64px' // Account for AppBar height
             }}>
                 {currentTab === 'chat' ? (
-                    <>
+                    showWelcome ? (
+                        <WelcomePanel 
+                            onStartTask={(taskId) => {
+                                // Handle task start
+                                setShowWelcome(false);
+                            }}
+                            onSwitchToChat={() => setShowWelcome(false)}
+                        />
+                    ) : (
+                        <>
                         <Drawer
                             variant="persistent"
                             anchor="left"
