@@ -2,7 +2,7 @@ import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { StepExecutor } from "../interfaces/StepExecutor";
-import { StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Artifact } from "src/tools/artifact";
 import { ModelHelpers } from "src/llm/modelHelpers";
@@ -17,6 +17,7 @@ import { StringUtils } from 'src/utils/StringUtils';
 import JSON5 from 'json5';
 import { ArtifactSelectionResponse } from "src/schemas/ArtifactSelectionResponse";
 import { LinkRef } from "src/helpers/scrapeHelper";
+import { marked } from "marked";
 
 export interface ArtifactSelectionStepResponse extends StepResponse {
     type: StepResponseType.WebPage;
@@ -67,7 +68,7 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionS
         const schema = await getGeneratedSchema(SchemaType.ArtifactSelectionResponse);
         
         prompt.addInstruction(`OUTPUT INSTRUCTIONS:
-1. Respond with a JSON object matching this schema:
+1. Include a JSON object in your response, enclosed in a \`\`\`json code block matching this schema:
 ${JSON.stringify(schema, null, 2)}
 2. The artifactIndexes field should contain the list numbers (1-N) from the ARTIFACTS EXCERPTS above
 3. Include a clear selectionReason explaining why these artifacts were chosen`);
@@ -89,16 +90,18 @@ ${JSON.stringify(schema, null, 2)}
 
             // Extract links from all selected artifacts
             const allLinks = selectedArtifacts.flatMap(artifact => 
-                this.extractLinksFromArtifact(artifact)
+                StringUtils.extractLinksFromMarkdown(artifact.content.toString())
             );
 
             return {
                 finished: true,
                 type: StepResultType.WebScrapeStepResult,
+                replan: ReplanType.Allow,
                 artifactIds: selectedArtifacts.map(a => a.id),
                 response: {
                     type: StepResponseType.WebPage,
-                    message: `Selected ${selectedArtifacts.length} artifacts with ${allLinks.length} links:\n\n${json.selectionReason}`,
+                    message: `I've successfully reviewed the document and found ${selectedArtifacts.length} artifacts containing ${allLinks.length} links:\n
+${json.selectionReason}. Now I need to select the relevant links from the links in the document. My next step would typically be [${ExecutorType.SELECT_LINKS}]`,
                     data: {
                         selectedArtifacts,
                         selectionReason: json?.selectionReason||"[Unknown reason]",
@@ -109,6 +112,7 @@ ${JSON.stringify(schema, null, 2)}
         } catch (error) {
             return {
                 finished: true,
+                replan: ReplanType.Allow,
                 needsUserInput: true,
                 response: {
                     type: StepResponseType.WebPage,
@@ -116,32 +120,5 @@ ${JSON.stringify(schema, null, 2)}
                 }
             };
         }
-    }
-
-
-    private extractLinksFromArtifact(artifact: Artifact): LinkRef[] {
-        // Parse HTML content directly using marked
-        const { marked } = await import('marked');
-        const tokens = marked.lexer(artifact.content.toString());
-        
-        // Extract links from parsed tokens
-        const links: LinkRef[] = [];
-        
-        const extractLinks = (tokens: any[]) => {
-            for (const token of tokens) {
-                if (token.type === 'link') {
-                    links.push({
-                        text: token.text || '',
-                        href: token.href || ''
-                    });
-                }
-                if (token.tokens) {
-                    extractLinks(token.tokens);
-                }
-            }
-        };
-        
-        extractLinks(tokens);
-        return links.filter(link => link.href.trim() !== '');
     }
 }
