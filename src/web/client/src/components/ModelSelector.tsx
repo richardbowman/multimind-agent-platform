@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ModelInfo } from '../../../../llm/types';
-import { Button, Card, List, Typography, Alert, TextField } from '@mui/material';
+import { Card, Typography, Alert, TextField, List, ListItem, ListItemText, Divider } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Box } from '@mui/system';
 import './ModelSelector.css';
@@ -72,34 +72,51 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                 {error && <Alert severity="error">{error}</Alert>}
 
                 <Box className="model-list-container">
-                    <List
-                        loading={loading}
-                        dataSource={models}
-                        renderItem={(model) => (
-                            <List.Item 
-                                onClick={() => handleSelect(model)}
-                                className={`model-item ${selectedModel?.id === model.id ? 'selected' : ''}`}
-                            >
-                                <Card hoverable style={{ width: '100%' }}>
-                                    <Space direction="vertical">
-                                        <Text strong>{model.id}</Text>
-                                        <Text type="secondary">{model.provider}</Text>
-                                        <Text>{model.description}</Text>
-                                        <Text type="secondary">
-                                            Context: {model.contextSize} tokens | 
-                                            Max Tokens: {model.maxTokens}
-                                        </Text>
-                                    </Space>
-                                </Card>
-                            </List.Item>
-                        )}
-                    />
+                    <List>
+                        {models.map((model) => (
+                            <React.Fragment key={model.id}>
+                                <ListItem 
+                                    onClick={() => handleSelect(model)}
+                                    className={`model-item ${selectedModel?.id === model.id ? 'selected' : ''}`}
+                                >
+                                    <Card sx={{ width: '100%', p: 2 }}>
+                                        <ListItemText
+                                            primary={
+                                                <Typography variant="subtitle1" fontWeight="bold">
+                                                    {model.id}
+                                                </Typography>
+                                            }
+                                            secondary={
+                                                <>
+                                                    <Typography variant="body2" color="text.secondary">
+                                                        {model.provider}
+                                                    </Typography>
+                                                    <Typography variant="body2">
+                                                        {model.description}
+                                                    </Typography>
+                                                    <Typography variant="caption" color="text.secondary">
+                                                        Context: {model.contextSize} tokens | 
+                                                        Max Tokens: {model.maxTokens}
+                                                    </Typography>
+                                                </>
+                                            }
+                                        />
+                                    </Card>
+                                </ListItem>
+                                <Divider component="li" />
+                            </React.Fragment>
+                        ))}
+                    </List>
                 </Box>
 
                 {selectedModel && (
-                    <Box className="selected-model">
-                        <Typography fontWeight="bold">Selected Model:</Typography>
-                        <Typography>{selectedModel.id}</Typography>
+                    <Box className="selected-model" sx={{ p: 2, mt: 2 }}>
+                        <Typography variant="subtitle1" fontWeight="bold">
+                            Selected Model:
+                        </Typography>
+                        <Typography variant="body1">
+                            {selectedModel.id}
+                        </Typography>
                     </Box>
                 )}
             </Box>
