@@ -144,11 +144,17 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
                                 const totalSize = parseInt(redirectResponse.headers['content-length'] || '0', 10);
                                 let bytesDownloaded = 0;
+                                let lastKB = 0;
                                 redirectResponse.on('data', (chunk) => {
                                     bytesDownloaded += chunk.length;
-                                    const percent = totalSize > 0 ? (bytesDownloaded / totalSize) : 0;
-                                    const percentFormatted = percent > 0 ? ` (${(percent * 100).toFixed(1)}%)` : "";
-                                    Logger.progress(`Downloading ${bytesDownloaded}/${totalSize} bytes${percentFormatted} of ${modelName}`, percent);
+                                    const currentKB = Math.floor(bytesDownloaded / 1024);
+                                    if (currentKB !== lastKB) {
+                                        lastKB = currentKB;
+                                        const totalKB = Math.floor(totalSize / 1024);
+                                        const percent = totalSize > 0 ? (bytesDownloaded / totalSize) : 0;
+                                        const percentFormatted = percent > 0 ? ` (${(percent * 100).toFixed(1)}%)` : "";
+                                        Logger.progress(`Downloading ${currentKB}/${totalKB} KB${percentFormatted} of ${modelName}`, percent);
+                                    }
                                 });
 
                                 pipeline(redirectResponse, fileStream)
@@ -161,10 +167,16 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                         } else if (response.statusCode === 200) {
                             const totalSize = parseInt(response.headers['content-length'] || '0', 10);
                             let bytesDownloaded = 0;
+                            let lastKB = 0;
                             response.on('data', (chunk) => {
                                 bytesDownloaded += chunk.length;
-                                const percent = totalSize > 0 ? ((bytesDownloaded / totalSize) * 100).toFixed(1) : '?';
-                                Logger.progress(`Downloading ${bytesDownloaded}/${totalSize} bytes (${percent}%) of ${modelName}`);
+                                const currentKB = Math.floor(bytesDownloaded / 1024);
+                                if (currentKB !== lastKB) {
+                                    lastKB = currentKB;
+                                    const totalKB = Math.floor(totalSize / 1024);
+                                    const percent = totalSize > 0 ? ((bytesDownloaded / totalSize) * 100).toFixed(1) : '?';
+                                    Logger.progress(`Downloading ${currentKB}/${totalKB} KB (${percent}%) of ${modelName}`);
+                                }
                             });
 
                             pipeline(response, fileStream)
