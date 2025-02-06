@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { ModelInfo } from '../../../../llm/types';
-import { Card, Typography, Alert, TextField, List, ListItem, ListItemText, Divider } from '@mui/material';
+import { Card, Typography, Alert, TextField, List, ListItem, ListItemText, Divider, Dialog, DialogTitle, DialogContent } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Box } from '@mui/system';
 import './ModelSelector.css';
@@ -57,7 +57,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
     };
 
     return (
-        <Box className="model-selector">
+        <Box className="model-selector" sx={{ mt: 2 }}>
             <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
                 <TextField
                     placeholder="Search models..."

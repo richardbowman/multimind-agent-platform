@@ -31,6 +31,8 @@ import {
 } from '@mui/material';
 import { useDropzone } from 'react-dropzone';
 import MenuIcon from '@mui/icons-material/Menu';
+import SearchIcon from '@mui/icons-material/Search';
+import { IconButton } from '@mui/material';
 import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { Settings } from '../../../../tools/settings';
@@ -160,6 +162,15 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const [aboutOpen, setAboutOpen] = useState(false);
     const [rebuildDialogOpen, setRebuildDialogOpen] = useState(false);
     const [resetDialogOpen, setResetDialogOpen] = useState(false);
+    const [modelDialog, setModelDialog] = useState<{
+        open: boolean;
+        key: string;
+        provider: string;
+    }>({
+        open: false,
+        key: '',
+        provider: ''
+    });
 
     const handleSave = async () => {
         console.log('Saving settings:', settings);
@@ -265,11 +276,25 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         settings.providers?.chat;
                     
                     return (
-                        <ModelSelector
-                            value={value}
-                            onChange={(newValue) => handleChange(metadata.key, newValue)}
-                            provider={provider || ''}
-                        />
+                        <Box sx={{ width: '100%' }}>
+                            <TextField
+                                value={value}
+                                label={metadata.label}
+                                variant="outlined"
+                                fullWidth
+                                InputProps={{
+                                    readOnly: true,
+                                    endAdornment: (
+                                        <IconButton 
+                                            onClick={() => setModelDialog({ open: true, key: metadata.key, provider: provider || '' })}
+                                            edge="end"
+                                        >
+                                            <SearchIcon />
+                                        </IconButton>
+                                    )
+                                }}
+                            />
+                        </Box>
                     );
                 }
 
@@ -852,6 +877,26 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                         Reset Settings
                     </Button>
                 </DialogActions>
+            </Dialog>
+
+            {/* Model Selector Dialog */}
+            <Dialog
+                open={modelDialog.open}
+                onClose={() => setModelDialog(prev => ({ ...prev, open: false }))}
+                maxWidth="md"
+                fullWidth
+            >
+                <DialogTitle>Select Model</DialogTitle>
+                <DialogContent>
+                    <ModelSelector
+                        value={getNestedValue(settings, modelDialog.key)}
+                        onChange={(newValue) => {
+                            handleChange(modelDialog.key, newValue);
+                            setModelDialog(prev => ({ ...prev, open: false }));
+                        }}
+                        provider={modelDialog.provider}
+                    />
+                </DialogContent>
             </Dialog>
         </Box>
     );
