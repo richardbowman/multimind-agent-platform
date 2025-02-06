@@ -8,8 +8,9 @@ import './ModelSelector.css';
 import { useIPCService } from '../contexts/IPCContext';
 import { useDataContext } from '../contexts/DataContext';
 import { ClientError } from '../../../../shared/RPCInterface';
-//import path from 'node:path';
 import { useSnackbar } from '../contexts/SnackbarContext';
+import { BrowserElectron } from '../../../../browserExport';
+// import { webUtils } from 'electron';
 
 interface ModelSelectorProps {
     value?: string;
@@ -44,28 +45,25 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                 try {
                     setIsUploadingModel(true);
                     setUploadError('');
+                    const reader = new FileReader();
 
-                    // In Electron, we need to use the file object's path property
-                    // and ensure it's an absolute path
-                    const fullPath = window.require('path').resolve(file.path);
-                    
-                    // Upload the GGUF file with full path
-                    const result = await ipcService.getRPC().uploadGGUFModel(fullPath);
+                    reader.onload = async (e) => {
+                        var _a;
+                        const content = (_a = e.target) === null || _a === void 0 ? void 0 : _a.result;
+                        const result = await ipcService.getRPC().uploadGGUFModel(content, file.name);
 
-                    if (result.error) {
-                        throw new Error(result.error);
-                    }
+                        // Update the model list
+                        const models = await ipcService.getRPC().getAvailableModels('llama_cpp');
+                        setModels(prev => ({
+                            ...prev,
+                            llama_cpp: models
+                        }));
 
-                    // Update the model list
-                    const models = await ipcService.getRPC().getAvailableModels('llama_cpp');
-                    setModels(prev => ({
-                        ...prev,
-                        llama_cpp: models
-                    }));
+                        handleSelect({ id: file.name });
 
-                    handleSelect({ id: result.modelId });
-
-                    snackbar.showSnackbar({ message: `Model ${file.name} uploaded successfully` });
+                        snackbar.showSnackbar({ message: `Model ${file.name} uploaded successfully` });
+                    };
+                    reader.readAsArrayBuffer(file);
                 } catch (error) {
                     console.error('Failed to upload model:', error);
                     setUploadError(`Failed to upload model: ${error instanceof Error ? error.message : 'Unknown error'}`);
