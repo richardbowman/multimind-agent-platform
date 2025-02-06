@@ -267,6 +267,34 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         return <pre>Binary content</pre>;
     }
     
+    // Handle Reveal.js presentations
+    if (type === ArtifactType.PRESENTATION || metadata?.format === 'revealjs') {
+        const htmlContent = typeof content === 'string' ? content : new TextDecoder().decode(content);
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        
+        return (
+            <Box sx={{ 
+                width: '100%', 
+                height: '70vh',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                overflow: 'hidden'
+            }}>
+                <iframe 
+                    src={url}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none'
+                    }}
+                    title="Reveal.js Presentation"
+                    allowFullScreen
+                />
+            </Box>
+        );
+    }
+
     if (content.length < 1024*10 && (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown')) {
         return <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>;
     } else {
