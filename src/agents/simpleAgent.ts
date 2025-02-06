@@ -28,7 +28,7 @@ export class SimpleAgent extends Agent {
             }
             promptBuilder.addContext({contentType: ContentType.PURPOSE});
             promptBuilder.addContext({contentType: ContentType.CHANNEL, channel: channelData});
-            promptBuilder.addInstruction("You are a helpful agent.");
+            promptBuilder.addInstruction("You are a helpful agent. You may respond using SSML if you need to introduce pauses.");
             const prompt = promptBuilder.build();
 
             const response = await this.modelHelpers.generate<ModelMessageResponse>({
