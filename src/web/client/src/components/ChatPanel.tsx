@@ -229,13 +229,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         }
     }, [messages]);
 
-    // Show welcome panel only if there are remaining tasks in the channel
+    // Show welcome panel only when switching to a new channel with remaining tasks
     useEffect(() => {
         if (currentChannelId) {
             const hasRemainingTasks = tasks.some(t => !t.complete);
             onSwitchToWelcome(hasRemainingTasks);
         }
-    }, [currentChannelId, tasks]);
+    }, [currentChannelId]); // Removed tasks from dependencies
 
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
