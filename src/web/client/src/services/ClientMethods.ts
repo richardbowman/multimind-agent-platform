@@ -36,9 +36,20 @@ class ClientMethodsImplementation implements ClientMethods {
 
             if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id && message.message?.length > 0) {
                 try {
+                    // Convert basic SSML-like pauses to SSML
+                    let ttsText = message.message
+                        .replace(/\.{2,}/g, '<break time="500ms"/>') // Convert ... to 500ms pause
+                        .replace(/\. /g, '<break time="300ms"/>') // Convert . to 300ms pause
+                        .replace(/, /g, '<break time="200ms"/>'); // Convert , to 200ms pause
+
+                    // Wrap in SSML if we have any pauses
+                    if (ttsText.includes('<break')) {
+                        ttsText = `<speak>${ttsText}</speak>`;
+                    }
+
                     const wav = await tts.predict({
                         voiceId: 'en_US-ryan-high',
-                        text: message.message
+                        text: ttsText
                     });
 
                     const audio = new Audio();
