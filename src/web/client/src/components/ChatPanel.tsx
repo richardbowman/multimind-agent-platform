@@ -1,4 +1,5 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { ChatMessage } from './ChatMessage';
 import {
     Box,
     Typography,
