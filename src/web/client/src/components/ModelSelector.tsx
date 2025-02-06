@@ -5,7 +5,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import { Box } from '@mui/system';
 import './ModelSelector.css';
 import { useIPCService } from '../contexts/IPCContext';
-import { ClientError } from '@mattermost/client';
+import { ClientError } from '../../../../shared/RPCInterface';
 
 interface ModelSelectorProps {
     value?: string;
