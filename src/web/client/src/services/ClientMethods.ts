@@ -94,16 +94,31 @@ class ClientMethodsImplementation implements ClientMethods {
                     // Process each segment
                     for (const segment of segments) {
                         if (segment.type === 'text') {
-                            const wav = await tts.predict({
+                            // Create audio context and stream
+                            const audioContext = new AudioContext();
+                            const mediaStreamDestination = audioContext.createMediaStreamDestination();
+                            const audioElement = new Audio();
+                            audioElement.srcObject = mediaStreamDestination.stream;
+                            
+                            // Start streaming immediately
+                            const stream = await tts.predictStream({
                                 voiceId: 'en_US-ryan-high',
                                 text: segment.content
                             });
-
-                            const audio = new Audio();
-                            audio.src = URL.createObjectURL(wav);
+                            
+                            // Create source and connect to destination
+                            const source = audioContext.createMediaStreamSource(stream);
+                            source.connect(mediaStreamDestination);
+                            
+                            // Play the audio
+                            await audioElement.play();
+                            
+                            // Wait for stream to end
                             await new Promise<void>((resolve) => {
-                                audio.onended = () => resolve();
-                                audio.play();
+                                stream.getAudioTracks()[0].onended = () => {
+                                    audioContext.close();
+                                    resolve();
+                                };
                             });
                         } else if (segment.type === 'tag') {
                             // Handle SSML tags
