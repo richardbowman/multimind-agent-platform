@@ -268,7 +268,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     }
     
     if (content.length < 1024*10 && (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown')) {
-        return <ReactMarkdown remarkPlugins={[remarkGfm]}>content</ReactMarkdown>;
+        return <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>;
     } else {
         return <pre>{content}</pre>;
     }
