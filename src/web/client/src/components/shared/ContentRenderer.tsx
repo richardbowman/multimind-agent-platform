@@ -365,7 +365,53 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         const htmlContent = typeof content === 'string' ? content : new TextDecoder().decode(content);
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
-        
+        const iframeRef = useRef<HTMLIFrameElement>(null);
+
+        const navigateSlide = useCallback((direction: 'prev' | 'next') => {
+            if (iframeRef.current) {
+                iframeRef.current.contentWindow?.postMessage({
+                    namespace: 'reveal',
+                    type: 'navigate',
+                    direction
+                }, '*');
+            }
+        }, []);
+
+        const toggleFullscreen = useCallback(() => {
+            if (iframeRef.current) {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    iframeRef.current.requestFullscreen();
+                }
+            }
+        }, []);
+
+        useEffect(() => {
+            const presentationActions = [
+                {
+                    id: 'reveal-prev',
+                    icon: <NavigateBeforeIcon />,
+                    label: 'Previous Slide',
+                    onClick: () => navigateSlide('prev')
+                },
+                {
+                    id: 'reveal-next',
+                    icon: <NavigateNextIcon />,
+                    label: 'Next Slide',
+                    onClick: () => navigateSlide('next')
+                },
+                {
+                    id: 'reveal-fullscreen',
+                    label: 'Toggle Fullscreen',
+                    onClick: toggleFullscreen
+                }
+            ];
+
+            registerActions('reveal', presentationActions);
+            return () => unregisterActions('reveal');
+        }, [navigateSlide, toggleFullscreen, registerActions, unregisterActions]);
+
         return (
             <Box sx={{ 
                 width: '100%', 
@@ -375,6 +421,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                 overflow: 'hidden'
             }}>
                 <iframe 
+                    ref={iframeRef}
                     src={url}
                     style={{
                         width: '100%',
