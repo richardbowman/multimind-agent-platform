@@ -371,8 +371,10 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
             if (iframeRef.current) {
                 iframeRef.current.contentWindow?.postMessage({
                     namespace: 'reveal',
-                    type: 'navigate',
-                    direction
+                    type: 'navigation',
+                    state: {
+                        method: direction === 'prev' ? 'prev' : 'next'
+                    }
                 }, '*');
             }
         }, []);
