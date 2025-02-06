@@ -36,25 +36,41 @@ class ClientMethodsImplementation implements ClientMethods {
 
             if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id && message.message?.length > 0) {
                 try {
-                    // Convert basic SSML-like pauses to SSML
-                    let ttsText = message.message
-                        .replace(/\.{2,}/g, '<break time="500ms"/>') // Convert ... to 500ms pause
-                        .replace(/\. /g, '<break time="300ms"/>') // Convert . to 300ms pause
-                        .replace(/, /g, '<break time="200ms"/>'); // Convert , to 200ms pause
+                    // Split text into segments based on punctuation
+                    const segments = message.message.split(/(?<=[.,])\s+/g);
+                    
+                    // Play each segment with appropriate pauses
+                    for (let i = 0; i < segments.length; i++) {
+                        const segment = segments[i];
+                        const wav = await tts.predict({
+                            voiceId: 'en_US-ryan-high',
+                            text: segment
+                        });
 
-                    // Wrap in SSML if we have any pauses
-                    if (ttsText.includes('<break')) {
-                        ttsText = `<speak>${ttsText}</speak>`;
+                        const audio = new Audio();
+                        audio.src = URL.createObjectURL(wav);
+                        await new Promise<void>((resolve) => {
+                            audio.onended = () => resolve();
+                            audio.play();
+                        });
+
+                        // Add pause based on punctuation
+                        if (i < segments.length - 1) {
+                            const nextChar = segments[i + 1][0];
+                            let pauseDuration = 0;
+                            if (segment.endsWith('...')) {
+                                pauseDuration = 500;
+                            } else if (segment.endsWith('.')) {
+                                pauseDuration = 300;
+                            } else if (segment.endsWith(',')) {
+                                pauseDuration = 200;
+                            }
+                            
+                            if (pauseDuration > 0) {
+                                await new Promise(resolve => setTimeout(resolve, pauseDuration));
+                            }
+                        }
                     }
-
-                    const wav = await tts.predict({
-                        voiceId: 'en_US-ryan-high',
-                        text: ttsText
-                    });
-
-                    const audio = new Audio();
-                    audio.src = URL.createObjectURL(wav);
-                    audio.play();
                 } catch (error) {
                     console.error('Error playing TTS:', error);
                 }
