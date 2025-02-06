@@ -1,38 +1,24 @@
 import * as ort from 'onnxruntime-web';
-
-ort.env.wasm.wasmPaths = '/';
-
 import * as tts from '@mintplex-labs/piper-tts-web';
-import { settings } from '../contexts/SettingsContext';
-import type { LogParam } from '../../../../llm/LLMLogger';
+import { IPCProvider } from '../contexts/IPCContext';
 import { type DataContextMethods } from '../contexts/DataContext';
 import { ClientChannel, ClientMessage } from '../../../../shared/types';
-
-
-// Initialize TTS system
-let ttsInitialized = false;
-async function initializeTTS() {
-    if (!ttsInitialized) {
-        try {
-            // Download the model in advance
-            await tts.download(DEFAULT_VOICE_ID);
-            ttsInitialized = true;
-        } catch (error) {
-            console.error('Error initializing TTS:', error);
-        }
-    }
-}
-
-// Initialize on module load
-initializeTTS();
-import { SnackbarContextType } from '../contexts/SnackbarContext';
+import { SnackbarContextType, useSnackbar } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { ClientMethods } from '../../../../shared/RPCInterface';
 import { Artifact } from '../../../../tools/artifact';
-import { message } from 'blessed';
+import { Task } from '../../../../tools/taskManager';
+import { BaseRPCService } from '../../../../shared/BaseRPCService';
+import { LogParam } from '../../../../llm/LLMLogger';
+
+
+// Initialize TTS system
+let ttsSession : tts.TtsSession|null = null;
+
 
 class ClientMethodsImplementation implements ClientMethods {
-    constructor(private snackbarContext: SnackbarContextType, private contextMethods: DataContextMethods) { };
+
+    constructor(private ipcService: BaseRPCService, private snackbarContext: SnackbarContextType, private contextMethods: DataContextMethods) { };
 
     async onClientLogProcessed(success, message) {
         return;
@@ -48,17 +34,13 @@ class ClientMethodsImplementation implements ClientMethods {
         for (const message of messages) {
             const rootPost = this.contextMethods.messages.find(m => message.props?.["root-id"] === m.id)
 
-            if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id) {
+            if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id && message.message?.length > 0) {
                 try {
-                    // Ensure TTS is initialized
-                    await initializeTTS();
-                    
-                    if (!settings.tts.enabled) return;
-            
                     const wav = await tts.predict({
-                        text: message.message,
-                        voiceId: settings.tts.voiceId,
+                        voiceId: 'en_US-ryan-high',
+                        text: message.message
                     });
+
                     const audio = new Audio();
                     audio.src = URL.createObjectURL(wav);
                     audio.play();
@@ -157,11 +139,44 @@ class ClientMethodsImplementation implements ClientMethods {
         }
     }
 
-    async onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }) {
+    async onBackendStatus(status: { configured: boolean; ready: boolean; message?: string, appPath: string }) {
         this.contextMethods.setNeedsConfig(!status.configured);
+
+        if (status.configured) {
+            await this.initializeTTS(status.appPath);
+        }
     }
 
-    onTaskUpdate(task: ClientTask) {
+    async initializeTTS(appPath: string) {
+        const settings = await this.ipcService.getRPC().getSettings();
+        const snackBar = this.snackbarContext;
+    
+        if (settings.tts.enabled) {
+            try {
+                await tts.download(settings.tts.voiceId);
+    
+                // ttsSession = await tts.TtsSession.create({
+                //     voiceId: settings.tts.voiceId,
+                //     progress: (progress) => {
+                //         snackBar.showSnackbar({ 
+                //             message: `Downloading voice ${progress.loaded} of ${progress.total}`, 
+                //             percentComplete: progress.loaded / progress.total,
+                //             severity: 'info'
+                //         });
+                //     },
+                //     wasmPaths: {
+                //         onnxWasm: appPath + "/dist/wasm/",
+                //         piperData: tts.WASM_BASE.data,
+                //         piperWasm: tts.WASM_BASE.wasm
+                //     }
+                // });
+            } catch (error) {
+                throw error;
+            }
+        }
+    }
+
+    onTaskUpdate(task: Task) {
         this.contextMethods.setTasks(prevTasks => {
             // Find and replace the updated task
             const existingIndex = prevTasks.findIndex(t => t.id === task.id);
@@ -189,6 +204,6 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 }
 
-export const useClientMethods = (snackbarContext: SnackbarContextType, contextMethods: DataContextMethods) => {
-    return new ClientMethodsImplementation(snackbarContext, contextMethods);
+export const useClientMethods = (ipcService: BaseRPCService, snackbarContext: SnackbarContextType, contextMethods: DataContextMethods) => {
+    return new ClientMethodsImplementation(ipcService, snackbarContext, contextMethods);
 };

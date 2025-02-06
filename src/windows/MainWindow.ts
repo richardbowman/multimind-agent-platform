@@ -32,6 +32,15 @@ export class MainWindow {
             show: false
         });
 
+        // Enable multithreading
+        this.window.webContents.session.webRequest.onHeadersReceived((details, callback) => {
+            if (details.responseHeaders) {
+                details.responseHeaders['Cross-Origin-Opener-Policy'] = ['same-origin'];
+                details.responseHeaders['Cross-Origin-Embedder-Policy'] = ['require-corp'];
+            }
+            callback({ responseHeaders: details.responseHeaders });
+        });        
+
         // Setup window control handlers
         this.window.on('maximize', () => {
             this.window.webContents.send('window-state-changed', 'maximized');
