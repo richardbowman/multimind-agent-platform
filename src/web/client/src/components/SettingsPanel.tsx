@@ -114,65 +114,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         }
     });
 
-    useEffect(() => {
-        const fetchModels = async () => {
-            if (!settings || !settings.providers?.chat) {
-                return;
-            }
-                try {
-                    const models = await ipcService.getRPC().getAvailableModels(settings.providers.chat);
-
-                    if (models.message) { throw models; }
-
-                    // Sort models with local first, then by name
-                    const sortedModels = models.sort((a, b) => {
-                        if (a.isLocal === b.isLocal) {
-                            return a.name.localeCompare(b.name);
-                        }
-                        return a.isLocal ? -1 : 1;
-                    });
-
-                    setAvailableModels(prev => ({
-                        ...prev,
-                        [settings.providers!.chat]: sortedModels
-                    }));
-                } catch (error) {
-                    console.error('Failed to fetch models:', error);
-                    setModelFetchError(`Failed to fetch models: ${asError(error)?.message || 'Unknown error'}`);
-                }
-            }
-        }
-        fetchModels();
-    }, [settings.providers?.chat]);
-
-    useEffect(() => {
-        const fetchEmbeddingModels = async () => {
-            if (!settings || !settings.providers?.embeddings) {
-                return;
-            }
-                try {
-                    const embedders = await ipcService.getRPC().getAvailableEmbedders(settings.providers.embeddings);
-
-                    if (embedders.message) { throw embedders; }
-
-                    // Sort embedders by downloads
-                    const sortedEmbedders = embedders.sort((a, b) => (b.downloads || 0) - (a.downloads || 0));
-
-                    setAvailableEmbedders(prev => ({
-                        ...prev,
-                        [settings.providers!.embeddings]: sortedEmbedders
-                    }));
-                } catch (error) {
-                    console.error('Failed to fetch models:', error);
-                    setModelFetchError(`Failed to fetch models: ${asError(error)?.message || 'Unknown error'}`);
-                }
-            }
-
-        };
-
-        fetchEmbeddingModels();
-    }, [settings.providers?.embeddings]);
-
     const handleChange = async (key: string, value: string | number | boolean) => {
         console.log('handleChange:', key, value);
         // Get metadata using reflection
