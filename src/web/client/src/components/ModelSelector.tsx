@@ -64,14 +64,14 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                         offset += CHUNK_SIZE;
                     }
 
-                        // Update the model list
-                        const models = await ipcService.getRPC().getAvailableModels('llama_cpp');
-                        setModels(models);
+                    // Update the model list
+                    const models = await ipcService.getRPC().getAvailableModels('llama_cpp');
+                    setModels(models);
 
-                        handleSelect({ id: file.name });
+                    handleSelect({ id: file.name });
 
-                        snackbar.showSnackbar({ message: `Model ${file.name} uploaded successfully` });
-                    }
+                    snackbar.showSnackbar({ message: `Model ${file.name} uploaded successfully` });
+
                 } catch (error) {
                     console.error('Failed to upload model:', error);
                     setUploadError(`Failed to upload model: ${error instanceof Error ? error.message : 'Unknown error'}`);
