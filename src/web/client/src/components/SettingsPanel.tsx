@@ -35,6 +35,7 @@ import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { Settings } from '../../../../tools/settings';
 import { ModelInfo } from '../../../../llm/types';
+import ModelSelector from './ModelSelector';
 import { getClientSettingsMetadata } from '../../../../tools/settingsDecorators';
 import { DrawerPage } from './GlobalArtifactViewer';
 
@@ -257,6 +258,21 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
         switch (metadata.type) {
             case 'select':
+                // Handle custom components
+                if (metadata.customComponent === 'ModelSelector') {
+                    const provider = metadata.key.includes('embedding') ?
+                        settings.providers?.embeddings :
+                        settings.providers?.chat;
+                    
+                    return (
+                        <ModelSelector
+                            value={value}
+                            onChange={(newValue) => handleChange(metadata.key, newValue)}
+                            provider={provider || ''}
+                        />
+                    );
+                }
+
                 // Special handling for model selection
                 if (metadata.key.startsWith('models.')) {
                     const provider = metadata.key.includes('embedding') ?
