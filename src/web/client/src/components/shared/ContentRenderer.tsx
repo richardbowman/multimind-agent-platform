@@ -367,16 +367,47 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         const url = URL.createObjectURL(blob);
         const iframeRef = useRef<HTMLIFrameElement>(null);
 
+        const [currentSlide, setCurrentSlide] = useState(0);
+        const [totalSlides, setTotalSlides] = useState(0);
+
         const navigateSlide = useCallback((direction: 'prev' | 'next') => {
             if (iframeRef.current) {
-                iframeRef.current.contentWindow?.postMessage({
-                    namespace: 'reveal',
-                    type: 'navigation',
-                    state: {
+                iframeRef.current.contentWindow?.postMessage(
+                    JSON.stringify({
                         method: direction === 'prev' ? 'prev' : 'next'
-                    }
-                }, '*');
+                    }),
+                    '*'
+                );
             }
+        }, []);
+
+        const goToSlide = useCallback((slideNumber: number) => {
+            if (iframeRef.current) {
+                iframeRef.current.contentWindow?.postMessage(
+                    JSON.stringify({
+                        method: 'slide',
+                        args: [slideNumber]
+                    }),
+                    '*'
+                );
+            }
+        }, []);
+
+        // Listen for slide changes
+        useEffect(() => {
+            const handleMessage = (event: MessageEvent) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.namespace === 'reveal' && data.eventName === 'slidechanged') {
+                        setCurrentSlide(data.state.indexh + 1); // indexh is 0-based
+                    }
+                } catch (error) {
+                    console.error('Error handling Reveal.js message:', error);
+                }
+            };
+
+            window.addEventListener('message', handleMessage);
+            return () => window.removeEventListener('message', handleMessage);
         }, []);
 
         const toggleFullscreen = useCallback(() => {
@@ -395,18 +426,25 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                     id: 'reveal-prev',
                     icon: <NavigateBeforeIcon />,
                     label: 'Previous Slide',
-                    onClick: () => navigateSlide('prev')
+                    onClick: () => navigateSlide('prev'),
+                    disabled: currentSlide === 1
                 },
                 {
                     id: 'reveal-next',
                     icon: <NavigateNextIcon />,
                     label: 'Next Slide',
-                    onClick: () => navigateSlide('next')
+                    onClick: () => navigateSlide('next'),
+                    disabled: currentSlide === totalSlides
                 },
                 {
                     id: 'reveal-fullscreen',
                     label: 'Toggle Fullscreen',
                     onClick: toggleFullscreen
+                },
+                {
+                    id: 'reveal-slide-number',
+                    label: `Slide ${currentSlide} of ${totalSlides}`,
+                    disabled: true
                 }
             ];
 

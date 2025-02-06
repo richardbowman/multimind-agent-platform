@@ -68,6 +68,27 @@ export class BrainstormExecutor implements StepExecutor {
                 hash: true,
                 transition: 'fade'
             });
+
+            // Send initial slide count
+            window.parent.postMessage(JSON.stringify({
+                namespace: 'reveal',
+                eventName: 'ready',
+                state: {
+                    totalSlides: Reveal.getTotalSlides()
+                }
+            }), '*');
+
+            // Listen for slide changes
+            Reveal.on('slidechanged', event => {
+                window.parent.postMessage(JSON.stringify({
+                    namespace: 'reveal',
+                    eventName: 'slidechanged',
+                    state: {
+                        indexh: event.indexh,
+                        indexv: event.indexv
+                    }
+                }), '*');
+            });
         </script>
     </body>
 </html>`;
