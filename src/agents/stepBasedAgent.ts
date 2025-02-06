@@ -22,6 +22,7 @@ import { ExecutorType } from './interfaces/ExecutorType';
 import { exec } from 'child_process';
 import { asUUID, UUID } from 'src/types/uuid';
 import { ArrayUtils } from 'src/utils/ArrayUtils';
+import { Artifact } from 'src/tools/artifact';
 
 interface ExecutorCapability {
     stepType: string;
@@ -608,7 +609,10 @@ export abstract class StepBasedAgent extends Agent {
                 //TODO need a way to update project to disk
             }
 
-            const artifactList = [...stepResult.artifactIds || [], ...stepResult.response?.artifactIds || [], stepResult.response?.data?.artifactId];
+            // check if they provided artifact objects for us to save
+            const artifactIds = stepResult.artifacts && (await Promise.all<Artifact>(stepResult.artifacts?.map(a => this.artifactManager.saveArtifact(a)))).map(a => a.id);
+
+            const artifactList = [...artifactIds||[], ...stepResult.artifactIds || [], ...stepResult.response?.artifactIds || [], stepResult.response?.data?.artifactId];
 
             // Only send replies if we have a userPost to reply to
             if (replyTo && stepResult.response.message) {

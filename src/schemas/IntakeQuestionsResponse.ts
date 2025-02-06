@@ -4,13 +4,13 @@ export interface IntakeQuestion {
 }
 
 export interface IntakeQuestionsResponse {
-    intakeQuestions: IntakeQuestion[];
-    reasoning: string;
+    /**
+     * Restated goal of your best understanding of how to achieve the goal (this will be provided to your follow-up tasks)
+     */
     goalRestatement: string;
-    followupMessage: string;
 
     /**
-     * @description if the LLM believes we have enough information to end questioning
+     * @description if you believe we have enough information to proceed with other processing tasks.
      */
     shouldContinue?: boolean;
 }

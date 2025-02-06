@@ -14,7 +14,10 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { Artifact } from '../../tools/artifact';
 import { StepTask } from '../interfaces/ExecuteStepParams';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
+import { StringUtils } from 'src/utils/StringUtils';
+import { attr } from 'cheerio/dist/commonjs/api/attributes';
+import { response } from 'express';
 
 /**
  * Executor that generates targeted questions to understand user requirements.
@@ -43,13 +46,8 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         this.userId = params.userId || 'executor';
     }
 
-    private formatMessage(goal: string, project: any, artifacts?: Artifact[]): string {
-        let message = `${goal}\n\n`;
-
-        // Include relevant artifacts if available
-        if (artifacts && artifacts.length > 0) {
-            message += this.modelHelpers.formatArtifacts(artifacts);
-        }
+    private formatMessage(project: any, artifacts?: Artifact[]): string {
+        let message = ``;
 
         // Include existing Q&A if available
         if (project.metadata?.answers?.length > 0) {
@@ -90,93 +88,58 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         const formattedMessage = this.formatMessage(params.goal, project, params.context?.artifacts);
 
         const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`Review if we have sufficient information to achieve the goal. If not, we will generate questions to gather the necessary information.
-                
-                IMPORTANT: 
-                - Review any previous answers carefully to avoid redundant questions
-                - Build upon partial answers to get more specific details
-                - Focus on areas not yet covered or needing clarification
-                - Create as few questions as possible to succeed at the goal.
-                - If you have enough information to proceed, return no questions
-                - If the user seems frustrated or asks you to move on, return no questions
 
-                Each question should help gather specific information about:
 
-                Also include:
-                1. A concise restatement of the user's goal to confirm understanding
-                2. A friendly followup message to present the questions to the user (make sure to include the initial question you want them to answer)
+
+        prompt.addInstruction(`In this step of the process, you are reviewing if we have sufficient information to move forward on achieving the goal.
+If you would like to think about the problem to start, use <thinking> tags.
+
+Then, once you have decided if you want to wait for user input or proceed:
+
+1. If you want to pause the process, generate questions to gather the necessary information.
                 
-                
-                Keep questions focused and actionable. If you have a good understanding, return no more questions.`)
-        prompt.addContext({contentType: ContentType.INTENT, params});
+IMPORTANT: 
+- Review any previous answers carefully to avoid redundant questions
+- Build upon partial answers to get more specific details
+- Focus on areas not yet covered or needing clarification
+- Create as few questions as possible to succeed at the goal.
+- If you have enough information to proceed, return no questions
+- If the user seems frustrated or asks you to move on, return no questions
+
+Each question should help gather specific information about:
+
+Also include:
+1. A concise restatement of the user's goal to confirm understanding
+2. A friendly followup message to present the questions to the user (make sure to include the initial question you want them to answer)`)
         
-        const response = await this.modelHelpers.generate<IntakeQuestionsResponse>({
+        prompt.addContext({contentType: ContentType.INTENT, params});
+        prompt.addContext({contentType: ContentType.ABOUT});
+        prompt.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
+        prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts});
+
+        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema);
+        
+        const rawMessage = await this.modelHelpers.generate({
             message: formattedMessage,
-            instructions: new StructuredOutputPrompt(schema, prompt),
+            instructions: prompt,
             threadPosts: params.context?.threadPosts
         });
 
-        Logger.info('UnderstandGoalsExecutor response:', JSON.stringify(response, null, 2));
+        const attributes = StringUtils.extractAndParseJsonBlock<IntakeQuestionsResponse>(rawMessage.message, schema);
+        const message = StringUtils.extractNonCodeContent(rawMessage.message, ["thinking"]);
+        const reasoning = StringUtils.extractXmlBlock(rawMessage.message, "thinking");
 
-        if (!response.intakeQuestions || !Array.isArray(response.intakeQuestions)) {
-            throw new Error(`Invalid response format. Expected array of questions but got: ${JSON.stringify(response)}`);
-        }
-        
+        const shouldContinue = params.executionMode === 'task' ? true : attributes?.shouldContinue;
 
-        
-
-        // Get existing tasks and their current max order
-        // const existingTasks = this.taskManager.getAllTasks(params.projectId);
-        
-        // Create tasks for each intake question with sequential ordering starting at 1
-        // for (let i = 0; i < response.intakeQuestions.length; i++) {
-        //     const q = response.intakeQuestions[i];
-        //     await this.taskManager.addTask(project, {
-        //         id: crypto.randomUUID(),
-        //         type: TaskType.Step,
-        //         props: {
-        //             stepType: ExecutorType.ANSWER_QUESTIONS,
-        //         },
-        //         category: 'process-answers',
-        //         description: `Gather answer to Q: ${q.question}; Purpose: ${q.purpose}`,
-        //         creator: this.userId,
-        //         complete: false,
-        //         order: i + 1
-        //     } as StepTask);
-        // }
-        
-        // // Update existing tasks to continue numbering after the new questions
-        // for (const task of existingTasks) {
-        //     await this.taskManager.updateTask(task.id, {
-        //         order: task.order||0 + response.intakeQuestions.length + 1
-        //     });
-        // }
-
-        const shouldContinue = params.executionMode === 'task' ? true : response.intakeQuestions.length === 0;
-
-        // If we're continuing, mark all pending question tasks as complete
-        // if (shouldContinue) {
-        //     const pendingTasks = Object.values(project.tasks || {})
-        //         .filter((t: any) => t.type === 'process-answers' && !t.complete);
-            
-        //     for (const task of pendingTasks) {
-        //         await this.taskManager.completeTask(task.id);
-        //     }
-        // }
-        
         return {
-            // finished: shouldContinue || response.intakeQuestions.length == 0,
-            // needsUserInput: !shouldContinue && response.intakeQuestions.length > 0,
             finished: true,
-            replan: shouldContinue || response.intakeQuestions.length == 0 ? ReplanType.Allow : ReplanType.None,
-            goal: response.goalRestatement,
+            needsUserInput: !shouldContinue,
+            replan: shouldContinue ? ReplanType.Allow : ReplanType.None,
+            goal: attributes?.goalRestatement,
             response: {
-                message: response.followupMessage + 
-                    (response.intakeQuestions?.length > 0 ? " " + response.intakeQuestions[0].question : "") +
-                    (shouldContinue ? "\n\nI believe we have enough information to proceed." : ""),
-                data: {
-                    outstandingQuestions: response.intakeQuestions
-                }
+                message: message,
+                reasoning: reasoning,
+                data: attributes
             }
         };
     }

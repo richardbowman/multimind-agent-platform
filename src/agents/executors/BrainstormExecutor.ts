@@ -66,6 +66,8 @@ export class BrainstormExecutor implements StepExecutor {
             Reveal.initialize({
                 plugins: [ RevealMarkdown ],
                 hash: true,
+                postMessage: true,
+                postMessageEvents: true,
                 transition: 'fade'
             });
 

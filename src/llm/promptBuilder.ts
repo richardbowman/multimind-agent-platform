@@ -9,6 +9,7 @@ import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { IntentionsResponse } from "src/schemas/goalAndPlan";
 import { ExecutorType } from "src/agents/interfaces/ExecutorType";
 import { StringUtils } from "src/utils/StringUtils";
+import { JSONSchema } from "./ILLMService";
 
 export interface ContentRenderer<T> {
     (content: T): string;
@@ -42,7 +43,8 @@ export enum ContentType {
 
 export enum OutputType {
     JSON_AND_MARKDOWN,
-    JSON_WITH_MESSAGE
+    JSON_WITH_MESSAGE,
+    JSON_WITH_MESSAGE_AND_REASONING
 }
 
 
@@ -312,14 +314,15 @@ export class PromptBuilder implements InputPrompt {
         return this.build();
     }
     
-    async addOutputInstructions(outputType: OutputType, schema?: SchemaType, specialInstructions?: string) {
-        if (outputType === OutputType.JSON_AND_MARKDOWN && schema) {
-            const schemaDef = await getGeneratedSchema(schema);
+    addOutputInstructions(outputType: OutputType, schemaDef?: JSONSchema, specialInstructions?: string) {
+        if (outputType === OutputType.JSON_AND_MARKDOWN && schemaDef) {
             this.addInstruction(`Please respond two code blocks. One enclosed \`\`\`json block format that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n 
             Then, provide a separately enclosed \`\`\`markdown block. ${specialInstructions || ''}`);
-        } else if (outputType === OutputType.JSON_WITH_MESSAGE && schema) {
-            const schemaDef = await getGeneratedSchema(schema);
+        } else if (outputType === OutputType.JSON_WITH_MESSAGE && schemaDef) {
             this.addInstruction(`Please respond with one enclosed \`\`\`json block format that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+        } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schemaDef) {
+            this.addInstruction(`Before you answer the user, please think about how to best interpret the instructions and context you have been provided. Include your thinking inside of a single <thinking> XML block.
+Then, include as part of your message one enclosed \`\`\`json block format that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         }
     }
     private contentSections: Map<ContentType, any> = new Map();

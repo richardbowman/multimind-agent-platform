@@ -10,13 +10,14 @@ import remarkGfm from 'remark-gfm';
 import { CodeBlock } from './shared/CodeBlock';
 import { Spinner } from './Spinner';
 import { CustomLink } from './ChatPanel';
+import { UUID } from '../../../../types/uuid';
 
 interface ChatMessageProps {
     message: any;
     handles: any[];
     expandedMessages: Set<string>;
     messageVersions: Record<string, number>;
-    currentThreadId?: string;
+    currentThreadId?: UUID;
     messages: any[];
     onToggleExpansion: (messageId: string) => void;
     onViewThread: (messageId: string) => void;

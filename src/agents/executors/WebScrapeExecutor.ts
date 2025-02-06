@@ -203,7 +203,9 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         prompt.addContext({contentType: ContentType.PURPOSE});
         prompt.addContext({contentType: ContentType.GOALS_FULL, params});
         prompt.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
-        await prompt.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, SchemaType.WebScrapeSummaryResponse);
+
+        const schema = await getGeneratedSchema(SchemaType.WebScrapeSummaryResponse);
+        prompt.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, schema);
 
         const userPrompt = "Web Search Result:" + content;
 
@@ -214,7 +216,6 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
             model: ModelType.DOCUMENT
         });
 
-        const schema = await getGeneratedSchema(SchemaType.WebScrapeSummaryResponse);
         const jsonBlock = StringUtils.extractAndParseJsonBlock(summary.message, schema);
         const markdownBlocks = StringUtils.extractCodeBlocks(summary.message, "markdown");
 

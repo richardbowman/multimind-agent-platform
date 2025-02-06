@@ -770,7 +770,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             // Transcribe audio using Whisper
             const { nodewhisper } = await import('nodejs-whisper');
             let transcription = await nodewhisper(audioFilePath, {
-                modelName: 'tiny.en',
+                modelName: 'base.en',
                 removeWavFileAfterTranscription: true,
                 withCuda: false,
                 logger: Logger,

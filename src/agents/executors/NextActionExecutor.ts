@@ -125,7 +125,7 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
 
         prompt.addContext({contentType: ContentType.FINAL_INSTRUCTIONS, instructions: this.modelHelpers.getFinalInstructions()||""});
 
-        await prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, SchemaType.NextActionResponse, "Before providing your action, please think out your choice out loud.");
+        await prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema, "Before providing your action, please think out your choice out loud.");
 
         const responseText = await this.modelHelpers.generate({
             message: params.message,

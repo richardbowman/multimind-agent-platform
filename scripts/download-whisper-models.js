@@ -1,6 +1,7 @@
 const { nodewhisper } = require('nodejs-whisper');
 const path = require('path');
 const fs = require('fs');
+const MODEL_NAME = "base.en";
 
 async function downloadModels() {
     const modelDir = path.join(__dirname, '..', 'dist', 'whisper-models');
@@ -16,9 +17,9 @@ async function downloadModels() {
     try {
         // This will trigger the model download
         const transcription = await nodewhisper(sampleAudioPath, {
-            modelName: 'tiny.en',
+            modelName: MODEL_NAME,
             modelDir,
-            autoDownloadModelName: 'tiny.en',
+            autoDownloadModelName: MODEL_NAME,
             removeWavFileAfterTranscription: false,
             withCuda: false,
             logger: console,
