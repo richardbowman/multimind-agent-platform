@@ -53,56 +53,66 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
         onDrop: async (acceptedFiles) => {
             if (acceptedFiles.length > 0) {
                 const file = acceptedFiles[0];
-                try {
-                    setIsUploadingModel(true);
-                    setUploadError('');
-                    const CHUNK_SIZE = 1024 * 1024 * 5; // 5MB chunks
-                    let offset = 0;
-                    let uploadId = '';
-                    const totalSize = file.size;
-                    
-                    while (offset < totalSize) {
-                        const chunk = file.slice(offset, offset + CHUNK_SIZE);
-                        const arrayBuffer = await chunk.arrayBuffer();
-                        const base64 = arrayBufferToBase64(arrayBuffer);
+                setIsUploadingModel(true);
+                setUploadError('');
+                
+                // Start upload in background
+                const upload = async () => {
+                    try {
+                        const CHUNK_SIZE = 1024 * 1024 * 5; // 5MB chunks
+                        let offset = 0;
+                        let uploadId = '';
+                        const totalSize = file.size;
                         
-                        const result = await ipcService.getRPC().uploadGGUFModelChunk({
-                            chunk: base64,
-                            fileName: file.name,
-                            uploadId,
-                            isLast: offset + CHUNK_SIZE >= totalSize
-                        });
-                        
-                        uploadId = result.uploadId;
-                        offset += CHUNK_SIZE;
+                        while (offset < totalSize) {
+                            const chunk = file.slice(offset, offset + CHUNK_SIZE);
+                            const arrayBuffer = await chunk.arrayBuffer();
+                            const base64 = arrayBufferToBase64(arrayBuffer);
+                            
+                            const result = await ipcService.getRPC().uploadGGUFModelChunk({
+                                chunk: base64,
+                                fileName: file.name,
+                                uploadId,
+                                isLast: offset + CHUNK_SIZE >= totalSize
+                            });
+                            
+                            uploadId = result.uploadId;
+                            offset += CHUNK_SIZE;
 
-                        // Update progress
-                        const percentComplete = offset / totalSize;
+                            // Update progress
+                            const percentComplete = offset / totalSize;
+                            snackbar.showSnackbar({
+                                message: `Uploading ${file.name}...`,
+                                severity: 'progress',
+                                percentComplete,
+                                persist: true
+                            });
+                        }
+
+                        // Update the model list
+                        const models = await ipcService.getRPC().getAvailableModels('llama_cpp');
+                        setModels(models);
+
+                        handleSelect({ id: file.name });
+
+                        snackbar.showSnackbar({ 
+                            message: `Model ${file.name} uploaded successfully`,
+                            severity: 'success'
+                        });
+
+                    } catch (error) {
+                        console.error('Failed to upload model:', error);
                         snackbar.showSnackbar({
-                            message: `Uploading ${file.name}...`,
-                            severity: 'progress',
-                            percentComplete,
-                            persist: true
+                            message: `Failed to upload model: ${error instanceof Error ? error.message : 'Unknown error'}`,
+                            severity: 'error'
                         });
+                    } finally {
+                        setIsUploadingModel(false);
                     }
+                };
 
-                    // Update the model list
-                    const models = await ipcService.getRPC().getAvailableModels('llama_cpp');
-                    setModels(models);
-
-                    handleSelect({ id: file.name });
-
-                    snackbar.showSnackbar({ 
-                        message: `Model ${file.name} uploaded successfully`,
-                        severity: 'success'
-                    });
-
-                } catch (error) {
-                    console.error('Failed to upload model:', error);
-                    setUploadError(`Failed to upload model: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                } finally {
-                    setIsUploadingModel(false);
-                }
+                // Start upload without waiting
+                upload();
             }
         }
     });
@@ -226,7 +236,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                             </Typography>
                         </>
                     )}
-                    {uploadError && (
+                    {uploadError && !isUploadingModel && (
                         <Alert severity="error" sx={{ mt: 2 }}>
                             {uploadError}
                         </Alert>
