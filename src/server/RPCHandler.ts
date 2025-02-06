@@ -9,6 +9,7 @@ import { ClientThread } from "src/shared/types";
 import { ChannelData, CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
 import { createChannelHandle } from "src/shared/channelTypes";
 import { getDataPath } from "../helpers/paths";
+import fs from 'node:fs';
 import fsPromises from 'node:fs/promises';
 import path from 'node:path';
 import { ClientProject } from "src/shared/types";
