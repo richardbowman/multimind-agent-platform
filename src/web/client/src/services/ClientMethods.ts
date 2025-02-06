@@ -40,7 +40,24 @@ class ClientMethodsImplementation implements ClientMethods {
                     // Parse SSML and split into segments
                     const ssmlRegex = /<speak>(.*?)<\/speak>/s;
                     const ssmlMatch = message.message.match(ssmlRegex);
-                    const textContent = ssmlMatch ? ssmlMatch[1] : message.message;
+                    let textContent = ssmlMatch ? ssmlMatch[1] : message.message;
+                    
+                    // Strip markdown formatting
+                    textContent = textContent
+                        .replace(/(\*\*|__)(.*?)\1/g, '$2') // bold
+                        .replace(/(\*|_)(.*?)\1/g, '$2')     // italic
+                        .replace(/~~(.*?)~~/g, '$1')         // strikethrough
+                        .replace(/`{1,3}(.*?)`{1,3}/g, '$1') // inline code
+                        .replace(/\[(.*?)\]\(.*?\)/g, '$1')  // links
+                        .replace(/^#+\s+(.*)/gm, '$1')       // headers
+                        .replace(/\n\s*\n/g, '\n')           // extra newlines
+                        .replace(/!\[.*?\]\(.*?\)/g, '');    // images
+                    
+                    // Remove emojis
+                    textContent = textContent.replace(
+                        /([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, 
+                        ''
+                    );
 
                     // Split into segments based on SSML tags or punctuation
                     const segments = [];
