@@ -40,10 +40,21 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
         return settings;
     }
 
-    async getAvailableModels(provider: string): Promise<ModelInfo[]|ClientError> {
+    async getAvailableModels(provider: string, search?: string): Promise<ModelInfo[]|ClientError> {
         try {
             const service = LLMServiceFactory.createServiceByName(provider, this.partialServices.settingsManager.getSettings());
-            return service.getAvailableModels();
+            const models = await service.getAvailableModels();
+            
+            // Filter models if search term provided
+            if (search) {
+                const searchLower = search.toLowerCase();
+                return models.filter(model => 
+                    model.id.toLowerCase().includes(searchLower) ||
+                    model.description?.toLowerCase().includes(searchLower) ||
+                    model.provider?.toLowerCase().includes(searchLower)
+                );
+            }
+            return models;
         } catch (e) {
             return {message: e.message}
         }

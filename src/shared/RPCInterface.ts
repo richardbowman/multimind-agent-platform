@@ -81,7 +81,7 @@ export interface ServerMethods {
      */
     deleteChannel(channelId: UUID): Promise<void>;
 
-    getAvailableModels(provider: string): Promise<ModelInfo[]|ClientError>;
+    getAvailableModels(provider: string, search?: string): Promise<ModelInfo[]|ClientError>;
     getAvailableEmbedders(provider: string): Promise<EmbedderModelInfo[]|ClientError>;
     rebuildVectorDB(): Promise<void>;
     getProject(projectId: string): Promise<ClientProject>;

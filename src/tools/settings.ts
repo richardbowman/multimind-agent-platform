@@ -545,7 +545,8 @@ export class Settings {
         label: 'Models',
         category: 'LLM Settings',
         type: 'section',
-        description: 'Model configurations for different tasks'
+        description: 'Model configurations for different tasks',
+        customComponent: 'ModelSelector'
     })
     models: LLMModels = new LLMModels();
 
