@@ -32,7 +32,7 @@ class IncludeAllModulesPlugin {
 }
 
 module.exports = {
-  target: 'node',
+  target: 'electron-main',
   entry: './src/main.electron.ts',
   output: {
     path: path.resolve(__dirname, 'dist'),
@@ -112,6 +112,10 @@ module.exports = {
         {
           from: pdfWorkerPath,
           to: './pdf.worker.mjs'
+        },
+        {
+          from: 'src/workers/modelDownloader.worker.js',
+          to: '.'
         },
         {
           from: path.posix.join(

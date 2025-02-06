@@ -142,7 +142,9 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
             return new Promise((resolve, reject) => {
                 worker.on('message', (message) => {
-                    if (message.type === 'progress') {
+                    if (message.type === 'progressMsg') {
+                        Logger.progress(message.message);
+                    } else if (message.type === 'progress') {
                         const { totalSize, downloadedSize } = message;
                         const totalKB = Math.floor(totalSize / 1024);
                         const currentKB = Math.floor(downloadedSize / 1024);
@@ -174,11 +176,6 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
 
     async initializeModel(modelId: string, modelType: 'chat' | 'embedding'): Promise<void> {
         try {
-            if (!this.llama) {
-                const options = this.getLlamaOptions();
-                this.llama = await loadLlama(options);
-            }
-
             // Create models directory if it doesn't exist
             const modelDir = path.join(getDataPath(), "models");
             await fs.mkdir(modelDir, { recursive: true });
@@ -206,6 +203,10 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 }
             }
 
+            if (!this.llama) {
+                const options = this.getLlamaOptions();
+                this.llama = await loadLlama(options);
+            }
             const model = await this.llama.loadModel({
                 modelPath: modelPath
             });
@@ -217,7 +218,9 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 if (this.model) {
                     await this.model.dispose();
                 }
-                const context = await model.createContext();
+                const context = await model.createContext({
+                    contextSize: 4096
+                });
                 this.context = context;
                 this.model = model;
                 this.session = await loadLlamaChatSession({
@@ -478,19 +481,51 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 grammar
             });
 
-            const result = completion.trim();
+            const response = completion.trim();
 
             if (params.parseJSON && grammar) {
                 try {
-                    const parsed = grammar.parse(result);
-                    return parsed as T;
+                    const parsed = grammar.parse(response);
+                    
+                    const result = {
+                        response: parsed as T,
+                        metadata: {
+                            _usage: {
+                                inputTokens: 0,
+                                outputTokens: 0
+                            }
+                        }
+                    };
+
+                    await this.logger.logCall('sendLLMRequest', {
+                        messages: params.messages,
+                        systemPrompt: params.systemPrompt,
+                        opts: params.opts
+                    }, result.response);
                 } catch (error) {
                     Logger.error("Failed to parse structured output:", error);
                     throw new Error(`Failed to parse structured output: ${error.message}`);
                 }
             }
 
-            return { message: result } as T;
+            const result = {
+                response: response,
+                metadata: {
+                    _usage: {
+                        inputTokens: 0,
+                        outputTokens: 0
+                    }
+                }
+            };
+
+            await this.logger.logCall('sendLLMRequest', {
+                messages: params.messages,
+                systemPrompt: params.systemPrompt,
+                opts: params.opts
+            }, result.response);
+
+            return result;
+
         } catch (error) {
             await this.logger.logCall('completion', params, null, error);
             throw error;

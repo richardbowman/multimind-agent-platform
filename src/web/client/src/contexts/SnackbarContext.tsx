@@ -8,7 +8,7 @@ import { useIPCService } from '../contexts/IPCContext';
 
 export interface SnackbarOptions {
   message: string;
-  severity: 'info' | 'success' | 'warning' | 'error' | 'progress';
+  severity?: 'info' | 'success' | 'warning' | 'error' | 'progress';
   persist?: boolean;
   percentComplete?: number;
   onClick?: () => void;

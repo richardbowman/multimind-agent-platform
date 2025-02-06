@@ -1,6 +1,5 @@
-import { ILLMService, LLMRequestParams } from "./ILLMService";
+import { IEmbeddingFunction, ILLMService, LLMRequestParams } from "./ILLMService";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import { AsyncQueue } from "../helpers/asyncQueue";
 import { BaseLLMService } from "./BaseLLMService";

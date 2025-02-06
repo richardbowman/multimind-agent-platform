@@ -29,7 +29,6 @@ import {
     FormControlLabel,
     Checkbox
 } from '@mui/material';
-import { useDropzone } from 'react-dropzone';
 import MenuIcon from '@mui/icons-material/Menu';
 import SearchIcon from '@mui/icons-material/Search';
 import { IconButton } from '@mui/material';
@@ -56,6 +55,8 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
     const { getSettings, updateSettings } = useDataContext();
     const ipcService = useIPCService();
     const metadata = getClientSettingsMetadata(new Settings());
+    const [availableModels, setAvailableModels] = useState<Record<string, ModelInfo[]>>({});
+    const [availableEmbedders, setAvailableEmbedders] = useState<Record<string, EmbedderModelInfo[]>>({});
 
     useEffect(() => {
         const loadSettings = async () => {
@@ -71,51 +72,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
         loadSettings();
     }, [getSettings]);
 
-    const [availableModels, setAvailableModels] = useState<Record<string, ModelInfo[]>>({});
-    const [availableEmbedders, setAvailableEmbedders] = useState<Record<string, EmbedderModelInfo[]>>({});
-    const [modelFetchError, setModelFetchError] = useState<string>('');
-    const [isUploadingModel, setIsUploadingModel] = useState(false);
-    const [uploadError, setUploadError] = useState<string>('');
 
-    const { getRootProps, getInputProps, isDragActive } = useDropzone({
-        accept: {
-            'application/octet-stream': ['.gguf']
-        },
-        maxFiles: 1,
-        onDrop: async (acceptedFiles) => {
-            if (acceptedFiles.length > 0) {
-                const file = acceptedFiles[0];
-                try {
-                    setIsUploadingModel(true);
-                    setUploadError('');
-                    
-                    // Upload the GGUF file
-                    const result = await ipcService.getRPC().uploadGGUFModel(file.path);
-                    
-                    if (result.error) {
-                        throw new Error(result.error);
-                    }
-
-                    // Update the model list
-                    const models = await ipcService.getRPC().getAvailableModels('llama_cpp');
-                    setAvailableModels(prev => ({
-                        ...prev,
-                        llama_cpp: models
-                    }));
-
-                    // Set the new model as selected
-                    handleChange('models.conversation.llama_cpp', result.modelId);
-                    
-                    setSuccessMessage(`Model ${file.name} uploaded successfully`);
-                } catch (error) {
-                    console.error('Failed to upload model:', error);
-                    setUploadError(`Failed to upload model: ${error instanceof Error ? error.message : 'Unknown error'}`);
-                } finally {
-                    setIsUploadingModel(false);
-                }
-            }
-        }
-    });
 
     const handleChange = async (key: string, value: string | number | boolean) => {
         console.log('handleChange:', key, value);
@@ -295,126 +252,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                 }}
                             />
                         </Box>
-                    );
-                }
-
-                // Special handling for model selection
-                if (false) {
-                    const provider = metadata.key.includes('embedding') ?
-                        settings.providers?.embeddings :
-                        settings.providers?.chat;
-                    const models = provider ?
-                        (metadata.key.includes('embedding') ?
-                            availableEmbedders[provider] || [] :
-                            availableModels[provider] || []) :
-                        [];
-
-                    return (
-                        <Autocomplete
-                            freeSolo
-                            options={models}
-                            value={models.find(m => m.id === value) || value || null}
-                            onChange={(_, newValue) => {
-                                let valueToSave = '';
-                                if (typeof newValue === 'string') {
-                                    valueToSave = newValue;
-                                } else if (newValue && typeof newValue === 'object') {
-                                    valueToSave = newValue.id;
-                                }
-                                handleChange(metadata.key, valueToSave);
-                            }}
-                            getOptionLabel={(option) => typeof option === 'string' ? option : option.name || option.id}
-                            renderInput={(params) => (
-                                <TextField
-                                    {...params}
-                                    label={metadata.label}
-                                    variant="outlined"
-                                />
-                            )}
-                            filterOptions={(options, state) => {
-                                const inputValue = state.inputValue.toLowerCase();
-                                return options.filter(option =>
-                                (option.name?.toLowerCase().includes(inputValue) ||
-                                    option.id.toLowerCase().includes(inputValue) ||
-                                    option.pipelineTag?.toLowerCase().includes(inputValue) ||
-                                    option.supportedTasks?.join(' ').toLowerCase().includes(inputValue) ||
-                                    option.description?.toLowerCase().includes(inputValue))
-                                );
-                            }}
-                            renderOption={(props, option) => {
-                                const { key, ...restProps } = props;
-                                return (
-                                    <Box
-                                        component="li"
-                                        key={key}
-                                        {...restProps}
-                                        sx={{
-                                            display: 'flex',
-                                            flexDirection: 'column',
-                                            alignItems: 'flex-start',
-                                            gap: 0.5,
-                                            py: 1.5,
-                                            width: '100%'
-                                        }}
-                                    >
-                                        <Box sx={{
-                                            display: 'flex',
-                                            justifyContent: 'space-between',
-                                            width: '100%'
-                                        }}>
-                                            <Typography variant="body1" fontWeight={500}>
-                                                {option.name || option.id}
-                                            </Typography>
-                                            <Chip
-                                                label={option.id.includes('/') ? 'Remote' : 'Local'}
-                                                size="small"
-                                                color={option.id.includes('/') ? 'secondary' : 'primary'}
-                                                sx={{ ml: 1 }}
-                                            />
-                                        </Box>
-                                        {'pipelineTag' in option && (
-                                            <Typography variant="caption" color="text.secondary">
-                                                Pipeline: {option.pipelineTag}
-                                            </Typography>
-                                        )}
-                                        {'supportedTasks' in option && option.supportedTasks.length > 0 && (
-                                            <Typography variant="caption" color="text.secondary">
-                                                Tasks: {option.supportedTasks.join(', ')}
-                                            </Typography>
-                                        )}
-                                        <Box sx={{
-                                            display: 'flex',
-                                            gap: 1,
-                                            fontSize: '0.875rem',
-                                            color: 'text.secondary'
-                                        }}>
-                                            {option.size && (
-                                                <Typography variant="caption">
-                                                    Size: {option.size}
-                                                </Typography>
-                                            )}
-                                            {option.author && (
-                                                <Typography variant="caption">
-                                                    By {option.author}
-                                                </Typography>
-                                            )}
-                                            {option.downloads && (
-                                                <Typography variant="caption">
-                                                    {option.downloads.toLocaleString()} downloads
-                                                </Typography>
-                                            )}
-                                        </Box>
-                                        {option.description && (
-                                            <Typography variant="caption" color="text.secondary">
-                                                {option.description}
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                )
-                            }}
-                            sx={{ width: '100%' }}
-                            isOptionEqualToValue={(option, value) => option.id === value.id}
-                        />
                     );
                 }
 
@@ -616,12 +453,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             {successMessage}
                         </Alert>
                     )}
-
-                    {modelFetchError && (
-                        <Alert severity="error" sx={{ mt: 2 }}>
-                            {modelFetchError}
-                        </Alert>
-                    )}
                 </Box>
                 <Box sx={{
                     flex: 1,
@@ -698,44 +529,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                                                 )}
                                             </FormControl>
                                         ))}
-                                    
-                                        {category === 'LLM Settings' && settings.providers?.chat === 'llama_cpp' && (
-                                            <Box 
-                                                {...getRootProps()}
-                                                sx={{
-                                                    border: '2px dashed',
-                                                    borderColor: isDragActive ? 'primary.main' : 'divider',
-                                                    borderRadius: 2,
-                                                    p: 3,
-                                                    textAlign: 'center',
-                                                    cursor: 'pointer',
-                                                    backgroundColor: isDragActive ? 'action.hover' : 'background.paper',
-                                                    '&:hover': {
-                                                        backgroundColor: 'action.hover'
-                                                    }
-                                                }}
-                                            >
-                                                <input {...getInputProps()} />
-                                                {isUploadingModel ? (
-                                                    <Box sx={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 1 }}>
-                                                        <CircularProgress size={24} />
-                                                        <Typography>Uploading model...</Typography>
-                                                    </Box>
-                                                ) : (
-                                                    <>
-                                                        <Typography>Drag & drop a GGUF model file here, or click to select</Typography>
-                                                        <Typography variant="caption" color="text.secondary">
-                                                            Supported formats: .gguf
-                                                        </Typography>
-                                                    </>
-                                                )}
-                                                {uploadError && (
-                                                    <Alert severity="error" sx={{ mt: 2 }}>
-                                                        {uploadError}
-                                                    </Alert>
-                                                )}
-                                            </Box>
-                                        )}
                                     </Box>
                                 </Paper>
                             );

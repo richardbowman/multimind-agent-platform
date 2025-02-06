@@ -1,10 +1,10 @@
 import { ClientOptions, OpenAI } from "openai";
 import { ModelInfo } from "./types";
-import { IEmbeddingFunction } from "chromadb";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
+import { ModelSearchParams, VisionContent } from "./ILLMService";
 import JSON5 from 'json5';
 import { BaseLLMService } from "./BaseLLMService";
-import { LLMRequestParams } from "./ILLMService";
+import { IEmbeddingFunction, LLMRequestParams } from "./ILLMService";
 import { ConfigurationError } from "../errors/ConfigurationError";
 import Logger from "src/helpers/logger";
 import { error } from "console";
@@ -16,6 +16,22 @@ import { ModelType } from "./LLMServiceFactory";
 export class OpenAIService extends BaseLLMService {
     private client: OpenAI;
     private embeddingModel?: string;
+
+    async shutdown(): Promise<void> {
+        // Clean up any OpenAI resources if needed
+        this.client = null as unknown as OpenAI;
+    }
+
+    private async bufferToBase64(buffer: Buffer): Promise<string> {
+        return `data:image/jpeg;base64,${buffer.toString('base64')}`;
+    }
+
+    private async processVisionContent(content: VisionContent | Buffer): Promise<string> {
+        if (Buffer.isBuffer(content)) {
+            return await this.bufferToBase64(content);
+        }
+        return content.image_url.url;
+    }
 
 
     constructor(apiKey: string, embeddingModel?: string, baseUrl?: string, private settings?: Settings) {
@@ -37,7 +53,7 @@ export class OpenAIService extends BaseLLMService {
         // this.model = modelPath;
     }
 
-    getEmbeddingModel(): IEmbeddingFunction {
+    getEmbeddingModel(searchParams?: ModelSearchParams): IEmbeddingFunction {
         if (!this.embeddingModel) {
             throw new ConfigurationError("Embedding model not initialized");
         }
@@ -57,11 +73,11 @@ export class OpenAIService extends BaseLLMService {
         return Math.ceil(content.length / 4);
     }
 
-    async getAvailableModels(): Promise<ModelInfo[]> {
+    async getAvailableModels(searchParams?: ModelSearchParams): Promise<ModelInfo[]> {
         try {
             const models = await this.client.models.list();
-            if (models.body?.length && models.body.length > 0) {  //special Azure response
-                return models.body.map(m => ({
+            let modelList = models.body?.length && models.body.length > 0 ?  //special Azure response
+                models.body.map(m => ({
                     id: m.name,
                     name: m.friendly_name,
                     size: 'unknown', // OpenAI doesn't provide size info
@@ -69,9 +85,8 @@ export class OpenAIService extends BaseLLMService {
                     isLocal: false,
                     author: m.publisher,
                     tags: m.tags
-                }));
-            } else {
-                return models.data.map(m => ({
+                })) :
+                models.data.map(m => ({
                     id: m.id,
                     name: m.id,
                     size: 'unknown', // OpenAI doesn't provide size info
@@ -79,9 +94,76 @@ export class OpenAIService extends BaseLLMService {
                     isLocal: false,
                     author: 'OpenAI'
                 }));
+
+            if (searchParams?.textFilter) {
+                const filter = searchParams.textFilter.toLowerCase();
+                modelList = modelList.filter(m => 
+                    m.id.toLowerCase().includes(filter) || 
+                    m.name.toLowerCase().includes(filter)
+                );
             }
+
+            return modelList;
         } catch (error) {
             await this.logger.logCall('getAvailableModels', {}, null, error);
+            throw error;
+        }
+    }
+
+    async sendVisionRequest<T extends ModelResponse = ModelMessageResponse>(
+        params: LLMRequestParams
+    ): Promise<GenerateOutputParams<T>> {
+        try {
+            const messages = await Promise.all(params.messages.map(async m => ({
+                role: m.role,
+                content: Array.isArray(m.content) ?
+                    await Promise.all(m.content.map(async c => 
+                        typeof c === 'string' ? c : await this.processVisionContent(c)
+                    )) :
+                    typeof m.content === 'string' ? m.content : await this.processVisionContent(m.content)
+            })));
+
+            if (params.systemPrompt) {
+                messages.unshift({
+                    role: "system",
+                    content: params.systemPrompt
+                });
+            }
+
+            const modelType = params.modelType || ModelType.REASONING;
+            const model = this.settings?.models[modelType][this.settings?.providers.chat];
+
+            const response = await this.client.chat.completions.create({
+                model: model,
+                messages,
+                temperature: params.opts?.temperature,
+                max_tokens: params.opts?.maxPredictedTokens,
+                top_p: params.opts?.topP,
+            });
+
+    const result: GenerateOutputParams<T> = {
+        response: { message: response.choices[0].message?.content || '' } as T,
+        metadata: {
+            _usage: {
+                inputTokens: response.usage?.prompt_tokens || 0,
+                outputTokens: response.usage?.completion_tokens || 0
+            }
+        }
+    };
+
+            await this.logger.logCall('sendVisionRequest', {
+                messages: params.messages,
+                systemPrompt: params.systemPrompt,
+                opts: params.opts
+            }, result.response);
+
+            return result;
+        } catch (error) {
+            await this.logger.logCall('sendVisionRequest', {
+                messages: params.messages,
+                systemPrompt: params.systemPrompt,
+                opts: params.opts
+            }, null, error);
             throw error;
         }
     }
@@ -148,10 +230,11 @@ export class OpenAIService extends BaseLLMService {
             });
 
             if (response?.error) {
-                if (isObject(response.error) && (error.code || error.message)) {
-                    throw new Error(`Error from LLM provider ${error.code} ${error.message}\n${error.metadata ? JSON.stringify(error.metadata, undefined, 2) : ''}`);
+                const err = response.error as { code?: string; message?: string; metadata?: any };
+                if (err.code || err.message) {
+                    throw new Error(`Error from LLM provider ${err.code} ${err.message}\n${err.metadata ? JSON.stringify(err.metadata, undefined, 2) : ''}`);
                 } else {
-                    throw new Error(`Error from LLM provider ${error}`);
+                    throw new Error(`Error from LLM provider ${JSON.stringify(err)}`);
                 }
             }
 

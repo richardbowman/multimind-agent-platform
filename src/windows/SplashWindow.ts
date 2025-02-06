@@ -18,7 +18,7 @@ export class SplashWindow {
             resizable: false,
             skipTaskbar: true,
             autoHideMenuBar: true,
-            hasShadow: false,
+            hasShadow: true,
             show: false, // Don't show immediately
             webPreferences: {
                 contextIsolation: true,

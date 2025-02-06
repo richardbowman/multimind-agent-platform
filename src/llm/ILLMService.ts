@@ -1,6 +1,5 @@
 import { ChatPost } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { IEmbeddingFunction } from "chromadb";
 import { LLMCallLogger } from "./LLMLogger";
 import { ModelType } from "./LLMServiceFactory";
 import { ModelInfo } from "./types";
@@ -11,14 +10,32 @@ export interface EmbedderModelInfo extends ModelInfo {
     supportedTasks: string[];
 }
 
+export interface IEmbeddingFunction {
+    generate(texts: string[]): Promise<number[][]>;
+}
+
+export interface VisionContent {
+    type: "image_url";
+    image_url: {
+        url: string;
+        detail?: "low" | "high" | "auto";
+    };
+}
+
+export interface ModelSearchParams {
+    /** Text to search in model names and IDs */
+    textFilter?: string;
+}
+
 export interface ILLMService {
     shutdown(): Promise<void>;
     initializeChatModel(modelPath: string): Promise<void>;
     sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
+    sendVisionRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     countTokens(content: string): Promise<number>;
     getLogger(): LLMCallLogger;
-    getAvailableModels(): Promise<ModelInfo[]>;
-    getAvailableEmbedders(): Promise<EmbedderModelInfo[]>;
+    getAvailableModels(searchParams?: ModelSearchParams): Promise<ModelInfo[]>;
+    getAvailableEmbedders(searchParams?: ModelSearchParams): Promise<EmbedderModelInfo[]>;
 
     /** @deprecated */
     generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: any): Promise<T>;
@@ -65,7 +82,7 @@ export interface IEmbeddingService {
 }
 
 export interface LLMRequestParams {
-    messages: { role: string; content: string }[];
+    messages: { role: string; content: string | VisionContent | (string | VisionContent)[] }[];
     systemPrompt?: string;
     opts?: LLMPredictionOpts;
     parseJSON?: boolean;
@@ -95,4 +112,3 @@ export enum ModelRole {
     ASSISTANT = "assistant",
     SYSTEM = "system"
 }
-

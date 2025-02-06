@@ -15,8 +15,6 @@
     "esModuleInterop": true,
     "allowSyntheticDefaultImports": true
   },
-  "include": [
-    "src/**/*"
-, "tests/ComplexProjectExecutor.test.ts", "tests/GoalConfirmationExecutor.test.ts", "tests/UnderstandGoalsExecutor.test.ts", "tests/channelManagement.test.ts"  ],
+  "include": [ "src/**/*", "tests/**/*" ],
   "exclude": ["node_modules", "dist", ".output", "src/web"]
 }

@@ -256,6 +256,10 @@ export abstract class Agent {
     }
 
     protected async reply(post: ChatPost, response: ModelMessageResponse, postProps?: ConversationContext): Promise<ChatPost> {
+        if (!response || !response.message) {
+            throw new Error("Invalid message provided in reply");
+        }
+
         const artifactIds = [...postProps?.["artifact-ids"] || [], ...response.artifactIds || [], ...response.artifactId ? [response.artifactId] : []];
 
         // Include project ID in props if present in response

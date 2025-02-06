@@ -5,7 +5,7 @@ import { type DataContextMethods } from '../contexts/DataContext';
 import { ClientMessage } from '../../../../shared/types';
 import { SnackbarContextType, useSnackbar } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
-import { ClientMethods } from '../../../../shared/RPCInterface';
+import { BackendStatus, ClientMethods } from '../../../../shared/RPCInterface';
 import { Artifact } from '../../../../tools/artifact';
 import { Task } from '../../../../tools/taskManager';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
@@ -194,8 +194,9 @@ class ClientMethodsImplementation implements ClientMethods {
         }
     }
 
-    async onBackendStatus(status: { configured: boolean; ready: boolean; message?: string, appPath: string }) {
+    async onBackendStatus(status: BackendStatus) {
         this.contextMethods.setNeedsConfig(!status.configured);
+        this.contextMethods.setPaths({ appPath: status.appPath, modelsPath: status.modelPath} );
 
         if (status.configured) {
             await this.initializeTTS(status.appPath);
@@ -209,22 +210,6 @@ class ClientMethodsImplementation implements ClientMethods {
         if (settings.tts.enabled) {
             try {
                 await tts.download(settings.tts.voiceId);
-    
-                // ttsSession = await tts.TtsSession.create({
-                //     voiceId: settings.tts.voiceId,
-                //     progress: (progress) => {
-                //         snackBar.showSnackbar({ 
-                //             message: `Downloading voice ${progress.loaded} of ${progress.total}`, 
-                //             percentComplete: progress.loaded / progress.total,
-                //             severity: 'info'
-                //         });
-                //     },
-                //     wasmPaths: {
-                //         onnxWasm: appPath + "/dist/wasm/",
-                //         piperData: tts.WASM_BASE.data,
-                //         piperWasm: tts.WASM_BASE.wasm
-                //     }
-                // });
             } catch (error) {
                 throw error;
             }

@@ -1,13 +1,12 @@
 // lmstudioService.ts
 
 import { EmbeddingSpecificModel, LLMPredictionConfig, LLMSpecificModel, LMStudioClient, ModelDescriptor } from "@lmstudio/sdk";
-import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { LLMCallLogger } from "./LLMLogger";
 
-import { EmbedderModelInfo, IEmbeddingService, LLMPredictionOpts, LLMRequestParams } from "./ILLMService";
+import { EmbedderModelInfo, IEmbeddingFunction, IEmbeddingService, LLMPredictionOpts, LLMRequestParams } from "./ILLMService";
 
 interface LMStudioRequestParams extends LLMRequestParams {
     messages: ModelMessageHistory[];

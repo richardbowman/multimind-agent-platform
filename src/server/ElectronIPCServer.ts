@@ -1,4 +1,4 @@
-import { ipcMain, BrowserWindow } from 'electron';
+import { ipcMain, BrowserWindow, app } from 'electron';
 import { createBirpc } from 'birpc';
 import { BackendServices, BackendServicesConfigNeeded, BackendServicesWithWindows } from '../types/BackendServices';
 import { ServerRPCHandler } from './RPCHandler';
@@ -7,6 +7,7 @@ import { ClientMethods, ServerMethods } from '../shared/RPCInterface';
 import { LimitedRPCHandler } from './LimitedRPCHandler';
 import { AppUpdater } from 'electron-updater';
 import Logger from 'src/helpers/logger';
+import { getDataPath } from 'src/helpers/paths';
 
 export class ElectronIPCServer {
     private handler: LimitedRPCHandler|ServerRPCHandler;
@@ -91,13 +92,17 @@ export class ElectronIPCServer {
             new LimitedRPCHandler(services) : 
             new ServerRPCHandler(services);
         this.handler.setServices(services);
-        this.handler.setupClientEvents(this.getRPC(), autoUpdater);
         
-        if (this.handler instanceof ServerRPCHandler) {
+        if (this.handler instanceof ServerRPCHandler && this.getRPC) {
+            this.handler.setupClientEvents(this.getRPC(), autoUpdater);
             this.rpc.onBackendStatus({
                 configured: true,
-                ready: true
+                ready: true,
+                appPath: app.getAppPath(),
+                modelsPath: path.join(getDataPath(), "models")
             });
+        } else {
+            Logger.error("RPC not ready for backend status");
         }
     }
 

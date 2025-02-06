@@ -29,8 +29,10 @@ export class LogManager extends EventEmitter {
 
         // Ensure directory exists and append to log file
         try {
-            this.ensureLogDirectoryExists();
-            appendFileSync(Logger.logFilePath, formattedMessage);
+            if (level !== "progress") {
+                this.ensureLogDirectoryExists();
+                appendFileSync(Logger.logFilePath, formattedMessage);
+            }
         } catch (e) {
             //swallow errors, this can happen as process is exiting
         }
@@ -41,7 +43,7 @@ export class LogManager extends EventEmitter {
         }
         this.emit("_" + level.toLowerCase(), logEntry);
         
-        if (level !== "verbose" && level !== "debug") console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`)
+        if (level === "error" || level === "warn") console.log(`[${timestamp}] ${level.toUpperCase()}: ${message}`)
     }
 
     public info(message: string, error?: any): void {

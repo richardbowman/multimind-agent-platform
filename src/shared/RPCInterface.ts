@@ -129,16 +129,24 @@ export interface ServerMethods {
     
     /**
      * Upload and register a GGUF model file
-     * @param filePath - Path to the GGUF model file
+     * @param arrayBuffer - model content
      * @returns Promise resolving to the model ID and any error
      */
-    uploadGGUFModel(filePath: string): Promise<{ modelId: string, error?: string }>;
+    uploadGGUFModel(arrayBuffer: ArrayBuffer, fileName: string): Promise<{ modelId: string, error?: string }>;
+}
+
+export interface BackendStatus {
+    configured: boolean;
+    ready: boolean;
+    message?: string;
+    appPath: string;
+    modelsPath: string;
 }
 
 export interface ClientMethods {
     onMessage(messages: ClientMessage[]): void;
     onLogUpdate(update: LogParam): void;
-    onBackendStatus(status: { configured: boolean; ready: boolean; message?: string, appPath: string }): void;
+    onBackendStatus(status: BackendStatus): void;
     onTaskUpdate(task: Task): void;
     onProjectUpdate(project: ClientProject): void;
     onFilesAttached(artifacts: Artifact[]): void;

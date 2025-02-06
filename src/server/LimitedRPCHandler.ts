@@ -43,7 +43,7 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
     async getAvailableModels(provider: string, search?: string): Promise<ModelInfo[]|ClientError> {
         try {
             const service = LLMServiceFactory.createServiceByName(provider, this.partialServices.settingsManager.getSettings());
-            const models = await service.getAvailableModels();
+            const models = await service.getAvailableModels({ textFilter: search });
             
             // Filter models if search term provided
             if (search && search.trim().length > 0) {

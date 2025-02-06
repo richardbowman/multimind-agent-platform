@@ -99,9 +99,9 @@ export class MainWindow {
         this.window.show();
         this.window.webContents.setZoomFactor(1);
         this.window.webContents.setZoomLevel(this.zoomLevel);          
-        if (this.settingsManager?.getSettings().openDevToolsOnLoad) {
+        // if (this.settingsManager?.getSettings().openDevToolsOnLoad) {
             this.window.webContents.openDevTools();
-        }
+        // }
     }
 
     setMessage(message: string) {

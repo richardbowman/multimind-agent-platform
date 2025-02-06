@@ -17,6 +17,8 @@ import { LogReader } from './server/LogReader';
 import { AppUpdater, autoUpdater } from 'electron-updater';
 import { AsyncQueue } from './helpers/asyncQueue';
 import { electron } from 'process';
+import { getDataPath } from './helpers/paths';
+import path from 'path';
 
 let mainWindow: MainWindow;
 let splashWindow: SplashWindow;
@@ -136,7 +138,8 @@ export async function setupIpcHandlers(autoUpdater: AppUpdater, hasConfigError: 
                 configured: configComplete,
                 ready: configComplete,
                 message: hasConfigError ? "Initial configuration required" : undefined,
-                appPath: app.getAppPath()
+                appPath: app.getAppPath(),
+                modelPath: path.join(getDataPath(), "models")
             };
             setTimeout(() => {
                 console.log('firing backend status', JSON.stringify(status, 2, false));

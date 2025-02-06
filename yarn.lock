@@ -4772,6 +4772,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/events@npm:^3":
+  version: 3.0.3
+  resolution: "@types/events@npm:3.0.3"
+  checksum: 10c0/3a56f8c51eb4ebc0d05dcadca0c6636c816acc10216ce36c976fad11e54a01f4bb979a07211355686015884753b37f17d74bfdc7aaf4ebb027c1e8a501c7b21d
+  languageName: node
+  linkType: hard
+
 "@types/express-serve-static-core@npm:*, @types/express-serve-static-core@npm:^5.0.0":
   version: 5.0.4
   resolution: "@types/express-serve-static-core@npm:5.0.4"
@@ -13871,6 +13878,7 @@ __metadata:
     "@types/blessed": "npm:^0.1.25"
     "@types/chart.js": "npm:^2.9.41"
     "@types/dompurify": "npm:^3.2.0"
+    "@types/events": "npm:^3"
     "@types/express": "npm:^5.0.0"
     "@types/fs-extra": "npm:^11.0.4"
     "@types/ical": "npm:^0"
@@ -13911,6 +13919,7 @@ __metadata:
     electron-builder-squirrel-windows: "npm:^25.1.8"
     electron-is-dev: "npm:^3.0.1"
     electron-updater: "npm:^6.3.9"
+    events: "npm:^3.3.0"
     express: "npm:^4.21.2"
     fs-extra: "npm:^11.3.0"
     html-webpack-plugin: "npm:^5.6.3"
@@ -13957,6 +13966,7 @@ __metadata:
     reblessed: "npm:^0.2.1"
     reflect-metadata: "npm:^0.2.2"
     remark-gfm: "npm:^4.0.0"
+    rollup-plugin-node-externals: "npm:^8.0.0"
     socket.io: "npm:^4.8.1"
     socket.io-client: "npm:^4.8.1"
     style-loader: "npm:^4.0.0"
@@ -16503,6 +16513,15 @@ __metadata:
   version: 3.0.2
   resolution: "robust-predicates@npm:3.0.2"
   checksum: 10c0/4ecd53649f1c2d49529c85518f2fa69ffb2f7a4453f7fd19c042421c7b4d76c3efb48bc1c740c8f7049346d7cb58cf08ee0c9adaae595cc23564d360adb1fde4
+  languageName: node
+  linkType: hard
+
+"rollup-plugin-node-externals@npm:^8.0.0":
+  version: 8.0.0
+  resolution: "rollup-plugin-node-externals@npm:8.0.0"
+  peerDependencies:
+    rollup: ^4.0.0
+  checksum: 10c0/e6b4778677ebb19852bb7c0024d7fd6bcf4452fa5e870bdee7ac2cd2ab3ceda307419050a2082f76a1dd9dc141bdb179f726b22c0ef1e974fc1c9ebd65a9be95
   languageName: node
   linkType: hard
 

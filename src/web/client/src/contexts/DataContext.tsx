@@ -12,6 +12,10 @@ import { UUID } from '../../../../types/uuid';
 import { Task } from '../../../../tools/taskManager';
 const DataContext = createContext<DataContextMethods | null>(null);
 
+export interface Paths {
+  appPath: string;
+  modelsPath: string;
+}
 
 export interface DataContextMethods {
   messages: ClientMessage[];
@@ -31,6 +35,8 @@ export interface DataContextMethods {
   isLoading: boolean;
   needsConfig: boolean | null;
   settings: Settings | null;
+  paths: Paths | null;
+  setPaths: React.Dispatch<React.SetStateAction<Paths>>;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   fetchChannels: () => Promise<void>;
   fetchTasks: (channelId: string, threadId: string | null) => Promise<Task[]>;
@@ -69,6 +75,7 @@ export const DataProvider: React.FC<{
   const ipcService = useIPCService();
   const { showSnackbar } = useSnackbar();
 
+  const [paths, setPaths] = useState<Paths|null>();
   const [settings, setSettings] = useState<Settings|null>();
   const [messages, setMessages] = useState<ClientMessage[]>([]);
   const [channels, setChannels] = useState<ChannelData[]>([]);
@@ -324,6 +331,8 @@ export const DataProvider: React.FC<{
     isLoading,
     needsConfig,
     settings,
+    paths: paths,
+    setPaths,
     sendMessage,
     fetchChannels,
     fetchTasks,

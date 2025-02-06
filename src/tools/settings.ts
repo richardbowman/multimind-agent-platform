@@ -155,7 +155,7 @@ export class ModelByProvider {
         type: 'select',
         description: 'Model path for Llama.cpp'
     })
-    llama_cpp: string = '';
+    llama_cpp: string = 'MaziyarPanahi/Qwen2-1.5B-Instruct-GGUF/Qwen2-1.5B-Instruct.Q4_K_S.gguf';
 
     @ClientSettings({
         label: 'Advanced Reasoning Model',

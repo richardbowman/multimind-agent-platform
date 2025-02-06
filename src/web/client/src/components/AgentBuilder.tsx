@@ -203,7 +203,6 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 )}
                             </Box>
                         </Box>
-                        )
                 {/* Edit Agent Dialog */}
                 <Dialog
                     open={editingAgentId === agentId}

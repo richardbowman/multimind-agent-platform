@@ -2,6 +2,7 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const webpack = require('webpack');
+const webpackNodeExternals = require('webpack-node-externals');
 
 module.exports = {
   entry: './src/web/client/src/index.tsx',
@@ -10,6 +11,7 @@ module.exports = {
     filename: 'bundle.js',
     publicPath: './'
   },
+  // target: 'electron-renderer',
   module: {
     rules: [
       {

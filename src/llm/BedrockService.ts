@@ -2,7 +2,7 @@ import { BedrockRuntimeClient, ConversationRole, ConverseCommand, InvokeModelCom
 import { BEDROCK_MAX_TOKENS_PER_MINUTE, BEDROCK_DEFAULT_DELAY_MS, BEDROCK_WINDOW_SIZE_MS } from "../helpers/config";
 import JSON5 from 'json5';
 import { RetryHelper } from "../helpers/retryHelper";
-import { ILLMService, ModelRole } from "./ILLMService";
+import { IEmbeddingFunction, ILLMService, ModelRole } from "./ILLMService";
 
 interface LLMRequestParams {
     messages: { role: string; content: string }[];
@@ -19,7 +19,6 @@ import { AsyncQueue } from "../helpers/asyncQueue";
 import { ChatPost } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
 import { StructuredOutputPrompt } from "./ILLMService";
-import { IEmbeddingFunction } from "chromadb";
 import Logger from "src/helpers/logger";
 import { LLMCallLogger } from "./LLMLogger";
 
