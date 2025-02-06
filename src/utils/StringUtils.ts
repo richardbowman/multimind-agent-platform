@@ -91,6 +91,13 @@ export namespace StringUtils {
             let content = match[2].trim();
             
             // Handle nested tags by recursively extracting inner content
+            // First add the outer block
+            matches.push({
+                tag,
+                content
+            });
+
+            // Then recursively handle inner blocks
             const innerBlocks = extractXmlBlocks(content);
             for (const inner of innerBlocks) {
                 if (!seen.has(inner.tag)) {
@@ -98,11 +105,6 @@ export namespace StringUtils {
                     seen.add(inner.tag);
                 }
             }
-
-            matches.push({
-                tag,
-                content
-            });
         }
         return matches;
     }
