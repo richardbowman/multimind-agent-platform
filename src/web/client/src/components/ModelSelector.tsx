@@ -53,9 +53,10 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                     while (offset < totalSize) {
                         const chunk = file.slice(offset, offset + CHUNK_SIZE);
                         const arrayBuffer = await chunk.arrayBuffer();
+                        const base64 = Buffer.from(arrayBuffer).toString('base64');
                         
                         const result = await ipcService.getRPC().uploadGGUFModelChunk({
-                            chunk: arrayBuffer,
+                            chunk: base64,
                             fileName: file.name,
                             uploadId,
                             isLast: offset + CHUNK_SIZE >= totalSize

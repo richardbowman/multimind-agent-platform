@@ -677,7 +677,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     private uploadChunks = new Map<string, { filePath: string, writeStream: fs.WriteStream }>();
 
     async uploadGGUFModelChunk({ chunk, fileName, uploadId, isLast }: { 
-        chunk: ArrayBuffer, 
+        chunk: string, // base64 encoded
         fileName: string, 
         uploadId: string, 
         isLast: boolean 
@@ -710,8 +710,8 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 writeStream = upload.writeStream;
             }
 
-            // Write chunk
-            const buffer = Buffer.from(chunk);
+            // Decode base64 and write chunk
+            const buffer = Buffer.from(chunk, 'base64');
             await new Promise<void>((resolve, reject) => {
                 writeStream.write(buffer, (err) => {
                     if (err) reject(err);
