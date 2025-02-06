@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { ModelInfo } from 'src/llm/types';
-import { invoke } from '@tauri-apps/api/tauri';
+import { ModelInfo } from '../../../../llm/types';
 import { Button, Card, List, Typography, Alert, TextField } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Box } from '@mui/system';
 import './ModelSelector.css';
-
-const { Text } = Typography;
+import { useIPCService } from '../contexts/IPCContext';
+import { ClientError } from '@mattermost/client';
 
 interface ModelSelectorProps {
     value?: string;
@@ -20,6 +19,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
     const [error, setError] = useState<string | null>(null);
     const [search, setSearch] = useState('');
     const [selectedModel, setSelectedModel] = useState<ModelInfo | null>(null);
+    const ipcService = useIPCService();
 
     useEffect(() => {
         loadModels();
@@ -29,10 +29,11 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
         setLoading(true);
         setError(null);
         try {
-            const result = await invoke<ModelInfo[]>('get_available_models', { 
+            const result = await ipcService.getRPC().getAvailableModels(
                 provider,
-                search: searchTerm 
-            });
+                searchTerm 
+            );
+            if (result instanceof ClientError) throw result;
             setModels(result);
         } catch (err) {
             setError('Failed to load models');
