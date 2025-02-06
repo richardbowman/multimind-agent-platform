@@ -45,8 +45,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                     setIsUploadingModel(true);
                     setUploadError('');
 
-                    // Upload the GGUF file
-                    const result = await ipcService.getRPC().uploadGGUFModel(file.path);
+                    // In Electron, we need to use the file object's path property
+                    // and ensure it's an absolute path
+                    const fullPath = window.require('path').resolve(file.path);
+                    
+                    // Upload the GGUF file with full path
+                    const result = await ipcService.getRPC().uploadGGUFModel(fullPath);
 
                     if (result.error) {
                         throw new Error(result.error);

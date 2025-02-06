@@ -679,8 +679,9 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             const modelsDir = path.join(getDataPath(), 'models');
             await fsPromises.mkdir(modelsDir, { recursive: true });
 
-            // Get the filename and validate it's a GGUF file
-            const fileName = path.basename(filePath);
+            // Ensure we have a full path and validate it's a GGUF file
+            const fullPath = path.isAbsolute(filePath) ? filePath : path.resolve(filePath);
+            const fileName = path.basename(fullPath);
             if (!fileName.endsWith('.gguf')) {
                 return { modelId: '', error: 'Only .gguf files are supported' };
             }
