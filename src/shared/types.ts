@@ -23,18 +23,7 @@ export interface ClientProject {
     last_message_at: number;
     channel_id: string;
 }
-export interface ClientChannel {
-    id: string;
-    name: ChannelHandle;
-    description?: string;
-    members: UUID[];
-    projectId?: UUID;
-    defaultResponderId?: UUID;
-    artifactIds: UUID[];
-    goalTemplate: ChannelHandle;
-}
 import { ChatHandle } from 'src/types/chatHandle';
-import { ChannelHandle } from './channelTypes';
 import { Task } from 'src/tools/taskManager';
 
 export interface ClientMessage {

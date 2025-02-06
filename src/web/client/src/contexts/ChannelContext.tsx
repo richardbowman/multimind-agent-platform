@@ -1,10 +1,9 @@
 import React, { createContext, useContext, useCallback, useMemo, useState } from 'react';
-import { ClientChannel } from '../../../../shared/types';
-import { CreateChannelParams } from '../../../../shared/channelTypes';
+import { ChannelData, CreateChannelParams } from '../../../../shared/channelTypes';
 import { useIPCService } from './IPCContext';
 
 interface ChannelContextType {
-  channels: ClientChannel[];
+  channels: ChannelData[];
   fetchChannels: () => Promise<void>;
   createChannel: (params: CreateChannelParams) => Promise<string>;
   deleteChannel: (channelId: string) => Promise<void>;
@@ -14,7 +13,7 @@ const ChannelContext = createContext<ChannelContextType | null>(null);
 
 export const ChannelProvider = ({ children }: { children: React.ReactNode }) => {
   const ipcService = useIPCService();
-  const [channels, setChannels] = useState<ClientChannel[]>([]);
+  const [channels, setChannels] = useState<ChannelData[]>([]);
 
   const fetchChannels = useCallback(async () => {
     try {

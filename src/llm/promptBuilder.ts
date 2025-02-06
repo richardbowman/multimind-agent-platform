@@ -4,7 +4,7 @@ import Logger from "src/helpers/logger";
 import { ModelHelpers } from "./modelHelpers";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepResponseContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent, OverallGoalContent, FullGoalsContent, StepsContent, TasksContent } from "./ContentTypeDefinitions";
+import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelNameContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepResponseContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent, OverallGoalContent, FullGoalsContent, StepsContent, TasksContent, ChannelDetailsContent } from "./ContentTypeDefinitions";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { IntentionsResponse } from "src/schemas/goalAndPlan";
 import { ExecutorType } from "src/agents/interfaces/ExecutorType";
@@ -59,6 +59,7 @@ export class PromptRegistry {
 
         this.registerRenderer(ContentType.PURPOSE, this.renderPurpose.bind(this));
         this.registerRenderer(ContentType.CHANNEL, this.renderChannel.bind(this));
+        this.registerRenderer(ContentType.CHANNEL_DETAILS, this.renderChannelDetails.bind(this));
         this.registerRenderer(ContentType.OVERALL_GOAL, this.renderOverallGoal.bind(this));
         this.registerRenderer(ContentType.FINAL_INSTRUCTIONS, this.renderFinalInstructions.bind(this));
 
@@ -162,7 +163,7 @@ ${this.modelHelpers.getFinalInstructions()}
 `;
     }
 
-    renderChannel({channel} : ChannelContent) {
+    renderChannel({channel} : ChannelNameContent) {
         return `CURRENT CHAT CHANNEL: ${channel.name} - ${channel.description}`;
     }
 

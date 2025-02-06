@@ -5,9 +5,8 @@ import mime from 'mime';
 import Logger from "../helpers/logger";
 import { ChatClient, ChatPost } from "../chat/chatClient";
 import { ClientMessage } from "src/shared/types";
-import { ClientChannel } from "src/shared/types";
 import { ClientThread } from "src/shared/types";
-import { CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
+import { ChannelData, CreateChannelHandlerParams, CreateChannelParams } from "src/shared/channelTypes";
 import { createChannelHandle } from "src/shared/channelTypes";
 import { getDataPath } from "../helpers/paths";
 import fsPromises from 'node:fs/promises';
@@ -339,23 +338,15 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             .sort((a, b) => b.last_message_at - a.last_message_at);
     }
 
-    async getChannels(): Promise<ClientChannel[]> {
+    async getChannels(): Promise<ChannelData[]> {
         if (!this.services?.chatClient) {
             throw new Error('Chat client is not initialized');
         }
         const channels = await this.services.chatClient.getChannels();
-        return channels.map(channel => ({
-            id: channel.id,
-            name: channel.name.replace('#', ''),
-            description: channel.description,
-            members: channel.members || [],
-            artifactIds: channel.artifactIds,
-            projectId: channel.projectId,
-            goalTemplate: channel.goalTemplateId
-        }));
+        return channels;
     }
 
-    async getTasks({ channelId, threadId }: { channelId: string; threadId: string | null }): Promise<any[]> {
+    async getTasks({ channelId, threadId }: { channelId: UUID; threadId: UUID | null }): Promise<any[]> {
         // Get all posts for this channel/thread
         const posts = (await this.services.chatClient.fetchPreviousMessages(channelId, 500)).filter(post => {
             if (threadId) {
@@ -368,8 +359,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
 
         // Extract project IDs from posts
         const projectIds = [
-            ...new Set(posts.map(p => p.props["project-ids"]||[]).flat()),
-            channelData.projectId
+            ...new Set([...posts.map(p => p.props["project-ids"]||[]).flat(), channelData.projectId]),
         ].filter(id => id != undefined);
         
         // Get tasks from storage that match these project IDs and convert to ClientTask format
@@ -377,21 +367,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             const project = this.services.taskManager.getProject(projectId);
             if (!project) return [];
             
-            return Object.values<Task>(project.tasks).map(task => ({
-                id: task.id,
-                description: task.description,
-                projectId: task.projectId,
-                type: task.type,
-                assignee: task.assignee,
-                inProgress: task.inProgress || false,
-                complete: task.complete || false,
-                threadId: task.props?.threadId || null,
-                createdAt: task.props?.createdAt,
-                updatedAt: task.props?.updatedAt,
-                dependsOn: task.dependsOn,
-                props: task.props,
-                status: task.status
-            } as ClientTask));
+            return Object.values<Task>(project.tasks);
         });
 
         return tasks;

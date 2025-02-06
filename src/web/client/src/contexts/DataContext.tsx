@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback, useMemo } from 'react';
 import type { LLMLogEntry } from '../../../../llm/LLMLogger';
-import { ClientChannel, ClientMessage } from '../../../../shared/types';
-import { CreateChannelParams } from '../../../../shared/channelTypes';
+import { ClientMessage } from '../../../../shared/types';
+import { ChannelData, CreateChannelParams } from '../../../../shared/channelTypes';
 import { useSnackbar } from './SnackbarContext';
 import { useIPCService } from './IPCContext';
 import { useClientMethods } from '../services/ClientMethods';
@@ -15,7 +15,7 @@ const DataContext = createContext<DataContextMethods | null>(null);
 
 export interface DataContextMethods {
   messages: ClientMessage[];
-  channels: ClientChannel[];
+  channels: ChannelData[];
   tasks: Task[];
   allArtifacts: Artifact[];
   currentThreadArtifacts: Artifact[];
@@ -71,7 +71,7 @@ export const DataProvider: React.FC<{
 
   const [settings, setSettings] = useState<Settings|null>();
   const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [channels, setChannels] = useState<ClientChannel[]>([]);
+  const [channels, setChannels] = useState<ChannelData[]>([]);
   const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);
   const [currentChannelId, _setCurrentChannelId] = useState<string | null>(null);
   const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);

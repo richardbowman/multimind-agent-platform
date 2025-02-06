@@ -2,7 +2,7 @@ import * as ort from 'onnxruntime-web';
 import * as tts from '@mintplex-labs/piper-tts-web';
 import { IPCProvider } from '../contexts/IPCContext';
 import { type DataContextMethods } from '../contexts/DataContext';
-import { ClientChannel, ClientMessage } from '../../../../shared/types';
+import { ClientMessage } from '../../../../shared/types';
 import { SnackbarContextType, useSnackbar } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { ClientMethods } from '../../../../shared/RPCInterface';
@@ -10,6 +10,7 @@ import { Artifact } from '../../../../tools/artifact';
 import { Task } from '../../../../tools/taskManager';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import { LogParam } from '../../../../llm/LLMLogger';
+import { ChannelData } from '../../../../shared/channelTypes';
 
 
 // Initialize TTS system
@@ -248,7 +249,7 @@ class ClientMethodsImplementation implements ClientMethods {
         console.log('project update not handled yet');
     }
 
-    onChannelCreated(channel: ClientChannel) {
+    onChannelCreated(channel: ChannelData) {
         // Add the new channel to the list and refresh
         this.contextMethods.fetchChannels();
     }

@@ -55,32 +55,11 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
 
     useEffect(() => {
         if (initialData) {
-            // Ensure channel name starts with #
-            const name = initialData.name?.startsWith('#') 
-                ? initialData.name 
-                : `#${initialData.name || ''}`;
-            setChannelName(createChannelHandle(name));
+            setChannelName(initialData.name);
             setDescription(initialData.description);
-            // Convert member IDs to handles if needed
-            const agents = initialData.members.map(idOrHandle => {
-                if (idOrHandle.startsWith('@')) {
-                    const handle = handles.find(h => h.handle === idOrHandle.slice(1));
-                    return handle?.id || idOrHandle;
-                }
-                return idOrHandle;
-            });
-            setSelectedAgents(agents);
+            setSelectedAgents(initialData.members);
             setSelectedTemplate(initialData.goalTemplate);
-            
-            // Convert default responder ID to handle if needed
-            if (initialData.defaultResponderId) {
-                if (initialData.defaultResponderId.startsWith('@')) {
-                    const handle = handles.find(h => h.handle === initialData.defaultResponderId?.slice(1));
-                    setDefaultResponderId(handle?.id || initialData.defaultResponderId);
-                } else {
-                    setDefaultResponderId(initialData.defaultResponderId);
-                }
-            }
+            setDefaultResponderId(initialData.defaultResponderId);
         } else {
             setChannelName(null);
             setDescription('');
@@ -101,24 +80,14 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
         setSelectedTemplate(templateId);
         const selectedTemplate = templates.find(t => t.id === templateId);
         if (selectedTemplate) {
-            const agentIds = selectedTemplate.supportingAgents.map(idOrHandle => {
-                if (idOrHandle.startsWith('@')) {
-                    const handle = handles.find(h => h.handle === idOrHandle.slice(1));
-                    return handle?.id || idOrHandle;
-                }
-                return idOrHandle;
-            });
-            setSelectedAgents(agentIds);
+            const agentIds = selectedTemplate.supportingAgents.map(handle => handles.find(h => h.handle === handle)?.id);
+            setSelectedAgents(agentIds.filter(a => (a !== undefined)));
         } else {
             setSelectedAgents([]);
         }
         
         if (selectedTemplate?.defaultResponder) {
-            setDefaultResponderId(
-                selectedTemplate.defaultResponder.startsWith('@')
-                    ? handles.find(h => h.handle === selectedTemplate.defaultResponder.slice(1))?.id || selectedTemplate.defaultResponder
-                    : selectedTemplate.defaultResponder
-            );
+            setDefaultResponderId(handles.find(h => h.handle === selectedTemplate.defaultResponder)?.id||null);
         }
         
         if (!channelName?.trim() || !channelName?.startsWith('#') || channelName === lastSelectedTemplateName) {

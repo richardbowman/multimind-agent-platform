@@ -11,7 +11,7 @@ import {
 import { ClientProject } from '../../../../shared/types';
 import { UUID } from '../../../../types/uuid';
 
-interface ChatProjectHeaderProps {
+interface ChatHeaderProps {
     currentProject: ClientProject | null;
     channels: any[];
     tasks: any[];
@@ -20,10 +20,10 @@ interface ChatProjectHeaderProps {
     onTaskClick: (task: any) => void;
 }
 
-export const ChatProjectHeader: React.FC<ChatProjectHeaderProps> = ({
+export const ChatHeader: React.FC<ChatHeaderProps> = ({
     currentProject,
     channels,
-    tasks,
+    tasks: goals,
     currentChannelId,
     handles,
     onTaskClick
@@ -31,7 +31,7 @@ export const ChatProjectHeader: React.FC<ChatProjectHeaderProps> = ({
     const channel = channels.find(c => c.id === currentChannelId);
     const goalTemplate = channel?.goalTemplate;
     const projectId = channel?.projectId;
-    const planningTasks = tasks.filter(t => t.projectId === projectId && t.type === 'planning');
+    const planningTasks = goals.filter(t => t.projectId === projectId && t.type === 'planning');
 
     return (
         <>
@@ -49,7 +49,7 @@ export const ChatProjectHeader: React.FC<ChatProjectHeaderProps> = ({
                     }}
                 >
                     <Typography variant="overline" sx={{ mb: 1, color: 'text.secondary', display: 'block' }}>
-                        Project Overview
+                        Channel Overview
                     </Typography>
                     <Box>
                         <Typography variant="h6" sx={{ mb: 1 }}>
@@ -59,9 +59,9 @@ export const ChatProjectHeader: React.FC<ChatProjectHeaderProps> = ({
                             {currentProject.metadata.description}
                         </Typography>
 
-                        <Box sx={{ mt: 2 }}>
+                        {goals?.length > 0 && (<Box sx={{ mt: 2 }}>
                             <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                Tasks:
+                                Goals:
                             </Typography>
                             <List dense sx={{ mb: 2 }}>
                                 {currentProject.tasks.map(task => (
@@ -84,7 +84,7 @@ export const ChatProjectHeader: React.FC<ChatProjectHeaderProps> = ({
                                     </ListItem>
                                 ))}
                             </List>
-                        </Box>
+                        </Box>)}
 
                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                             Status: {currentProject.metadata.status} |

@@ -16,23 +16,19 @@ export class SimpleAgent extends Agent {
     
     protected async handlerThread(params: HandlerParams): Promise<void> {
         try {
-            const promptBuilder = this.modelHelpers.createPrompt();
+            const instructions = this.modelHelpers.createPrompt();
 
             // Get channel data including any project goals
-            const channelData = await this.chatClient.getChannelData(params.userPost.channel_id);
-            const project = channelData?.projectId
-                ? this.projects.getProject(channelData.projectId)
-                : null;
-            if (project) {
-                promptBuilder.addContext({contentType: ContentType.CHANNEL_GOALS, tasks: Object.values(project.tasks)});
-            }
-            promptBuilder.addContext({contentType: ContentType.PURPOSE});
-            promptBuilder.addContext({contentType: ContentType.CHANNEL, channel: channelData});
-            promptBuilder.addInstruction("You are a helpful agent. You may respond using SSML if you need to introduce pauses.");
-            const prompt = promptBuilder.build();
+            const channel = await this.chatClient.getChannelData(params.userPost.channel_id);
+            const channelProject = channel?.projectId && this.projects.getProject(channel.projectId);
+
+            instructions.addContext({contentType: ContentType.PURPOSE});
+            channel && instructions.addContext({contentType: ContentType.CHANNEL_DETAILS, channel, tasks: Object.values(channelProject?.tasks||{})});
+
+            instructions.addInstruction("You are a helpful agent. You may respond using SSML if you need to introduce pauses.");
 
             const response = await this.modelHelpers.generate<ModelMessageResponse>({
-                instructions: prompt,
+                instructions,
                 message: params.userPost.message,
                 threadPosts: params.threadPosts,
                 model: ModelType.CONVERSATION,

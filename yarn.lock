@@ -12036,7 +12036,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"json-schema@npm:0.4.0":
+"json-schema@npm:0.4.0, json-schema@npm:^0.4.0":
   version: 0.4.0
   resolution: "json-schema@npm:0.4.0"
   checksum: 10c0/d4a637ec1d83544857c1c163232f3da46912e971d5bf054ba44fdb88f07d8d359a462b4aec46f2745efbc57053365608d88bc1d7b1729f7b4fc3369765639ed3
@@ -13919,6 +13919,7 @@ __metadata:
     ical-parser: "npm:^1.2.0"
     jest: "npm:^29.7.0"
     jest-mock: "npm:^29.7.0"
+    json-schema: "npm:^0.4.0"
     json5: "npm:^2.2.3"
     kafkajs: "npm:^2.2.4"
     langchain: "npm:^0.3.11"

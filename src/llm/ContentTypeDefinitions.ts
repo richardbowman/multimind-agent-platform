@@ -62,7 +62,7 @@ export interface StepResponseContent {
 
 export interface ValidationContent {
     contentType: ContentType.VALIDATION_RESULTS;
-    step: StepResult;
+    step: StepResult<StepResponse>;
 }
 
 export interface ExecuteParamsContent {
@@ -84,7 +84,7 @@ export interface PurposeContent {
     contentType: ContentType.PURPOSE;
 }
 
-export interface ChannelContent {
+export interface ChannelNameContent {
     contentType: ContentType.CHANNEL;
     channel: ChannelData;
 }
@@ -151,7 +151,8 @@ export type ContentInput =
     | AgentCapabilitiesContent 
     | AgentOverviewsContent 
     | PurposeContent 
-    | ChannelContent 
+    | ChannelNameContent 
+    | ChannelDetailsContent
     | FinalInstructionsContent 
     | OverallGoalContent 
     | StepGoalContent 

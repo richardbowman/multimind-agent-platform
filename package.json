@@ -79,6 +79,7 @@
     "ical": "^0.8.0",
     "ical-generator": "^8.1.1",
     "ical-parser": "^1.2.0",
+    "json-schema": "^0.4.0",
     "json5": "^2.2.3",
     "kafkajs": "^2.2.4",
     "langchain": "^0.3.11",

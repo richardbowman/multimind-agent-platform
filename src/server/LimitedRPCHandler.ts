@@ -46,7 +46,7 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
             const models = await service.getAvailableModels();
             
             // Filter models if search term provided
-            if (search) {
+            if (search && search.trim().length > 0) {
                 const searchLower = search.toLowerCase();
                 return models.filter(model => 
                     model.id.toLowerCase().includes(searchLower) ||

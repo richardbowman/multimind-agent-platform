@@ -82,14 +82,8 @@ export class LocalChatStorage extends EventEmitter {
         const channelId = createUUID();
         this.registerChannel(channelId, params.name);
         this.channelData[channelId] = {
-            id: channelId,
-            name: params.name,
-            description: params.description,
-            isPrivate: params.isPrivate,
-            members: params.members,
-            defaultResponderId: params.defaultResponderId,
-            projectId: params.projectId,
-            artifactIds: params.artifactIds
+            ...params,
+            id: channelId
         };
 
         await this.save();

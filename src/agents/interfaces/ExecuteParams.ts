@@ -19,7 +19,7 @@ export interface ExecuteParams {
     readonly projectId: UUID;
     readonly previousResponses?: StepResponse[];
     readonly channelGoals: Task[];
-    readonly steps: StepTask[],
+    readonly steps: StepTask<StepResponse>[],
     readonly mode?: 'quick' | 'detailed';
     readonly executionMode: 'conversation' | 'task';
     readonly agents?: Agent[];

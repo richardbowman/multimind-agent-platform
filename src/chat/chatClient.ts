@@ -92,12 +92,15 @@ export interface Attachment {
     height?: number;
 }
 
-export interface Message {
-    id: UUID;
+export interface CreateMessage {
     message: string;
     props?: ConversationContext;
     attachments?: Attachment[];
     files?: File[];
+}
+
+export interface Message extends CreateMessage  {
+    id: UUID;
 }
 
 export interface ChatPost extends Message {

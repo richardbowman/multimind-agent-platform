@@ -7,7 +7,6 @@ import { ModelInfo } from 'src/llm/types';
 import { UpdateStatus } from './UpdateStatus';
 import { UUID } from 'src/types/uuid';
 import { Artifact } from 'src/tools/artifact';
-import { ClientError } from '@mattermost/client';
 import { GoalTemplate } from 'src/schemas/goalTemplateSchema';
 import { Task } from 'src/tools/taskManager';
 import { Settings } from 'src/tools/settings';
@@ -17,6 +16,13 @@ export interface LogEntry {
     level: string;
     message: string;
     details?: Record<string, any>;
+}
+
+export class ClientError {
+    readonly message: string;
+    constructor(message: string) {
+        this.message = message;
+    };
 }
 
 export interface ServerMethods {

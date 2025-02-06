@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { ChatMessage } from './ChatMessage';
-import { ChatProjectHeader } from './ChatProjectHeader';
+import { ChatHeader } from './ChatHeader';
 import { ChatDetailsDialog } from './ChatDetailsDialog';
 import {
     Box,
@@ -25,6 +25,7 @@ import { TaskDialog } from './TaskDialog';
 import { ClientProject } from '../../../../shared/types';
 import { CodeBlock } from './shared/CodeBlock';
 import { WelcomePanel } from './WelcomePanel.tsx';
+import { TaskType } from '../../../../tools/taskManager.ts';
 
 // Custom link component that opens links in system browser
 export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -45,7 +46,7 @@ export const CustomLink = ({ href, children }: { href?: string, children: React.
 interface ChatPanelProps {
     leftDrawerOpen: boolean;
     rightDrawerOpen: boolean;
-    onSwitchToWelcome: () => void;
+    onSwitchToWelcome: (showWelcome: boolean) => void;
     showWelcome: boolean;
 }
 
@@ -154,12 +155,12 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         const container = messagesContainerRef.current;
         if (container) {
             const scrollHandler = () => {
-                console.debug('Scroll event detected');
+                // console.debug('Scroll event detected');
                 requestAnimationFrame(checkScrollPosition);
             };
             container.addEventListener('scroll', scrollHandler);
             return () => {
-                console.debug('Removing scroll listener');
+                // console.debug('Removing scroll listener');
                 container.removeEventListener('scroll', scrollHandler);
             };
         }
@@ -231,8 +232,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     // Show welcome panel only if there are remaining tasks in the channel
     useEffect(() => {
         if (currentChannelId) {
-            const channelTasks = tasks.filter(t => t.channelId === currentChannelId);
-            const hasRemainingTasks = channelTasks.some(t => !t.complete);
+            const hasRemainingTasks = tasks.some(t => !t.complete);
             onSwitchToWelcome(hasRemainingTasks);
         }
     }, [currentChannelId, tasks]);
@@ -339,7 +339,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 >
                 {/* Project Overview and Goal Planning Cards */}
                 {!currentThreadId && (
-                    <ChatProjectHeader
+                    <ChatHeader
                         currentProject={currentProject}
                         channels={channels}
                         tasks={tasks}

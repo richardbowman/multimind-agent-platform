@@ -1,5 +1,5 @@
 import JSON5 from "json5";
-import { ChatClient, ChatPost, ConversationContext, Message, ProjectChainResponse } from "src/chat/chatClient";
+import { ChatClient, ChatPost, ConversationContext, CreateMessage, Message, ProjectChainResponse } from "src/chat/chatClient";
 import Logger from "src/helpers/logger";
 import { SystemPromptBuilder } from "src/helpers/systemPrompt";
 import { ModelMessageResponse } from "src/schemas/ModelResponse";
@@ -18,6 +18,8 @@ import { asUUID, createUUID, UUID } from "src/types/uuid";
 import { StringUtils } from "src/utils/StringUtils";
 import { ContentType, PromptBuilder } from "src/llm/promptBuilder";
 import { ChatHandle } from "src/types/chatHandle";
+import { getGeneratedSchema } from "src/helpers/schemaUtils";
+import { SchemaType } from "src/schemas/SchemaTypes";
 
 
 export enum TaskEventType {
@@ -242,13 +244,14 @@ export abstract class Agent {
         this.modelHelpers.enableMemory();
     }
 
-    protected async send(post: Message, channelId: UUID): Promise<void> {
+    protected async send(post: CreateMessage, channelId: UUID): Promise<ChatPost|null> {
         try {
             // Assuming you have a chatClient or similar service to send messages to the channel
-            await this.chatClient.postInChannel(channelId, post.message, post.props);
+            return await this.chatClient.postInChannel(channelId, post.message, post.props);
             Logger.info(`Agent [${this.messagingHandle}]: Message sent to channel ${channelId}: ${post.message}`);
         } catch (error) {
             Logger.error(`Agent [${this.messagingHandle}]: Failed to send message to channel ${channelId}:`, error);
+            return null;
         }
     }
 
@@ -357,63 +360,44 @@ export abstract class Agent {
                     .filter(memberId => this.userId !== memberId)
                     .map(memberId => this.agents.agents[memberId]);
 
-                const welcomeMessage = {
-                    message: `@user ${await this.generateWelcomeMessage(agentOptions, monitorChannelId)}`,
-                    props: { messageType: 'welcome' }
-                };
-
-                await this.send(welcomeMessage, monitorChannelId);
+                const post = await this.send({message: "Typing...", props: {partial: true, messageType: 'welcome'}}, monitorChannelId);
+                if (!post) {
+                    Logger.error("Failed to create post for welcome message");
+                } else {
+                    const welcomeMessage = `@user ${await this.generateWelcomeMessage(agentOptions, monitorChannelId)}`;
+                    await this.chatClient.updatePost(post.id, welcomeMessage, { partial: false });
+                }
             }
         }
     }
 
     private async generateWelcomeMessage(agentOptions: Agent[], channelId: UUID): Promise<string> {
-        const schema = {
-            type: "object",
-            properties: {
-                welcomeMessage: {
-                    type: "string",
-                    description: "A friendly, personalized welcome message"
-                }
-            },
-            required: ["welcomeMessage"]
-        };
-
-
-        const channelData = await this.chatClient.getChannelData(channelId);
-        const channelProject = channelData?.projectId
-            ? this.projects.getProject(channelData.projectId)
+        const channel = await this.chatClient.getChannelData(channelId);
+        const channelProject = channel?.projectId
+            ? this.projects.getProject(channel.projectId)
             : null;
         const channelGoals = [
             ...Object.values(channelProject?.tasks || {})
         ]
 
-        // Get agent descriptions from settings for channel members
-        const agentsOptions = (channelData.members || [])
-            .filter(memberId => this.userId !== memberId)
-            .map(memberId => {
-                return this.agents.agents[memberId];
-            });
+        const instructions = this.modelHelpers.createPrompt();
+        instructions.addContext({ contentType: ContentType.ABOUT });
+        instructions.addContext({ contentType: ContentType.CHANNEL_DETAILS, channel, tasks: channelGoals });
+        instructions.addContext({ contentType: ContentType.PURPOSE });
+        instructions.addContext({ contentType: ContentType.AGENT_CAPABILITIES, agents: agentOptions });
 
-
-        const promptBuilder = this.modelHelpers.createPrompt();
-        promptBuilder.addContext({ contentType: ContentType.PURPOSE });
-        promptBuilder.addContext({ contentType: ContentType.AGENT_CAPABILITIES, agents: agentOptions });
-
-        promptBuilder.addInstruction(`Generate a friendly welcome message for a new user that:
+        instructions.addInstruction(`Generate a welcome message for a new chat channel that:
 1. Introduces yourself
 2. Briefly explains how you help users achieve their goals
 3. Mentions the specific types of agents available to help them
-4. Invites them to share what they'd like to achieve
-        
-Keep it concise but warm and engaging.`);
+4. Invites them to share what they'd like to achieve`);
 
-        const response = await this.modelHelpers.generate<{ welcomeMessage: string }>({
-            message: "Generate welcome message",
-            instructions: new StructuredOutputPrompt(schema, promptBuilder.build())
+        const response = await this.modelHelpers.generate({
+            message: "Generate a welcome message to the chat channel.",
+            instructions: instructions
         });
 
-        return response.welcomeMessage;
+        return response.message;
     }
 
     // @deprecated

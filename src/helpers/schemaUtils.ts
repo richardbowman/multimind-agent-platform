@@ -2,6 +2,8 @@ import { SchemaInliner } from './schemaInliner';
 import { SchemaType } from '../schemas/SchemaTypes';
 import schemas from '../schemas/schemasImport';
 import { JSONSchema } from 'src/llm/ILLMService';
+import { Config } from 'ts-json-schema-generator';
+import { JSONSchema7 } from 'json-schema';
 
 /**
  * Gets an inlined schema from a JSON schema file
@@ -22,4 +24,18 @@ export function getInlinedSchema(schemaJson: any, type?: string): JSONSchema {
  */
 export async function getGeneratedSchema(type: SchemaType): Promise<JSONSchema> {
     return getInlinedSchema(schemas, type);
+}
+
+//TODO: probably not that useful, but maybe for dynamic agents
+export async function getDynamicSchema({ path, type  = "*"} : {path: string, type: string}) : Promise<JSONSchema7> {
+    const tsj = await import("ts-json-schema-generator");
+
+    const config : Config = {
+        path,
+        tsconfig: "TODO: need to copy this to dist",
+        type
+    };
+
+    const outputPath = "path/to/output/file";
+    return tsj.createGenerator(config).createSchema(config.type);    
 }
