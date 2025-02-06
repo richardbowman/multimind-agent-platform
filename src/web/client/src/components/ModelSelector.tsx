@@ -66,16 +66,12 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
 
                         // Update the model list
                         const models = await ipcService.getRPC().getAvailableModels('llama_cpp');
-                        setModels(prev => ({
-                            ...prev,
-                            llama_cpp: models
-                        }));
+                        setModels(models);
 
                         handleSelect({ id: file.name });
 
                         snackbar.showSnackbar({ message: `Model ${file.name} uploaded successfully` });
-                    };
-                    reader.readAsArrayBuffer(file);
+                    }
                 } catch (error) {
                     console.error('Failed to upload model:', error);
                     setUploadError(`Failed to upload model: ${error instanceof Error ? error.message : 'Unknown error'}`);
