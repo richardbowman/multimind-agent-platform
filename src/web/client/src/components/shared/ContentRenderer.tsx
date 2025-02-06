@@ -26,14 +26,14 @@ interface ContentRendererProps {
     metadata?: Record<string, any>;
 }
 
-export const ContentRenderer: React.FC<ContentRendererProps> = ({ 
-    content, 
-    type, 
+export const ContentRenderer: React.FC<ContentRendererProps> = ({
+    content,
+    type,
     metadata
 }) => {
     const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
     const mimeType = metadata?.mimeType;
-    
+
     // Handle CSV content
     if (mimeType === 'text/csv' || type === 'csv' || type == ArtifactType.Spreadsheet) {
         return <CSVRenderer content={content} />;
@@ -43,7 +43,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     if (type === 'mermaid' || type == ArtifactType.Diagram) {
         return <Mermaid content={content} />;
     }
-    
+
     // Handle image content
     if (mimeType?.startsWith('image/')) {
         let dataUrl;
@@ -66,20 +66,20 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
             console.error('Unsupported image content type:', typeof content);
             return <Typography color="error">Unsupported image format</Typography>;
         }
-        
+
         return (
-            <Box sx={{ 
-                display: 'flex', 
-                justifyContent: 'center', 
+            <Box sx={{
+                display: 'flex',
+                justifyContent: 'center',
                 alignItems: 'center',
-                p: 2 
+                p: 2
             }}>
                 <Paper elevation={3} sx={{ p: 1, maxWidth: '100%', maxHeight: '70vh' }}>
-                    <img 
-                        src={dataUrl} 
-                        alt={metadata?.title || 'Image artifact'} 
-                        style={{ 
-                            maxWidth: '100%', 
+                    <img
+                        src={dataUrl}
+                        alt={metadata?.title || 'Image artifact'}
+                        style={{
+                            maxWidth: '100%',
                             maxHeight: '70vh',
                             objectFit: 'contain'
                         }}
@@ -88,10 +88,13 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
             </Box>
         );
     }
-    
+
     // Handle calendar content
     if (mimeType === 'text/calendar' || type === 'calendar' || type == ArtifactType.Calendar) {
         const localizer = momentLocalizer(moment);
+        const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+        const [date, setDate] = useState(new Date());
+
         const events = (content as CalendarEvent[]).map(event => ({
             title: event.title,
             start: new Date(event.start),
@@ -100,6 +103,92 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
             location: event.location
         }));
 
+        const handlePrevious = useCallback(() => {
+            setDate(prev => {
+                const newDate = new Date(prev);
+                if (view === 'month') {
+                    newDate.setMonth(newDate.getMonth() - 1);
+                } else if (view === 'week') {
+                    newDate.setDate(newDate.getDate() - 7);
+                } else {
+                    newDate.setDate(newDate.getDate() - 1);
+                }
+                return newDate;
+            });
+        }, [view]);
+
+        const handleNext = useCallback(() => {
+            setDate(prev => {
+                const newDate = new Date(prev);
+                if (view === 'month') {
+                    newDate.setMonth(newDate.getMonth() + 1);
+                } else if (view === 'week') {
+                    newDate.setDate(newDate.getDate() + 7);
+                } else {
+                    newDate.setDate(newDate.getDate() + 1);
+                }
+                return newDate;
+            });
+        }, [view]);
+
+        const handleToday = useCallback(() => {
+            setDate(new Date());
+        }, []);
+
+        const handleViewChange = useCallback((newView: 'month' | 'week' | 'day') => {
+            setView(newView);
+        }, []);
+
+        useEffect(() => {
+            const calendarActions = [
+                {
+                    id: 'calendar-prev',
+                    icon: <NavigateBeforeIcon />,
+                    label: 'Previous',
+                    onClick: handlePrevious
+                },
+                {
+                    id: 'calendar-next',
+                    icon: <NavigateNextIcon />,
+                    label: 'Next',
+                    onClick: handleNext
+                },
+                {
+                    id: 'calendar-today',
+                    label: 'Today',
+                    onClick: handleToday
+                },
+                {
+                    id: 'calendar-view-month',
+                    label: 'Month',
+                    onClick: () => handleViewChange('month'),
+                    variant: view === 'month' ? 'contained' : 'outlined'
+                },
+                {
+                    id: 'calendar-view-week',
+                    label: 'Week',
+                    onClick: () => handleViewChange('week'),
+                    variant: view === 'week' ? 'contained' : 'outlined'
+                },
+                {
+                    id: 'calendar-view-day',
+                    label: 'Day',
+                    onClick: () => handleViewChange('day'),
+                    variant: view === 'day' ? 'contained' : 'outlined'
+                }
+            ];
+
+            registerActions('calendar', calendarActions);
+            return () => unregisterActions('calendar');
+        }, [handlePrevious, handleNext, handleToday, handleViewChange, view, registerActions, unregisterActions]);
+
+        // Update view button states when view changes
+        useEffect(() => {
+            updateActionState('calendar-view-month', { variant: view === 'month' ? 'contained' : 'outlined' });
+            updateActionState('calendar-view-week', { variant: view === 'week' ? 'contained' : 'outlined' });
+            updateActionState('calendar-view-day', { variant: view === 'day' ? 'contained' : 'outlined' });
+        }, [view, updateActionState]);
+
         return (
             <Box sx={{ height: '70vh', mt: 2 }}>
                 <Calendar
@@ -107,6 +196,10 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                     events={events}
                     startAccessor="start"
                     endAccessor="end"
+                    view={view}
+                    onView={setView}
+                    date={date}
+                    onNavigate={setDate}
                     defaultView="month"
                     views={['month', 'week', 'day']}
                     style={{ height: '100%' }}
@@ -129,7 +222,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         pdfjs.GlobalWorkerOptions.workerSrc = new URL(
             'pdfjs-dist/build/pdf.worker.min.mjs',
             import.meta.url,
-          ).toString();
+        ).toString();
 
         const handleLoadSuccess = ({ numPages: totalPages }: { numPages: number }) => {
             numPages.current = totalPages;
@@ -198,41 +291,41 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         }, [updateActionState]);
 
         return (
-            <Box sx={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
+            <Box sx={{
+                display: 'flex',
+                flexDirection: 'column',
                 alignItems: 'center',
                 p: 2
             }}>
-                
+
                 <Paper elevation={3} sx={{ p: 1, maxWidth: '100%', overflow: 'auto' }}>
                     <Document
                         file={`data:${mimeType};base64,${content}`}
                         onLoadSuccess={handleLoadSuccess}
                     >
-                        <Page 
-                            pageNumber={pageNumber.current} 
+                        <Page
+                            pageNumber={pageNumber.current}
                             scale={scale}
                             renderAnnotationLayer={false}
                             renderTextLayer={false}
                         />
                     </Document>
                 </Paper>
-                
+
                 <Typography variant="caption" sx={{ mt: 1 }}>
                     Page {pageNumber.current} of {numPages.current}
                 </Typography>
-                
+
                 {(
                     <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
-                        <IconButton 
+                        <IconButton
                             onClick={handlePreviousPage}
                             size="small"
                             disabled={pageNumber.current === 1}
                         >
                             <NavigateBeforeIcon />
                         </IconButton>
-                        <IconButton 
+                        <IconButton
                             onClick={handleNextPage}
                             size="small"
                             disabled={pageNumber.current === numPages.current}
@@ -266,9 +359,128 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     if (type === 'binary' || metadata?.format === 'binary') {
         return <pre>Binary content</pre>;
     }
-    
-    if (content.length < 1024*10 && (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown')) {
-        return <ReactMarkdown remarkPlugins={[remarkGfm]}>content</ReactMarkdown>;
+
+    // Handle Reveal.js presentations
+    if (type === ArtifactType.PRESENTATION || metadata?.format === 'revealjs') {
+        const htmlContent = typeof content === 'string' ? content : new TextDecoder().decode(content);
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        const url = URL.createObjectURL(blob);
+        const iframeRef = useRef<HTMLIFrameElement>(null);
+
+        const [currentSlide, setCurrentSlide] = useState(0);
+        const [totalSlides, setTotalSlides] = useState(0);
+
+        const navigateSlide = useCallback((direction: 'prev' | 'next') => {
+            if (iframeRef.current) {
+                iframeRef.current.contentWindow?.postMessage(
+                    JSON.stringify({
+                        method: direction === 'prev' ? 'left' : 'right'
+                    }),
+                    '*'
+                );
+                iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ method: 'availableRoutes' }), '*');
+            }
+        }, []);
+
+        // Listen for slide changes
+        useEffect(() => {
+            const handleMessage = (event: MessageEvent) => {
+                try {
+                    const data = JSON.parse(event.data);
+                    if (data.namespace === 'reveal') {
+                        if (data.eventName === 'callback' && data.method === 'getTotalSlides') {
+                            setTotalSlides(data.result);
+
+                        }
+                        if (data.eventName === 'callback' && data.method === 'availableRoutes') {
+                            updateActionState('reveal-prev', { disabled: !data.result.left });
+                            updateActionState('reveal-next', { disabled: !data.result.right });
+                        }
+                        if (data.eventName === 'slidechanged') {
+                            updateActionState('reveal-slide-number', { label: `Slide ${data.indexh} of ${totalSlides}` });
+                        }
+                        if (data.eventName === 'ready') {
+                            iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ method: 'getTotalSlides' }), '*');
+                            iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ method: 'availableRoutes' }), '*');
+                        }
+                    }
+                } catch (error) {
+                    console.error('Error handling Reveal.js message:', error);
+                }
+            };
+
+            window.addEventListener('message', handleMessage);
+
+            return () => window.removeEventListener('message', handleMessage);
+        }, []);
+
+        const toggleFullscreen = useCallback(() => {
+            if (iframeRef.current) {
+                if (document.fullscreenElement) {
+                    document.exitFullscreen();
+                } else {
+                    iframeRef.current.requestFullscreen();
+                }
+            }
+        }, []);
+
+        useEffect(() => {
+            const presentationActions = [
+                {
+                    id: 'reveal-prev',
+                    icon: <NavigateBeforeIcon />,
+                    label: 'Previous Slide',
+                    onClick: () => navigateSlide('prev'),
+                    disabled: currentSlide === 1
+                },
+                {
+                    id: 'reveal-next',
+                    icon: <NavigateNextIcon />,
+                    label: 'Next Slide',
+                    onClick: () => navigateSlide('next'),
+                    disabled: currentSlide === totalSlides
+                },
+                {
+                    id: 'reveal-fullscreen',
+                    label: 'Toggle Fullscreen',
+                    onClick: toggleFullscreen
+                },
+                {
+                    id: 'reveal-slide-number',
+                    label: `Slide ${currentSlide} of ${totalSlides}`,
+                    disabled: true
+                }
+            ];
+
+            registerActions('reveal', presentationActions);
+            return () => unregisterActions('reveal');
+        }, [registerActions, unregisterActions]);
+
+        return (
+            <Box sx={{
+                width: '100%',
+                height: '70vh',
+                border: '1px solid #ddd',
+                borderRadius: '4px',
+                overflow: 'hidden'
+            }}>
+                <iframe
+                    ref={iframeRef}
+                    src={url}
+                    style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none'
+                    }}
+                    title="Reveal.js Presentation"
+                    allowFullScreen
+                />
+            </Box>
+        );
+    }
+
+    if (content.length < 1024 * 10 && (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown')) {
+        return <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>;
     } else {
         return <pre>{content}</pre>;
     }

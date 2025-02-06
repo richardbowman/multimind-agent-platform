@@ -9,6 +9,11 @@ export interface CodeBlock {
     readonly code: string;
 }
 
+export interface XmlBlock {
+    readonly tag: string;
+    readonly content: string;
+}
+
 export interface Link {
     text: string;
     href: string;
@@ -70,10 +75,75 @@ export namespace StringUtils {
      * @param text Input text containing code blocks
      * @returns String with all content outside of code blocks
      */
-    export function extractNonCodeContent(text: string): string {
-        // Replace all code blocks (with any language specifier) with empty strings
-        const withoutCodeBlocks = text.replace(/```[\s\S]*?```/g, '');
-        return withoutCodeBlocks.trim();
+    /**
+     * Extracts XML blocks from text
+     * @param text Input text containing XML blocks
+     * @returns Array of XML blocks with tag and content
+     */
+    export function extractXmlBlocks(text: string): XmlBlock[] {
+        const xmlBlockRegex = /<([a-zA-Z]+)[^>]*>([\s\S]*?)<\/\1>/g;
+        const matches: XmlBlock[] = [];
+        let match: RegExpExecArray | null;
+        const seen = new Set();
+
+        while ((match = xmlBlockRegex.exec(text)) !== null) {
+            const tag = match[1];
+            let content = match[2].trim();
+            
+            // Handle nested tags by recursively extracting inner content
+            // First add the outer block
+            matches.push({
+                tag,
+                content
+            });
+
+            // Then recursively handle inner blocks
+            const innerBlocks = extractXmlBlocks(content);
+            for (const inner of innerBlocks) {
+                if (!seen.has(inner.tag)) {
+                    matches.push(inner);
+                    seen.add(inner.tag);
+                }
+            }
+        }
+        return matches;
+    }
+
+    /**
+     * Extracts a specific XML block by tag name
+     * @param text Input text containing XML blocks
+     * @param tagName The XML tag to search for
+     * @returns The content of the first matching XML block or undefined if not found
+     */
+    export function extractXmlBlock(text: string, tagName: string): string|undefined {
+        const regex = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`);
+        const match = regex.exec(text);
+        return match ? match[1].trim() : undefined;
+    }
+
+    /**
+     * Extracts text content that is not within code blocks or specified XML blocks
+     * @param text Input text containing code blocks and XML blocks
+     * @param xmlTagsToRemove Optional array of XML tags to remove from the content
+     * @returns String with all content outside of code blocks and specified XML blocks
+     */
+    export function extractNonCodeContent(text: string, xmlTagsToRemove: string[] = []): string {
+        // Remove code blocks
+        let cleanedText = text.replace(/```[\s\S]*?```/g, '');
+        
+        // Remove specified XML blocks if any
+        if (xmlTagsToRemove.length > 0) {
+            const xmlRegex = new RegExp(`<(${xmlTagsToRemove.join('|')})[^>]*>[\\s\\S]*?<\\/\\1>`, 'g');
+            cleanedText = cleanedText.replace(xmlRegex, '');
+        }
+        
+        // Clean up extra whitespace
+        return cleanedText
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+            .join('\n')
+            .trim();
     }
 
     /**

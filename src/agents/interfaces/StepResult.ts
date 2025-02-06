@@ -1,4 +1,5 @@
-import { ModelResponse } from 'src/schemas/ModelResponse';
+import { CreateArtifact, ModelResponse } from 'src/schemas/ModelResponse';
+import { Artifact } from 'src/tools/artifact';
 import { UUID } from 'src/types/uuid';
 
 export enum StepResultType {
@@ -56,6 +57,7 @@ export interface StepResult<TypedStepResponse extends StepResponse> {
     projectId?: UUID;
     taskId?: UUID;
     artifactIds?: UUID[],
+    artifacts?: Partial<Artifact>[],
     finished?: boolean;
     goal?: string;
     async?: boolean;

@@ -6,13 +6,95 @@ import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ContentType } from 'src/llm/promptBuilder';
-import { BrainstormResponse } from 'src/schemas/BrainstormResponse';
+import { BrainstormResponse, SlideContent } from 'src/schemas/BrainstormResponse';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StructuredOutputPrompt } from 'src/llm/ILLMService';
+import { ArtifactType } from 'src/tools/artifact';
 
 @StepExecutorDecorator(ExecutorType.BRAINSTORM, 'Generate creative ideas and possibilities through brainstorming', true)
 export class BrainstormExecutor implements StepExecutor {
+    protected generateSlideContent(ideas: any[]): SlideContent[] {
+        return ideas.map((idea, index) => ({
+            title: idea.title,
+            content: [
+                `## ${idea.title}`,
+                idea.description,
+                `### Benefits:`,
+                idea.benefits
+            ].join('\n'),
+            notes: `Additional details for ${idea.title}`,
+            transition: index === 0 ? 'slide' : 'fade',
+            background: index % 2 === 0 ? '#ffffff' : '#f5f5f5'
+        }));
+    }
+
+    protected generateRevealJS(slides: SlideContent[]): string {
+        const slideSections = slides.map(slide => `
+            <section 
+                data-transition="${slide.transition}"
+                data-background="${slide.background}"
+                data-markdown
+            >
+                <textarea data-template>
+                    ${slide.content}
+                </textarea>
+                <aside class="notes">
+                    ${slide.notes}
+                </aside>
+            </section>
+        `).join('\n');
+
+        return `<!doctype html>
+<html>
+    <head>
+        <meta charset="utf-8">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+        <title>Brainstorming Presentation</title>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/black.css">
+    </head>
+    <body>
+        <div class="reveal">
+            <div class="slides">
+                ${slideSections}
+            </div>
+        </div>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/markdown/markdown.min.js"></script>
+        <script>
+            Reveal.initialize({
+                plugins: [ RevealMarkdown ],
+                hash: true,
+                postMessage: true,
+                postMessageEvents: true,
+                transition: 'fade'
+            });
+
+            // Send initial slide count
+            window.parent.postMessage(JSON.stringify({
+                namespace: 'reveal',
+                eventName: 'ready',
+                state: {
+                    totalSlides: Reveal.getTotalSlides()
+                }
+            }), '*');
+
+            // Listen for slide changes
+            Reveal.on('slidechanged', event => {
+                window.parent.postMessage(JSON.stringify({
+                    namespace: 'reveal',
+                    eventName: 'slidechanged',
+                    state: {
+                        indexh: event.indexh,
+                        indexv: event.indexv
+                    }
+                }), '*');
+            });
+        </script>
+    </body>
+</html>`;
+    }
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
@@ -64,6 +146,10 @@ export class BrainstormExecutor implements StepExecutor {
             `### ${idea.title}\n${idea.description}\n\n**Benefits:**\n${idea.benefits}`
         ).join('\n\n');
 
+        // Generate slides
+        const slides = this.generateSlideContent(ideas);
+        const revealJS = this.generateRevealJS(slides);
+
         return {
             type: "brainstorm",
             finished: response.isComplete || false,
@@ -71,7 +157,17 @@ export class BrainstormExecutor implements StepExecutor {
             response: {
                 message: `**Brainstorming Results:**\n\n${formattedIdeas}\n\n**Summary:**\n${response.summary || ''}`,
                 isComplete: response.isComplete || false
-            }
+            },
+            artifacts: [{
+                id: crypto.randomUUID(),
+                type: ArtifactType.PRESENTATION,
+                content: Buffer.from(revealJS),
+                metadata: {
+                    format: 'revealjs',
+                    slideCount: slides.length,
+                    generatedAt: new Date().toISOString()
+                }
+            }]
         };
     }
 }

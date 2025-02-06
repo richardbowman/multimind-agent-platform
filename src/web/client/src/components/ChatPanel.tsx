@@ -1,4 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
+import { ChatMessage } from './ChatMessage';
+import { ChatProjectHeader } from './ChatProjectHeader';
+import { ChatDetailsDialog } from './ChatDetailsDialog';
 import {
     Box,
     Typography,
@@ -334,155 +337,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                     }}
                     onScroll={checkScrollPosition}
                 >
-                {/* Project Overview Card - Only show when not in thread view */}
-                {currentProject && !currentThreadId && (
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            mb: 2,
-                            p: 2,
-                            bgcolor: 'background.paper',
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 2
+                {/* Project Overview and Goal Planning Cards */}
+                {!currentThreadId && (
+                    <ChatProjectHeader
+                        currentProject={currentProject}
+                        channels={channels}
+                        tasks={tasks}
+                        currentChannelId={currentChannelId}
+                        handles={handles}
+                        onTaskClick={(task) => {
+                            setSelectedTask(task);
+                            setTaskDialogOpen(true);
                         }}
-                    >
-                        <Typography
-                            variant="overline"
-                            sx={{
-                                mb: 1,
-                                color: 'text.secondary',
-                                display: 'block'
-                            }}
-                        >
-                            Project Overview
-                        </Typography>
-                        <Box>
-                            <Typography variant="h6" sx={{ mb: 1 }}>
-                                {currentProject.name}
-                            </Typography>
-                            <Typography variant="body2" sx={{ mb: 2 }}>
-                                {currentProject.metadata.description}
-                            </Typography>
-
-                            <Box sx={{ mt: 2 }}>
-                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                    Tasks:
-                                </Typography>
-                                <List dense sx={{ mb: 2 }}>
-                                    {currentProject.tasks.map(task => (
-                                        <ListItem key={task.id} sx={{ p: 0 }}>
-                                            <ListItemButton
-                                                onClick={() => {
-                                                    setSelectedTask(task);
-                                                    setTaskDialogOpen(true);
-                                                }}
-                                            >
-                                                <Typography variant="body2">
-                                                    {task.description}
-                                                </Typography>
-                                                {task.complete && (
-                                                    <Typography variant="caption" sx={{ ml: 1, color: 'success.main' }}>
-                                                        ✓
-                                                    </Typography>
-                                                )}
-                                                {task.inProgress && (
-                                                    <Typography variant="caption" sx={{ ml: 1, color: 'warning.main' }}>
-                                                        ⌛
-                                                    </Typography>
-                                                )}
-                                            </ListItemButton>
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </Box>
-
-                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                Status: {currentProject.metadata.status} |
-                                Created: {new Date(currentProject.metadata.createdAt).toLocaleDateString()} |
-                                Last Updated: {new Date(currentProject.metadata.updatedAt).toLocaleDateString()}
-                            </Typography>
-                        </Box>
-                    </Paper>
-                )}
-
-                {/* Goal Planning Card */}
-                {!currentProject && channels.find(c => c.id === currentChannelId)?.goalTemplate && (
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            mb: 2,
-                            p: 2,
-                            bgcolor: 'background.paper',
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 2
-                        }}
-                    >
-                        <Typography
-                            variant="overline"
-                            sx={{
-                                mb: 1,
-                                color: 'text.secondary',
-                                display: 'block'
-                            }}
-                        >
-                            Project Planning
-                        </Typography>
-                        {(() => {
-                            const projectId = channels.find(c => c.id === currentChannelId)?.projectId;
-                            //const project = await ipcService.getRPC().getProject(projectId);
-                            const planningTasks = tasks.filter(t =>
-                                t.projectId === projectId &&
-                                t.type === 'planning'
-                            );
-
-                            return planningTasks ? (
-                                <Box>
-                                    <Typography variant="h6" sx={{ mb: 1 }}>
-                                        todo
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ mb: 2 }}>
-                                        todo
-                                    </Typography>
-
-                                    {planningTasks.length > 0 ? (
-                                        <Box sx={{ mt: 2 }}>
-                                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                                Planning Tasks:
-                                            </Typography>
-                                            <List dense sx={{ mb: 2 }}>
-                                                {planningTasks.map(task => (
-                                                    <ListItem key={task.id} sx={{ p: 0 }}>
-                                                        <ListItemButton
-                                                            onClick={() => {
-                                                                setSelectedTask(task);
-                                                                setTaskDialogOpen(true);
-                                                            }}
-                                                        >
-                                                            <Typography variant="body2">
-                                                                {task.description}
-                                                            </Typography>
-                                                        </ListItemButton>
-                                                    </ListItem>
-                                                ))}
-                                            </List>
-                                        </Box>
-                                    ) : (
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            No planning tasks created yet
-                                        </Typography>
-                                    )}
-
-                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                        Supporting Agents: {template.supportingAgents
-                                            .map(id => handles.find(h => h.id === id)?.handle || 'Unknown')
-                                            .join(', ')}
-                                    </Typography>
-                                </Box>
-                            ) : null;
-                        })()}
-                    </Paper>
+                    />
                 )}
 
                 {isLoading ? (
@@ -505,184 +372,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                     </Typography>
                 ) : (
                     visibleMessages.map((message, index) => (
-                        <Paper key={`${message.id}-${messageVersions[message.id] || 0}`} sx={{
-                            mb: 2,
-                            p: 2,
-                            bgcolor: 'background.default'
-                        }}>
-                            <Box sx={{
-                                display: 'flex',
-                                justifyContent: 'space-between',
-                                mb: 1
-                            }}>
-                                <Typography variant="subtitle2" sx={{ color: 'primary.main' }}>
-                                    {handles.find(h => h.id === message.user_id)?.handle || 'Unknown User'}
-                                </Typography>
-                                <Typography
-                                    variant="caption"
-                                    sx={{
-                                        color: 'text.secondary',
-                                        cursor: 'pointer',
-                                        '&:hover': {
-                                            textDecoration: 'underline'
-                                        }
-                                    }}
-                                    onClick={() => {
-                                        setSelectedMessage(message);
-                                        setMetadataDialogOpen(true);
-                                    }}
-                                >
-                                    {new Date(message.create_at).toLocaleString()}
-                                </Typography>
-                            </Box>
-                            <Box sx={{
-                                position: 'relative',
-                                overflow: 'hidden',
-                                maxHeight: expandedMessages.has(message.id) ? 'none' : '4.5em',
-                                ...(message.props?.partial && {
-                                    borderLeft: '4px solid',
-                                    borderColor: 'primary.main',
-                                    pl: 2,
-                                    mb: 1
-                                })
-                            }}>
-                                <ReactMarkdown
-                                    remarkPlugins={[remarkGfm]}
-                                    components={{
-                                        a: CustomLink,
-                                        pre: ({node, ...props}) => (
-                                            <div {...props} />
-                                        ),
-                                        code({node, inline, className, children, ...props}) {
-                                            if (message.props?.partial) {
-                                                return (
-                                                    <Box component="span" sx={{
-                                                        bgcolor: 'background.default',
-                                                        p: '2px 4px',
-                                                        borderRadius: 1,
-                                                        fontFamily: 'monospace'
-                                                    }}>
-                                                        {children}
-                                                    </Box>
-                                                );
-                                            }
-                                            const match = /language-(\w+)(?:\s*\[hidden\])?/.exec(className || '');
-                                            const content = String(children).replace(/\n$/, '');
-                                            const isHidden = className?.includes('[hidden]');
-                                            
-                                            // Handle code blocks
-                                            if (!inline && match) {
-                                                return isHidden ? null : (
-                                                    <CodeBlock 
-                                                        language={match[1]} 
-                                                        content={content}
-                                                    />
-                                                );
-                                            }
-
-                                            // Inline code
-                                            return isHidden ? null : (
-                                                <div className={className} {...props}>
-                                                    {children}
-                                                </div>
-                                            );
-                                        }
-                                    }}
-                                >
-                                    {message.message}
-                                </ReactMarkdown>
-                            </Box>
-                            <Box sx={{
-                                position: 'relative',
-                                margin: '-16px',
-                                padding: '16px',
-                                background: !expandedMessages.has(message.id) ? 'linear-gradient(to bottom, rgba(42,42,42,0) 0%, rgba(24,24,24,1) 100%)' : undefined,
-                                borderRadius: 2
-                            }}>
-                                {!expandedMessages.has(message.id) && (
-                                    <Box sx={{ 
-                                        position: 'absolute', 
-                                        bottom: 0, 
-                                        right: 0,
-                                        zIndex: 1,
-                                        p: 1,
-                                        bgcolor: 'background.paper',
-                                        borderRadius: '4px 0 4px 0'
-                                    }}>
-                                        <Button
-                                            size="small"
-                                            onClick={() => toggleMessageExpansion(message.id)}
-                                            sx={{
-                                                textTransform: 'none',
-                                                color: 'primary.main',
-                                                '&:hover': {
-                                                    backgroundColor: 'background.default'
-                                                }
-                                            }}
-                                        >
-                                            Show more
-                                        </Button>
-                                    </Box>
-                                )}
-                                {expandedMessages.has(message.id) && message.message.split('\n').length > 3 && (
-                                    <Box sx={{ 
-                                        position: 'absolute', 
-                                        bottom: 0, 
-                                        right: 0,
-                                        zIndex: 1,
-                                        p: 1,
-                                        bgcolor: 'background.paper',
-                                        borderRadius: '4px 0 4px 0'
-                                    }}>
-                                        <Button
-                                            size="small"
-                                            onClick={() => toggleMessageExpansion(message.id)}
-                                            sx={{
-                                                textTransform: 'none',
-                                                color: 'primary.main',
-                                                '&:hover': {
-                                                    backgroundColor: 'background.default'
-                                                }
-                                            }}
-                                        >
-                                            Show less
-                                        </Button>
-                                    </Box>
-                                )}
-                                {(message.inProgress || message.props?.partial) && (
-                                    <Box sx={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center',
-                                        gap: 1,
-                                        mt: 1
-                                    }}>
-                                        <Spinner size={20} />
-                                        <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                            Streaming response...
-                                        </Typography>
-                                    </Box>
-                                )}
-                                {expandedMessages.has(message.id) && !currentThreadId && messages.some(m => m.props?.['root-id'] === message.id) && (
-                                    <Box
-                                        onClick={() => setCurrentThreadId(message.id)}
-                                        sx={{
-                                            mt: 1,
-                                            p: 1,
-                                            bgcolor: 'action.hover',
-                                            borderRadius: 1,
-                                            cursor: 'pointer',
-                                            '&:hover': {
-                                                bgcolor: 'action.selected'
-                                            }
-                                        }}
-                                    >
-                                        <Typography variant="caption" sx={{ color: 'primary.main' }}>
-                                            View thread ({message.reply_count} {message.reply_count === 1 ? 'response' : 'responses'})
-                                        </Typography>
-                                    </Box>
-                                )}
-                            </Box>
-                        </Paper>
+                        <ChatMessage
+                        key={`${message.id}-${messageVersions[message.id] || 0}`}
+                        message={message}
+                        handles={handles}
+                        expandedMessages={expandedMessages}
+                        messageVersions={messageVersions}
+                        currentThreadId={currentThreadId}
+                        messages={messages}
+                        onToggleExpansion={toggleMessageExpansion}
+                        onViewThread={setCurrentThreadId}
+                        onViewMetadata={(message) => {
+                            setSelectedMessage(message);
+                            setMetadataDialogOpen(true);
+                        }}
+                    />
                     )))}
                 {uniqueTasks && uniqueTasks.length > 0 && (
                     <Paper
@@ -745,100 +449,18 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 />
             </Box>
 
-            <Dialog
+            <ChatDetailsDialog
                 open={metadataDialogOpen}
                 onClose={() => setMetadataDialogOpen(false)}
-                maxWidth="sm"
-                fullWidth
-            >
-                <DialogTitle>Message Metadata</DialogTitle>
-                <DialogContent>
-                    {selectedMessage && (
-                        <Stack spacing={2} sx={{ mt: 2 }}>
-                            <Typography variant="body1">
-                                <strong>ID:</strong> {selectedMessage.id}
-                            </Typography>
-                            <Typography variant="body1">
-                                <strong>Channel ID:</strong> {selectedMessage.channel_id}
-                            </Typography>
-                            <Typography variant="body1">
-                                <strong>Thread ID:</strong> {selectedMessage.thread_id || 'None'}
-                            </Typography>
-                            <Typography variant="body1">
-                                <strong>Created At:</strong> {new Date(selectedMessage.create_at).toLocaleString()}
-                            </Typography>
-                            <Typography variant="body1">
-                                <strong>User ID:</strong> {selectedMessage.user_id}
-                            </Typography>
-                            {selectedMessage.props && Object.entries(selectedMessage.props).map(([key, value]) => {
-                                const isProjectIds = key === 'project-ids';
-                                return (
-                                    <Box key={key} sx={{
-                                        p: 1,
-                                        bgcolor: 'background.paper',
-                                        borderRadius: 1,
-                                        border: '1px solid',
-                                        borderColor: 'divider',
-                                        mb: 1
-                                    }}>
-                                        <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
-                                            {key}
-                                        </Typography>
-                                        {isProjectIds ? (
-                                            <Button
-                                                variant="text"
-                                                sx={{
-                                                    p: 0,
-                                                    textTransform: 'none',
-                                                    justifyContent: 'flex-start',
-                                                    '&:hover': {
-                                                        textDecoration: 'underline'
-                                                    }
-                                                }}
-                                                onClick={() => {
-                                                    const projectTasks = tasks.filter(t => (t.props?.["project-ids"]||[]).includes(value));
-                                                    if (projectTasks.length > 0) {
-                                                        setSelectedMessage(null);
-                                                        setMetadataDialogOpen(false);
-                                                        setSelectedTask(projectTasks[0]);
-                                                        setTaskDialogOpen(true);
-                                                    } else {
-                                                        // If no tasks found, create a new task for this project
-                                                        setSelectedTask({
-                                                            projectId: value,
-                                                            description: `New task for project ${value}`,
-                                                            type: 'standard',
-                                                            complete: false,
-                                                            inProgress: false,
-                                                            createdAt: new Date().toISOString(),
-                                                            updatedAt: new Date().toISOString()
-                                                        });
-                                                        setTaskDialogOpen(true);
-                                                    }
-                                                }}
-                                            >
-                                                <Typography variant="body2" sx={{
-                                                    whiteSpace: 'pre-wrap',
-                                                    wordBreak: 'break-word'
-                                                }}>
-                                                    {value}
-                                                </Typography>
-                                            </Button>
-                                        ) : (
-                                            <Typography variant="body2" sx={{
-                                                whiteSpace: 'pre-wrap',
-                                                wordBreak: 'break-word'
-                                            }}>
-                                                {typeof value === 'object' ? JSON.stringify(value, null, 2) : String(value)}
-                                            </Typography>
-                                        )}
-                                    </Box>
-                                );
-                            })}
-                        </Stack>
-                    )}
-                </DialogContent>
-            </Dialog>
+                selectedMessage={selectedMessage}
+                tasks={tasks}
+                onTaskClick={(task) => {
+                    setSelectedMessage(null);
+                    setMetadataDialogOpen(false);
+                    setSelectedTask(task);
+                    setTaskDialogOpen(true);
+                }}
+            />
 
             <TaskDialog
                 open={taskDialogOpen}

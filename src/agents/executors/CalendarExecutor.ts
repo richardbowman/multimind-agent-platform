@@ -75,11 +75,19 @@ export class CalendarExecutor implements StepExecutor {
         });
       });
 
+      // Generate a title based on the first event or default
+      const title = response.events.length > 0 
+        ? `Calendar: ${response.events[0].title} and ${response.events.length - 1} more events`
+        : 'Generated Calendar';
+
       // Create the calendar artifact
       const calendarArtifact = await this.artifactManager.saveArtifact({
         type: 'calendar',
         content: calendar.toString(),
         mimeType: 'text/calendar',
+        metadata: {
+          title: title
+        }
       });
 
       // Return both the confirmation message and the artifact

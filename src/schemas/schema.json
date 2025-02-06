@@ -1085,31 +1085,17 @@
     "IntakeQuestionsResponse": {
       "additionalProperties": false,
       "properties": {
-        "followupMessage": {
-          "type": "string"
-        },
         "goalRestatement": {
-          "type": "string"
-        },
-        "intakeQuestions": {
-          "items": {
-            "$ref": "#/definitions/IntakeQuestion"
-          },
-          "type": "array"
-        },
-        "reasoning": {
+          "description": "Restated goal of your best understanding of how to achieve the goal (this will be provided to your follow-up tasks)",
           "type": "string"
         },
         "shouldContinue": {
-          "description": "if the LLM believes we have enough information to end questioning",
+          "description": "if you believe we have enough information to proceed with other processing tasks.",
           "type": "boolean"
         }
       },
       "required": [
-        "intakeQuestions",
-        "reasoning",
-        "goalRestatement",
-        "followupMessage"
+        "goalRestatement"
       ],
       "type": "object"
     },

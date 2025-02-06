@@ -11,6 +11,7 @@ import { Artifact } from 'src/tools/artifact';
 import { ClientError } from '@mattermost/client';
 import { GoalTemplate } from 'src/schemas/goalTemplateSchema';
 import { Task } from 'src/tools/taskManager';
+import { Settings } from 'src/tools/settings';
 
 export interface LogEntry {
     timestamp: string;
@@ -51,7 +52,7 @@ export interface ServerMethods {
     saveArtifact(artifact: Artifact): Promise<Artifact>;
     addArtifactToChannel(channelId: string, artifactId: string): Promise<void>;
     removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void>;
-    getSettings(): Promise<any>;
+    getSettings(): Promise<Settings>;
     updateSettings(settings: any): Promise<ClientError>;
     getLogs(logType: 'llm' | 'system' | 'api'): Promise<any>;
     getHandles(): Promise<Array<{id: string; handle: string}>>;
@@ -132,7 +133,7 @@ export interface ServerMethods {
 export interface ClientMethods {
     onMessage(messages: ClientMessage[]): void;
     onLogUpdate(update: LogParam): void;
-    onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }): void;
+    onBackendStatus(status: { configured: boolean; ready: boolean; message?: string, appPath: string }): void;
     onTaskUpdate(task: Task): void;
     onProjectUpdate(project: ClientProject): void;
     onFilesAttached(artifacts: Artifact[]): void;

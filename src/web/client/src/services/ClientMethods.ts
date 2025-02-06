@@ -1,39 +1,24 @@
 import * as ort from 'onnxruntime-web';
-
-// Default voice ID for TTS
-const DEFAULT_VOICE_ID = 'en_US-hfc_female-medium';
-ort.env.wasm.wasmPaths = '/';
-
 import * as tts from '@mintplex-labs/piper-tts-web';
-import type { LogParam } from '../../../../llm/LLMLogger';
+import { IPCProvider } from '../contexts/IPCContext';
 import { type DataContextMethods } from '../contexts/DataContext';
 import { ClientChannel, ClientMessage } from '../../../../shared/types';
-
-
-// Initialize TTS system
-let ttsInitialized = false;
-async function initializeTTS() {
-    if (!ttsInitialized) {
-        try {
-            // Download the model in advance
-            await tts.download(DEFAULT_VOICE_ID);
-            ttsInitialized = true;
-        } catch (error) {
-            console.error('Error initializing TTS:', error);
-        }
-    }
-}
-
-// Initialize on module load
-initializeTTS();
-import { SnackbarContextType } from '../contexts/SnackbarContext';
+import { SnackbarContextType, useSnackbar } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { ClientMethods } from '../../../../shared/RPCInterface';
 import { Artifact } from '../../../../tools/artifact';
-import { message } from 'blessed';
+import { Task } from '../../../../tools/taskManager';
+import { BaseRPCService } from '../../../../shared/BaseRPCService';
+import { LogParam } from '../../../../llm/LLMLogger';
+
+
+// Initialize TTS system
+let ttsSession : tts.TtsSession|null = null;
+
 
 class ClientMethodsImplementation implements ClientMethods {
-    constructor(private snackbarContext: SnackbarContextType, private contextMethods: DataContextMethods) { };
+
+    constructor(private ipcService: BaseRPCService, private snackbarContext: SnackbarContextType, private contextMethods: DataContextMethods) { };
 
     async onClientLogProcessed(success, message) {
         return;
@@ -49,18 +34,70 @@ class ClientMethodsImplementation implements ClientMethods {
         for (const message of messages) {
             const rootPost = this.contextMethods.messages.find(m => message.props?.["root-id"] === m.id)
 
-            if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id) {
+            if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id && message.message?.length > 0) {
                 try {
-                    // Ensure TTS is initialized
-                    await initializeTTS();
+                    // Parse SSML and split into segments
+                    const ssmlRegex = /<speak>(.*?)<\/speak>/s;
+                    const ssmlMatch = message.message.match(ssmlRegex);
+                    const textContent = ssmlMatch ? ssmlMatch[1] : message.message;
+
+                    // Split into segments based on SSML tags or punctuation
+                    const segments = [];
+                    let currentText = '';
+                    let inTag = false;
+                    let tagContent = '';
                     
-                    const wav = await tts.predict({
-                        text: message.message,
-                        voiceId: DEFAULT_VOICE_ID,
-                    });
-                    const audio = new Audio();
-                    audio.src = URL.createObjectURL(wav);
-                    audio.play();
+                    for (let i = 0; i < textContent.length; i++) {
+                        const char = textContent[i];
+                        if (char === '<') {
+                            inTag = true;
+                            if (currentText.trim()) {
+                                segments.push({type: 'text', content: currentText.trim()});
+                                currentText = '';
+                            }
+                            continue;
+                        }
+                        if (char === '>') {
+                            inTag = false;
+                            segments.push({type: 'tag', content: tagContent});
+                            tagContent = '';
+                            continue;
+                        }
+                        if (inTag) {
+                            tagContent += char;
+                        } else {
+                            currentText += char;
+                        }
+                    }
+                    if (currentText.trim()) {
+                        segments.push({type: 'text', content: currentText.trim()});
+                    }
+
+                    // Process each segment
+                    for (const segment of segments) {
+                        if (segment.type === 'text') {
+                            const wav = await tts.predict({
+                                voiceId: 'en_US-ryan-high',
+                                text: segment.content
+                            });
+
+                            const audio = new Audio();
+                            audio.src = URL.createObjectURL(wav);
+                            await new Promise<void>((resolve) => {
+                                audio.onended = () => resolve();
+                                audio.play();
+                            });
+                        } else if (segment.type === 'tag') {
+                            // Handle SSML tags
+                            const tagMatch = segment.content.match(/break\s+time="(\d+)(ms|s)"/);
+                            if (tagMatch) {
+                                const duration = parseInt(tagMatch[1]);
+                                const unit = tagMatch[2];
+                                const pauseDuration = unit === 's' ? duration * 1000 : duration;
+                                await new Promise(resolve => setTimeout(resolve, pauseDuration));
+                            }
+                        }
+                    }
                 } catch (error) {
                     console.error('Error playing TTS:', error);
                 }
@@ -156,11 +193,44 @@ class ClientMethodsImplementation implements ClientMethods {
         }
     }
 
-    async onBackendStatus(status: { configured: boolean; ready: boolean; message?: string }) {
+    async onBackendStatus(status: { configured: boolean; ready: boolean; message?: string, appPath: string }) {
         this.contextMethods.setNeedsConfig(!status.configured);
+
+        if (status.configured) {
+            await this.initializeTTS(status.appPath);
+        }
     }
 
-    onTaskUpdate(task: ClientTask) {
+    async initializeTTS(appPath: string) {
+        const settings = await this.ipcService.getRPC().getSettings();
+        const snackBar = this.snackbarContext;
+    
+        if (settings.tts.enabled) {
+            try {
+                await tts.download(settings.tts.voiceId);
+    
+                // ttsSession = await tts.TtsSession.create({
+                //     voiceId: settings.tts.voiceId,
+                //     progress: (progress) => {
+                //         snackBar.showSnackbar({ 
+                //             message: `Downloading voice ${progress.loaded} of ${progress.total}`, 
+                //             percentComplete: progress.loaded / progress.total,
+                //             severity: 'info'
+                //         });
+                //     },
+                //     wasmPaths: {
+                //         onnxWasm: appPath + "/dist/wasm/",
+                //         piperData: tts.WASM_BASE.data,
+                //         piperWasm: tts.WASM_BASE.wasm
+                //     }
+                // });
+            } catch (error) {
+                throw error;
+            }
+        }
+    }
+
+    onTaskUpdate(task: Task) {
         this.contextMethods.setTasks(prevTasks => {
             // Find and replace the updated task
             const existingIndex = prevTasks.findIndex(t => t.id === task.id);
@@ -188,6 +258,6 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 }
 
-export const useClientMethods = (snackbarContext: SnackbarContextType, contextMethods: DataContextMethods) => {
-    return new ClientMethodsImplementation(snackbarContext, contextMethods);
+export const useClientMethods = (ipcService: BaseRPCService, snackbarContext: SnackbarContextType, contextMethods: DataContextMethods) => {
+    return new ClientMethodsImplementation(ipcService, snackbarContext, contextMethods);
 };
