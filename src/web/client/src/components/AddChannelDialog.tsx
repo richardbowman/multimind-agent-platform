@@ -71,7 +71,16 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             });
             setSelectedAgents(agents);
             setSelectedTemplate(initialData.goalTemplate);
-            setDefaultResponderId(initialData.defaultResponderId);
+            
+            // Convert default responder ID to handle if needed
+            if (initialData.defaultResponderId) {
+                if (initialData.defaultResponderId.startsWith('@')) {
+                    const handle = handles.find(h => h.handle === initialData.defaultResponderId?.slice(1));
+                    setDefaultResponderId(handle?.id || initialData.defaultResponderId);
+                } else {
+                    setDefaultResponderId(initialData.defaultResponderId);
+                }
+            }
         } else {
             setChannelName(null);
             setDescription('');
@@ -253,10 +262,9 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                     <Autocomplete
                         multiple
                         options={handles}
-                        value={handles.filter(handle => selectedAgents.includes(handle.handle)
-                        )}
+                        value={handles.filter(handle => selectedAgents.includes(handle.id))}
                         onChange={(_, newValue) => {
-                            setSelectedAgents(newValue.map(handle => handle.handle));
+                            setSelectedAgents(newValue.map(handle => handle.id));
                         }}
                         getOptionLabel={(option) => option.handle}
                         isOptionEqualToValue={(option, value) => 
