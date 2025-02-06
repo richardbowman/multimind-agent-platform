@@ -84,11 +84,24 @@ export namespace StringUtils {
         const xmlBlockRegex = /<([a-zA-Z]+)[^>]*>([\s\S]*?)<\/\1>/g;
         const matches: XmlBlock[] = [];
         let match: RegExpExecArray | null;
+        const seen = new Set();
 
         while ((match = xmlBlockRegex.exec(text)) !== null) {
+            const tag = match[1];
+            let content = match[2].trim();
+            
+            // Handle nested tags by recursively extracting inner content
+            const innerBlocks = extractXmlBlocks(content);
+            for (const inner of innerBlocks) {
+                if (!seen.has(inner.tag)) {
+                    matches.push(inner);
+                    seen.add(inner.tag);
+                }
+            }
+
             matches.push({
-                tag: match[1],
-                content: match[2].trim()
+                tag,
+                content
             });
         }
         return matches;
@@ -122,7 +135,13 @@ export namespace StringUtils {
             cleanedText = cleanedText.replace(xmlRegex, '');
         }
         
-        return cleanedText.trim();
+        // Clean up extra whitespace
+        return cleanedText
+            .split('\n')
+            .map(line => line.trim())
+            .filter(line => line.length > 0)
+            .join('\n')
+            .trim();
     }
 
     /**
