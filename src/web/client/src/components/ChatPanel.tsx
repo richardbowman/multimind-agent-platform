@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { ChatMessage } from './ChatMessage';
+import { ChatProjectHeader } from './ChatProjectHeader';
 import {
     Box,
     Typography,
@@ -335,155 +336,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                     }}
                     onScroll={checkScrollPosition}
                 >
-                {/* Project Overview Card - Only show when not in thread view */}
-                {currentProject && !currentThreadId && (
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            mb: 2,
-                            p: 2,
-                            bgcolor: 'background.paper',
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 2
+                {/* Project Overview and Goal Planning Cards */}
+                {!currentThreadId && (
+                    <ChatProjectHeader
+                        currentProject={currentProject}
+                        channels={channels}
+                        tasks={tasks}
+                        currentChannelId={currentChannelId}
+                        handles={handles}
+                        onTaskClick={(task) => {
+                            setSelectedTask(task);
+                            setTaskDialogOpen(true);
                         }}
-                    >
-                        <Typography
-                            variant="overline"
-                            sx={{
-                                mb: 1,
-                                color: 'text.secondary',
-                                display: 'block'
-                            }}
-                        >
-                            Project Overview
-                        </Typography>
-                        <Box>
-                            <Typography variant="h6" sx={{ mb: 1 }}>
-                                {currentProject.name}
-                            </Typography>
-                            <Typography variant="body2" sx={{ mb: 2 }}>
-                                {currentProject.metadata.description}
-                            </Typography>
-
-                            <Box sx={{ mt: 2 }}>
-                                <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                    Tasks:
-                                </Typography>
-                                <List dense sx={{ mb: 2 }}>
-                                    {currentProject.tasks.map(task => (
-                                        <ListItem key={task.id} sx={{ p: 0 }}>
-                                            <ListItemButton
-                                                onClick={() => {
-                                                    setSelectedTask(task);
-                                                    setTaskDialogOpen(true);
-                                                }}
-                                            >
-                                                <Typography variant="body2">
-                                                    {task.description}
-                                                </Typography>
-                                                {task.complete && (
-                                                    <Typography variant="caption" sx={{ ml: 1, color: 'success.main' }}>
-                                                        ✓
-                                                    </Typography>
-                                                )}
-                                                {task.inProgress && (
-                                                    <Typography variant="caption" sx={{ ml: 1, color: 'warning.main' }}>
-                                                        ⌛
-                                                    </Typography>
-                                                )}
-                                            </ListItemButton>
-                                        </ListItem>
-                                    ))}
-                                </List>
-                            </Box>
-
-                            <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                Status: {currentProject.metadata.status} |
-                                Created: {new Date(currentProject.metadata.createdAt).toLocaleDateString()} |
-                                Last Updated: {new Date(currentProject.metadata.updatedAt).toLocaleDateString()}
-                            </Typography>
-                        </Box>
-                    </Paper>
-                )}
-
-                {/* Goal Planning Card */}
-                {!currentProject && channels.find(c => c.id === currentChannelId)?.goalTemplate && (
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            mb: 2,
-                            p: 2,
-                            bgcolor: 'background.paper',
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 2
-                        }}
-                    >
-                        <Typography
-                            variant="overline"
-                            sx={{
-                                mb: 1,
-                                color: 'text.secondary',
-                                display: 'block'
-                            }}
-                        >
-                            Project Planning
-                        </Typography>
-                        {(() => {
-                            const projectId = channels.find(c => c.id === currentChannelId)?.projectId;
-                            //const project = await ipcService.getRPC().getProject(projectId);
-                            const planningTasks = tasks.filter(t =>
-                                t.projectId === projectId &&
-                                t.type === 'planning'
-                            );
-
-                            return planningTasks ? (
-                                <Box>
-                                    <Typography variant="h6" sx={{ mb: 1 }}>
-                                        todo
-                                    </Typography>
-                                    <Typography variant="body2" sx={{ mb: 2 }}>
-                                        todo
-                                    </Typography>
-
-                                    {planningTasks.length > 0 ? (
-                                        <Box sx={{ mt: 2 }}>
-                                            <Typography variant="subtitle2" sx={{ mb: 1 }}>
-                                                Planning Tasks:
-                                            </Typography>
-                                            <List dense sx={{ mb: 2 }}>
-                                                {planningTasks.map(task => (
-                                                    <ListItem key={task.id} sx={{ p: 0 }}>
-                                                        <ListItemButton
-                                                            onClick={() => {
-                                                                setSelectedTask(task);
-                                                                setTaskDialogOpen(true);
-                                                            }}
-                                                        >
-                                                            <Typography variant="body2">
-                                                                {task.description}
-                                                            </Typography>
-                                                        </ListItemButton>
-                                                    </ListItem>
-                                                ))}
-                                            </List>
-                                        </Box>
-                                    ) : (
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            No planning tasks created yet
-                                        </Typography>
-                                    )}
-
-                                    <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                                        Supporting Agents: {template.supportingAgents
-                                            .map(id => handles.find(h => h.id === id)?.handle || 'Unknown')
-                                            .join(', ')}
-                                    </Typography>
-                                </Box>
-                            ) : null;
-                        })()}
-                    </Paper>
+                    />
                 )}
 
                 {isLoading ? (
