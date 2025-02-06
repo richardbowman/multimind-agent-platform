@@ -114,8 +114,11 @@ module.exports = {
           to: './pdf.worker.mjs'
         },
         {
-          from: path.resolve(__dirname, 'node_modules/onnxruntime-web/dist/*.wasm'),
-          to: '[name][ext]'
+          from: path.posix.join(
+          path.resolve(__dirname, "node_modules/onnxruntime-web/dist").replace(/\\/g, "/"),
+          "*.wasm",
+        ),
+          to: '.'
         }
       ]
     })
