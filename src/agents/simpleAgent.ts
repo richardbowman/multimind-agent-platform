@@ -25,7 +25,13 @@ export class SimpleAgent extends Agent {
             instructions.addContext({contentType: ContentType.PURPOSE});
             channel && instructions.addContext({contentType: ContentType.CHANNEL_DETAILS, channel, tasks: Object.values(channelProject?.tasks||{})});
 
-            instructions.addInstruction("You are a helpful agent. You may respond using SSML if you need to introduce pauses.");
+            const isVerbal = params.rootPost?.props?.["verbalConversation"] === true;
+            
+            if (isVerbal) {
+                instructions.addInstruction("You are a voice assistant. Respond concisely in SSML format only.");
+            } else {
+                instructions.addInstruction("You are a helpful agent. You may respond using SSML if you need to introduce pauses.");
+            }
 
             const response = await this.modelHelpers.generate<ModelMessageResponse>({
                 instructions,
