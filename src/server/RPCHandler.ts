@@ -673,25 +673,24 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return { ...artifact, content };
     }
 
-    async uploadGGUFModel(filePath: string): Promise<{ modelId: string, error?: string }> {
+    async uploadGGUFModel(arrayBuffer: ArrayBuffer, fileName: string): Promise<{ modelId: string, error?: string }> {
         try {
-            // Get the models directory path
-            const modelsDir = path.join(getDataPath(), 'models');
-            await fsPromises.mkdir(modelsDir, { recursive: true });
-
-            // Ensure we have a full path and validate it's a GGUF file
-            const fullPath = path.isAbsolute(filePath) ? filePath : path.resolve(filePath);
-            const fileName = path.basename(fullPath);
+            // Validate file name
             if (!fileName.endsWith('.gguf')) {
                 return { modelId: '', error: 'Only .gguf files are supported' };
             }
+
+            // Get the models directory path
+            const modelsDir = path.join(getDataPath(), 'models');
+            await fsPromises.mkdir(modelsDir, { recursive: true });
 
             // Create a unique model ID based on filename
             const modelId = fileName.replace(/\.gguf$/i, '').toLowerCase().replace(/[^a-z0-9]/g, '-');
             const destPath = path.join(modelsDir, fileName);
 
-            // Copy the file to models directory
-            await fsPromises.copyFile(filePath, destPath);
+            // Convert ArrayBuffer to Buffer and write to file
+            const buffer = Buffer.from(arrayBuffer);
+            await fsPromises.writeFile(destPath, buffer);
 
             // TODO: Register the model with LlamaCPP
 
