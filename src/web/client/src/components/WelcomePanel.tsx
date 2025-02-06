@@ -1,5 +1,5 @@
 import React from 'react';
-import { Box, Typography, Button, Card, CardContent, Stack, Paper } from '@mui/material';
+import { Box, Typography, Button, Card, CardContent, Stack, Paper, Avatar } from '@mui/material';
 import { useDataContext } from '../contexts/DataContext';
 import { useIPCService } from '../contexts/IPCContext';
 
@@ -24,27 +24,28 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
             overflow: 'hidden',
             p: 4
         }}>
-            <Paper elevation={0} sx={{ 
-                mb: 4, 
-                p: 3,
-                bgcolor: 'background.paper',
-                borderRadius: 2
+            <Box sx={{
+                background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                borderRadius: 2,
+                p: 4,
+                mb: 4,
+                color: 'white',
+                display: 'flex',
+                alignItems: 'center',
+                gap: 3
             }}>
-                <Typography variant="h4" gutterBottom>
-                    Welcome to {channel?.name}
-                </Typography>
-                <Typography variant="body1" sx={{ mb: 2 }}>
-                    Let's get started by choosing a task to work on:
-                </Typography>
-                
-                <Button 
-                    variant="contained" 
-                    onClick={onSwitchToChat}
-                    sx={{ mb: 2 }}
-                >
-                    Go to Chat
-                </Button>
-            </Paper>
+                <Avatar sx={{ width: 80, height: 80 }}>
+                    {channel?.name[0]}
+                </Avatar>
+                <Box>
+                    <Typography variant="h3" gutterBottom>
+                        Welcome to {channel?.name}
+                    </Typography>
+                    <Typography variant="subtitle1">
+                        Let's make progress together!
+                    </Typography>
+                </Box>
+            </Box>
 
             <Box sx={{
                 display: 'grid',
@@ -56,9 +57,10 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                         height: '100%',
                         display: 'flex',
                         flexDirection: 'column',
-                        transition: 'transform 0.2s',
+                        transition: 'all 0.3s ease',
                         '&:hover': {
-                            transform: 'translateY(-4px)'
+                            transform: 'translateY(-8px)',
+                            boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
                         }
                     }}>
                         <CardContent sx={{ flexGrow: 1 }}>
@@ -89,6 +91,21 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                         </Box>
                     </Card>
                 ))}
+            </Box>
+
+            <Box sx={{
+                mt: 4,
+                p: 3,
+                bgcolor: 'background.paper',
+                borderRadius: 2,
+                textAlign: 'center'
+            }}>
+                <Typography variant="h6" sx={{ fontStyle: 'italic' }}>
+                    "The way to get started is to quit talking and begin doing."
+                </Typography>
+                <Typography variant="subtitle2" sx={{ mt: 1 }}>
+                    - Walt Disney
+                </Typography>
             </Box>
         </Box>
     );
