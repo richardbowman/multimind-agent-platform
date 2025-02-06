@@ -4,6 +4,17 @@ import { ModelInfo } from '../../../../llm/types';
 import { Card, Typography, Alert, TextField, List, ListItem, ListItemText, Divider, Dialog, DialogTitle, DialogContent, Button, CircularProgress } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { Box } from '@mui/system';
+
+// Helper function to convert ArrayBuffer to base64
+function arrayBufferToBase64(buffer: ArrayBuffer): string {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    const len = bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(bytes[i]);
+    }
+    return window.btoa(binary);
+}
 import './ModelSelector.css';
 import { useIPCService } from '../contexts/IPCContext';
 import { useDataContext } from '../contexts/DataContext';
@@ -53,7 +64,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                     while (offset < totalSize) {
                         const chunk = file.slice(offset, offset + CHUNK_SIZE);
                         const arrayBuffer = await chunk.arrayBuffer();
-                        const base64 = Buffer.from(arrayBuffer).toString('base64');
+                        const base64 = arrayBufferToBase64(arrayBuffer);
                         
                         const result = await ipcService.getRPC().uploadGGUFModelChunk({
                             chunk: base64,
