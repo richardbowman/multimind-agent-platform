@@ -36,37 +36,64 @@ class ClientMethodsImplementation implements ClientMethods {
 
             if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id && message.message?.length > 0) {
                 try {
-                    // Split text into segments based on punctuation
-                    const segments = message.message.split(/(?<=[.,])\s+/g);
+                    // Parse SSML and split into segments
+                    const ssmlRegex = /<speak>(.*?)<\/speak>/s;
+                    const ssmlMatch = message.message.match(ssmlRegex);
+                    const textContent = ssmlMatch ? ssmlMatch[1] : message.message;
+
+                    // Split into segments based on SSML tags or punctuation
+                    const segments = [];
+                    let currentText = '';
+                    let inTag = false;
+                    let tagContent = '';
                     
-                    // Play each segment with appropriate pauses
-                    for (let i = 0; i < segments.length; i++) {
-                        const segment = segments[i];
-                        const wav = await tts.predict({
-                            voiceId: 'en_US-ryan-high',
-                            text: segment
-                        });
-
-                        const audio = new Audio();
-                        audio.src = URL.createObjectURL(wav);
-                        await new Promise<void>((resolve) => {
-                            audio.onended = () => resolve();
-                            audio.play();
-                        });
-
-                        // Add pause based on punctuation
-                        if (i < segments.length - 1) {
-                            const nextChar = segments[i + 1][0];
-                            let pauseDuration = 0;
-                            if (segment.endsWith('...')) {
-                                pauseDuration = 500;
-                            } else if (segment.endsWith('.')) {
-                                pauseDuration = 300;
-                            } else if (segment.endsWith(',')) {
-                                pauseDuration = 200;
+                    for (let i = 0; i < textContent.length; i++) {
+                        const char = textContent[i];
+                        if (char === '<') {
+                            inTag = true;
+                            if (currentText.trim()) {
+                                segments.push({type: 'text', content: currentText.trim()});
+                                currentText = '';
                             }
-                            
-                            if (pauseDuration > 0) {
+                            continue;
+                        }
+                        if (char === '>') {
+                            inTag = false;
+                            segments.push({type: 'tag', content: tagContent});
+                            tagContent = '';
+                            continue;
+                        }
+                        if (inTag) {
+                            tagContent += char;
+                        } else {
+                            currentText += char;
+                        }
+                    }
+                    if (currentText.trim()) {
+                        segments.push({type: 'text', content: currentText.trim()});
+                    }
+
+                    // Process each segment
+                    for (const segment of segments) {
+                        if (segment.type === 'text') {
+                            const wav = await tts.predict({
+                                voiceId: 'en_US-ryan-high',
+                                text: segment.content
+                            });
+
+                            const audio = new Audio();
+                            audio.src = URL.createObjectURL(wav);
+                            await new Promise<void>((resolve) => {
+                                audio.onended = () => resolve();
+                                audio.play();
+                            });
+                        } else if (segment.type === 'tag') {
+                            // Handle SSML tags
+                            const tagMatch = segment.content.match(/break\s+time="(\d+)(ms|s)"/);
+                            if (tagMatch) {
+                                const duration = parseInt(tagMatch[1]);
+                                const unit = tagMatch[2];
+                                const pauseDuration = unit === 's' ? duration * 1000 : duration;
                                 await new Promise(resolve => setTimeout(resolve, pauseDuration));
                             }
                         }
