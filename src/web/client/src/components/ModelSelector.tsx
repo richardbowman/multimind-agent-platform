@@ -1,8 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { ModelInfo } from 'src/llm/types';
 import { invoke } from '@tauri-apps/api/tauri';
-import { Button, Input, Card, List, Typography, Space, Alert } from 'antd';
-import { SearchOutlined } from '@ant-design/icons';
+import { Button, Card, List, Typography, Alert, TextField } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
+import { Box } from '@mui/system';
 import './ModelSelector.css';
 
 const { Text } = Typography;
@@ -55,19 +56,21 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
     };
 
     return (
-        <div className="model-selector">
-            <Space direction="vertical" style={{ width: '100%' }}>
-                <Input
+        <Box className="model-selector">
+            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 2, width: '100%' }}>
+                <TextField
                     placeholder="Search models..."
-                    prefix={<SearchOutlined />}
                     value={search}
                     onChange={handleSearch}
-                    allowClear
+                    InputProps={{
+                        startAdornment: <SearchIcon />
+                    }}
+                    fullWidth
                 />
 
-                {error && <Alert message={error} type="error" showIcon />}
+                {error && <Alert severity="error">{error}</Alert>}
 
-                <div className="model-list-container">
+                <Box className="model-list-container">
                     <List
                         loading={loading}
                         dataSource={models}
@@ -90,16 +93,16 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                             </List.Item>
                         )}
                     />
-                </div>
+                </Box>
 
                 {selectedModel && (
-                    <div className="selected-model">
-                        <Text strong>Selected Model:</Text>
-                        <Text>{selectedModel.id}</Text>
-                    </div>
+                    <Box className="selected-model">
+                        <Typography fontWeight="bold">Selected Model:</Typography>
+                        <Typography>{selectedModel.id}</Typography>
+                    </Box>
                 )}
-            </Space>
-        </div>
+            </Box>
+        </Box>
     );
 };
 
