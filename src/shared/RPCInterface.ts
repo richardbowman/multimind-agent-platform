@@ -1,7 +1,6 @@
-import { CreateChannelParams } from 'src/shared/channelTypes';
+import { ChannelData, CreateChannelParams } from 'src/shared/channelTypes';
 import { LLMLogEntry, LogParam } from '../llm/LLMLogger';
 import { ClientMessage, ClientProject } from "./types";
-import { ClientChannel } from "./types";
 import { ClientThread } from "./types";
 import { EmbedderModelInfo } from 'src/llm/ILLMService';
 import { ModelInfo } from 'src/llm/types';
@@ -43,7 +42,7 @@ export interface ServerMethods {
     getWindowState(): Promise<'maximized' | 'normal' | 'fullscreen'>;
     toggleFullScreen(): Promise<void>;
     getMessages(params: { channelId: string; threadId: string | null; limit?: number }): Promise<ClientMessage[]>;
-    getChannels(): Promise<ClientChannel[]>;
+    getChannels(): Promise<ChannelData[]>;
     getThreads(params: { channelId: string }): Promise<ClientThread[]>;
     getTasks(params: { channelId: string; threadId: string | null }): Promise<Task[]>;
     getArtifacts(params: { channelId: string; threadId: string | null }): Promise<any[]>;
@@ -142,7 +141,7 @@ export interface ClientMethods {
      * Callback when a channel is created
      * @param channel - The newly created channel
      */
-    onChannelCreated(channel: ClientChannel): void;
+    onChannelCreated(channel: ChannelData): void;
     
     /**
      * Callback when a client log event is successfully processed
