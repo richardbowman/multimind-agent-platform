@@ -92,6 +92,9 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     // Handle calendar content
     if (mimeType === 'text/calendar' || type === 'calendar' || type == ArtifactType.Calendar) {
         const localizer = momentLocalizer(moment);
+        const [view, setView] = useState<'month' | 'week' | 'day'>('month');
+        const [date, setDate] = useState(new Date());
+
         const events = (content as CalendarEvent[]).map(event => ({
             title: event.title,
             start: new Date(event.start),
@@ -100,6 +103,63 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
             location: event.location
         }));
 
+        const handlePrevious = useCallback(() => {
+            setDate(prev => {
+                const newDate = new Date(prev);
+                if (view === 'month') {
+                    newDate.setMonth(newDate.getMonth() - 1);
+                } else if (view === 'week') {
+                    newDate.setDate(newDate.getDate() - 7);
+                } else {
+                    newDate.setDate(newDate.getDate() - 1);
+                }
+                return newDate;
+            });
+        }, [view]);
+
+        const handleNext = useCallback(() => {
+            setDate(prev => {
+                const newDate = new Date(prev);
+                if (view === 'month') {
+                    newDate.setMonth(newDate.getMonth() + 1);
+                } else if (view === 'week') {
+                    newDate.setDate(newDate.getDate() + 7);
+                } else {
+                    newDate.setDate(newDate.getDate() + 1);
+                }
+                return newDate;
+            });
+        }, [view]);
+
+        const handleToday = useCallback(() => {
+            setDate(new Date());
+        }, []);
+
+        useEffect(() => {
+            const calendarActions = [
+                {
+                    id: 'calendar-prev',
+                    icon: <NavigateBeforeIcon />,
+                    label: 'Previous',
+                    onClick: handlePrevious
+                },
+                {
+                    id: 'calendar-next',
+                    icon: <NavigateNextIcon />,
+                    label: 'Next',
+                    onClick: handleNext
+                },
+                {
+                    id: 'calendar-today',
+                    label: 'Today',
+                    onClick: handleToday
+                }
+            ];
+
+            registerActions('calendar', calendarActions);
+            return () => unregisterActions('calendar');
+        }, [handlePrevious, handleNext, handleToday, registerActions, unregisterActions]);
+
         return (
             <Box sx={{ height: '70vh', mt: 2 }}>
                 <Calendar
@@ -107,6 +167,10 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                     events={events}
                     startAccessor="start"
                     endAccessor="end"
+                    view={view}
+                    onView={setView}
+                    date={date}
+                    onNavigate={setDate}
                     defaultView="month"
                     views={['month', 'week', 'day']}
                     style={{ height: '100%' }}
