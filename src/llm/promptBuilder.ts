@@ -166,6 +166,33 @@ ${this.modelHelpers.getFinalInstructions()}
         return `CURRENT CHAT CHANNEL: ${channel.name} - ${channel.description}`;
     }
 
+    private renderChannelDetails({channel, tasks, artifacts} : ChannelDetailsContent): string {
+        let output = `📌 Channel Details:\n`;
+        output += `- Name: ${channel.name}\n`;
+        output += `- Description: ${channel.description || 'No description'}\n`;
+        output += `- Type: ${channel.isPrivate ? 'Private' : 'Public'}\n`;
+        
+        if (channel.projectId) {
+            output += `- Project ID: ${channel.projectId}\n`;
+        }
+
+        if (tasks && tasks.length > 0) {
+            output += `\n📋 Channel Tasks (${tasks.length}):\n`;
+            output += tasks.map((task, index) => 
+                `  ${index + 1}. ${task.description} (Status: ${task.status})`
+            ).join('\n');
+        }
+
+        if (artifacts && artifacts.length > 0) {
+            output += `\n📁 Channel Artifacts (${artifacts.length}):\n`;
+            output += artifacts.map((artifact, index) => 
+                `  ${index + 1}. ${artifact.metadata?.title || 'Untitled'} (Type: ${artifact.type})`
+            ).join('\n');
+        }
+
+        return output;
+    }
+
     private renderSteps({steps} : StepsContent): string {
         const filteredSteps = steps.filter(s => s.props.result && s.props.stepType !== ExecutorType.NEXT_STEP);
         return "# 📝 STEP HISTORY:\n" + 
