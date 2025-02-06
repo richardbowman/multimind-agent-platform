@@ -118,7 +118,7 @@ class ClientMethodsImplementation implements ClientMethods {
         if (latestMessage) {
             const channelName = this.contextMethods.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
             this.snackbarContext.showSnackbar({
-                message: `New message in #${channelName}`,
+                message: `New message in ${channelName}`,
                 severity: 'info',
                 persist: true,
                 onClick: () => {
