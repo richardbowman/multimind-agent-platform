@@ -135,6 +135,10 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
             setDate(new Date());
         }, []);
 
+        const handleViewChange = useCallback((newView: 'month' | 'week' | 'day') => {
+            setView(newView);
+        }, []);
+
         useEffect(() => {
             const calendarActions = [
                 {
@@ -153,12 +157,37 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
                     id: 'calendar-today',
                     label: 'Today',
                     onClick: handleToday
+                },
+                {
+                    id: 'calendar-view-month',
+                    label: 'Month',
+                    onClick: () => handleViewChange('month'),
+                    variant: view === 'month' ? 'contained' : 'outlined'
+                },
+                {
+                    id: 'calendar-view-week',
+                    label: 'Week',
+                    onClick: () => handleViewChange('week'),
+                    variant: view === 'week' ? 'contained' : 'outlined'
+                },
+                {
+                    id: 'calendar-view-day',
+                    label: 'Day',
+                    onClick: () => handleViewChange('day'),
+                    variant: view === 'day' ? 'contained' : 'outlined'
                 }
             ];
 
             registerActions('calendar', calendarActions);
             return () => unregisterActions('calendar');
-        }, [handlePrevious, handleNext, handleToday, registerActions, unregisterActions]);
+        }, [handlePrevious, handleNext, handleToday, handleViewChange, view, registerActions, unregisterActions]);
+
+        // Update view button states when view changes
+        useEffect(() => {
+            updateActionState('calendar-view-month', { variant: view === 'month' ? 'contained' : 'outlined' });
+            updateActionState('calendar-view-week', { variant: view === 'week' ? 'contained' : 'outlined' });
+            updateActionState('calendar-view-day', { variant: view === 'day' ? 'contained' : 'outlined' });
+        }, [view, updateActionState]);
 
         return (
             <Box sx={{ height: '70vh', mt: 2 }}>
