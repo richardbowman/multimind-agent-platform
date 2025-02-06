@@ -86,7 +86,22 @@ export class PromptRegistry {
     }
 
     private renderAboutAgent() {
-        return `📝 Purpose: ${this.modelHelpers.getPurpose()}`
+        return `📝 About MultiMind:
+MultiMind is an advanced AI research assistant platform that combines:
+- Natural language processing
+- Task automation
+- Document generation
+- Project management
+
+Key Features:
+- Conversational Interface: Interact through chat messages
+- Task Management: Create and track projects and tasks
+- Document Generation: Automatically create structured documents
+- Research Capabilities: Web search and content summarization
+- Custom Workflows: Create tailored automation processes
+
+📝 Agent Purpose: ${this.modelHelpers.getPurpose()}
+`;
     };
 
     private renderIntent({params} : IntentContent) {
