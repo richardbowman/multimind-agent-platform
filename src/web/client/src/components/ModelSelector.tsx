@@ -48,8 +48,9 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                     const CHUNK_SIZE = 1024 * 1024 * 5; // 5MB chunks
                     let offset = 0;
                     let uploadId = '';
+                    const totalSize = file.size;
                     
-                    while (offset < file.size) {
+                    while (offset < totalSize) {
                         const chunk = file.slice(offset, offset + CHUNK_SIZE);
                         const arrayBuffer = await chunk.arrayBuffer();
                         
@@ -57,11 +58,20 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                             chunk: arrayBuffer,
                             fileName: file.name,
                             uploadId,
-                            isLast: offset + CHUNK_SIZE >= file.size
+                            isLast: offset + CHUNK_SIZE >= totalSize
                         });
                         
                         uploadId = result.uploadId;
                         offset += CHUNK_SIZE;
+
+                        // Update progress
+                        const percentComplete = offset / totalSize;
+                        snackbar.showSnackbar({
+                            message: `Uploading ${file.name}...`,
+                            severity: 'progress',
+                            percentComplete,
+                            persist: true
+                        });
                     }
 
                     // Update the model list
@@ -70,7 +80,10 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
 
                     handleSelect({ id: file.name });
 
-                    snackbar.showSnackbar({ message: `Model ${file.name} uploaded successfully` });
+                    snackbar.showSnackbar({ 
+                        message: `Model ${file.name} uploaded successfully`,
+                        severity: 'success'
+                    });
 
                 } catch (error) {
                     console.error('Failed to upload model:', error);
