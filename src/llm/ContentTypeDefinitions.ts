@@ -89,6 +89,13 @@ export interface ChannelContent {
     channel: ChannelData;
 }
 
+export interface ChannelDetailsContent {
+    contentType: ContentType.CHANNEL_DETAILS;
+    channel: ChannelData;
+    tasks?: Task[];
+    artifacts?: Artifact[];
+}
+
 export interface FinalInstructionsContent {
     contentType: ContentType.FINAL_INSTRUCTIONS;
     instructions: string;

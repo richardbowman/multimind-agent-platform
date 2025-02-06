@@ -31,6 +31,7 @@ export enum ContentType {
     AGENT_OVERVIEWS = 'agent_overviews',
     PURPOSE = "PURPOSE",
     CHANNEL = "CHANNEL",
+    CHANNEL_DETAILS = "CHANNEL_DETAILS",
     FINAL_INSTRUCTIONS = "FINAL_INSTRUCTIONS",
     OVERALL_GOAL = "OVERALL_GOAL",
     STEP_GOAL = "STEP_GOAL",
@@ -217,6 +218,10 @@ ${this.modelHelpers.getFinalInstructions()}
 
     registerRenderer<T>(contentType: ContentType, renderer: ContentRenderer<T>): void {
         this.contentRenderers.set(contentType, renderer);
+    }
+
+    registerChannelDetailsRenderer(renderer: ContentRenderer<ChannelDetailsContent>): void {
+        this.registerRenderer(ContentType.CHANNEL_DETAILS, renderer);
     }
 
     getRenderer(contentType: ContentType): ContentRenderer<any> | undefined {
