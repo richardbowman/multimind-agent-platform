@@ -45,12 +45,24 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                 try {
                     setIsUploadingModel(true);
                     setUploadError('');
-                    const reader = new FileReader();
-
-                    reader.onload = async (e) => {
-                        var _a;
-                        const content = (_a = e.target) === null || _a === void 0 ? void 0 : _a.result;
-                        const result = await ipcService.getRPC().uploadGGUFModel(content, file.name);
+                    const CHUNK_SIZE = 1024 * 1024 * 5; // 5MB chunks
+                    let offset = 0;
+                    let uploadId = '';
+                    
+                    while (offset < file.size) {
+                        const chunk = file.slice(offset, offset + CHUNK_SIZE);
+                        const arrayBuffer = await chunk.arrayBuffer();
+                        
+                        const result = await ipcService.getRPC().uploadGGUFModelChunk({
+                            chunk: arrayBuffer,
+                            fileName: file.name,
+                            uploadId,
+                            isLast: offset + CHUNK_SIZE >= file.size
+                        });
+                        
+                        uploadId = result.uploadId;
+                        offset += CHUNK_SIZE;
+                    }
 
                         // Update the model list
                         const models = await ipcService.getRPC().getAvailableModels('llama_cpp');

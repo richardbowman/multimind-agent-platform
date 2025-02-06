@@ -673,11 +673,18 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return { ...artifact, content };
     }
 
-    async uploadGGUFModel(arrayBuffer: ArrayBuffer, fileName: string): Promise<{ modelId: string, error?: string }> {
+    private uploadChunks = new Map<string, { filePath: string, writeStream: fs.WriteStream }>();
+
+    async uploadGGUFModelChunk({ chunk, fileName, uploadId, isLast }: { 
+        chunk: ArrayBuffer, 
+        fileName: string, 
+        uploadId: string, 
+        isLast: boolean 
+    }): Promise<{ uploadId: string, error?: string }> {
         try {
-            // Validate file name
-            if (!fileName.endsWith('.gguf')) {
-                return { modelId: '', error: 'Only .gguf files are supported' };
+            // Validate file name on first chunk
+            if (!uploadId && !fileName.endsWith('.gguf')) {
+                return { uploadId: '', error: 'Only .gguf files are supported' };
             }
 
             // Get the models directory path
@@ -688,13 +695,42 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
             const modelId = fileName.replace(/\.gguf$/i, '').toLowerCase().replace(/[^a-z0-9]/g, '-');
             const destPath = path.join(modelsDir, fileName);
 
-            // Convert ArrayBuffer to Buffer and write to file
-            const buffer = Buffer.from(arrayBuffer);
-            await fsPromises.writeFile(destPath, buffer);
+            // Get or create write stream
+            let writeStream: fs.WriteStream;
+            if (!uploadId) {
+                writeStream = fs.createWriteStream(destPath);
+                this.uploadChunks.set(modelId, { filePath: destPath, writeStream });
+                uploadId = modelId;
+            } else {
+                const upload = this.uploadChunks.get(uploadId);
+                if (!upload) {
+                    return { uploadId: '', error: 'Invalid upload session' };
+                }
+                writeStream = upload.writeStream;
+            }
 
-            // TODO: Register the model with LlamaCPP
+            // Write chunk
+            const buffer = Buffer.from(chunk);
+            await new Promise<void>((resolve, reject) => {
+                writeStream.write(buffer, (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
 
-            return { modelId };
+            // Clean up if last chunk
+            if (isLast) {
+                await new Promise<void>((resolve, reject) => {
+                    writeStream.end(() => {
+                        this.uploadChunks.delete(uploadId);
+                        resolve();
+                    });
+                });
+
+                // TODO: Register the model with LlamaCPP
+            }
+
+            return { uploadId };
         } catch (error) {
             console.error('Failed to upload GGUF model:', error);
             return { 
