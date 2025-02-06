@@ -116,7 +116,9 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
     useEffect(() => {
         const fetchModels = async () => {
-            if (settings.providers?.chat) {
+            if (!settings || !settings.providers?.chat) {
+                return;
+            }
                 try {
                     const models = await ipcService.getRPC().getAvailableModels(settings.providers.chat);
 
@@ -145,7 +147,9 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
     useEffect(() => {
         const fetchEmbeddingModels = async () => {
-            if (settings.providers?.embeddings) {
+            if (!settings || !settings.providers?.embeddings) {
+                return;
+            }
                 try {
                     const embedders = await ipcService.getRPC().getAvailableEmbedders(settings.providers.embeddings);
 
@@ -672,11 +676,11 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
 
                                     // For embedding models, check against embeddings provider
                                     if (meta.key.includes('embedding')) {
-                                        return providerType === settings.providers?.embeddings;
+                                        return settings?.providers?.embeddings && providerType === settings.providers.embeddings;
                                     }
 
                                     // For chat models, check against chat provider
-                                    return providerType === settings.providers?.chat;
+                                    return settings?.providers?.chat && providerType === settings.providers.chat;
                                 })
                                 : metadataList;
 
