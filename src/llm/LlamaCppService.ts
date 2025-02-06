@@ -16,7 +16,7 @@ import { ModelInfo } from "./types";
 import { ConfigurationError } from "src/errors/ConfigurationError";
 import { sleep } from "src/utils/sleep";
 import { ModelInfosPage } from "@anthropic-ai/sdk/resources";
-import { app } from "electron";
+import { app, BrowserWindow, ipcMain } from "electron";
 import { Worker } from "node:worker_threads";
 
 interface HFModel {
