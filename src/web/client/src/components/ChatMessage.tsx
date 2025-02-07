@@ -1,10 +1,15 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
     Box,
     Typography,
     Button,
-    Paper
+    Paper,
+    Collapse,
+    IconButton
 } from '@mui/material';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import { CodeBlock } from './shared/CodeBlock';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CodeBlock } from './shared/CodeBlock';
@@ -37,6 +42,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
     const isExpanded = expandedMessages.has(message.id);
     const hasThread = !currentThreadId && messages.some(m => m.props?.['root-id'] === message.id);
+    const [showAttachments, setShowAttachments] = useState(false);
+    const hasAttachments = message.props?.artifactIds?.length > 0;
 
     return (
         <Paper key={`${message.id}-${messageVersions[message.id] || 0}`} sx={{
@@ -211,6 +218,44 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     </Box>
                 )}
             </Box>
+            {hasAttachments && (
+                <Box sx={{ mt: 2 }}>
+                    <Box
+                        onClick={() => setShowAttachments(!showAttachments)}
+                        sx={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: 1,
+                            cursor: 'pointer',
+                            '&:hover': {
+                                bgcolor: 'action.hover'
+                            },
+                            p: 1,
+                            borderRadius: 1
+                        }}
+                    >
+                        <IconButton size="small">
+                            {showAttachments ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        </IconButton>
+                        <Typography variant="subtitle2">
+                            Attachments ({message.props.artifactIds.length})
+                        </Typography>
+                    </Box>
+                    <Collapse in={showAttachments}>
+                        <Box sx={{ mt: 1 }}>
+                            {message.props.artifactIds.map((artifactId: string) => (
+                                <Box key={artifactId} sx={{ mb: 2 }}>
+                                    <CodeBlock 
+                                        content="Loading artifact..."
+                                        language="text"
+                                        title={`Artifact ${artifactId}`}
+                                    />
+                                </Box>
+                            ))}
+                        </Box>
+                    </Collapse>
+                </Box>
+            )}
         </Paper>
     );
 };
