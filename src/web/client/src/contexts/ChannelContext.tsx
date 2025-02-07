@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useCallback, useMemo, useState } from 'react';
+import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
 import { ChannelData, CreateChannelParams } from '../../../../shared/channelTypes';
 import { useIPCService } from './IPCContext';
 
@@ -14,6 +14,11 @@ const ChannelContext = createContext<ChannelContextType | null>(null);
 export const ChannelProvider = ({ children }: { children: React.ReactNode }) => {
   const ipcService = useIPCService();
   const [channels, setChannels] = useState<ChannelData[]>([]);
+
+  // Fetch channels on mount
+  useEffect(() => {
+    fetchChannels();
+  }, []);
 
   const fetchChannels = useCallback(async () => {
     try {
