@@ -1,4 +1,5 @@
-import React, { createContext, useContext, useMemo } from 'react';
+import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
+import { invoke } from '@tauri-apps/api/tauri';
 import { Artifact } from '../../../../tools/artifact';
 import { useArtifacts } from './ArtifactContext';
 import { useThreadMessages } from './ThreadMessageContext';
@@ -26,6 +27,30 @@ export const FilteredArtifactProvider = ({
 }) => {
   const { artifacts, isLoading } = useArtifacts();
   const { threadMessages } = useThreadMessages();
+  const [loadedArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
+  const [isLoadingArtifact, setIsLoadingArtifact] = useState(false);
+
+  useEffect(() => {
+    if (!artifactId) {
+      setLoadedArtifact(null);
+      return;
+    }
+
+    const loadArtifact = async () => {
+      setIsLoadingArtifact(true);
+      try {
+        const artifact = await invoke<Artifact>('get_artifact', { id: artifactId });
+        setLoadedArtifact(artifact);
+      } catch (error) {
+        console.error('Failed to load artifact:', error);
+        setLoadedArtifact(null);
+      } finally {
+        setIsLoadingArtifact(false);
+      }
+    };
+
+    loadArtifact();
+  }, [artifactId]);
 
   // Get artifact IDs from thread messages
   const threadArtifactIds = useMemo(() => {
@@ -49,13 +74,13 @@ export const FilteredArtifactProvider = ({
 
   const currentArtifact = useMemo(() => {
     if (!artifactId) return null;
-    return artifacts.find(a => a.id === artifactId) || null;
-  }, [artifacts, artifactId]);
+    return loadedArtifact || artifacts.find(a => a.id === artifactId) || null;
+  }, [artifacts, artifactId, loadedArtifact]);
 
   const value = useMemo(() => ({
     filteredArtifacts,
     currentArtifact,
-    isLoading,
+    isLoading: isLoading || isLoadingArtifact,
     isChannelView: !!channelId && !threadId
   }), [filteredArtifacts, currentArtifact, isLoading, channelId, threadId]);
 
