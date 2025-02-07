@@ -47,11 +47,10 @@ export interface ArtifactGenerationStepResponse extends StepResponse {
  * - Preserves existing IDs during revisions
  */
 @StepExecutorDecorator(ExecutorType.GENERATE_ARTIFACT, 'Create/revise a Markdown document, Mermaid diagram, or spreadsheet (CSV)')
-export class GenerateArtifactExecutor implements StepExecutor<ArtifactGenerationStepResponse> {
-    private modelHelpers: ModelHelpers;
-    private artifactManager: ArtifactManager;
-
-    private taskManager?: TaskManager;
+export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactGenerationStepResponse> {
+    protected modelHelpers: ModelHelpers;
+    protected artifactManager: ArtifactManager;
+    protected taskManager?: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
@@ -60,20 +59,15 @@ export class GenerateArtifactExecutor implements StepExecutor<ArtifactGeneration
         this.taskManager = params.taskManager;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
+    protected createBasePrompt(): PromptBuilder {
         const promptBuilder = this.modelHelpers.createPrompt();
 
         // Add core instructions
-        promptBuilder.addInstruction("Generate or modify a Markdown document based on the goal.");
+        promptBuilder.addInstruction("Generate or modify a document based on the goal.");
         promptBuilder.addInstruction(`You have these options:
 1. Create a NEW document (leave artifactId blank and set operation to "create")
 2. Replace an EXISTING document (specify artifactId and set operation to "replace")
 3. Append to an EXISTING document (specify artifactId and set operation to "append")`);
-
-        promptBuilder.addInstruction(`CONTENT FORMATTING RULES:
-- For markdown: Use standard Markdown syntax
-- For csv: Provide comma-separated values with header row
-- For mermaid: Provide Mermaid diagram syntax only`);
 
         promptBuilder.addInstruction(`IMPORTANT RULES:
 - For NEW documents: Use operation="create" and omit artifactIndex
@@ -105,21 +99,28 @@ export class GenerateArtifactExecutor implements StepExecutor<ArtifactGeneration
             promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses});
         }
 
-        const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);
+        return promptBuilder;
+    }
 
-        promptBuilder.addInstruction(`OUTPUT INSTRUCTIONS:
+    protected abstract getContentFormattingRules(): string;
+
+    protected async getOutputInstructions(schema: any): Promise<string> {
+        return `OUTPUT INSTRUCTIONS:
 1. To create the requested artifact, you will use two code blocks, one to contain attributes about the document, and the other for the content.
 2. Use one enclosed code block with the hidden indicator \`\`\`json[hidden] that matches this JSON Schema:
 ${JSON.stringify(schema, null, 2)}
-for the file attributes`);
+for the file attributes`;
+    }
 
-        promptBuilder.addInstruction(`3. Provide the content in a separately enclosed code block using the appropriate syntax using only one of these three supported formats:
-- For markdown: \`\`\`markdown
-- For csv: \`\`\`csv
-- For mermaid diagrams: \`\`\`mermaid`);
+    protected abstract getSupportedFormats(): string[];
 
-        promptBuilder.addInstruction(`4. You may only provide one content type per response. If you need to provide multiple content types, please respond suggesting other content types to generate.`);
-        promptBuilder.addInstruction(`If you are appending to a CSV file, make sure you include the exactly same column structure for the new rows.`);
+    async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
+        const promptBuilder = this.createBasePrompt();
+        
+        // Add content formatting rules
+        promptBuilder.addInstruction(this.getContentFormattingRules());
+        
+        // Add Q&A context from project metadata
 
         try {
             const unstructuredResult = await this.modelHelpers.generate({
