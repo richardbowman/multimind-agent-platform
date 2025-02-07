@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from 'react';
-import { useDataContext } from '../contexts/DataContext';
+import { useMessages } from '../contexts/MessageContext';
 import { 
     Box, 
     Typography, 
@@ -16,7 +16,7 @@ interface ThreadListProps {
 }
 
 export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
-    const { messages, currentThreadId, setCurrentThreadId } = useDataContext();
+    const { messages, currentThreadId, setCurrentThreadId } = useMessages();
     const activeThreadRef = useRef<HTMLLIElement>(null);
 
     useEffect(() => {
