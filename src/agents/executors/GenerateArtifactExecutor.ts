@@ -59,7 +59,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
         this.taskManager = params.taskManager;
     }
 
-    protected createBasePrompt(): PromptBuilder {
+    protected createBasePrompt(params: ExecuteParams): PromptBuilder {
         const promptBuilder = this.modelHelpers.createPrompt();
 
         // Add core instructions
@@ -115,7 +115,7 @@ for the file attributes`;
     protected abstract getSupportedFormats(): string[];
 
     async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
-        const promptBuilder = this.createBasePrompt();
+        const promptBuilder = this.createBasePrompt(params);
         
         // Add content formatting rules
         promptBuilder.addInstruction(this.getContentFormattingRules());
