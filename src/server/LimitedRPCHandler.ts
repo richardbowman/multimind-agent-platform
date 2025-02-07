@@ -1,5 +1,5 @@
 import { BackendServicesConfigNeeded } from "../types/BackendServices";
-import { ClientMethods, ServerMethods } from "../shared/RPCInterface";
+import { ClientMethods, ServerMethods, UploadGGUFParameters } from "../shared/RPCInterface";
 import Logger from "../helpers/logger";
 import { LLMCallLogger } from "../llm/LLMLogger";
 import { reinitializeBackend } from "../main.electron";
@@ -11,6 +11,10 @@ import { UpdateStatus } from "src/shared/UpdateStatus";
 import { AppUpdater } from "electron-updater";
 import { ConfigurationError } from "src/errors/ConfigurationError";
 import { asError } from "src/types/types";
+import { createWriteStream, WriteStream } from "node:fs";
+import { mkdir } from "node:fs/promises";
+import { getDataPath } from "src/helpers/paths";
+import path from 'node:path';
 
 interface ClientError {
     message: string;
@@ -18,6 +22,7 @@ interface ClientError {
 
 export class LimitedRPCHandler implements Partial<ServerMethods> {
     protected clientRpc?: ClientMethods;
+    private uploadChunks = new Map<string, { filePath: string, writeStream: WriteStream }>();
 
     constructor(private partialServices: BackendServicesConfigNeeded) {
     }
@@ -198,6 +203,67 @@ export class LimitedRPCHandler implements Partial<ServerMethods> {
 
     async quitAndInstall(): Promise<void> {
         this.partialServices.autoUpdater.quitAndInstall();
+    }
+
+
+    async uploadGGUFModelChunk({ chunk, fileName, uploadId, isLast }: UploadGGUFParameters): Promise<{ uploadId: string, error?: string }> {
+        try {
+            // Validate file name on first chunk
+            if (!uploadId && !fileName.endsWith('.gguf')) {
+                return { uploadId: '', error: 'Only .gguf files are supported' };
+            }
+
+            // Get the models directory path
+            const modelsDir = path.join(getDataPath(), 'models');
+            await mkdir(modelsDir, { recursive: true });
+
+            // Create a unique model ID based on filename
+            const modelId = fileName.replace(/\.gguf$/i, '').toLowerCase().replace(/[^a-z0-9]/g, '-');
+            const destPath = path.join(modelsDir, fileName);
+
+            // Get or create write stream
+            let writeStream: WriteStream;
+            if (!uploadId) {
+                writeStream = createWriteStream(destPath);
+                this.uploadChunks.set(modelId, { filePath: destPath, writeStream });
+                uploadId = modelId;
+            } else {
+                const upload = this.uploadChunks.get(uploadId);
+                if (!upload) {
+                    return { uploadId: '', error: 'Invalid upload session' };
+                }
+                writeStream = upload.writeStream;
+            }
+
+            // Decode base64 and write chunk
+            const buffer = Buffer.from(chunk, 'base64');
+            await new Promise<void>((resolve, reject) => {
+                writeStream.write(buffer, (err) => {
+                    if (err) reject(err);
+                    else resolve();
+                });
+            });
+
+            // Clean up if last chunk
+            if (isLast) {
+                await new Promise<void>((resolve, reject) => {
+                    writeStream.end(() => {
+                        this.uploadChunks.delete(uploadId);
+                        resolve();
+                    });
+                });
+
+                // TODO: Register the model with LlamaCPP
+            }
+
+            return { uploadId };
+        } catch (error) {
+            console.error('Failed to upload GGUF model:', error);
+            return { 
+                modelId: '', 
+                error: error instanceof Error ? error.message : 'Failed to upload model' 
+            };
+        }
     }
 
 }

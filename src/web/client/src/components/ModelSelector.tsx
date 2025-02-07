@@ -59,7 +59,7 @@ const ModelSelector: React.FC<ModelSelectorProps> = ({ value, onChange, provider
                 // Start upload in background
                 const upload = async () => {
                     try {
-                        const CHUNK_SIZE = 1024 * 1024 * 5; // 5MB chunks
+                        const CHUNK_SIZE = 1024 * 1024 * 10; // 10MB chunks
                         let offset = 0;
                         let uploadId = '';
                         const totalSize = file.size;

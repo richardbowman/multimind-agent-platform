@@ -99,7 +99,13 @@ export abstract class StepBasedAgent extends Agent {
         }
     }
 
-    static getRootTask(taskId: UUID, projects: TaskManager): Task | null {
+    static getRootTask(taskId: UUID, projects: TaskManager, depth? : number): Task | null {
+        // handle weird issues
+        if (depth == 10) {
+            Logger.error(`Recursive getRootTask call with ${taskId}.`);
+            return null;
+        }
+
         const task = projects.getTaskById(taskId);
         if (!task) return null;
    
@@ -109,7 +115,7 @@ export abstract class StepBasedAgent extends Agent {
         }
    
         // Recursively find the root task
-        return StepBasedAgent.getRootTask(project.metadata.parentTaskId, projects);
+        return StepBasedAgent.getRootTask(project.metadata.parentTaskId, projects, (depth||0)+1);
     }
    
     protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {

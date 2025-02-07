@@ -15,7 +15,9 @@ export interface TaskCreationResponse {
     recurrencePattern: TaskCreationResponseRecurrence;
     /** The @user handle or agent handle starting with @ */
     assignee: string;
-    responseMessage: string;
     /** Either a ISO-formatted Date/Time or a ISO Duration field */
     dueDate: string;
+
+    /** deprecated */
+    // responseMessage: string;
 }

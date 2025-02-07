@@ -97,7 +97,7 @@ export class ModelHelpers {
         const time = now.toTimeString().split(' ')[0];
         const agentIdentity = this.messagingHandle ? `🤖 Agent Handle: ${this.messagingHandle}\n` : '';
         
-        prompt.addContext(`${agentIdentity}Current date: ${date}\nCurrent time: ${time}\n`);
+        prompt.addContext(`${agentIdentity}Current date: ${date}\nCurrent time: ${time}\nLanguage: US English\n`);
         return prompt;
     }
 

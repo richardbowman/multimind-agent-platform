@@ -509,7 +509,9 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             }
 
             const result = {
-                response: response,
+                response: {
+                    message: response
+                },
                 metadata: {
                     _usage: {
                         inputTokens: 0,

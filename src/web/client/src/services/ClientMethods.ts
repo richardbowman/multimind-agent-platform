@@ -100,25 +100,16 @@ class ClientMethodsImplementation implements ClientMethods {
                             const audioElement = new Audio();
                             audioElement.srcObject = mediaStreamDestination.stream;
                             
-                            // Start streaming immediately
-                            const stream = await tts.predictStream({
+                            const wav = await tts.predict({
                                 voiceId: 'en_US-ryan-high',
                                 text: segment.content
                             });
-                            
-                            // Create source and connect to destination
-                            const source = audioContext.createMediaStreamSource(stream);
-                            source.connect(mediaStreamDestination);
-                            
-                            // Play the audio
-                            await audioElement.play();
-                            
-                            // Wait for stream to end
+
+                            const audio = new Audio();
+                            audio.src = URL.createObjectURL(wav);
                             await new Promise<void>((resolve) => {
-                                stream.getAudioTracks()[0].onended = () => {
-                                    audioContext.close();
-                                    resolve();
-                                };
+                                audio.onended = () => resolve();
+                                audio.play();
                             });
                         } else if (segment.type === 'tag') {
                             // Handle SSML tags

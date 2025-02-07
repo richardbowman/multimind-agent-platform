@@ -129,11 +129,19 @@ export interface ServerMethods {
     
     /**
      * Upload and register a GGUF model file
-     * @param arrayBuffer - model content
+     * @param buffer - base64-encoded chunk
      * @returns Promise resolving to the model ID and any error
      */
-    uploadGGUFModel(arrayBuffer: ArrayBuffer, fileName: string): Promise<{ modelId: string, error?: string }>;
+    uploadGGUFModelChunk(params: UploadGGUFParameters): Promise<{ modelId: string, error?: string }>;
 }
+
+export interface UploadGGUFParameters {
+    chunk: string, // base64 encoded
+    fileName: string, 
+    uploadId: string, 
+    isLast: boolean 
+}
+
 
 export interface BackendStatus {
     configured: boolean;

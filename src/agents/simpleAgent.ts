@@ -25,7 +25,7 @@ export class SimpleAgent extends Agent {
             instructions.addContext({contentType: ContentType.PURPOSE});
             channel && instructions.addContext({contentType: ContentType.CHANNEL_DETAILS, channel, tasks: Object.values(channelProject?.tasks||{})});
 
-            const isVerbal = params.rootPost?.props?.["verbalConversation"] === true;
+            const isVerbal = params.userPost?.props?.["verbalConversation"] === true || params.rootPost?.props?.["verbalConversation"] === true;
             
             if (isVerbal) {
                 instructions.addInstruction("You are a voice assistant. Respond concisely in SSML format only.");

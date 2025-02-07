@@ -8,6 +8,7 @@ import { LimitedRPCHandler } from './LimitedRPCHandler';
 import { AppUpdater } from 'electron-updater';
 import Logger from 'src/helpers/logger';
 import { getDataPath } from 'src/helpers/paths';
+import path from 'node:path';
 
 export class ElectronIPCServer {
     private handler: LimitedRPCHandler|ServerRPCHandler;
@@ -93,9 +94,10 @@ export class ElectronIPCServer {
             new ServerRPCHandler(services);
         this.handler.setServices(services);
         
-        if (this.handler instanceof ServerRPCHandler && this.getRPC) {
-            this.handler.setupClientEvents(this.getRPC(), autoUpdater);
-            this.rpc.onBackendStatus({
+        const rpc = this.getRPC();
+        if (this.handler instanceof ServerRPCHandler && rpc) {
+            this.handler.setupClientEvents(rpc, autoUpdater);
+            rpc.onBackendStatus({
                 configured: true,
                 ready: true,
                 appPath: app.getAppPath(),

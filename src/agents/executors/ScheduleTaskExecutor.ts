@@ -1,6 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult, ReplanType } from '../interfaces/StepResult';
+import { StepResult, ReplanType, StepResponse } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -9,7 +9,7 @@ import { TaskStatus } from 'src/schemas/TaskStatus';
 import Logger from '../../helpers/logger';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { TaskCreationResponse, UpdateActions } from '../../schemas/taskCreation';
 import moment from 'moment';
 
@@ -38,6 +38,7 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { UUID } from 'src/types/uuid';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ChatClient } from 'src/chat/chatClient';
+import { StringUtils } from 'src/utils/StringUtils';
 
 @StepExecutorDecorator(ExecutorType.CREATE_TASK, 'Create, update, complete, cancel, and delete a task')
 export class ScheduleTaskExecutor implements StepExecutor {
@@ -106,14 +107,21 @@ export class ScheduleTaskExecutor implements StepExecutor {
             1. The task ID to remove
             2. A user-friendly confirmation message`);
 
-        const structuredPrompt = new StructuredOutputPrompt(schema, promptBuilder);
+        promptBuilder.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
 
         try {
-            const response = await this.modelHelpers.generate<TaskCreationResponse>({
+            const response = await this.modelHelpers.generate({
                 message: goal,
-                instructions: structuredPrompt,
+                instructions: promptBuilder,
                 threadPosts: params.context?.threadPosts || []
             });
+
+            const data = StringUtils.extractAndParseJsonBlock<TaskCreationResponse>(response.message, schema);
+            const responseMessage = StringUtils.extractNonCodeContent(response.message);
+
+            if (!data) {
+                throw new Error("Model didn't provide JSON block");
+            }
 
             const {
                 action,
@@ -121,9 +129,8 @@ export class ScheduleTaskExecutor implements StepExecutor {
                 taskDescription,
                 recurrencePattern,
                 assignee,
-                responseMessage,
                 dueDate // New field for due date
-            } = response;
+            } = data;
 
             // Handle assignment                                                                                                    
             let assigneeId: UUID | undefined;
