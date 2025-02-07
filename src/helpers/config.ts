@@ -52,16 +52,22 @@ export async function initializeConfig() {
         
         const lastPart = parts[parts.length - 1];
         Logger.verbose(`Setting value at ${parts.join('.')} = ${value}`);
+        
+        // Find the actual property name case-insensitively
+        const actualKey = Object.keys(current).find(
+            k => k.toLowerCase() === lastPart
+        ) || lastPart;
+        
         // Convert value to number if it looks like one
         const numValue = Number(value);
         if (!isNaN(numValue) && value !== '') {
-            current[lastPart] = numValue;
+            current[actualKey] = numValue;
         } else if (value?.toLowerCase() === 'true') {
-            current[lastPart] = true;
+            current[actualKey] = true;
         } else if (value?.toLowerCase() === 'false') {
-            current[lastPart] = false;
+            current[actualKey] = false;
         } else if (value) {
-            current[lastPart] = value;
+            current[actualKey] = value;
         }
     }
 
