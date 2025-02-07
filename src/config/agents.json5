@@ -274,6 +274,9 @@
               "className": "GenerateSpreadsheetExecutor"
             },
             {
+              "className": "GenerateDiagramExecutor"
+            },
+            {
               "className": "GoalConfirmationExecutor"
             },
             {
@@ -359,6 +362,9 @@
               "className": "GenerateSpreadsheetExecutor"
             },
             {
+              "className": "GenerateDiagramExecutor"
+            },
+            {
               "className": "GoalConfirmationExecutor"
             },
             {
@@ -420,6 +426,9 @@
                 "defaultFormat": "markdown",
                 "artifactTypes": ["prd", "spec", "roadmap"]
               }
+            },
+            {
+              "className": "GenerateDiagramExecutor"
             },
             {
               "className": "GoalConfirmationExecutor"
