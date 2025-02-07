@@ -30,7 +30,7 @@
               "className": "ReplyExecutor"
             },
             {
-              "className": "GenerateArtifactExecutor"
+              "className": "GenerateDocumentExecutor"
             },
             {
               "className": "GenerateChartExecutor"
@@ -268,11 +268,10 @@
               "className": "NodeExecutorExecutor"
             },
             {
-              "className": "GenerateArtifactExecutor",
-              "config": {
-                "defaultFormat": "json",
-                "artifactTypes": ["api-data", "report", "analysis"]
-              }
+              "className": "GenerateChartExecutor"
+            },
+            {
+              "className": "GenerateSpreadsheetExecutor"
             },
             {
               "className": "GoalConfirmationExecutor"
@@ -413,7 +412,7 @@
               "className": "BrainstormExecutor"
             },
             {
-              "className": "GenerateArtifactExecutor",
+              "className": "GenerateDocumentExecutor",
               "config": {
                 "defaultFormat": "markdown",
                 "artifactTypes": ["prd", "spec", "roadmap"]
@@ -449,7 +448,7 @@
                "className": "UrlExecutor"
              },
              {
-               "className": "GenerateArtifactExecutor",
+               "className": "GenerateDocumentExecutor",
                "config": {
                  "defaultFormat": "markdown",
                  "artifactTypes": ["data", "report", "summary"]
@@ -496,7 +495,7 @@
               "className": "CalendarExecutor"
             },
             {
-              "className": "GenerateArtifactExecutor",
+              "className": "GenerateDocumentExecutor",
               "config": {
                 "defaultFormat": "markdown",
                 "artifactTypes": ["strategy", "brief", "campaign-plan"]
