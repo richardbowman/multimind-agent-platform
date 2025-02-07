@@ -350,10 +350,13 @@
               "className": "BrainstormExecutor"
             },
             {
-              "className": "GenerateArtifactExecutor",
+              "className": "GenerateDocumentExecutor",
               "config": {
                 "defaultFormat": "markdown"
               }
+            },
+            {
+              "className": "GenerateSpreadsheetExecutor"
             },
             {
               "className": "GoalConfirmationExecutor"
