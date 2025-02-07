@@ -4,9 +4,10 @@ import { useMessages } from './MessageContext';
 import { UUID } from '../../../../types/uuid';
 
 interface ThreadMessageContextType {
-  threadMessages: ClientMessage[];
+  messages: ClientMessage[];
   rootMessage: ClientMessage | null;
   isLoading: boolean;
+  isThread: boolean;
 }
 
 const ThreadMessageContext = createContext<ThreadMessageContextType | null>(null);
@@ -18,14 +19,20 @@ export const ThreadMessageProvider = ({
   threadId: UUID | null;
   children: React.ReactNode 
 }) => {
-  const { messages, isLoading } = useMessages();
+  const { messages, isLoading, currentChannelId } = useMessages();
 
-  const threadMessages = useMemo(() => {
-    if (!threadId) return [];
+  const messages = useMemo(() => {
+    if (!threadId) {
+      // Main channel messages - messages without a thread
+      return messages.filter(msg => 
+        !msg.props?.['root-id'] && msg.channel_id === currentChannelId
+      );
+    }
+    // Thread messages - root message and its replies
     return messages.filter(msg => 
       msg.id === threadId || msg.props?.['root-id'] === threadId
     );
-  }, [messages, threadId]);
+  }, [messages, threadId, currentChannelId]);
 
   const rootMessage = useMemo(() => {
     if (!threadId) return null;
@@ -33,10 +40,11 @@ export const ThreadMessageProvider = ({
   }, [messages, threadId]);
 
   const value = useMemo(() => ({
-    threadMessages,
+    messages,
     rootMessage,
-    isLoading
-  }), [threadMessages, rootMessage, isLoading]);
+    isLoading,
+    isThread: !!threadId
+  }), [messages, rootMessage, isLoading, threadId]);
 
   return (
     <ThreadMessageContext.Provider value={value}>
