@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { ClientMessage } from '../../../../shared/types';
 import { useMessages } from './MessageContext';
+import { UUID } from '../../../../types/uuid';
 
 interface ThreadMessageContextType {
   threadMessages: ClientMessage[];
@@ -14,7 +15,7 @@ export const ThreadMessageProvider = ({
   threadId,
   children 
 }: { 
-  threadId: string | null;
+  threadId: UUID | null;
   children: React.ReactNode 
 }) => {
   const { messages, isLoading } = useMessages();
