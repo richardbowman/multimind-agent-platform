@@ -209,7 +209,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     }
 
     if (type === "javascript" || type === ArtifactType.APIData || mimeType === "application/json") {
-        return <pre>{content}</pre>;
+        return <Box sx={{overflow: "auto"}}><pre>{content}</pre></Box>;
     }
 
     // Handle PDF content
@@ -480,8 +480,8 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     }
 
     if (content.length < 1024 * 10 && (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown')) {
-        return <ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown>;
+        return <Box sx={{overflow: "auto"}}><ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown></Box>;
     } else {
-        return <pre>{content}</pre>;
+        return <Box sx={{overflow: "auto"}}><pre>{content}</pre></Box>;
     }
 };

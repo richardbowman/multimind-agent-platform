@@ -184,6 +184,7 @@ export interface StepSequenceConfig {
 export interface AgentConfig {
     purpose: string;
     finalInstructions: string;
+    supportsDelegation: boolean;
     plannerType: PlannerType;
     executors: {
         className: string;

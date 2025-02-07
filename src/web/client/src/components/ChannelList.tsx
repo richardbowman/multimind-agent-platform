@@ -14,13 +14,13 @@ import EditIcon from '@mui/icons-material/Edit';
 import AddIcon from '@mui/icons-material/Add';
 import { AddChannelDialog } from './AddChannelDialog';
 import { createChannelHandle } from '../../../../shared/channelTypes';
+import { useMessages } from '../contexts/MessageContext';
 
 interface ChannelListProps {}
 
 export const ChannelList: React.FC<ChannelListProps> = () => {
     const { channels } = useChannels();
-    const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
-    const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
+    const { currentChannelId, setCurrentChannelId, currentThreadId, setCurrentThreadId } = useMessages();
     const [dialogOpen, setDialogOpen] = useState(false);
     const [editingChannelId, setEditingChannelId] = useState<string | null>(null);
 

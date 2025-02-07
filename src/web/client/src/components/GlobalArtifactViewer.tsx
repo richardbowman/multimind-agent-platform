@@ -1,7 +1,7 @@
 import React, { useEffect, useState, useCallback, useMemo } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
-import { Artifact, ArtifactType } from '../../../../tools/artifact';
+import { Artifact, ArtifactItem, ArtifactType } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
 import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, ListItem, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
@@ -15,6 +15,7 @@ import Checkbox from '@mui/material/Checkbox';
 import { ActionToolbar } from './shared/ActionToolbar';
 import { useToolbarActions } from '../contexts/ToolbarActionsContext';
 import { useIPCService } from '../contexts/IPCContext';
+import { useArtifacts } from '../contexts/ArtifactContext';
 
 export interface DrawerPage {
     drawerOpen: boolean;
@@ -22,8 +23,10 @@ export interface DrawerPage {
 }
 
 export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
-    const { allArtifacts, fetchAllArtifacts, deleteArtifact, showFileDialog } = useDataContext();
-    const [selectedArtifacts, setSelectedArtifacts] = useState<Artifact[]>([]);
+    const { artifacts: allArtifacts, fetchAllArtifacts, deleteArtifact } = useArtifacts();
+    const { showFileDialog } = useDataContext();
+    const [selectedArtifact, setSelectedArtifact] = useState<Artifact|null>(null);
+    const [selectedArtifacts, setSelectedArtifacts] = useState<ArtifactItem[]>([]);
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [filterText, setFilterText] = useState('');
     const [selectedProject, setSelectedProject] = useState<string>('all');
@@ -65,9 +68,14 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         return () => unregisterActions('global-artifact-viewer');
     }, [registerActions, unregisterActions]);
 
-    const handleCreateArtifact = async (artifact: Artifact) => {
+    const selectArtifact = async (item: ArtifactItem) => {
+        setSelectedArtifacts([item]);
+        setSelectedArtifact(await ipcService.getRPC().getArtifact(item.id));
+    }
+
+    const handleCreateArtifact = async (artifact: ArtifactItem) => {
         // Update the selected artifact
-        setSelectedArtifacts([artifact]);
+        selectArtifact(artifact);
         
         // Update the artifact in the folders list
         setArtifactFolders(prevFolders => {
@@ -106,6 +114,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         if (selectedArtifacts.length > 0) {
             await Promise.all(selectedArtifacts.map(artifact => deleteArtifact(artifact.id)));
             setSelectedArtifacts([]);
+            setSelectedArtifact(null);
+
             updateActionState('bulk-delete', {
                 disabled: true,
                 label: 'Bulk Delete Selected (0)'
@@ -304,7 +314,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                             selected={selectedArtifacts.some(a => a.id === artifact.id)}
                                             onClick={() => {
                                                 // Single select when clicking the card
-                                                setSelectedArtifacts([artifact]);
+                                                selectArtifact(artifact);
+                                                
                                                 updateActionState('bulk-delete', {
                                                     disabled: true,
                                                     label: `Bulk Delete Selected (1)`
@@ -329,11 +340,11 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 position: 'relative'
             }}>
                 <ActionToolbar actions={toolbarActions} />
-                {selectedArtifacts.length === 1 ? (
+                {selectedArtifact ? (
                     <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, height: '100%', overflow: 'hidden' }}>
                         <Box sx={{ display: 'flex', flexDirection: 'column', flex: 1, overflow: 'auto', pt: 1 }}>
                             <ArtifactDisplay 
-                                artifact={selectedArtifacts[0]} 
+                                artifact={selectedArtifact} 
                                 showMetadata={true}
                                 onDelete={() => setDeleteConfirmOpen(true)}
                                 onEdit={() => {
@@ -368,13 +379,13 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             </Box>
 
 
-            {selectedArtifacts.length === 1 ? (
+            {selectedArtifact ? (
                 <ArtifactEditor
                     open={editorOpen}
                     onClose={() => setEditorOpen(false)}
                     onCreate={handleCreateArtifact}
                     onUpdate={handleCreateArtifact}
-                    artifact={selectedArtifacts[0]}
+                    artifact={selectedArtifact}
                 />
             ) : (
                 <ArtifactEditor

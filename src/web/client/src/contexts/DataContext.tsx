@@ -21,8 +21,6 @@ export interface DataContextMethods {
   messages: ClientMessage[];
   channels: ChannelData[];
   tasks: Task[];
-  allArtifacts: Artifact[];
-  currentThreadArtifacts: Artifact[];
   pendingFiles: Artifact[];
   logs: {
     llm: Record<string, LLMLogEntry[]>;
@@ -40,13 +38,8 @@ export interface DataContextMethods {
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   fetchChannels: () => Promise<void>;
   fetchTasks: (channelId: string, threadId: string | null) => Promise<Task[]>;
-  fetchArtifacts: (channelId: string, threadId: string | null) => Promise<void>;
-  fetchAllArtifacts: () => Promise<void>;
   fetchLogs: (logType: 'llm' | 'system' | 'api') => Promise<void>;
   fetchHandles: () => Promise<void>;
-  deleteArtifact: (artifactId: string) => Promise<void>;
-  addArtifactToChannel: (channelId: string, artifactId: string) => Promise<void>;
-  removeArtifactFromChannel: (channelId: string, artifactId: string) => Promise<void>;
   setMessages: React.Dispatch<React.SetStateAction<ClientMessage[]>>;
   setLogs: React.Dispatch<React.SetStateAction<{
     llm: Record<string, LLMLogEntry[]>;
@@ -54,7 +47,6 @@ export interface DataContextMethods {
     api: any[];
   }>>;
   setNeedsConfig: React.Dispatch<React.SetStateAction<boolean>>;
-  saveArtifact: (artifact: Artifact) => Promise<any>
   setCurrentChannelId: React.Dispatch<React.SetStateAction<string | null>>;
   setCurrentThreadId: React.Dispatch<React.SetStateAction<string | null>>;
   getSettings: () => Promise<any>;
@@ -226,7 +218,7 @@ export const DataProvider: React.FC<{
   }, []);
 
   const fetchAllArtifacts = useCallback(async () => {
-    const newArtifacts = await ipcService.getRPC().getAllArtifacts();
+    const newArtifacts = await ipcService.getRPC().listArtifacts();
     setAllArtifacts(newArtifacts);
   }, []);
 
@@ -321,8 +313,6 @@ export const DataProvider: React.FC<{
     messages,
     channels,
     tasks,
-    currentThreadArtifacts,
-    allArtifacts, 
     pendingFiles,
     logs,
     handles,
@@ -336,14 +326,8 @@ export const DataProvider: React.FC<{
     sendMessage,
     fetchChannels,
     fetchTasks,
-    fetchArtifacts,
-    fetchAllArtifacts,
     fetchLogs,
     fetchHandles,
-    deleteArtifact,
-    saveArtifact,
-    addArtifactToChannel,
-    removeArtifactFromChannel,
     setMessages,
     setLogs,
     setNeedsConfig,

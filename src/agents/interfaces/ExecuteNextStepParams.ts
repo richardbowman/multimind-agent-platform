@@ -1,6 +1,6 @@
 import { ChatPost, Message } from 'src/chat/chatClient';
 import { Artifact } from 'src/tools/artifact';
-import { Project } from 'src/tools/taskManager';
+import { Project, Task } from 'src/tools/taskManager';
 import { UUID } from 'src/types/uuid';
 
 export interface ExecuteContext {
@@ -16,4 +16,5 @@ export interface ExecuteNextStepParams {
     userPost?: Message;
     context?: ExecuteContext;
     partialPost?: ChatPost;
+    task?: Task;
 }

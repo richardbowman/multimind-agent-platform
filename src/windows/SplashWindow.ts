@@ -12,7 +12,7 @@ export class SplashWindow {
         this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
             width: 500,
-            height: 400,
+            height: 500,
             frame: false,
             transparent: true,
             resizable: false,
@@ -37,6 +37,7 @@ export class SplashWindow {
         this.window.webContents.setZoomFactor(this.zoomLevel);
         this.window.webContents.setZoomLevel(1);
         this.window.show();
+        this.window.webContents.openDevTools();
     }
 
     setMessage(message: string) {
@@ -56,7 +57,7 @@ export class SplashWindow {
     }
 
     close() {
-        this.window.close();
+        // this.window.close();
         Logger.off("_progress", this.infoEvent);
     }
 }

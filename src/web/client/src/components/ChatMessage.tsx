@@ -12,13 +12,13 @@ import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { CodeBlock } from './shared/CodeBlock';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
-import { CodeBlock } from './shared/CodeBlock';
 import { Spinner } from './Spinner';
 import { CustomLink } from './ChatPanel';
 import { UUID } from '../../../../types/uuid';
+import { ChatPost } from '../../../../chat/chatClient';
 
 interface ChatMessageProps {
-    message: any;
+    message: ChatPost;
     handles: any[];
     expandedMessages: Set<string>;
     messageVersions: Record<string, number>;
@@ -213,7 +213,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         }}
                     >
                         <Typography variant="caption" sx={{ color: 'primary.main' }}>
-                            View thread ({message.reply_count} {message.reply_count === 1 ? 'response' : 'responses'})
+                            View thread ({message.replyCount} {message.replyCount === 1 ? 'response' : 'responses'})
                         </Typography>
                     </Box>
                 )}

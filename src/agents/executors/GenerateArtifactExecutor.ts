@@ -2,24 +2,17 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResponse, StepResponseType, StepResult, WithMessage } from '../interfaces/StepResult';
-import { ModelMessageResponse, RequestArtifacts } from '../../schemas/ModelResponse';
 import { ModelHelpers } from 'src/llm/modelHelpers';
-import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { randomUUID } from 'crypto';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
-import { ExecutorType } from '../interfaces/ExecutorType';
 import { TaskManager } from 'src/tools/taskManager';
-import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
-import { createUUID, UUID } from 'src/types/uuid';
-import { contentType } from 'mime-types';
+import { PromptBuilder, ContentType, OutputType } from 'src/llm/promptBuilder';
 import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationResponse';
-import { StructuredOutputPrompt } from 'src/llm/ILLMService';
+import { StringUtils } from 'src/utils/StringUtils';
+import { JSONSchema } from 'src/llm/ILLMService';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
-import { StringUtils } from 'src/utils/StringUtils';
-import JSON5 from 'json5';
 
 
 export interface ArtifactGenerationStepData {
@@ -45,13 +38,14 @@ export interface ArtifactGenerationStepResponse extends StepResponse {
  * - Handles errors gracefully with logging
  * - Generates unique IDs for new artifacts
  * - Preserves existing IDs during revisions
- */
-@StepExecutorDecorator(ExecutorType.GENERATE_ARTIFACT, 'Create/revise a Markdown document, Mermaid diagram, or spreadsheet (CSV)')
+*/
 export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactGenerationStepResponse> {
     protected modelHelpers: ModelHelpers;
     protected artifactManager: ArtifactManager;
     protected taskManager?: TaskManager;
-
+    protected addContentFormattingRules?(prompt: PromptBuilder);
+    protected abstract getSupportedFormats(): string[];
+    
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
 
@@ -102,23 +96,14 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
         return promptBuilder;
     }
 
-    protected abstract getContentFormattingRules(): string;
-
-    protected async getOutputInstructions(schema: any): Promise<string> {
-        return `OUTPUT INSTRUCTIONS:
-1. To create the requested artifact, you will use two code blocks, one to contain attributes about the document, and the other for the content.
-2. Use one enclosed code block with the hidden indicator \`\`\`json[hidden] that matches this JSON Schema:
-${JSON.stringify(schema, null, 2)}
-for the file attributes`;
-    }
-
-    protected abstract getSupportedFormats(): string[];
 
     async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
         const promptBuilder = this.createBasePrompt(params);
+        const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
         
         // Add content formatting rules
-        promptBuilder.addInstruction(this.getContentFormattingRules());
+        if (this.addContentFormattingRules) this.addContentFormattingRules(promptBuilder);
+        promptBuilder.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema, "", this.getSupportedFormats().join("|"));
         
         // Add Q&A context from project metadata
 

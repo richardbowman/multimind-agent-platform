@@ -90,25 +90,26 @@
         }
 
         .logo-container {
-            padding: 20px;
+            padding: 10px;
         }
 
         .logo {
-            width: 80px;
-            height: 80px;
+            width: 100px;
+            height: 100px;
             background: url('./logo.svg') no-repeat center;
             background-size: 60%; /* Make SVG smaller relative to container */
             position: relative;
             flex-shrink: 0;
+            animation: pulseLogo 2s ease-in-out infinite;
         }
 
         .logo::after {
             content: '';
             position: absolute;
-            top: -10px; /* Extend beyond container */
-            left: -10px; /* Extend beyond container */
-            width: 100px; /* Larger than container */
-            height: 100px; /* Larger than container */
+            top: -5px; /* Extend beyond container */
+            left: -5px; /* Extend beyond container */
+            width: 110px; /* Larger than container */
+            height: 110px; /* Larger than container */
             border-radius: 50%;
             box-shadow: 0 0 20px rgba(74, 158, 255, 0.5),
                         0 0 40px rgba(74, 158, 255, 0.3),
@@ -119,10 +120,21 @@
         @keyframes pulse {
             0%, 100% {
                 transform: scale(1);
-                opacity: 1;
+                opacity: 0.7;
             }
             50% {
                 transform: scale(1.1);
+                opacity: 0.5;
+            }
+        }
+
+        @keyframes pulseLogo {
+            0%, 100% {
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% {
+                transform: scale(1.05);
                 opacity: 0.7;
             }
         }

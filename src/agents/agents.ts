@@ -260,12 +260,12 @@ export abstract class Agent {
             throw new Error("Invalid message provided in reply");
         }
 
-        const artifactIds = [...postProps?.["artifact-ids"] || [], ...response.artifactIds || [], ...response.artifactId ? [response.artifactId] : []];
+        const artifactIds = [...postProps?.artifactIds || [], ...response.artifactIds || [], ...response.artifactId ? [response.artifactId] : []];
 
         // Include project ID in props if present in response
         const responseProps = {
             ...postProps,
-            "artifact-ids": artifactIds,
+            artifactIds,
             ...(response.projectId && { "project-ids": [response.projectId] })
         };
 
@@ -309,7 +309,7 @@ export abstract class Agent {
                 if (!post.getRootId() && (handle && post.message.startsWith(handle + " ") || (!post.message.startsWith("@") && autoRespond))) {
                     let requestedArtifacts: string[] = [], searchResults: SearchResult[] = [];
 
-                    const allArtifacts = [...new Set([...requestedArtifacts, ...post.props["artifact-ids"] || []].flat())];
+                    const allArtifacts = [...new Set([...requestedArtifacts, ...post.props.artifactIds || []].flat())];
                     const artifacts = await this.mapRequestedArtifacts(allArtifacts.map(a => asUUID(a)));
 
                     await this.handleChannel({ userPost: post, artifacts: artifacts, agents: this.agents });
@@ -331,7 +331,7 @@ export abstract class Agent {
 
                         let requestedArtifacts: UUID[] = [], searchResults: SearchResult[] = [];
 
-                        const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifact-ids"] || [])].flat())];
+                        const allArtifacts = [...new Set([...requestedArtifacts, ...posts.map(p => p.props["artifactIds"] || [])].flat())];
                         const artifacts = await this.mapRequestedArtifacts(allArtifacts.filter(a => a).map(a => asUUID(a)));
 
                         this.handlerThread({

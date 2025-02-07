@@ -137,7 +137,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                 flexDirection: "column",
                 flex: 1,
                 position: 'relative',
-                height: (artifact.metadata?.format === 'csv' || artifact.type === 'csv') ? '100%': undefined,
+                overflow: 'hidden',
                 cursor: 'pointer',
                 border: isSelected ? '2px solid #1976d2' : '1px solid #444',
                 borderRadius: '4px',

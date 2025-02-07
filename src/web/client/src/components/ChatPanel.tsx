@@ -26,6 +26,8 @@ import { ClientProject } from '../../../../shared/types';
 import { CodeBlock } from './shared/CodeBlock';
 import { WelcomePanel } from './WelcomePanel.tsx';
 import { TaskType } from '../../../../tools/taskManager.ts';
+import { useThreadMessages } from '../contexts/ThreadMessageContext.tsx';
+import { useMessages } from '../contexts/MessageContext.tsx';
 
 // Custom link component that opens links in system browser
 export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -51,7 +53,9 @@ interface ChatPanelProps {
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen, showWelcome, onSwitchToWelcome }) => {
-    const { messages, sendMessage, handles, currentChannelId, currentThreadId, setCurrentThreadId, isLoading, tasks } = useDataContext();
+    const { threadMessages: messages } = useThreadMessages();
+    const { sendMessage, currentChannelId, currentThreadId, setCurrentThreadId } = useMessages();
+    const { handles, isLoading, tasks } = useDataContext();
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
     const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
     const [messageVersions, setMessageVersions] = useState<Record<string, number>>({});
@@ -256,7 +260,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             user_id: userId,
                             create_at: Date.now(),
                             props: {
-                                ["artifact-ids"]: artifactIds
+                                artifactIds
                             }
                         });
                     }
@@ -272,7 +276,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                             user_id: userId,
                             create_at: Date.now(),
                             props: {
-                                ["artifact-ids"]: artifactIds
+                                artifactIds
                             }
                         });
                     }
@@ -296,7 +300,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             create_at: Date.now(),
             thread_id: currentThreadId || undefined,
             props: {
-                ["artifact-ids"]: artifactIds,
+                artifactIds,
                 ...(currentThreadId ? { 'root-id': currentThreadId } : {})
             }
         };

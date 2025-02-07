@@ -123,7 +123,7 @@ export class RouterAgent extends Agent {
                             "routed-by": this.userId,
                             "routed-agent": response.selectedAgent,
                             ...(context.artifacts && context.artifacts.length > 0 ? {
-                                "artifact-ids": context.artifacts.map(a => a.id)
+                                artifactIds: context.artifacts.map(a => a.id)
                             } : {})
                         }
                     );

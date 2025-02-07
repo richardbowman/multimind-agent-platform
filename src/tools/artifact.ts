@@ -30,13 +30,17 @@ export enum ArtifactType {
   Diagram = "diagram",
   Calendar = "calendar",
   ProcedureGuide = "procedure-guide",
-  APIData = "api-data"
+  APIData = "api-data",
+  PRESENTATION = "PRESENTATION"
 }
 
-export interface Artifact {
+export interface Artifact extends ArtifactItem {
+  content: string | Buffer | CalendarEvent[]; // The actual data, could be text, binary, or calendar events
+}
+
+export interface ArtifactItem {
   id: UUID;
   type: ArtifactType; // e.g., 'report', 'draft-email', 'calendar'
-  content: string | Buffer | CalendarEvent[]; // The actual data, could be text, binary, or calendar events
   metadata?: Record<string, any>; // Optional additional information about the artifact
   tokenCount?: number; // Optional token count for the content
 }

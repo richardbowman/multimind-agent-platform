@@ -3,7 +3,7 @@ import * as path from 'path';
 import { getDataPath } from '../helpers/paths';
 import Logger from '../helpers/logger';
 import { IVectorDatabase } from '../llm/IVectorDatabase';
-import { Artifact } from './artifact';
+import { Artifact, ArtifactItem } from './artifact';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { asUUID, createUUID, UUID } from 'src/types/uuid';
 import * as pdf from 'pdf-parse';
@@ -252,16 +252,14 @@ export class ArtifactManager {
     }
   }
 
-  async listArtifacts(): Promise<Artifact[]> {
+  async listArtifacts(): Promise<ArtifactItem[]> {
     const metadata = await this.loadArtifactMetadata();
-    const artifacts: Artifact[] = [];
+    const artifacts: ArtifactItem[] = [];
     for (const artifactId in metadata) {
       try {
         const uuid = asUUID(artifactId);
-        const contentPath = metadata[uuid].contentPath;
-        const content = await fs.readFile(contentPath);
         const type = metadata[uuid].type; // Retrieve the artifact type from metadata
-        artifacts.push({ id: uuid, type, content, metadata: metadata[uuid] });
+        artifacts.push({ id: uuid, type, metadata: metadata[uuid] });
       } catch (error) {
         Logger.verbose(`Artifact not loadable: ${artifactId}`, error);
       }

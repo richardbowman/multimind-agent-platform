@@ -346,13 +346,13 @@ export class LocalTestClient implements ChatClient {
         const channelData = this.storage.channelData[channelId];
         const projectId = channelData?.projectId;
 
-        const artifacts = channelData?.artifactIds;
+        const artifactIds = channelData?.artifactIds;
         
         // Merge any existing props with the project ID
         const postProps = {
             ...(props || {}),
             ...(projectId ? { 'project-ids': [projectId] } : {}),
-            ...(artifacts&&artifacts.length > 0 ? {"artifact-ids": artifacts} : {})
+            ...(artifactIds?.length??0 > 0 ? {artifactIds} : {})
         };
 
         const post = new InMemoryPost(

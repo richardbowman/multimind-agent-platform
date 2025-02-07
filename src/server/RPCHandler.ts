@@ -16,7 +16,7 @@ import { Project, Task, TaskManager, TaskType } from "src/tools/taskManager";
 import { LimitedRPCHandler } from "./LimitedRPCHandler";
 import { AppUpdater } from "electron-updater";
 import { createUUID, UUID } from "src/types/uuid";
-import { Artifact } from "src/tools/artifact";
+import { Artifact, ArtifactItem } from "src/tools/artifact";
 import ical from "ical";
 import { GoalTemplate } from "src/schemas/goalTemplateSchema";
 import { createChatHandle, ChatHandle, isChatHandle } from "src/types/chatHandle";
@@ -372,7 +372,13 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
 
         return tasks;
     }
+    
+    async getArtifact(id: UUID): Promise<Artifact> {
+        const artifact = await this.services.artifactManager.loadArtifact(id);
+        return this.processArtifactContent(artifact);
+    }
 
+    /** @deprecated */
     async getArtifacts({ channelId, threadId }: { channelId: UUID; threadId: string | null }): Promise<any[]> {
         // Get all messages for this channel/thread
         const messages = await this.services.chatClient.fetchPreviousMessages(channelId, 1000);
@@ -385,7 +391,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
 
         // Collect all artifact IDs from message metadata
         const artifactIds = filteredMessages
-            .flatMap(message => message.props['artifact-ids'] || [])
+            .flatMap(message => message.props['artifactIds'] || [])
             .filter((id): id is string => !!id); // Filter out undefined/null
 
         // Get the actual artifacts
@@ -397,14 +403,13 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return artifacts.map(artifact => this.processArtifactContent(artifact));
     }
 
-    async getAllArtifacts(): Promise<any[]> {
-        return (await this.services.artifactManager.listArtifacts())
-            .map(artifact => this.processArtifactContent(artifact));
+    async listArtifacts(): Promise<ArtifactItem[]> {
+        return (await this.services.artifactManager.listArtifacts());
     }
 
-    async deleteArtifact(artifactId: string): Promise<any[]> {
+    async deleteArtifact(artifactId: string): Promise<ArtifactItem[]> {
         await this.services.artifactManager.deleteArtifact(artifactId);
-        return this.getAllArtifacts();
+        return this.listArtifacts();
     }
 
     async saveArtifact(artifact: Artifact): Promise<any> {

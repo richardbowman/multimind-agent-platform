@@ -1,47 +1,41 @@
 import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
-import { Artifact } from '../../../../tools/artifact';
+import { Artifact, ArtifactItem } from '../../../../tools/artifact';
 import { useIPCService } from './IPCContext';
 import { UUID } from '../../../../types/uuid';
+import { useDataContext } from '../contexts/DataContext';
 
 interface ArtifactContextType {
-  artifacts: Artifact[];
-  currentChannelId: UUID | null;
-  currentThreadId: UUID | null;
+  artifacts: ArtifactItem[];
   isLoading: boolean;
-  fetchArtifacts: (channelId: UUID, threadId: UUID | null) => Promise<void>;
   fetchAllArtifacts: () => Promise<void>;
   saveArtifact: (artifact: Artifact) => Promise<Artifact>;
   deleteArtifact: (artifactId: UUID) => Promise<void>;
   addArtifactToChannel: (channelId: UUID, artifactId: UUID) => Promise<void>;
   removeArtifactFromChannel: (channelId: UUID, artifactId: UUID) => Promise<void>;
-  setCurrentChannelId: (channelId: UUID | null) => void;
-  setCurrentThreadId: React.Dispatch<React.SetStateAction<UUID | null>>;
 }
 
 const ArtifactContext = createContext<ArtifactContextType | null>(null);
 
 export const ArtifactProvider = ({ children }: { children: React.ReactNode }) => {
+  const { needsConfig } = useDataContext();
   const ipcService = useIPCService();
-  const [artifacts, setArtifacts] = useState<Artifact[]>([]);
-  const [currentChannelId, setCurrentChannelId] = useState<UUID | null>(null);
-  const [currentThreadId, setCurrentThreadId] = useState<UUID | null>(null);
+  const [artifacts, setArtifacts] = useState<ArtifactItem[]>([]);
+  const [currentChannelId] = useState<UUID | null>(null);
+  const [currentThreadId] = useState<UUID | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchArtifacts = useCallback(async (channelId: UUID, threadId: UUID | null) => {
-    if (!channelId) return;
-
-    setIsLoading(true);
-    const newArtifacts = await ipcService.getRPC().getArtifacts({ channelId, threadId });
-    setArtifacts(newArtifacts);
-    setIsLoading(false);
-  }, [ipcService]);
-
   const fetchAllArtifacts = useCallback(async () => {
-    setIsLoading(true);
-    const newArtifacts = await ipcService.getRPC().getAllArtifacts();
-    setArtifacts(newArtifacts);
-    setIsLoading(false);
+    if (ipcService.getRPC() && !needsConfig) {
+      setIsLoading(true);
+      const newArtifacts = await ipcService.getRPC().listArtifacts();
+      setArtifacts(newArtifacts);
+      setIsLoading(false);
+    }
   }, [ipcService]);
+
+  useEffect(() => {
+    fetchAllArtifacts();
+  }, [needsConfig]);
 
   const saveArtifact = useCallback(async (artifact: Artifact) => {
     const savedArtifact = await ipcService.getRPC().saveArtifact(artifact);
@@ -70,28 +64,16 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
     await ipcService.getRPC().removeArtifactFromChannel(channelId, artifactId);
   }, [ipcService]);
 
-  // Fetch artifacts when channel or thread changes
-  useEffect(() => {
-    if (currentChannelId) {
-      fetchArtifacts(currentChannelId, currentThreadId);
-    }
-  }, [currentChannelId, currentThreadId, fetchArtifacts]);
-
   const value = useMemo(() => ({
     artifacts,
-    currentChannelId,
-    currentThreadId,
     isLoading,
-    fetchArtifacts,
     fetchAllArtifacts,
     saveArtifact,
     deleteArtifact,
     addArtifactToChannel,
     removeArtifactFromChannel,
-    setCurrentChannelId,
-    setCurrentThreadId
   }), [artifacts, currentChannelId, currentThreadId, isLoading, 
-       fetchArtifacts, fetchAllArtifacts, saveArtifact, 
+       fetchAllArtifacts, saveArtifact, 
        deleteArtifact, addArtifactToChannel, removeArtifactFromChannel]);
 
   return (

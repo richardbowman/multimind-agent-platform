@@ -16,7 +16,7 @@ import { ModelType } from 'src/llm/LLMServiceFactory';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ModelResponse } from 'src/schemas/ModelResponse';
@@ -169,6 +169,8 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
             finished: true,
             goal: response.revisedUserGoal,
             response: {
+                type: StepResponseType.Plan,
+                reasoning: planResponse.reasoning,
                 data: planResponse
             }
         };

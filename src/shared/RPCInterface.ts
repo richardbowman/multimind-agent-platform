@@ -6,7 +6,7 @@ import { EmbedderModelInfo } from 'src/llm/ILLMService';
 import { ModelInfo } from 'src/llm/types';
 import { UpdateStatus } from './UpdateStatus';
 import { UUID } from 'src/types/uuid';
-import { Artifact } from 'src/tools/artifact';
+import { Artifact, ArtifactItem } from 'src/tools/artifact';
 import { GoalTemplate } from 'src/schemas/goalTemplateSchema';
 import { Task } from 'src/tools/taskManager';
 import { Settings } from 'src/tools/settings';
@@ -52,7 +52,8 @@ export interface ServerMethods {
     getThreads(params: { channelId: string }): Promise<ClientThread[]>;
     getTasks(params: { channelId: string; threadId: string | null }): Promise<Task[]>;
     getArtifacts(params: { channelId: string; threadId: string | null }): Promise<any[]>;
-    getAllArtifacts(): Promise<any[]>;
+    getArtifact(id: UUID): Promise<Artifact>;
+    listArtifacts(): Promise<ArtifactItem[]>
     deleteArtifact(artifactId: string): Promise<any[]>;
     saveArtifact(artifact: Artifact): Promise<Artifact>;
     addArtifactToChannel(channelId: string, artifactId: string): Promise<void>;

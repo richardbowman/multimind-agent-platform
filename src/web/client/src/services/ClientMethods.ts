@@ -167,7 +167,7 @@ class ClientMethodsImplementation implements ClientMethods {
 
         // Check for artifact references in new messages
         const hasNewArtifacts = messages.some(message =>
-            message.props?.["artifact-ids"]?.length > 0
+            message.props?.artifactIds?.length > 0
         );
 
         // If we have new artifacts, refresh artifacts for both current and message channels

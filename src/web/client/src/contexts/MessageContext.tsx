@@ -1,16 +1,17 @@
-import React, { createContext, useContext, useCallback, useMemo, useState } from 'react';
+import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
 import { ClientMessage } from '../../../../shared/types';
 import { useIPCService } from './IPCContext';
+import { UUID } from '../../../../types/uuid';
 
 interface MessageContextType {
   messages: ClientMessage[];
-  currentChannelId: string | null;
-  currentThreadId: string | null;
+  currentChannelId: UUID | null;
+  currentThreadId: UUID | null;
   isLoading: boolean;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
   setMessages: React.Dispatch<React.SetStateAction<ClientMessage[]>>;
-  setCurrentChannelId: (channelId: string | null) => void;
-  setCurrentThreadId: React.Dispatch<React.SetStateAction<string | null>>;
+  setCurrentChannelId: (channelId: UUID | null) => void;
+  setCurrentThreadId: React.Dispatch<React.SetStateAction<UUID | null>>;
 }
 
 const MessageContext = createContext<MessageContextType | null>(null);
@@ -18,9 +19,20 @@ const MessageContext = createContext<MessageContextType | null>(null);
 export const MessageProvider = ({ children }: { children: React.ReactNode }) => {
   const ipcService = useIPCService();
   const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [currentChannelId, setCurrentChannelId] = useState<string | null>(null);
-  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
+  const [currentChannelId, setCurrentChannelId] = useState<UUID | null>(null);
+  const [currentThreadId, setCurrentThreadId] = useState<UUID | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+
+  const fetchMessages = useCallback(async (channelId: UUID, threadId: UUID | null) => {
+    if (!channelId) return;
+
+    setIsLoading(true);
+    setMessages([]); // Clear messages before loading new ones
+
+    const newMessages = await ipcService.getRPC().getMessages({ channelId, threadId });
+    setMessages(newMessages);
+    setIsLoading(false);
+  }, [ipcService]);
 
   const sendMessage = useCallback(async (message: Partial<ClientMessage>) => {
     const result = await ipcService.getRPC().sendMessage(message);
@@ -33,6 +45,13 @@ export const MessageProvider = ({ children }: { children: React.ReactNode }) => 
       });
     }
   }, [ipcService]);
+
+  // Fetch messages whenever channel or thread changes
+  useEffect(() => {
+    if (currentChannelId) {
+      fetchMessages(currentChannelId, currentThreadId);
+    }
+  }, [currentChannelId, currentThreadId, fetchMessages]);
 
   const value = useMemo(() => ({
     messages,

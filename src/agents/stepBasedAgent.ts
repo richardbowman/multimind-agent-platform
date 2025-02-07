@@ -129,7 +129,8 @@ export abstract class StepBasedAgent extends Agent {
             }];
     
             const nextStepParams = {
-                projectId: task.projectId
+                projectId: task.projectId,
+                task: task
             }
 
             // Handle response to existing project
@@ -281,7 +282,7 @@ export abstract class StepBasedAgent extends Agent {
         };
 
         if (this.planner === null) {
-            const goal = `Perform planning for user's goal: ${plannerParams.userPost.message}`;
+            const goal = `Perform planning for ${plannerParams.userPost ? `user's goal: ${plannerParams.userPost?.message}` : `task: ${params.task?.description}`}`;
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
                 description: goal,
@@ -627,7 +628,7 @@ export abstract class StepBasedAgent extends Agent {
                 }
                 const props = {
                     "project-ids": [stepResult.projectId, projectId],
-                    "artifact-ids": artifactList
+                    artifactIds: artifactList
                 };
                 if (params.partialPost) {
                     await this.chatClient.updatePost(

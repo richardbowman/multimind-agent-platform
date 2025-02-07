@@ -63,6 +63,7 @@
         "config": {
           "purpose": "My name is Sentry. My job is to help make write code to automate tasks.",
           "finalInstructions": "",
+          "supportsDelegation": true,
           "plannerType": "nextStep",
           "executors": [
             {
@@ -98,6 +99,7 @@
         "config": {
           "purpose": "You are a research assistant who performs web searches to meet the goal.",
           "finalInstructions": "IN YOUR REASONING, Explain the step strategies you considered.",
+          "supportsDelegation": true,
           "plannerType": "nextStep",
           "executors": [
             {
@@ -253,6 +255,7 @@
         "config": {
           "purpose": "My name is Data Assistant. My goal is to help extract and analyze data from APIs.",
           "finalInstructions": "To work with an attached list of links, first peform artifact selection, then link selection, then use the scraper, and then generate the artifact.",
+          "supportsDelegation": true,
           "plannerType": "nextStep",
           "executors": [
             {
@@ -313,6 +316,7 @@
       "ResearchManager": {
         "className": "ResearchManager",
         "sourcePath": "researchManager.ts",
+        "supportsDelegation": true,
         "userId": "48d176a8-9f55-47c2-90ca-6dd2bba8e262",
         "handle": "@research",
         "description": "Manages and coordinates complex research activities that require multiple Web searches (the research assistant is part of their team).",
@@ -323,8 +327,12 @@
         "sourcePath": "contentManager.ts",
         "userId": "9d039c4e-f99d-4fb7-a160-452ac261569c",
         "handle": "@content",
+        "supportsDelegation": true,
         "description": "Manages content creation and organization for larger writing assignments that need multiple sections (the writer is part of their team).",
-        "enabled": true
+        "enabled": true,
+        "config": {
+          "supportsDelegation": true
+        }
       },
       "ContentWriter": {
         "className": "ContentWriter",
@@ -332,7 +340,10 @@
         "userId": "66025743-45bc-4625-a27f-52aa09dde128",
         "handle": "@writer",
         "description": "The content writer can write content blocks, short articles. They are part of the @content content manager's team. The manager can break down and segreate multiple writing tasks for larger projects.",
-        "enabled": true
+        "enabled": true,
+        "config": {
+          "supportsDelegation": true
+        }
       },
       "ProjectManager": {
         "className": "ConfigurableAgent",

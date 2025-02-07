@@ -103,6 +103,8 @@ export class DelegationExecutor implements StepExecutor {
                 const agent = params.agents?.find(a => a.messagingHandle === task.assignee);
                 if (agent) {
                     await this.taskManager.assignTaskToAgent(taskId, agent.userId);
+                } else {
+                    Logger.error(`Unable to delegate to unknown (or unsupported for delegation) agent ${task.assignee}`)
                 }
 
                 taskDetails.push(`${task.description} [${taskId}] -> ${task.assignee}`);

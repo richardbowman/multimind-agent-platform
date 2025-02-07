@@ -27,7 +27,8 @@ export enum StepResponseType {
     WebPage = "web-page",
     Chart = "chart",
     GeneratedArtifact = "generated-artifact",
-    Tasks = "Tasks"
+    Tasks = "tasks",
+    Plan = "plan"
 }
 
 export enum ReplanType {

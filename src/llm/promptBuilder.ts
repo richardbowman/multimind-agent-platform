@@ -224,7 +224,7 @@ ${this.modelHelpers.getFinalInstructions()}
                 }
             }
             // Default renderer for unknown types
-            return `Step ${index + 1} (${stepResponse.type}):\n<stepInformation>${body||stepResponse.message||stepResponse.reasoning||stepResponse.status}</stepInformation>`;
+        return `Step ${index + 1} (${stepResponse.type??""}):\n<stepInformation>${body||stepResponse.message||stepResponse.reasoning||stepResponse.status}</stepInformation>`;
         }).join('\n') + "\n";
     }
 
@@ -362,10 +362,10 @@ export class PromptBuilder implements InputPrompt {
         return this.build();
     }
     
-    addOutputInstructions(outputType: OutputType, schemaDef?: JSONSchema, specialInstructions?: string) {
+    addOutputInstructions(outputType: OutputType, schemaDef?: JSONSchema, specialInstructions?: string, type: string = 'markdown') {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schemaDef) {
             this.addInstruction(`Respond with a user-friendly message as well as two code blocks. One enclosed \`\`\`json block format that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n 
-            Then, provide a separately enclosed \`\`\`markdown block. ${specialInstructions || ''}`);
+            Then, provide a separately enclosed \`\`\`${type} block. ${specialInstructions || ''}`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE && schemaDef) {
             this.addInstruction(`Respond with a user-friendly message as well as enclosed \`\`\`json block format that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schemaDef) {

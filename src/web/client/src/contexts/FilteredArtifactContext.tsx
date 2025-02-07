@@ -1,15 +1,17 @@
-import React, { createContext, useContext, useMemo, useState, useEffect } from 'react';
-import { invoke } from '@tauri-apps/api/tauri';
-import { Artifact } from '../../../../tools/artifact';
+import React, { createContext, useContext, useMemo, useState, useEffect, SetStateAction } from 'react';
+import { Artifact, ArtifactItem } from '../../../../tools/artifact';
 import { useArtifacts } from './ArtifactContext';
 import { useThreadMessages } from './ThreadMessageContext';
 import { UUID } from '../../../../types/uuid';
+import { useIPCService } from './IPCContext';
 
 interface FilteredArtifactContextType {
-  filteredArtifacts: Artifact[];
+  filteredArtifacts: ArtifactItem[];
+  artifactId: UUID | null;
   currentArtifact: Artifact | null;
   isLoading: boolean;
   isChannelView: boolean;
+  setArtifactId: React.Dispatch<React.SetStateAction<UUID | null>>;
 }
 
 const FilteredArtifactContext = createContext<FilteredArtifactContextType | null>(null);
@@ -17,7 +19,6 @@ const FilteredArtifactContext = createContext<FilteredArtifactContextType | null
 export const FilteredArtifactProvider = ({ 
   channelId,
   threadId,
-  artifactId,
   children 
 }: { 
   channelId: UUID | null;
@@ -25,9 +26,11 @@ export const FilteredArtifactProvider = ({
   artifactId: UUID | null;
   children: React.ReactNode 
 }) => {
+  const ipcService = useIPCService();
   const { artifacts, isLoading } = useArtifacts();
   const { threadMessages } = useThreadMessages();
-  const [loadedArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
+  const [artifactId, setArtifactId] = useState<UUID | null>(null);
+  const [currentArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
   const [isLoadingArtifact, setIsLoadingArtifact] = useState(false);
 
   useEffect(() => {
@@ -39,7 +42,7 @@ export const FilteredArtifactProvider = ({
     const loadArtifact = async () => {
       setIsLoadingArtifact(true);
       try {
-        const artifact = await invoke<Artifact>('get_artifact', { id: artifactId });
+        const artifact = await ipcService.getRPC().getArtifact(artifactId);
         setLoadedArtifact(artifact);
       } catch (error) {
         console.error('Failed to load artifact:', error);
@@ -51,7 +54,7 @@ export const FilteredArtifactProvider = ({
 
     loadArtifact();
   }, [artifactId]);
-
+  
   // Get artifact IDs from thread messages
   const threadArtifactIds = useMemo(() => {
     const ids = new Set(
@@ -72,17 +75,15 @@ export const FilteredArtifactProvider = ({
     return list;
   }, [artifacts, threadArtifactIds]);
 
-  const currentArtifact = useMemo(() => {
-    if (!artifactId) return null;
-    return loadedArtifact || artifacts.find(a => a.id === artifactId) || null;
-  }, [artifacts, artifactId, loadedArtifact]);
 
   const value = useMemo(() => ({
     filteredArtifacts,
     currentArtifact,
+    artifactId,
+    setArtifactId,
     isLoading: isLoading || isLoadingArtifact,
     isChannelView: !!channelId && !threadId
-  }), [filteredArtifacts, currentArtifact, isLoading, channelId, threadId]);
+  }), [filteredArtifacts, currentArtifact, isLoading, artifactId, setArtifactId, channelId, threadId]);
 
   return (
     <FilteredArtifactContext.Provider value={value}>

@@ -363,7 +363,7 @@ export async function setupUserAgent(UserClient: LocalTestClient, storage: Local
     async function loadArtifacts() {
         const posts = storage.posts.filter(post => post.channel_id === currentChannelId && (post.getRootId() === currentThreadId || post.id === currentThreadId || (currentThreadId === null && !post.getRootId())));
 
-        const artifactIds = [...new Set(posts.map(p => p.props['artifact-ids']).flat())];
+        const artifactIds = [...new Set(posts.map(p => p.props['artifactIds']).flat())];
 
         const fullArtifactList = await artifactManager.listArtifacts();
         artifacts = fullArtifactList.filter(a => artifactIds.includes(a.id));

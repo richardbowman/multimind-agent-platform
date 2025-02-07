@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
 import { ChannelData, CreateChannelParams } from '../../../../shared/channelTypes';
 import { useIPCService } from './IPCContext';
+import { useDataContext } from './DataContext';
 
 interface ChannelContextType {
   channels: ChannelData[];
@@ -14,20 +15,22 @@ const ChannelContext = createContext<ChannelContextType | null>(null);
 export const ChannelProvider = ({ children }: { children: React.ReactNode }) => {
   const ipcService = useIPCService();
   const [channels, setChannels] = useState<ChannelData[]>([]);
-
-  // Fetch channels on mount
-  useEffect(() => {
-    fetchChannels();
-  }, []);
+  const { needsConfig } = useDataContext();
 
   const fetchChannels = useCallback(async () => {
     try {
-      const newChannels = await ipcService.getRPC().getChannels();
-      setChannels(newChannels);
+      if (ipcService.getRPC() && !needsConfig) {
+        const newChannels = await ipcService.getRPC().getChannels();
+        setChannels(newChannels);
+      }
     } catch (error) {
       console.error(error);
     }
   }, [ipcService]);
+
+  useEffect(() => {
+    fetchChannels();
+  }, [needsConfig]);
 
   const createChannel = useCallback(async (params: CreateChannelParams) => {
     const channelId = await ipcService.getRPC().createChannel(params);

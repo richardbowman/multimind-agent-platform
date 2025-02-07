@@ -79,7 +79,7 @@ export interface ProjectChainResponse {
 export interface ConversationContext extends Record<string, any> {
     "project-ids"?: string[];
     "conversation-root"?: string;
-    "artifact-ids"?: string[];
+    artifactIds?: string[];
 }
 
 export interface Attachment {

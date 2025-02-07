@@ -223,42 +223,48 @@ const AppContent: React.FC = () => {
                         </Drawer>
 
 
-                        <Main leftOpen={leftDrawerOpen} rightOpen={rightDrawerOpen}>
-                            <ThreadMessageProvider threadId={currentThreadId}>
+                        <ThreadMessageProvider threadId={currentThreadId}>
+                            <Main leftOpen={leftDrawerOpen} rightOpen={rightDrawerOpen}>
                                 <ChatPanel
                                     leftDrawerOpen={leftDrawerOpen}
                                     rightDrawerOpen={rightDrawerOpen}
                                     showWelcome={showWelcome}
                                     onSwitchToWelcome={setShowWelcome}
                                 />
-                            </ThreadMessageProvider>
-                        </Main>
+                            </Main>
 
-                        <Drawer
-                            variant="persistent"
-                            anchor="right"
-                            open={rightDrawerOpen}
-                            sx={{
-                                width: rightDrawerWidth,
-                                flexShrink: 0,
-                                '& .MuiDrawer-paper': {
-                                    width: 300,
-                                    boxSizing: 'border-box',
-                                    backgroundColor: '#2a2a2a',
-                                    borderLeft: '1px solid #444'
-                                },
-                            }}
-                        >
-                            <Toolbar /> {/* For spacing under app bar */}
-                            <TaskPanel
-                                channelId={currentChannelId}
-                                threadId={currentThreadId}
-                            />
-                            <ArtifactPanel
-                                channelId={currentChannelId}
-                                threadId={currentThreadId}
-                            />
-                        </Drawer>
+                            <Drawer
+                                variant="persistent"
+                                anchor="right"
+                                open={rightDrawerOpen}
+                                sx={{
+                                    width: rightDrawerWidth,
+                                    flexShrink: 0,
+                                    '& .MuiDrawer-paper': {
+                                        width: 300,
+                                        boxSizing: 'border-box',
+                                        backgroundColor: '#2a2a2a',
+                                        borderLeft: '1px solid #444'
+                                    },
+                                }}
+                            >
+                                <Toolbar /> {/* For spacing under app bar */}
+                                <TaskPanel
+                                    channelId={currentChannelId}
+                                    threadId={currentThreadId}
+                                />
+                                <FilteredArtifactProvider
+                                    channelId={currentChannelId}
+                                    threadId={currentThreadId}
+                                    artifactId={null}
+                                >
+                                    <ArtifactPanel
+                                        channelId={currentChannelId}
+                                        threadId={currentThreadId}
+                                    />
+                                </FilteredArtifactProvider>
+                            </Drawer>
+                        </ThreadMessageProvider>
                     </>
                 ) : currentTab === 'artifacts' ? (
                     <GlobalArtifactViewer
@@ -283,25 +289,19 @@ const App: React.FC = () => {
     return (
         <IPCProvider>
             <SnackbarProvider>
-                <ChannelProvider>
-                    <MessageProvider>
-                        <DataProvider>
+                <DataProvider>
+                    <ChannelProvider>
+                        <MessageProvider>
                             <ArtifactProvider>
                                 <LogProvider>
                                     <ToolbarActionsProvider>
-                                        <FilteredArtifactProvider 
-                                            channelId={currentChannelId}
-                                            threadId={currentThreadId}
-                                            artifactId={null}
-                                        >
-                                            <AppContent />
-                                        </FilteredArtifactProvider>
+                                        <AppContent />
                                     </ToolbarActionsProvider>
                                 </LogProvider>
                             </ArtifactProvider>
-                        </DataProvider>
-                    </MessageProvider>
-                </ChannelProvider>
+                        </MessageProvider>
+                    </ChannelProvider>
+                </DataProvider>
             </SnackbarProvider>
         </IPCProvider>
     );

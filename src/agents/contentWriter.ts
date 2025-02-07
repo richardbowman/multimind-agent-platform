@@ -46,7 +46,7 @@ export class ContentWriter extends Agent {
                 category: TaskCategories.Writing,
                 creator: this.userId,
                 props: {
-                    'artifact-ids': params.artifacts?.map(a => a.id),
+                    'artifactIds': params.artifacts?.map(a => a.id),
                     'project-ids': params.projects?.map(p => p.id),
                     'thread-chain': [params.rootPost, ...params.threadPosts||[]]
                 }
@@ -84,8 +84,8 @@ export class ContentWriter extends Agent {
                 prompt.addContent(ContentType.CONVERSATION, task.props['thread-chain']);
             }
             
-            if (task.props && task.props['artifact-ids']) {
-                const artifacts = await this.mapRequestedArtifacts(task.props['artifact-ids']);
+            if (task.props && task.props['artifactIds']) {
+                const artifacts = await this.mapRequestedArtifacts(task.props['artifactIds']);
                 prompt.addContent(ContentType.ARTIFACTS_EXCERPTS, artifacts);
             }
 
@@ -223,7 +223,7 @@ export class ContentWriter extends Agent {
                 },
                 {
                     "project-ids": [project.id],
-                    "artifact-ids": completedTasks
+                    artifactIds: completedTasks
                         .map(t => t.props?.result?.response?.contentBlockId)
                         .filter(Boolean)
                 }
