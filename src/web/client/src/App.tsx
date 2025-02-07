@@ -23,6 +23,8 @@ import './styles/App.css';
 import { ChannelProvider } from './contexts/ChannelContext';
 import { MessageProvider, useMessages } from './contexts/MessageContext';
 import { ThreadMessageProvider } from './contexts/ThreadMessageContext';
+import { ArtifactProvider } from './contexts/ArtifactContext';
+import { FilteredArtifactProvider } from './contexts/FilteredArtifactContext';
 
 const leftDrawerWidth = 250;
 const rightDrawerWidth = 300;
@@ -284,11 +286,19 @@ const App: React.FC = () => {
                 <ChannelProvider>
                     <MessageProvider>
                         <DataProvider>
-                            <LogProvider>
-                                <ToolbarActionsProvider>
-                                    <AppContent />
-                                </ToolbarActionsProvider>
-                            </LogProvider>
+                            <ArtifactProvider>
+                                <LogProvider>
+                                    <ToolbarActionsProvider>
+                                        <FilteredArtifactProvider 
+                                            channelId={currentChannelId}
+                                            threadId={currentThreadId}
+                                            artifactId={null}
+                                        >
+                                            <AppContent />
+                                        </FilteredArtifactProvider>
+                                    </ToolbarActionsProvider>
+                                </LogProvider>
+                            </ArtifactProvider>
                         </DataProvider>
                     </MessageProvider>
                 </ChannelProvider>
