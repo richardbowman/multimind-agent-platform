@@ -32,6 +32,9 @@ export class ConfigurableAgent extends StepBasedAgent {
 
         const agentConfig = this.settings.agents[this.agentName].config;
         
+        // Set delegation support from config
+        this.supportsDelegation = agentConfig?.supportsDelegation || false;
+        
         if (!agentConfig) {
             throw new Error(`No configuration found for agent ${this.agentName}`);
         }
