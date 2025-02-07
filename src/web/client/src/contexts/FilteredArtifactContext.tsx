@@ -29,20 +29,22 @@ export const FilteredArtifactProvider = ({
 
   // Get artifact IDs from thread messages
   const threadArtifactIds = useMemo(() => {
-    return new Set(
+    const ids = new Set(
       threadMessages
         .flatMap(msg => msg.props?.artifactIds || [])
         .filter(Boolean)
     );
+    return ids;
   }, [threadMessages]);
 
   const filteredArtifacts = useMemo(() => {
     if (!channelId) return [];
     
     // Filter artifacts that are referenced in the thread messages
-    return artifacts.filter(artifact => 
+    const list = artifacts.filter(artifact => 
       threadArtifactIds.has(artifact.id)
     );
+    return list;
   }, [artifacts, threadArtifactIds]);
 
   const currentArtifact = useMemo(() => {
