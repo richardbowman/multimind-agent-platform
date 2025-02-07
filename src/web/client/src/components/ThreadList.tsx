@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { useMessages } from '../contexts/MessageContext';
 import { 
     Box, 
@@ -18,12 +18,29 @@ interface ThreadListProps {
 export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
     const { messages, currentThreadId, setCurrentThreadId } = useMessages();
     const activeThreadRef = useRef<HTMLLIElement>(null);
+    const listRef = useRef<HTMLUListElement>(null);
+    const [scrollPosition, setScrollPosition] = useState(0);
 
+    // Save scroll position before re-render
     useEffect(() => {
-        if (activeThreadRef.current) {
-            activeThreadRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+        const list = listRef.current;
+        if (list) {
+            const handleScroll = () => setScrollPosition(list.scrollTop);
+            list.addEventListener('scroll', handleScroll);
+            return () => list.removeEventListener('scroll', handleScroll);
         }
-    }, [currentThreadId]);
+    }, []);
+
+    // Restore scroll position after re-render
+    useEffect(() => {
+        const list = listRef.current;
+        if (list) {
+            list.scrollTop = scrollPosition;
+            if (activeThreadRef.current) {
+                activeThreadRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            }
+        }
+    }, [currentThreadId, scrollPosition]);
 
     if (!channelId) {
         return (
@@ -54,7 +71,10 @@ export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
             <Typography variant="h6" sx={{ mb: 2, color: '#fff', flexDirection: 'column' }}>
                 Threads
             </Typography>
-            <List sx={{display: 'flex', flexDirection: 'column', overflowY: 'auto'}}>
+            <List 
+                ref={listRef}
+                sx={{display: 'flex', flexDirection: 'column', overflowY: 'auto'}}
+            >
                 <ListItem 
                     ref={currentThreadId === null ? activeThreadRef : null}
                     key="root"
