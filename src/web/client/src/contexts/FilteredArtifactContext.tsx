@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useMemo } from 'react';
 import { Artifact } from '../../../../tools/artifact';
 import { useArtifacts } from './ArtifactContext';
+import { useThreadMessages } from './ThreadMessageContext';
 import { UUID } from '../../../../types/uuid';
 
 interface FilteredArtifactContextType {
@@ -24,20 +25,25 @@ export const FilteredArtifactProvider = ({
   children: React.ReactNode 
 }) => {
   const { artifacts, isLoading } = useArtifacts();
+  const { threadMessages } = useThreadMessages();
+
+  // Get artifact IDs from thread messages
+  const threadArtifactIds = useMemo(() => {
+    return new Set(
+      threadMessages
+        .flatMap(msg => msg.props?.artifactIds || [])
+        .filter(Boolean)
+    );
+  }, [threadMessages]);
 
   const filteredArtifacts = useMemo(() => {
     if (!channelId) return [];
     
-    return artifacts.filter(artifact => {
-      // Filter by channel
-      if (artifact.metadata?.channelId !== channelId) return false;
-      
-      // Filter by thread if specified
-      if (threadId && artifact.metadata?.threadId !== threadId) return false;
-      
-      return true;
-    });
-  }, [artifacts, channelId, threadId]);
+    // Filter artifacts that are referenced in the thread messages
+    return artifacts.filter(artifact => 
+      threadArtifactIds.has(artifact.id)
+    );
+  }, [artifacts, threadArtifactIds]);
 
   const currentArtifact = useMemo(() => {
     if (!artifactId) return null;
