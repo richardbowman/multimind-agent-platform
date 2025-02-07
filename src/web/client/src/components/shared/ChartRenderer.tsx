@@ -74,12 +74,22 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ data }) => {
 
     return (
         <Box sx={{ 
-            width: data.style?.width || '100%',
-            height: data.style?.height || '400px',
+            display: 'flex',
+            flexDirection: 'column',
+            width: '100%',
+            height: '100%',
             p: 2
         }}>
-            <Paper elevation={3} sx={{ p: 2 }}>
-                <canvas ref={chartRef} />
+            <Paper elevation={3} sx={{ 
+                p: 2,
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0 // Fixes flexbox overflow issue
+            }}>
+                <Box sx={{ flex: 1, minHeight: 0 }}>
+                    <canvas ref={chartRef} style={{ width: '100%', height: '100%' }} />
+                </Box>
             </Paper>
             {data.metadata?.source && (
                 <Typography variant="caption" sx={{ mt: 1 }}>
