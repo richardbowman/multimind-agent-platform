@@ -1,7 +1,9 @@
 import * as ort from 'onnxruntime-web';
 import * as tts from '@mintplex-labs/piper-tts-web';
 import { IPCProvider } from '../contexts/IPCContext';
-import { type DataContextMethods } from '../contexts/DataContext';
+import { DataContextMethods } from '../contexts/DataContext';
+import { MessageContextType } from '../contexts/MessageContext';
+import { ArtifactContextType } from '../contexts/ArtifactContext';
 import { ClientMessage } from '../../../../shared/types';
 import { SnackbarContextType, useSnackbar } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
@@ -19,7 +21,12 @@ let ttsSession : tts.TtsSession|null = null;
 
 class ClientMethodsImplementation implements ClientMethods {
 
-    constructor(private ipcService: BaseRPCService, private snackbarContext: SnackbarContextType, private contextMethods: DataContextMethods) { };
+    constructor(private ipcService: BaseRPCService, 
+        private snackbarContext: SnackbarContextType, 
+        private contextMethods: DataContextMethods,
+        private messageContext: MessageContextType,
+        private artifactProvider: ArtifactContextType
+    ) { };
 
     async onClientLogProcessed(success, message) {
         return;
@@ -149,46 +156,23 @@ class ClientMethodsImplementation implements ClientMethods {
                     this.contextMethods.setCurrentChannelId(latestMessage.channel_id);
                     this.contextMethods.setCurrentThreadId(latestMessage.thread_id || null);
 
+                    this.messageContext.setCurrentChannelId(latestMessage.channel_id);
+                    this.messageContext.setCurrentThreadId(latestMessage.thread_id || null);
+
                     // Fetch related tasks and artifacts
                     this.contextMethods.fetchChannels();
                     this.contextMethods.fetchTasks(latestMessage.channel_id, latestMessage.thread_id || null);
-                    this.contextMethods.fetchArtifacts(latestMessage.channel_id, latestMessage.thread_id || null);
                 }
             });
         };
 
         // Update messages directly in context
-        this.contextMethods.setMessages(prev => {
+        this.messageContext.setMessages(prev => {
             const filteredPrev = prev.filter(prevMessage =>
                 !messages.some(newMessage => newMessage.id === prevMessage.id)
             );
             return [...filteredPrev, ...messages].sort((a, b) => a.create_at - b.create_at);
         });
-
-        // Check for artifact references in new messages
-        const hasNewArtifacts = messages.some(message =>
-            message.props?.artifactIds?.length > 0
-        );
-
-        // If we have new artifacts, refresh artifacts for both current and message channels
-        if (hasNewArtifacts) {
-            // Refresh artifacts for current channel/thread
-            if (this.contextMethods.currentChannelId) {
-                await this.contextMethods.fetchArtifacts(
-                    this.contextMethods.currentChannelId,
-                    this.contextMethods.currentThreadId
-                );
-            }
-
-            // Refresh artifacts for any channels mentioned in messages
-            const uniqueChannels = new Set(messages.map(m => m.channel_id));
-            for (const channelId of uniqueChannels) {
-                await this.contextMethods.fetchArtifacts(
-                    channelId,
-                    null // Refresh all threads for the channel
-                );
-            }
-        }
     }
 
     onLogUpdate(update: LogParam) {
@@ -267,6 +251,11 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 }
 
-export const useClientMethods = (ipcService: BaseRPCService, snackbarContext: SnackbarContextType, contextMethods: DataContextMethods) => {
-    return new ClientMethodsImplementation(ipcService, snackbarContext, contextMethods);
+export const useClientMethods = (ipcService: BaseRPCService, 
+        snackbarContext: SnackbarContextType, 
+        contextMethods: DataContextMethods,
+        messageContext: MessageContextType,
+        artifactProvider: ArtifactContextType    
+    ) => {
+    return new ClientMethodsImplementation(ipcService, snackbarContext, contextMethods, messageContext, artifactProvider);
 };

@@ -407,15 +407,6 @@ export const DataProvider: React.FC<{
     setTasks
   ]);
 
-  const clientMethods = useClientMethods(ipcService, useSnackbar(), contextMethods);  
-
-  useEffect(() => {
-    if (ipcService && clientMethods) {
-      ipcService.setupRPC(clientMethods);
-    }
-  }, [ipcService, clientMethods]);
-
-  
   return (
     <DataContext.Provider value={contextMethods}>
       {typeof children === 'function' 

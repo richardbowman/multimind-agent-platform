@@ -1,6 +1,11 @@
 import React, { createContext, useContext, useEffect, useMemo } from 'react';
 import { ClientLogger } from '../services/ClientLogger';
 import { useIPCService } from './IPCContext';
+import { useDataContext } from './DataContext';
+import { useMessages } from './MessageContext';
+import { useArtifacts } from './ArtifactContext';
+import { useClientMethods } from '../services/ClientMethods';
+import { useSnackbar } from './SnackbarContext';
 
 interface LogContextType {
     logger: ClientLogger;
@@ -10,7 +15,17 @@ const LogContext = createContext<LogContextType | null>(null);
 
 export const LogProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
     const ipcService = useIPCService();
-    
+
+    //TODO SHOULD REALLY BE IN ITS OWN CONTEXT
+    const clientMethods = useClientMethods(ipcService, useSnackbar(), useDataContext(), useMessages(), useArtifacts());  
+
+    useEffect(() => {
+      if (ipcService && clientMethods) {
+        ipcService.setupRPC(clientMethods);
+      }
+    }, [ipcService, clientMethods]);
+  
+
     const logger = useMemo(() => {
         const logger = new ClientLogger((level, message, details) => {
             if (level !== "debug") {

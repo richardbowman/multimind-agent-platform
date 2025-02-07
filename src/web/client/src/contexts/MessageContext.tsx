@@ -3,7 +3,7 @@ import { ClientMessage } from '../../../../shared/types';
 import { useIPCService } from './IPCContext';
 import { UUID } from '../../../../types/uuid';
 
-interface MessageContextType {
+export interface MessageContextType {
   messages: ClientMessage[];
   currentChannelId: UUID | null;
   currentThreadId: UUID | null;

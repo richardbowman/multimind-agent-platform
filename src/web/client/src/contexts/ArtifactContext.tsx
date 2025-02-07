@@ -4,7 +4,7 @@ import { useIPCService } from './IPCContext';
 import { UUID } from '../../../../types/uuid';
 import { useDataContext } from '../contexts/DataContext';
 
-interface ArtifactContextType {
+export interface ArtifactContextType {
   artifacts: ArtifactItem[];
   isLoading: boolean;
   fetchAllArtifacts: () => Promise<void>;

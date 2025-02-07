@@ -236,8 +236,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     // Show welcome panel only when switching to a new channel with remaining tasks
     useEffect(() => {
         if (currentChannelId) {
-            const hasRemainingTasks = tasks.some(t => !t.complete);
-            onSwitchToWelcome(hasRemainingTasks);
+            const hasRemainingGoals = tasks.some(t => !t.complete && t.type === TaskType.Goal);
+            onSwitchToWelcome(hasRemainingGoals);
         }
     }, [currentChannelId]); // Removed tasks from dependencies
 
