@@ -3,7 +3,7 @@ import { useDropzone } from 'react-dropzone';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact, ArtifactType } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
-import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, ListItem, TextField } from '@mui/material';
+import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, ListItem, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
@@ -26,6 +26,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const [selectedArtifacts, setSelectedArtifacts] = useState<Artifact[]>([]);
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [filterText, setFilterText] = useState('');
+    const [selectedProject, setSelectedProject] = useState<string>('all');
+    const [availableProjects, setAvailableProjects] = useState<string[]>([]);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [editorOpen, setEditorOpen] = useState(false);
     const ipcService = useIPCService();
@@ -119,6 +121,16 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
 
     useEffect(() => {
         if (allArtifacts) {
+            // Extract unique projects from artifacts
+            const projects = new Set<string>(['all']);
+            allArtifacts.forEach(artifact => {
+                if (artifact.metadata?.projects) {
+                    artifact.metadata.projects.forEach((project: string) => projects.add(project));
+                }
+            });
+            setAvailableProjects(Array.from(projects));
+
+            // Group artifacts by type
             const folders = allArtifacts.reduce((acc, artifact) => {
                 const type = artifact.type;
                 if (!acc[type]) acc[type] = [];
@@ -207,17 +219,33 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             >
                 <Toolbar /> {/* For spacing under app bar */}
                 <Box sx={{ p: 1 }}>
-                    <TextField
-                        fullWidth
-                        variant="outlined"
-                        size="small"
-                        placeholder="Search artifacts..."
-                        value={filterText}
-                        onChange={(e) => setFilterText(e.target.value)}
-                        InputProps={{
-                            startAdornment: <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
-                        }}
-                    />
+                    <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                        <FormControl fullWidth size="small">
+                            <InputLabel>Project</InputLabel>
+                            <Select
+                                value={selectedProject}
+                                onChange={(e) => setSelectedProject(e.target.value as string)}
+                                label="Project"
+                            >
+                                {availableProjects.map(project => (
+                                    <MenuItem key={project} value={project}>
+                                        {project}
+                                    </MenuItem>
+                                ))}
+                            </Select>
+                        </FormControl>
+                        <TextField
+                            fullWidth
+                            variant="outlined"
+                            size="small"
+                            placeholder="Search artifacts..."
+                            value={filterText}
+                            onChange={(e) => setFilterText(e.target.value)}
+                            InputProps={{
+                                startAdornment: <SearchIcon sx={{ color: 'text.secondary', mr: 1 }} />
+                            }}
+                        />
+                    </Box>
                 </Box>
                 {Object.entries(artifactFolders).map(([type, artifacts]) => (
                     <Accordion key={type}>
@@ -231,13 +259,23 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 padding: 0
                             }}>
                                 {artifacts.filter(artifact => {
-                                    if (!filterText) return true;
-                                    const searchText = filterText.toLowerCase();
-                                    return (
-                                        artifact.metadata?.title?.toLowerCase().includes(searchText) ||
-                                        artifact.type.toLowerCase().includes(searchText) ||
-                                        artifact.content.toString().toLowerCase().includes(searchText)
-                                    );
+                                    // Apply project filter
+                                    if (selectedProject !== 'all' && 
+                                        (!artifact.metadata?.projects || 
+                                        !artifact.metadata.projects.includes(selectedProject))) {
+                                        return false;
+                                    }
+                                    
+                                    // Apply text filter
+                                    if (filterText) {
+                                        const searchText = filterText.toLowerCase();
+                                        return (
+                                            artifact.metadata?.title?.toLowerCase().includes(searchText) ||
+                                            artifact.type.toLowerCase().includes(searchText) ||
+                                            artifact.content.toString().toLowerCase().includes(searchText)
+                                        );
+                                    }
+                                    return true;
                                 }).map(artifact => (
                                     <Box key={artifact.id} sx={{ 
                                         display: 'flex', 
