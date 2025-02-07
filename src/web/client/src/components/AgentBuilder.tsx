@@ -297,6 +297,17 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                 }
                                 label="Enabled"
                             />
+
+                            <FormControlLabel
+                                control={
+                                    <Checkbox
+                                        checked={agentForm.supportsDelegation || false}
+                                        onChange={(e) => handleFormChange('supportsDelegation', e.target.checked)}
+                                    />
+                                }
+                                label="Supports Delegation"
+                                sx={{ mt: 1 }}
+                            />
                             </Box>
 
                             {/* Right Column - Executors */}
@@ -553,6 +564,7 @@ export const AgentBuilder: React.FC<AgentBuilderProps> = ({
                                     plannerType: 'nextStep',
                                     autoRespondChannelIds: '',
                                     enabled: true,
+                                    supportsDelegation: false,
                                     executors: []
                                 }
                             }
