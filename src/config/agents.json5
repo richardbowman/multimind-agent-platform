@@ -455,6 +455,9 @@
                }
              },
              {
+               "className": "GenerateSpreadsheetExecutor"
+             },
+             {
               "className": "DocumentRetrievalExecutor"
              },
              {
@@ -500,6 +503,9 @@
                 "defaultFormat": "markdown",
                 "artifactTypes": ["strategy", "brief", "campaign-plan"]
               }
+            },
+            {
+              "className": "GenerateSpreadsheetExecutor"
             },
             {
               "className": "UnderstandGoalsExecutor"
