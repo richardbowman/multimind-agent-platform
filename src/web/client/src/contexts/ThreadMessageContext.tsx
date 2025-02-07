@@ -24,9 +24,15 @@ export const ThreadMessageProvider = ({
   const threadMessages = useMemo(() => {
     if (!threadId) {
       // Main channel messages - messages without a thread
-      return messages.filter(msg => 
+      const mainMessages = messages.filter(msg => 
         !msg.props?.['root-id'] && msg.channel_id === currentChannelId
       );
+      
+      // Add replyCount to each message
+      return mainMessages.map(msg => ({
+        ...msg,
+        replyCount: messages.filter(m => m.props?.['root-id'] === msg.id).length
+      }));
     }
     // Thread messages - root message and its replies
     return messages.filter(msg => 
