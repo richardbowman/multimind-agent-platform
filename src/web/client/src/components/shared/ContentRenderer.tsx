@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { CSVRenderer } from './CSVRenderer';
 import { Mermaid } from './Mermaid';
-import { ChartRenderer } from './ChartRenderer';
+import { BarChartRenderer } from './BarChartRenderer';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Box, Paper, Typography, IconButton } from '@mui/material';
@@ -348,7 +348,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     if (type === 'chart-data' || metadata?.chartType) {
         try {
             const chartData = JSON.parse(content) as BarChartData;
-            return <ChartRenderer data={chartData} />;
+            return <BarChartRenderer data={chartData} />;
         } catch (error) {
             console.error('Error parsing chart data:', error);
             return <Typography color="error">Invalid chart data format</Typography>;
