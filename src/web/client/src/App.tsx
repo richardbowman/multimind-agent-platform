@@ -20,6 +20,9 @@ import { GlobalArtifactViewer } from './components/GlobalArtifactViewer';
 import { LogViewer } from './components/LogViewer';
 import { SettingsPanel } from './components/SettingsPanel';
 import './styles/App.css';
+import { ChannelProvider } from './contexts/ChannelContext';
+import { MessageProvider, useMessages } from './contexts/MessageContext';
+import { ThreadMessageProvider } from './contexts/ThreadMessageContext';
 
 const leftDrawerWidth = 250;
 const rightDrawerWidth = 300;
@@ -56,6 +59,9 @@ const AppContent: React.FC = () => {
         currentChannelId,
         currentThreadId,
         setCurrentThreadId,
+    } = useMessages();
+
+    const {
         needsConfig
     } = useDataContext();
 
@@ -202,13 +208,13 @@ const AppContent: React.FC = () => {
                             }}
                         >
                             <Toolbar /> {/* For spacing under app bar */}
-                            <ChannelList 
+                            <ChannelList
                                 onChannelSelect={(channelId) => {
                                     setCurrentChannelId(channelId);
                                     setCurrentThreadId(null); // Reset thread when changing channels
                                 }}
                             />
-                            <ThreadList 
+                            <ThreadList
                                 channelId={currentChannelId}
                                 onThreadSelect={setCurrentThreadId}
                             />
@@ -216,12 +222,14 @@ const AppContent: React.FC = () => {
 
 
                         <Main leftOpen={leftDrawerOpen} rightOpen={rightDrawerOpen}>
-                            <ChatPanel
-                                leftDrawerOpen={leftDrawerOpen}
-                                rightDrawerOpen={rightDrawerOpen}
-                                showWelcome={showWelcome}
-                                onSwitchToWelcome={setShowWelcome}
-                            />
+                            <ThreadMessageProvider threadId={currentThreadId}>
+                                <ChatPanel
+                                    leftDrawerOpen={leftDrawerOpen}
+                                    rightDrawerOpen={rightDrawerOpen}
+                                    showWelcome={showWelcome}
+                                    onSwitchToWelcome={setShowWelcome}
+                                />
+                            </ThreadMessageProvider>
                         </Main>
 
                         <Drawer
@@ -273,13 +281,17 @@ const App: React.FC = () => {
     return (
         <IPCProvider>
             <SnackbarProvider>
-                <DataProvider>
-                    <LogProvider>
-                        <ToolbarActionsProvider>
-                            <AppContent />
-                        </ToolbarActionsProvider>
-                    </LogProvider>
-                </DataProvider>
+                <ChannelProvider>
+                    <MessageProvider>
+                        <DataProvider>
+                            <LogProvider>
+                                <ToolbarActionsProvider>
+                                    <AppContent />
+                                </ToolbarActionsProvider>
+                            </LogProvider>
+                        </DataProvider>
+                    </MessageProvider>
+                </ChannelProvider>
             </SnackbarProvider>
         </IPCProvider>
     );
