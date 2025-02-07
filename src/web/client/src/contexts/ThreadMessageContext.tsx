@@ -4,7 +4,7 @@ import { useMessages } from './MessageContext';
 import { UUID } from '../../../../types/uuid';
 
 interface ThreadMessageContextType {
-  messages: ClientMessage[];
+  threadMessages: ClientMessage[];
   rootMessage: ClientMessage | null;
   isLoading: boolean;
   isThread: boolean;
@@ -21,7 +21,7 @@ export const ThreadMessageProvider = ({
 }) => {
   const { messages, isLoading, currentChannelId } = useMessages();
 
-  const messages = useMemo(() => {
+  const threadMessages = useMemo(() => {
     if (!threadId) {
       // Main channel messages - messages without a thread
       return messages.filter(msg => 
@@ -40,11 +40,11 @@ export const ThreadMessageProvider = ({
   }, [messages, threadId]);
 
   const value = useMemo(() => ({
-    messages,
+    threadMessages,
     rootMessage,
     isLoading,
     isThread: !!threadId
-  }), [messages, rootMessage, isLoading, threadId]);
+  }), [threadMessages, rootMessage, isLoading, threadId]);
 
   return (
     <ThreadMessageContext.Provider value={value}>
