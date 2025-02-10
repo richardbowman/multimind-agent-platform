@@ -25,6 +25,8 @@ import { MessageProvider, useMessages } from './contexts/MessageContext';
 import { ThreadMessageProvider } from './contexts/ThreadMessageContext';
 import { ArtifactProvider } from './contexts/ArtifactContext';
 import { FilteredArtifactProvider } from './contexts/FilteredArtifactContext';
+import { TaskProvider } from './contexts/TaskContext';
+import { FilteredTaskProvider } from './contexts/FilteredTaskContext';
 
 const leftDrawerWidth = 250;
 const rightDrawerWidth = 300;
@@ -249,10 +251,15 @@ const AppContent: React.FC = () => {
                                 }}
                             >
                                 <Toolbar /> {/* For spacing under app bar */}
-                                <TaskPanel
+                                <FilteredTaskProvider
                                     channelId={currentChannelId}
                                     threadId={currentThreadId}
-                                />
+                                >
+                                    <TaskPanel
+                                        channelId={currentChannelId}
+                                        threadId={currentThreadId}
+                                    />
+                                </FilteredTaskProvider>
                                 <FilteredArtifactProvider
                                     channelId={currentChannelId}
                                     threadId={currentThreadId}
@@ -293,11 +300,13 @@ const App: React.FC = () => {
                     <ChannelProvider>
                         <MessageProvider>
                             <ArtifactProvider>
-                                <LogProvider>
-                                    <ToolbarActionsProvider>
-                                        <AppContent />
-                                    </ToolbarActionsProvider>
-                                </LogProvider>
+                                <TaskProvider>
+                                    <LogProvider>
+                                        <ToolbarActionsProvider>
+                                            <AppContent />
+                                        </ToolbarActionsProvider>
+                                    </LogProvider>
+                                </TaskProvider>
                             </ArtifactProvider>
                         </MessageProvider>
                     </ChannelProvider>

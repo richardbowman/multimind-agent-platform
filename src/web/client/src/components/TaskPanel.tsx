@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { useDataContext } from '../contexts/DataContext';
+import { useTasks } from '../contexts/TaskContext';
+import { useFilteredTasks } from '../contexts/FilteredTaskContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { 
     Box, 
@@ -34,7 +35,9 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
     dialogOpen,
     setDialogOpen
 }) => {
-    const { tasks, fetchTasks, handles } = useDataContext();
+    const { tasks, fetchAllTasks } = useTasks();
+    const { filteredTasks } = useFilteredTasks();
+    const ipcService = useIPCService();
     const ipcService = useIPCService();
     const [localSelectedTask, setLocalSelectedTask] = useState<any>(null);
     const [localDialogOpen, setLocalDialogOpen] = useState(false);
@@ -45,7 +48,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
 
         const loadTasks = async () => {
             if (channelId && isSubscribed) {
-                await fetchTasks(channelId, threadId);
+                await fetchAllTasks();
             }
         };
 
@@ -114,7 +117,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                 </Tooltip>
             </Box>
             <List sx={{ display: 'flex', flexDirection: 'column', overflowY: 'auto' }}>
-                {Array.from(new Map((tasks || [])
+                {Array.from(new Map((filteredTasks || [])
                     .filter(task => {
                         const userHandle = handles.find(h => h.handle === '@user');
                         if (!userHandle) return false;
