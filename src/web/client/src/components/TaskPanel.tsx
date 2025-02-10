@@ -38,7 +38,6 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
     const { tasks, fetchAllTasks } = useTasks();
     const { filteredTasks } = useFilteredTasks();
     const ipcService = useIPCService();
-    const ipcService = useIPCService();
     const [localSelectedTask, setLocalSelectedTask] = useState<any>(null);
     const [localDialogOpen, setLocalDialogOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'user' | 'agent' | 'steps'>('user');
