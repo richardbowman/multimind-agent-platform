@@ -18,6 +18,7 @@ import ReactMarkdown from 'react-markdown';
 import { CommandInput } from './CommandInput';
 import { Spinner } from './Spinner';
 import { useDataContext } from '../contexts/DataContext';
+import { useTasks } from '../contexts/TaskContext';
 import { useIPCService } from '../contexts/IPCContext';
 import remarkGfm from 'remark-gfm';
 import Link from '@mui/material/Link';
@@ -55,7 +56,8 @@ interface ChatPanelProps {
 export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen, showWelcome, onSwitchToWelcome }) => {
     const { threadMessages: messages } = useThreadMessages();
     const { sendMessage, currentChannelId, currentThreadId, setCurrentThreadId } = useMessages();
-    const { handles, isLoading, tasks } = useDataContext();
+    const { handles, isLoading } = useDataContext();
+    const { tasks } = useTasks();
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
     const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
     const [messageVersions, setMessageVersions] = useState<Record<string, number>>({});
@@ -239,7 +241,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             const hasRemainingGoals = tasks.some(t => !t.complete && t.type === TaskType.Goal);
             onSwitchToWelcome(hasRemainingGoals);
         }
-    }, [currentChannelId]); // Removed tasks from dependencies
+    }, [currentChannelId, tasks]);
 
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
