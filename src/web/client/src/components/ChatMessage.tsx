@@ -91,12 +91,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}>
-                                <ExpandMoreIcon sx={{ transform: 'rotate(90deg)' }} />
+                                <ExpandMoreIcon sx={{ transform: 'rotate(-90deg)' }} />
                                 {message.replyCount > 0 && (
                                     <Box sx={{
                                         position: 'absolute',
-                                        top: -4,
-                                        right: -4,
+                                        top: -6,
+                                        right: -6,
                                         bgcolor: 'primary.main',
                                         color: 'primary.contrastText',
                                         borderRadius: '50%',
@@ -105,7 +105,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         display: 'flex',
                                         alignItems: 'center',
                                         justifyContent: 'center',
-                                        fontSize: '0.6rem'
+                                        fontSize: '0.6rem',
+                                        border: '1px solid',
+                                        borderColor: 'background.paper'
                                     }}>
                                         {message.replyCount}
                                     </Box>
