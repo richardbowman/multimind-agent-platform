@@ -34,11 +34,6 @@ const styles = {
         bgcolor: 'background.paper',
         overflow: 'auto',
         maxHeight: '400px',
-        // Fixed height for Mermaid diagrams to prevent flickering
-        ...(language === 'mermaid' && {
-            height: '400px',
-            overflow: 'hidden'
-        }),
         '& pre': {
             whiteSpace: 'pre-wrap',
             wordWrap: 'break-word'
@@ -142,7 +137,14 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                     </Box>
                 ))}
             </Box>
-            <Box sx={styles.contentContainerScrolling}>
+            <Box sx={{
+                ...styles.contentContainerScrolling,
+                // Fixed height for Mermaid diagrams to prevent flickering
+                ...(language === 'mermaid' && {
+                    height: '400px',
+                    overflow: 'hidden'
+                })
+            }}>
                 {viewMode === 'visual' ? (
                     <ContentRenderer 
                         content={content}
