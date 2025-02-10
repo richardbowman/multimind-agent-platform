@@ -11,6 +11,7 @@ export interface TaskContextType {
   saveTask: (task: Task) => Promise<Task>;
   deleteTask: (taskId: UUID) => Promise<void>;
   markTaskComplete: (taskId: UUID, complete: boolean) => Promise<void>;
+  reviseTasksForThread(channel_id: UUID, arg1: any): unknown;
 }
 
 const TaskContext = createContext<TaskContextType | null>(null);
@@ -24,11 +25,16 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
   const fetchAllTasks = useCallback(async () => {
     if (ipcService.getRPC() && !needsConfig) {
       setIsLoading(true);
-      const newTasks = await ipcService.getRPC().getAllTasks();
+      const newTasks = await ipcService.getRPC().getTasks({});
       setTasks(newTasks);
       setIsLoading(false);
     }
   }, [ipcService, needsConfig]);
+
+  const reviseTasksForThread = async function(channelId: UUID, threadId: UUID) {
+    const newTasks = await ipcService.getRPC().getTasks({channelId, threadId});
+    setTasks()
+  }
 
   useEffect(() => {
     fetchAllTasks();
