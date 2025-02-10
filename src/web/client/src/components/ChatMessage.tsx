@@ -59,7 +59,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 <Typography variant="subtitle2" sx={{ color: 'primary.main' }}>
                     {handles.find(h => h.id === message.user_id)?.handle || 'Unknown User'}
                 </Typography>
-                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1.5 }}>
                     <Typography
                         variant="caption"
                         sx={{
@@ -73,22 +73,23 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     >
                         {new Date(message.create_at).toLocaleString()}
                     </Typography>
-                    {message.message.split('\n').length > 3 && (
-                        <IconButton
-                            size="small"
-                            onClick={() => onToggleExpansion(message.id)}
-                            sx={{
-                                p: 0.5,
-                                bgcolor: 'action.hover',
-                                '&:hover': {
-                                    bgcolor: 'action.selected'
-                                }
-                            }}
-                        >
-                            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </IconButton>
-                    )}
-                    {hasThread && (
+                    <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
+                        {message.message.split('\n').length > 3 && (
+                            <IconButton
+                                size="small"
+                                onClick={() => onToggleExpansion(message.id)}
+                                sx={{
+                                    p: 0.5,
+                                    bgcolor: 'action.hover',
+                                    '&:hover': {
+                                        bgcolor: 'action.selected'
+                                    }
+                                }}
+                            >
+                                {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                            </IconButton>
+                        )}
+                        {hasThread && (
                         <IconButton
                             size="small"
                             onClick={() => onViewThread(message.id)}
