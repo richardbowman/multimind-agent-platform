@@ -31,10 +31,28 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
     }
   }, [ipcService, needsConfig]);
 
-  const reviseTasksForThread = async function(channelId: UUID, threadId: UUID) {
-    const newTasks = await ipcService.getRPC().getTasks({channelId, threadId});
-    setTasks()
-  }
+  const reviseTasksForThread = useCallback(async (channelId: UUID, threadId: UUID) => {
+    if (!ipcService.getRPC()) return;
+    
+    setIsLoading(true);
+    try {
+      const threadTasks = await ipcService.getRPC().getTasks({ channelId, threadId });
+      
+      setTasks(prevTasks => {
+        // Remove old tasks for this thread
+        const filteredTasks = prevTasks.filter(task => 
+          !task.props?.channelId === channelId || 
+          !task.props?.threadId === threadId
+        );
+        // Add new tasks
+        return [...filteredTasks, ...threadTasks];
+      });
+    } catch (error) {
+      console.error('Failed to revise tasks:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [ipcService]);
 
   useEffect(() => {
     fetchAllTasks();
@@ -73,7 +91,8 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
     saveTask,
     deleteTask,
     markTaskComplete,
-  }), [tasks, isLoading, fetchAllTasks, saveTask, deleteTask, markTaskComplete]);
+    reviseTasksForThread,
+  }), [tasks, isLoading, fetchAllTasks, saveTask, deleteTask, markTaskComplete, reviseTasksForThread]);
 
   return (
     <TaskContext.Provider value={value}>
