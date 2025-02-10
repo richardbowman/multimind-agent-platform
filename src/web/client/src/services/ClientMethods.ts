@@ -1,11 +1,10 @@
-import * as ort from 'onnxruntime-web';
 import * as tts from '@mintplex-labs/piper-tts-web';
-import { IPCProvider } from '../contexts/IPCContext';
 import { DataContextMethods } from '../contexts/DataContext';
 import { MessageContextType } from '../contexts/MessageContext';
 import { ArtifactContextType } from '../contexts/ArtifactContext';
+import { ChannelContextType } from '../contexts/ChannelContext';
 import { ClientMessage } from '../../../../shared/types';
-import { SnackbarContextType, useSnackbar } from '../contexts/SnackbarContext';
+import { SnackbarContextType } from '../contexts/SnackbarContext';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { BackendStatus, ClientMethods } from '../../../../shared/RPCInterface';
 import { Artifact } from '../../../../tools/artifact';
@@ -13,6 +12,7 @@ import { Task } from '../../../../tools/taskManager';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import { LogParam } from '../../../../llm/LLMLogger';
 import { ChannelData } from '../../../../shared/channelTypes';
+import { TaskContextType } from '../contexts/TaskContext';
 
 
 // Initialize TTS system
@@ -25,7 +25,9 @@ class ClientMethodsImplementation implements ClientMethods {
         private snackbarContext: SnackbarContextType, 
         private contextMethods: DataContextMethods,
         private messageContext: MessageContextType,
-        private artifactProvider: ArtifactContextType
+        private artifactProvider: ArtifactContextType,
+        private channelContext: ChannelContextType,
+        private tasksContext: TaskContextType
     ) { };
 
     async onClientLogProcessed(success, message) {
@@ -152,16 +154,10 @@ class ClientMethodsImplementation implements ClientMethods {
                 severity: 'info',
                 persist: true,
                 onClick: () => {
-                    // Set both channel and thread first
-                    this.contextMethods.setCurrentChannelId(latestMessage.channel_id);
-                    this.contextMethods.setCurrentThreadId(latestMessage.thread_id || null);
-
                     this.messageContext.setCurrentChannelId(latestMessage.channel_id);
                     this.messageContext.setCurrentThreadId(latestMessage.thread_id || null);
-
-                    // Fetch related tasks and artifacts
-                    this.contextMethods.fetchChannels();
-                    this.contextMethods.fetchTasks(latestMessage.channel_id, latestMessage.thread_id || null);
+                    this.channelContext.fetchChannels();
+                    this.tasksContext.reviseTasksForThread(latestMessage.channel_id, latestMessage.thread_id || null);
                 }
             });
         };
@@ -243,7 +239,7 @@ class ClientMethodsImplementation implements ClientMethods {
 
     onChannelCreated(channel: ChannelData) {
         // Add the new channel to the list and refresh
-        this.contextMethods.fetchChannels();
+        this.channelContext.fetchChannels();
     }
 
     onAutoUpdate(update: { status: UpdateStatus, progress?: number }) {
@@ -255,7 +251,17 @@ export const useClientMethods = (ipcService: BaseRPCService,
         snackbarContext: SnackbarContextType, 
         contextMethods: DataContextMethods,
         messageContext: MessageContextType,
-        artifactProvider: ArtifactContextType    
+        artifactProvider: ArtifactContextType,
+        channelContext: ChannelContextType,
+        taskContext: TaskContextType
     ) => {
-    return new ClientMethodsImplementation(ipcService, snackbarContext, contextMethods, messageContext, artifactProvider);
+    return new ClientMethodsImplementation(
+        ipcService, 
+        snackbarContext, 
+        contextMethods, 
+        messageContext, 
+        artifactProvider, 
+        channelContext, 
+        taskContext
+    );
 };
