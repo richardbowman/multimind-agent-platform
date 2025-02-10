@@ -74,7 +74,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         {new Date(message.create_at).toLocaleString()}
                     </Typography>
                     <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
-                        {(!isExpanded || message.message.split('\n').length > 3) && (
+                        {(message.message.split('\n').length > 3 || isExpanded) && (
                             <IconButton
                                 size="small"
                                 onClick={() => onToggleExpansion(message.id)}
