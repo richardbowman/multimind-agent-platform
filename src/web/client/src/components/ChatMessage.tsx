@@ -73,6 +73,21 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     >
                         {new Date(message.create_at).toLocaleString()}
                     </Typography>
+                    {message.message.split('\n').length > 3 && (
+                        <IconButton
+                            size="small"
+                            onClick={() => onToggleExpansion(message.id)}
+                            sx={{
+                                p: 0.5,
+                                bgcolor: 'action.hover',
+                                '&:hover': {
+                                    bgcolor: 'action.selected'
+                                }
+                            }}
+                        >
+                            {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                        </IconButton>
+                    )}
                     {hasThread && (
                         <IconButton
                             size="small"
@@ -194,56 +209,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 background: !isExpanded ? 'linear-gradient(to bottom, rgba(42,42,42,0) 0%, rgba(24,24,24,1) 100%)' : undefined,
                 borderRadius: 2
             }}>
-                {!isExpanded && (
-                    <Box sx={{ 
-                        position: 'absolute', 
-                        bottom: 0, 
-                        right: 0,
-                        zIndex: 1,
-                        p: 1,
-                        bgcolor: 'background.paper',
-                        borderRadius: '4px 0 4px 0'
-                    }}>
-                        <Button
-                            size="small"
-                            onClick={() => onToggleExpansion(message.id)}
-                            sx={{
-                                textTransform: 'none',
-                                color: 'primary.main',
-                                '&:hover': {
-                                    backgroundColor: 'background.default'
-                                }
-                            }}
-                        >
-                            Show more
-                        </Button>
-                    </Box>
-                )}
-                {isExpanded && message.message.split('\n').length > 3 && (
-                    <Box sx={{ 
-                        position: 'absolute', 
-                        bottom: 0, 
-                        right: 0,
-                        zIndex: 1,
-                        p: 1,
-                        bgcolor: 'background.paper',
-                        borderRadius: '4px 0 4px 0'
-                    }}>
-                        <Button
-                            size="small"
-                            onClick={() => onToggleExpansion(message.id)}
-                            sx={{
-                                textTransform: 'none',
-                                color: 'primary.main',
-                                '&:hover': {
-                                    backgroundColor: 'background.default'
-                                }
-                            }}
-                        >
-                            Show less
-                        </Button>
-                    </Box>
-                )}
                 {(message.inProgress || message.props?.partial) && (
                     <Box sx={{ 
                         display: 'flex', 
