@@ -41,7 +41,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     onViewMetadata
 }) => {
     const isExpanded = expandedMessages.has(message.id);
-    const hasThread = !currentThreadId && messages.some(m => m.props?.['root-id'] === message.id);
+    const hasThread = !currentThreadId && message.replyCount > 0;
     const [showAttachments, setShowAttachments] = useState(false);
     const hasAttachments = message.props?.artifactIds?.length > 0;
 
