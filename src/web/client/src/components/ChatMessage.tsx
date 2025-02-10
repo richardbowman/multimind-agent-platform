@@ -130,7 +130,49 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 )}
                             </Box>
                         </IconButton>
-                    )}
+                        )}
+                        {hasAttachments && (
+                            <IconButton
+                                size="small"
+                                onClick={() => setShowAttachments(!showAttachments)}
+                                sx={{
+                                    p: 0.5,
+                                    bgcolor: 'action.hover',
+                                    '&:hover': {
+                                        bgcolor: 'action.selected'
+                                    }
+                                }}
+                            >
+                                <Box sx={{ 
+                                    position: 'relative',
+                                    display: 'flex',
+                                    alignItems: 'center',
+                                    justifyContent: 'center'
+                                }}>
+                                    <DescriptionIcon fontSize="small" />
+                                    {message.props.artifactIds.length > 0 && (
+                                        <Box sx={{
+                                            position: 'absolute',
+                                            top: -6,
+                                            right: -6,
+                                            bgcolor: 'primary.main',
+                                            color: 'primary.contrastText',
+                                            borderRadius: '50%',
+                                            width: 16,
+                                            height: 16,
+                                            display: 'flex',
+                                            alignItems: 'center',
+                                            justifyContent: 'center',
+                                            fontSize: '0.6rem',
+                                            border: '1px solid',
+                                            borderColor: 'background.paper'
+                                        }}>
+                                            {message.props.artifactIds.length}
+                                        </Box>
+                                    )}
+                                </Box>
+                            </IconButton>
+                        )}
                     </Box>
                 </Box>
             </Box>
@@ -227,27 +269,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             </Box>
             {hasAttachments && (
                 <Box sx={{ mt: 2 }}>
-                    <Box
-                        onClick={() => setShowAttachments(!showAttachments)}
-                        sx={{
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 1,
-                            cursor: 'pointer',
-                            '&:hover': {
-                                bgcolor: 'action.hover'
-                            },
-                            p: 1,
-                            borderRadius: 1
-                        }}
-                    >
-                        <IconButton size="small">
-                            {showAttachments ? <ExpandLessIcon /> : <ExpandMoreIcon />}
-                        </IconButton>
-                        <Typography variant="subtitle2">
-                            Attachments ({message.props.artifactIds.length})
-                        </Typography>
-                    </Box>
                     <Collapse in={showAttachments}>
                         <Box sx={{ mt: 1 }}>
                             {message.props.artifactIds.map((artifactId: string) => (
