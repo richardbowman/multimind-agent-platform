@@ -17,6 +17,8 @@ import { Spinner } from './Spinner';
 import { CustomLink } from './ChatPanel';
 import { UUID } from '../../../../types/uuid';
 import { ChatPost } from '../../../../chat/chatClient';
+import { useIPCService } from '../contexts/IPCContext';
+import { Artifact } from '../../../../tools/artifact';
 
 interface ChatMessageProps {
     message: ChatPost;
@@ -29,6 +31,67 @@ interface ChatMessageProps {
     onViewThread: (messageId: string) => void;
     onViewMetadata: (message: any) => void;
 }
+
+const ArtifactLoader: React.FC<{ artifactId: string }> = ({ artifactId }) => {
+    const ipcService = useIPCService();
+    const [artifact, setArtifact] = useState<Artifact | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const loadArtifact = async () => {
+            try {
+                const artifact = await ipcService.getRPC().getArtifact(artifactId);
+                setArtifact(artifact);
+            } catch (err) {
+                setError('Failed to load artifact');
+                console.error('Error loading artifact:', err);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadArtifact();
+    }, [artifactId, ipcService]);
+
+    if (loading) {
+        return (
+            <Box sx={{ mb: 2 }}>
+                <CodeBlock 
+                    content="Loading artifact..."
+                    language="text"
+                    title={`Artifact ${artifactId}`}
+                />
+            </Box>
+        );
+    }
+
+    if (error) {
+        return (
+            <Box sx={{ mb: 2 }}>
+                <CodeBlock 
+                    content={error}
+                    language="text"
+                    title={`Error loading artifact ${artifactId}`}
+                />
+            </Box>
+        );
+    }
+
+    if (!artifact) {
+        return null;
+    }
+
+    return (
+        <Box sx={{ mb: 2 }}>
+            <CodeBlock 
+                content={artifact.content.toString()}
+                language={artifact.type}
+                title={artifact.metadata?.title || `Artifact ${artifactId}`}
+            />
+        </Box>
+    );
+};
 
 export const ChatMessage: React.FC<ChatMessageProps> = ({
     message,
@@ -273,13 +336,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     <Collapse in={showAttachments}>
                         <Box sx={{ mt: 1 }}>
                             {message.props.artifactIds.map((artifactId: string) => (
-                                <Box key={artifactId} sx={{ mb: 2 }}>
-                                    <CodeBlock 
-                                        content="Loading artifact..."
-                                        language="text"
-                                        title={`Artifact ${artifactId}`}
-                                    />
-                                </Box>
+                                <ArtifactLoader 
+                                    key={artifactId}
+                                    artifactId={artifactId}
+                                />
                             ))}
                         </Box>
                     </Collapse>
