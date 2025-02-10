@@ -59,19 +59,61 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 <Typography variant="subtitle2" sx={{ color: 'primary.main' }}>
                     {handles.find(h => h.id === message.user_id)?.handle || 'Unknown User'}
                 </Typography>
-                <Typography
-                    variant="caption"
-                    sx={{
-                        color: 'text.secondary',
-                        cursor: 'pointer',
-                        '&:hover': {
-                            textDecoration: 'underline'
-                        }
-                    }}
-                    onClick={() => onViewMetadata(message)}
-                >
-                    {new Date(message.create_at).toLocaleString()}
-                </Typography>
+                <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+                    <Typography
+                        variant="caption"
+                        sx={{
+                            color: 'text.secondary',
+                            cursor: 'pointer',
+                            '&:hover': {
+                                textDecoration: 'underline'
+                            }
+                        }}
+                        onClick={() => onViewMetadata(message)}
+                    >
+                        {new Date(message.create_at).toLocaleString()}
+                    </Typography>
+                    {hasThread && (
+                        <IconButton
+                            size="small"
+                            onClick={() => onViewThread(message.id)}
+                            sx={{
+                                p: 0.5,
+                                bgcolor: 'action.hover',
+                                '&:hover': {
+                                    bgcolor: 'action.selected'
+                                }
+                            }}
+                        >
+                            <Box sx={{ 
+                                position: 'relative',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center'
+                            }}>
+                                <ExpandMoreIcon sx={{ transform: 'rotate(90deg)' }} />
+                                {message.replyCount > 0 && (
+                                    <Box sx={{
+                                        position: 'absolute',
+                                        top: -4,
+                                        right: -4,
+                                        bgcolor: 'primary.main',
+                                        color: 'primary.contrastText',
+                                        borderRadius: '50%',
+                                        width: 16,
+                                        height: 16,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        justifyContent: 'center',
+                                        fontSize: '0.6rem'
+                                    }}>
+                                        {message.replyCount}
+                                    </Box>
+                                )}
+                            </Box>
+                        </IconButton>
+                    )}
+                </Box>
             </Box>
             <Box sx={{
                 position: 'relative',
@@ -210,25 +252,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         <Spinner size={20} />
                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
                             Streaming response...
-                        </Typography>
-                    </Box>
-                )}
-                {isExpanded && hasThread && (
-                    <Box
-                        onClick={() => onViewThread(message.id)}
-                        sx={{
-                            mt: 1,
-                            p: 1,
-                            bgcolor: 'action.hover',
-                            borderRadius: 1,
-                            cursor: 'pointer',
-                            '&:hover': {
-                                bgcolor: 'action.selected'
-                            }
-                        }}
-                    >
-                        <Typography variant="caption" sx={{ color: 'primary.main' }}>
-                            View thread ({message.replyCount} {message.replyCount === 1 ? 'response' : 'responses'})
                         </Typography>
                     </Box>
                 )}
