@@ -36,7 +36,6 @@ export interface DataContextMethods {
   paths: Paths | null;
   setPaths: React.Dispatch<React.SetStateAction<Paths>>;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
-  fetchTasks: (channelId: string, threadId: string | null) => Promise<Task[]>;
   fetchLogs: (logType: 'llm' | 'system' | 'api') => Promise<void>;
   fetchHandles: () => Promise<void>;
   setMessages: React.Dispatch<React.SetStateAction<ClientMessage[]>>;
@@ -52,8 +51,6 @@ export interface DataContextMethods {
   updateSettings: (settings: any) => Promise<Settings|ClientError>;
   createChannel: (params: CreateChannelParams) => Promise<string>;
   deleteChannel: (channelId: string) => Promise<void>;
-  setTasks: React.Dispatch<React.SetStateAction<Task[]>>;
-  markTaskComplete: (taskId: string, complete: boolean) => Promise<void>;
   addPendingFiles: (artifacts: Artifact[]) => Promise<void>;
   resetPendingFiles: () => void;
   showFileDialog: () => Promise<void>;
@@ -84,7 +81,6 @@ export const DataProvider: React.FC<{
     }
     _setCurrentChannelId(channelId);
   }, []);
-  const [tasks, setTasks] = useState<Task[]>([]);
   const [currentThreadArtifacts, setCurrentThreadArtifacts] = useState<any[]>([]);
   const [allArtifacts, setAllArtifacts] = useState<any[]>([]);
   const [pendingFiles, setPendingFiles] = useState<Artifact[]>([]);
@@ -177,10 +173,6 @@ export const DataProvider: React.FC<{
     setHandles(newHandles);
   }, []);
 
-  const fetchTasks = useCallback(async (channelId: string, threadId: string | null) => {
-    const newTasks = await ipcService.getRPC().getTasks({ channelId, threadId });
-    setTasks(newTasks);
-  }, []);
 
   const fetchLogs = useCallback(async (logType: 'llm' | 'system' | 'api', params?: {
     limit?: number;
@@ -215,7 +207,6 @@ export const DataProvider: React.FC<{
   const contextMethods = useMemo(() => ({
     messages,
     channels,
-    tasks,
     pendingFiles,
     logs,
     handles,
@@ -227,7 +218,6 @@ export const DataProvider: React.FC<{
     paths: paths,
     setPaths,
     sendMessage,
-    fetchTasks,
     fetchLogs,
     fetchHandles,
     setMessages,
@@ -235,7 +225,6 @@ export const DataProvider: React.FC<{
     setNeedsConfig,
     setCurrentChannelId,
     setCurrentThreadId,
-    setTasks,
     getSettings,
     updateSettings: async (settings: Settings) => {
       try {
@@ -252,12 +241,6 @@ export const DataProvider: React.FC<{
         console.error('Failed to update settings:', error);
         throw error;
       }
-    },
-    markTaskComplete: async (taskId: string, complete: boolean) => {
-      const updatedTask = await ipcService.getRPC().markTaskComplete(taskId, complete);
-      setTasks(prev => prev.map(t =>
-        t.id === updatedTask.id ? updatedTask : t
-      ));
     },
     addPendingFiles: (artifacts: Artifact[]) => {
       setPendingFiles([
@@ -278,7 +261,6 @@ export const DataProvider: React.FC<{
   } as DataContextMethods), [
     messages,
     channels,
-    tasks,
     logs,
     handles,
     settings,
