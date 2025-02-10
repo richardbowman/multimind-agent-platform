@@ -104,6 +104,21 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                     </Box>
                                 );
                             }
+                            
+                            // Skip rendering code blocks when collapsed
+                            if (!isExpanded && !inline) {
+                                return (
+                                    <Box component="span" sx={{
+                                        bgcolor: 'background.default',
+                                        p: '2px 4px',
+                                        borderRadius: 1,
+                                        fontFamily: 'monospace'
+                                    }}>
+                                        {'[code block]'}
+                                    </Box>
+                                );
+                            }
+
                             const match = /language-(\w+)(?:\s*\[hidden\])?/.exec(className || '');
                             const content = String(children).replace(/\n$/, '');
                             const isHidden = className?.includes('[hidden]');
