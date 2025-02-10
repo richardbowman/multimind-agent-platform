@@ -131,6 +131,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             </Box>
                         </IconButton>
                     )}
+                    </Box>
                 </Box>
             </Box>
             <Box sx={{
