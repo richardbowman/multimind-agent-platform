@@ -36,7 +36,6 @@ export interface DataContextMethods {
   paths: Paths | null;
   setPaths: React.Dispatch<React.SetStateAction<Paths>>;
   sendMessage: (message: Partial<ClientMessage>) => Promise<void>;
-  fetchChannels: () => Promise<void>;
   fetchTasks: (channelId: string, threadId: string | null) => Promise<Task[]>;
   fetchLogs: (logType: 'llm' | 'system' | 'api') => Promise<void>;
   fetchHandles: () => Promise<void>;
@@ -123,7 +122,6 @@ export const DataProvider: React.FC<{
         const [newMessages] = await Promise.all([
           ipcService.getRPC().getMessages({ channelId: currentChannelId, threadId: currentThreadId }),
           fetchTasks(currentChannelId, currentThreadId),
-          fetchArtifacts(currentChannelId, currentThreadId)
         ]);
 
         setMessages(newMessages);
@@ -147,9 +145,7 @@ export const DataProvider: React.FC<{
             const lastChannel = localStorage.getItem('lastChannelId');
             setCurrentChannelId(lastChannel);
 
-            fetchChannels();
             fetchHandles();
-            fetchAllArtifacts();
             fetchSettings();
         } catch (error) {
             console.error(error);
@@ -176,15 +172,6 @@ export const DataProvider: React.FC<{
     }
   }, []);
 
-  const fetchChannels = useCallback(async () => {
-    try {
-      const newChannels = await ipcService.getRPC().getChannels();
-      setChannels(newChannels);
-    } catch (error) {
-      console.error(error);
-    }
-  }, []);
-
   const fetchHandles = useCallback(async () => {
     const newHandles = await ipcService.getRPC().getHandles();
     setHandles(newHandles);
@@ -193,90 +180,6 @@ export const DataProvider: React.FC<{
   const fetchTasks = useCallback(async (channelId: string, threadId: string | null) => {
     const newTasks = await ipcService.getRPC().getTasks({ channelId, threadId });
     setTasks(newTasks);
-  }, []);
-
-  const fetchArtifacts = useCallback(async (channelId: string, threadId: string | null) => {
-    // Only fetch if we have a valid channel ID
-    if (!channelId) return;
-    
-    // Debounce artifact fetching
-    const newArtifacts = await ipcService.getRPC().getArtifacts({ channelId, threadId });
-    
-    // Only update state if artifacts have actually changed
-    setCurrentThreadArtifacts(prev => {
-      const prevIds = new Set(prev.map(a => a.id));
-      const newIds = new Set(newArtifacts.map(a => a.id));
-      
-      // If sets are equal, return previous artifacts to prevent re-render
-      if (prevIds.size === newIds.size && 
-          [...prevIds].every(id => newIds.has(id))) {
-        return prev;
-      }
-      
-      return newArtifacts;
-    });
-  }, []);
-
-  const fetchAllArtifacts = useCallback(async () => {
-    const newArtifacts = await ipcService.getRPC().listArtifacts();
-    setAllArtifacts(newArtifacts);
-  }, []);
-
-  const deleteArtifact = useCallback(async (artifactId: string) => {
-    const remainingArtifacts = await ipcService.getRPC().deleteArtifact(artifactId);
-    setCurrentThreadArtifacts(remainingArtifacts);
-    setAllArtifacts(remainingArtifacts);
-  }, []);
-
-  const saveArtifact = useCallback(async (artifact: any) => {
-    const savedArtifact = await ipcService.getRPC().saveArtifact(artifact);
-    
-    // Update all artifacts list
-    setAllArtifacts(prev => {
-      const existingIndex = prev.findIndex(a => a.id === savedArtifact.id);
-      if (existingIndex >= 0) {
-        // Update existing artifact
-        const newArtifacts = [...prev];
-        newArtifacts[existingIndex] = savedArtifact;
-        return newArtifacts;
-      }
-      // Add new artifact
-      return [...prev, savedArtifact];
-    });
-
-    // Update channel artifacts if present
-    setCurrentThreadArtifacts(prev => {
-      const existingIndex = prev.findIndex(a => a.id === savedArtifact.id);
-      if (existingIndex >= 0) {
-        // Update existing artifact
-        const newArtifacts = [...prev];
-        newArtifacts[existingIndex] = savedArtifact;
-        return newArtifacts;
-      }
-      return prev;
-    });
-
-    return savedArtifact;
-  }, []);
-
-  const addArtifactToChannel = useCallback(async (channelId: string, artifactId: string) => {
-    await ipcService.getRPC().addArtifactToChannel(channelId, artifactId);
-    // Update channels state
-    setChannels(prevChannels => prevChannels.map(channel => 
-      channel.id === channelId 
-        ? { ...channel, artifactIds: [...(channel.artifactIds || []), artifactId] }
-        : channel
-    ));
-  }, []);
-
-  const removeArtifactFromChannel = useCallback(async (channelId: string, artifactId: string) => {
-    await ipcService.getRPC().removeArtifactFromChannel(channelId, artifactId);
-    // Update channels state
-    setChannels(prevChannels => prevChannels.map(channel => 
-      channel.id === channelId 
-        ? { ...channel, artifactIds: (channel.artifactIds || []).filter(id => id !== artifactId) }
-        : channel
-    ));
   }, []);
 
   const fetchLogs = useCallback(async (logType: 'llm' | 'system' | 'api', params?: {
@@ -324,7 +227,6 @@ export const DataProvider: React.FC<{
     paths: paths,
     setPaths,
     sendMessage,
-    fetchChannels,
     fetchTasks,
     fetchLogs,
     fetchHandles,
@@ -342,7 +244,7 @@ export const DataProvider: React.FC<{
         if (updatedSettings.settings && !updatedSettings.error) {
           ipcService.disconnect();
           ipcService.connect();
-          await Promise.all([fetchChannels(), fetchHandles(), fetchAllArtifacts()]);
+          await Promise.all([fetchHandles(), fetchAllArtifacts()]);
         }
 
         return updatedSettings;
@@ -350,11 +252,6 @@ export const DataProvider: React.FC<{
         console.error('Failed to update settings:', error);
         throw error;
       }
-    },
-    createChannel: (params: CreateChannelParams) => ipcService.getRPC().createChannel(params),
-    deleteChannel: async (channelId: string) => {
-      await ipcService.getRPC().deleteChannel(channelId);
-      await fetchChannels();
     },
     markTaskComplete: async (taskId: string, complete: boolean) => {
       const updatedTask = await ipcService.getRPC().markTaskComplete(taskId, complete);
@@ -382,8 +279,6 @@ export const DataProvider: React.FC<{
     messages,
     channels,
     tasks,
-    currentThreadArtifacts,
-    allArtifacts,
     logs,
     handles,
     settings,
@@ -393,14 +288,9 @@ export const DataProvider: React.FC<{
     needsConfig,
     pendingFiles,
     sendMessage,
-    fetchChannels,
     fetchTasks,
-    fetchArtifacts,
-    fetchAllArtifacts,
     fetchLogs,
     fetchHandles,
-    saveArtifact,
-    deleteArtifact,
     setCurrentChannelId,
     setCurrentThreadId,
     setSettings,
