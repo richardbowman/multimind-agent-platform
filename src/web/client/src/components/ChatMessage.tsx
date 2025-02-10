@@ -9,7 +9,7 @@ import {
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
-import DescriptionIcon from '@mui/icons-material/Description';
+import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { CodeBlock } from './shared/CodeBlock';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
@@ -44,7 +44,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     const isExpanded = expandedMessages.has(message.id);
     const hasThread = !currentThreadId && message.replyCount > 0;
     const [showAttachments, setShowAttachments] = useState(false);
-    const hasAttachments = message.props?.artifactIds?.length > 0;
+    const hasAttachments = message.props?.artifactIds?.filter(Boolean).length > 0;
 
     return (
         <Paper key={`${message.id}-${messageVersions[message.id] || 0}`} sx={{
@@ -150,7 +150,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                     alignItems: 'center',
                                     justifyContent: 'center'
                                 }}>
-                                    <DescriptionIcon fontSize="small" />
+                                    <AttachFileIcon fontSize="small" />
                                     {message.props.artifactIds.length > 0 && (
                                         <Box sx={{
                                             position: 'absolute',
