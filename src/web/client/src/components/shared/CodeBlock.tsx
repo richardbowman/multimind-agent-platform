@@ -7,6 +7,7 @@ import ReactMarkdown from 'react-markdown';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { DataContextMethods, useDataContext } from '../../contexts/DataContext';
 import { ContentRenderer } from './ContentRenderer';
+import { useArtifacts } from '../../contexts/ArtifactContext';
 
 interface CodeBlockProps {
     language?: string;
@@ -90,7 +91,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
         onClick: () => void;
         disabled?: boolean;
     }>>([]);
-    const dataContext = useDataContext();
+    const artifactContext = useArtifacts();
 
     return (
         <Box sx={styles.container}>
@@ -102,9 +103,9 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                         label: 'Save as Artifact',
                         onClick: async () => {
                             const artifactTitle = title || `Content Export - ${new Date().toLocaleDateString()}`;
-                            if (dataContext) {
+                            if (artifactContext) {
                                 try {
-                                    await dataContext.saveArtifact({
+                                    await artifactContext.saveArtifact({
                                         id: crypto.randomUUID(),
                                         type: 'code',
                                         content: content,
@@ -147,49 +148,6 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                         }}
                         onAddToolbarActions={setToolbarActions}
                     />
-                ) : (
-                    <Box 
-                        component="textarea" 
-                        value={content}
-                        readOnly
-                        sx={styles.textarea}
-                    />
-                )}
-            </Box>
-        </Box>
-    );
-
-    return (
-        <Box sx={styles.container}>
-            <ActionToolbar 
-                title={title || `Code Export - ${new Date().toLocaleDateString()}`}
-                actions={[{
-                    icon: <DescriptionIcon />,
-                    label: 'Save as Artifact',
-                    onClick: () => {
-                        console.log('Saving artifact:', content);
-                    }
-                }]}
-            />
-            <Box sx={styles.viewToggle}>
-                {viewOptions.map(option => (
-                    <Box
-                        key={option.value}
-                        onClick={() => setViewMode(option.value as 'visual' | 'raw')}
-                        sx={[
-                            styles.viewOption,
-                            viewMode === option.value && styles.activeViewOption
-                        ]}
-                    >
-                        {option.label}
-                    </Box>
-                ))}
-            </Box>
-            <Box sx={styles.contentContainerScrolling}>
-                {viewMode === 'visual' ? (
-                    <Box>
-                        {content}
-                    </Box>
                 ) : (
                     <Box 
                         component="textarea" 
