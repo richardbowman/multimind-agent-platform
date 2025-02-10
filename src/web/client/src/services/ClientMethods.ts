@@ -220,17 +220,7 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 
     onTaskUpdate(task: Task) {
-        this.contextMethods.setTasks(prevTasks => {
-            // Find and replace the updated task
-            const existingIndex = prevTasks.findIndex(t => t.id === task.id);
-            if (existingIndex >= 0) {
-                const newTasks = [...prevTasks];
-                newTasks[existingIndex] = task;
-                return newTasks;
-            }
-            // If it's a new task, add it to the list
-            return [...prevTasks, task];
-        });
+        this.tasksContext.replaceTask(task);
     }
 
     onProjectUpdate(project) {

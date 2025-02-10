@@ -9,6 +9,7 @@ export interface TaskContextType {
   isLoading: boolean;
   fetchAllTasks: () => Promise<void>;
   saveTask: (task: Task) => Promise<Task>;
+  replaceTask: (task: Task) => void;
   deleteTask: (taskId: UUID) => Promise<void>;
   markTaskComplete: (taskId: UUID, complete: boolean) => Promise<void>;
   reviseTasksForThread(channel_id: UUID, arg1: any): unknown;
@@ -84,15 +85,28 @@ export const TaskProvider = ({ children }: { children: React.ReactNode }) => {
     ));
   }, [ipcService]);
 
+  const replaceTask = useCallback((task: Task) => {
+    setTasks(prev => {
+      const existingIndex = prev.findIndex(t => t.id === task.id);
+      if (existingIndex >= 0) {
+        const newTasks = [...prev];
+        newTasks[existingIndex] = task;
+        return newTasks;
+      }
+      return [...prev, task];
+    });
+  }, []);
+
   const value = useMemo(() => ({
     tasks,
     isLoading,
     fetchAllTasks,
     saveTask,
+    replaceTask,
     deleteTask,
     markTaskComplete,
     reviseTasksForThread,
-  }), [tasks, isLoading, fetchAllTasks, saveTask, deleteTask, markTaskComplete, reviseTasksForThread]);
+  }), [tasks, isLoading, fetchAllTasks, saveTask, replaceTask, deleteTask, markTaskComplete, reviseTasksForThread]);
 
   return (
     <TaskContext.Provider value={value}>
