@@ -33,7 +33,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     setSelectedTask,
     tasks
 }) => {
-    const { handles, tasks: allTasks } = useDataContext();
+    const { handles } = useDataContext();
     const ipcService = useIPCService();
     const [projectDetails, setProjectDetails] = useState<any>(null);
 
@@ -59,14 +59,14 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         
         // Create a map to deduplicate tasks by ID
         const taskMap = new Map();
-        allTasks.forEach(t => {
+        tasks.forEach(t => {
             if (t.projectId === projectId && !taskMap.has(t.id)) {
                 taskMap.set(t.id, t);
             }
         });
         
         return Array.from(taskMap.values());
-    }, [selectedTask, allTasks]);
+    }, [selectedTask, tasks]);
 
     return (
         <Dialog 
