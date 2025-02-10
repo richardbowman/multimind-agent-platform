@@ -17,6 +17,7 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import ListAltIcon from '@mui/icons-material/ListAlt';
 import { TaskDialog } from './TaskDialog';
 import { TaskCard } from './TaskCard';
+import { useDataContext } from '../contexts/DataContext';
 
 interface TaskPanelProps {
     channelId: string | null;
@@ -27,37 +28,13 @@ interface TaskPanelProps {
     setDialogOpen: (open: boolean) => void;
 }
 
-export const TaskPanel: React.FC<TaskPanelProps> = ({ 
-    channelId, 
-    threadId,
-    selectedTask,
-    setSelectedTask,
-    dialogOpen,
-    setDialogOpen
-}) => {
-    const { tasks, fetchAllTasks } = useTasks();
+export const TaskPanel: React.FC<TaskPanelProps> = () => {
+    const { handles } = useDataContext();
     const { filteredTasks } = useFilteredTasks();
     const ipcService = useIPCService();
     const [localSelectedTask, setLocalSelectedTask] = useState<any>(null);
     const [localDialogOpen, setLocalDialogOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'user' | 'agent' | 'steps'>('user');
-
-    useEffect(() => {
-        let isSubscribed = true;
-
-        const loadTasks = async () => {
-            if (channelId && isSubscribed) {
-                await fetchAllTasks();
-            }
-        };
-
-        loadTasks();
-
-        return () => {
-            isSubscribed = false;
-        };
-    }, [channelId, threadId]);
-
 
     return (
         <Box sx={{ p: 2, height: '100%', overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -99,7 +76,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                 <Tooltip title="Cancel all outstanding tasks">
                     <IconButton
                         onClick={async () => {
-                            const outstandingTasks = tasks.filter(t => 
+                            const outstandingTasks = filteredTasks.filter(t => 
                                 !t.complete && t.status !== 'cancelled'
                             );
                             for (const task of outstandingTasks) {
@@ -169,7 +146,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = ({
                 onClose={() => setLocalDialogOpen(false)}
                 selectedTask={localSelectedTask}
                 setSelectedTask={setLocalSelectedTask}
-                tasks={tasks}
+                tasks={filteredTasks}
             />
         </Box>
     );

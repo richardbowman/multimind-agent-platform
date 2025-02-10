@@ -29,6 +29,8 @@ import { WelcomePanel } from './WelcomePanel.tsx';
 import { TaskType } from '../../../../tools/taskManager.ts';
 import { useThreadMessages } from '../contexts/ThreadMessageContext.tsx';
 import { useMessages } from '../contexts/MessageContext.tsx';
+import { useChannels } from '../contexts/ChannelContext.tsx';
+import { useFilteredTasks } from '../contexts/FilteredTaskContext.tsx';
 
 // Custom link component that opens links in system browser
 export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -57,7 +59,9 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const { threadMessages: messages } = useThreadMessages();
     const { sendMessage, currentChannelId, currentThreadId, setCurrentThreadId } = useMessages();
     const { handles, isLoading } = useDataContext();
-    const { tasks } = useTasks();
+    const { filteredTasks: tasks } = useFilteredTasks(currentChannelId, currentThreadId);
+    const { channels } = useChannels();
+
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
     const [expandedMessages, setExpandedMessages] = useState<Set<string>>(new Set());
     const [messageVersions, setMessageVersions] = useState<Record<string, number>>({});
@@ -115,7 +119,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const ipcService = useIPCService();
     const messagesEndRef = useRef<HTMLDivElement>(null);
 
-    const { channels } = useDataContext();
 
     const [isAtBottom, setIsAtBottom] = useState(true);
     const messagesContainerRef = useRef<HTMLDivElement>(null);

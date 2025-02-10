@@ -2,6 +2,8 @@ import React from 'react';
 import { Box, Typography, Button, Card, CardContent, Stack, Paper, Avatar } from '@mui/material';
 import { useTasks } from '../contexts/TaskContext';
 import { useIPCService } from '../contexts/IPCContext';
+import { useMessages } from '../contexts/MessageContext';
+import { useChannels } from '../contexts/ChannelContext';
 
 interface WelcomePanelProps {
     onStartTask: (taskId: string) => void;
@@ -9,7 +11,8 @@ interface WelcomePanelProps {
 }
 
 export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitchToChat }) => {
-    const { currentChannelId, channels, sendMessage } = useDataContext();
+    const { channels } = useChannels();
+    const { sendMessage, currentChannelId } = useMessages();
     const { tasks } = useTasks();
     const ipcService = useIPCService();
 
