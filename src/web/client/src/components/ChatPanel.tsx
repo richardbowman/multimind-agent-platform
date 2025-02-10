@@ -238,11 +238,17 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         }
     }, [messages]);
 
-    // Show welcome panel only when switching to a new channel with remaining tasks
+    // Track last channel ID to detect channel changes
+    const lastChannelId = useRef<string | null>(null);
+
+    // Show welcome panel only when:
+    // 1. Switching to a new channel
+    // 2. The new channel has remaining goal tasks
     useEffect(() => {
-        if (currentChannelId) {
+        if (currentChannelId && currentChannelId !== lastChannelId.current) {
             const hasRemainingGoals = tasks.some(t => !t.complete && t.type === TaskType.Goal);
             onSwitchToWelcome(hasRemainingGoals);
+            lastChannelId.current = currentChannelId;
         }
     }, [currentChannelId, tasks]);
 
