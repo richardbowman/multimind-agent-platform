@@ -34,6 +34,11 @@ const styles = {
         bgcolor: 'background.paper',
         overflow: 'auto',
         maxHeight: '400px',
+        // Fixed height for Mermaid diagrams to prevent flickering
+        ...(language === 'mermaid' && {
+            height: '400px',
+            overflow: 'hidden'
+        }),
         '& pre': {
             whiteSpace: 'pre-wrap',
             wordWrap: 'break-word'
