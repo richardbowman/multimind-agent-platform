@@ -53,7 +53,8 @@ Include relevant details from all steps while maintaining clarity and coherence.
         });
 
         promptBuilder.addInstruction(instructions);
-        promptBuilder.addContext({ contentType: ContentType.PURPOSE });
+        promptBuilder.addContext({ contentType: ContentType.ABOUT });
+        promptBuilder.addContext({ contentType: ContentType.GOALS_FULL, params });
 
         params.context?.artifacts && promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts });
         params.previousResponses && promptBuilder.addContext({ contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses });
@@ -81,7 +82,7 @@ for the response attributes.`);
         const prompt = promptBuilder.build();
 
         const response = await this.modelHelpers.generate({
-            message: params.stepGoal,
+            message: params.message || params.stepGoal,
             instructions: prompt,
             model: ModelType.CONVERSATION,
             threadPosts: params.context?.threadPosts

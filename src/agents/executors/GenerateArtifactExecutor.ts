@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResponse, StepResponseType, StepResult, WithMessage } from '../interfaces/StepResult';
+import { StepResponse, StepResponseType, StepResult, StepResultType, WithMessage } from '../interfaces/StepResult';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact } from 'src/tools/artifact';
@@ -10,7 +10,6 @@ import { TaskManager } from 'src/tools/taskManager';
 import { PromptBuilder, ContentType, OutputType } from 'src/llm/promptBuilder';
 import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationResponse';
 import { StringUtils } from 'src/utils/StringUtils';
-import { JSONSchema } from 'src/llm/ILLMService';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 
@@ -67,20 +66,8 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
 - For NEW documents: Use operation="create" and omit artifactIndex
 - For EXISTING documents: Use operation="replace" or "append" and provide "artifactIndex" field with the list number of the Attached Artifacts list from above.`);
 
-        // Add Q&A context from project metadata
-        try {
-            const project = this.taskManager?.getProject(params.projectId);
-            if (project?.metadata?.answers) {
-                promptBuilder.addContent(ContentType.DOCUMENTS, {
-                    title: "Q&A Context",
-                    content: project.metadata.answers.map((a: any) =>
-                        `Q: ${a.question}\nA: ${a.answer}`
-                    ).join('\n\n')
-                });
-            }
-        } catch (error) {
-            Logger.warn('Failed to fetch Q&A context:', error);
-        }
+        promptBuilder.addContext({contentType: ContentType.ABOUT})
+        promptBuilder.addContext({contentType: ContentType.GOALS_FULL, params});
 
         // Add existing artifacts from previous results
         promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts||[]});
@@ -160,7 +147,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
                 const artifact = await this.artifactManager.saveArtifact(artifactUpdate);
 
                 return {
-                    type: "generate-artifact",
+                    type: StepResultType.GenerateArtifact,
                     finished: true,
                     artifactIds: [artifact?.id],
                     response: {
@@ -172,10 +159,11 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
         } catch (error) {
             Logger.error('Error generating artifact:', error);
             return {
-                type: "generate-artifact",
+                type: StepResultType.GenerateArtifact,
                 finished: true,
                 needsUserInput: true,
                 response: {
+                    type: StepResponseType.GeneratedArtifact,
                     message: 'Failed to generate the artifact. Please try again later.'
                 }
             };

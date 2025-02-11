@@ -45,7 +45,7 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
 
     for (let i = 0; i < markdownFiles.length; i++) {
         const file = markdownFiles[i];
-        Logger.progress(`Loading procedure guides for agents (${i + 1} of ${markdownFiles.length})`, (i + 1) / markdownFiles.length);
+        Logger.progress(`Loading agent procedures (${i + 1} of ${markdownFiles.length})`, (i + 1) / markdownFiles.length);
         const filePath = path.join(guidesDir, file);
         const content = fs.readFileSync(filePath, 'utf-8');
         const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
