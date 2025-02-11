@@ -37,7 +37,7 @@ export class SplashWindow {
         this.window.webContents.setZoomFactor(this.zoomLevel);
         this.window.webContents.setZoomLevel(1);
         this.window.show();
-        this.window.webContents.openDevTools();
+        // this.window.webContents.openDevTools();
     }
 
     setMessage(message: string) {
@@ -57,7 +57,7 @@ export class SplashWindow {
     }
 
     close() {
-        // this.window.close();
+        this.window.close();
         Logger.off("_progress", this.infoEvent);
     }
 }

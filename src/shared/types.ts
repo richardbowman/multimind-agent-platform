@@ -33,6 +33,7 @@ export interface ClientMessage {
     message: string;
     user_id: string;
     create_at: number;
+    updated_at: number;
     directed_at?: ChatHandle;
     props?: Record<string, any>;
     inProgress?: boolean;

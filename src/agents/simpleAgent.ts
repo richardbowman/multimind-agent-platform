@@ -5,6 +5,7 @@ import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { Project, Task } from 'src/tools/taskManager';
 import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
 import { ModelType } from 'src/llm/LLMServiceFactory';
+import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 
 export class SimpleAgent extends Agent {
     protected projectCompleted(project: Project): void {
@@ -14,6 +15,11 @@ export class SimpleAgent extends Agent {
         throw new Error('Method not implemented.');
     }
     
+    constructor(params: AgentConstructorParams) {
+        super(params);
+        this.modelHelpers.setPurpose("You can only respond to messages using your general knowledge and do not have acccess to other Multimind tools (only other agents can do things like web research, task management, etc.). For users wanting to access additional tools, you should point them to the #onboarding channel.");
+    }
+
     protected async handlerThread(params: HandlerParams): Promise<void> {
         try {
             const instructions = this.modelHelpers.createPrompt();

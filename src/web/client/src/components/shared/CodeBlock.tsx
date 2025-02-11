@@ -1,13 +1,11 @@
-import React, { useState, useContext } from 'react';
+import React, { useState } from 'react';
 import { Box } from '@mui/material';
-import { CSVRenderer } from './CSVRenderer';
 import { ActionToolbar } from './ActionToolbar';
-import { Mermaid } from './Mermaid';
-import ReactMarkdown from 'react-markdown';
 import DescriptionIcon from '@mui/icons-material/Description';
-import { DataContextMethods, useDataContext } from '../../contexts/DataContext';
 import { ContentRenderer } from './ContentRenderer';
 import { useArtifacts } from '../../contexts/ArtifactContext';
+import { createUUID } from '../../../../../types/uuid';
+import { ArtifactType } from '../../../../../tools/artifact';
 
 interface CodeBlockProps {
     language?: string;
@@ -96,7 +94,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
     return (
         <Box sx={styles.container}>
             <ActionToolbar 
-                title={title || `Content Export - ${new Date().toLocaleDateString()}`}
+                title={title || `Generated Content`}
                 actions={[
                     {
                         icon: <DescriptionIcon />,
@@ -106,8 +104,8 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                             if (artifactContext) {
                                 try {
                                     await artifactContext.saveArtifact({
-                                        id: crypto.randomUUID(),
-                                        type: 'code',
+                                        id: createUUID(),
+                                        type: ArtifactType.Document,
                                         content: content,
                                         metadata: {
                                             language: language,

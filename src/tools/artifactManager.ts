@@ -77,7 +77,7 @@ export class ArtifactManager {
     ).catch(err => Logger.error('Error creating output directory:', err));
   }
 
-  async getArtifacts(filter: { type?: string } = {}): Promise<Artifact[]> {
+  async getArtifacts(filter: { type?: string } = {}): Promise<ArtifactItem[]> {
     const artifacts = await this.listArtifacts();
 
     if (filter.type) {

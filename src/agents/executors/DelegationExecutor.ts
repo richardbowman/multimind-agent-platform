@@ -52,7 +52,7 @@ export class DelegationExecutor implements StepExecutor {
             - A response message to explain the delegation plan to the user.
             - Create as few delegation steps as possible to achieve the goal.
             - If you delegate to managers, don't also delegate to their team.`);
-            supportedAgents && prompt.addContext({contentType: ContentType.AGENT_CAPABILITIES, agents: supportedAgents});
+            supportedAgents && prompt.addContext({contentType: ContentType.CHANNEL_AGENT_CAPABILITIES, agents: supportedAgents});
         prompt.addInstruction( `IMPORTANT DELEGATION RULES:
             - Create THE FEWEST delegation steps as possible to achieve the goal.
             - If you delegate to managers, do not also delegate to their team. (i.e. don't delegate to the research manager AND the research assistant)

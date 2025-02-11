@@ -1,19 +1,28 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { ContentType } from 'src/llm/promptBuilder';
-import { BrainstormResponse, SlideContent } from 'src/schemas/BrainstormResponse';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
+import { BrainstormIdea, BrainstormResponse, SlideContent } from 'src/schemas/BrainstormResponse';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StructuredOutputPrompt } from 'src/llm/ILLMService';
 import { ArtifactType } from 'src/tools/artifact';
+import { StringUtils } from 'src/utils/StringUtils';
+
+export interface BrainstormStepResponse extends StepResponse {
+    type: StepResponseType.Brainstorm,
+    data: {
+        topic?: string,
+        ideas?: BrainstormIdea
+    }
+}
 
 @StepExecutorDecorator(ExecutorType.BRAINSTORM, 'Generate creative ideas and possibilities through brainstorming', true)
-export class BrainstormExecutor implements StepExecutor {
+export class BrainstormExecutor implements StepExecutor<BrainstormStepResponse> {
     protected generateSlideContent(ideas: any[]): SlideContent[] {
         return ideas.map((idea, index) => ({
             title: idea.title,
@@ -24,8 +33,7 @@ export class BrainstormExecutor implements StepExecutor {
                 idea.benefits
             ].join('\n'),
             notes: `Additional details for ${idea.title}`,
-            transition: index === 0 ? 'slide' : 'fade',
-            background: index % 2 === 0 ? '#ffffff' : '#f5f5f5'
+            transition: index === 0 ? 'slide' : 'fade'
         }));
     }
 
@@ -52,7 +60,7 @@ export class BrainstormExecutor implements StepExecutor {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
         <title>Brainstorming Presentation</title>
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/black.css">
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/dracula.css">
     </head>
     <body>
         <div class="reveal">
@@ -99,10 +107,16 @@ export class BrainstormExecutor implements StepExecutor {
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
-
+        this.modelHelpers.createPrompt().registerStepResultRenderer(StepResponseType.Brainstorm, (response: StepResponse) => {
+            const ideas = response?.data?.ideas || [];
+            const formattedIdeas = ideas.map((idea: any) => 
+                `### ${idea.title}\n${idea.description}\n\n**Benefits:**\n${idea.benefits}`
+            ).join('\n\n');
+            return `PAST IDEAS FOR TOPIC: ${response.data?.topic}:\n${formattedIdeas}`;
+        })
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
+    async execute(params: ExecuteParams): Promise<StepResult<BrainstormStepResponse>> {
         const promptBuilder = this.modelHelpers.createPrompt();
         
         // Add core instructions
@@ -132,19 +146,18 @@ export class BrainstormExecutor implements StepExecutor {
         // Add execution parameters
         promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
 
-        const prompt = promptBuilder.build();
-        
         const schema = await getGeneratedSchema(SchemaType.BrainstormResponse);
-        const response = await this.modelHelpers.generate<BrainstormResponse>({
+        promptBuilder.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
+        
+        const rawResponse = await this.modelHelpers.generate({
             message: params.message || params.stepGoal,
-            instructions: new StructuredOutputPrompt(schema, prompt)
+            instructions: promptBuilder
         });
+        const response = StringUtils.extractAndParseJsonBlock<BrainstormResponse>(rawResponse.message, schema);
+        const message = StringUtils.extractNonCodeContent(rawResponse.message);
 
         // Parse and format the response
-        const ideas = response.ideas || [];
-        const formattedIdeas = ideas.map((idea: any) => 
-            `### ${idea.title}\n${idea.description}\n\n**Benefits:**\n${idea.benefits}`
-        ).join('\n\n');
+        const ideas = response?.ideas || [];
 
         // Generate slides
         const slides = this.generateSlideContent(ideas);
@@ -152,17 +165,22 @@ export class BrainstormExecutor implements StepExecutor {
 
         return {
             type: "brainstorm",
-            finished: response.isComplete || false,
-            needsUserInput: !response.isComplete,
+            finished: response?.isComplete || false,
+            needsUserInput: !response?.isComplete,
             response: {
-                message: `**Brainstorming Results:**\n\n${formattedIdeas}\n\n**Summary:**\n${response.summary || ''}`,
-                isComplete: response.isComplete || false
+                type: StepResponseType.Brainstorm,
+                message,
+                data: {
+                    topic: response?.topic,
+                    ideas: response?.ideas
+                },
+                isComplete: response?.isComplete || false
             },
             artifacts: [{
-                id: crypto.randomUUID(),
                 type: ArtifactType.PRESENTATION,
                 content: Buffer.from(revealJS),
                 metadata: {
+                    title: response?.topic,
                     format: 'revealjs',
                     slideCount: slides.length,
                     generatedAt: new Date().toISOString()

@@ -1,4 +1,4 @@
-import { ChannelData, CreateChannelParams } from 'src/shared/channelTypes';
+import { ChannelData, CreateChannelHandlerParams, CreateChannelParams } from 'src/shared/channelTypes';
 import { LLMLogEntry, LogParam } from '../llm/LLMLogger';
 import { ClientMessage, ClientProject } from "./types";
 import { ClientThread } from "./types";
@@ -79,7 +79,7 @@ export interface ServerMethods {
      * @param isPrivate - Whether the channel should be private
      * @returns Promise resolving to the new channel ID
      */
-    createChannel(params: CreateChannelParams): Promise<string>;
+    createChannel(params: CreateChannelHandlerParams): Promise<string>;
     
     /**
      * Delete an existing channel

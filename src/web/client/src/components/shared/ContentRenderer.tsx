@@ -18,6 +18,7 @@ import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { ArtifactType, CalendarEvent } from '../../../../../tools/artifact';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 import { StringUtils } from '../../../../../utils/StringUtils';
+import { BarChartData } from '../../../../../schemas/BarChartData';
 
 interface ContentRendererProps {
     content: any;
@@ -480,8 +481,8 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     }
 
     if (content.length < 1024 * 10 && (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown')) {
-        return <Box sx={{overflow: "auto"}}><ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown></Box>;
+        return <Box sx={{overflow: "auto", p: 2}}><ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown></Box>;
     } else {
-        return <Box sx={{overflow: "auto"}}><pre>{content}</pre></Box>;
+        return <Box sx={{overflow: "auto", p: 2}}><pre>{content}</pre></Box>;
     }
 };

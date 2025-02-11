@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useCallback, useMemo, useState, useEffect } from 'react';
 import { ClientMessage } from '../../../../shared/types';
 import { useIPCService } from './IPCContext';
-import { UUID } from '../../../../types/uuid';
+import { asUUID, UUID } from '../../../../types/uuid';
+import { useChannels } from './ChannelContext';
 
 export interface MessageContextType {
   messages: ClientMessage[];
@@ -19,11 +20,11 @@ const MessageContext = createContext<MessageContextType | null>(null);
 export const MessageProvider = ({ children }: { children: React.ReactNode }) => {
   const ipcService = useIPCService();
   const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [currentChannelId, setCurrentChannelId] = useState<UUID | null>(null);
+  const { currentChannelId, setCurrentChannelId } = useChannels();
   const [currentThreadId, setCurrentThreadId] = useState<UUID | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  const fetchMessages = useCallback(async (channelId: UUID, threadId: UUID | null) => {
+  const fetchMessages = useCallback(async (channelId: UUID | null, threadId: UUID | null) => {
     if (!channelId) return;
 
     setIsLoading(true);

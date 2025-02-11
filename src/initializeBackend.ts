@@ -22,6 +22,11 @@ import { ArtifactType } from "./tools/artifact";
 import { app } from "electron";
 import { runInThisContext } from "node:vm";
 import { Message } from "./chat/chatClient";
+import _crypto from 'node:crypto';
+
+if (!global.crypto) {
+    global.crypto = _crypto;
+} 
 
 async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<void> {
     const guidesDir = path.join(app.getAppPath(), 'dist', 'assets', "procedure-guides");

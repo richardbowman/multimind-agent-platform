@@ -4,23 +4,32 @@
     "description": "Template for setting up a web research channel with a research manager",
     "supportingAgents": [
         "@research",
-        "@research-assistant"
+        "@research-assistant",
+        "@router"
     ],
-    "defaultResponder": "@research",
+    "defaultResponder": "@router",
     "initialTasks": [
         {
-            "description": "Define research goals and objectives",
-            "type": "planning"
+            "description": "Today's latest world news",
+            "type": "data-gathering"
         },
         {
-            "description": "Gather initial research data from web sources",
-            "type": "data-gathering",
-            "dependsOn": ["define-research-goals"]
-        },
-        {
-            "description": "Analyze gathered data and generate insights",
-            "type": "analysis",
-            "dependsOn": ["gather-initial-research-data"]
+            "description": "Latest content marketing trends",
+            "type": "data-gathering"
         }
+        // {
+        //     "description": "Define research goals and objectives",
+        //     "type": "planning"
+        // },
+        // {
+        //     "description": "Gather initial research data from web sources",
+        //     "type": "data-gathering",
+        //     "dependsOn": ["define-research-goals"]
+        // },
+        // {
+        //     "description": "Analyze gathered data and generate insights",
+        //     "type": "analysis",
+        //     "dependsOn": ["gather-initial-research-data"]
+        // }
     ]
 }

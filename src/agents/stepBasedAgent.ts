@@ -287,7 +287,7 @@ export abstract class StepBasedAgent extends Agent {
                 type: TaskType.Step,
                 description: goal,
                 creator: this.userId,
-                order: 0, // Add to end of current tasks
+                order: 0, // Add at very beginning
                 props: {
                     stepType: ExecutorType.NEXT_STEP
                 }
@@ -453,7 +453,8 @@ export abstract class StepBasedAgent extends Agent {
             if (replyTo) {
                 if (!params.partialPost) {
                     params.partialPost = await this.reply(replyTo, {
-                        message,
+                        message
+                    }, {
                         props: {
                             partial: true
                         }

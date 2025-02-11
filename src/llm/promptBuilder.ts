@@ -27,7 +27,7 @@ export enum ContentType {
     CHANNEL_GOALS = 'goals',
     STEP_RESPONSE = 'step_results',
     EXECUTE_PARAMS = 'execute_params',
-    AGENT_CAPABILITIES = 'agent_capabilities',
+    CHANNEL_AGENT_CAPABILITIES = 'agent_capabilities',
     AGENT_OVERVIEWS = 'agent_overviews',
     PURPOSE = "PURPOSE",
     CHANNEL = "CHANNEL",
@@ -39,7 +39,8 @@ export enum ContentType {
     INTENT = "INTENT",
     VALIDATION_RESULTS = "VALIDATION_RESULTS",
     GOALS_FULL = "GOALS_FULL",
-    STEPS = "STEPS"
+    STEPS = "STEPS",
+    ALL_AGENTS = "ALL_AGENTS"
 }
 
 export enum OutputType {
@@ -74,7 +75,8 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.STEP_RESPONSE, this.renderStepResponses.bind(this));
         this.registerRenderer(ContentType.STEPS, this.renderSteps.bind(this));
         this.registerRenderer(ContentType.EXECUTE_PARAMS, this.renderExecuteParams.bind(this));
-        this.registerRenderer(ContentType.AGENT_CAPABILITIES, this.renderAgentCapabilities.bind(this));
+        this.registerRenderer(ContentType.CHANNEL_AGENT_CAPABILITIES, this.renderAgentCapabilities.bind(this));
+        this.registerRenderer(ContentType.ALL_AGENTS, this.renderFullAgentList.bind(this));
         this.registerRenderer(ContentType.AGENT_OVERVIEWS, this.renderAgentOverviews.bind(this));
         
         this.registerRenderer(ContentType.GOALS_FULL, this.renderAllGoals.bind(this));
@@ -89,15 +91,16 @@ export class PromptRegistry {
 
     private renderAboutAgent() {
         return `📝 About MultiMind:
-MultiMind is an advanced AI research assistant platform that combines:
-- Natural language processing
+MultiMind is an advanced AI research assistant platform that provides multiple agents that can help:
 - Task automation
-- Document generation
-- Project management
+- Web-based research
+- Brainstorming
+- Content generation including documents, diagrams, spreadsheets, and charts
+- Work with CSV and Markdown
 
 Key Features:
 - Conversational Interface: Interact through chat messages
-- Task Management: Create and track projects and tasks
+- Task Management: Create and track projects and tasks (@assistant agent)
 - Document Generation: Automatically create structured documents
 - Research Capabilities: Web search and content summarization
 - Custom Workflows: Create tailored automation processes
@@ -151,6 +154,9 @@ ${params.stepGoal && `CURRENT STEP GOAL: ${params.stepGoal}`}`;
         return `USER'S OVERALL GOAL: ${goal}\n`;
     }
 
+    /**
+     * @deprecated Use About instead
+     **/
     renderPurpose() {
         return `OVERALL AGENT PURPOSE:
 ${this.modelHelpers.getPurpose()}
@@ -294,7 +300,7 @@ ${this.modelHelpers.getFinalInstructions()}
     private renderAgentCapabilities({agents} : AgentCapabilitiesContent): string {
         if (!agents || agents.length === 0) return '';
 
-        return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
+        return "🤖 AGENTS IN THIS CHANNEL:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
             let output = `- ${agent.messagingHandle}: ${agent.description}`;
 
             // Get detailed capabilities for each agent that is a StepBasedAgent
@@ -316,7 +322,16 @@ ${this.modelHelpers.getFinalInstructions()}
     private renderAgentOverviews({agents} : AgentOverviewsContent): string {
         if (!agents || agents.length === 0) return '';
 
-        return "🤖 OTHER AVAILABLE AGENTS FOR DELEGATION:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
+        return "🤖 AGENTS IN THIS CHANNEL:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
+            let output = `- ${agent.messagingHandle}: ${agent.description}`;
+            return output;
+        }).join('\n');
+    }
+
+    private renderFullAgentList({agents} : AgentOverviewsContent): string {
+        if (!agents || agents.length === 0) return '';
+
+        return "🤖 AGENTS AVAIALBLE ACROSS PLATFORM:\n\n" + agents.filter(a => a && a.messagingHandle && a.description).map(agent => {
             let output = `- ${agent.messagingHandle}: ${agent.description}`;
             return output;
         }).join('\n');

@@ -18,9 +18,6 @@ export interface Paths {
 }
 
 export interface DataContextMethods {
-  messages: ClientMessage[];
-  channels: ChannelData[];
-  tasks: Task[];
   pendingFiles: Artifact[];
   logs: {
     llm: Record<string, LLMLogEntry[]>;
@@ -28,8 +25,6 @@ export interface DataContextMethods {
     api: any[];
   };
   handles: Array<{ id: string, handle: string }>;
-  currentChannelId: UUID | null;
-  currentThreadId: UUID | null;
   isLoading: boolean;
   needsConfig: boolean | null;
   settings: Settings | null;
@@ -66,21 +61,10 @@ export const DataProvider: React.FC<{
   const [paths, setPaths] = useState<Paths|null>();
   const [settings, setSettings] = useState<Settings|null>();
   const [messages, setMessages] = useState<ClientMessage[]>([]);
-  const [channels, setChannels] = useState<ChannelData[]>([]);
   const [handles, setHandles] = useState<Array<{ id: string, handle: string }>>([]);
-  const [currentChannelId, _setCurrentChannelId] = useState<string | null>(null);
-  const [currentThreadId, setCurrentThreadId] = useState<string | null>(null);
-
 
   
-  const setCurrentChannelId = useCallback((channelId: string | null) => {
-    if (channelId) {
-      localStorage.setItem('lastChannelId', channelId);
-    } else {
-      localStorage.removeItem('lastChannelId');
-    }
-    _setCurrentChannelId(channelId);
-  }, []);
+  
   const [currentThreadArtifacts, setCurrentThreadArtifacts] = useState<any[]>([]);
   const [allArtifacts, setAllArtifacts] = useState<any[]>([]);
   const [pendingFiles, setPendingFiles] = useState<Artifact[]>([]);
@@ -118,9 +102,6 @@ export const DataProvider: React.FC<{
     if (needsConfig === false) {
         // Trigger initial data fetch when backend is ready
         try {
-            const lastChannel = localStorage.getItem('lastChannelId');
-            setCurrentChannelId(lastChannel);
-
             fetchHandles();
             fetchSettings();
         } catch (error) {
@@ -186,12 +167,9 @@ export const DataProvider: React.FC<{
 
   const contextMethods = useMemo(() => ({
     messages,
-    channels,
     pendingFiles,
     logs,
     handles,
-    currentChannelId,
-    currentThreadId,
     isLoading,
     needsConfig,
     settings,
@@ -203,8 +181,6 @@ export const DataProvider: React.FC<{
     setMessages,
     setLogs,
     setNeedsConfig,
-    setCurrentChannelId,
-    setCurrentThreadId,
     getSettings,
     updateSettings: async (settings: Settings) => {
       try {
@@ -240,20 +216,15 @@ export const DataProvider: React.FC<{
     }
   } as DataContextMethods), [
     messages,
-    channels,
     logs,
     handles,
     settings,
-    currentChannelId,
-    currentThreadId,
     isLoading,
     needsConfig,
     pendingFiles,
     sendMessage,
     fetchLogs,
     fetchHandles,
-    setCurrentChannelId,
-    setCurrentThreadId,
     setSettings,
   ]);
 

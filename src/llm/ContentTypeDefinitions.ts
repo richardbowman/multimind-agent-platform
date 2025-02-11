@@ -71,7 +71,7 @@ export interface ExecuteParamsContent {
 }
 
 export interface AgentCapabilitiesContent {
-    contentType: ContentType.AGENT_CAPABILITIES;
+    contentType: ContentType.CHANNEL_AGENT_CAPABILITIES;
     agents: Agent[];
 }
 
@@ -79,6 +79,12 @@ export interface AgentOverviewsContent {
     contentType: ContentType.AGENT_OVERVIEWS;
     agents: Agent[];
 }
+
+export interface AllAgentOverviewsContent {
+    contentType: ContentType.ALL_AGENTS;
+    agents: Agent[];
+}
+
 
 export interface PurposeContent {
     contentType: ContentType.PURPOSE;
@@ -150,6 +156,7 @@ export type ContentInput =
     | ExecuteParamsContent 
     | AgentCapabilitiesContent 
     | AgentOverviewsContent 
+    | AllAgentOverviewsContent
     | PurposeContent 
     | ChannelNameContent 
     | ChannelDetailsContent

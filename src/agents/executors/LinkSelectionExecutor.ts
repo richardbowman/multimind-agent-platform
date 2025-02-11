@@ -92,7 +92,7 @@ Given the following web search results and links from existing pages you've scra
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const message = `Links from previously scraped pages:
-${previousLinks?.map(l => `- ${l.href}: ${l.text}`).join('\n')}
+${previousLinks?.map(l => `- ${l.href}: ${l.text}`).join('\n') || "(No previous scraped page results)"}
 
 ${searchResults&&`Search Results (${searchResults.length} found}):
 ${searchResults && searchResults

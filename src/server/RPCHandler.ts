@@ -21,6 +21,7 @@ import ical from "ical";
 import { GoalTemplate } from "src/schemas/goalTemplateSchema";
 import { createChatHandle, ChatHandle, isChatHandle } from "src/types/chatHandle";
 import { LLMLogEntry } from "src/llm/LLMLogger";
+import JSON5 from 'json5';
 
 export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods {
     constructor(private services: BackendServicesWithWindows) {
@@ -474,7 +475,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         const jsonFiles = dir.filter(file => file.endsWith('.json'));
 
         return Promise.all(jsonFiles.map(async file => {
-            const template = JSON.parse(await fsPromises.readFile(path.join(templatesDir, file), 'utf8'));
+            const template = JSON5.parse(await fsPromises.readFile(path.join(templatesDir, file), 'utf8'));
             return {
                 ...template,
                 id: createChannelHandle(template.id),

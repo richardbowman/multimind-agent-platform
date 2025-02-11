@@ -73,9 +73,10 @@ export class WebSearchExecutor implements StepExecutor {
             const existingSummaries = await this.artifactManager.getArtifacts({
                 type: 'summary'
             });
-            const existingSummary = existingSummaries.find(a =>
+            const existingSummaryInfo = existingSummaries.find(a =>
                 a.metadata?.url === url
             );
+            const existingSummary = existingSummaryInfo && await this.artifactManager.loadArtifact(existingSummary.id);
             if (existingSummary) {
                 return existingSummary.content.toString();
             }

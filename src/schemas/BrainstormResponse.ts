@@ -6,8 +6,8 @@ export interface BrainstormIdea {
     benefits: string;
 }
 
-export interface BrainstormResponse extends ModelMessageResponse {
+export interface BrainstormResponse {
+    topic: string;
     ideas: BrainstormIdea[];
-    summary: string;
     isComplete: boolean;
 }

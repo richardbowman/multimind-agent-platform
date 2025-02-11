@@ -160,18 +160,15 @@ export class RouterAgent extends Agent {
         const schema = await getGeneratedSchema(SchemaType.RoutingResponse);
 
         const promptBuilder = this.modelHelpers.createPrompt();
-        promptBuilder.addContent(ContentType.PURPOSE);
+        promptBuilder.addContext({contentType: ContentType.ABOUT});
 
         // Add available agents with their capabilities
-        promptBuilder.addContent<Agent[]>(ContentType.AGENT_CAPABILITIES, context.agentOptions);
+        promptBuilder.addContext({contentType: ContentType.CHANNEL_AGENT_CAPABILITIES, agents: context.agentOptions});
 
         // Add project details if exists
         if (context.project) {
-            promptBuilder.addContent(ContentType.CHANNEL_GOALS, context.project);
+            promptBuilder.addContext({contentType: ContentType.CHANNEL_GOALS, tasks: Object.values(context.project.tasks)});
         }
-
-        // Add conversation context
-        promptBuilder.addContent(ContentType.CONVERSATION, [rootPost, ...threadPosts]);
 
         // Add routing instructions
         promptBuilder.addInstruction(`You must explicitly choose one of these next steps:
@@ -193,7 +190,7 @@ export class RouterAgent extends Agent {
 
         // Add artifacts if present
         if (params.artifacts) {
-            promptBuilder.addContent(ContentType.ARTIFACTS_EXCERPTS, params.artifacts);
+            promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.artifacts});
         }
 
         // Add response format
@@ -202,9 +199,11 @@ export class RouterAgent extends Agent {
 - response: Your message to the user (or message to the transferring agent for execute-transfer)
 - confidence: Your confidence level (0-1) in this selection`);
 
+        const posts = [rootPost, ...threadPosts].filter(p => p !== undefined);
         const response = await this.modelHelpers.generate<RoutingResponse>({
             message: userPost.message,
-            instructions: new StructuredOutputPrompt(schema, promptBuilder.build())
+            instructions: new StructuredOutputPrompt(schema, promptBuilder.build()),
+            threadPosts: posts
         });
 
         await this.handleRoutingResponse(userPost, response, threadPosts, context);

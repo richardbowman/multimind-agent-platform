@@ -360,22 +360,23 @@ export abstract class Agent {
 
             // Only send welcome if we're the default responder
             if (channelData.defaultResponderId === this.userId) {
-                const agentOptions = (channelData.members || [])
-                    .filter(memberId => this.userId !== memberId)
+                const allAgents = Object.values(this.agents.agents);
+
+                const channelAgents = (channelData.members || [])
                     .map(memberId => this.agents.agents[memberId]);
 
                 const post = await this.send({message: "Typing...", props: {partial: true, messageType: 'welcome'}}, monitorChannelId);
                 if (!post) {
                     Logger.error("Failed to create post for welcome message");
                 } else {
-                    const welcomeMessage = `@user ${await this.generateWelcomeMessage(agentOptions, monitorChannelId)}`;
+                    const welcomeMessage = `@user ${await this.generateWelcomeMessage(channelAgents, allAgents, monitorChannelId)}`;
                     await this.chatClient.updatePost(post.id, welcomeMessage, { partial: false });
                 }
             }
         }
     }
 
-    private async generateWelcomeMessage(agentOptions: Agent[], channelId: UUID): Promise<string> {
+    private async generateWelcomeMessage(agentOptions: Agent[], allAgents: Agent[], channelId: UUID): Promise<string> {
         const channel = await this.chatClient.getChannelData(channelId);
         const channelProject = channel?.projectId
             ? this.projects.getProject(channel.projectId)
@@ -388,13 +389,18 @@ export abstract class Agent {
         instructions.addContext({ contentType: ContentType.ABOUT });
         instructions.addContext({ contentType: ContentType.CHANNEL_DETAILS, channel, tasks: channelGoals });
         instructions.addContext({ contentType: ContentType.PURPOSE });
-        instructions.addContext({ contentType: ContentType.AGENT_CAPABILITIES, agents: agentOptions });
-
+        if (channel.name === "#welcome") {
+            instructions.addContext({ contentType: ContentType.ALL_AGENTS, agents: allAgents });
+        } else {
+            instructions.addContext({ contentType: ContentType.CHANNEL_AGENT_CAPABILITIES, agents: agentOptions });
+        }
         instructions.addInstruction(`Generate a welcome message for a new chat channel that:
 1. Introduces yourself
 2. Briefly explains how you help users achieve their goals
-3. Mentions the specific types of agents available to help them
-4. Invites them to share what they'd like to achieve`);
+3. Explains the agent(s) available to help them
+4. Invites them to share what they'd like to achieve
+
+Do not make information up.`);
 
         const response = await this.modelHelpers.generate({
             message: "Generate a welcome message to the chat channel.",

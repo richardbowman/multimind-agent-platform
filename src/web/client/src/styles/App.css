@@ -2,11 +2,8 @@
     0% {
         transform: translate(0, 0);
     }
-    50% {
-        transform: translate(20px, 20px);
-    }
     100% {
-        transform: translate(0, 0);
+        transform: translate(20px, 20px);
     }
 }
 
@@ -31,16 +28,13 @@
     left: -50%;
     width: 200%;
     height: 200%;
-    background: linear-gradient(45deg, transparent 48%, rgba(74, 158, 255, 0.15) 50%, transparent 52%),
-                linear-gradient(-45deg, transparent 48%, rgba(74, 158, 255, 0.15) 50%, transparent 52%),
-                linear-gradient(45deg, transparent 48%, rgba(255, 74, 158, 0.05) 50%, transparent 52%),
-                linear-gradient(-45deg, transparent 48%, rgba(255, 74, 158, 0.05) 50%, transparent 52%);
-    background-size: 40px 40px;
-    animation: gridMove 10s linear infinite;
-    opacity: 0.5;
+    background: linear-gradient(45deg, transparent 49%, rgba(74, 158, 255, 0.15) 50%, transparent 51%),
+                linear-gradient(-45deg, transparent 49%, rgba(74, 158, 255, 0.15) 50%, transparent 51%);
+    background-size: 10px 10px;
+    animation: gridMove 5s linear infinite;
+    opacity: 1;
     pointer-events: none;
     z-index: 0;
-    mix-blend-mode: overlay;
 }
 
 .chat-layout {

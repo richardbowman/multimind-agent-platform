@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Artifact, ArtifactType } from '../../../../tools/artifact';
-import { Button, TextField, Select, MenuItem, Box, Dialog, DialogTitle, DialogContent, DialogActions, Typography } from '@mui/material';
-import { useDataContext } from '../contexts/DataContext';
-import { useIPCService } from '../contexts/IPCContext';
+import { Button, TextField, Select, MenuItem, Box, Dialog, DialogTitle, DialogContent, DialogActions } from '@mui/material';
+import { createUUID } from '../../../../types/uuid';
+import { useArtifacts } from '../contexts/ArtifactContext';
 
 interface ArtifactEditorProps {
     open: boolean;
@@ -48,7 +48,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
         }
     }, [artifact]);
 
-    const { saveArtifact } = useDataContext();
+    const { saveArtifact } = useArtifacts();
 
     const handleCreate = async () => {
         try {
@@ -58,7 +58,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
             }
             
             const newArtifact: Artifact = {
-                id: artifact?.id || crypto.randomUUID(),
+                id: artifact?.id || createUUID(),
                 type: artifactType,
                 content: artifactContent,
                 metadata: metadataObj

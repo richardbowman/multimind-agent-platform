@@ -67,6 +67,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         if (!selectedUrls?.length) {
             return {
                 finished: true,
+                replan: ReplanType.Allow,
                 response: {
                     type: StepResponseType.WebPage,
                     message: 'No URLs to scrape',
@@ -220,7 +221,8 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         const existingSummaries = await this.artifactManager.getArtifacts({
             type: 'summary'
         });
-        const artifact = existingSummaries.find(a => a.metadata?.url === url);
+        const artifactInfo = existingSummaries.find(a => a.metadata?.url === url);
+        const artifact = artifactInfo && await this.artifactManager.loadArtifact(artifactInfo.id);
         if (artifact) {
             return {
                 summary: artifact.content.toString(),
@@ -282,15 +284,13 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
     }
 
     private async cleanupExpiredNews() {
-        const newsArtifacts = await this.artifactManager.getArtifacts({
-            metadata: { isTimeSensitive: true }
-        });
+        const newsArtifacts = (await this.artifactManager.getArtifacts()).filter(a => a.metadata?.isTimeSensitive);
 
         const now = new Date();
-        for (const artifact of newsArtifacts) {
-            if (artifact.metadata?.expirationDate &&
-                new Date(artifact.metadata.expirationDate) < now) {
-                await this.artifactManager.deleteArtifact(artifact.id);
+        for (const artifactInfo of newsArtifacts) {
+            if (artifactInfo.metadata?.expirationDate &&
+                new Date(artifactInfo.metadata.expirationDate) < now) {
+                await this.artifactManager.deleteArtifact(artifactInfo.id);
             }
         }
     }

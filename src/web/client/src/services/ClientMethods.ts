@@ -42,7 +42,7 @@ class ClientMethodsImplementation implements ClientMethods {
         // Check for messages with verbal conversation flag
         const userHandle = this.contextMethods.handles.find(h => h.handle === '@user');
         for (const message of messages) {
-            const rootPost = this.contextMethods.messages.find(m => message.props?.["root-id"] === m.id)
+            const rootPost = this.messageContext.messages.find(m => message.props?.["root-id"] === m.id)
 
             if (rootPost?.props?.verbalConversation === true && message.user_id !== userHandle?.id && message.message?.length > 0) {
                 try {
@@ -140,15 +140,15 @@ class ClientMethodsImplementation implements ClientMethods {
         // Find the latest message from a different channel/thread or not the current thread root
         const latestMessage = messages
             .filter(message =>
-                message.channel_id !== this.contextMethods.currentChannelId ||
-                (message.channel_id === this.contextMethods.currentChannelId &&
-                    message.thread_id !== this.contextMethods.currentThreadId &&
-                    message.id !== this.contextMethods.currentThreadId)
+                message.channel_id !== this.messageContext.currentChannelId ||
+                (message.channel_id === this.messageContext.currentChannelId &&
+                    message.thread_id !== this.messageContext.currentThreadId &&
+                    message.id !== this.messageContext.currentThreadId)
             )
             .sort((a, b) => b.create_at - a.create_at)[0];
 
         if (latestMessage) {
-            const channelName = this.contextMethods.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
+            const channelName = this.channelContext.channels.find(c => c.id === latestMessage.channel_id)?.name || 'a channel';
             this.snackbarContext.showSnackbar({
                 message: `New message in ${channelName}`,
                 severity: 'info',
@@ -161,6 +161,11 @@ class ClientMethodsImplementation implements ClientMethods {
                 }
             });
         };
+
+        const hasArtifacts = messages.find(m => m.props?.['artifact-ids']?.filter(a => a.id));
+        if (hasArtifacts) {
+            this.artifactProvider.fetchAllArtifacts();
+        }
 
         // Update messages directly in context
         this.messageContext.setMessages(prev => {

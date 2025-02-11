@@ -4,6 +4,7 @@ import { useTasks } from './TaskContext';
 import { useThreadMessages } from './ThreadMessageContext';
 import { UUID } from '../../../../types/uuid';
 import { useIPCService } from './IPCContext';
+import { useChannels } from './ChannelContext';
 
 interface FilteredTaskContextType {
   filteredTasks: Task[];
@@ -25,7 +26,7 @@ export const FilteredTaskProvider = ({
   threadId: UUID | null;
   children: React.ReactNode 
 }) => {
-  const ipcService = useIPCService();
+  const { currentChannelProject } = useChannels();
   const { tasks, isLoading } = useTasks();
   const { threadMessages } = useThreadMessages();
   const [taskId, setTaskId] = useState<UUID | null>(null);
@@ -71,7 +72,9 @@ export const FilteredTaskProvider = ({
     const list = tasks.filter(task => 
       threadTaskIds.has(task.id)
     );
-    return list;
+
+
+    return [...list, ...currentChannelProject?.tasks||[]];
   }, [tasks, threadTaskIds]);
 
   const value = useMemo(() => ({

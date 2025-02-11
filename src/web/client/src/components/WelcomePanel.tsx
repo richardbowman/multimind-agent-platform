@@ -4,6 +4,8 @@ import { useTasks } from '../contexts/TaskContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { useMessages } from '../contexts/MessageContext';
 import { useChannels } from '../contexts/ChannelContext';
+import { useFilteredTasks } from '../contexts/FilteredTaskContext';
+import { TaskType } from '../../../../tools/taskManager';
 
 interface WelcomePanelProps {
     onStartTask: (taskId: string) => void;
@@ -13,11 +15,11 @@ interface WelcomePanelProps {
 export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitchToChat }) => {
     const { channels } = useChannels();
     const { sendMessage, currentChannelId } = useMessages();
-    const { tasks } = useTasks();
+    const { filteredTasks : tasks } = useFilteredTasks();
     const ipcService = useIPCService();
 
     const channel = channels.find(c => c.id === currentChannelId);
-    const projectTasks = tasks.filter(t => t.projectId === channel?.projectId);
+    const goals = tasks.filter(t => t.type === TaskType.Goal);
 
     return (
         <Box sx={{
@@ -39,14 +41,14 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                 gap: 3
             }}>
                 <Avatar sx={{ width: 80, height: 80 }}>
-                    {channel?.name[0]}
+                    {channel?.name?.[1]?.toUpperCase()}
                 </Avatar>
                 <Box>
                     <Typography variant="h3" gutterBottom>
                         Welcome to {channel?.name}
                     </Typography>
                     <Typography variant="subtitle1">
-                        Let's make progress together!
+                        {channel?.description}
                     </Typography>
                 </Box>
             </Box>
@@ -56,7 +58,7 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                 gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))',
                 gap: 3
             }}>
-                {projectTasks.map(task => (
+                {goals.map(task => (
                     <Card key={task.id} sx={{ 
                         height: '100%',
                         display: 'flex',
@@ -97,7 +99,7 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                 ))}
             </Box>
 
-            <Box sx={{
+            {/* <Box sx={{
                 mt: 4,
                 p: 3,
                 bgcolor: 'background.paper',
@@ -110,7 +112,7 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                 <Typography variant="subtitle2" sx={{ mt: 1 }}>
                     - Walt Disney
                 </Typography>
-            </Box>
+            </Box> */}
         </Box>
     );
 };

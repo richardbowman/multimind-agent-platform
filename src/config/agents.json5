@@ -33,7 +33,7 @@
               "className": "GenerateDocumentExecutor"
             },
             {
-              "className": "GenerateChartExecutor"
+              "className": "GenerateDiagramExecutor"
             },
             {
               "className": "BrainstormExecutor"

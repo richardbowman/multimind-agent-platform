@@ -103,7 +103,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
         
         // Add content formatting rules
         if (this.addContentFormattingRules) this.addContentFormattingRules(promptBuilder);
-        promptBuilder.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema, "", this.getSupportedFormats().join("|"));
+        promptBuilder.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, schema, "", this.getSupportedFormats().join("|"));
         
         // Add Q&A context from project metadata
 
@@ -116,8 +116,10 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
 
             const json = StringUtils.extractAndParseJsonBlock<ArtifactGenerationResponse>(unstructuredResult.message, schema);
             const md = StringUtils.extractCodeBlocks(unstructuredResult.message).filter(b => b.type !== 'json');
+            const message = StringUtils.extractNonCodeContent(unstructuredResult.message);
             const result = {
-                ...json
+                ...json,
+                message
             } as WithMessage<ArtifactGenerationResponse> & { content: string };
 
             if (md && md.length == 0) {
@@ -163,7 +165,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
                     artifactIds: [artifact?.id],
                     response: {
                         type: StepResponseType.GeneratedArtifact,
-                        message: unstructuredResult.message
+                        message: result.message
                     }
                 };
             }

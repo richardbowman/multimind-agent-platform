@@ -270,6 +270,7 @@
       "type": "object"
     },
     "BrainstormResponse": {
+      "additionalProperties": false,
       "properties": {
         "ideas": {
           "items": {
@@ -280,18 +281,14 @@
         "isComplete": {
           "type": "boolean"
         },
-        "message": {
-          "type": "string"
-        },
-        "summary": {
+        "topic": {
           "type": "string"
         }
       },
       "required": [
+        "topic",
         "ideas",
-        "isComplete",
-        "message",
-        "summary"
+        "isComplete"
       ],
       "type": "object"
     },
