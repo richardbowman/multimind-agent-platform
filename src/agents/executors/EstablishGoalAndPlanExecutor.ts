@@ -62,7 +62,7 @@ export class EstablishGoalAndPlanExecutor implements StepExecutor {
             `);
 
             // Clear existing tasks if re-evaluating
-            const currentTasks = this.taskManager.getAllTasks(project.id).filter(task => task.type === TaskType.Step);
+            const currentTasks = this.taskManager.getProjectTasks(project.id).filter(task => task.type === TaskType.Step);
             currentTasks.forEach(task => this.taskManager.cancelTask(task.id));
 
             // Create new tasks for the sub-plan
@@ -103,7 +103,7 @@ export class EstablishGoalAndPlanExecutor implements StepExecutor {
         if (activeMasterPlan) {
             // Clear existing sub-plan tasks
             const project = this.taskManager.getProject(params.projectId);
-            const currentTasks = this.taskManager.getAllTasks(project.id).filter(task => task.type === TaskType.Step);
+            const currentTasks = this.taskManager.getProjectTasks(project.id).filter(task => task.type === TaskType.Step);
             currentTasks.forEach(task => this.taskManager.cancelTask(task.id));
 
             // Create new tasks for the sub-plan

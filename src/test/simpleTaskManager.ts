@@ -320,7 +320,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         return availableTasks[0] || null;
     }
 
-    getAllTasks(projectId: string, type?: TaskType): Task[] {
+    getProjectTasks(projectId: string, type?: TaskType): Task[] {
         const project = this.projects[projectId];
         if (!project) {
             return [];

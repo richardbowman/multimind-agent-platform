@@ -19,37 +19,7 @@ export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
     const { messages, currentThreadId, setCurrentThreadId } = useMessages();
     const activeThreadRef = useRef<HTMLLIElement>(null);
     const listRef = useRef<HTMLUListElement>(null);
-    const [scrollPosition, setScrollPosition] = useState(0);
-
-    // Save scroll position before re-render
-    useEffect(() => {
-        const list = listRef.current;
-        if (list) {
-            const handleScroll = () => setScrollPosition(list.scrollTop);
-            list.addEventListener('scroll', handleScroll);
-            return () => list.removeEventListener('scroll', handleScroll);
-        }
-    }, []);
-
-    // Restore scroll position after re-render
-    useEffect(() => {
-        const list = listRef.current;
-        if (list) {
-            list.scrollTop = scrollPosition;
-            if (activeThreadRef.current) {
-                activeThreadRef.current.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-            }
-        }
-    }, [currentThreadId, scrollPosition]);
-
-    if (!channelId) {
-        return (
-            <Box sx={{ p: 2, color: '#666', fontStyle: 'italic' }}>
-                Select a channel to view threads
-            </Box>
-        );
-    }
-
+    
     // Get root messages that have replies
     const threadsInChannel = messages
         .filter(msg => msg.channel_id === channelId && !msg.props?.['root-id'])

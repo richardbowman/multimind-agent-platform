@@ -149,7 +149,7 @@ export class ContentWriter extends Agent {
         }
 
         // Get all completed tasks for this project
-        const tasks = await this.projects.getAllTasks(project.id);
+        const tasks = await this.projects.getProjectTasks(project.id);
         const completedTasks = tasks.filter(task => task.complete && task.props?.result?.response);
 
         // Merge all sections while preserving structure and citations

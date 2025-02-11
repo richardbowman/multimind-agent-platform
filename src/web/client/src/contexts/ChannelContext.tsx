@@ -3,7 +3,7 @@ import { ChannelData, CreateChannelParams } from '../../../../shared/channelType
 import { useIPCService } from './IPCContext';
 import { useDataContext } from './DataContext';
 
-interface ChannelContextType {
+export interface ChannelContextType {
   channels: ChannelData[];
   fetchChannels: () => Promise<void>;
   createChannel: (params: CreateChannelParams) => Promise<string>;

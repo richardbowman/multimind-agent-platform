@@ -21,7 +21,7 @@ export const AssetSelectionDialog: React.FC<AssetSelectionDialogProps> = ({ asse
     const [selectedTypes, setSelectedTypes] = useState<ArtifactType[]>([]);
 
     const filteredAssets = assets.filter(asset => {
-        const matchesSearch = asset.metadata.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        const matchesSearch = asset.metadata.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
             (asset.metadata.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
 
         const matchesType = selectedTypes.length === 0 ||

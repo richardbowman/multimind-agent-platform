@@ -346,31 +346,36 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         return channels;
     }
 
-    async getTasks({ channelId, threadId }: { channelId: UUID; threadId: UUID | null }): Promise<any[]> {
-        // Get all posts for this channel/thread
-        const posts = (await this.services.chatClient.fetchPreviousMessages(channelId, 500)).filter(post => {
-            if (threadId) {
-                return post.getRootId() === threadId || post.id === threadId;
-            }
-            return true;
-        });
+    async getTasks({ channelId, threadId }: { channelId?: UUID; threadId?: UUID }): Promise<Task[]> {
+        if (channelId) {
+            // Get all posts for this channel/thread
+            const posts = (await this.services.chatClient.fetchPreviousMessages(channelId, 500)).filter(post => {
+                if (threadId) {
+                    return post.getRootId() === threadId || post.id === threadId;
+                }
+                return true;
+            });
 
-        const channelData = await this.services.chatClient.getChannelData(channelId);
+            const channelData = await this.services.chatClient.getChannelData(channelId);
 
-        // Extract project IDs from posts
-        const projectIds = [
-            ...new Set([...posts.map(p => p.props["project-ids"]||[]).flat(), channelData.projectId]),
-        ].filter(id => id != undefined);
-        
-        // Get tasks from storage that match these project IDs and convert to ClientTask format
-        const tasks = projectIds.flatMap(projectId => {
-            const project = this.services.taskManager.getProject(projectId);
-            if (!project) return [];
+            // Extract project IDs from posts
+            const projectIds = [
+                ...new Set([...posts.map(p => p.props["project-ids"]||[]).flat(), channelData.projectId]),
+            ].filter(id => id != undefined);
             
-            return Object.values<Task>(project.tasks);
-        });
+            // Get tasks from storage that match these project IDs and convert to ClientTask format
+            const tasks = projectIds.flatMap(projectId => {
+                const project = this.services.taskManager.getProject(projectId);
+                if (!project) return [];
+                
+                return Object.values<Task>(project.tasks);
+            });
 
-        return tasks;
+            return tasks;
+        } else {
+            return this.services.taskManager.getProjects().flatMap(p => 
+                Object.values(p.tasks).sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity)));
+        }
     }
     
     async getArtifact(id: UUID): Promise<Artifact> {

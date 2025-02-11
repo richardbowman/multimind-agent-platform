@@ -27,7 +27,6 @@ export const MessageProvider = ({ children }: { children: React.ReactNode }) => 
     if (!channelId) return;
 
     setIsLoading(true);
-    setMessages([]); // Clear messages before loading new ones
 
     const newMessages = await ipcService.getRPC().getMessages({ channelId, threadId });
     setMessages(newMessages);

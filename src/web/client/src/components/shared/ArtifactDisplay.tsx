@@ -13,13 +13,6 @@ import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 interface ArtifactDisplayProps {
     artifact: Artifact;
     showMetadata?: boolean;
-    onDelete?: () => void;
-    onEdit?: () => void;
-}
-
-interface ArtifactDisplayProps {
-    artifact: Artifact;
-    showMetadata?: boolean;
     onDelete?: (artifact: Artifact) => void;
     onEdit?: (artifact: Artifact) => void;
     isSelected?: boolean;

@@ -47,11 +47,11 @@ export interface ServerMethods {
     closeWindow(): Promise<void>;
     getWindowState(): Promise<'maximized' | 'normal' | 'fullscreen'>;
     toggleFullScreen(): Promise<void>;
-    getMessages(params: { channelId: string; threadId: string | null; limit?: number }): Promise<ClientMessage[]>;
+    getMessages(params: { channelId: UUID; threadId?: UUID; limit?: number }): Promise<ClientMessage[]>;
     getChannels(): Promise<ChannelData[]>;
     getThreads(params: { channelId: string }): Promise<ClientThread[]>;
-    getTasks(params: { channelId: string; threadId: string | null }): Promise<Task[]>;
-    getArtifacts(params: { channelId: string; threadId: string | null }): Promise<any[]>;
+    getTasks(params: { channelId?: UUID; threadId?: UUID }): Promise<Task[]>;
+    getArtifacts(params: { channelId: UUID; threadId?: UUID }): Promise<any[]>;
     getArtifact(id: UUID): Promise<Artifact>;
     listArtifacts(): Promise<ArtifactItem[]>
     deleteArtifact(artifactId: string): Promise<any[]>;

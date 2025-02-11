@@ -74,7 +74,7 @@ export class NextActionExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.NextActionResponse);
 
         const project = this.projects.getProject(params.projectId);
-        const tasks = project ? this.projects.getAllTasks(project.id) : [];
+        const tasks = project ? this.projects.getProjectTasks(project.id) : [];
 
         const formatCompletedTasks = (tasks: Task[]) => {
             return tasks.map(t => {

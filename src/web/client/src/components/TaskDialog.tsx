@@ -54,18 +54,20 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     
     // Filter tasks to only show unique tasks from the current project
     const projectTasks = React.useMemo(() => {
-        const projectId = selectedTask?.projectId;
-        if (!projectId) return tasks;
-        
-        // Create a map to deduplicate tasks by ID
-        const taskMap = new Map();
-        tasks.forEach(t => {
-            if (t.projectId === projectId && !taskMap.has(t.id)) {
-                taskMap.set(t.id, t);
-            }
-        });
-        
-        return Array.from(taskMap.values());
+        if (tasks) {
+            const projectId = selectedTask?.projectId;
+            if (!projectId) return tasks;
+            
+            // Create a map to deduplicate tasks by ID
+            const taskMap = new Map();
+            tasks.forEach(t => {
+                if (t.projectId === projectId && !taskMap.has(t.id)) {
+                    taskMap.set(t.id, t);
+                }
+            });
+            
+            return Array.from(taskMap.values());
+        }
     }, [selectedTask, tasks]);
 
     return (

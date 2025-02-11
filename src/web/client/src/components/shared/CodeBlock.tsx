@@ -138,7 +138,7 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                 ))}
             </Box>
             <Box sx={{
-                ...styles.contentContainerScrolling,
+                ...styles.contentContainerFixed,
                 // Fixed height for Mermaid diagrams to prevent flickering
                 ...(language === 'mermaid' && {
                     height: '400px',

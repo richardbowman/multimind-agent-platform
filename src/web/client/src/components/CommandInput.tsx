@@ -1,15 +1,17 @@
 import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent, useLayoutEffect } from 'react';
 import { useDataContext } from '../contexts/DataContext';
-import { Artifact } from '../../../../tools/artifact';
+import { Artifact, ArtifactItem } from '../../../../tools/artifact';
 import { Settings } from 'electron';
 import { AssetSelectionDialog } from './AssetSelectionDialog';
 import Attachment from '@mui/icons-material/Attachment';
 import { MicrophoneButton } from './MicrophoneButton';
-import { useIPCService } from '../contexts/IPCContext';
 import HomeIcon from '@mui/icons-material/Home';
 import ChatIcon from '@mui/icons-material/Chat';
 import { Box } from '@mui/material';
 import { UUID } from '../../../../types/uuid';
+import { useArtifacts } from '../contexts/ArtifactContext';
+import { useFilteredTasks } from '../contexts/FilteredTaskContext';
+import { useChannels } from '../contexts/ChannelContext';
 
 interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: UUID[]) => void;
@@ -33,37 +35,37 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     showWelcome, 
     onToggleWelcome 
 }) => {
-    const ipcService = useIPCService();
     const [input, setInput] = useState('');
     const [suggestions, setSuggestions] = useState<Array<{ title: string, type: string, id: string }>>([]);
     const [showSuggestions, setShowSuggestions] = useState(false);
     const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
     const [showAssetDialog, setShowAssetDialog] = useState(false);
-    const [pendingArtifacts, setPendingArtifacts] = useState<Artifact[]>([]);
+    const [pendingArtifacts, setPendingArtifacts] = useState<ArtifactItem[]>([]);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    
+    const { channels } = useChannels();    
+    const { filteredTasks: tasks } = useFilteredTasks();    
+    const { artifacts : allArtifacts } = useArtifacts();    
+
     const { 
         settings, 
-        channels, 
         handles, 
         pendingFiles, 
         resetPendingFiles, 
-        allArtifacts, 
-        showFileDialog,
-        currentThreadId,
-        tasks 
+        showFileDialog
     } = useDataContext();
 
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {
         if (!currentChannel) return handles.map(h => h.handle);
 
-        const channel = channels.find(c => c.id === currentChannel);
+        const channel = channels?.find(c => c.id === currentChannel);
         if (!channel || !channel.members) return handles.map(h => h.handle);
 
         // Filter handles to only those in the current channel
         return handles
-            .filter(h => channel.members.includes(h.id))
+            .filter(h => channel!.members!.includes(h.id))
             .map(h => h.handle);
     }, [handles, channels, currentChannel]);
 
@@ -192,7 +194,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             onSendMessage(input.trim(), [
                 ...pendingArtifacts.map(a => a.id),
                 ...pendingFiles.map(a => a.id)
-            ], currentThreadId);
+            ]);
             setPendingArtifacts([]);
             resetPendingFiles();
             setInput('');
@@ -209,9 +211,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             event.preventDefault();
             const suggestion = suggestions[0];
             if (suggestion) {
-                if (suggestion.includes(' - ')) {
+                if (suggestion.title.includes(' - ')) {
                     // Command suggestion
-                    setInput(suggestion.split(' - ')[0] + ' ');
+                    setInput(suggestion.title.split(' - ')[0] + ' ');
                 } else {
                     // Handle suggestion
                     const words = input.split(' ');

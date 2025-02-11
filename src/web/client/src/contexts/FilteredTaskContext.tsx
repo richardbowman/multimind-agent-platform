@@ -41,7 +41,7 @@ export const FilteredTaskProvider = ({
     const loadTask = async () => {
       setIsLoadingTask(true);
       try {
-        const task = await ipcService.getRPC().getTask(taskId);
+        const task = tasks.find(t => t.id === taskId);
         setLoadedTask(task);
       } catch (error) {
         console.error('Failed to load task:', error);
@@ -56,12 +56,12 @@ export const FilteredTaskProvider = ({
   
   // Get task IDs from thread messages
   const threadTaskIds = useMemo(() => {
-    const ids = new Set(
+    const projectIds = new Set(
       threadMessages
-        .flatMap(msg => msg.props?.taskIds || [])
-        .filter(Boolean)
+        .flatMap(msg => msg.props?.['project-ids'] || [])
+        .filter(id => id)
     );
-    return ids;
+    return new Set(tasks.filter(t => projectIds.has(t.projectId)).map(t => t.id));
   }, [threadMessages]);
 
   const filteredTasks = useMemo(() => {

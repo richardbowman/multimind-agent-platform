@@ -20,9 +20,12 @@ import {
     Chip
 } from '@mui/material';
 import { GoalTemplate } from '../../../../schemas/goalTemplateSchema';
-import { useDataContext } from '../contexts/DataContext';
+import { useChannels } from '../contexts/ChannelContext';
 import { ChannelHandle, createChannelHandle } from '../../../../shared/channelTypes';
 import { useIPCService } from '../contexts/IPCContext';
+import { useDataContext } from '../contexts/DataContext';
+import { UUID } from '../../../../types/uuid';
+import { ChatHandle } from '../../../../types/chatHandle';
 
 interface AddChannelDialogProps {
     open: boolean;
@@ -31,9 +34,9 @@ interface AddChannelDialogProps {
     initialData?: {
         name: ChannelHandle | null;
         description: string;
-        members: string[];
+        members: ChatHandle[];
         goalTemplate: ChannelHandle | null;
-        defaultResponderId: string | null;
+        defaultResponderId: ChatHandle | null;
     };
 }
 
@@ -44,13 +47,14 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     initialData
 }) => {
     const ipcService = useIPCService();
-    const {handles, deleteChannel, createChannel, fetchChannels} = useDataContext();
+    const {handles} = useDataContext();
+    const {deleteChannel, createChannel, fetchChannels} = useChannels();
     const [channelName, setChannelName] = useState<ChannelHandle|null>(null);
     const [channelNameError, setChannelNameError] = useState(false);
     const [description, setDescription] = useState('');
-    const [selectedAgents, setSelectedAgents] = useState<string[]>([]);
-    const [selectedTemplate, setSelectedTemplate] = useState<string | null>(null);
-    const [defaultResponderId, setDefaultResponderId] = useState<string | null>(null);
+    const [selectedAgents, setSelectedAgents] = useState<UUID[]>([]);
+    const [selectedTemplate, setSelectedTemplate] = useState<ChannelHandle | null>(null);
+    const [defaultResponderId, setDefaultResponderId] = useState<UUID | null>(null);
     const [templates, setTemplates] = useState<GoalTemplate[]>([]);
 
     useEffect(() => {

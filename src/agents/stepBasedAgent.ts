@@ -507,7 +507,7 @@ export abstract class StepBasedAgent extends Agent {
             }
 
             // Get all prior completed tasks' results
-            const tasks = this.projects.getAllTasks(projectId);
+            const tasks = this.projects.getProjectTasks(projectId);
             const priorSteps = tasks
                 .filter(t => t.type === "step")
                 .map(t => t as StepTask<StepResponse>)
@@ -648,7 +648,7 @@ export abstract class StepBasedAgent extends Agent {
                 Logger.info(`Completed step "${task.props.stepType}" for project "${projectId}"`);
 
                 // If this was the last planned task, add a validation step
-                const remainingTasks = this.projects.getAllTasks(projectId).filter(t => !t.complete && t.type === "step");
+                const remainingTasks = this.projects.getProjectTasks(projectId).filter(t => !t.complete && t.type === "step");
                 if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
                     //TODO: hacky, we don't really post this message
                     if (!this.planner || this.planner.allowReplan) {

@@ -226,51 +226,50 @@ const AppContent: React.FC = () => {
 
 
                         <ThreadMessageProvider threadId={currentThreadId}>
-                            <Main leftOpen={leftDrawerOpen} rightOpen={rightDrawerOpen}>
-                                <ChatPanel
-                                    leftDrawerOpen={leftDrawerOpen}
-                                    rightDrawerOpen={rightDrawerOpen}
-                                    showWelcome={showWelcome}
-                                    onSwitchToWelcome={setShowWelcome}
-                                />
-                            </Main>
+                            <FilteredTaskProvider channelId={currentChannelId} threadId={currentThreadId}>
+                                <Main leftOpen={leftDrawerOpen} rightOpen={rightDrawerOpen}>
+                                    <ChatPanel
+                                        leftDrawerOpen={leftDrawerOpen}
+                                        rightDrawerOpen={rightDrawerOpen}
+                                        showWelcome={showWelcome}
+                                        onSwitchToWelcome={setShowWelcome}
+                                    />
+                                </Main>
 
-                            <Drawer
-                                variant="persistent"
-                                anchor="right"
-                                open={rightDrawerOpen}
-                                sx={{
-                                    width: rightDrawerWidth,
-                                    flexShrink: 0,
-                                    '& .MuiDrawer-paper': {
-                                        width: 300,
-                                        boxSizing: 'border-box',
-                                        backgroundColor: '#2a2a2a',
-                                        borderLeft: '1px solid #444'
-                                    },
-                                }}
-                            >
-                                <Toolbar /> {/* For spacing under app bar */}
-                                <FilteredTaskProvider
-                                    channelId={currentChannelId}
-                                    threadId={currentThreadId}
+                                <Drawer
+                                    variant="persistent"
+                                    anchor="right"
+                                    open={rightDrawerOpen}
+                                    sx={{
+                                        width: rightDrawerWidth,
+                                        flexShrink: 0,
+                                        '& .MuiDrawer-paper': {
+                                            width: 300,
+                                            boxSizing: 'border-box',
+                                            backgroundColor: '#2a2a2a',
+                                            borderLeft: '1px solid #444'
+                                        },
+                                    }}
                                 >
-                                    <TaskPanel
+                                    <Toolbar /> {/* For spacing under app bar */}
+                                    <FilteredTaskProvider
                                         channelId={currentChannelId}
                                         threadId={currentThreadId}
-                                    />
-                                </FilteredTaskProvider>
-                                <FilteredArtifactProvider
-                                    channelId={currentChannelId}
-                                    threadId={currentThreadId}
-                                    artifactId={null}
-                                >
-                                    <ArtifactPanel
+                                    >
+                                        <TaskPanel/>
+                                    </FilteredTaskProvider>
+                                    <FilteredArtifactProvider
                                         channelId={currentChannelId}
                                         threadId={currentThreadId}
-                                    />
-                                </FilteredArtifactProvider>
-                            </Drawer>
+                                        artifactId={null}
+                                    >
+                                        <ArtifactPanel
+                                            channelId={currentChannelId}
+                                            threadId={currentThreadId}
+                                        />
+                                    </FilteredArtifactProvider>
+                                </Drawer>
+                            </FilteredTaskProvider>
                         </ThreadMessageProvider>
                     </>
                 ) : currentTab === 'artifacts' ? (

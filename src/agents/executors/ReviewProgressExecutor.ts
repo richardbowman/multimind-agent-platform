@@ -28,7 +28,7 @@ export class ReviewProgressExecutor implements StepExecutor {
 
     async executeOld(goal: string, step: string, projectId: string): Promise<StepResult<StepResponse>> {
         const project = await this.getProjectWithPlan(projectId);
-        const tasks = this.taskManager.getAllTasks(projectId);
+        const tasks = this.taskManager.getProjectTasks(projectId);
 
         const schema = await getGeneratedSchema(SchemaType.ReviewProgressResponse);
 

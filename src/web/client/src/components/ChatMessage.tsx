@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     Box,
     Typography,
@@ -7,8 +7,9 @@ import {
     Collapse,
     IconButton
 } from '@mui/material';
-import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import ExpandLessIcon from '@mui/icons-material/ExpandLess';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import ReplyIcon from '@mui/icons-material/Reply';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import { CodeBlock } from './shared/CodeBlock';
 import ReactMarkdown from 'react-markdown';
@@ -105,9 +106,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     onViewMetadata
 }) => {
     const isExpanded = expandedMessages.has(message.id);
-    const hasThread = !currentThreadId && message.replyCount > 0;
+    const hasThread = !currentThreadId && message.replyCount||0 > 0;
     const [showAttachments, setShowAttachments] = useState(false);
-    const hasAttachments = message.props?.artifactIds?.filter(Boolean).length > 0;
+    const uniqueArtifacts = [...new Set((message.props?.artifactIds||[]).filter(a => a))];
+    const hasAttachments = uniqueArtifacts.length||0 > 0;
 
     return (
         <Paper key={`${message.id}-${messageVersions[message.id] || 0}`} sx={{
@@ -150,7 +152,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                     }
                                 }}
                             >
-                                {isExpanded ? <ExpandLessIcon /> : <ExpandMoreIcon />}
+                                {isExpanded ? <UnfoldLessIcon /> : <UnfoldMoreIcon />}
                             </IconButton>
                         )}
                         {hasThread && (
@@ -171,7 +173,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 alignItems: 'center',
                                 justifyContent: 'center'
                             }}>
-                                <ExpandMoreIcon sx={{ transform: 'rotate(-90deg)' }} />
+                                <ReplyIcon sx={{ transform: 'rotate(-90deg)' }} />
                                 {message.replyCount > 0 && (
                                     <Box sx={{
                                         position: 'absolute',
@@ -214,7 +216,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                     justifyContent: 'center'
                                 }}>
                                     <AttachFileIcon fontSize="small" />
-                                    {message.props.artifactIds.length > 0 && (
+                                    {uniqueArtifacts.length > 0 && (
                                         <Box sx={{
                                             position: 'absolute',
                                             top: -6,
@@ -231,7 +233,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                             border: '1px solid',
                                             borderColor: 'background.paper'
                                         }}>
-                                            {message.props.artifactIds.length}
+                                            {uniqueArtifacts.length}
                                         </Box>
                                     )}
                                 </Box>
@@ -335,7 +337,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 <Box sx={{ mt: 2 }}>
                     <Collapse in={showAttachments}>
                         <Box sx={{ mt: 1 }}>
-                            {message.props.artifactIds.map((artifactId: string) => (
+                            {uniqueArtifacts.filter(a => a).map((artifactId: string) => (
                                 <ArtifactLoader 
                                     key={artifactId}
                                     artifactId={artifactId}

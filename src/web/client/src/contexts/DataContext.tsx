@@ -108,26 +108,6 @@ export const DataProvider: React.FC<{
   const [isLoading, setIsLoading] = useState(true);
   const [needsConfig, setNeedsConfig] = useState(null);
 
-  // Fetch messages whenever channel or thread changes
-  useEffect(() => {
-    const loadChannelData = async () => {
-      if (currentChannelId && isLoading === false) {
-        setIsLoading(true);
-        setMessages([]); // Clear messages before loading new ones
-
-        const [newMessages] = await Promise.all([
-          ipcService.getRPC().getMessages({ channelId: currentChannelId, threadId: currentThreadId }),
-          fetchTasks(currentChannelId, currentThreadId),
-        ]);
-
-        setMessages(newMessages);
-        setIsLoading(false);
-      }
-    };
-
-    loadChannelData();
-  }, [currentChannelId, currentThreadId]);
-
   const getSettings = () => ipcService.getRPC().getSettings();
 
   const fetchSettings = async () => {
@@ -270,13 +250,11 @@ export const DataProvider: React.FC<{
     needsConfig,
     pendingFiles,
     sendMessage,
-    fetchTasks,
     fetchLogs,
     fetchHandles,
     setCurrentChannelId,
     setCurrentThreadId,
     setSettings,
-    setTasks
   ]);
 
   return (
