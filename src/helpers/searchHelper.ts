@@ -116,7 +116,10 @@ export class DuckDuckGoProvider implements ISearchProvider {
 
             const page = await context.newPage();
             const encodedQuery = encodeURIComponent(query);
-            await page.goto(`https://duckduckgo.com/?q=${encodedQuery}`);
+            const searchUrl = category === 'news' 
+                ? `https://duckduckgo.com/?t=h_&q=${encodedQuery}&iar=news&ia=news`
+                : `https://duckduckgo.com/?q=${encodedQuery}`;
+            await page.goto(searchUrl);
 
             await page.waitForLoadState('networkidle');
 
