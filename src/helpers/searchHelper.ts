@@ -150,19 +150,19 @@ export class DuckDuckGoProvider implements ISearchProvider {
             Logger.info(`Saved DuckDuckGo search page as artifact: ${artifactId}`);
 
             // Find the main results container and extract results
-            const mainResults = await page.$('.react-results--main');
+            const mainResults = await page.$('.react-results--main') || await page.$('.results--main');
             if (!mainResults) {
                 Logger.warn('Could not find main results container');
                 return results;
             }
-            const searchResults = await mainResults.$$('[data-testid="result"]');
+            const searchResults = await mainResults.$$('[data-testid="result"]') || await mainResults.$$('.result');
             Logger.info(`Found ${searchResults.length} results on page`);
 
             for (const result of searchResults) {
                 try {
-                    const titleElement = await result.$('[data-testid="result-title-a"]');
-                    const linkElement = await result.$('[data-testid="result-extras-url-link"]');
-                    const snippetElement = await result.$('[data-result="snippet"]');
+                    const titleElement = await result.$('[data-testid="result-title-a"]') || await result.$('.result__title');
+                    const linkElement = await result.$('[data-testid="result-extras-url-link"]')  || await result.$('.result__a');
+                    const snippetElement = await result.$('[data-result="snippet"]')  || await result.$('.result__snippet');
 
                     if (titleElement && linkElement) {
                         const title = await titleElement.innerText();
