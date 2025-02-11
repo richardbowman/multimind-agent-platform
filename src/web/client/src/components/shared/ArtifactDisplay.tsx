@@ -132,12 +132,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                 position: 'relative',
                 overflow: 'hidden',
                 cursor: 'pointer',
-                border: isSelected ? '2px solid #1976d2' : '1px solid #444',
-                borderRadius: '4px',
-                padding: '8px',
-                '&:hover': {
-                    backgroundColor: '#1e1e1e'
-                }
+                padding: '8px'
             }}
             onClick={() => onSelect && onSelect(artifact, !isSelected)}
         >

@@ -1016,29 +1016,24 @@
     },
     "ImplementationStep": {
       "additionalProperties": false,
-      "description": "Represents an implementation step",
       "properties": {
+        "considerations": {
+          "type": "string"
+        },
         "description": {
-          "description": "Detailed description",
           "type": "string"
         },
-        "outcome": {
-          "description": "Expected outcome",
+        "expectedOutcome": {
           "type": "string"
         },
-        "timeline": {
-          "description": "Timeline estimate",
-          "type": "string"
-        },
-        "title": {
-          "description": "Step title/name",
+        "phase": {
           "type": "string"
         }
       },
       "required": [
-        "title",
+        "phase",
         "description",
-        "outcome"
+        "expectedOutcome"
       ],
       "type": "object"
     },
@@ -1262,39 +1257,32 @@
     },
     "OperationalGuide": {
       "additionalProperties": false,
-      "description": "Represents an operational guide item",
       "properties": {
         "businessContext": {
-          "description": "Business context description",
           "type": "string"
         },
         "implementationApproach": {
-          "description": "Implementation approach details",
           "type": "string"
         },
-        "implementationSteps": {
-          "description": "Recommended implementation steps",
-          "items": {
-            "$ref": "#/definitions/ImplementationStep"
-          },
-          "type": "array"
-        },
         "keyConsiderations": {
-          "description": "Key considerations and notes",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "questionsAndAnswers": {
-          "description": "Questions and answers from analysis",
           "items": {
             "$ref": "#/definitions/QAItem"
           },
           "type": "array"
         },
+        "recommendedSteps": {
+          "items": {
+            "$ref": "#/definitions/ImplementationStep"
+          },
+          "type": "array"
+        },
         "serviceStrategy": {
-          "description": "Service strategy outline",
           "type": "string"
         }
       },
@@ -1302,21 +1290,18 @@
         "businessContext",
         "serviceStrategy",
         "implementationApproach",
-        "implementationSteps",
+        "recommendedSteps",
         "questionsAndAnswers"
       ],
       "type": "object"
     },
     "OperationalGuideResponse": {
       "additionalProperties": false,
-      "description": "Response wrapper for operational guide",
       "properties": {
         "operationalGuide": {
-          "$ref": "#/definitions/OperationalGuide",
-          "description": "The generated operational guide"
+          "$ref": "#/definitions/OperationalGuide"
         },
         "summary": {
-          "description": "Summary of the guide",
           "type": "string"
         }
       },
@@ -1450,18 +1435,14 @@
     },
     "QAItem": {
       "additionalProperties": false,
-      "description": "Represents a Q&A item",
       "properties": {
         "answer": {
-          "description": "The provided answer",
           "type": "string"
         },
         "category": {
-          "description": "Optional category/type",
           "type": "string"
         },
         "question": {
-          "description": "The question asked",
           "type": "string"
         }
       },
@@ -1721,17 +1702,14 @@
     },
     "ReviewProgressResponse": {
       "additionalProperties": false,
-      "description": "Interface for the complete review progress response",
       "properties": {
         "progress": {
-          "description": "List of progress details for each task",
           "items": {
             "$ref": "#/definitions/TaskProgress"
           },
           "type": "array"
         },
         "summary": {
-          "description": "Overall summary of the project's progress",
           "type": "string"
         }
       },
@@ -1854,6 +1832,13 @@
       ],
       "type": "string"
     },
+    "SearchCategory": {
+      "enum": [
+        "general",
+        "news"
+      ],
+      "type": "string"
+    },
     "SearchQuery": {
       "additionalProperties": false,
       "description": "Interface for search query",
@@ -1876,15 +1861,11 @@
     "SearchQueryResponse": {
       "properties": {
         "category": {
-          "description": "The search category - use 'news' for current events, otherwise 'general'",
-          "enum": [
-            "general",
-            "news"
-          ],
-          "type": "string"
+          "$ref": "#/definitions/SearchCategory",
+          "description": "The search category - use 'news' for current events, otherwise 'general'"
         },
         "searchQuery": {
-          "description": "A broad web search query without special keywords or operators",
+          "description": "A web search query. For news searches, include relevant keywords",
           "type": "string"
         }
       },
@@ -1961,32 +1942,32 @@
     },
     "TaskProgress": {
       "additionalProperties": false,
-      "description": "Interface for individual task progress details",
       "properties": {
         "analysis": {
-          "description": "Detailed analysis of the task's current state",
           "type": "string"
         },
         "blockers": {
-          "description": "List of current blockers preventing progress",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "nextSteps": {
-          "description": "List of recommended next steps",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "status": {
-          "$ref": "#/definitions/TaskReviewStatus",
-          "description": "Current status of the task"
+          "enum": [
+            "Not Started",
+            "In Progress",
+            "Blocked",
+            "Complete"
+          ],
+          "type": "string"
         },
         "taskId": {
-          "description": "Unique identifier of the task",
           "type": "string"
         }
       },
