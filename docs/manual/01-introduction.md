@@ -28,7 +28,9 @@ For best results, we recommend using one of these high-quality language models:
 - Supported LLM provider (LM Studio, OpenAI, Bedrock, etc.)
 
 ## Getting Help
-For support, you can open issues on the [GitHub public issues tracker](https://github.com/richardbowman/multimind-agent-platform/issues).
+For support, you can:
+- Open issues on the [GitHub public issues tracker](https://github.com/richardbowman/multimind-agent-platform/issues)
+- Join our [Discord community](https://discord.gg/QssYuAkfkB) for real-time help and discussions
 
 ## Screenshot
 Here is a screenshot of the welcome screen:
