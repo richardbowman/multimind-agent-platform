@@ -31,7 +31,11 @@ export class BraveSearchProvider implements ISearchProvider {
 
     async search(query: string, category: string): Promise<SearchResult[]> {
         try {
-            const response = await axios.get(this.settings.brave.endpoint, {
+            const endpoint = category === 'news' 
+                ? 'https://api.search.brave.com/res/v1/news/search'
+                : this.settings.brave.endpoint;
+
+            const response = await axios.get(endpoint, {
                 params: {
                     q: query,
                     count: 10
@@ -42,11 +46,14 @@ export class BraveSearchProvider implements ISearchProvider {
                 }
             });
 
-            const results = response.data.web?.results || [];
+            const results = category === 'news' 
+                ? response.data.news?.results || []
+                : response.data.web?.results || [];
+
             return results.map((result: any) => ({
                 title: result.title,
-                url: result.url,
-                description: result.description
+                url: result.url || result.news_url,
+                description: result.description || result.snippet
             }));
         } catch (error) {
             Logger.error(`Error searching Brave for "${query}":`, error);
