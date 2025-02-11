@@ -97,10 +97,26 @@ const AppContent: React.FC = () => {
         }}>
             <AppBar
                 position="fixed"
+                className="app-header"
                 sx={{
                     zIndex: (theme) => theme.zIndex.drawer + 1,
                     WebkitAppRegion: 'drag',
-                    cursor: 'move'
+                    cursor: 'move',
+                    '&::after': {
+                        content: '""',
+                        position: 'absolute',
+                        top: '-50%',
+                        left: '-50%',
+                        width: '200%',
+                        height: '200%',
+                        background: `linear-gradient(45deg, transparent 49%, rgba(74, 158, 255, 0.1) 50%, transparent 51%),
+                                   linear-gradient(-45deg, transparent 49%, rgba(74, 158, 255, 0.1) 50%, transparent 51%)`,
+                        backgroundSize: '20px 20px',
+                        animation: 'gridMove 5s linear infinite',
+                        opacity: 0.3,
+                        pointerEvents: 'none',
+                        zIndex: 0
+                    }
                 }}
             >
                 <Toolbar>
