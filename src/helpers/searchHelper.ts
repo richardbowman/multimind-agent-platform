@@ -46,14 +46,49 @@ export class BraveSearchProvider implements ISearchProvider {
                 }
             });
 
-            const results = category === 'news' 
-                ? response.data.news?.results || []
-                : response.data.web?.results || [];
+            let results: any[] = [];
+            if (category === 'news') {
+                const newsResponse = response.data as {
+                    type: string;
+                    query: any;
+                    results: {
+                        type: string;
+                        url: string;
+                        title: string;
+                        description: string;
+                        age: string;
+                        page_age: string;
+                        page_fetched: string;
+                        breaking: boolean;
+                        thumbnail: {
+                            src: string;
+                            original: string;
+                        };
+                        meta_url: {
+                            scheme: string;
+                            netloc: string;
+                            hostname: string;
+                            favicon: string;
+                            path: string;
+                        };
+                        extra_snippets: string[];
+                    }[];
+                };
+                results = newsResponse.results || [];
+            } else {
+                results = response.data.web?.results || [];
+            }
 
             return results.map((result: any) => ({
                 title: result.title,
-                url: result.url || result.news_url,
-                description: result.description || result.snippet
+                url: result.url,
+                description: result.description,
+                ...(category === 'news' && {
+                    age: result.age,
+                    isBreaking: result.breaking,
+                    thumbnail: result.thumbnail?.src,
+                    source: result.meta_url?.hostname
+                })
             }));
         } catch (error) {
             Logger.error(`Error searching Brave for "${query}":`, error);
