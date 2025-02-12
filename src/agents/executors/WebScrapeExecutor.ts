@@ -175,6 +175,15 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
             }
         }
 
+        // Create status messages for all URLs
+        const statusMessages = selectedUrls.map(url => {
+            const artifact = result.artifacts.find(a => a.metadata?.url === url);
+            if (artifact) {
+                return `✅ Successfully scraped: ${url}`;
+            }
+            return `❌ Failed to scrape: ${url}`;
+        });
+
         return {
             finished: true,
             replan: ReplanType.Allow,
@@ -182,11 +191,14 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
             artifactIds: result.artifacts.map(a => a.id),
             response: {
                 type: StepResponseType.WebPage,
-                message: `Scraped ${result.artifacts.length} pages:\n\n${result.summaries.map(s => s.summary).join('\n\n---\n\n')}`,
+                status: statusMessages.join('\n'),
                 data: {
                     artifacts: result.artifacts,
                     summaries: result.summaries,
-                    extractedLinks: [...new Set(result.extractedLinks)] // Deduplicate links
+                    extractedLinks: [...new Set(result.extractedLinks)], // Deduplicate links
+                    processedUrls: selectedUrls,
+                    successCount: result.artifacts.length,
+                    failureCount: selectedUrls.length - result.artifacts.length
                 }
             }
         };
