@@ -294,7 +294,8 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
 
         const response = await this.modelHelpers.generate({
             instructions: prompt.build(),
-            message: content
+            message: content,
+            model: ModelType.DOCUMENT
         });
         const publishedDate = StringUtils.extractCaptionedText(response.message, "Published Date");
 
