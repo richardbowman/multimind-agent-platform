@@ -45,17 +45,37 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   (window as any).electron.status((log) => {
     // Update progress bar based on message
     if (log.details.percentComplete > 0) {
-      setOptions({
-        percentComplete: log.details.percentComplete,
-        persist: log.details.percentComplete < 1,
-        message: log.message,
-        severity: 'progress',
+      setOptions(prev => {
+        const existingMeters = prev.progressMeters || [];
+        const meterIndex = existingMeters.findIndex(m => m.id === log.details.id);
+        
+        const newMeter = {
+          id: log.details.id,
+          message: log.message,
+          percentComplete: log.details.percentComplete
+        };
+
+        const updatedMeters = meterIndex >= 0 
+          ? [
+              ...existingMeters.slice(0, meterIndex),
+              newMeter,
+              ...existingMeters.slice(meterIndex + 1)
+            ]
+          : [...existingMeters, newMeter];
+
+        return {
+          ...prev,
+          progressMeters: updatedMeters,
+          persist: log.details.percentComplete < 1,
+          severity: 'progress'
+        };
       });
     } else {
-      setOptions({
+      setOptions(prev => ({
+        ...prev,
         message: log.message,
         severity: 'info'
-      });
+      }));
     }
     setOpen(true);
   });
