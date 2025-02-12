@@ -228,8 +228,15 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 }}
             >
                 <Toolbar /> {/* For spacing under app bar */}
-                <Box sx={{ p: 1 }}>
-                    <Box sx={{ display: 'flex', gap: 1, mb: 1 }}>
+                <Box sx={{ 
+                    p: 1,
+                    position: 'sticky',
+                    top: 0,
+                    backgroundColor: '#2a2a2a',
+                    zIndex: 1,
+                    borderBottom: '1px solid #444'
+                }}>
+                    <Box sx={{ display: 'flex', gap: 1 }}>
                         <FormControl fullWidth size="small">
                             <InputLabel>Project</InputLabel>
                             <Select
@@ -257,7 +264,24 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                         />
                     </Box>
                 </Box>
-                {Object.entries(artifactFolders).map(([type, artifacts]) => (
+                <Box sx={{ 
+                    overflowY: 'auto',
+                    height: 'calc(100vh - 120px)', // Adjust based on your header height
+                    '&::-webkit-scrollbar': {
+                        width: '6px',
+                    },
+                    '&::-webkit-scrollbar-track': {
+                        background: '#2a2a2a',
+                    },
+                    '&::-webkit-scrollbar-thumb': {
+                        background: '#666',
+                        borderRadius: '3px',
+                    },
+                    '&::-webkit-scrollbar-thumb:hover': {
+                        background: '#888',
+                    }
+                }}>
+                    {Object.entries(artifactFolders).map(([type, artifacts]) => (
                     <Accordion key={type}>
                         <AccordionSummary>
                             <FolderIcon sx={{ mr: 1 }} />
@@ -327,7 +351,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                             </List>
                         </AccordionDetails>
                     </Accordion>
-                ))}
+                    ))}
+                </Box>
             </Drawer>
             <Box component="main" sx={{ 
                 flexGrow: 1,
