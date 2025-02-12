@@ -269,7 +269,20 @@ ${this.modelHelpers.getFinalInstructions()}
                 ? artifact.content
                 : `[Binary data - ${artifact.content.length} bytes]`;
 
-            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
+            let metadataInfo = '';
+            if (artifact.metadata) {
+                if (artifact.metadata.url) {
+                    metadataInfo += `\n- URL: ${artifact.metadata.url}`;
+                }
+                if (artifact.metadata.publishedDate) {
+                    metadataInfo += `\n- Published: ${new Date(artifact.metadata.publishedDate).toLocaleDateString()}`;
+                }
+                if (artifact.metadata.contentDate) {
+                    metadataInfo += `\n- Content Date: ${new Date(artifact.metadata.contentDate).toLocaleDateString()}`;
+                }
+            }
+
+            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}${metadataInfo}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
         }).join('\n\n');
     }
 
@@ -286,14 +299,39 @@ ${this.modelHelpers.getFinalInstructions()}
 
             content = StringUtils.truncateWithEllipsis(content, 1000, `[truncated to 1000 characters out of total size: ${size}]`);
 
-            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'} [Size: ${size}]\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
+            let metadataInfo = '';
+            if (artifact.metadata) {
+                if (artifact.metadata.url) {
+                    metadataInfo += `\n- URL: ${artifact.metadata.url}`;
+                }
+                if (artifact.metadata.publishedDate) {
+                    metadataInfo += `\n- Published: ${new Date(artifact.metadata.publishedDate).toLocaleDateString()}`;
+                }
+                if (artifact.metadata.contentDate) {
+                    metadataInfo += `\n- Content Date: ${new Date(artifact.metadata.contentDate).toLocaleDateString()}`;
+                }
+            }
+
+            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'} [Size: ${size}]${metadataInfo}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
         }).join('\n\n');
     }
 
     private renderArtifactTitles({artifacts}: ArtifactsTitlesContent, offset: number = 0): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
-            return `Artifact Index:${index + offset} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}`;
+            let metadataInfo = '';
+            if (artifact.metadata) {
+                if (artifact.metadata.url) {
+                    metadataInfo += `\n- URL: ${artifact.metadata.url}`;
+                }
+                if (artifact.metadata.publishedDate) {
+                    metadataInfo += `\n- Published: ${new Date(artifact.metadata.publishedDate).toLocaleDateString()}`;
+                }
+                if (artifact.metadata.contentDate) {
+                    metadataInfo += `\n- Content Date: ${new Date(artifact.metadata.contentDate).toLocaleDateString()}`;
+                }
+            }
+            return `Artifact Index:${index + offset} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}${metadataInfo}`;
         }).join('\n\n');
     }
 
