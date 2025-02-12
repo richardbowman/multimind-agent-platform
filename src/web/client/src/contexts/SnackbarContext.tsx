@@ -6,6 +6,12 @@ import { SnackbarCloseReason } from '@mui/material/Snackbar';
 import { UpdateStatus } from '../../../../shared/UpdateStatus';
 import { useIPCService } from '../contexts/IPCContext';
 
+export interface ProgressMeter {
+  id: string;
+  message: string;
+  percentComplete: number;
+}
+
 export interface SnackbarOptions {
   message: string;
   severity?: 'info' | 'success' | 'warning' | 'error' | 'progress';
@@ -13,6 +19,7 @@ export interface SnackbarOptions {
   percentComplete?: number;
   onClick?: () => void;
   updateStatus?: UpdateStatus;
+  progressMeters?: ProgressMeter[];
 }
 
 export interface SnackbarContextType {
@@ -29,7 +36,8 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
   const [open, setOpen] = useState(false);
   const [options, setOptions] = useState<SnackbarOptions>({
     message: '',
-    severity: 'info'
+    severity: 'info',
+    progressMeters: []
   });
 
   const ipcContext = useIPCService();
@@ -110,17 +118,34 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         message={
           <Box sx={{ width: '100%' }}>
             <Box>{options.message}</Box>
-            {(options.severity === 'progress' || options.updateStatus) && (
-              <LinearProgress
-                variant={options.updateStatus === UpdateStatus.Downloaded ? 'indeterminate' : 'determinate'}
-                value={(options.percentComplete || 0) * 100}
-                sx={{
-                  mt: 1,
-                  width: '100%',
-                  minWidth: 300,
-                  maxWidth: 500
-                }}
-              />
+            {(options.severity === 'progress' || options.updateStatus || options.progressMeters?.length) && (
+              <Box sx={{ width: '100%', mt: 1 }}>
+                {options.progressMeters?.map((meter) => (
+                  <Box key={meter.id} sx={{ mb: 1 }}>
+                    <Box sx={{ fontSize: '0.8rem', mb: 0.5 }}>{meter.message}</Box>
+                    <LinearProgress
+                      variant="determinate"
+                      value={meter.percentComplete * 100}
+                      sx={{
+                        width: '100%',
+                        minWidth: 300,
+                        maxWidth: 500
+                      }}
+                    />
+                  </Box>
+                ))}
+                {options.updateStatus && (
+                  <LinearProgress
+                    variant={options.updateStatus === UpdateStatus.Downloaded ? 'indeterminate' : 'determinate'}
+                    value={(options.percentComplete || 0) * 100}
+                    sx={{
+                      width: '100%',
+                      minWidth: 300,
+                      maxWidth: 500
+                    }}
+                  />
+                )}
+              </Box>
             )}
             {options.updateStatus === UpdateStatus.Downloaded && (
               <Button
