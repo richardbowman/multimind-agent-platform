@@ -194,7 +194,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
 
     private async saveArtifactForNews(content: string, metadata: any): Promise<Artifact> {                                                          
         // For news, we'll save a summary but not the full content                                                                                  
-        const summary = await this.generateNewsSummary(content);                                                                                    
+        const {summary, publishedDate} = await this.generateNewsSummary(content);                                                                                    
                                                                                                                                                     
         return this.artifactManager.saveArtifact({                                                                                                  
             id: createUUID(),                                                                                                                       
@@ -203,7 +203,8 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
             metadata: {                                                                                                                             
                 ...metadata,                                                                                                                        
                 isTimeSensitive: true,                                                                                                              
-                contentDate: new Date(),                                                                                                            
+                contentDate: publishedDate || new Date(),                                                                                                            
+                publishedDate: publishedDate,
                 expirationDate: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours                                                              
             }                                                                                                                                       
         });                                                                                                                                         
@@ -269,18 +270,41 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         };
     }
 
-    private async generateNewsSummary(content: string): Promise<string> {
+    private async generateNewsSummary(content: string): Promise<{summary: string, publishedDate?: Date}> {
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(`You are a news summarizer. Create a concise summary of the key points from this news article.                        
-            Focus on the who, what, when, where, and why. Keep it under 200 words.`);
+            Focus on the who, what, when, where, and why. Keep it under 200 words.
+            Also extract the published date if available in the content. Return the date in ISO format if found.`);
+
+        const schema = {
+            type: "object",
+            properties: {
+                summary: {
+                    type: "string",
+                    description: "Concise summary of the news article"
+                },
+                publishedDate: {
+                    type: "string",
+                    description: "Published date in ISO format if available",
+                    format: "date-time",
+                    nullable: true
+                }
+            },
+            required: ["summary"]
+        };
 
         const response = await this.modelHelpers.generate({
             instructions: prompt.build(),
             message: content,
-            model: ModelType.DOCUMENT
+            model: ModelType.DOCUMENT,
+            parseJSON: true
         });
 
-        return response.message;
+        const result = JSON.parse(response.message);
+        return {
+            summary: result.summary,
+            publishedDate: result.publishedDate ? new Date(result.publishedDate) : undefined
+        };
     }
 
     private async cleanupExpiredNews() {
