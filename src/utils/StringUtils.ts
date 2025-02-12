@@ -30,15 +30,20 @@ export namespace StringUtils {
     }
 
     export function extractCodeBlocks(text: string, type?: string): CodeBlock[] {
-        const codeBlockRegex = /```([a-zA-Z]+)(?:\[([^\]]+)\])?\n([\s\S]*?)```/g;
+        const codeBlockRegex = /```([a-zA-Z]+)(?:\[([^\]]+)\])?\n([\s\S]*?)(```|$)/g;
         const matches: CodeBlock[] = [];
         let match: RegExpExecArray | null;
    
         while ((match = codeBlockRegex.exec(text)) !== null) {
+            // If the match ends with the closing ```, use the full match
+            // If it ends with $ (end of string), it's an incomplete block
+            const isComplete = match[4] === '```';
+            const code = isComplete ? match[3].trim() : match[3].trim() + '\n```';
+            
             matches.push({
                 type: match[1],
                 attribute: match[2],
-                code: match[3].trim()
+                code: code
             });
         }
    
