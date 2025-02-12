@@ -203,4 +203,33 @@ export namespace StringUtils {
 
         return links;
     }
+
+    /**
+     * Checks if a string is a valid date
+     * @param dateString The string to validate as a date
+     * @returns true if the string can be parsed as a valid date, false otherwise
+     */
+    export function isValidDate(dateString: string): boolean {
+        // Try parsing as ISO date first
+        const isoDate = Date.parse(dateString);
+        if (!isNaN(isoDate)) return true;
+
+        // Try parsing as other common formats
+        const formats = [
+            'MM/dd/yyyy', 
+            'dd/MM/yyyy',
+            'yyyy-MM-dd',
+            'MMMM d, yyyy',
+            'MMM d, yyyy'
+        ];
+
+        for (const format of formats) {
+            const parsedDate = new Date(dateString);
+            if (!isNaN(parsedDate.getTime())) {
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
