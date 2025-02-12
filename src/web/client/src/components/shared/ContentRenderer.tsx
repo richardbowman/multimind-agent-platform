@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
+import { MarkdownRenderer } from './MarkdownRenderer';
 import { CSVRenderer } from './CSVRenderer';
 import { Mermaid } from './Mermaid';
 import { ChartRenderer } from './ChartRenderer';
@@ -481,7 +482,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     }
 
     if (content.length < 1024 * 10 && (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown')) {
-        return <Box sx={{overflow: "auto", p: 2}}><ReactMarkdown remarkPlugins={[remarkGfm]}>{content}</ReactMarkdown></Box>;
+        return <MarkdownRenderer content={content} />;
     } else {
         return <Box sx={{overflow: "auto", p: 2}}><pre>{content}</pre></Box>;
     }
