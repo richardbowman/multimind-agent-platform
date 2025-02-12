@@ -10,7 +10,12 @@ interface MarkdownRendererProps {
 export const MarkdownRenderer: React.FC<MarkdownRendererProps> = ({ content }) => {
     return (
         <Box sx={{ overflow: "auto", p: 2 }}>
-            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+            <ReactMarkdown 
+                remarkPlugins={[remarkGfm]}
+                components={{
+                    a: ({node, ...props}) => <a target="_blank" rel="noopener noreferrer" {...props} />
+                }}
+            >
                 {content}
             </ReactMarkdown>
         </Box>
