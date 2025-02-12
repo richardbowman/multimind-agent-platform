@@ -24,6 +24,12 @@ on:
       - 'mkdocs.yml'
       - 'requirements-docs.txt'
   workflow_dispatch:
+    inputs:
+      build_linux:
+        description: 'Build Linux version'
+        required: false
+        type: boolean
+        default: false
 
 jobs:
   version-bump:
@@ -59,7 +65,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
-        os: [macos-latest, ubuntu-latest, windows-latest]
+        os: [macos-latest, windows-latest]
 
     steps:
       - uses: actions/checkout@v4
@@ -103,10 +109,62 @@ jobs:
             yarn electron:package --mac --publish always
           elif [ "${{ matrix.os }}" = "windows-latest" ]; then
             yarn electron:package --win --publish always
-          else
-            yarn electron:package --linux --publish always
           fi
         shell: bash
+
+  linux-build:
+    if: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.build_linux == 'true' }}
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PAT }}
+
+      - name: Setup Node.js and Python
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install setuptools wheel
+
+      - name: Enable Corepack and Yarn
+        run: |
+          corepack enable
+
+      - name: Install Dependencies
+        run: |
+          yarn install --immutable
+          
+      - name: Build All App Components
+        env:
+          CI: ""
+        run: |
+          yarn build:app
+        
+      - name: Build and Publish Linux Electron App
+        env:
+          GH_TOKEN: ${{ secrets.GH_PAT }}
+        run: |
+          yarn electron:package --linux --publish always
+        shell: bash
+
+      - name: Upload Linux Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-build
+          path: |
+            dist/*.deb
+            dist/*.AppImage
+          retention-days: 2
+          if-no-files-found: ignore
 
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
