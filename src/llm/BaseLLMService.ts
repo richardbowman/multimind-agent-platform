@@ -1,6 +1,6 @@
 import { ChatPost, Message } from "src/chat/chatClient";
 import { GenerateOutputParams, ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { ILLMService, LLMRequestParams, LLMTool, StructuredOutputPrompt } from "./ILLMService";
+import { ILLMService, LLMOptions, LLMRequestParams, LLMTool, StructuredOutputPrompt } from "./ILLMService";
 import { LLMCallLogger } from "./LLMLogger";
 import { ModelType } from "./LLMServiceFactory";
 import { ModelInfo } from "./types";
@@ -24,7 +24,7 @@ export abstract class BaseLLMService implements ILLMService {
         return this.logger;
     }
 
-    async generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[]): Promise<T> {
+    async generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: LLMOptions): Promise<T> {
         const messages = [
             ...(history ? this.mapPosts(userPost, history) : []),
             {
@@ -35,7 +35,8 @@ export abstract class BaseLLMService implements ILLMService {
 
         const result = await this.sendLLMRequest<T>({
             messages,
-            systemPrompt: instructions
+            systemPrompt: instructions,
+            modelType: opts?.modelType
         });
 
         return typeof result === "string" ? {message: result as string} as T : result.response;

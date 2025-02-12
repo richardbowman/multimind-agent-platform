@@ -303,8 +303,13 @@ export class ArtifactManager {
     Logger.info(`Indexing ${artifacts.length} artifacts`);
 
     for (let i = 0; i < artifacts.length; i++) {
-      Logger.progress(`Indexing ${i} of ${artifacts.length} artifacts`, (i+1)/artifacts.length);
-      await this.indexArtifact(artifacts[i]);
+      const artifact = await this.loadArtifact(artifacts[i].id);
+      if (artifact) {
+        Logger.progress(`Indexing ${i} of ${artifacts.length} artifacts`, (i+1)/artifacts.length, "index-artifacts");
+        await this.indexArtifact(artifact);
+      } else {
+        Logger.progress(`Skipping ${i} of ${artifacts.length} artifacts, content not available`, (i+1)/artifacts.length, "index-artifacts");
+      }
     }
 
     Logger.info('Finished indexing artifacts');

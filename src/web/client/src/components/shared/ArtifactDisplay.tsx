@@ -131,8 +131,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                 flex: 1,
                 position: 'relative',
                 overflow: 'hidden',
-                cursor: 'pointer',
-                padding: '8px'
+                cursor: 'pointer'
             }}
             onClick={() => onSelect && onSelect(artifact, !isSelected)}
         >

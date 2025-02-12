@@ -15,6 +15,7 @@ import AddIcon from '@mui/icons-material/Add';
 import { AddChannelDialog } from './AddChannelDialog';
 import { createChannelHandle } from '../../../../shared/channelTypes';
 import { useMessages } from '../contexts/MessageContext';
+import { CustomScrollbarStyles } from '../styles/styles';
 
 interface ChannelListProps {}
 
@@ -52,7 +53,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 </Stack>
             </Box>
 
-            <Box sx={{ flex: 1, overflowY: 'auto' }}>
+            <Box sx={{ flex: 1, overflowY: 'auto', ...CustomScrollbarStyles }}>
                 {channels.length === 0 && (
                     <Typography variant="body1" sx={{ color: '#666', textAlign: 'center', mt: 2 }}>
                         Loading channels...

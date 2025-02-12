@@ -63,7 +63,7 @@ class LlamaEmbedder implements IEmbeddingFunction {
     async generate(texts: string[]): Promise<number[][]> {
         const embeddings: number[][] = [];
         for (let i = 0; i < texts.length; i++) {
-            if (texts.length > 5) Logger.progress(`Indexing documents (Chunk ${i + 1} of ${texts.length})`, (i + 1) / texts.length);
+            if (texts.length > 5) Logger.progress(`Indexing documents (Chunk ${i + 1} of ${texts.length})`, (i + 1) / texts.length, "index-chunks");
             try {
                 const embedding = await this.embeddingContext.getEmbeddingFor(texts[i]);
                 embeddings.push(Array.from(embedding.vector)); // Convert Float32Array to number[]

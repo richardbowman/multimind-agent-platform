@@ -258,7 +258,7 @@ RESPONSE FORMAT: RESPOND WITH THE CODE INSIDE OF A SINGLE ENCLOSED \`\`\`javascr
         let result = await this.modelHelpers.generate({
             message: params.stepGoal || params.message,
             instructions: promptBuilder,
-            model: ModelType.ADVANCED_REASONING
+            modelType: ModelType.ADVANCED_REASONING
         });
 
         let stepResult: CodeResult, originalCode: CodeBlock | undefined, reasoning: string, newArtifacts;

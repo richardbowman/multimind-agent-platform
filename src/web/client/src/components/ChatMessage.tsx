@@ -110,6 +110,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     const [showAttachments, setShowAttachments] = useState(false);
     const uniqueArtifacts = [...new Set((message.props?.artifactIds||[]).filter(a => a))];
     const hasAttachments = uniqueArtifacts.length||0 > 0;
+    const inProgress = message.props?.partial;
 
     return (
         <Paper key={`${message.id}-${messageVersions[message.id] || 0}`} sx={{
@@ -319,7 +320,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 background: !isExpanded ? 'linear-gradient(to bottom, rgba(42,42,42,0) 0%, rgba(24,24,24,1) 100%)' : undefined,
                 borderRadius: 2
             }}>
-                {(message.inProgress || message.props?.partial) && (
+                {(inProgress) && (
                     <Box sx={{ 
                         display: 'flex', 
                         alignItems: 'center',

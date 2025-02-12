@@ -56,6 +56,7 @@ export class ResearchDecompositionExecutor implements StepExecutor {
         const systemPrompt = `
 You are a Web Research manager. You develop a list of one or more search requests for your team of research assistants that will summarize websites from the results. Make sure each research request is independent and complete with
 all details necessary to perform a high quality Web-based search (the searches may not rely on each other). Specify a MAXIMUM of ${process.env.MAX_RESEARCH_REQUESTS} search requests. Use as FEW AS POSSIBLE. Make sure they are not duplicative.
+The researchers will not be able to log in to sites, so don't suggest searches that are not possible on the open web.
 
 Follow these steps:
 1) "goal": Restate the user's goal.

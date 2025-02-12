@@ -10,6 +10,7 @@ import {
     Chip 
 } from '@mui/material';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import { CustomScrollbarStyles } from '../styles/styles';
 
 interface ThreadListProps {
     channelId: string | null;
@@ -43,7 +44,8 @@ export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
             </Typography>
             <List 
                 ref={listRef}
-                sx={{display: 'flex', flexDirection: 'column', overflowY: 'auto'}}
+                sx={{display: 'flex', flexDirection: 'column', overflowY: 'auto', ...CustomScrollbarStyles
+                }}
             >
                 <ListItem 
                     ref={currentThreadId === null ? activeThreadRef : null}

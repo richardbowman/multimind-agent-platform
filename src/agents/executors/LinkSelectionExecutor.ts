@@ -88,7 +88,7 @@ export class LinkSelectionExecutor implements StepExecutor<StepResponse> {
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(`You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
 
-Given the following web search results and links from existing pages you've scraped, select 1-${this.settings.maxFollows} URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them. If you don't think any are relevant, return an empty array.`);
+Given the following web search results and links from existing pages you've scraped, select 1-${this.settings.maxSelectedLinks} URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them. If you don't think any are relevant, return an empty array.`);
 
         const instructions = new StructuredOutputPrompt(schema, prompt);
         const message = `Links from previously scraped pages:

@@ -457,7 +457,7 @@ export class ModelHelpers {
         return message;
     }
 
-    private async generateOld(instructions: string|InputPrompt, params: GenerateParams): Promise<ModelMessageResponse> {
+    private async generateOld(instructions: string|InputPrompt, params: GenerateInputParams): Promise<ModelMessageResponse> {
         // Check cache first
         const cacheContext = { params };
         // const cachedResponse = this.modelCache.get(instructions, cacheContext);
@@ -469,8 +469,8 @@ export class ModelHelpers {
         if (typeof instructions === "string") {
             // Fetch the latest memory artifact for the channel
             augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`);
-            if (this.isMemoryEnabled && (params as HandlerParams).userPost) {
-                const memoryArtifact = await this.fetchLatestMemoryArtifact((params as HandlerParams).userPost.channel_id);
+            if (this.isMemoryEnabled && params.userPost) {
+                const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
     
                 // Append the memory content to the instructions if it exists
                 if (memoryArtifact && memoryArtifact.content) {
@@ -498,8 +498,10 @@ export class ModelHelpers {
         }
        
         // Augment instructions with context and generate a response
-        const history = (params as HandlerParams).threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
-        const response = await this.llmService.generate(augmentedInstructions, (params as HandlerParams).userPost || { message: params.message || params.content || "" }, history);
+        const history = params.threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
+        const response = await this.llmService.generate(augmentedInstructions, params.userPost || { message: params.message || params.content || "" }, history, {
+            modelType: params.modelType
+        });
 
         // Ensure response is an object with message property
         const formattedResponse: ModelMessageResponse = typeof response === "string"

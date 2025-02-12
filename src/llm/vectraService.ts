@@ -11,6 +11,7 @@ import { ConversationContext } from "../chat/chatClient";
 import { IEmbeddingService, ILLMService } from "./ILLMService";
 import { getDataPath } from "src/helpers/paths";
 import { timeStamp } from "console";
+import { asError } from "src/types/types";
 
 const syncQueue = new AsyncQueue();
 
@@ -58,7 +59,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
                     });
                 } catch (error) {
                     // Skip if item already exists
-                    if (error.message?.includes('already exists')) {
+                    if (asError(error).message.includes('already exists')) {
                         Logger.verbose(`Skipping duplicate item with id ${collection.ids[i]}`, error);
                     } else {
                         throw error; // Re-throw other errors
@@ -80,7 +81,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
 
             return results.map(result => ({
                 id: result.item.id,
-                metadata: { ...result.item.metadata, text: undefined },
+                metadata: { ...result.item.metadata },
                 text: result.item.metadata.text,
                 score: result.score
             }));
@@ -126,20 +127,17 @@ class VectraService extends EventEmitter implements IVectorDatabase {
 
             addCollection.ids.push(hashId);
 
-            const metadata: ConversationContext = {
+            const metadata = {
                 url,
                 projectId,
+                type,
+                task,
                 title,
                 docId,
                 chunkId: index + 1,
                 chunkTotal: chunks.length,
                 artifactId
             };
-
-            if (type === 'summary') {
-                metadata.task = task;
-                metadata.type = type;
-            }
 
             addCollection.metadatas.push(metadata);
             addCollection.documents.push(chunkContent);

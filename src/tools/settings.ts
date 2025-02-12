@@ -107,7 +107,7 @@ export class ModelByProvider {
         type: 'select',
         description: 'Model identifier for Anthropic'
     })
-    anthropic: string = 'claude-3-opus-20240229';
+    anthropic: string = 'claude-3-5-sonnet-20241022';
 
     @ClientSettings({
         label: 'Bedrock Model',
@@ -131,7 +131,7 @@ export class ModelByProvider {
         type: 'select',
         description: 'Model identifier for OpenRouter'
     })
-    openrouter: string = 'anthropic/claude-3.5-haiku';
+    openrouter: string = 'qwen/qwen-2.5-72b-instruct';
 
     @ClientSettings({
         label: 'DeepSeek Model',
@@ -439,11 +439,11 @@ export class Settings {
     chromaCollection: string = 'webpage_scrapes';
 
     @ClientSettings({
-        label: 'Max Searches',
+        label: 'Max Link Selections',
         category: 'Search Settings',
         type: 'number'
     })
-    maxSearches: number = 3;
+    maxSelectedLinks: number = 10;
 
     @ClientSettings({
         label: 'Max Follows',

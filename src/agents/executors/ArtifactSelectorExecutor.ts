@@ -79,7 +79,7 @@ ${JSON.stringify(schema, null, 2)}
                 message: params.message || params.stepGoal,
                 instructions: prompt,
                 threadPosts: params.context?.threadPosts,
-                model: ModelType.REASONING
+                modelType: ModelType.REASONING
             });
 
             const json = StringUtils.extractAndParseJsonBlock<ArtifactSelectionResponse>(unstructuredResult.message, schema);

@@ -173,7 +173,7 @@
                 },
                 {
                   "executor": "final-response",
-                  "description": "Provide final response"
+                  "description": "Summarize and format results, can be used to reformat"
                 }
               ]
             },
@@ -191,12 +191,12 @@
                   "description": "Select child links found in the document"
                 },
                 {
-                  "executor": "WEB_SCRAPE",
+                  "executor": "web-scrape",
                   "description": "Scrape selected child links"
                 },
                 {
                   "executor": "final-response",
-                  "description": "Provide final response"
+                  "description": "Summarize and format results, can be used to reformat"
                 }
               ]
             },
@@ -210,16 +210,16 @@
                   "description": "Perform web search"
                 },
                 {
-                  "executor": "SELECT_LINKS",
+                  "executor": "select-links",
                   "description": "Select child links from search results"
                 },
                 {
-                  "executor": "WEB_SCRAPE",
+                  "executor": "web-scrape",
                   "description": "Scrape selected child links"
                 },
                 {
-                  "executor": "FINAL_RESPONSE",
-                  "description": "Provide final response"
+                  "executor": "final-response",
+                  "description": "Summarize your findings"
                 }
               ]
             },
@@ -319,7 +319,7 @@
         "supportsDelegation": true,
         "userId": "48d176a8-9f55-47c2-90ca-6dd2bba8e262",
         "handle": "@research",
-        "description": "Manages and coordinates complex research activities that require multiple Web searches (the research assistant is part of their team).",
+        "description": "Manages and coordinates complex research activities that span multiple topics, requiring multiple independent research assistants to assist them.",
         "enabled": true
       },
       "ContentManager": {

@@ -92,7 +92,7 @@ ${params.previousResponses ? `Consider this previous result:\n${JSON.stringify(p
         let result = await this.modelHelpers.generate<CodeExecutionResponse>({
             message: params.message || params.stepGoal,
             instructions,
-            model: "qwen2.5-coder-14b-instruct"
+            modelType: "qwen2.5-coder-14b-instruct"
         });
 
         let executionResult: CodeExecution;

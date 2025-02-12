@@ -31,6 +31,7 @@ import { useThreadMessages } from '../contexts/ThreadMessageContext.tsx';
 import { useMessages } from '../contexts/MessageContext.tsx';
 import { useChannels } from '../contexts/ChannelContext.tsx';
 import { useFilteredTasks } from '../contexts/FilteredTaskContext.tsx';
+import { CustomScrollbarStyles } from '../styles/styles.ts';
 
 // Custom link component that opens links in system browser
 export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -350,7 +351,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         overflowY: 'auto',
                         p: 2,
                         bgcolor: 'background.paper',
-                        width: '100%'
+                        width: '100%',
+                        ...CustomScrollbarStyles
                     }}
                     onScroll={checkScrollPosition}
                 >

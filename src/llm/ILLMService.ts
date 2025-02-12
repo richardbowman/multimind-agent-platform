@@ -27,6 +27,10 @@ export interface ModelSearchParams {
     textFilter?: string;
 }
 
+export interface LLMOptions extends Record<string, any> {
+    modelType: ModelType
+}
+
 export interface ILLMService {
     shutdown(): Promise<void>;
     initializeChatModel(modelPath: string): Promise<void>;
@@ -38,7 +42,7 @@ export interface ILLMService {
     getAvailableEmbedders(searchParams?: ModelSearchParams): Promise<EmbedderModelInfo[]>;
 
     /** @deprecated */
-    generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: any): Promise<T>;
+    generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: LLMOptions): Promise<T>;
     /** @deprecated */
     sendMessageToLLM(message: string, history: any[], seedAssistant?: string, contextWindowLength?: number, maxTokens?: number, schema?: object): Promise<string>;
     /** @deprecated */

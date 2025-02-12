@@ -33,10 +33,11 @@ export interface ScrapeStepResponse extends StepResponse {
 }
 
 interface SummaryResponse extends WebScrapeSummaryResponse {
+    url: string
     summary: string;
 }
 
-@StepExecutorDecorator(ExecutorType.WEB_SCRAPE, 'Scrapes and summarizes webpage content')
+@StepExecutorDecorator(ExecutorType.WEB_SCRAPE, 'Download selected webpage content')
 export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
     private scrapeHelper: ScrapeHelper;
     private llmService: ILLMService;
@@ -70,12 +71,12 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
                 replan: ReplanType.Allow,
                 response: {
                     type: StepResponseType.WebPage,
-                    message: 'No URLs to scrape',
+                    status: 'No URLs selected to scrape',
                     data: {
                         artifacts: [],
                         summaries: [],
                         extractedLinks: [],
-                        error: 'No URLs to scrape'
+                        error: 'No URLs selected to scrape'
                     }
                 }
             };
@@ -156,7 +157,9 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
                     // Generate summary
                     const summaryResponse = await this.summarizeContent(
                         params.stepGoal,
-                        `Page Title: ${title}\nURL: ${url}\n\n${content}`,
+                        title,
+                        url,
+                        content,
                         params
                     );
 
@@ -285,7 +288,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         return new Set(artifacts.map(a => a.metadata?.url));
     }
 
-    private async summarizeContent(task: string, content: string, params: ExecuteParams): Promise<WithTokens<SummaryResponse>> {
+    private async summarizeContent(task: string, title: string, url: string, content: string, params: ExecuteParams): Promise<WithTokens<SummaryResponse>> {
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(`You are a step in an agent. The goal is to summarize a web search result.
             If the page is relevant to the goals, create a report in Markdown of all of the specific information from the provided web page.
@@ -295,23 +298,34 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         prompt.addContext({ contentType: ContentType.EXECUTE_PARAMS, params });
 
         const schema = await getGeneratedSchema(SchemaType.WebScrapeSummaryResponse);
-        prompt.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, schema);
+        prompt.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, schema, "The summary should be provided in the Markdown block.");
 
-        const userPrompt = "Web Search Result:" + content;
+        const userPrompt = "Web Search Result:" + `Page Title: ${title}\nURL: ${url}\n\n${content}`;
 
         const summary = await this.modelHelpers.generate({
             instructions: prompt.build(),
             message: userPrompt,
             threadPosts: params.context?.threadPosts,
-            model: ModelType.DOCUMENT
+            modelType: ModelType.DOCUMENT
         });
 
         const jsonBlock = StringUtils.extractAndParseJsonBlock(summary.message, schema);
         const markdownBlocks = StringUtils.extractCodeBlocks(summary.message, "markdown");
 
+        if (markdownBlocks.length !== 1) {
+            Logger.error("Didn't get a content block");
+            return {
+                ...jsonBlock as WebScrapeSummaryResponse,
+                summary: "[DIDN'T RECEIVE SUMMARY]",
+                relevant: false,
+                url
+            };
+        }
+
         return {
             ...jsonBlock as WebScrapeSummaryResponse,
-            summary: markdownBlocks[0].code
+            summary: markdownBlocks[0].code,
+            url
         };
     }
 
@@ -328,7 +342,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         const response = await this.modelHelpers.generate({
             instructions: prompt.build(),
             message: content,
-            model: ModelType.DOCUMENT
+            modelType: ModelType.DOCUMENT
         });
         const publishedDate = StringUtils.extractCaptionedText(response.message, "Published Date");
 

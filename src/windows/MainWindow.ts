@@ -17,7 +17,6 @@ export class MainWindow {
         settingsManager?: SettingsManager
     ) {
         this.settingsManager = settingsManager;
-        this.zoomLevel = initialZoom;
         this.window = new BrowserWindow({
             ...options,
             width: Math.round(width * this.zoomLevel),
@@ -31,6 +30,7 @@ export class MainWindow {
             autoHideMenuBar: true,
             show: false
         });
+        this.setZoomLevel(initialZoom);
 
         // Enable multithreading
         this.window.webContents.session.webRequest.onHeadersReceived((details, callback) => {

@@ -5,7 +5,7 @@ import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { StepExecutor } from "../interfaces/StepExecutor";
-import { ReplanType, StepResponse, StepResult } from "../interfaces/StepResult";
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { SchemaType } from "src/schemas/SchemaTypes";
@@ -30,8 +30,9 @@ export class WebSearchExecutor implements StepExecutor<StepResponse> {
             type: 'search_results',
             replan: ReplanType.Allow,
             response: {
-                status: `Found ${searchResults.length} search results`,
+                status: `Query found ${searchResults.length} possible links (still need to select best links and retrieve page content)`,
                 data: {
+                    type: StepResponseType.SearchResults,
                     searchResults,
                     query: searchQuery
                 }

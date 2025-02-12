@@ -81,7 +81,7 @@ export class KnowledgeCheckExecutor implements StepExecutor {
         // only include relevant items
         searchResults = searchResults.filter(s => s.score > 0.5);
 
-        const analysisPrompt = `Your are a step in an agent. Agent's purpose: ${this.modelHelpers.getPurpose()}. You are helping search for existing information for: "${goal}"
+        const analysisPrompt = `You are a step in an agent. Agent's purpose: ${this.modelHelpers.getPurpose()}. You are helping search for existing information for: "${goal}"
 
 ATTACHED KNOWLEDGE BASE ARTIFACTS:
 ${artifacts?.map(a => `ID: ${a.id}

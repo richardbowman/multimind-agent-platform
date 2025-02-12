@@ -94,10 +94,12 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         prompt.addInstruction(`In this step of the process, you are reviewing if we have sufficient information to move forward on achieving the goal.
 If you would like to think about the problem to start, use <thinking> tags.
 
-Then, once you have decided if you want to wait for user input or proceed:
+Then, once you have decided if you want to more information from the user, respond with
+questions to gather the necessary information. If you have enough information to achive the goal,
+explain to the user that we'll continue.
 
-1. If you want to pause the process, generate questions to gather the necessary information.
-                
+Also include in the JSON attributes a concise restatement of the user's goal to confirm understanding.
+
 IMPORTANT: 
 - Review any previous answers carefully to avoid redundant questions
 - Build upon partial answers to get more specific details
@@ -106,11 +108,7 @@ IMPORTANT:
 - If you have enough information to proceed, return no questions
 - If the user seems frustrated or asks you to move on, return no questions
 
-Each question should help gather specific information about:
-
-Also include:
-1. A concise restatement of the user's goal to confirm understanding
-2. A friendly followup message to present the questions to the user (make sure to include the initial question you want them to answer)`)
+`)
         
         prompt.addContext({contentType: ContentType.INTENT, params});
         prompt.addContext({contentType: ContentType.ABOUT});

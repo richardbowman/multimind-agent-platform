@@ -6,8 +6,8 @@ import Logger from '../helpers/logger';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { EventEmitter } from 'events';
 import { app } from 'electron';
-import { Settings } from './settings';
 import { isObject } from '../types/types';
+import { Settings } from './settings';
 
 export class SettingsManager extends EventEmitter {
     private settings?: Settings;

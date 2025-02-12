@@ -45,7 +45,7 @@ async function loadProcedureGuides(artifactManager: ArtifactManager): Promise<vo
 
     for (let i = 0; i < markdownFiles.length; i++) {
         const file = markdownFiles[i];
-        Logger.progress(`Loading agent procedures (${i + 1} of ${markdownFiles.length})`, (i + 1) / markdownFiles.length);
+        Logger.progress(`Loading agent procedures (${i + 1} of ${markdownFiles.length})`, (i + 1) / markdownFiles.length, "agent-procedures");
         const filePath = path.join(guidesDir, file);
         const content = fs.readFileSync(filePath, 'utf-8');
         const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
@@ -119,26 +119,26 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         //        Logger.progress('Initializing LLM services...', 0.1);
 
         const embeddingService = LLMServiceFactory.createEmbeddingService(_s);
-        Logger.progress('Initializing embedding model...', 0.2);
+        Logger.progress('Initializing embedding model...', 0.2, "loading");
 
 
         await embeddingService.initializeEmbeddingModel(_s.models.embeddings[_s.providers.embeddings]);
 
         await sleep();
 
-        Logger.progress('Initializing chat model...', 0.3);
+        Logger.progress('Initializing chat model...', 0.3, "loading");
         const chatService = LLMServiceFactory.createService(_s);
         await chatService.initializeChatModel(_s.models.conversation[_s.providers.chat]);
         await sleep();
 
-        Logger.progress('Loading vector database', 0.3);
+        Logger.progress('Loading vector database', 0.3, "loading");
         const vectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
         const artifactManager = new ArtifactManager(vectorDB);
 
         await sleep();
 
         vectorDB.on("needsReindex", async () => {
-            Logger.progress("Reindexing vector database", 0.4);
+            Logger.progress("Reindexing vector database", 0.4, "loading");
             await artifactManager.indexArtifacts();
         });
 
@@ -150,11 +150,11 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         const tasks = new SimpleTaskManager(path.join(dataDir, "tasks.json"));
 
         // Load previously saved tasks
-        Logger.progress("Loading tasks", 0.6);
+        Logger.progress("Loading tasks", 0.6, "loading");
         await tasks.load();
         await sleep();
 
-        Logger.progress("Loading chats", 0.6);
+        Logger.progress("Loading chats", 0.6, "loading");
         await chatStorage.load();
         await sleep();
 

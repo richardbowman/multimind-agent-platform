@@ -81,9 +81,10 @@ export class LogManager extends EventEmitter {
         this.log('error', errorMsg);
     }
 
-    public progress(message: string, percentComplete?: number): void {
+    public progress(message: string, percentComplete?: number, id?: string): void {
         this.log('progress', message, {
-            percentComplete
+            percentComplete,
+            id
         });
     }
 }

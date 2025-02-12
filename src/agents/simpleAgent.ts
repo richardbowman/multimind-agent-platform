@@ -43,7 +43,7 @@ export class SimpleAgent extends Agent {
                 instructions,
                 message: params.userPost.message,
                 threadPosts: params.threadPosts,
-                model: ModelType.CONVERSATION,
+                modelType: ModelType.CONVERSATION,
             });
             await this.reply(
                 params.userPost,

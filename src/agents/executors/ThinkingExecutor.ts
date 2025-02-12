@@ -54,7 +54,7 @@ Consider multiple angles and potential implications. You cannot run code, but yo
         const result = await this.modelHelpers.generate<ThinkingResponse>({
             message: params.message,
             instructions: new StructuredOutputPrompt(schema, promptBuilder.build()),
-            model: ModelType.ADVANCED_REASONING
+            modelType: ModelType.ADVANCED_REASONING
         });
 
         return {

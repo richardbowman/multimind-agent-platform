@@ -130,7 +130,7 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
         const responseText = await this.modelHelpers.generate({
             message: params.message,
             instructions: prompt,
-            model: ModelType.ADVANCED_REASONING
+            modelType: ModelType.ADVANCED_REASONING
         }); 
 
         const response : WithReasoning<NextActionResponse> = {

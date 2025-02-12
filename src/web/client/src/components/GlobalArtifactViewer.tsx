@@ -16,6 +16,7 @@ import { ActionToolbar } from './shared/ActionToolbar';
 import { useToolbarActions } from '../contexts/ToolbarActionsContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { useArtifacts } from '../contexts/ArtifactContext';
+import { CustomScrollbarStyles } from '../styles/styles';
 
 export interface DrawerPage {
     drawerOpen: boolean;
@@ -265,10 +266,10 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                     </Box>
                 </Box>
                 <Box 
-                    className="custom-scrollbar"
                     sx={{ 
                         overflowY: 'auto',
-                        height: 'calc(100vh - 120px)' // Adjust based on your header height
+                        height: 'calc(100vh - 120px)',
+                        ...CustomScrollbarStyles
                     }}
                 >
                     {Object.entries(artifactFolders).map(([type, artifacts]) => (

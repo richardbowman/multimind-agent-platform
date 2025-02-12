@@ -216,7 +216,7 @@ ${this.modelHelpers.getFinalInstructions()}
                 return `- STEP ${index + 1} of ${filteredSteps.length} ${index+1==filteredSteps.length?"[LAST COMPLETED STEP]":""}:
    Step Type [${step.props.stepType}]
    Step Description: ${step.description}
-   Step Result: <stepInformation>${body||stepResult.response.message||stepResult.response.reasoning||stepResult.response.status}}</stepInformation>`;
+   Step Result: <stepInformation>${body||stepResult.response.message||stepResult.response.reasoning||stepResult.response.status}</stepInformation>`;
             }).join('\n') + "\n";
     }
 
@@ -417,10 +417,10 @@ export class PromptBuilder implements InputPrompt {
     
     addOutputInstructions(outputType: OutputType, schemaDef?: JSONSchema, specialInstructions?: string, type: string = 'markdown') {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schemaDef) {
-            this.addInstruction(`Respond with a user-friendly message as well as two code blocks. One enclosed \`\`\`json block format that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n 
-            Then, provide a separately enclosed \`\`\`${type} block. ${specialInstructions || ''}`);
+            this.addInstruction(`Respond with a user-friendly message as well as two separate fully enclosed code blocks. One enclosed \`\`\`json block format that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n 
+            Then, provide a separate fully enclosed \`\`\`${type} block. ${specialInstructions || ''}`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE && schemaDef) {
-            this.addInstruction(`Respond with a user-friendly message as well as enclosed \`\`\`json block format that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+            this.addInstruction(`Respond with a user-friendly message as well as a fully enclosed \`\`\`json block format that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schemaDef) {
             this.addInstruction(`Before you answer the user, please think about how to best interpret the instructions and context you have been provided. Include your thinking inside of a single <thinking> XML block.
 Then, respond with a user-friendly message and a \`\`\`json block format that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);

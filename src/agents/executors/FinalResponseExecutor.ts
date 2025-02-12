@@ -49,7 +49,7 @@ Include relevant details from all steps while maintaining clarity and coherence.
         const promptBuilder = this.modelHelpers.createPrompt();
         promptBuilder.registerStepResultRenderer<ScrapeStepResponse>(StepResponseType.WebPage, (response: ScrapeStepResponse) => {
             const validSummaries = response.data.summaries?.filter(s => s.date && s.summary);
-            return validSummaries?.map((s, i) => `{$i+1} of ${response.data.summaries.length}: Date: ${s.date}\nSummary: \`\`\`\n${s.summary}\n\`\`\`\n`).join('\n') + "\n";
+            return validSummaries?.map((s, i) => `${i+1} of ${response.data.summaries.length}: Date: ${s.date}\nURL: ${s.url}\nSummary:\n\`\`\`\n${s.summary}\n\`\`\`\n`).join('\n') + "\n";
         });
 
         promptBuilder.addInstruction(instructions);
@@ -84,7 +84,7 @@ for the response attributes.`);
         const response = await this.modelHelpers.generate({
             message: params.message || params.stepGoal,
             instructions: prompt,
-            model: ModelType.CONVERSATION,
+            modelType: ModelType.DOCUMENT,
             threadPosts: params.context?.threadPosts
         });
 

@@ -30,7 +30,8 @@ export enum StepResponseType {
     GeneratedArtifact = "generated-artifact",
     Tasks = "tasks",
     Plan = "plan",
-    Brainstorm = "brainstorm"
+    Brainstorm = "brainstorm",
+    SearchResults = "SearchResults"
 }
 
 export enum ReplanType {

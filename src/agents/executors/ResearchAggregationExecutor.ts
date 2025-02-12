@@ -14,6 +14,7 @@ import { ResearchArtifactResponse } from '../../schemas/research-manager';
 import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StringUtils } from 'src/utils/StringUtils';
+import { ArtifactType } from 'src/tools/artifact';
 
 /**
  * Executor that combines and synthesizes research findings into comprehensive reports.
@@ -108,10 +109,11 @@ And put the report inside of \`\`\`markdown tags.`;
 
         const queryTexts = [goal];
         const where: any = {
-            "$and": [
-                { "type": { "$eq": "summary" } },
-                //{ "projectId": { "$eq": projectId } }
-            ]
+            // "$and": [
+            //     { "type": { "$eq": ArtifactType.Document } },
+            //     // { "title": /^Summary Report/}
+            //     //{ "projectId": { "$eq": projectId } }
+            // ]
         };
         const nResults = 20;
 

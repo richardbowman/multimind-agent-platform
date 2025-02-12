@@ -20,6 +20,7 @@ import { ContentType, PromptBuilder } from "src/llm/promptBuilder";
 import { ChatHandle } from "src/types/chatHandle";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";
+import { ModelType } from "src/llm/LLMServiceFactory";
 
 
 export enum TaskEventType {
@@ -54,8 +55,9 @@ export interface PlannerParams extends GenerateParams {
 
 export interface GenerateInputParams extends GenerateParams {
     instructions: string | InputPrompt | StructuredOutputPrompt;
+    userPost?: Message;
     threadPosts?: Message[];
-    model?: string;
+    modelType?: ModelType;
 }
 
 export interface GenerateParams {

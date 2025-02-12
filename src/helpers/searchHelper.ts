@@ -1,13 +1,13 @@
 import axios from 'axios';
 import Logger from "src/helpers/logger";
-import { chromium, PlaywrightBrowserLauncher } from 'playwright-extra';
+import { chromium } from 'playwright-extra';
 import stealth from 'puppeteer-extra-plugin-stealth';
 import { ArtifactManager } from '../tools/artifactManager';
-import crypto from 'crypto';
 import { load } from 'cheerio';
 import { convertPageToMarkdown } from './scrapeHelper';
 import { Settings } from 'src/tools/settingsManager';
 import { Browser } from 'puppeteer';
+import { ArtifactType } from 'src/tools/artifact';
 
 // Add stealth plugin to avoid detection
 chromium.use(stealth())
@@ -98,9 +98,15 @@ export class BraveSearchProvider implements ISearchProvider {
 }
 
 export class SearxNGProvider implements ISearchProvider {
+    private settings: Settings;
+
+    constructor(settings: Settings) {
+        this.settings = settings;
+    }
+
     async search(query: string, category: string): Promise<SearchResult[]> {
         const encodedQuery = encodeURIComponent(query).replace(/'/g, '%27');
-        const searchUrl = `${SEARXNG_URL}search?q=${encodedQuery}&category=${category}&format=json`;
+        const searchUrl = `${this.settings.searxngUrl}search?q=${encodedQuery}&category=${category}&format=json`;
 
         Logger.info(`Searching on SearXNG: ${searchUrl}`);
         try {
@@ -158,7 +164,8 @@ export class DuckDuckGoProvider implements ISearchProvider {
 
             const page = await context.newPage();
             const encodedQuery = encodeURIComponent(query);
-            const searchUrl = category === 'news' 
+            const isNews = category === 'news';
+            const searchUrl = isNews
                 ? `https://duckduckgo.com/?t=h_&q=${encodedQuery}&iar=news&ia=news`
                 : `https://duckduckgo.com/?q=${encodedQuery}`;
             await page.goto(searchUrl);
@@ -176,10 +183,8 @@ export class DuckDuckGoProvider implements ISearchProvider {
             const $ = load(htmlContent);
             const markdownContent = convertPageToMarkdown($, actualUrl);
 
-            const artifactId = crypto.randomUUID();
-            await this.artifactManager.saveArtifact({
-                id: artifactId,
-                type: 'webpage',
+            const { id: artifactId } = await this.artifactManager.saveArtifact({
+                type: ArtifactType.Webpage,
                 content: markdownContent,
                 metadata: {
                     query,
@@ -192,19 +197,19 @@ export class DuckDuckGoProvider implements ISearchProvider {
             Logger.info(`Saved DuckDuckGo search page as artifact: ${artifactId}`);
 
             // Find the main results container and extract results
-            const mainResults = await page.$('.react-results--main') || await page.$('.results--main');
+            const mainResults = isNews ? await page.$('.results--main') : await page.$('.react-results--main');
             if (!mainResults) {
                 Logger.warn('Could not find main results container');
                 return results;
             }
-            const searchResults = await mainResults.$$('[data-testid="result"]') || await mainResults.$$('.result');
+            const searchResults = isNews ? await mainResults.$$('.result') : await mainResults.$$('[data-testid="result"]');
             Logger.info(`Found ${searchResults.length} results on page`);
 
             for (const result of searchResults) {
                 try {
-                    const titleElement = await result.$('[data-testid="result-title-a"]') || await result.$('.result__title');
-                    const linkElement = await result.$('[data-testid="result-extras-url-link"]')  || await result.$('.result__a');
-                    const snippetElement = await result.$('[data-result="snippet"]')  || await result.$('.result__snippet');
+                    const titleElement = isNews ? await result.$('.result__title') : await result.$('[data-testid="result-title-a"]');
+                    const linkElement = isNews ? await result.$('.result__a') : await result.$('[data-testid="result-extras-url-link"]');
+                    const snippetElement = isNews ? await result.$('.result__snippet') : await result.$('[data-result="snippet"]');
 
                     if (titleElement && linkElement) {
                         const title = await titleElement.innerText();
@@ -271,7 +276,7 @@ class SearchHelper {
                 provider = new DuckDuckGoProvider(artifactManager, settings);
                 break;
             case 'searxng':
-                provider = new SearxNGProvider();
+                provider = new SearxNGProvider(settings);
                 break;
             case 'brave':
                 provider = new BraveSearchProvider(settings);
