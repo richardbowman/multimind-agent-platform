@@ -348,7 +348,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 flexGrow: 1,
                 display: 'flex',
                 flexDirection: 'column',
-                marginLeft: drawerOpen ? 0 : `-350oh i px`, 
+                marginLeft: drawerOpen ? 0 : '-350px',
                 transition: 'margin 225ms cubic-bezier(0, 0, 0.2, 1) 0ms',
                 flex: 1,
                 overflow: 'hidden',
