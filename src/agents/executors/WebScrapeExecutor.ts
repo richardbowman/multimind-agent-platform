@@ -274,36 +274,21 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(`You are a news summarizer. Create a concise summary of the key points from this news article.                        
             Focus on the who, what, when, where, and why. Keep it under 200 words.
-            Also extract the published date if available in the content. Return the date in ISO format if found.`);
-
-        const schema = {
-            type: "object",
-            properties: {
-                summary: {
-                    type: "string",
-                    description: "Concise summary of the news article"
-                },
-                publishedDate: {
-                    type: "string",
-                    description: "Published date in ISO format if available",
-                    format: "date-time",
-                    nullable: true
-                }
-            },
-            required: ["summary"]
-        };
+            Also extract the published date if available in the content. Return the date in ISO format if found and specify like with :
+            
+            Published Date: ...
+            Summary: ...
+            .`);
 
         const response = await this.modelHelpers.generate({
             instructions: prompt.build(),
-            message: content,
-            model: ModelType.DOCUMENT,
-            parseJSON: true
+            message: content
         });
+        const publishedDate = StringUtils.extractCaptionedText(response.message, "Published Date");
 
-        const result = JSON.parse(response.message);
         return {
-            summary: result.summary,
-            publishedDate: result.publishedDate ? new Date(result.publishedDate) : undefined
+            summary: response.message,
+            publishedDate: StringUtils.isValidDate(publishedDate) ? new Date(publishedDate) : undefined
         };
     }
 
