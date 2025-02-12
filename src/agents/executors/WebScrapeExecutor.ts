@@ -91,11 +91,13 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         };
 
         const total = selectedUrls.length;
-
-        for (const [index, url] of selectedUrls.entries()) {
-            try {
-                if (isNews) {
-                    // For news, always fetch fresh content                                                                                         
+        
+        // Process news articles concurrently
+        if (isNews) {
+            await params.partialResponse(`Scraping ${total} news articles...`);
+            
+            const newsPromises = selectedUrls.map(async (url) => {
+                try {
                     const { content, title, links } = await this.scrapeHelper.scrapePage(url, {
                         task: params.stepGoal,
                         projectId: params.projectId
@@ -108,41 +110,50 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
                         projectId: params.projectId
                     });
 
-                    result.artifacts.push(artifact);
-                    result.extractedLinks.push(...links);
-                } else {
+                    return { artifact, links };
+                } catch (error) {
+                    Logger.error(`Error processing news URL ${url}`, error);
+                    return null;
+                }
+            });
 
+            const newsResults = await Promise.all(newsPromises);
+            for (const newsResult of newsResults) {
+                if (newsResult) {
+                    result.artifacts.push(newsResult.artifact);
+                    result.extractedLinks.push(...newsResult.links);
+                }
+            }
+        } else {
+            // Process regular pages with concurrency
+            await params.partialResponse(`Scraping ${total} pages...`);
+            
+            const scrapePromises = selectedUrls.map(async (url) => {
+                try {
                     // Check if already processed
                     if (this.visitedUrls.has(url) || scrapedUrls.has(url)) {
                         Logger.info(`Retrieving existing summary for URL: ${url}`);
                         const webPage = await this.getStoredWebpage(url);
                         const existingSummary = await this.getStoredSummary(url);
                         if (webPage && existingSummary) {
-                            result.artifacts.push(webPage);
-                            result.summaries.push(existingSummary);
-                            result.extractedLinks = [...new Set([
-                                ...result.extractedLinks,
-                                ...StringUtils.extractLinksFromMarkdown(webPage.content.toString())
-                            ])];
-                            continue;
+                            return {
+                                type: 'cached',
+                                webPage,
+                                existingSummary,
+                                links: StringUtils.extractLinksFromMarkdown(webPage.content.toString())
+                            };
                         }
                     }
 
                     this.visitedUrls.add(url);
 
                     // Scrape page
-                    await params.partialResponse(`Scraping ${url} (${index + 1} of ${total})...`);
-
                     const { content, title, links } = await this.scrapeHelper.scrapePage(url, {
                         task: params.stepGoal,
                         projectId: params.projectId
                     });
 
-                    result.extractedLinks.push(...links);
-
                     // Generate summary
-                    await params.partialResponse(`Summarizing ${title} (${index + 1} of ${total})...`);
-
                     const summaryResponse = await this.summarizeContent(
                         params.stepGoal,
                         `Page Title: ${title}\nURL: ${url}\n\n${content}`,
@@ -165,13 +176,35 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
                             tokenCount: summaryResponse._usage?.outputTokens
                         });
 
-                        result.summaries.push(summaryResponse);
-                        result.artifacts.push(artifact);
+                        return {
+                            type: 'new',
+                            artifact,
+                            summaryResponse,
+                            links
+                        };
+                    }
+                } catch (error) {
+                    Logger.error(`Error processing URL ${url}`, error);
+                }
+                return null;
+            });
+
+            const scrapeResults = await Promise.all(scrapePromises);
+            for (const scrapeResult of scrapeResults) {
+                if (scrapeResult) {
+                    if (scrapeResult.type === 'cached') {
+                        result.artifacts.push(scrapeResult.webPage);
+                        result.summaries.push(scrapeResult.existingSummary);
+                        result.extractedLinks = [...new Set([
+                            ...result.extractedLinks,
+                            ...scrapeResult.links
+                        ])];
+                    } else {
+                        result.artifacts.push(scrapeResult.artifact);
+                        result.summaries.push(scrapeResult.summaryResponse);
+                        result.extractedLinks.push(...scrapeResult.links);
                     }
                 }
-
-            } catch (error) {
-                Logger.error(`Error processing URL ${url}`, error);
             }
         }
 
