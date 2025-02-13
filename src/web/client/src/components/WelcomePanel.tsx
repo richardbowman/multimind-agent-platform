@@ -19,7 +19,6 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
     const { channels } = useChannels();
     const { sendMessage, currentChannelId, messages } = useMessages();
     const { filteredTasks : tasks } = useFilteredTasks();
-    const ipcService = useIPCService();
     const [welcomeMessage, setWelcomeMessage] = useState<string | null>(null);
 
     // Find the welcome message from the agent

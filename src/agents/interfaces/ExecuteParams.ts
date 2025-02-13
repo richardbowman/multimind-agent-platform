@@ -1,9 +1,7 @@
-import { ModelResponse } from 'src/schemas/ModelResponse';
-import { Artifact } from 'src/tools/artifact';
+import { ArtifactItem } from 'src/tools/artifact';
 import { Project, Task } from 'src/tools/taskManager';
 import { StepTask } from './ExecuteStepParams';
 import { UUID } from 'src/types/uuid';
-import { ChatHandle } from 'src/types/chatHandle';
 import { ChatPost } from 'src/chat/chatClient';
 import { Agent } from '../agents';
 import { StepResponse } from './StepResult';
@@ -26,7 +24,7 @@ export interface ExecuteParams {
     readonly context?: {
         readonly channelId?: UUID;
         readonly threadId?: UUID;
-        readonly artifacts?: Artifact[];
+        readonly artifacts?: ArtifactItem[];
         readonly projects?: Project[];
         readonly threadPosts?: ChatPost[];
     };

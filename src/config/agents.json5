@@ -36,6 +36,9 @@
               "className": "GenerateDiagramExecutor"
             },
             {
+              "className": "GenerateSpreadsheetExecutor"
+            },
+            {
               "className": "BrainstormExecutor"
             },
             {
@@ -49,6 +52,9 @@
             },
             {
               "className": "KnowledgeCheckExecutor"
+            },
+            {
+              "className": "GoalProgressExecutor"
             }
           ]
         }

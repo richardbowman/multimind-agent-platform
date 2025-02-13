@@ -17,19 +17,5 @@
             "description": "Latest content marketing trends",
             "type": "data-gathering"
         }
-        // {
-        //     "description": "Define research goals and objectives",
-        //     "type": "planning"
-        // },
-        // {
-        //     "description": "Gather initial research data from web sources",
-        //     "type": "data-gathering",
-        //     "dependsOn": ["define-research-goals"]
-        // },
-        // {
-        //     "description": "Analyze gathered data and generate insights",
-        //     "type": "analysis",
-        //     "dependsOn": ["gather-initial-research-data"]
-        // }
     ]
 }

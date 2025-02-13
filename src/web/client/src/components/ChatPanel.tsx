@@ -60,7 +60,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const { threadMessages: messages } = useThreadMessages();
     const { sendMessage, currentChannelId, currentThreadId, setCurrentThreadId } = useMessages();
     const { handles, isLoading } = useDataContext();
-    const { filteredTasks: tasks, isLoading: tasksLoading } = useFilteredTasks();
+    const { filteredTasks: tasks } = useFilteredTasks();
     const { channels } = useChannels();
 
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
@@ -252,20 +252,35 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     // Track last channel ID to detect channel changes
     const lastChannelId = useRef<string | null>(null);
 
-    // Show welcome panel only when:
+     // Show welcome panel only when:
     // 1. Switching to a new channel
     // 2. The new channel has remaining goal tasks
+    // 3. The channel has no other messages besides the welcome message
     useEffect(() => {
-        if (currentChannelId && currentChannelId !== lastChannelId.current) {
-            if (currentThreadId === null && tasks && !tasksLoading) {
-                const hasRemainingGoals = tasks.some(t => !t.complete && t.type === TaskType.Goal);
-                onSwitchToWelcome(hasRemainingGoals);
-                lastChannelId.current = currentChannelId;
+        const channelTasks = tasks.filter(t => t.channelId === currentChannelId);
+        const channelMessages = messages.filter(m => m.channel_id === currentChannelId);
+
+        const lastChannelTasks = tasks.filter(t => t.channelId === lastChannelId.current);
+        const lastChannelMessages = messages.filter(m => m.channel_id === lastChannelId.current);
+
+        if (lastChannelTasks.length > 0 && lastChannelMessages.length > 0) return;
+
+        if (channelMessages.length > 0) {
+            if (currentChannelId && currentChannelId !== lastChannelId.current && currentThreadId === null && tasks.length > 0) {
+                // Only consider tasks for the current channel
+                const hasRemainingGoals = channelTasks.some(t => !t.complete && t.type === TaskType.Goal);
+
+                // Only consider messages for the current channel
+                const hasOnlyWelcomeMessage = channelMessages.length === 0 ||
+                    channelMessages.every(m => m.props?.messageType === 'welcome');
+
+                onSwitchToWelcome(hasRemainingGoals && hasOnlyWelcomeMessage);
             } else {
                 onSwitchToWelcome(false);
             }
+            lastChannelId.current = currentChannelId;
         }
-    }, [currentChannelId, currentThreadId, tasks]);
+    }, [currentChannelId, currentThreadId, tasks, messages]);
 
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 

@@ -7,7 +7,9 @@ import { useIPCService } from './IPCContext';
 import { useChannels } from './ChannelContext';
 
 interface FilteredTaskContextType {
-  filteredTasks: Task[];
+  filteredTasks: (Task&{channelId: UUID})[];
+  channelId: UUID | null;
+  threadId: UUID | null;
   taskId: UUID | null;
   currentTask: Task | null;
   isLoading: boolean;
@@ -32,6 +34,11 @@ export const FilteredTaskProvider = ({
   const [taskId, setTaskId] = useState<UUID | null>(null);
   const [currentTask, setLoadedTask] = useState<Task | null>(null);
   const [isLoadingTask, setIsLoadingTask] = useState(false);
+  const [isLoadingTasks, setIsLoadingTasks] = useState(false);
+
+  useEffect(() => {
+    setIsLoadingTasks(true);
+  }, [channelId, threadId]);
 
   useEffect(() => {
     if (!taskId) {
@@ -73,16 +80,19 @@ export const FilteredTaskProvider = ({
       threadTaskIds.has(task.id)
     );
 
+    setIsLoadingTasks(false);
 
-    return [...list, ...currentChannelProject?.tasks||[]];
+    return [...list, ...currentChannelProject?.tasks||[]].map(t => ({...t, channelId}));
   }, [tasks, threadTaskIds]);
 
   const value = useMemo(() => ({
+    channelId,
+    threadId,
     filteredTasks,
     currentTask,
     taskId,
     setTaskId,
-    isLoading: isLoading || isLoadingTask,
+    isLoading: isLoading || isLoadingTask || isLoadingTasks,
     isChannelView: !!channelId && !threadId
   }), [filteredTasks, currentTask, isLoading, taskId, setTaskId, channelId, threadId]);
 

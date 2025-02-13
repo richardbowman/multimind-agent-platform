@@ -17,7 +17,8 @@ export enum StepResultType {
     GenerateIntention = "GenerateIntention",
     WebScrapeStepResult = "WebScrapeStepResult",
     GenerateChartResult = "GenerateChartResult",
-    GenerateArtifact = "GenerateArtifact"
+    GenerateArtifact = "GenerateArtifact",
+    Error = "Error"
 }
 
 export enum StepResponseType {

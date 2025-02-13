@@ -8,12 +8,15 @@ theme:
     - navigation.tabs
     - navigation.indexes
     - toc.integrate
+    - navigation.path
+    - navigation.footer
 
 markdown_extensions:
   - admonition
   - pymdownx.superfences
   - pymdownx.tabbed
   - pymdownx.tasklist
+  - attr_list
 
 plugins:
   - glightbox

@@ -11,23 +11,26 @@ import { createUUID } from 'src/types/uuid';
 import { Agent } from '../agents';
 import { ContentType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType } from '../../tools/artifact';
-import * as csv from 'csv-parser';
+import { parse } from 'csv';
 import * as fs from 'fs';
 import { stringify } from 'csv-stringify/sync';
+import { ArtifactManager } from 'src/tools/artifactManager';
 
 @StepExecutorDecorator('csv-processor', 'Process CSV artifacts by delegating tasks for each row')
 export class CSVProcessingExecutor implements StepExecutor {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
+    private artifactManager: ArtifactManager;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
+        this.artifactManager = params.artifactManager!;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         // Find the first CSV artifact
-        const csvArtifact = params.artifacts?.find(a => a.type === ArtifactType.Spreadsheet);
+        const csvArtifact = params.context?.artifacts?.find(a => a.type === ArtifactType.Spreadsheet);
         if (!csvArtifact) {
             return {
                 type: StepResultType.Error,
@@ -41,13 +44,23 @@ export class CSVProcessingExecutor implements StepExecutor {
         // Read the CSV file
         const rows: any[] = [];
         try {
-            await new Promise((resolve, reject) => {
-                fs.createReadStream(csvArtifact.filePath)
-                    .pipe(csv())
-                    .on('data', (row) => rows.push(row))
-                    .on('end', resolve)
-                    .on('error', reject);
+            const artifact = await this.artifactManager.loadArtifact(csvArtifact.id);
+
+            if (!artifact) {
+                throw new Error(`Could not load artifact ${csvArtifact.id}`);
+            }
+            
+            const parser = parse(artifact.content.toString(), {
+                columns: true,
+                skip_empty_lines: true,
+                trim: true,
+                relax_quotes: true,
+                relax_column_count: true,
+                bom: true
             });
+            for await (const record of parser) {
+                rows.push(record);
+            }
         } catch (error) {
             Logger.error('Error reading CSV file:', error);
             return {
