@@ -329,7 +329,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     }}>
                         <Spinner size={20} />
                         <Typography variant="caption" sx={{ color: 'text.secondary' }}>
-                            Streaming response...
+                            Partial response, still working...
                         </Typography>
                     </Box>
                 )}
