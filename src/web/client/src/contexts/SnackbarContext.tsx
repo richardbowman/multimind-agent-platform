@@ -44,32 +44,36 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   (window as any).electron.status((log) => {
     // Update progress bar based on message
-    if (log.details.percentComplete > 0) {
+    if (log.details.percentComplete !== undefined && log.details.percentComplete >= 0) {
       setOptions(prev => {
         const existingMeters = prev.progressMeters || [];
         const meterIndex = existingMeters.findIndex(m => m.id === log.details.id);
         
-        const newMeter = {
-          id: log.details.id,
-          message: log.message,
-          percentComplete: log.details.percentComplete
-        };
+        // Only create meter if we have a valid percentage
+        if (log.details.percentComplete !== undefined) {
+          const newMeter = {
+            id: log.details.id,
+            message: log.message,
+            percentComplete: log.details.percentComplete
+          };
 
-        const updatedMeters = meterIndex >= 0 
-          ? [
-              ...existingMeters.slice(0, meterIndex),
-              newMeter,
-              ...existingMeters.slice(meterIndex + 1)
-            ]
-          : [...existingMeters, newMeter];
+          const updatedMeters = meterIndex >= 0 
+            ? [
+                ...existingMeters.slice(0, meterIndex),
+                newMeter,
+                ...existingMeters.slice(meterIndex + 1)
+              ]
+            : [...existingMeters, newMeter];
 
-        return {
-          ...prev,
-          progressMeters: updatedMeters,
-          persist: log.details.percentComplete < 1,
-          severity: 'progress',
-          message: '' // Clear the message when showing progress
-        };
+          return {
+            ...prev,
+            progressMeters: updatedMeters,
+            persist: log.details.percentComplete < 1,
+            severity: 'progress',
+            message: '' // Clear the message when showing progress
+          };
+        }
+        return prev;
       });
     } else {
       setOptions(prev => ({
