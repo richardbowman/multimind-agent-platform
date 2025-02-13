@@ -24,6 +24,7 @@ import { useChannels } from '../contexts/ChannelContext';
 import { ChannelHandle, createChannelHandle } from '../../../../shared/channelTypes';
 import { useIPCService } from '../contexts/IPCContext';
 import { useDataContext } from '../contexts/DataContext';
+import { useMessages } from '../contexts/MessageContext';
 import { UUID } from '../../../../types/uuid';
 import { ChatHandle } from '../../../../types/chatHandle';
 
@@ -51,6 +52,7 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     const ipcService = useIPCService();
     const {handles} = useDataContext();
     const {deleteChannel, createChannel, fetchChannels} = useChannels();
+    const { setCurrentChannelId } = useMessages();
     const [channelName, setChannelName] = useState<ChannelHandle|null>(null);
     const [channelNameError, setChannelNameError] = useState(false);
     const [description, setDescription] = useState('');
@@ -129,15 +131,17 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                 defaultResponder
             };
 
+            let newChannelId: string;
             if (editingChannelId) {
                 await deleteChannel(editingChannelId);
-                await createChannel(params);
+                newChannelId = await createChannel(params);
             } else {
-                await createChannel(params);
+                newChannelId = await createChannel(params);
             }
 
             onClose();
-            fetchChannels();
+            await fetchChannels();
+            setCurrentChannelId(newChannelId);
         } catch (error) {
             console.error('Failed to save channel:', error);
         }
