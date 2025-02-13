@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { ArtifactType } from '../../../../tools/artifact';
 
 interface AssetSelectionDialogProps {
@@ -38,7 +39,7 @@ export const AssetSelectionDialog: React.FC<AssetSelectionDialogProps> = ({ asse
         );
     };
 
-    return (
+    return createPortal(
         <div style={{
             position: 'fixed',
             top: '50%',
@@ -52,7 +53,7 @@ export const AssetSelectionDialog: React.FC<AssetSelectionDialogProps> = ({ asse
             display: 'flex',
             flexDirection: 'row',
             gap: '20px',
-            zIndex: 1000
+            zIndex: 9999
         }}>
             {/* Sidebar */}
             <div style={{
@@ -190,6 +191,7 @@ export const AssetSelectionDialog: React.FC<AssetSelectionDialogProps> = ({ asse
                     </button>
                 </div>
             </div>
-        </div>
+        </div>,
+        document.getElementById('portal-root')!
     );
 };

@@ -410,7 +410,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                         </div>
                     )}
                 </div>
-                {showAssetDialog && (
+                {showAssetDialog && createPortal(
                     <AssetSelectionDialog
                         assets={allArtifacts}
                         onSelect={(assetIds) => {
@@ -426,7 +426,9 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                             setShowAssetDialog(false);
                         }}
                         onClose={() => setShowAssetDialog(false)}
-                    />
+                    />,
+                    document.getElementById('portal-root')!
+                )
                 )}
                 <textarea
                     ref={inputRef}
