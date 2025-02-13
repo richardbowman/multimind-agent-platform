@@ -1,5 +1,13 @@
 ![Welcome Screen](./manual/images/01-welcome.png)
 
+<div style="text-align: center; margin: 2rem 0;">
+  <a href="https://github.com/richardbowman/multimind-agent-platform/releases/" 
+     style="background-color: #4CAF50; color: white; padding: 1rem 2rem; 
+            text-decoration: none; border-radius: 5px; font-size: 1.2rem;">
+    Download Now
+  </a>
+</div>
+
 # Welcome to MultiMind
 
 ## Privacy and Security Benefits
