@@ -59,25 +59,65 @@ export class CSVProcessingExecutor implements StepExecutor {
             };
         }
 
-        // Find the most appropriate agent for processing
-        const supportedAgents = params.agents?.filter(a => a.supportsDelegation);
-        const researcherAgent = supportedAgents?.find(a => a.messagingHandle === 'researcher');
-        const defaultAgent = supportedAgents?.[0];
-        const assignedAgent = researcherAgent || defaultAgent;
+        // Create schema for agent selection
+        const schema = {
+            type: 'object',
+            properties: {
+                projectName: { type: 'string' },
+                projectGoal: { type: 'string' },
+                assignedAgent: { type: 'string' }, // Agent handle
+                responseMessage: { type: 'string' }
+            }
+        };
 
-        if (!assignedAgent) {
-            return {
-                type: StepResultType.Error,
-                finished: true,
-                response: {
-                    message: 'No available agents to process the CSV'
-                }
-            };
+        const supportedAgents = params.agents?.filter(a => a.supportsDelegation);
+
+        // Create prompt for agent selection
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addInstruction(`Select the most appropriate agent to process this CSV file based on the goal and content.
+            The CSV contains ${rows.length} rows of data.
+            Consider the agents' capabilities and the nature of the data when making your selection.
+            Output should include:
+            - A clear project name and goal
+            - The handle of the selected agent
+            - A response message explaining the selection to the user.`);
+        
+        if (supportedAgents) {
+            prompt.addContext({
+                contentType: ContentType.CHANNEL_AGENT_CAPABILITIES, 
+                agents: supportedAgents
+            });
         }
 
-        const projectName = `CSV Processing - ${csvArtifact.name}`;
-        const projectGoal = `Process ${rows.length} rows from ${csvArtifact.name}`;
-        const responseMessage = `Created a task to process ${rows.length} rows from ${csvArtifact.name}. Assigned to ${assignedAgent.messagingHandle}.`;
+        prompt.addInstruction(`IMPORTANT SELECTION RULES:
+            - Choose the most specialized agent for the work
+            - Consider the type of data in the CSV
+            - If multiple agents could handle it, choose the one with the most relevant expertise`);
+
+        const structuredPrompt = new StructuredOutputPrompt(
+            schema,
+            prompt.build()
+        );
+
+        try {
+            const responseJSON = await this.modelHelpers.generate({
+                message: params.stepGoal,
+                instructions: structuredPrompt
+            });
+
+            const { projectName, projectGoal, assignedAgent: selectedAgentHandle, responseMessage } = responseJSON;
+
+            // Find the selected agent
+            const assignedAgent = supportedAgents?.find(a => a.messagingHandle === selectedAgentHandle);
+            if (!assignedAgent) {
+                return {
+                    type: StepResultType.Error,
+                    finished: true,
+                    response: {
+                        message: `Unable to delegate to unknown agent ${selectedAgentHandle}`
+                    }
+                };
+            }
 
             // Create the project
             const project = await this.taskManager.createProject({
