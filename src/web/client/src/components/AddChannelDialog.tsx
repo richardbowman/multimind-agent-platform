@@ -68,14 +68,17 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
             setSelectedAgents(initialData.members);
             setSelectedTemplate(initialData.goalTemplate);
             setDefaultResponderId(initialData.defaultResponderId);
-        } else {
+        } else if (open && !editingChannelId) {
+            // Reset state when opening for new channel
             setChannelName(null);
             setDescription('');
             setSelectedAgents([]);
             setSelectedTemplate(null);
             setDefaultResponderId(null);
+            setChannelNameError(false);
+            setLastSelectedTemplateName('');
         }
-    }, [initialData, handles]);
+    }, [initialData, handles, open, editingChannelId]);
 
     useEffect(() => {
         ipcService.getRPC().loadGoalTemplates().then(setTemplates);
