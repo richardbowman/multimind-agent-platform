@@ -15,6 +15,9 @@ markdown_extensions:
   - pymdownx.tabbed
   - pymdownx.tasklist
 
+plugins:
+  - glightbox
+
 nav:
   - Home: index.md
   - User Manual:
