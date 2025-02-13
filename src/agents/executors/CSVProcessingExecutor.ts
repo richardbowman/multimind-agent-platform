@@ -59,68 +59,25 @@ export class CSVProcessingExecutor implements StepExecutor {
             };
         }
 
-        // Create schema for delegation plan
-        const schema = {
-            type: 'object',
-            properties: {
-                projectName: { type: 'string' },
-                projectGoal: { type: 'string' },
-                taskGroups: {
-                    type: 'array',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            description: { type: 'string' },
-                            assignee: { type: 'string' }, // Agent handle
-                            rowIndices: {
-                                type: 'array',
-                                items: { type: 'number' }
-                            }
-                        }
-                    }
-                },
-                responseMessage: { type: 'string' }
-            }
-        };
-
+        // Find the most appropriate agent for processing
         const supportedAgents = params.agents?.filter(a => a.supportsDelegation);
+        const researcherAgent = supportedAgents?.find(a => a.messagingHandle === 'researcher');
+        const defaultAgent = supportedAgents?.[0];
+        const assignedAgent = researcherAgent || defaultAgent;
 
-        // Create prompt for delegation planning
-        const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`Create a plan to process this CSV file by delegating tasks to appropriate agents. 
-            The CSV contains ${rows.length} rows of data. 
-            Group similar rows together and assign them to the most appropriate agent based on their capabilities.
-            Output should include:
-            - A clear project name and goal
-            - Groups of tasks with descriptions, assigned agents, and the row indices they should process
-            - A response message to explain the delegation plan to the user.
-            - Create as few delegation steps as possible to achieve the goal.`);
-        
-        if (supportedAgents) {
-            prompt.addContext({
-                contentType: ContentType.CHANNEL_AGENT_CAPABILITIES, 
-                agents: supportedAgents
-            });
+        if (!assignedAgent) {
+            return {
+                type: StepResultType.Error,
+                finished: true,
+                response: {
+                    message: 'No available agents to process the CSV'
+                }
+            };
         }
 
-        prompt.addInstruction(`IMPORTANT DELEGATION RULES:
-            - Group similar rows together to minimize the number of tasks
-            - Assign tasks to the most specialized agent for the work
-            - If you delegate to managers, do not also delegate to their team
-            - Make sure task descriptions are complete and self-contained`);
-
-        const structuredPrompt = new StructuredOutputPrompt(
-            schema,
-            prompt.build()
-        );
-
-        try {
-            const responseJSON = await this.modelHelpers.generate({
-                message: params.stepGoal,
-                instructions: structuredPrompt
-            });
-
-            const { projectName, projectGoal, taskGroups, responseMessage } = responseJSON;
+        const projectName = `CSV Processing - ${csvArtifact.name}`;
+        const projectGoal = `Process ${rows.length} rows from ${csvArtifact.name}`;
+        const responseMessage = `Created a task to process ${rows.length} rows from ${csvArtifact.name}. Assigned to ${assignedAgent.messagingHandle}.`;
 
             // Create the project
             const project = await this.taskManager.createProject({
@@ -134,44 +91,34 @@ export class CSVProcessingExecutor implements StepExecutor {
                 }
             });
 
-            // Create tasks and assign to agents
-            const taskDetails: string[] = [];
-            for (const group of taskGroups) {
-                const taskId = createUUID();
-                
-                // Create task description with row data
-                const taskDescription = `Process ${group.rowIndices.length} rows from ${csvArtifact.name}:\n` +
-                    group.description + '\n\nRows to process:\n' +
-                    group.rowIndices.map(index => {
-                        const row = rows[index];
-                        return `Row ${index + 1}:\n` +
-                            Object.entries(row)
-                                .map(([key, value]) => `${key}: ${value}`)
-                                .join('\n');
-                    }).join('\n\n');
+            // Create a single task for all rows
+            const taskId = createUUID();
+            
+            // Create task description with row data
+            const taskDescription = `Process ${rows.length} rows from ${csvArtifact.name}:\n\n` +
+                rows.map((row, index) => 
+                    `Row ${index + 1}:\n` +
+                    Object.entries(row)
+                        .map(([key, value]) => `${key}: ${value}`)
+                        .join('\n')
+                ).join('\n\n');
 
-                await this.taskManager.addTask(project, {
-                    id: taskId,
-                    description: taskDescription,
-                    creator: params.agentId,
-                    type: TaskType.Standard,
-                    props: {
-                        rowIndices: group.rowIndices,
-                        csvArtifactId: csvArtifact.id,
-                        originalRowData: group.rowIndices.map(index => rows[index])
-                    }
-                });
-
-                // Find and assign to agent
-                const agent = params.agents?.find(a => a.messagingHandle === group.assignee);
-                if (agent) {
-                    await this.taskManager.assignTaskToAgent(taskId, agent.userId);
-                } else {
-                    Logger.error(`Unable to delegate to unknown (or unsupported for delegation) agent ${group.assignee}`);
+            await this.taskManager.addTask(project, {
+                id: taskId,
+                description: taskDescription,
+                creator: params.agentId,
+                type: TaskType.Standard,
+                props: {
+                    rowIndices: rows.map((_, index) => index),
+                    csvArtifactId: csvArtifact.id,
+                    originalRowData: rows
                 }
+            });
 
-                taskDetails.push(`${group.description} [${taskId}] -> ${group.assignee} (${group.rowIndices.length} rows)`);
-            }
+            // Assign to agent
+            await this.taskManager.assignTaskToAgent(taskId, assignedAgent.userId);
+
+            const taskDetails = [`Process ${rows.length} rows [${taskId}] -> ${assignedAgent.messagingHandle}`];
 
             return {
                 type: StepResultType.Delegation,
