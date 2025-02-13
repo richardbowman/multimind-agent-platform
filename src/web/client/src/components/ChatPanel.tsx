@@ -94,9 +94,19 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 }
             });
 
-        // Always expand the last 2 messages
-        const lastTwoIds = filtered.slice(-2).map(m => m.id);
-        setExpandedMessages(prev => new Set([...prev, ...lastTwoIds]));
+        // Always expand the last message and its attachments
+        if (filtered.length > 0) {
+            const lastMessage = filtered[filtered.length - 1];
+            const idsToExpand = [lastMessage.id];
+            
+            // If last message has attachments, expand them too
+            if (lastMessage.props?.artifactIds?.length > 0) {
+                // Set showAttachments to true for the last message
+                lastMessage.showAttachments = true;
+            }
+            
+            setExpandedMessages(prev => new Set([...prev, ...idsToExpand]));
+        }
 
         return filtered;
     }, [messages, currentChannelId, currentThreadId, messageVersions]);

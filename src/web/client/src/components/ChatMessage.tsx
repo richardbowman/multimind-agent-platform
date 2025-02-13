@@ -107,7 +107,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
     const isExpanded = expandedMessages.has(message.id);
     const hasThread = !currentThreadId && message.replyCount||0 > 0;
-    const [showAttachments, setShowAttachments] = useState(false);
+    const [showAttachments, setShowAttachments] = useState(message.showAttachments || false);
     const uniqueArtifacts = [...new Set((message.props?.artifactIds||[]).filter(a => a))];
     const hasAttachments = uniqueArtifacts.length||0 > 0;
     const inProgress = message.props?.partial;
