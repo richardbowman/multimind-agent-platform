@@ -191,6 +191,13 @@ export class ArtifactManager {
 
     let contentToIndex = artifact.content.toString();
 
+    // Check token count before indexing
+    const tokenCount = await this.vectorDb.getTokenCount(contentToIndex);
+    if (tokenCount > 100000) { // Skip documents larger than 100k tokens
+      Logger.warn(`Skipping indexing of large artifact: ${artifact.id} (${tokenCount} tokens)`);
+      return;
+    }
+
     // Extract text from PDF if the MIME type is application/pdf
     if (mimeType === 'application/pdf') {
       try {
