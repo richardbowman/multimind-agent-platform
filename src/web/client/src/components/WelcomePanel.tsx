@@ -56,11 +56,11 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                 alignItems: 'center',
                 gap: 3
             }}>
-                <Avatar sx={{ width: 80, height: 80 }}>
+                <Avatar sx={{ width: 80, height: 80, alignSelf: 'flex-start' }}>
                     {channel?.name?.[1]?.toUpperCase()}
                 </Avatar>
                 <Box>
-                    <Typography variant="h3" gutterBottom>
+                    <Typography variant="h4" gutterBottom>
                         Welcome to {channel?.name}
                     </Typography>
                     <Typography variant="subtitle1">
