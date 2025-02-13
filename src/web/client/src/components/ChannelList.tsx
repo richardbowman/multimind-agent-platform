@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Channel } from '../../../../types/types';
 import { useChannels } from '../contexts/ChannelContext';
 import { 
@@ -145,6 +145,12 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                     goalTemplate: channels.find(c => c.id === editingChannelId)?.goalTemplate || null,
                     defaultResponderId: channels.find(c => c.id === editingChannelId)?.defaultResponderId || null
                 } : undefined}
+                existingChannelNames={useMemo(() => 
+                    channels
+                        .filter(c => c.id !== editingChannelId) // Exclude current channel when editing
+                        .map(c => c.name.toLowerCase()), 
+                    [channels, editingChannelId]
+                )}
             />
         </Box>
     );
