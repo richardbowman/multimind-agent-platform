@@ -352,6 +352,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         onSwitchToWelcome(false);
                     }}
                     onSwitchToChat={() => onSwitchToWelcome(false)}
+                    messageType="welcome"
                 />
             ) : (
                 <Box

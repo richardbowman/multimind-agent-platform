@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Box, Typography, Button, Card, CardContent, Stack, Paper, Avatar } from '@mui/material';
+import ReactMarkdown from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 import { useTasks } from '../contexts/TaskContext';
 import { useIPCService } from '../contexts/IPCContext';
 import { useMessages } from '../contexts/MessageContext';
@@ -14,9 +16,21 @@ interface WelcomePanelProps {
 
 export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitchToChat }) => {
     const { channels } = useChannels();
-    const { sendMessage, currentChannelId } = useMessages();
+    const { sendMessage, currentChannelId, messages } = useMessages();
     const { filteredTasks : tasks } = useFilteredTasks();
     const ipcService = useIPCService();
+    const [welcomeMessage, setWelcomeMessage] = useState<string | null>(null);
+
+    // Find the welcome message from the agent
+    useEffect(() => {
+        const welcomeMsg = messages.find(m => 
+            m.channel_id === currentChannelId && 
+            m.props?.messageType === 'welcome'
+        );
+        if (welcomeMsg) {
+            setWelcomeMessage(welcomeMsg.message);
+        }
+    }, [messages, currentChannelId]);
 
     const channel = channels.find(c => c.id === currentChannelId);
     const goals = tasks.filter(t => t.type === TaskType.Goal);
@@ -50,6 +64,20 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                     <Typography variant="subtitle1">
                         {channel?.description}
                     </Typography>
+                    {welcomeMessage && (
+                        <Paper elevation={0} sx={{ 
+                            mt: 2, 
+                            p: 2, 
+                            bgcolor: 'background.paper',
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            borderRadius: 2
+                        }}>
+                            <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                                {welcomeMessage}
+                            </ReactMarkdown>
+                        </Paper>
+                    )}
                 </Box>
             </Box>
 
