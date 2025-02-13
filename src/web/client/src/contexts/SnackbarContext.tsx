@@ -67,14 +67,16 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
           ...prev,
           progressMeters: updatedMeters,
           persist: log.details.percentComplete < 1,
-          severity: 'progress'
+          severity: 'progress',
+          message: '' // Clear the message when showing progress
         };
       });
     } else {
       setOptions(prev => ({
         ...prev,
         message: log.message,
-        severity: 'info'
+        severity: 'info',
+        progressMeters: [] // Clear progress meters when showing regular messages
       }));
     }
     setOpen(true);
