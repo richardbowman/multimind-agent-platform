@@ -41,7 +41,7 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
             flexDirection: 'column',
             height: 'calc(100vh - 64px)',
             width: '100%',
-            overflow: 'hidden',
+            overflowY: 'auto',
             p: 4
         }}>
             <Box sx={{
@@ -71,7 +71,9 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                             bgcolor: 'background.paper',
                             border: '1px solid',
                             borderColor: 'divider',
-                            borderRadius: 2
+                            borderRadius: 2,
+                            maxHeight: 200,
+                            overflowY: 'auto'
                         }}>
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                 {welcomeMessage}
