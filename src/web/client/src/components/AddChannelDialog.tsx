@@ -38,6 +38,7 @@ interface AddChannelDialogProps {
         goalTemplate: ChannelHandle | null;
         defaultResponderId: ChatHandle | null;
     };
+    existingChannelNames: string[];
 }
 
 export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
@@ -102,6 +103,13 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
 
     const handleSaveChannel = async () => {
         if (!channelName || !channelName.trim() || !channelName.startsWith('#')) {
+            setChannelNameError(true);
+            return;
+        }
+
+        // Check for duplicate channel name (case insensitive)
+        const normalizedName = channelName.toLowerCase();
+        if (existingChannelNames.includes(normalizedName)) {
             setChannelNameError(true);
             return;
         }
@@ -182,7 +190,11 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
                             shrink: !!channelName,
                         }}
                         error={channelNameError}
-                        helperText={channelNameError ? "Channel name must start with # and not be empty" : "Channel names must start with #"}
+                        helperText={channelNameError ? 
+                            existingChannelNames.includes(channelName?.toLowerCase() || '') 
+                                ? "Channel name already exists" 
+                                : "Channel name must start with # and not be empty" 
+                            : "Channel names must start with #"}
                         required
                         sx={{ mb: 2 }}
                     />
