@@ -8,6 +8,7 @@ import { useMessages } from '../contexts/MessageContext';
 import { useChannels } from '../contexts/ChannelContext';
 import { useFilteredTasks } from '../contexts/FilteredTaskContext';
 import { TaskType } from '../../../../tools/taskManager';
+import { CustomScrollbarStyles } from '../styles/styles';
 
 interface WelcomePanelProps {
     onStartTask: (taskId: string) => void;
@@ -42,7 +43,8 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
             height: 'calc(100vh - 64px)',
             width: '100%',
             overflowY: 'auto',
-            p: 4
+            p: 4,
+            ...CustomScrollbarStyles
         }}>
             <Box sx={{
                 background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
@@ -73,7 +75,8 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                             borderColor: 'divider',
                             borderRadius: 2,
                             maxHeight: 200,
-                            overflowY: 'auto'
+                            overflowY: 'auto',
+                            ...CustomScrollbarStyles
                         }}>
                             <ReactMarkdown remarkPlugins={[remarkGfm]}>
                                 {welcomeMessage}
