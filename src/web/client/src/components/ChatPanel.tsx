@@ -60,7 +60,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const { threadMessages: messages } = useThreadMessages();
     const { sendMessage, currentChannelId, currentThreadId, setCurrentThreadId } = useMessages();
     const { handles, isLoading } = useDataContext();
-    const { filteredTasks: tasks } = useFilteredTasks();
+    const { filteredTasks: tasks, isLoading: tasksLoading } = useFilteredTasks();
     const { channels } = useChannels();
 
     const [selectedMessage, setSelectedMessage] = useState<any>(null);
@@ -256,12 +256,14 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     // 1. Switching to a new channel
     // 2. The new channel has remaining goal tasks
     useEffect(() => {
-        if (currentChannelId && currentChannelId !== lastChannelId.current && currentThreadId === null) {
-            const hasRemainingGoals = tasks.some(t => !t.complete && t.type === TaskType.Goal);
-            onSwitchToWelcome(hasRemainingGoals);
-            lastChannelId.current = currentChannelId;
-        } else {
-            onSwitchToWelcome(false);
+        if (currentChannelId && currentChannelId !== lastChannelId.current) {
+            if (currentThreadId === null && tasks && !tasksLoading) {
+                const hasRemainingGoals = tasks.some(t => !t.complete && t.type === TaskType.Goal);
+                onSwitchToWelcome(hasRemainingGoals);
+                lastChannelId.current = currentChannelId;
+            } else {
+                onSwitchToWelcome(false);
+            }
         }
     }, [currentChannelId, currentThreadId, tasks]);
 
