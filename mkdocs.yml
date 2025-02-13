@@ -36,5 +36,7 @@ extra:
   social:
     - icon: fontawesome/brands/github
       link: https://github.com/richardbowman/multimind-agent-platform
+    - icon: fontawesome/solid/user
+      link: https://www.rick-bowman.com/
   
 copyright: Copyright &copy; 2024 - 2025 <a href="https://www.rick-bowman.com/">Rick Bowman</a>
