@@ -1,4 +1,4 @@
-import { ArtifactItem } from 'src/tools/artifact';
+import { Artifact } from 'src/tools/artifact';
 import { Project, Task } from 'src/tools/taskManager';
 import { StepTask } from './ExecuteStepParams';
 import { UUID } from 'src/types/uuid';
@@ -24,7 +24,7 @@ export interface ExecuteParams {
     readonly context?: {
         readonly channelId?: UUID;
         readonly threadId?: UUID;
-        readonly artifacts?: ArtifactItem[];
+        readonly artifacts?: Artifact[];
         readonly projects?: Project[];
         readonly threadPosts?: ChatPost[];
     };

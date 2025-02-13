@@ -9,16 +9,12 @@ import { ModelHelpers } from "src/llm/modelHelpers";
 import { ContentType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
-import TurndownService from 'turndown';
-import { gfm } from 'turndown-plugin-gfm';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StringUtils } from 'src/utils/StringUtils';
-import JSON5 from 'json5';
 import { ArtifactSelectionResponse } from "src/schemas/ArtifactSelectionResponse";
 import { LinkRef } from "src/helpers/scrapeHelper";
-import { marked } from "marked";
-import { parse } from 'csv-parse/sync';
+import { parse } from 'csv';
 
 export interface ArtifactSelectionStepResponse extends StepResponse {
     type: StepResponseType.WebPage;
