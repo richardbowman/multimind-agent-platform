@@ -45,7 +45,8 @@ export const AddChannelDialog: React.FC<AddChannelDialogProps> = ({
     open,
     onClose,
     editingChannelId,
-    initialData
+    initialData,
+    existingChannelNames
 }) => {
     const ipcService = useIPCService();
     const {handles} = useDataContext();
