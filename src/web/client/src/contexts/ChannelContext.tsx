@@ -14,6 +14,8 @@ export interface ChannelContextType {
   createChannel: (params: CreateChannelParams) => Promise<string>;
   deleteChannel: (channelId: string) => Promise<void>;
   setCurrentChannelId: (channelId: UUID | null) => void;
+  addArtifactToChannel: (channelId: UUID, artifactId: UUID) => Promise<void>;
+  removeArtifactFromChannel: (channelId: UUID, artifactId: UUID) => Promise<void>;
 }
 
 const ChannelContext = createContext<ChannelContextType | null>(null);
@@ -84,6 +86,16 @@ export const ChannelProvider = ({ children }: { children: React.ReactNode }) => 
   const deleteChannel = useCallback(async (channelId: string) => {
     await ipcService.getRPC().deleteChannel(channelId);
     await fetchChannels();
+  }, [ipcService, fetchChannels]);
+
+  const addArtifactToChannel = useCallback(async (channelId: UUID, artifactId: UUID) => {
+    await ipcService.getRPC().addArtifactToChannel(channelId, artifactId);
+    await fetchChannels(); // Refresh channels to get updated artifactIds
+  }, [ipcService, fetchChannels]);
+
+  const removeArtifactFromChannel = useCallback(async (channelId: UUID, artifactId: UUID) => {
+    await ipcService.getRPC().removeArtifactFromChannel(channelId, artifactId);
+    await fetchChannels(); // Refresh channels to get updated artifactIds
   }, [ipcService, fetchChannels]);
 
   const value = useMemo(() => ({

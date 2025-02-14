@@ -31,10 +31,6 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   
 
 export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
-    const {
-        addArtifactToChannel,
-        removeArtifactFromChannel 
-    } = useArtifacts();
     const { 
         filteredArtifacts: artifacts,
         currentArtifact,
@@ -43,6 +39,8 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     const { 
         currentChannelId,
         channels,
+        addArtifactToChannel,
+        removeArtifactFromChannel
     } = useChannels();
 
     const [drawerOpen, setDrawerOpen] = useState(false);
