@@ -26,6 +26,10 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         prompt.addInstruction("  <script src='/react/react.min.js'></script>");
         prompt.addInstruction("  <script src='/react-dom/react-dom.min.js'></script>");
         prompt.addInstruction("  <script src='/mui/material-ui.min.js'></script>");
+        prompt.addInstruction("  The generated code must properly initialize React and MUI components");
+        prompt.addInstruction("  - Use ReactDOM.render() to mount your root component");
+        prompt.addInstruction("  - Initialize MUI components using createTheme() and ThemeProvider");
+        prompt.addInstruction("  - Ensure all component imports are properly destructured from MaterialUI");
         prompt.addInstruction("- Do not use any other CDN-hosted libraries");
         prompt.addInstruction("- Include all necessary JavaScript code within the HTML file");
         
@@ -46,13 +50,15 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
     }
 
     protected validateGeneratedCode(code: string): boolean {
-        // Check for proper React/MUI references
+        // Check for proper React/MUI references and initialization
         const hasReact = code.includes('/react/react.min.js');
         const hasReactDOM = code.includes('/react-dom/react-dom.min.js');
         const hasMUI = code.includes('/mui/material-ui.min.js');
+        const hasReactMount = code.includes('ReactDOM.render(');
+        const hasMUIInit = code.includes('createTheme(') || code.includes('ThemeProvider');
         
-        if (!hasReact || !hasReactDOM || !hasMUI) {
-            throw new Error('Generated code must use the provided React and MUI library paths');
+        if (!hasReact || !hasReactDOM || !hasMUI || !hasReactMount || !hasMUIInit) {
+            throw new Error('Generated code must use the provided React and MUI library paths and properly initialize components');
         }
         
         return true;
