@@ -59,12 +59,9 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
     isLoading,
     fetchAllArtifacts,
     saveArtifact,
-    deleteArtifact,
-    addArtifactToChannel,
-    removeArtifactFromChannel,
+    deleteArtifact
   }), [artifacts, currentChannelId, currentThreadId, isLoading, 
-       fetchAllArtifacts, saveArtifact, 
-       deleteArtifact, addArtifactToChannel, removeArtifactFromChannel]);
+       fetchAllArtifacts, saveArtifact, deleteArtifact]);
 
   return (
     <ArtifactContext.Provider value={value}>

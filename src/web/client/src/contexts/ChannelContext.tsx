@@ -106,8 +106,12 @@ export const ChannelProvider = ({ children }: { children: React.ReactNode }) => 
     fetchChannels,
     createChannel,
     deleteChannel,
-    setCurrentChannelId
-  }), [channels, currentChannelId, currentChannel, currentChannelProject, fetchChannels, createChannel, deleteChannel, setCurrentChannelId]);
+    setCurrentChannelId,
+    addArtifactToChannel,
+    removeArtifactFromChannel
+  }), [channels, currentChannelId, currentChannel, currentChannelProject, 
+    fetchChannels, createChannel, deleteChannel, setCurrentChannelId,
+    addArtifactToChannel, removeArtifactFromChannel]);
 
   return (
     <ChannelContext.Provider value={value}>
