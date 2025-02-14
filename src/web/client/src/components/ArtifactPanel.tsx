@@ -12,6 +12,8 @@ import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import { ArtifactCard } from './ArtifactCard';
 import { useFilteredArtifacts } from '../contexts/FilteredArtifactContext';
+import { useChannels } from '../contexts/ChannelContext';
+import { useArtifacts } from '../contexts/ArtifactContext';
 
 interface ArtifactPanelProps {
     channelId: string | null;
@@ -29,17 +31,19 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   
 
 export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
+    const {
+        addArtifactToChannel,
+        removeArtifactFromChannel 
+    } = useArtifacts();
     const { 
         filteredArtifacts: artifacts,
         currentArtifact,
-        setArtifactId
+        setArtifactId,
     } = useFilteredArtifacts();
     const { 
         currentChannelId,
         channels,
-        addArtifactToChannel,
-        removeArtifactFromChannel 
-    } = useDataContext();
+    } = useChannels();
 
     const [drawerOpen, setDrawerOpen] = useState(false);
     const { actions, registerActions, unregisterActions, updateActionState } = useToolbarActions();
