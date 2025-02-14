@@ -21,8 +21,13 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         // Add website-specific instructions
         prompt.addInstruction("You are creating a website. Follow these guidelines:");
         prompt.addInstruction("- Use modern, responsive design principles");
-        prompt.addInstruction("- Include JavaScript for interactivity if needed");
-        prompt.addInstruction("- You may not run terminal commmands, use CDN-hosted libraries, you must create the complete app in an HTML file.");
+        prompt.addInstruction("- You may use React and Material-UI (MUI) components");
+        prompt.addInstruction("- Use these exact script references in your HTML:");
+        prompt.addInstruction("  <script src='/react/umd/react.development.js'></script>");
+        prompt.addInstruction("  <script src='/react-dom/umd/react-dom.development.js'></script>");
+        prompt.addInstruction("  <script src='/mui/umd/material-ui.production.min.js'></script>");
+        prompt.addInstruction("- Do not use any other CDN-hosted libraries");
+        prompt.addInstruction("- Include all necessary JavaScript code within the HTML file");
         
         return prompt;
     }
@@ -31,10 +36,26 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         prompt.addInstruction("Format the website using these rules:");
         prompt.addInstruction("- Use HTML5 doctype declaration");
         prompt.addInstruction("- Include comments for major sections");
+        prompt.addInstruction("- Use React functional components with proper JSX syntax");
+        prompt.addInstruction("- Use MUI components with proper import syntax");
+        prompt.addInstruction("- Ensure all React components are properly mounted");
     }
 
     getSupportedFormats(): string[] {
-        return ['html'];
+        return ['html', 'jsx'];
+    }
+
+    protected validateGeneratedCode(code: string): boolean {
+        // Check for proper React/MUI references
+        const hasReact = code.includes('/react/umd/react.development.js');
+        const hasReactDOM = code.includes('/react-dom/umd/react-dom.development.js');
+        const hasMUI = code.includes('/mui/umd/material-ui.production.min.js');
+        
+        if (!hasReact || !hasReactDOM || !hasMUI) {
+            throw new Error('Generated code must use the provided React and MUI library paths');
+        }
+        
+        return true;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
