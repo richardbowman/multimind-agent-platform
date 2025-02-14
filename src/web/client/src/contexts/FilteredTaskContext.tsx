@@ -69,8 +69,10 @@ export const FilteredTaskProvider = ({
         .flatMap(msg => msg.props?.['project-ids'] || [])
         .filter(id => id)
     );
-    const childProjects = new Set(tasks.map(t => t.props?.childProjectId));
-    return new Set(tasks.filter(t => projectIds.has(t.projectId) || childProjects.has(t.projectId)).map(t => t.id));
+    const filteredTasks = tasks.filter(t => projectIds.has(t.projectId));
+    const childProjects = new Set(filteredTasks.values().map(t => t.props?.childProjectId));
+    const childTasks = tasks.filter(t => childProjects.has(t.projectId));
+    return new Set([...filteredTasks.map(t => t.id), ...childTasks.map(t => t.id)]);
   }, [threadMessages]);
 
   const filteredTasks = useMemo(() => {

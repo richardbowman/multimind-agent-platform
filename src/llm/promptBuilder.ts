@@ -417,13 +417,13 @@ export class PromptBuilder implements InputPrompt {
     
     addOutputInstructions(outputType: OutputType, schemaDef?: JSONSchema, specialInstructions?: string, type: string = 'markdown') {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schemaDef) {
-            this.addInstruction(`Respond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block with a hidden indicator \`\`\`json[hidden] that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n 
+            this.addInstruction(`Respond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n 
             Then, provide a separate fully enclosed \`\`\`${type} block. ${specialInstructions || ''}`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE && schemaDef) {
-            this.addInstruction(`Respond with a user-friendly message as well as a fully enclosed code block with a hidden indicator \`\`\`json[hidden]  that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+            this.addInstruction(`Respond with a user-friendly message as well as a fully enclosed code block \`\`\`json  that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schemaDef) {
             this.addInstruction(`Before you answer the user, please think about how to best interpret the instructions and context you have been provided. Include your thinking inside of a single <thinking> XML block.
-Then, respond with a user-friendly message and fully enclosed code block with a hidden indicator \`\`\`json[hidden] that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+Then, respond with a user-friendly message and fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         }
     }
     private contentSections: Map<ContentType, any> = new Map();

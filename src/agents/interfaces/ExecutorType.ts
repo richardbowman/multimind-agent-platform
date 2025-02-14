@@ -42,5 +42,7 @@ export enum ExecutorType {
     GENERATE_DIAGRAM = "generate-diagram",
     ARTIFACT_SELECTOR = "artifact-selector",
     API_SCRAPER = "api-scraper",
-    VIEW_TASKS = "view-tasks"
+    VIEW_TASKS = "view-tasks",
+    GENERATE_WEBSITE = "generate-website",
+    ARTIFACT_RETRIEVER = "retrieve-full-artifact"
 }

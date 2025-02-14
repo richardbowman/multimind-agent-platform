@@ -76,6 +76,15 @@
               "className": "GenerateSlidesExecutor"
             },
             {
+              "className": "GenerateSpreadsheetExecutor"
+            },
+            {
+              "className": "RetrieveFullArtifactExecutor"
+            },
+            {
+              "className": "WebsiteExecutor"
+            },
+            {
               "className": "KnowledgeCheckExecutor"
             },
             {
