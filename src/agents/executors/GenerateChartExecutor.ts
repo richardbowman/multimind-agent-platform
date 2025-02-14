@@ -63,6 +63,7 @@ export class GenerateChartExecutor implements StepExecutor<ChartResponse> {
 
         // Add execution parameters
         promptBuilder.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
+        promptBuilder.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts});
 
         // Add previous results if available
         if (params.previousResponses) {
@@ -114,7 +115,14 @@ ${JSON.stringify(schema, null, 2)}`);
                     }
                 };
             } else {
-                throw new Error("Could not find chart data in the response: ${unstructuredResult}");
+                return {
+                    type: StepResultType.Error,
+                    finished: true,
+                    response: {
+                        type: StepResponseType.Message,
+                        message: unstructuredResult.message
+                    }
+                };
             }
         } catch (error) {
             Logger.error('Error generating chart:', error);

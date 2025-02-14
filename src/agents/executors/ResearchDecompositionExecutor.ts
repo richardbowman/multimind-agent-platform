@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -31,7 +31,7 @@ import Logger from 'src/helpers/logger';
  * - Handles both broad and focused research requests
  */
 @StepExecutorDecorator(ExecutorType.RESEARCH_DECOMPOSITION, 'Break down research request into specific tasks')
-export class ResearchDecompositionExecutor implements StepExecutor {
+export class ResearchDecompositionExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
 
@@ -62,14 +62,17 @@ Follow these steps:
 1) "goal": Restate the user's goal.
 2) Consider previous research context provided (if any).
 3) "strategy": explain your thinking on the search requests.
-4) "researchRequested": your list of Web search queries goals.
+4) "researchTopic": your Web search queries topics that you want research assistants to search.
 
 Previous research context:
-${previousContext}`;
+${previousContext}
+
+Your goal:
+${goal}`;
 
         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
         const result = await this.modelHelpers.generate<ResearchDecomposition>({
-            message: `${goal}`,
+            message: params.message || params.stepGoal,
             instructions
         });
 
@@ -98,7 +101,7 @@ ${previousContext}`;
 
 
         // Create research tasks and assign to researchers
-        for (const researchRequest of result.researchRequested) {
+        for (const researchRequest of result.researchTopic) {
             const description = `${researchRequest} [${result.goal}]`;
 
             const task = await this.taskManager.addTask(
@@ -127,7 +130,7 @@ ${previousContext}`;
             finished: false, // Don't mark as finished until researchers complete their work
             async: true,
             response: {
-                message: `Research plan created:\n\n${result.strategy}\n\nTasks:\n${result.researchRequested.map(t => `- ${t}`).join('\n')}\n\nWaiting for researchers to complete their tasks...`,
+                message: `Research plan created:\n\n${result.strategy}\n\nTasks:\n${result.researchTopic?.map(t => `- ${t}`).join('\n')}\n\nWaiting for researchers to complete their tasks...`,
                 data: {
                     result,
                     researchTasks: pendingTasks

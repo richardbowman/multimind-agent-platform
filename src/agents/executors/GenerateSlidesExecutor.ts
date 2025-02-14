@@ -21,8 +21,8 @@ export interface BrainstormStepResponse extends StepResponse {
     }
 }
 
-@StepExecutorDecorator(ExecutorType.BRAINSTORM, 'Generate creative ideas and possibilities through brainstorming', true)
-export class BrainstormExecutor implements StepExecutor<BrainstormStepResponse> {
+@StepExecutorDecorator(ExecutorType.GENERATE_SLIDES, 'Generate a slide deck', true)
+export class GenerateSlidesExecutor implements StepExecutor<BrainstormStepResponse> {
     protected generateSlideContent(ideas: any[]): SlideContent[] {
         return ideas.map((idea, index) => ({
             title: idea.title,
@@ -177,7 +177,7 @@ export class BrainstormExecutor implements StepExecutor<BrainstormStepResponse> 
                 isComplete: response?.isComplete || false
             },
             artifacts: [{
-                type: ArtifactType.PRESENTATION,
+                type: ArtifactType.Presentation,
                 content: Buffer.from(revealJS),
                 metadata: {
                     title: response?.topic,

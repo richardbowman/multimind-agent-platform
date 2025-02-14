@@ -455,9 +455,8 @@ export abstract class StepBasedAgent extends Agent {
                     params.partialPost = await this.reply(replyTo, {
                         message
                     }, {
-                        props: {
-                            partial: true
-                        }
+                        partial: true,
+                        "project-ids": [params.projectId]
                     });
                 } else {
                     params.partialPost = await this.chatClient.updatePost(params.partialPost.id, message);

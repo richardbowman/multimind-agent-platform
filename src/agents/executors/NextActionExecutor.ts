@@ -106,10 +106,14 @@ export class NextActionExecutor implements StepExecutor {
         if (params.steps) {
             prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
         }
-        prompt.addContext(sequences.map((seq, i) => 
-            `### SEQUENCE ${i+1} of ${sequences.length}: ID: [${seq.getName()}] (${seq.getDescription()}):
-${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description}`).join('\n')}`
-        ).join('\n\n'));
+
+        const sequencesPrompt = sequences.map((seq, i) => {
+            const seqText = seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description} ${(params.executionMode === 'conversation' && step.interaction) ?? ""}`).join("\n");
+            return `### SEQUENCE ${i+1} of ${sequences.length}: ID: [${seq.getName()}] (${seq.getDescription()}):\n${seqText}`;
+        }).join('\n\n');
+            
+        prompt.addInstruction(sequencesPrompt);
+
         prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
             .filter(metadata => metadata.planner)
             .map(({ key, description }) => `[${key}]: ${description}`)
@@ -128,7 +132,7 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
         await prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema, "Before providing your action, please think out your choice out loud.");
 
         const responseText = await this.modelHelpers.generate({
-            message: params.message,
+            message: params.message||params.stepGoal,
             instructions: prompt,
             modelType: ModelType.ADVANCED_REASONING
         }); 
@@ -154,15 +158,6 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
             await this.projects.addTask(project, newTask);
         }
 
-        // Convert NextActionResponse to PlanStepsResponse
-        const planResponse: PlanStepsResponse = {
-            reasoning: response.reasoning,
-            steps: response.action ? [{
-                actionType: response.nextAction,
-                context: response.taskDescription
-            }] : []
-        };
-
         await params.partialResponse("Planning...");
 
         return {
@@ -170,8 +165,13 @@ ${seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.descripti
             goal: response.revisedUserGoal,
             response: {
                 type: StepResponseType.Plan,
-                reasoning: planResponse.reasoning,
-                data: planResponse
+                reasoning: response.reasoning,
+                data: {
+                    steps: response.nextAction ? [{
+                        actionType: response.nextAction,
+                        context: response.taskDescription
+                    }] : []
+                }
             }
         };
     }

@@ -3,7 +3,7 @@ import { ModelMessageResponse } from "./ModelResponse";
 export interface ResearchDecomposition {
     goal: string;
     strategy: string;
-    researchRequested: string[];
+    researchTopic: string[];
 }
 
 export interface ResearchArtifactResponse extends ModelMessageResponse {

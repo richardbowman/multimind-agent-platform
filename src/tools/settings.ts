@@ -178,6 +178,7 @@ export interface StepSequenceConfig {
         executor: string;
         description?: string;
         config?: Record<string, any>;
+        interaction?: string;
     }>;
 }
 

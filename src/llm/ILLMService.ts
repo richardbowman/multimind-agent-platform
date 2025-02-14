@@ -35,11 +35,10 @@ export interface ILLMService {
     shutdown(): Promise<void>;
     initializeChatModel(modelPath: string): Promise<void>;
     sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
-    sendVisionRequest<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
+    sendVisionRequest?<T extends ModelResponse = ModelMessageResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     countTokens(content: string): Promise<number>;
     getLogger(): LLMCallLogger;
     getAvailableModels(searchParams?: ModelSearchParams): Promise<ModelInfo[]>;
-    getAvailableEmbedders(searchParams?: ModelSearchParams): Promise<EmbedderModelInfo[]>;
 
     /** @deprecated */
     generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: LLMOptions): Promise<T>;
@@ -82,6 +81,7 @@ export interface LLMPredictionOpts {
 
 export interface IEmbeddingService {
     initializeEmbeddingModel(modelPath: string): Promise<void>;
+    getAvailableEmbedders(searchParams?: ModelSearchParams): Promise<EmbedderModelInfo[]>;
     getEmbeddingModel(): IEmbeddingFunction;
 }
 

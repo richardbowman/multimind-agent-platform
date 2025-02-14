@@ -1,16 +1,14 @@
-import { chromium, devices } from 'playwright-extra';
-import type Browser from 'playwright-extra';
+import { chromium } from 'playwright-extra';
 
 import TurndownService from 'turndown';
 import { CheerioAPI, load } from 'cheerio';
 import { ArtifactManager } from '../tools/artifactManager';
-import crypto from 'crypto';
-
-// Load the stealth plugin and use defaults (all tricks to hide playwright usage)
-// Note: playwright-extra is compatible with most puppeteer-extra plugins
 import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import Logger from './logger';
 import { Settings } from 'src/tools/settings';
+import { ClientSettings } from 'src/tools/settingsDecorators';
+import { BrowserWindow } from "electron";
+import { ArtifactType } from 'src/tools/artifact';
 
 // Add to your Settings class if not already present
 export class ScrapingSettings {
@@ -40,8 +38,6 @@ export class ScrapingSettings {
     scrapingProvider: string = 'puppeteer';
 }
 
-import { BrowserWindow } from "electron";
-import { ArtifactType } from 'src/tools/artifact';
 
 // Add stealth plugin
 chromium.use(StealthPlugin());
@@ -52,7 +48,7 @@ export interface LinkRef {
 }
 
 class ScrapeHelper {
-    private browser: Browser | null = null;
+    private browser: any | null = null;
     private artifactManager: ArtifactManager;
     private settings: Settings;
     private electronWindows: BrowserWindow[] = [];
@@ -146,9 +142,10 @@ class ScrapeHelper {
             Logger.error('Error during cleanup:', error);
         }
     }
+    
     async scrapePage(url: string, metadata: Record<string, any> = {}): Promise<{ content: string, links: { href: string, text: string }[], title: string, screenshot?: Buffer, artifactId: string }> {
         // Only initialize browser when actually scraping
-        if (!this.browser && !this.electronWindow) {
+        if (!this.browser && !this.electronWindows) {
             await this.initialize();
         }
 

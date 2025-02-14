@@ -355,8 +355,8 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                         </Typography>
                                         {key === 'message' ? (
                                             <ReactMarkdown>
-                                                {value as string}
-                                            </ReactMarkdown>
+                                                {typeof value === 'object' ? JSON.stringify(value, null, 2) : (value as Object).toString()}
+                                        </ReactMarkdown>
                                         ) : (
                                             <FormattedDataView data={value} />
                                         )}

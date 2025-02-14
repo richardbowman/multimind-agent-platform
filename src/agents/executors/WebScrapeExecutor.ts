@@ -7,7 +7,6 @@ import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { StepExecutor } from "../interfaces/StepExecutor";
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
-import { ModelMessageResponse } from "src/schemas/ModelResponse";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { createUUID } from "src/types/uuid";
 import { Artifact, ArtifactType } from "src/tools/artifact";
@@ -262,7 +261,8 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         const existingSummaries = await this.artifactManager.getArtifacts({
             type: 'webpage'
         });
-        const artifact = existingSummaries.find(a => a.metadata?.url === url);
+        const itemId = existingSummaries.find(a => a.metadata?.url === url)?.id;
+        const artifact = itemId && this.artifactManager.loadArtifact(itemId);
         return artifact || null;
     }
 
@@ -275,6 +275,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         if (artifact) {
             return {
                 summary: artifact.content.toString(),
+                url: artifact.metadata?.url,
                 date: artifact.metadata?.contentDate,
                 relevant: true
             }

@@ -31,7 +31,8 @@ export enum ArtifactType {
   Calendar = "calendar",
   ProcedureGuide = "procedure-guide",
   APIData = "api-data",
-  PRESENTATION = "presentation"
+  Presentation = "presentation",
+  Unknown = "unknown"
 }
 
 export interface Artifact extends ArtifactItem {

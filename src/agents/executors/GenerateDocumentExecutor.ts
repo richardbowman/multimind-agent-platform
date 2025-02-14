@@ -3,6 +3,7 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { GenerateArtifactExecutor } from './GenerateArtifactExecutor';
 import { JSONSchema } from 'openai/lib/jsonschema';
+import { ArtifactType } from 'src/tools/artifact';
 
 @StepExecutorDecorator(ExecutorType.GENERATE_DOCUMENT, 'Create/revise Markdown documents')
 export class GenerateDocumentExecutor extends GenerateArtifactExecutor {
@@ -16,5 +17,13 @@ export class GenerateDocumentExecutor extends GenerateArtifactExecutor {
 
     protected getSupportedFormats(): string[] {
         return ['markdown'];
+    }
+
+    getArtifactType(codeBlockType: string): ArtifactType {
+        if (codeBlockType === "markdown") {
+            return ArtifactType.Document;
+        } else {
+            return ArtifactType.Unknown;
+        }
     }
 }

@@ -2,6 +2,7 @@ import React, { useEffect, useRef } from 'react';
 import { Box, Paper, Typography } from '@mui/material';
 import { Chart, registerables } from 'chart.js';
 import { BarChartData } from '../../../../../schemas/BarChartData';
+import { CustomScrollbarStyles } from '../../styles/styles';
 
 Chart.register(...registerables);
 
@@ -78,6 +79,8 @@ export const ChartRenderer: React.FC<ChartRendererProps> = ({ data }) => {
             flexDirection: 'column',
             width: '100%',
             height: '100%',
+            overflow: 'auto',
+            ...CustomScrollbarStyles,
             p: 2
         }}>
             <Paper elevation={3} sx={{ 

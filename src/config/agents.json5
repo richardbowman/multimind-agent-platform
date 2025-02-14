@@ -39,7 +39,7 @@
               "className": "GenerateSpreadsheetExecutor"
             },
             {
-              "className": "BrainstormExecutor"
+              "className": "GenerateSlidesExecutor"
             },
             {
               "className": "DelegationExecutor"
@@ -73,7 +73,7 @@
           "plannerType": "nextStep",
           "executors": [
             {
-              "className": "BrainstormExecutor"
+              "className": "GenerateSlidesExecutor"
             },
             {
               "className": "KnowledgeCheckExecutor"
@@ -166,7 +166,7 @@
                   "description": "Extract the URLs from the task information"
                 },
                 {
-                  "executor": "web-scrape",
+                  "executor": "download-webpage",
                   "description": "Scrape provided URL"
                 },
                 {
@@ -174,7 +174,7 @@
                   "description": "Select child links from this page"
                 },
                 {
-                  "executor": "web-scrape",
+                  "executor": "download-webpage",
                   "description": "Scrape selected child links"
                 },
                 {
@@ -197,8 +197,8 @@
                   "description": "Select child links found in the document"
                 },
                 {
-                  "executor": "web-scrape",
-                  "description": "Scrape selected child links"
+                  "executor": "download-webpage",
+                  "description": "Download selected child links"
                 },
                 {
                   "executor": "final-response",
@@ -212,16 +212,16 @@
               "description": "Search, process links, and provide final response.",
               "steps": [
                 {
-                  "executor": "web-search",
-                  "description": "Perform web search"
+                  "executor": "run-search-engine",
+                  "description": "Get result links from the search engine"
                 },
                 {
                   "executor": "select-links",
-                  "description": "Select child links from search results"
+                  "description": "Select best links from search results"
                 },
                 {
-                  "executor": "web-scrape",
-                  "description": "Scrape selected child links"
+                  "executor": "download-webpage",
+                  "description": "Download the pages of the selected links"
                 },
                 {
                   "executor": "final-response",
@@ -236,14 +236,18 @@
               "steps": [
                 {
                   "executor": "artifact-selector",
-                  "description": "Select child links from this page"
+                  "description": "Select the artifact that you expect to contain the links."
                 },
                 {
-                  "executor": "SELECT_LINKS",
-                  "description": "Scrape selected child links"
+                  "executor": "select-links",
+                  "description": "Select the links from the document."
                 },
                 {
-                  "executor": "FINAL_RESPONSE",
+                  "executor": "download-webpage",
+                  "description": "Download the pages of the selected links"
+                },
+                {
+                  "executor": "final-response",
                   "description": "Provide final response"
                 }
               ]
@@ -307,10 +311,6 @@
                   "description": "Capture API calls and responses"
                 },
                 {
-                  "executor": "data-analysis",
-                  "description": "Analyze captured API data"
-                },
-                {
                   "executor": "generate-artifact",
                   "description": "Create structured report from API data"
                 }
@@ -367,7 +367,7 @@
           "plannerType": "advanced",
           "executors": [
             {
-              "className": "BrainstormExecutor"
+              "className": "GenerateSlidesExecutor"
             },
             {
               "className": "GenerateDocumentExecutor",
@@ -423,19 +423,16 @@
         "description": "Helps create and document product specifications",
         "enabled": true,
         "config": {
+          "plannerType": "nextStep",
           "purpose": "My name is Product Analyst. \
   My goal is to help you define, document and refine product specifications.",
-          "finalInstructions": "When working on product specifications: \
-  1. Start with market research and user needs analysis \
-  2. Define clear product requirements \
-  3. Document technical specifications \
-  4. Create user stories and acceptance criteria \
-  5. Develop product roadmaps \
-  6. Generate product requirement documents (PRDs) \
-  7. Validate specifications with stakeholders",
+          "finalInstructions": "",
           "executors": [
             {
-              "className": "BrainstormExecutor"
+              "className": "GenerateSlidesExecutor"
+            },
+            {
+              "className": "GenerateDiagramExecutor"
             },
             {
               "className": "GenerateDocumentExecutor",
@@ -445,16 +442,57 @@
               }
             },
             {
+              "className": "GenerateSpreadsheetExecutor"
+            },
+            {
               "className": "GenerateDiagramExecutor"
             },
             {
               "className": "GoalConfirmationExecutor"
             },
-            {
+            /*{
               "className": "AnswerQuestionsExecutor"
-            },
+            },*/
             {
               className: "UnderstandGoalsExecutor"
+            }
+          ],
+          "stepSequences": [
+            {
+              "id": "VISION",
+              "name": "Product vision",
+              "description": "Develop product vision and high-level product requirements",
+              "steps": [
+                {
+                  "executor": "understand-goals",
+                  "description": "Gain an understanding of user's high level idea."
+                },
+                {
+                  "executor": "generate-diagram",
+                  "description": "Brainstorm the overall product considerations in a mindmap to support the idea.",
+                  "interaction": "Make sure to follow-up with a recommended next step."
+                },
+                {
+                  "executor": "generate-spreadsheet",
+                  "description": "Create the initial list of user stories that would enable creating a prototype.",
+                  "interaction": "Follow-up and see if any changes are desired"
+                }
+              ]
+            },
+            {
+              "id": "PROTOTYPE",
+              "name": "Product Prototype",
+              "description": "Develop product prototype using provided user stories",
+              "steps": [
+                {
+                  "executor": "goal-confirmation",
+                  "description": "Make sure we have the attached user stories. If not, ask the user to attach them."
+                },
+                {
+                  "executor": "generate-diagram",
+                  "description": "Develop sequence diagrams to better explain the flow for each user story."
+                }
+              ]
             }
           ]
         }
@@ -521,7 +559,7 @@
   7. Validate strategies with stakeholders",
           "executors": [
             {
-              "className": "BrainstormExecutor"
+              "className": "GenerateSlidesExecutor"
             },
             {
               "className": "CalendarExecutor"

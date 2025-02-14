@@ -6,11 +6,11 @@
     "defaultResponder": "@product",
     "initialTasks": [
         {
-            "description": "Understand the product vision and product requirements to generate product requirements",
+            "description": "Document the product vision and high-level epics.",
             "type": "planning"
         },
         {
-            "description": "Understand desired technologies to use, and document a technical plan",
+            "description": "Use high-level epics to create a working prototype.",
             "type": "setup",
             "dependsOn": ["define-project-requirements"]
         }

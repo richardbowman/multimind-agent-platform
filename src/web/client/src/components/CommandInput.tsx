@@ -410,26 +410,23 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                         </div>
                     )}
                 </div>
-                {showAssetDialog && createPortal(
-                    <AssetSelectionDialog
-                        assets={allArtifacts}
-                        onSelect={(assetIds) => {
-                            const newArtifacts = allArtifacts.filter(a =>
-                                assetIds.includes(a.id)
-                            );
-                            setPendingArtifacts(prev => [
-                                ...prev,
-                                ...newArtifacts.filter(newArtifact =>
-                                    !prev.some(existing => existing.id === newArtifact.id)
-                                )
-                            ]);
-                            setShowAssetDialog(false);
-                        }}
-                        onClose={() => setShowAssetDialog(false)}
-                    />,
-                    document.getElementById('portal-root')!
-                )
-                )}
+                {showAssetDialog && 
+                <AssetSelectionDialog
+                    assets={allArtifacts}
+                    onSelect={(assetIds) => {
+                        const newArtifacts = allArtifacts.filter(a =>
+                            assetIds.includes(a.id)
+                        );
+                        setPendingArtifacts(prev => [
+                            ...prev,
+                            ...newArtifacts.filter(newArtifact =>
+                                !prev.some(existing => existing.id === newArtifact.id)
+                            )
+                        ]);
+                        setShowAssetDialog(false);
+                    }}
+                    onClose={() => setShowAssetDialog(false)}
+                />}
                 <textarea
                     ref={inputRef}
                     value={input}

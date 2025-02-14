@@ -8,6 +8,7 @@ import { ModelType } from "src/llm/LLMServiceFactory";
 import { parseAndMergeNestedHeaders } from "@mattermost/client/lib/client4";
 import { NextActionExecutor } from "./executors/NextActionExecutor";
 import { StepSequence } from "src/llm/modelHelpers";
+import { ExecutorType } from "./interfaces/ExecutorType";
 
 export class ConfigurableAgent extends StepBasedAgent {
     agentName: string | undefined;
@@ -48,8 +49,9 @@ export class ConfigurableAgent extends StepBasedAgent {
                     seq.id,
                     seq.description || '',
                     seq.steps.map(step => ({
-                        type: step.executor,
-                        description: step.description || ''
+                        type: ExecutorType[Object.keys(ExecutorType).find(k => ExecutorType[k] === step.executor)||""],
+                        description: step.description || '',
+                        interaction: step.interaction
                     }))
                 );
             }

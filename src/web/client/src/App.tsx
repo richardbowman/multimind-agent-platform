@@ -319,6 +319,7 @@ const App: React.FC = () => {
                                     <LogProvider>
                                         <ToolbarActionsProvider>
                                             <AppContent />
+                                            <div id="portal-root"></div>
                                         </ToolbarActionsProvider>
                                     </LogProvider>
                                 </TaskProvider>

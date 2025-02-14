@@ -3,6 +3,7 @@ import Mic from '@mui/icons-material/Mic';
 import Stop from '@mui/icons-material/Stop';
 import { useIPCService } from '../contexts/IPCContext';
 import { useDataContext } from '../contexts/DataContext';
+import { useSnackbar } from '../contexts/SnackbarContext';
 
 export const MicrophoneButton: React.FC = () => {
     const { currentChannelId, currentThreadId } = useDataContext();
@@ -70,6 +71,9 @@ export const MicrophoneButton: React.FC = () => {
         // If already recording, stop and clean up
         if (isRecordingRef.current && mediaRecorderRef.current) {
             try {
+                useSnackbar().showSnackbar({
+                    message: "Processing speech..."
+                });
                 setIsRecording(false);
                 isRecordingRef.current = false; // Update both state and ref
                 mediaRecorderRef.current.stop();
@@ -87,6 +91,10 @@ export const MicrophoneButton: React.FC = () => {
                 if (!MediaRecorder.isTypeSupported('audio/webm')) {
                     throw new Error('audio/webm format not supported');
                 }
+
+                useSnackbar().showSnackbar({
+                    message: "Listening..."
+                });
 
                 const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
                 const recorder = new MediaRecorder(stream, { 

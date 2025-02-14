@@ -44,7 +44,6 @@ export class LLMServiceFactory {
                     settings.openai.api.key,
                     settings.models.conversation.openai || "gpt-3.5-turbo",
                     settings.models.embeddings.openai || "text-embedding-ada-002",
-                    undefined,
                     settings
                 );
             case LLMProvider.LLAMA_CPP:
@@ -70,7 +69,8 @@ export class LLMServiceFactory {
             case LLMProvider.ANTHROPIC:
                 return new AnthropicService(
                     settings.anthropic.api.key,
-                    settings.models.conversation.anthropic
+                    settings.models.conversation.anthropic,
+                    settings
                 );
             case LLMProvider.LLAMA_CPP:
                 return new LlamaCppService(settings.llama_cpp_execution_mode);

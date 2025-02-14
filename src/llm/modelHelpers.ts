@@ -32,8 +32,14 @@ export type WithTokens<T> = T extends object ? T & {
     };
 } : never;
 
+export interface StepSequenceItem {
+    type: ExecutorType;
+    description?: string;
+    interaction?: string;
+}
+
 export class StepSequence {
-    private steps: { type: string, description: string }[] = [];
+    private steps: StepSequenceItem[] = [];
     private currentStepIndex = 0;
     private name: string;
     private description: string;
@@ -41,7 +47,7 @@ export class StepSequence {
     constructor(
         name: string,
         description: string,
-        initialSteps?: { type: string, description: string }[]
+        initialSteps?: StepSequenceItem[]
     ) {
         this.name = name;
         this.description = description;
@@ -304,7 +310,7 @@ export class ModelHelpers {
         // }
 
         // Fetch the latest memory artifact for the channel
-        let augmentedInstructions;
+        let     augmentedInstructions;
         const prompt = structure.getPrompt();
         if (isObject(prompt) && prompt instanceof PromptBuilder) {
             augmentedInstructions = prompt.build();

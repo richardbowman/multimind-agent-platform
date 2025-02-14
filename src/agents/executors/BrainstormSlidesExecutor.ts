@@ -11,9 +11,10 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StructuredOutputPrompt } from 'src/llm/ILLMService';
 import { ArtifactType } from 'src/tools/artifact';
+import { GenerateSlidesExecutor } from './GenerateSlidesExecutor';
 
 @StepExecutorDecorator(ExecutorType.BRAINSTORM_SLIDES, 'Generate creative ideas and create Reveal.js slides', true)
-export class BrainstormSlidesExecutor extends BrainstormExecutor {
+export class BrainstormSlidesExecutor extends GenerateSlidesExecutor {
     constructor(params: ExecutorConstructorParams) {
         super(params);
     }

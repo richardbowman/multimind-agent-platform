@@ -30,7 +30,7 @@ export class WebSearchExecutor implements StepExecutor<StepResponse> {
             type: 'search_results',
             replan: ReplanType.Allow,
             response: {
-                status: `Query found ${searchResults.length} possible links (still need to select best links and retrieve page content)`,
+                status: `Query found ${searchResults.length} possible links (still need to select best links and download page content)`,
                 data: {
                     type: StepResponseType.SearchResults,
                     searchResults,

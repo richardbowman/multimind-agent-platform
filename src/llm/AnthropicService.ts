@@ -5,20 +5,24 @@ import { AsyncQueue } from "../helpers/asyncQueue";
 import { BaseLLMService } from "./BaseLLMService";
 import JSON5 from 'json5';
 import Anthropic from '@anthropic-ai/sdk';
+import { ModelType } from "./LLMServiceFactory";
+import { Settings } from "src/tools/settings";
 
 export class AnthropicService extends BaseLLMService {
     private client: Anthropic;
-    private model: string;
     private queue: AsyncQueue = new AsyncQueue();
     private embeddingService?: ILLMService;
 
-    constructor(apiKey: string, model: string, embeddingService?: ILLMService) {
+    constructor(apiKey: string, private model: string, private settings: Settings, embeddingService?: ILLMService) {
         super("anthropic");
         this.client = new Anthropic({
             apiKey: apiKey
         });
-        this.model = model;
         this.embeddingService = embeddingService;
+    }
+
+    async shutdown(): Promise<void> {
+        return;
     }
 
     async initializeEmbeddingModel(modelPath: string): Promise<void> {
@@ -41,7 +45,7 @@ export class AnthropicService extends BaseLLMService {
         return this.embeddingService.getEmbeddingModel();
     }
 
-    private async makeAnthropicRequest(messages: any[], systemPrompt?: string, opts: any = {}) {
+    private async makeAnthropicRequest(messages: any[], modelType?: ModelType, systemPrompt?: string, opts: any = {}) {
         const tools = opts.tools?.map(tool => ({
             name: tool.name,
             description: tool.description,
@@ -53,8 +57,11 @@ export class AnthropicService extends BaseLLMService {
         }));
 
         try {
+            const modelTypeDef = modelType || ModelType.REASONING; //defaulting right now to reasoning since most aren't set
+            const model = this.settings?.models[modelTypeDef][this.settings?.providers.chat];
+
             const response = await this.client.messages.create({
-                model: this.model,
+                model: model,
                 messages: messages,
                 system: systemPrompt || "",
                 max_tokens: opts.maxTokens || 2048,
@@ -82,6 +89,7 @@ export class AnthropicService extends BaseLLMService {
             try {
                 const response = await this.makeAnthropicRequest(
                     messages,
+                    params.modelType,
                     params.systemPrompt,
                     params.opts
                 );
@@ -95,7 +103,7 @@ export class AnthropicService extends BaseLLMService {
                 
                 if (toolResponse) {
                     content = {
-                        message: textResponse,
+                        // message: textResponse?.text, we can't do this it throws off validators
                         ...toolResponse.input as object
                     };
                 } else if (params.parseJSON && textResponse) {

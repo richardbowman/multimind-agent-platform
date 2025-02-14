@@ -32,7 +32,8 @@ export enum StepResponseType {
     Tasks = "tasks",
     Plan = "plan",
     Brainstorm = "brainstorm",
-    SearchResults = "SearchResults"
+    SearchResults = "SearchResults",
+    Message = "Message"
 }
 
 export enum ReplanType {

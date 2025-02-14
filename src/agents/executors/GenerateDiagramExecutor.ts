@@ -1,3 +1,4 @@
+import { ArtifactType } from 'src/tools/artifact';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { GenerateArtifactExecutor } from './GenerateArtifactExecutor';
@@ -15,5 +16,13 @@ export class GenerateDiagramExecutor extends GenerateArtifactExecutor {
 
     protected getSupportedFormats(): string[] {
         return ['mermaid'];
+    }
+
+    getArtifactType(codeBlockType: string): ArtifactType {
+        if (codeBlockType === "mermaid") {
+            return ArtifactType.Diagram;
+        } else {
+            return ArtifactType.Unknown;
+        }
     }
 }

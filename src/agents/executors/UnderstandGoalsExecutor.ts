@@ -85,7 +85,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         
         const project = this.taskManager.getProject(params.projectId);
         
-        const formattedMessage = this.formatMessage(params.goal, project, params.context?.artifacts);
+        // const formattedMessage = this.formatMessage(project, params.context?.artifacts);
 
         const prompt = this.modelHelpers.createPrompt();
 
@@ -118,7 +118,7 @@ IMPORTANT:
         prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema);
         
         const rawMessage = await this.modelHelpers.generate({
-            message: formattedMessage,
+            message: params.message || params.stepGoal,
             instructions: prompt,
             threadPosts: params.context?.threadPosts
         });

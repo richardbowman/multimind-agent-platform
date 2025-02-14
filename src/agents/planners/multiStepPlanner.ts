@@ -36,8 +36,6 @@ export class MultiStepPlanner implements Planner {
     ) {}
 
     public async planSteps(handlerParams: HandlerParams): Promise<PlanStepsResponse> {
-        Logger.progress(`Planning steps for ${StringUtils.truncateWithEllipsis(handlerParams.userPost.message, 100)}`);
-
         const executorMetadata = Array.from(this.stepExecutors.entries())
             .map(([key, executor]) => {
                 const metadata = Reflect.getMetadata(EXECUTOR_METADATA_KEY, executor.constructor);

@@ -4,7 +4,7 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResponse, StepResponseType, StepResult, StepResultType, WithMessage } from '../interfaces/StepResult';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ArtifactManager } from 'src/tools/artifactManager';
-import { Artifact } from 'src/tools/artifact';
+import { Artifact, ArtifactType } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
 import { TaskManager } from 'src/tools/taskManager';
 import { PromptBuilder, ContentType, OutputType } from 'src/llm/promptBuilder';
@@ -117,7 +117,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
 
                 // Prepare the artifact
                 const artifactUpdate: Partial<Artifact> = {
-                    type: md[0].type?.toLowerCase(),
+                    type: this.getArtifactType(md[0].type?.toLowerCase()),
                     content: result.content,
                     metadata: {
                         title: result.title,
@@ -137,9 +137,8 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
                     }
                 } else {
                     // Validate document type
-                    const validTypes = ['markdown', 'csv', 'mermaid'];
-                    if (!artifactUpdate.type || !validTypes.includes(artifactUpdate.type)) {
-                        throw new Error(`Invalid document type: ${artifactUpdate.type}. Must be one of: ${validTypes.join(', ')}`);
+                    if (!artifactUpdate.type || !Object.values(ArtifactType).includes(artifactUpdate.type)) {
+                        throw new Error(`Invalid document type: ${artifactUpdate.type}. Must be one of: ${Object.values(ArtifactType).join(', ')}`);
                     }
                 }
 
@@ -169,4 +168,6 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
             };
         }
     }
+
+    abstract getArtifactType(codeBlockType: string): ArtifactType;
 }
