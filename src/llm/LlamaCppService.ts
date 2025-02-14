@@ -1,23 +1,17 @@
 import { BaseLLMService } from "./BaseLLMService";
 import { type LlamaChatSession, type Llama, type LlamaContext, type LlamaModel, type LlamaOptions, LlamaChatSessionOptions, LlamaEmbeddingContext, ModelDownloaderOptions, ModelDownloader, GgufFileInfo } from "node-llama-cpp";
-import { IEmbeddingFunction, EmbedderModelInfo, IEmbeddingService, ILLMService, LLMRequestParams, ModelRole, ModelSearchParams } from "./ILLMService";
+import { IEmbeddingFunction, EmbedderModelInfo, IEmbeddingService, LLMRequestParams, ModelRole, ModelSearchParams } from "./ILLMService";
 import { ModelMessageResponse, ModelResponse } from "../schemas/ModelResponse";
-import { LLMCallLogger } from "./LLMLogger";
 import Logger from "src/helpers/logger";
-import JSON5 from "json5";
 import { promises as fs } from 'fs';
 import path from 'path';
-import https from 'https';
-import { createWriteStream } from 'node:fs';
-import { pipeline } from 'stream/promises';
 import { getDataPath } from "src/helpers/paths";
 import axios from 'axios';
 import { ModelInfo } from "./types";
 import { ConfigurationError } from "src/errors/ConfigurationError";
-import { sleep } from "src/utils/sleep";
-import { ModelInfosPage } from "@anthropic-ai/sdk/resources";
-import { app, BrowserWindow, ipcMain } from "electron";
+import { app } from "electron";
 import { Worker } from "node:worker_threads";
+import { createUUID } from "src/types/uuid";
 
 interface HFModel {
     id: string;
@@ -62,8 +56,9 @@ class LlamaEmbedder implements IEmbeddingFunction {
 
     async generate(texts: string[]): Promise<number[][]> {
         const embeddings: number[][] = [];
+        const progressId = `index-chunks-${createUUID()}`;
         for (let i = 0; i < texts.length; i++) {
-            if (texts.length > 5) Logger.progress(`Indexing documents (Chunk ${i + 1} of ${texts.length})`, (i + 1) / texts.length, "index-chunks");
+            if (texts.length > 5) Logger.progress(`Indexing documents (Chunk ${i + 1} of ${texts.length})`, (i + 1) / texts.length, progressId);
             try {
                 const embedding = await this.embeddingContext.getEmbeddingFor(texts[i]);
                 embeddings.push(Array.from(embedding.vector)); // Convert Float32Array to number[]
