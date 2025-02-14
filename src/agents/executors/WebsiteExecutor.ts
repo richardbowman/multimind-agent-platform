@@ -23,9 +23,9 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         prompt.addInstruction("- Use modern, responsive design principles");
         prompt.addInstruction("- You may use React and Material-UI (MUI) components");
         prompt.addInstruction("- Use these exact script references in your HTML:");
-        prompt.addInstruction("  <script src='/react/umd/react.development.js'></script>");
-        prompt.addInstruction("  <script src='/react-dom/umd/react-dom.development.js'></script>");
-        prompt.addInstruction("  <script src='/mui/umd/material-ui.production.min.js'></script>");
+        prompt.addInstruction("  <script src='/react/react.min.js'></script>");
+        prompt.addInstruction("  <script src='/react-dom/react-dom.min.js'></script>");
+        prompt.addInstruction("  <script src='/mui/material-ui.min.js'></script>");
         prompt.addInstruction("- Do not use any other CDN-hosted libraries");
         prompt.addInstruction("- Include all necessary JavaScript code within the HTML file");
         
@@ -47,9 +47,9 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 
     protected validateGeneratedCode(code: string): boolean {
         // Check for proper React/MUI references
-        const hasReact = code.includes('/react/umd/react.development.js');
-        const hasReactDOM = code.includes('/react-dom/umd/react-dom.development.js');
-        const hasMUI = code.includes('/mui/umd/material-ui.production.min.js');
+        const hasReact = code.includes('/react/react.min.js');
+        const hasReactDOM = code.includes('/react-dom/react-dom.min.js');
+        const hasMUI = code.includes('/mui/material-ui.min.js');
         
         if (!hasReact || !hasReactDOM || !hasMUI) {
             throw new Error('Generated code must use the provided React and MUI library paths');
