@@ -277,6 +277,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             
                             // Skip rendering code blocks when collapsed
                             if (!isExpanded && !inline) {
+                                const isJson = className?.includes('language-json');
                                 return (
                                     <Box component="span" sx={{
                                         bgcolor: 'background.default',
@@ -284,7 +285,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         borderRadius: 1,
                                         fontFamily: 'monospace'
                                     }}>
-                                        {'[code block]'}
+                                        {isJson ? '[JSON]' : '[code block]'}
                                     </Box>
                                 );
                             }
