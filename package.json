@@ -30,6 +30,7 @@
     "watch:web": "webpack --config webpack.config.js --mode development --watch",
     "watch:server": "concurrently \"webpack --config webpack.backend.config.js --mode development --watch\" \"webpack --config webpack.preload.config.js --mode development --watch\"",
     "build:worker": "webpack --config webpack.worker.config.js",
+    "build:website-libs": "webpack --config webpack.website-libs.config.js",
     "watch:worker": "webpack --config webpack.worker.config.js --watch --mode development",
     "watch:app": "concurrently \"npm run watch:web\" \"npm run watch:server\" \"npm run watch:worker\"",
     "electron:dev": "concurrently \"npm run watch:web\" \"npm run watch:server\" \"yarn watch:schemas\" \"yarn watch:worker\" \"wait-on dist/main.electron.js dist/web/bundle.js && yarn electron:start:dev\"",
