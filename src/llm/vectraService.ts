@@ -164,6 +164,25 @@ class VectraService extends EventEmitter implements IVectorDatabase {
     async getTokenCount(content: string): Promise<number> {
         return this.llmService.countTokens(content);
     }
+
+    async deleteDocuments(ids: string[]): Promise<void> {
+        await syncQueue.enqueue(async () => {
+            if (!this.index) throw new Error("Index not initialized");
+            
+            await this.index.beginUpdate();
+            for (const id of ids) {
+                try {
+                    await this.index.deleteItem(id);
+                } catch (error) {
+                    // Skip if item doesn't exist
+                    if (!asError(error).message.includes('not found')) {
+                        throw error;
+                    }
+                }
+            }
+            await this.index.endUpdate();
+        });
+    }
 }
 
 export default VectraService;

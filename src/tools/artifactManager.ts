@@ -296,7 +296,12 @@ export class ArtifactManager {
       delete metadata[artifactId];
       await this.saveArtifactMetadata(metadata);
 
-      // Remove from Chroma if it exists
+      // Remove from vector database
+      try {
+        await this.vectorDb.deleteDocuments([artifactId]);
+      } catch (error) {
+        Logger.error('Error deleting artifact from vector database:', error);
+      }
 
       Logger.info(`Successfully deleted artifact: ${artifactId}`);
     } catch (error) {
