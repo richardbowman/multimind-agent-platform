@@ -12,6 +12,34 @@ import StealthPlugin from 'puppeteer-extra-plugin-stealth';
 import Logger from './logger';
 import { Settings } from 'src/tools/settings';
 
+// Add to your Settings class if not already present
+export class ScrapingSettings {
+    @ClientSettings({
+        label: 'Display Scrape Browser',
+        category: 'Scraping',
+        type: 'boolean',
+        description: 'Show the browser window during scraping'
+    })
+    displayScrapeBrowser: boolean = false;
+
+    @ClientSettings({
+        label: 'Page Scrape Timeout',
+        category: 'Scraping',
+        type: 'number',
+        description: 'Timeout in seconds for page scraping'
+    })
+    pageScrapeTimeout: number = 30;
+
+    @ClientSettings({
+        label: 'Scraping Provider',
+        category: 'Scraping',
+        type: 'select',
+        options: ['puppeteer', 'electron'],
+        description: 'Which browser provider to use for scraping'
+    })
+    scrapingProvider: string = 'puppeteer';
+}
+
 import { BrowserWindow } from "electron";
 import { ArtifactType } from 'src/tools/artifact';
 
@@ -186,9 +214,27 @@ class ScrapeHelper {
                         width: 1920,
                         height: 1080,
                         webPreferences: {
-                            webSecurity: false
+                            webSecurity: false,
+                            // Add more webPreferences to make it look like a real browser
+                            contextIsolation: false,
+                            webviewTag: true,
+                            nodeIntegration: false,
+                            sandbox: true
                         },
                         show: this.settings.displayScrapeBrowser
+                    });
+
+                    // Set user agent to mimic a real Chrome browser
+                    const userAgent = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36';
+                    window.webContents.setUserAgent(userAgent);
+
+                    // Set additional headers to make it look like a real browser
+                    window.webContents.session.webRequest.onBeforeSendHeaders((details, callback) => {
+                        details.requestHeaders['Accept-Language'] = 'en-US,en;q=0.9';
+                        details.requestHeaders['Sec-Ch-Ua'] = '"Not_A Brand";v="8", "Chromium";v="120"';
+                        details.requestHeaders['Sec-Ch-Ua-Mobile'] = '?0';
+                        details.requestHeaders['Sec-Ch-Ua-Platform'] = '"Windows"';
+                        callback({ requestHeaders: details.requestHeaders });
                     });
                     this.electronWindows.push(window);
                 }
@@ -205,7 +251,27 @@ class ScrapeHelper {
                 });
 
                 try {
-                    await window.loadURL(url);
+                    // First load a blank page to initialize the browser context
+                    await window.loadURL('about:blank');
+                    
+                    // Then load the actual URL with additional headers
+                    await window.loadURL(url, {
+                        extraHeaders: `
+                            Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8
+                            Accept-Encoding: gzip, deflate, br
+                            Accept-Language: en-US,en;q=0.9
+                            Cache-Control: no-cache
+                            Pragma: no-cache
+                            Sec-Fetch-Dest: document
+                            Sec-Fetch-Mode: navigate
+                            Sec-Fetch-Site: none
+                            Sec-Fetch-User: ?1
+                            Upgrade-Insecure-Requests: 1
+                        `
+                    });
+
+                    // Wait for page to fully load
+                    await new Promise(resolve => setTimeout(resolve, 2000));
                 } catch (e) {
                     Logger.error(`Failed to load URL in Electron: ${url}`, e);
                 }
