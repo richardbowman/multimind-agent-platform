@@ -3,6 +3,7 @@ import { MarkdownRenderer } from './MarkdownRenderer';
 import { CSVRenderer } from './CSVRenderer';
 import { Mermaid } from './Mermaid';
 import { ChartRenderer } from './ChartRenderer';
+import { WebpageRenderer } from './WebpageRenderer';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Box, Paper, Typography, IconButton } from '@mui/material';
@@ -481,6 +482,12 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         );
     }
 
+    // Handle webpage content
+    if (type === ArtifactType.Webpage || metadata?.mimeType === 'text/html') {
+        return <WebpageRenderer content={content} metadata={metadata} />;
+    }
+
+    // Handle markdown content
     if (content.length < 1024 * 10 && (type === 'markdown' || type === 'report' || type === ArtifactType.Document || metadata?.mimeType === 'text/markdown')) {
         return <MarkdownRenderer content={content} />;
     } else {
