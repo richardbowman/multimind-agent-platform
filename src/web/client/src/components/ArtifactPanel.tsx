@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useRef, useState, useMemo } from 'react';
 import { useToolbarActions } from '../contexts/ToolbarActionsContext';
 import { Artifact, ArtifactItem } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
@@ -32,7 +32,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
 
 export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
     const { 
-        filteredArtifacts: artifacts,
+        filteredArtifacts: allArtifacts,
         currentArtifact,
         setArtifactId,
     } = useFilteredArtifacts();
@@ -42,6 +42,16 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
         addArtifactToChannel,
         removeArtifactFromChannel
     } = useChannels();
+
+    // When viewing main channel, show pinned artifacts
+    const artifacts = useMemo(() => {
+        if (!channelId) {
+            const currentChannel = channels.find(c => c.id === currentChannelId);
+            const pinnedArtifactIds = currentChannel?.artifactIds || [];
+            return allArtifacts.filter(a => pinnedArtifactIds.includes(a.id));
+        }
+        return allArtifacts;
+    }, [allArtifacts, channelId, currentChannelId, channels]);
 
     const [drawerOpen, setDrawerOpen] = useState(false);
     const { actions, registerActions, unregisterActions, updateActionState } = useToolbarActions();
