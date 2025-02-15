@@ -39,10 +39,12 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         prompt.addInstruction("- Use HTML5 doctype declaration");
         prompt.addInstruction("- Include comments for major sections");
         prompt.addInstruction("- Use React functional components with proper JSX syntax");
+        prompt.addInstruction("  - Each component must return a single root element (use React.Fragment or a div)");
         prompt.addInstruction("- Use MUI components with proper import syntax");
         prompt.addInstruction("- Ensure all React components are properly mounted");
         prompt.addInstruction("- Place all JSX code within a separate <script type='text/babel'> tag");
         prompt.addInstruction("- Do not mix JSX syntax with regular JavaScript in the same script tag");
+        prompt.addInstruction("- Always wrap multiple sibling components in a single root element");
     }
 
     getSupportedFormats(): string[] {
@@ -66,6 +68,12 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         const jsxOutsideBabel = /<[A-Z][\s\S]*?>/.test(code.split("<script type='text/babel'>")[0]);
         if (jsxOutsideBabel) {
             throw new Error('JSX syntax must be contained within a <script type="text/babel"> tag');
+        }
+
+        // Check for components with multiple root elements
+        const componentPattern = /function\s+\w+\s*\([^)]*\)\s*{[^}]*return\s*\([^)]*>[^<]*<[^>]+>[^<]*<[^>]+>/;
+        if (componentPattern.test(code)) {
+            throw new Error('React components must return a single root element - use React.Fragment or a div wrapper');
         }
         
         return true;
