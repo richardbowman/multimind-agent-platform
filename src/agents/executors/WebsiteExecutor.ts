@@ -23,6 +23,16 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         prompt.addInstruction("You are creating a website. Follow these guidelines:");
         prompt.addInstruction("- Use modern, responsive design principles");
         prompt.addInstruction("- You may use React 19 and Material-UI (MUI) components");
+        prompt.addInstruction("- Available MUI themes (use createTheme() to customize):");
+        prompt.addInstruction("  - light: Default light theme");
+        prompt.addInstruction("  - dark: Default dark theme");
+        prompt.addInstruction("  - blue: Blue color scheme");
+        prompt.addInstruction("  - green: Green color scheme");
+        prompt.addInstruction("  - corporate: Professional business theme");
+        prompt.addInstruction("- To use a theme:");
+        prompt.addInstruction("  const theme = WebsiteLibs.getTheme('themeName');");
+        prompt.addInstruction("  const themeProvider = WebsiteLibs.ThemeProvider;");
+        prompt.addInstruction("  Wrap your app in: <themeProvider theme={theme}>");
         prompt.addInstruction("- Use these exact script references in your HTML:");
         prompt.addInstruction("  <script src='../website-libs/website-libs.min.js'></script>");
         prompt.addInstruction("- To access needed libraries: const { React, ReactDOM, ReactDOMClient, MaterialUI } = WebsiteLibs;");
