@@ -21,15 +21,13 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         // Add website-specific instructions
         prompt.addInstruction("You are creating a website. Follow these guidelines:");
         prompt.addInstruction("- Use modern, responsive design principles");
-        prompt.addInstruction("- You may use React and Material-UI (MUI) components");
+        prompt.addInstruction("- You may use React 19 and Material-UI (MUI) components");
         prompt.addInstruction("- Use these exact script references in your HTML:");
-        prompt.addInstruction("  <script src='/react/react.min.js'></script>");
-        prompt.addInstruction("  <script src='/react-dom/react-dom.min.js'></script>");
-        prompt.addInstruction("  <script src='/mui/material-ui.min.js'></script>");
+        prompt.addInstruction("  <script src='../website-libs/website-libs.min.js'></script>");
+        prompt.addInstruction("- To access needed libraries: const { React, ReactDOM, ReactDOMClient, MaterialUI } = WebsiteLibs;");                                                                                                                                                                    
         prompt.addInstruction("  The generated code must properly initialize React and MUI components");
-        prompt.addInstruction("  - Use ReactDOM.render() to mount your root component");
-        prompt.addInstruction("  - Initialize MUI components using createTheme() and ThemeProvider");
-        prompt.addInstruction("  - Ensure all component imports are properly destructured from MaterialUI");
+        prompt.addInstruction("  - Use ReactDOMClient.createRoot to mount your root component");
+        prompt.addInstruction("  - Ensure all MUI component imports are properly destructured from MaterialUI variable");
         prompt.addInstruction("- Do not use any other CDN-hosted libraries");
         prompt.addInstruction("- Include all necessary JavaScript code within the HTML file");
         
