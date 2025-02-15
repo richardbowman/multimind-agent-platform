@@ -3,9 +3,9 @@ const webpack = require('webpack');
 
 module.exports = {
   entry: {
-    'react': 'react',
-    'react-dom': 'react-dom',
-    '@mui/material': '@mui/material'
+    'React': 'react',
+    'ReactDOM': 'react-dom',
+    'MaterialUI': '@mui/material'
   },
   output: {
     path: path.resolve(__dirname, 'dist/website-libs'),
