@@ -9,7 +9,7 @@ import { StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 
-@StepExecutorDecorator(ExecutorType.GENERATE_WEBSITE, 'Create/revise a website')
+@StepExecutorDecorator(ExecutorType.GENERATE_WEBSITE, 'Create/revise code for React-based website/app')
 export class WebsiteExecutor extends GenerateArtifactExecutor {
     constructor(params: ExecutorConstructorParams) {
         super(params);
