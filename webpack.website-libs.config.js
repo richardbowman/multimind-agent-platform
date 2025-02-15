@@ -3,14 +3,18 @@ const webpack = require('webpack');
 
 module.exports = {
   entry: {
-    react: 'react',
-    reactDOM: 'react-dom',
-    mui: '@mui/material'
+    'react': 'react',
+    'react-dom': 'react-dom',
+    '@mui/material': '@mui/material'
   },
   output: {
     path: path.resolve(__dirname, 'dist/website-libs'),
     filename: '[name].min.js',
-    library: '[name]',
+    library: {
+      root: '[name]',
+      amd: '[name]',
+      commonjs: '[name]'
+    },
     libraryTarget: 'umd'
   },
   mode: 'production',
