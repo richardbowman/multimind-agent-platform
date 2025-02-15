@@ -272,27 +272,31 @@ const AppContent: React.FC = () => {
                                         channelId={currentChannelId}
                                         threadId={currentThreadId}
                                     >
-                                        <TaskPanel/>
+                                        <TaskPanel />
                                     </FilteredTaskProvider>
-                                    <FilteredArtifactProvider
-                                        channelId={currentChannelId}
-                                        threadId={currentThreadId}
-                                        artifactId={null}
-                                    >
-                                        <ArtifactPanel
+                                    <ToolbarActionsProvider>
+                                        <FilteredArtifactProvider
                                             channelId={currentChannelId}
                                             threadId={currentThreadId}
-                                        />
-                                    </FilteredArtifactProvider>
+                                            artifactId={null}
+                                        >
+                                            <ArtifactPanel
+                                                channelId={currentChannelId}
+                                                threadId={currentThreadId}
+                                            />
+                                        </FilteredArtifactProvider>
+                                    </ToolbarActionsProvider>
                                 </Drawer>
                             </FilteredTaskProvider>
                         </ThreadMessageProvider>
                     </>
                 ) : currentTab === 'artifacts' ? (
-                    <GlobalArtifactViewer
-                        drawerOpen={leftDrawerOpen}
-                        onDrawerToggle={() => setLeftDrawerOpen(!leftDrawerOpen)}
-                    />
+                    <ToolbarActionsProvider>
+                        <GlobalArtifactViewer
+                            drawerOpen={leftDrawerOpen}
+                            onDrawerToggle={() => setLeftDrawerOpen(!leftDrawerOpen)}
+                        />
+                    </ToolbarActionsProvider>
                 ) : currentTab === 'settings' ? (
                     <SettingsPanel
                         drawerOpen={leftDrawerOpen}
@@ -317,10 +321,8 @@ const App: React.FC = () => {
                             <ArtifactProvider>
                                 <TaskProvider>
                                     <LogProvider>
-                                        <ToolbarActionsProvider>
-                                            <AppContent />
-                                            <div id="portal-root"></div>
-                                        </ToolbarActionsProvider>
+                                        <AppContent />
+                                        <div id="portal-root"></div>
                                     </LogProvider>
                                 </TaskProvider>
                             </ArtifactProvider>
