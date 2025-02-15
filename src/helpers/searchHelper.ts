@@ -5,9 +5,11 @@ import stealth from 'puppeteer-extra-plugin-stealth';
 import { ArtifactManager } from '../tools/artifactManager';
 import { load } from 'cheerio';
 import { convertPageToMarkdown } from './scrapeHelper';
-import { Settings } from 'src/tools/settingsManager';
-import { Browser } from 'puppeteer';
 import { ArtifactType } from 'src/tools/artifact';
+import { Settings } from 'src/tools/settings';
+import { BrowserHelper } from './browserHelper';
+import { BrowserWindow } from 'electron';
+import { BrowserContext } from 'playwright';
 
 // Add stealth plugin to avoid detection
 chromium.use(stealth())
@@ -161,22 +163,22 @@ export class DuckDuckGoProvider implements ISearchProvider {
             const searchUrl = isNews
                 ? `https://duckduckgo.com/?t=h_&q=${encodedQuery}&iar=news&ia=news`
                 : `https://duckduckgo.com/?q=${encodedQuery}`;
+            let htmlContent, title, actualUrl;
             if (this.settings.scrapingProvider === 'electron') {
                 const window = context as BrowserWindow;
                 await window.loadURL(searchUrl);
                 await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for page to load
                 
-                const htmlContent = await window.webContents.executeJavaScript('document.documentElement.outerHTML');
-                const title = await window.webContents.executeJavaScript('document.title');
-                const actualUrl = window.webContents.getURL();
+                htmlContent = await window.webContents.executeJavaScript('document.documentElement.outerHTML');
+                title = await window.webContents.executeJavaScript('document.title');
+                actualUrl = window.webContents.getURL();
             } else {
-                const page = context as BrowserContext;
                 await page.goto(searchUrl);
                 await page.waitForLoadState('networkidle');
                 
-                const htmlContent = await page.content();
-                const title = await page.title();
-                const actualUrl = page.url();
+                htmlContent = await page.content();
+                title = await page.title();
+                actualUrl = page.url();
             }
 
             // Load the HTML content into Cheerio
@@ -204,7 +206,6 @@ export class DuckDuckGoProvider implements ISearchProvider {
                 );
                 searchResults = mainResults;
             } else {
-                const page = context as BrowserContext;
                 const mainResults = isNews ? await page.$('.results--main') : await page.$('.react-results--main');
                 if (!mainResults) {
                     Logger.warn('Could not find main results container');
@@ -231,13 +232,12 @@ export class DuckDuckGoProvider implements ISearchProvider {
                         description = snippetElement ? (await snippetElement.innerText()).replace(/\s+/g, ' ').trim() : '';
                     }
 
-                        if (url.startsWith('http')) {
-                            results.push({
-                                title,
-                                url,
-                                description
-                            });
-                        }
+                    if (url.startsWith('http')) {
+                        results.push({
+                            title,
+                            url,
+                            description
+                        });
                     }
                 } catch (error) {
                     Logger.warn('Error parsing search result:', {
