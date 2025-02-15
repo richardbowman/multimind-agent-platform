@@ -1,11 +1,8 @@
-import React, { useEffect, useState, useRef } from 'react';
-import { Box, Typography, IconButton, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
+import { Box, Typography, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
 import { Spinner } from '../Spinner';
 import mermaid from 'mermaid';
-import ZoomInIcon from '@mui/icons-material/ZoomIn';
-import ZoomOutIcon from '@mui/icons-material/ZoomOut';
-import FullscreenIcon from '@mui/icons-material/Fullscreen';
-import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 
 interface MermaidProps {
     content: string;
@@ -19,22 +16,66 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
     const isMounted = useRef(true);
     const mermaidId = useRef(`mermaid-${Date.now()}-${Math.random().toString().replace('.', '')}`);
     const svgContainerRef = useRef<HTMLDivElement>(null);
+    const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
 
-    const handleZoomIn = () => {
+    const handleZoomIn = useCallback(() => {
         setZoomLevel(prev => Math.min(prev + 0.25, 3));
-    };
+    }, []);
 
-    const handleZoomOut = () => {
+    const handleZoomOut = useCallback(() => {
         setZoomLevel(prev => Math.max(prev - 0.25, 0.5));
-    };
+    }, []);
 
-    const handleResetZoom = () => {
+    const handleResetZoom = useCallback(() => {
         setZoomLevel(1);
-    };
+    }, []);
 
-    const toggleFullscreen = () => {
-        setIsFullscreen(!isFullscreen);
-    };
+    const toggleFullscreen = useCallback(() => {
+        setIsFullscreen(prev => !prev);
+    }, []);
+
+    useEffect(() => {
+        const mermaidActions = [
+            {
+                id: 'mermaid-zoom-in',
+                label: 'Zoom In',
+                onClick: handleZoomIn,
+                disabled: zoomLevel >= 3
+            },
+            {
+                id: 'mermaid-zoom-out',
+                label: 'Zoom Out',
+                onClick: handleZoomOut,
+                disabled: zoomLevel <= 0.5
+            },
+            {
+                id: 'mermaid-reset-zoom',
+                label: 'Reset Zoom',
+                onClick: handleResetZoom
+            },
+            {
+                id: 'mermaid-fullscreen',
+                label: isFullscreen ? 'Exit Fullscreen' : 'Fullscreen',
+                onClick: toggleFullscreen
+            }
+        ];
+
+        registerActions('mermaid', mermaidActions);
+        return () => unregisterActions('mermaid');
+    }, [registerActions, unregisterActions, handleZoomIn, handleZoomOut, handleResetZoom, toggleFullscreen, zoomLevel, isFullscreen]);
+
+    // Update action states when zoom level changes
+    useEffect(() => {
+        updateActionState('mermaid-zoom-in', { disabled: zoomLevel >= 3 });
+        updateActionState('mermaid-zoom-out', { disabled: zoomLevel <= 0.5 });
+    }, [zoomLevel, updateActionState]);
+
+    // Update fullscreen action label
+    useEffect(() => {
+        updateActionState('mermaid-fullscreen', { 
+            label: isFullscreen ? 'Exit Fullscreen' : 'Fullscreen'
+        });
+    }, [isFullscreen, updateActionState]);
 
     useEffect(() => {
         let isActive = true;
@@ -185,15 +226,6 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
                 ) : svg ? (
                     <>
                         {renderDiagram()}
-                        <Box sx={{ position: 'absolute', top: 8, right: 8 }}>
-                            <IconButton
-                                size="small"
-                                onClick={toggleFullscreen}
-                                sx={{ bgcolor: 'background.paper', '&:hover': { bgcolor: 'background.default' } }}
-                            >
-                                <FullscreenIcon fontSize="small" />
-                            </IconButton>
-                        </Box>
                     </>
                 ) : (
                     <Spinner />
