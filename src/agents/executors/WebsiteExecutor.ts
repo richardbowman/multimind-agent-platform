@@ -45,7 +45,12 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         prompt.addInstruction("- Ensure all React components are properly mounted");
         prompt.addInstruction("- Write React components using standard JavaScript syntax");
         prompt.addInstruction("- Always wrap multiple sibling components in a single root element");
-        prompt.addInstruction("- Use React.createElement() for JSX elements if needed");
+        prompt.addInstruction("- When using React.createElement():");
+        prompt.addInstruction("  - First argument is the component or HTML tag name (string)");
+        prompt.addInstruction("  - Second argument is props object (can be null if no props)");
+        prompt.addInstruction("  - Remaining arguments are children components");
+        prompt.addInstruction("  - Example: React.createElement('div', {className: 'container'}, child1, child2)");
+        prompt.addInstruction("- Ensure all component names are properly referenced as strings or variables");
     }
 
     getSupportedFormats(): string[] {
