@@ -84,10 +84,12 @@ const styles = {
 export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }) => {
     const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual');
     const [toolbarActions, setToolbarActions] = useState<Array<{
-        icon: React.ReactNode;
+        icon?: React.ReactNode;
         label: string;
         onClick: () => void;
         disabled?: boolean;
+        variant?: 'text' | 'outlined' | 'contained';
+        color?: 'inherit' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning';
     }>>([]);
     const artifactContext = useArtifacts();
 
@@ -118,7 +120,11 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                             }
                         }
                     },
-                    ...toolbarActions
+                    ...toolbarActions.map(action => ({
+                        ...action,
+                        // Ensure we have at least a default icon
+                        icon: action.icon || <DescriptionIcon />
+                    }))
                 ]}
             />
             <Box sx={styles.viewToggle}>
@@ -151,7 +157,9 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                             title: title,
                             language: language
                         }}
-                        onAddToolbarActions={setToolbarActions}
+                        onAddToolbarActions={(actions) => {
+                            setToolbarActions(actions);
+                        }}
                     />
                 ) : (
                     <Box 
