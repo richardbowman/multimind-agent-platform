@@ -41,6 +41,8 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         prompt.addInstruction("- Use React functional components with proper JSX syntax");
         prompt.addInstruction("- Use MUI components with proper import syntax");
         prompt.addInstruction("- Ensure all React components are properly mounted");
+        prompt.addInstruction("- Place all JSX code within a separate <script type='text/babel'> tag");
+        prompt.addInstruction("- Do not mix JSX syntax with regular JavaScript in the same script tag");
     }
 
     getSupportedFormats(): string[] {
@@ -52,11 +54,18 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         const hasReact = code.includes('/react/react.min.js');
         const hasReactDOM = code.includes('/react-dom/react-dom.min.js');
         const hasMUI = code.includes('/mui/material-ui.min.js');
-        const hasReactMount = code.includes('ReactDOM.render(');
+        const hasReactMount = code.includes('ReactDOMClient.createRoot(');
         const hasMUIInit = code.includes('createTheme(') || code.includes('ThemeProvider');
+        const hasBabelScript = code.includes("<script type='text/babel'>");
         
-        if (!hasReact || !hasReactDOM || !hasMUI || !hasReactMount || !hasMUIInit) {
-            throw new Error('Generated code must use the provided React and MUI library paths and properly initialize components');
+        if (!hasReact || !hasReactDOM || !hasMUI || !hasReactMount || !hasMUIInit || !hasBabelScript) {
+            throw new Error('Generated code must use the provided React and MUI library paths, include a Babel script tag, and properly initialize components');
+        }
+        
+        // Check for JSX syntax outside Babel script tag
+        const jsxOutsideBabel = /<[A-Z][\s\S]*?>/.test(code.split("<script type='text/babel'>")[0]);
+        if (jsxOutsideBabel) {
+            throw new Error('JSX syntax must be contained within a <script type="text/babel"> tag');
         }
         
         return true;
