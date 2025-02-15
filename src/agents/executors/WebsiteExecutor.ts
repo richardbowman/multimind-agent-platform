@@ -8,6 +8,7 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
+import { ModelType } from 'src/llm/LLMServiceFactory';
 
 @StepExecutorDecorator(ExecutorType.GENERATE_WEBSITE, 'Create/revise code for React-based website/app')
 export class WebsiteExecutor extends GenerateArtifactExecutor {
@@ -60,12 +61,10 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 
     async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);
-        const result = await super.execute(params);
-        
-        // Add website-specific post-processing
-        if (result.response?.type === StepResponseType.GeneratedArtifact) {
-            result.response.message = "Website created successfully! You can now view and edit it.";
-        }
+        const result = await super.execute({
+            ...params,
+            modelType: ModelType.ADVANCED_REASONING
+        });
         
         return result;
     }
