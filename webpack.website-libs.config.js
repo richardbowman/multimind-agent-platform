@@ -2,18 +2,13 @@ const path = require('path');
 const webpack = require('webpack');
 
 module.exports = {
-  entry: {
-    'React': 'react',
-    'ReactDOM': 'react-dom',
-    'ReactDOMClient': 'react-dom/client',
-    'MaterialUI': '@mui/material'
-  },
+  entry: './src/website-libs.js',
   output: {
     path: path.resolve(__dirname, 'dist/website-libs'),
-    filename: '[name].min.js',
+    filename: 'website-libs.min.js',
     library: {
       type: 'umd',
-      name: '[name]'
+      name: 'WebsiteLibs'
     },
     globalObject: 'this',
     libraryTarget: 'umd'
