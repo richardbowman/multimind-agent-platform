@@ -12,6 +12,7 @@ import { IEmbeddingService, ILLMService } from "./ILLMService";
 import { getDataPath } from "src/helpers/paths";
 import { timeStamp } from "console";
 import { asError } from "src/types/types";
+import { createUUID, UUID } from "src/types/uuid";
 
 const syncQueue = new AsyncQueue();
 
@@ -101,14 +102,14 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         projectId: string,
         title: string,
         type = 'content',
-        artifactId?: string
+        artifactId?: UUID
     ): Promise<void> {
         const splitter = new RecursiveCharacterTextSplitter({
             chunkSize: 2000,
             chunkOverlap: 100,
         });
 
-        const docId = crypto.randomUUID();
+        const docId = artifactId || createUUID();
         // await saveToFile(projectId, type, docId, content);
 
         const chunks = await splitter.createDocuments([content]);
