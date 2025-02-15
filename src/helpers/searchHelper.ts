@@ -132,52 +132,52 @@ export class SearxNGProvider implements ISearchProvider {
 }
 
 export class DuckDuckGoProvider implements ISearchProvider {
-    private browser?: Browser;
+    private browserHelper: BrowserHelper;
     private artifactManager: ArtifactManager;
     private settings: Settings;
 
     constructor(artifactManager: ArtifactManager, settings: Settings) {
         this.artifactManager = artifactManager;
         this.settings = settings;
-    }
-
-    private async initBrowser() {
-        if (!this.browser) {
-            this.browser = await chromium.launch({
-                headless: this.settings.duckduckgo.headless,
-                timeout: this.settings.duckduckgo.timeout
-            });
-        }
+        this.browserHelper = new BrowserHelper(settings);
     }
 
     async search(query: string, category: string): Promise<SearchResult[]> {
-        // Only initialize browser when actually searching
-        if (!this.browser) {
-            await this.initBrowser();
-        }
         const results: SearchResult[] = [];
-
+        const context = await this.browserHelper.getContext();
+        
         try {
-            const context = await this.browser!.newContext({
-                userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-            });
-
-            const page = await context.newPage();
+            let page;
+            if (this.settings.scrapingProvider === 'electron') {
+                const window = context as BrowserWindow;
+                await window.loadURL('about:blank');
+                page = window.webContents;
+            } else {
+                const playwrightContext = context as BrowserContext;
+                page = await playwrightContext.newPage();
+            }
             const encodedQuery = encodeURIComponent(query);
             const isNews = category === 'news';
             const searchUrl = isNews
                 ? `https://duckduckgo.com/?t=h_&q=${encodedQuery}&iar=news&ia=news`
                 : `https://duckduckgo.com/?q=${encodedQuery}`;
-            await page.goto(searchUrl);
-
-            await page.waitForLoadState('networkidle');
-
-            // Save the page content as an artifact
-            const htmlContent = await page.content();
-
-            // Extract the title of the page
-            const title = await page.title();
-            const actualUrl = page.url();
+            if (this.settings.scrapingProvider === 'electron') {
+                const window = context as BrowserWindow;
+                await window.loadURL(searchUrl);
+                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for page to load
+                
+                const htmlContent = await window.webContents.executeJavaScript('document.documentElement.outerHTML');
+                const title = await window.webContents.executeJavaScript('document.title');
+                const actualUrl = window.webContents.getURL();
+            } else {
+                const page = context as BrowserContext;
+                await page.goto(searchUrl);
+                await page.waitForLoadState('networkidle');
+                
+                const htmlContent = await page.content();
+                const title = await page.title();
+                const actualUrl = page.url();
+            }
 
             // Load the HTML content into Cheerio
             const $ = load(htmlContent);
@@ -196,25 +196,40 @@ export class DuckDuckGoProvider implements ISearchProvider {
             });
             Logger.info(`Saved DuckDuckGo search page as artifact: ${artifactId}`);
 
-            // Find the main results container and extract results
-            const mainResults = isNews ? await page.$('.results--main') : await page.$('.react-results--main');
-            if (!mainResults) {
-                Logger.warn('Could not find main results container');
-                return results;
+            let searchResults;
+            if (this.settings.scrapingProvider === 'electron') {
+                const window = context as BrowserWindow;
+                const mainResults = await window.webContents.executeJavaScript(
+                    `Array.from(document.querySelectorAll('${isNews ? '.results--main .result' : '.react-results--main [data-testid="result"]'}'))`
+                );
+                searchResults = mainResults;
+            } else {
+                const page = context as BrowserContext;
+                const mainResults = isNews ? await page.$('.results--main') : await page.$('.react-results--main');
+                if (!mainResults) {
+                    Logger.warn('Could not find main results container');
+                    return results;
+                }
+                searchResults = isNews ? await mainResults.$$('.result') : await mainResults.$$('[data-testid="result"]');
             }
-            const searchResults = isNews ? await mainResults.$$('.result') : await mainResults.$$('[data-testid="result"]');
             Logger.info(`Found ${searchResults.length} results on page`);
 
             for (const result of searchResults) {
                 try {
-                    const titleElement = isNews ? await result.$('.result__title') : await result.$('[data-testid="result-title-a"]');
-                    const linkElement = isNews ? await result.$('.result__a') : await result.$('[data-testid="result-extras-url-link"]');
-                    const snippetElement = isNews ? await result.$('.result__snippet') : await result.$('[data-result="snippet"]');
-
-                    if (titleElement && linkElement) {
-                        const title = await titleElement.innerText();
-                        const url = await linkElement.getAttribute('href') || '';
-                        const description = snippetElement ? (await snippetElement.innerText()).replace(/\s+/g, ' ').trim() : '';
+                    let title, url, description;
+                    if (this.settings.scrapingProvider === 'electron') {
+                        title = await result.querySelector(isNews ? '.result__title' : '[data-testid="result-title-a"]')?.textContent;
+                        url = await result.querySelector(isNews ? '.result__a' : '[data-testid="result-extras-url-link"]')?.getAttribute('href') || '';
+                        description = await result.querySelector(isNews ? '.result__snippet' : '[data-result="snippet"]')?.textContent?.replace(/\s+/g, ' ').trim() || '';
+                    } else {
+                        const titleElement = isNews ? await result.$('.result__title') : await result.$('[data-testid="result-title-a"]');
+                        const linkElement = isNews ? await result.$('.result__a') : await result.$('[data-testid="result-extras-url-link"]');
+                        const snippetElement = isNews ? await result.$('.result__snippet') : await result.$('[data-result="snippet"]');
+                        
+                        title = await titleElement?.innerText();
+                        url = await linkElement?.getAttribute('href') || '';
+                        description = snippetElement ? (await snippetElement.innerText()).replace(/\s+/g, ' ').trim() : '';
+                    }
 
                         if (url.startsWith('http')) {
                             results.push({
@@ -232,8 +247,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
                 }
             }
 
-            await page.close();
-            await context.close();
+            await this.browserHelper.releaseContext(context);
 
         } catch (error) {
             Logger.error(`Error searching DuckDuckGo for "${query}":`, error);
@@ -243,10 +257,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
     }
 
     async cleanup() {
-        if (this.browser) {
-            await this.browser.close();
-            this.browser = undefined;
-        }
+        await this.browserHelper.cleanup();
     }
 }
 
