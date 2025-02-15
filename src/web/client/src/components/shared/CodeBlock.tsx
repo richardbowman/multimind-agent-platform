@@ -1,4 +1,5 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 import { Box } from '@mui/material';
 import { ActionToolbar } from './ActionToolbar';
 import DescriptionIcon from '@mui/icons-material/Description';
@@ -83,14 +84,7 @@ const styles = {
 
 export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }) => {
     const [viewMode, setViewMode] = useState<'visual' | 'raw'>('visual');
-    const [toolbarActions, setToolbarActions] = useState<Array<{
-        icon?: React.ReactNode;
-        label: string;
-        onClick: () => void;
-        disabled?: boolean;
-        variant?: 'text' | 'outlined' | 'contained';
-        color?: 'inherit' | 'primary' | 'secondary' | 'success' | 'error' | 'info' | 'warning';
-    }>>([]);
+    const { actions: toolbarActions, registerActions, unregisterActions } = useToolbarActions();
     const artifactContext = useArtifacts();
 
     return (
@@ -158,7 +152,8 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                             language: language
                         }}
                         onAddToolbarActions={(actions) => {
-                            setToolbarActions(actions);
+                            registerActions('codeblock', actions);
+                            return () => unregisterActions('codeblock');
                         }}
                     />
                 ) : (
