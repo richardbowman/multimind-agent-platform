@@ -5,16 +5,17 @@ module.exports = {
   entry: {
     'React': 'react',
     'ReactDOM': 'react-dom',
+    'ReactDOMClient': 'react-dom/client',
     'MaterialUI': '@mui/material'
   },
   output: {
     path: path.resolve(__dirname, 'dist/website-libs'),
     filename: '[name].min.js',
     library: {
-      root: '[name]',
-      amd: '[name]',
-      commonjs: '[name]'
+      type: 'umd',
+      name: '[name]'
     },
+    globalObject: 'this',
     libraryTarget: 'umd'
   },
   mode: 'production',
