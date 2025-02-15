@@ -24,7 +24,8 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         prompt.addInstruction("- You may use React 19 and Material-UI (MUI) components");
         prompt.addInstruction("- Use these exact script references in your HTML:");
         prompt.addInstruction("  <script src='../website-libs/website-libs.min.js'></script>");
-        prompt.addInstruction("- To access needed libraries: const { React, ReactDOM, ReactDOMClient, MaterialUI } = WebsiteLibs;");                                                                                                                                                                    
+        prompt.addInstruction("- To access needed libraries: const { React, ReactDOM, ReactDOMClient, MaterialUI } = WebsiteLibs;");
+        prompt.addInstruction("- Write plain JavaScript code - no need for Babel script tags as JSX is precompiled");
         prompt.addInstruction("  The generated code must properly initialize React and MUI components");
         prompt.addInstruction("  - Use ReactDOMClient.createRoot to mount your root component");
         prompt.addInstruction("  - Ensure all MUI component imports are properly destructured from MaterialUI variable");
@@ -42,9 +43,9 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         prompt.addInstruction("  - Each component must return a single root element (use React.Fragment or a div)");
         prompt.addInstruction("- Use MUI components with proper import syntax");
         prompt.addInstruction("- Ensure all React components are properly mounted");
-        prompt.addInstruction("- Place all JSX code within a separate <script type='text/babel'> tag");
-        prompt.addInstruction("- Do not mix JSX syntax with regular JavaScript in the same script tag");
+        prompt.addInstruction("- Write React components using standard JavaScript syntax");
         prompt.addInstruction("- Always wrap multiple sibling components in a single root element");
+        prompt.addInstruction("- Use React.createElement() for JSX elements if needed");
     }
 
     getSupportedFormats(): string[] {
