@@ -298,7 +298,7 @@ export class ArtifactManager {
 
       // Remove from vector database
       try {
-        await this.vectorDb.deleteDocuments([artifactId]);
+        await this.vectorDb.deleteDocuments({ artifactId });
       } catch (error) {
         Logger.error('Error deleting artifact from vector database:', error);
       }
