@@ -51,33 +51,6 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
         return ['html', 'jsx'];
     }
 
-    protected validateGeneratedCode(code: string): boolean {
-        // Check for proper React/MUI references and initialization
-        const hasReact = code.includes('/react/react.min.js');
-        const hasReactDOM = code.includes('/react-dom/react-dom.min.js');
-        const hasMUI = code.includes('/mui/material-ui.min.js');
-        const hasReactMount = code.includes('ReactDOMClient.createRoot(');
-        const hasMUIInit = code.includes('createTheme(') || code.includes('ThemeProvider');
-        const hasBabelScript = code.includes("<script type='text/babel'>");
-        
-        if (!hasReact || !hasReactDOM || !hasMUI || !hasReactMount || !hasMUIInit || !hasBabelScript) {
-            throw new Error('Generated code must use the provided React and MUI library paths, include a Babel script tag, and properly initialize components');
-        }
-        
-        // Check for JSX syntax outside Babel script tag
-        const jsxOutsideBabel = /<[A-Z][\s\S]*?>/.test(code.split("<script type='text/babel'>")[0]);
-        if (jsxOutsideBabel) {
-            throw new Error('JSX syntax must be contained within a <script type="text/babel"> tag');
-        }
-
-        // Check for components with multiple root elements
-        const componentPattern = /function\s+\w+\s*\([^)]*\)\s*{[^}]*return\s*\([^)]*>[^<]*<[^>]+>[^<]*<[^>]+>/;
-        if (componentPattern.test(code)) {
-            throw new Error('React components must return a single root element - use React.Fragment or a div wrapper');
-        }
-        
-        return true;
-    }
 
     async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse);
