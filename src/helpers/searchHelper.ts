@@ -191,7 +191,7 @@ export class DuckDuckGoProvider implements ISearchProvider {
                 metadata: {
                     query,
                     category,
-                    url: page.url(),
+                    url: actualUrl,
                     title,
                     searchedAt: new Date().toISOString()
                 }
