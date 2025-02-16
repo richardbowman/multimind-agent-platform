@@ -1,8 +1,11 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-import { Box, Typography, Dialog, DialogContent, DialogActions, Button } from '@mui/material';
+import { Box, Typography, Dialog, DialogContent, DialogActions, Button, IconButton } from '@mui/material';
 import { Spinner } from '../Spinner';
 import mermaid from 'mermaid';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
+import ZoomInIcon from '@mui/icons-material/ZoomIn';
+import ZoomOutIcon from '@mui/icons-material/ZoomOut';
+import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
 
 interface MermaidProps {
     content: string;
