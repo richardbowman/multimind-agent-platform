@@ -356,7 +356,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             display: 'flex',
             flexDirection: 'column',
             height: 'calc(100vh - 64px)',
-            width: `calc(100vw - ${leftDrawerOpen ? 250 : 0}px - ${rightDrawerOpen ? 300 : 0}px)`,
+            width: `calc(100vw - ${leftDrawerOpen ? 250 : 0}px - ${rightDrawerOpen ? rightDrawerWidth : 0}px)`,
             overflow: 'hidden',
             ml: '250px',
             mr: rightDrawerOpen ? '300px' : 0,

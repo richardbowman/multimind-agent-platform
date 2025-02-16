@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import MinimizeIcon from '@mui/icons-material/Minimize';
@@ -74,6 +74,7 @@ const AppContent: React.FC = () => {
     const [showWelcome, setShowWelcome] = useState(true);
     const [leftDrawerOpen, setLeftDrawerOpen] = useState(true);
     const [rightDrawerOpen, setRightDrawerOpen] = useState(true);
+    const [rightDrawerWidth, setRightDrawerWidth] = useState(300);
 
     React.useEffect(() => {
         // wait for explicit answer, we start this as null
@@ -252,20 +253,14 @@ const AppContent: React.FC = () => {
                                     />
                                 </Main>
 
-                                <Drawer
-                                    variant="persistent"
+                                <ResizableDrawer
                                     anchor="right"
                                     open={rightDrawerOpen}
-                                    sx={{
-                                        width: rightDrawerWidth,
-                                        flexShrink: 0,
-                                        '& .MuiDrawer-paper': {
-                                            width: 300,
-                                            boxSizing: 'border-box',
-                                            backgroundColor: '#2a2a2a',
-                                            borderLeft: '1px solid #444'
-                                        },
-                                    }}
+                                    width={rightDrawerWidth}
+                                    onWidthChange={setRightDrawerWidth}
+                                    minWidth={200}
+                                    maxWidth={800}
+                                    onClose={() => setRightDrawerOpen(false)}
                                 >
                                     <Toolbar /> {/* For spacing under app bar */}
                                     <FilteredTaskProvider
