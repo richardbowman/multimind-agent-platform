@@ -89,7 +89,7 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
                     width: width,
                     overflow: 'visible',
                     backgroundColor: '#2a2a2a',
-                    position: 'relative',
+                    position: 'absolute',
                 }
             }}
         >
