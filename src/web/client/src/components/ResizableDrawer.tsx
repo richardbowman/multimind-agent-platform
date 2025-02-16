@@ -1,14 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Drawer, Box, styled } from '@mui/material';
 
 const ResizableHandle = styled(Box)(({ theme }) => ({
+    width: '5px',
+    cursor: 'ew-resize',
+    padding: '4px 0 0',
+    borderTop: '1px solid #ddd',
     position: 'absolute',
-    left: -4,
     top: 0,
+    left: -2,
     bottom: 0,
-    width: 8,
-    cursor: 'col-resize',
-    zIndex: 1,
+    zIndex: 100,
+    backgroundColor: '#f4f7f9',
     '&:hover': {
         backgroundColor: theme.palette.primary.main,
     },
@@ -36,28 +39,44 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
     onClose
 }) => {
     const [isResizing, setIsResizing] = useState(false);
+    const [lastDownX, setLastDownX] = useState(0);
 
     const handleMouseDown = (e: React.MouseEvent) => {
+        e.preventDefault();
         setIsResizing(true);
-        document.addEventListener('mousemove', handleMouseMove);
-        document.addEventListener('mouseup', handleMouseUp);
+        setLastDownX(e.clientX);
     };
 
     const handleMouseMove = (e: MouseEvent) => {
         if (!isResizing) return;
+        
+        const offset = e.clientX - lastDownX;
         const newWidth = anchor === 'right' 
-            ? window.innerWidth - e.clientX
-            : e.clientX;
-        if (newWidth >= minWidth && newWidth <= maxWidth) {
-            onWidthChange(newWidth);
-        }
+            ? Math.max(minWidth, Math.min(maxWidth, width - offset))
+            : Math.max(minWidth, Math.min(maxWidth, width + offset));
+        
+        onWidthChange(newWidth);
+        setLastDownX(e.clientX);
     };
 
     const handleMouseUp = () => {
         setIsResizing(false);
-        document.removeEventListener('mousemove', handleMouseMove);
-        document.removeEventListener('mouseup', handleMouseUp);
     };
+
+    useEffect(() => {
+        const handleMouseMoveBound = (e: MouseEvent) => handleMouseMove(e);
+        const handleMouseUpBound = () => handleMouseUp();
+
+        if (isResizing) {
+            document.addEventListener('mousemove', handleMouseMoveBound);
+            document.addEventListener('mouseup', handleMouseUpBound);
+        }
+
+        return () => {
+            document.removeEventListener('mousemove', handleMouseMoveBound);
+            document.removeEventListener('mouseup', handleMouseUpBound);
+        };
+    }, [isResizing, handleMouseMove, handleMouseUp]);
 
     return (
         <Drawer
@@ -70,6 +89,7 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
                     width: width,
                     overflow: 'visible',
                     backgroundColor: '#2a2a2a',
+                    position: 'relative',
                 }
             }}
         >
