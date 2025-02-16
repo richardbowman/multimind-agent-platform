@@ -57,7 +57,7 @@ interface ChatPanelProps {
     showWelcome: boolean;
 }
 
-export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen, showWelcome, onSwitchToWelcome }) => {
+export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen, rightDrawerWidth, showWelcome, onSwitchToWelcome }) => {
     const { threadMessages: messages } = useThreadMessages();
     const { sendMessage, currentChannelId, currentThreadId, setCurrentThreadId } = useMessages();
     const { handles, isLoading } = useDataContext();
