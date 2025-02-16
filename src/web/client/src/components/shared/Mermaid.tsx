@@ -34,8 +34,15 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
     }, []);
 
     const toggleFullscreen = useCallback(() => {
-        setIsFullscreen(prev => !prev);
-    }, []);
+        setIsFullscreen(prev => {
+            const newState = !prev;
+            // Update the fullscreen action label immediately
+            updateActionState('mermaid-fullscreen', { 
+                label: newState ? 'Exit Fullscreen' : 'Fullscreen'
+            });
+            return newState;
+        });
+    }, [updateActionState]);
 
     useEffect(() => {
         const mermaidActions = [
@@ -60,6 +67,7 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
             },
             {
                 id: 'mermaid-fullscreen',
+                icon: isFullscreen ? <FullscreenExitIcon /> : <FullscreenIcon />,
                 label: isFullscreen ? 'Exit Fullscreen' : 'Fullscreen',
                 onClick: toggleFullscreen
             }
