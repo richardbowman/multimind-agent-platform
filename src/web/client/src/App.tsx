@@ -27,6 +27,7 @@ import { ArtifactProvider } from './contexts/ArtifactContext';
 import { FilteredArtifactProvider } from './contexts/FilteredArtifactContext';
 import { TaskProvider } from './contexts/TaskContext';
 import { FilteredTaskProvider } from './contexts/FilteredTaskContext';
+import { ResizableDrawer } from './components/ResizableDrawer';
 
 const leftDrawerWidth = 250;
 const rightDrawerWidth = 300;
