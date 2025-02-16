@@ -62,13 +62,14 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
     return (
         <Drawer
             anchor={anchor}
+            variant="persistent"
             open={open}
             onClose={onClose}
             PaperProps={{
                 sx: {
                     width: width,
-                    position: 'relative',
-                    overflow: 'visible'
+                    overflow: 'visible',
+                    backgroundColor: '#2a2a2a',
                 }
             }}
         >
