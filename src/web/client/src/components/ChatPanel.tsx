@@ -359,8 +359,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             height: 'calc(100vh - 64px)',
             width: `calc(100vw - ${leftDrawerOpen ? 250 : 0}px - ${rightDrawerOpen ? rightDrawerWidth : 0}px)`,
             overflow: 'hidden',
-            ml: '250px',
-            mr: rightDrawerOpen ? '300px' : 0,
+            ml: leftDrawerOpen ? '250px' : 0,
+            mr: 0,
             transition: 'all 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
         }}>
             {showWelcome ? (
