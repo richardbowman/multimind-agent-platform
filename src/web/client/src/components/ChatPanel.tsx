@@ -52,6 +52,7 @@ export const CustomLink = ({ href, children }: { href?: string, children: React.
 interface ChatPanelProps {
     leftDrawerOpen: boolean;
     rightDrawerOpen: boolean;
+    rightDrawerWidth: number;
     onSwitchToWelcome: (showWelcome: boolean) => void;
     showWelcome: boolean;
 }
