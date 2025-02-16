@@ -41,7 +41,10 @@ export class DelegationExecutor implements StepExecutor {
             }
         };
         
-        const supportedAgents = params.agents?.filter(a => a.supportsDelegation);
+        const supportedAgents = params.agents?.filter(a => a?.supportsDelegation);
+        if (supportedAgents?.length === 0) {
+            throw new Error("No agents with delegation enabled in channel.");
+        }
 
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction( `Create a project with tasks that should be delegated to all agents in the channel. 
@@ -57,7 +60,9 @@ export class DelegationExecutor implements StepExecutor {
             - Create THE FEWEST delegation steps as possible to achieve the goal.
             - If you delegate to managers, do not also delegate to their team. (i.e. don't delegate to the research manager AND the research assistant)
             - Instead of making multiple tasks for the same agent, combine them into one complete task.
-            - MAKE SURE THE TASK DESCRIPTION is completely stand-alone. The agent will not receive any other information except for what is in the task description.`);
+            - MAKE SURE THE TASK DESCRIPTION is completely stand-alone and contains ALL details provided.
+            - The agent will not receive any other information except for what is in the task description so the task description
+            should not refer back to the message or goals, it should be self-contained. For instance, if the goal contains an artifact name or URL, make sure to restate it.`);
 
         const structuredPrompt = new StructuredOutputPrompt(
             schema,

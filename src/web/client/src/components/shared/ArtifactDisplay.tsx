@@ -28,7 +28,11 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     onSelect
 }) => {
     const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
-    const { addActions } = useToolbarActions();
+    const artifactRef = useRef(artifact);
+    const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
+
+    artifactRef.current = artifact;
+
     const handleExport = () => {
         let fileContent = '';
         // Clean the filename by removing any existing extensions
@@ -84,8 +88,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
         window.URL.revokeObjectURL(url);
     };
 
-    const artifactRef = useRef(artifact);
-    artifactRef.current = artifact;
+
 
     const baseActions = useMemo(() => [
         {
@@ -108,7 +111,6 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
         }
     ], [onEdit, onDelete, handleExport]);
 
-    const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
 
     useEffect(() => {
         registerActions('artifact-display', baseActions);

@@ -156,8 +156,6 @@ class ClientMethodsImplementation implements ClientMethods {
                 onClick: () => {
                     this.messageContext.setCurrentChannelId(latestMessage.channel_id);
                     this.messageContext.setCurrentThreadId(latestMessage.thread_id || null);
-                    this.channelContext.fetchChannels();
-                    this.tasksContext.reviseTasksForThread(latestMessage.channel_id, latestMessage.thread_id || null);
                 }
             });
         };

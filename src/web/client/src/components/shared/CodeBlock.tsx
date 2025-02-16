@@ -151,10 +151,6 @@ export const CodeBlock: React.FC<CodeBlockProps> = ({ language, content, title }
                             title: title,
                             language: language
                         }}
-                        onAddToolbarActions={(actions) => {
-                            registerActions('codeblock', actions);
-                            return () => unregisterActions('codeblock');
-                        }}
                     />
                 ) : (
                     <Box 

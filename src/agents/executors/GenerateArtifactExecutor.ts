@@ -12,6 +12,7 @@ import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationRespon
 import { StringUtils } from 'src/utils/StringUtils';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
+import { ModelType } from 'src/llm/LLMServiceFactory';
 
 
 export interface ArtifactGenerationStepData {
@@ -84,13 +85,13 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
     }
 
 
-    async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
+    async execute(params: ExecuteParams & { modelType?: ModelType}): Promise<StepResult<ArtifactGenerationStepResponse>> {
         const promptBuilder = this.createBasePrompt(params);
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
         
         // Add content formatting rules
         if (this.addContentFormattingRules) this.addContentFormattingRules(promptBuilder);
-        promptBuilder.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, schema, "", this.getSupportedFormats().join("|"));
+        promptBuilder.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, schema, "", this.getSupportedFormats().join(" OR "));
         
         // Add Q&A context from project metadata
 
@@ -98,7 +99,8 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
             const unstructuredResult = await this.modelHelpers.generate({
                 message: params.message || params.stepGoal,
                 instructions: promptBuilder,
-                threadPosts: params.context?.threadPosts
+                threadPosts: params.context?.threadPosts,
+                modelType: params.modelType
             });
 
             const json = StringUtils.extractAndParseJsonBlock<ArtifactGenerationResponse>(unstructuredResult.message, schema);

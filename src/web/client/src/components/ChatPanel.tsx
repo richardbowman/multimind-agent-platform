@@ -146,7 +146,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const scrollToBottom = useCallback(() => {
         if (isAtBottom && messagesEndRef.current) {
             // console.debug('scrollToBottom activated');
-            setTimeout(() => messagesEndRef.current?.scrollIntoView({ behavior: "smooth" }), 500);
+            setTimeout(() => messagesEndRef.current?.scrollIntoView(), 500);
         }
     }, [isAtBottom, messagesEndRef]);
 

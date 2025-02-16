@@ -6,6 +6,7 @@ import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 import ZoomInIcon from '@mui/icons-material/ZoomIn';
 import ZoomOutIcon from '@mui/icons-material/ZoomOut';
 import FullscreenExitIcon from '@mui/icons-material/FullscreenExit';
+import FullscreenIcon from '@mui/icons-material/Fullscreen';
 
 interface MermaidProps {
     content: string;

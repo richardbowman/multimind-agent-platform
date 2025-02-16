@@ -100,8 +100,9 @@ Content: ${r.text}
 ---`).join('\n')}
 
 Analyze relevant results (skipping irrelevant results):
-1. Extract key findings and their sources only from what's provided (do not make up information)
-2. Identify any information gaps`;
+1. Extract key findings and their sources from what's provided in the context above.
+2. You do not have direct access to Internet resources or searches. You are searching your internal knowledge base.
+3. ONLY SUMMARIZE FINDINGS PROVIDED ABOVE. DO NOT MAKE UP INFORMATION USING GENERAL KNOWLEDGE. `;
 
         // const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
         // const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);

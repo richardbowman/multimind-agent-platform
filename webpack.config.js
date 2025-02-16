@@ -59,18 +59,6 @@ module.exports = {
           globOptions: {
             ignore: ["**/index.html"]
           }
-        },
-        {
-          from: path.resolve(__dirname, 'node_modules/react/umd/react.production.min.js'),
-          to: path.resolve(__dirname, 'dist/web/react/react.min.js')
-        },
-        {
-          from: path.resolve(__dirname, 'node_modules/react-dom/umd/react-dom.production.min.js'),
-          to: path.resolve(__dirname, 'dist/web/react-dom/react-dom.min.js')
-        },
-        {
-          from: path.resolve(__dirname, 'node_modules/@mui/material/umd/material-ui.production.min.js'),
-          to: path.resolve(__dirname, 'dist/web/mui/material-ui.min.js')
         }
       ]
     }),

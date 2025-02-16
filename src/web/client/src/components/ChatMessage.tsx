@@ -20,6 +20,7 @@ import { UUID } from '../../../../types/uuid';
 import { ChatPost } from '../../../../chat/chatClient';
 import { useIPCService } from '../contexts/IPCContext';
 import { Artifact } from '../../../../tools/artifact';
+import { ToolbarActionsProvider } from '../contexts/ToolbarActionsContext';
 
 interface ChatMessageProps {
     message: ChatPost;
@@ -85,12 +86,14 @@ const ArtifactLoader: React.FC<{ artifactId: string }> = ({ artifactId }) => {
 
     return (
         <Box sx={{ mb: 2 }}>
-            <CodeBlock 
+            <ToolbarActionsProvider><CodeBlock 
                 content={artifact.content.toString()}
                 language={artifact.type}
                 title={artifact.metadata?.title || `Artifact ${artifactId}`}
             />
+            </ToolbarActionsProvider>
         </Box>
+        
     );
 };
 
@@ -296,10 +299,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             
                             if (!inline && match) {
                                 return isHidden ? null : (
-                                    <CodeBlock 
-                                        language={match[1]} 
-                                        content={content}
-                                    />
+                                    <ToolbarActionsProvider>
+                                        <CodeBlock 
+                                            language={match[1]} 
+                                            content={content}
+                                        />
+                                    </ToolbarActionsProvider>
                                 );
                             }
 
