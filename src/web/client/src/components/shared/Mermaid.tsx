@@ -41,12 +41,14 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
         const mermaidActions = [
             {
                 id: 'mermaid-zoom-in',
+                icon: <ZoomInIcon />,
                 label: 'Zoom In',
                 onClick: handleZoomIn,
                 disabled: zoomLevel >= 3
             },
             {
                 id: 'mermaid-zoom-out',
+                icon: <ZoomOutIcon />,
                 label: 'Zoom Out',
                 onClick: handleZoomOut,
                 disabled: zoomLevel <= 0.5
