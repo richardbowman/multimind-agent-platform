@@ -283,7 +283,7 @@ const AppContent: React.FC = () => {
                                             />
                                         </FilteredArtifactProvider>
                                     </ToolbarActionsProvider>
-                                </Drawer>
+                                </ResizableDrawer>
                             </FilteredTaskProvider>
                         </ThreadMessageProvider>
                     </>
