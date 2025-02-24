@@ -22,6 +22,7 @@ interface ResizableDrawerProps {
     minWidth?: number;
     maxWidth?: number;
     onWidthChange: (newWidth: number) => void;
+    onResizeEnd?: (newWidth: number) => void;
     children: React.ReactNode;
     anchor: 'left' | 'right';
     open: boolean;
@@ -60,6 +61,9 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
     };
 
     const handleMouseUp = () => {
+        if (isResizing && onResizeEnd) {
+            onResizeEnd(width);
+        }
         setIsResizing(false);
     };
 

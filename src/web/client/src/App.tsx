@@ -249,7 +249,7 @@ const AppContent: React.FC = () => {
                                     <ChatPanel
                                         leftDrawerOpen={leftDrawerOpen}
                                         rightDrawerOpen={rightDrawerOpen}
-                                        rightDrawerWidth={250}
+                                        rightDrawerWidth={rightDrawerWidth}
                                         showWelcome={showWelcome}
                                         onSwitchToWelcome={setShowWelcome}
                                     />
@@ -260,6 +260,10 @@ const AppContent: React.FC = () => {
                                     open={rightDrawerOpen}
                                     width={rightDrawerWidth}
                                     onWidthChange={setRightDrawerWidth}
+                                    onResizeEnd={(newWidth) => {
+                                        // Update the chat panel width when resizing ends
+                                        setRightDrawerWidth(newWidth);
+                                    }}
                                     minWidth={200}
                                     maxWidth={800}
                                     onClose={() => setRightDrawerOpen(false)}
