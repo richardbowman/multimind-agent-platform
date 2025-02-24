@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Drawer, Box, styled } from '@mui/material';
 
 const ResizableHandle = styled(Box)(({ theme }) => ({
@@ -37,7 +37,8 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
     children,
     anchor,
     open,
-    onClose
+    onClose,
+    onResizeEnd
 }) => {
     const [isResizing, setIsResizing] = useState(false);
     const [lastDownX, setLastDownX] = useState(0);
