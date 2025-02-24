@@ -206,11 +206,36 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                            levelMatch && 
                            (showVerbose || log.level.toLowerCase() !== 'verbose');
                 }).map((log, index) => (
-                    <div key={index} className={`log-entry ${log.level?.toLowerCase()}`}>
+                    <Box 
+                        key={index} 
+                        className={`log-entry ${log.level?.toLowerCase()}`}
+                        sx={{
+                            borderBottom: 1,
+                            borderColor: 'divider',
+                            py: 1,
+                            '& .log-timestamp': {
+                                color: 'text.secondary',
+                                mr: 2,
+                                fontSize: '0.875rem'
+                            },
+                            '& .log-level': {
+                                fontWeight: 'bold',
+                                mr: 2,
+                                textTransform: 'uppercase',
+                                fontSize: '0.875rem',
+                                color: log.level?.toLowerCase() === 'error' ? 'error.main' :
+                                      log.level?.toLowerCase() === 'warn' ? 'warning.main' :
+                                      'text.secondary'
+                            },
+                            '& .log-message': {
+                                color: 'text.primary'
+                            }
+                        }}
+                    >
                         <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
                         <span className="log-level">{log.level}</span>
                         <span className="log-message" dangerouslySetInnerHTML={{ __html: highlightText(log.message) }} />
-                    </div>
+                    </Box>
                 )) || [];
             }
     };
@@ -276,19 +301,6 @@ export const LogViewer: React.FC<LogViewerProps> = ({ logType: initialLogType })
                     display: 'flex',
                     flexDirection: 'column',
                     '& .log-entry': {
-                        borderBottom: '1px solid #eee',
-                        padding: '8px 0',
-                        '& .log-timestamp': {
-                            color: '#666',
-                            marginRight: '16px',
-                            fontSize: '0.875rem'
-                        },
-                        '& .log-level': {
-                            fontWeight: 'bold',
-                            marginRight: '16px',
-                            textTransform: 'uppercase',
-                            fontSize: '0.875rem'
-                        },
                         '& .log-method': {
                             fontWeight: '500',
                             color: theme => theme.palette.primary.main
