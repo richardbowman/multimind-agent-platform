@@ -2,22 +2,34 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './styles/index.css';
 import App from './App';
-import { createTheme, CssBaseline, ThemeProvider } from '@mui/material';
+import { createTheme, CssBaseline, ThemeProvider, useMediaQuery } from '@mui/material';
 
 const root = ReactDOM.createRoot(
   document.getElementById('root') as HTMLElement
 );
-const darkTheme = createTheme({
-  palette: {
-    mode: 'dark',
-  },
-});
+
+const ThemeWrapper = () => {
+  const prefersDarkMode = useMediaQuery('(prefers-color-scheme: dark)');
+  
+  const theme = React.useMemo(
+    () => createTheme({
+      palette: {
+        mode: prefersDarkMode ? 'dark' : 'light',
+      },
+    }),
+    [prefersDarkMode]
+  );
+
+  return (
+    <ThemeProvider theme={theme}>
+      <CssBaseline enableColorScheme />
+      <App />
+    </ThemeProvider>
+  );
+};
 
 root.render(
   <React.StrictMode>
-    <ThemeProvider theme={darkTheme}>
-      <CssBaseline enableColorScheme />    
-      <App />
-    </ThemeProvider>
+    <ThemeWrapper />
   </React.StrictMode>
 );
