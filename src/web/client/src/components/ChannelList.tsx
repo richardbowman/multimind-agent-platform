@@ -80,6 +80,12 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                 bgcolor: currentChannelId === channel.id ? 'primary.main' : 'background.paper',
                                 '&:hover': {
                                     bgcolor: currentChannelId === channel.id ? 'primary.dark' : 'action.hover'
+                                },
+                                '&.Mui-selected': {
+                                    bgcolor: 'primary.main',
+                                    '&:hover': {
+                                        bgcolor: 'primary.dark'
+                                    }
                                 }
                             }}
                         >
@@ -92,7 +98,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                 <Typography 
                                     variant="body1" 
                                     sx={{ 
-                                        color: currentChannelId === channel.id ? '#fff' : 'text.primary',
+                                        color: currentChannelId === channel.id ? 'common.white' : 'text.primary',
                                         fontWeight: currentChannelId === channel.id ? 500 : 400,
                                     }}
                                 >
@@ -115,7 +121,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                                             handleOpenDialog(channel.id);
                                         }}
                                         sx={{
-                                            color: currentChannelId === channel.id ? '#fff' : 'text.primary',
+                                            color: currentChannelId === channel.id ? 'common.white' : 'text.primary',
                                             '&:hover': {
                                                 backgroundColor: 'rgba(255, 255, 255, 0.1)'
                                             }
