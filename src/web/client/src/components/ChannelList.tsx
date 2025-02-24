@@ -34,7 +34,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
         <Box sx={{ p: 2, height: '100%', display: 'flex', flexDirection: 'column', overflowY: 'hidden' }}>
             <Box sx={{ mb: 2 }}>
                 <Stack direction="row" justifyContent="space-between" alignItems="center">
-                    <Typography variant="h6" sx={{ color: '#fff' }}>
+                    <Typography variant="h6">
                         Channels ({channels.length})
                     </Typography>
                     <IconButton 
