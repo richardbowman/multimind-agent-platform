@@ -9,8 +9,6 @@
 
 .app {
     height: 100vh;
-    background-color: #1a1a1a;
-    color: #ffffff;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -50,9 +48,7 @@
 }
 
 .logs-subtabs {
-    background-color: #2a2a2a;
     padding: 0.5rem 1rem;
-    border-bottom: 1px solid #444;
     display: flex;
     gap: 0.5rem;
 }
@@ -78,7 +74,6 @@
 }
 
 .log-viewer {
-    background-color: #1a1a1a;
     padding: 1rem;
     overflow-y: auto;
     flex: 1;
@@ -89,18 +84,6 @@
     font-family: monospace;
     font-size: 0.9rem;
     line-height: 1.5;
-}
-
-.log-entry {
-    padding: 0.25rem 0.5rem;
-    border-bottom: 1px solid #333;
-    display: flex;
-    gap: 1rem;
-    align-items: flex-start;
-}
-
-.log-entry:hover {
-    background-color: #2a2a2a;
 }
 
 .log-timestamp {
@@ -255,7 +238,6 @@
 .message {
     margin-bottom: 1rem;
     padding: 0.5rem;
-    background-color: #2a2a2a;
     border-radius: 4px;
 }
 
