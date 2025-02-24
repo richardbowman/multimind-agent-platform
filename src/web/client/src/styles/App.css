@@ -819,7 +819,7 @@
 /* Custom scrollbar styling */
 .custom-scrollbar {
     scrollbar-width: thin;
-    scrollbar-color: #666 #2a2a2a;
+    scrollbar-color: var(--mui-palette-divider) var(--mui-palette-background-paper);
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -827,14 +827,14 @@
 }
 
 .custom-scrollbar::-webkit-scrollbar-track {
-    background: #2a2a2a;
+    background: var(--mui-palette-background-paper);
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: #666;
+    background: var(--mui-palette-divider);
     border-radius: 3px;
 }
 
 .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: #888;
+    background: var(--mui-palette-action-hover);
 }

@@ -31,7 +31,7 @@ import { useThreadMessages } from '../contexts/ThreadMessageContext.tsx';
 import { useMessages } from '../contexts/MessageContext.tsx';
 import { useChannels } from '../contexts/ChannelContext.tsx';
 import { useFilteredTasks } from '../contexts/FilteredTaskContext.tsx';
-import { CustomScrollbarStyles } from '../styles/styles.ts';
+import { useTheme } from '@mui/material/styles';
 
 // Custom link component that opens links in system browser
 export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -58,6 +58,7 @@ interface ChatPanelProps {
 }
 
 export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawerOpen, rightDrawerWidth, showWelcome, onSwitchToWelcome }) => {
+    const theme = useTheme();
     const { threadMessages: messages } = useThreadMessages();
     const { sendMessage, currentChannelId, currentThreadId, setCurrentThreadId } = useMessages();
     const { handles, isLoading } = useDataContext();
@@ -381,7 +382,21 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                         p: 2,
                         bgcolor: 'background.paper',
                         width: '100%',
-                        ...CustomScrollbarStyles
+                        scrollbarWidth: 'thin',
+                        scrollbarColor: `${theme.palette.divider} ${theme.palette.background.paper}`,
+                        '&::-webkit-scrollbar': {
+                            width: '6px'
+                        },
+                        '&::-webkit-scrollbar-track': {
+                            background: theme.palette.background.paper
+                        },
+                        '&::-webkit-scrollbar-thumb': {
+                            background: theme.palette.divider,
+                            borderRadius: '3px',
+                            '&:hover': {
+                                background: theme.palette.action.hover
+                            }
+                        }
                     }}
                     onScroll={checkScrollPosition}
                 >
