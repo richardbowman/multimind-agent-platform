@@ -48,7 +48,7 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
         setLastDownX(e.clientX);
     };
 
-    const handleMouseMove = (e: MouseEvent) => {
+    const handleMouseMove = useCallback((e: MouseEvent) => {
         if (!isResizing) return;
         
         const offset = e.clientX - lastDownX;
@@ -58,14 +58,14 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
         
         onWidthChange(newWidth);
         setLastDownX(e.clientX);
-    };
+    }, [isResizing, lastDownX, width, minWidth, maxWidth, anchor, onWidthChange]);
 
-    const handleMouseUp = () => {
+    const handleMouseUp = useCallback(() => {
         if (isResizing && onResizeEnd) {
             onResizeEnd(width);
         }
         setIsResizing(false);
-    };
+    }, [isResizing, onResizeEnd, width]);
 
     useEffect(() => {
         const handleMouseMoveBound = (e: MouseEvent) => handleMouseMove(e);
@@ -80,7 +80,7 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
             document.removeEventListener('mousemove', handleMouseMoveBound);
             document.removeEventListener('mouseup', handleMouseUpBound);
         };
-    }, [isResizing, handleMouseMove, handleMouseUp]);
+    }, [isResizing]); // Removed handleMouseMove and handleMouseUp from dependencies
 
     return (
         <Drawer
