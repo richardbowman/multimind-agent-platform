@@ -144,8 +144,9 @@
 .sidebar {
     display: flex;
     flex-direction: column;
-    border-right: 1px solid #333;
-    background-color: #2a2a2a;
+    border-right: 1px solid;
+    border-color: var(--mui-palette-divider);
+    background-color: var(--mui-palette-background-paper);
     height: calc(100vh - 48px);
     overflow: hidden;
 }
