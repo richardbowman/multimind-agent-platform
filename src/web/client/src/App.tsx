@@ -249,7 +249,7 @@ const AppContent: React.FC = () => {
                                     <ChatPanel
                                         leftDrawerOpen={leftDrawerOpen}
                                         rightDrawerOpen={rightDrawerOpen}
-                                        rightDrawerWidth={rightDrawerWidth}
+                                        rightDrawerWidth={250}
                                         showWelcome={showWelcome}
                                         onSwitchToWelcome={setShowWelcome}
                                     />
