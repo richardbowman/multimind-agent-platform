@@ -1,6 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
+import { CustomScrollbarStyles } from '../../styles/styles';
 
 interface ScrollViewProps {
   children: React.ReactNode;
@@ -74,21 +75,7 @@ export const ScrollView: React.FC<ScrollViewProps> = ({
         sx={{
           height: '100%',
           overflowY: 'auto',
-          scrollbarWidth: 'thin',
-          scrollbarColor: `${theme.palette.divider} ${theme.palette.background.paper}`,
-          '&::-webkit-scrollbar': {
-            width: '6px'
-          },
-          '&::-webkit-scrollbar-track': {
-            background: theme.palette.background.paper
-          },
-          '&::-webkit-scrollbar-thumb': {
-            background: theme.palette.divider,
-            borderRadius: '3px',
-            '&:hover': {
-              background: theme.palette.action.hover
-            }
-          }
+          ...CustomScrollbarStyles(theme)
         }}
         onScroll={checkScrollPosition}
       >
