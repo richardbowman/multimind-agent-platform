@@ -3,11 +3,14 @@ import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
 import { CustomScrollbarStyles } from '../../styles/styles';
 
+import { SxProps, Theme } from '@mui/material/styles';
+
 interface ScrollViewProps {
   children: React.ReactNode;
   className?: string;
   autoScroll?: boolean;
   onScroll?: (isAtBottom: boolean) => void;
+  sx?: SxProps<Theme>;
 }
 
 export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({ 
@@ -70,12 +73,12 @@ export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({
 
   return (
     <Box 
-      sx={{
+      sx={[{
         position: 'relative',
         height: '100%',
         overflow: 'hidden',
         ...(className ? { [className]: true } : {})
-      }}
+      }, sx]}
     >
       {showTopGradient && (
         <Box
