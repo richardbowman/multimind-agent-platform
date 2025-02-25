@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -15,9 +15,10 @@ import { parse } from 'csv';
 import * as fs from 'fs';
 import { stringify } from 'csv-stringify/sync';
 import { ArtifactManager } from 'src/tools/artifactManager';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
-@StepExecutorDecorator('csv-processor', 'Process CSV artifacts by delegating tasks for each row')
-export class CSVProcessingExecutor implements StepExecutor {
+@StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Process CSV artifacts by delegating tasks for each row')
+export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private artifactManager: ArtifactManager;
