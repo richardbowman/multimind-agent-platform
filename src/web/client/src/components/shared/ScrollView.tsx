@@ -17,7 +17,8 @@ export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({
   children, 
   className, 
   autoScroll = false,
-  onScroll 
+  onScroll,
+  sx
 }, ref) => {
   const theme = useTheme();
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -131,4 +132,4 @@ export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({
       )}
     </Box>
   );
-};
+});
