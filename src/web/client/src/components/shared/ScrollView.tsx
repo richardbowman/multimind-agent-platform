@@ -1,6 +1,6 @@
 import React, { useRef, useState, useEffect } from 'react';
-import styles from './ScrollView.module.css';
 import { useTheme } from '@mui/material/styles';
+import { Box } from '@mui/material';
 
 interface ScrollViewProps {
   children: React.ReactNode;
@@ -47,16 +47,67 @@ export const ScrollView: React.FC<ScrollViewProps> = ({
   }, [children, autoScroll, isAtBottom]);
 
   return (
-    <div className={`${styles.scrollContainer} ${className}`}>
-      {showTopGradient && <div className={styles.topGradient} />}
-      <div 
+    <Box 
+      sx={{
+        position: 'relative',
+        height: '100%',
+        overflow: 'hidden',
+        ...(className ? { [className]: true } : {})
+      }}
+    >
+      {showTopGradient && (
+        <Box
+          sx={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            height: '20px',
+            pointerEvents: 'none',
+            zIndex: 1,
+            top: 0,
+            background: `linear-gradient(to bottom, ${theme.palette.background.paper} 0%, rgba(255,255,255,0) 100%)`
+          }}
+        />
+      )}
+      <Box
         ref={scrollRef}
-        className={styles.scrollContent}
+        sx={{
+          height: '100%',
+          overflowY: 'auto',
+          scrollbarWidth: 'thin',
+          scrollbarColor: `${theme.palette.divider} ${theme.palette.background.paper}`,
+          '&::-webkit-scrollbar': {
+            width: '6px'
+          },
+          '&::-webkit-scrollbar-track': {
+            background: theme.palette.background.paper
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: theme.palette.divider,
+            borderRadius: '3px',
+            '&:hover': {
+              background: theme.palette.action.hover
+            }
+          }
+        }}
         onScroll={checkScrollPosition}
       >
         {children}
-      </div>
-      {showBottomGradient && <div className={styles.bottomGradient} />}
-    </div>
+      </Box>
+      {showBottomGradient && (
+        <Box
+          sx={{
+            position: 'absolute',
+            left: 0,
+            right: 0,
+            height: '20px',
+            pointerEvents: 'none',
+            zIndex: 1,
+            bottom: 0,
+            background: `linear-gradient(to top, ${theme.palette.background.paper} 0%, rgba(255,255,255,0) 100%)`
+          }}
+        />
+      )}
+    </Box>
   );
 };

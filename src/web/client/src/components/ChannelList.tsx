@@ -53,7 +53,7 @@ export const ChannelList: React.FC<ChannelListProps> = () => {
                 </Stack>
             </Box>
 
-            <ScrollView>
+            <ScrollView className={styles.channelList}>
                 {channels.length === 0 && (
                     <Typography variant="body1" sx={{ color: '#666', textAlign: 'center', mt: 2 }}>
                         Loading channels...
