@@ -51,6 +51,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 throw new Error(`Could not load artifact ${csvArtifact.id}`);
             }
             
+            // Parse CSV with headers
             const parser = parse(artifact.content.toString(), {
                 columns: true,
                 skip_empty_lines: true,
@@ -59,8 +60,12 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 relax_column_count: true,
                 bom: true
             });
+            
+            // Store headers separately
+            const headers = Object.keys(parser.options.columns || {});
+            
             for await (const record of parser) {
-                rows.push(record);
+                rows.push({ headers, data: record });
             }
         } catch (error) {
             Logger.error('Error reading CSV file:', error);
@@ -152,11 +157,11 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 const row = rows[i];
                 const taskId = createUUID();
                 
-                // Create task description for this row
-                const taskDescription = `Process row ${i + 1} from ${csvArtifact.name}:\n` +
-                    Object.entries(row)
-                        .map(([key, value]) => `${key}: ${value}`)
-                        .join('\n');
+                // Create task description with headers
+                const taskDescription = `Process row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
+                    Object.keys(row.data).map((header: string) => 
+                        `${header}: ${row.data[header] || ''}`
+                    ).join('\n');
 
                 await this.taskManager.addTask(project, {
                     id: taskId,
@@ -166,7 +171,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                     props: {
                         rowIndex: i,
                         csvArtifactId: csvArtifact.id,
-                        originalRowData: row
+                        originalRowData: row.data
                     }
                 });
 
