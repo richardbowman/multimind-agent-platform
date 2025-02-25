@@ -145,34 +145,36 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 }
             });
 
-            // Create a single task for all rows
-            const taskId = createUUID();
+            // Create individual tasks for each row
+            const taskDetails: string[] = [];
             
-            // Create task description with row data
-            const taskDescription = `Process ${rows.length} rows from ${csvArtifact.name}:\n\n` +
-                rows.map((row, index) => 
-                    `Row ${index + 1}:\n` +
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const taskId = createUUID();
+                
+                // Create task description for this row
+                const taskDescription = `Process row ${i + 1} from ${csvArtifact.name}:\n` +
                     Object.entries(row)
                         .map(([key, value]) => `${key}: ${value}`)
-                        .join('\n')
-                ).join('\n\n');
+                        .join('\n');
 
-            await this.taskManager.addTask(project, {
-                id: taskId,
-                description: taskDescription,
-                creator: params.agentId,
-                type: TaskType.Standard,
-                props: {
-                    rowIndices: rows.map((_, index) => index),
-                    csvArtifactId: csvArtifact.id,
-                    originalRowData: rows
-                }
-            });
+                await this.taskManager.addTask(project, {
+                    id: taskId,
+                    description: taskDescription,
+                    creator: params.agentId,
+                    type: TaskType.Standard,
+                    props: {
+                        rowIndex: i,
+                        csvArtifactId: csvArtifact.id,
+                        originalRowData: row
+                    }
+                });
 
-            // Assign to agent
-            await this.taskManager.assignTaskToAgent(taskId, assignedAgent.userId);
-
-            const taskDetails = [`Process ${rows.length} rows [${taskId}] -> ${assignedAgent.messagingHandle}`];
+                // Assign to agent
+                await this.taskManager.assignTaskToAgent(taskId, assignedAgent.userId);
+                
+                taskDetails.push(`Row ${i + 1} [${taskId}] -> ${assignedAgent.messagingHandle}`);
+            }
 
             return {
                 type: StepResultType.Delegation,
