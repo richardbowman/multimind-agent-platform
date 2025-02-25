@@ -84,7 +84,13 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             properties: {
                 projectName: { type: 'string' },
                 projectGoal: { type: 'string' },
-                assignedAgent: { type: 'string' }, // Agent handle
+                assignedAgent: { 
+                    type: 'string',
+                    enum: [
+                        '@self', 
+                        ...(params.agents?.filter(a => a.supportsDelegation).map(a => a.messagingHandle) || [])
+                    ]
+                },
                 responseMessage: { type: 'string' }
             }
         };
@@ -125,6 +131,59 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             });
 
             const { projectName, projectGoal, assignedAgent: selectedAgentHandle, responseMessage } = responseJSON;
+
+            // Handle @self selection
+            if (selectedAgentHandle === '@self') {
+                // Create the project
+                const project = await this.taskManager.createProject({
+                    name: projectName,
+                    metadata: {
+                        description: projectGoal,
+                        status: 'active',
+                        createdAt: new Date(),
+                        updatedAt: new Date(),
+                        parentTaskId: params.stepId
+                    }
+                });
+
+                // Create individual tasks for each row
+                const taskDetails: string[] = [];
+                
+                for (let i = 0; i < rows.length; i++) {
+                    const row = rows[i];
+                    const taskId = createUUID();
+                    
+                    // Create task description with headers
+                    const taskDescription = `Process row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
+                        Object.keys(row.data).map((header: string) => 
+                            `${header}: ${row.data[header] || ''}`
+                        ).join('\n');
+
+                    await this.taskManager.addTask(project, {
+                        id: taskId,
+                        description: taskDescription,
+                        creator: params.agentId,
+                        type: TaskType.Standard,
+                        props: {
+                            rowIndex: i,
+                            csvArtifactId: csvArtifact.id,
+                            originalRowData: row.data
+                        }
+                    });
+                    
+                    taskDetails.push(`Row ${i + 1} [${taskId}] -> @self`);
+                }
+
+                return {
+                    type: StepResultType.Success,
+                    projectId: project.id,
+                    finished: true,
+                    response: {
+                        message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
+                            taskDetails.join('\n')
+                    }
+                };
+            }
 
             // Find the selected agent
             const assignedAgent = supportedAgents?.find(a => a.messagingHandle === selectedAgentHandle);
