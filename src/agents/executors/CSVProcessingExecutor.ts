@@ -117,7 +117,8 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         prompt.addInstruction(`IMPORTANT SELECTION RULES:
             - Choose the most specialized agent for the work
             - Consider the type of data in the CSV
-            - If multiple agents could handle it, choose the one with the most relevant expertise`);
+            - If multiple agents could handle it, choose the one with the most relevant expertise
+            - If you are capable of handling this task yourself, select @self`);
 
         const structuredPrompt = new StructuredOutputPrompt(
             schema,
