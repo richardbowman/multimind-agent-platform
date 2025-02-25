@@ -220,12 +220,10 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 : !message.props?.['root-id'])
         );
 
-        // console.debug('Messages changed - relevant messages:', relevantMessages.length);
-        // console.debug('isAtBottom:', isAtBottom);
-
         if (relevantMessages.length > 0) {
             console.debug('Scrolling to bottom');
-            setIsAtBottom(true);
+            // Use a timeout to ensure this runs after render
+            setTimeout(() => setIsAtBottom(true), 0);
         }
     }, [currentChannelId, currentThreadId]);
 
