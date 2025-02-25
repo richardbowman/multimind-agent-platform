@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect } from 'react';
+import React, { useRef, useState, useEffect, useCallback } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
 import { CustomScrollbarStyles } from '../../styles/styles';
