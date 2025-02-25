@@ -154,6 +154,13 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                     const row = rows[i];
                     const taskId = createUUID();
                     
+                    // Generate task description using the model
+                    const taskDescriptionResponse = await this.modelHelpers.generate({
+                        message: `Generate a clear and actionable task description for processing row ${i + 1}I'll modify the code to generate task descriptions using the model. Here are the changes:
+
+src/agents/executors/CSVProcessingExecutor.ts
+```typescript
+<<<<<<< SEARCH
                     // Create task description with headers
                     const taskDescription = `Process row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
                         Object.keys(row.data).map((header: string) => 
@@ -161,16 +168,6 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                         ).join('\n');
 
                     await this.taskManager.addTask(project, {
-                        id: taskId,
-                        description: taskDescription,
-                        creator: params.agentId,
-                        type: TaskType.Standard,
-                        props: {
-                            rowIndex: i,
-                            csvArtifactId: csvArtifact.id,
-                            originalRowData: row.data
-                        }
-                    });
                     
                     taskDetails.push(`Row ${i + 1} [${taskId}] -> @self`);
                 }
@@ -217,11 +214,18 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 const row = rows[i];
                 const taskId = createUUID();
                 
-                // Create task description with headers
-                const taskDescription = `Process row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
-                    Object.keys(row.data).map((header: string) => 
-                        `${header}: ${row.data[header] || ''}`
-                    ).join('\n');
+                // Generate task description using the model
+                const taskDescription = await this.modelHelpers.generate({
+                    message: `Create a clear and actionable task description for processing this CSV row. 
+                        CSV file: ${csvArtifact.metadata?.title || 'Untitled'}
+                        Row index: ${i + 1}
+                        Row data: ${JSON.stringify(row.data)}`,
+                    instructions: `Generate a concise task description that:
+                        1. Clearly states what needs to be done
+                        2. Includes relevant context from the row data
+                        3. Is specific and actionable
+                        4. Uses professional language`
+                });
 
                 await this.taskManager.addTask(project, {
                     id: taskId,
