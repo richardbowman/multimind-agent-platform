@@ -323,7 +323,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                 position: 'relative',
                 margin: '-16px',
                 padding: '16px',
-                background: !isExpanded ? theme => `linear-gradient(to bottom, rgba(${theme.palette.background.default}, 0) 0%, ${theme.palette.background.default} 100%)` : undefined,
+                background: !isExpanded ? theme => {
+                    const bgColor = theme.palette.mode === 'dark' 
+                        ? theme.palette.background.default 
+                        : theme.palette.background.paper;
+                    return `linear-gradient(to bottom, transparent 0%, ${bgColor} 100%)`;
+                } : undefined,
                 borderRadius: 2
             }}>
                 {(inProgress) && (
