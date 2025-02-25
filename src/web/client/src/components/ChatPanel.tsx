@@ -32,6 +32,7 @@ import { useMessages } from '../contexts/MessageContext.tsx';
 import { useChannels } from '../contexts/ChannelContext.tsx';
 import { useFilteredTasks } from '../contexts/FilteredTaskContext.tsx';
 import { useTheme } from '@mui/material/styles';
+import { ScrollView } from './shared/ScrollView.tsx';
 
 // Custom link component that opens links in system browser
 export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -74,7 +75,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         const updatedMessages = messages.filter(m => m.updated_at);
         if (updatedMessages.length > 0) {
             setMessageVersions(prev => {
-                const newVersions = {...prev};
+                const newVersions = { ...prev };
                 updatedMessages.forEach(m => {
                     newVersions[m.id] = (newVersions[m.id] || 0) + 1;
                 });
@@ -100,13 +101,13 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         if (filtered.length > 0) {
             const lastMessage = filtered[filtered.length - 1];
             const idsToExpand = [lastMessage.id];
-            
+
             // If last message has attachments, expand them too
             if (lastMessage.props?.artifactIds?.length > 0) {
                 // Set showAttachments to true for the last message
                 lastMessage.showAttachments = true;
             }
-            
+
             setExpandedMessages(prev => new Set([...prev, ...idsToExpand]));
         }
 
@@ -226,7 +227,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             console.debug('Scrolling to bottom');
             setIsAtBottom(true);
         }
-    }, [currentChannelId, currentThreadId]);    
+    }, [currentChannelId, currentThreadId]);
 
     // Scroll to bottom when in-progress messages update in current thread
     useEffect(() => {
@@ -254,7 +255,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     // Track last channel ID to detect channel changes
     const lastChannelId = useRef<string | null>(null);
 
-     // Show welcome panel only when:
+    // Show welcome panel only when:
     // 1. Switching to a new channel
     // 2. The new channel has remaining goal tasks
     // 3. The channel has no other messages besides the welcome message
@@ -365,7 +366,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
             transition: 'all 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
         }}>
             {showWelcome ? (
-                <WelcomePanel 
+                <WelcomePanel
                     onStartTask={(taskId) => {
                         // Handle task start
                         onSwitchToWelcome(false);
@@ -374,107 +375,93 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                     messageType="welcome"
                 />
             ) : (
-                <Box
+                <ScrollView
                     ref={messagesContainerRef}
                     sx={{
                         flex: 1,
+                        overflowX: 'hidden',
                         overflowY: 'auto',
                         p: 2,
                         bgcolor: 'background.paper',
                         width: '100%',
-                        scrollbarWidth: 'thin',
-                        scrollbarColor: `${theme.palette.divider} ${theme.palette.background.paper}`,
-                        '&::-webkit-scrollbar': {
-                            width: '6px'
-                        },
-                        '&::-webkit-scrollbar-track': {
-                            background: theme.palette.background.paper
-                        },
-                        '&::-webkit-scrollbar-thumb': {
-                            background: theme.palette.divider,
-                            borderRadius: '3px',
-                            '&:hover': {
-                                background: theme.palette.action.hover
-                            }
-                        }
                     }}
                     onScroll={checkScrollPosition}
                 >
-                {/* Project Overview and Goal Planning Cards */}
-                {!currentThreadId && (
-                    <ChatHeader
-                        currentProject={currentProject}
-                        channels={channels}
-                        tasks={tasks}
-                        currentChannelId={currentChannelId}
-                        handles={handles}
-                        onTaskClick={(task) => {
-                            setSelectedTask(task);
-                            setTaskDialogOpen(true);
-                        }}
-                    />
-                )}
+                    {/* Project Overview and Goal Planning Cards */}
+                    {!currentThreadId && (
+                        <ChatHeader
+                            currentProject={currentProject}
+                            channels={channels}
+                            tasks={tasks}
+                            currentChannelId={currentChannelId}
+                            handles={handles}
+                            onTaskClick={(task) => {
+                                setSelectedTask(task);
+                                setTaskDialogOpen(true);
+                            }}
+                        />
+                    )}
 
-                {isLoading ? (
-                    <Typography variant="body1" sx={{
-                        textAlign: 'center',
-                        color: 'text.secondary',
-                        fontStyle: 'italic',
-                        p: 2
-                    }}>
-                        Loading messages...
-                    </Typography>
-                ) : visibleMessages.length === 0 ? (
-                    <Typography variant="body1" sx={{
-                        textAlign: 'center',
-                        color: 'text.secondary',
-                        fontStyle: 'italic',
-                        p: 2
-                    }}>
-                        No messages yet
-                    </Typography>
-                ) : (
-                    visibleMessages.map((message, index) => (
-                        <ChatMessage
-                        key={`${message.id}-${messageVersions[message.id] || 0}`}
-                        message={message}
-                        handles={handles}
-                        expandedMessages={expandedMessages}
-                        messageVersions={messageVersions}
-                        currentThreadId={currentThreadId}
-                        messages={messages}
-                        onToggleExpansion={toggleMessageExpansion}
-                        onViewThread={setCurrentThreadId}
-                        onViewMetadata={(message) => {
-                            setSelectedMessage(message);
-                            setMetadataDialogOpen(true);
-                        }}
-                    />
-                    )))}
-                {uniqueTasks && uniqueTasks.length > 0 && (
-                    <Paper
-                        elevation={0}
-                        sx={{
-                            mt: 2,
-                            p: 2,
-                            bgcolor: 'background.paper',
-                            border: '1px solid',
-                            borderColor: 'divider',
-                            borderRadius: 2
-                        }}
-                    >
-                        <Typography
-                            variant="overline"
+                    {isLoading ? (
+                        <Typography variant="body1" sx={{
+                            textAlign: 'center',
+                            color: 'text.secondary',
+                            fontStyle: 'italic',
+                            p: 2
+                        }}>
+                            Loading messages...
+                        </Typography>
+                    ) : visibleMessages.length === 0 ? (
+                        <Typography variant="body1" sx={{
+                            textAlign: 'center',
+                            color: 'text.secondary',
+                            fontStyle: 'italic',
+                            p: 2
+                        }}>
+                            No messages yet
+                        </Typography>
+                    ) : (
+                        visibleMessages.map((message, index) => (
+                            <ChatMessage
+                                key={`${message.id}-${messageVersions[message.id] || 0}`}
+                                message={message}
+                                handles={handles}
+                                expandedMessages={expandedMessages}
+                                messageVersions={messageVersions}
+                                currentThreadId={currentThreadId}
+                                messages={messages}
+                                onToggleExpansion={toggleMessageExpansion}
+                                onViewThread={setCurrentThreadId}
+                                onViewMetadata={(message) => {
+                                    setSelectedMessage(message);
+                                    setMetadataDialogOpen(true);
+                                }}
+                            />
+                        )))}
+                    {uniqueTasks && uniqueTasks.length > 0 && (
+                        <Paper
+                            elevation={0}
                             sx={{
-                                mb: 1,
-                                color: 'text.secondary',
-                                display: 'block'
+                                mt: 2,
+                                p: 2,
+                                bgcolor: 'background.paper',
+                                border: '1px solid',
+                                borderColor: 'divider',
+                                borderRadius: 2
                             }}
                         >
-                            In Progress Tasks
-                        </Typography>
-                        <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                            {uniqueTasks.map(task => (
+                            <Typography
+                                variant="overline"
+                                sx={{
+                                    mb: 1,
+                                    color: 'text.secondary',
+                                    display: 'block'
+                                }}
+                            >
+                                In Progress Tasks
+                            </Typography>
+                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
+                                {uniqueTasks.map(task => (
                                     <Paper
                                         key={task.id}
                                         elevation={0}
@@ -495,20 +482,20 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                         </Typography>
                                     </Paper>
                                 ))
-                            }
-                        </Box>
-                    </Paper>
-                )}
-                <div ref={messagesEndRef} />
-            </Box>
+                                }
+                            </Box>
+                        </Paper>
+                    )}
+                    <div ref={messagesEndRef} />
+                </ScrollView>
             )}
             <Box sx={{ display: 'flex', gap: 1, p: 2 }}>
-                <CommandInput 
-                    onSendMessage={handleSendMessage} 
-                    currentChannel={currentChannelId} 
+                <CommandInput
+                    onSendMessage={handleSendMessage}
+                    currentChannel={currentChannelId}
                     showWelcome={showWelcome}
                     onToggleWelcome={onSwitchToWelcome}
-                    sx={{flex: 1}}
+                    sx={{ flex: 1 }}
                 />
             </Box>
 
