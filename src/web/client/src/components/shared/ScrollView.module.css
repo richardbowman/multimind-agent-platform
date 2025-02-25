@@ -1,35 +1,49 @@
 .scrollContainer {
-  position: relative;
-  overflow: hidden;
+    position: relative;
+    height: 100%;
+    overflow: hidden;
 }
 
 .scrollContent {
-  max-height: 100%;
-  overflow-y: auto;
-  scrollbar-width: none; /* Firefox */
-  -ms-overflow-style: none; /* IE and Edge */
+    height: 100%;
+    overflow-y: auto;
+    scrollbar-width: thin;
+    scrollbar-color: var(--mui-palette-divider) var(--mui-palette-background-paper);
 }
 
 .scrollContent::-webkit-scrollbar {
-  display: none; /* Chrome, Safari and Opera */
+    width: 6px;
+}
+
+.scrollContent::-webkit-scrollbar-track {
+    background: var(--mui-palette-background-paper);
+}
+
+.scrollContent::-webkit-scrollbar-thumb {
+    background: var(--mui-palette-divider);
+    border-radius: 3px;
+}
+
+.scrollContent::-webkit-scrollbar-thumb:hover {
+    background: var(--mui-palette-action-hover);
 }
 
 .topGradient,
 .bottomGradient {
-  position: absolute;
-  left: 0;
-  right: 0;
-  height: 20px;
-  pointer-events: none;
-  z-index: 1;
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 20px;
+    pointer-events: none;
+    z-index: 1;
 }
 
 .topGradient {
-  top: 0;
-  background: linear-gradient(to bottom, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+    top: 0;
+    background: linear-gradient(to bottom, var(--mui-palette-background-paper) 0%, rgba(255,255,255,0) 100%);
 }
 
 .bottomGradient {
-  bottom: 0;
-  background: linear-gradient(to top, rgba(255,255,255,1) 0%, rgba(255,255,255,0) 100%);
+    bottom: 0;
+    background: linear-gradient(to top, var(--mui-palette-background-paper) 0%, rgba(255,255,255,0) 100%);
 }
