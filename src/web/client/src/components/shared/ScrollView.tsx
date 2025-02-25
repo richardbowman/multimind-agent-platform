@@ -22,15 +22,21 @@ export const ScrollView: React.FC<ScrollViewProps> = ({
   const [showBottomGradient, setShowBottomGradient] = useState(false);
   const [isAtBottom, setIsAtBottom] = useState(true);
 
-  const checkScrollPosition = () => {
+  const checkScrollPosition = useCallback(() => {
     if (scrollRef.current) {
       const { scrollTop, scrollHeight, clientHeight } = scrollRef.current;
       setShowTopGradient(scrollTop > 0);
+      setShowBottomGradient(scrollTop < scrollHeight - clientHeight);
       const newIsAtBottom = scrollHeight - (scrollTop + clientHeight) < 50;
-      setIsAtBottom(newIsAtBottom);
-      onScroll?.(newIsAtBottom);
+      setIsAtBottom(prev => {
+        if (prev !== newIsAtBottom) {
+          onScroll?.(newIsAtBottom);
+          return newIsAtBottom;
+        }
+        return prev;
+      });
     }
-  };
+  }, [onScroll]);
 
   const scrollToBottom = () => {
     if (scrollRef.current) {
@@ -42,10 +48,25 @@ export const ScrollView: React.FC<ScrollViewProps> = ({
   };
 
   useEffect(() => {
+    const container = scrollRef.current;
+    if (container) {
+      container.addEventListener('scroll', checkScrollPosition);
+      return () => {
+        container.removeEventListener('scroll', checkScrollPosition);
+      };
+    }
+  }, [checkScrollPosition]);
+
+  useEffect(() => {
     if (autoScroll && isAtBottom) {
       scrollToBottom();
     }
   }, [children, autoScroll, isAtBottom]);
+
+  // Initial check
+  useEffect(() => {
+    checkScrollPosition();
+  }, [checkScrollPosition]);
 
   return (
     <Box 
