@@ -110,7 +110,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
     const isExpanded = expandedMessages.has(message.id);
     const hasThread = !currentThreadId && message.replyCount||0 > 0;
-    const [showAttachments, setShowAttachments] = useState(message.showAttachments || message.props?.artifactIds?.length > 0);
+    const [showAttachments, setShowAttachments] = useState(isExpanded && (message.showAttachments || message.props?.artifactIds?.length > 0));
     const uniqueArtifacts = [...new Set((message.props?.artifactIds||[]).filter(a => a))];
     const hasAttachments = uniqueArtifacts.length||0 > 0;
     const inProgress = message.props?.partial;
@@ -345,9 +345,9 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     </Box>
                 )}
             </Box>
-            {hasAttachments && (
+            {hasAttachments && isExpanded && (
                 <Box sx={{ mt: 2 }}>
-                    <Collapse in={showAttachments}>
+                    <Collapse in={true}>
                         <Box sx={{ mt: 1 }}>
                             {uniqueArtifacts.filter(a => a).map((artifactId: string) => (
                                 <ArtifactLoader 
