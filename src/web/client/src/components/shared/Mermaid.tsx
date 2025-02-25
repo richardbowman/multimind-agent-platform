@@ -91,6 +91,20 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
         });
     }, [isFullscreen, updateActionState]);
 
+    // Watch for theme changes
+    useEffect(() => {
+        const handleThemeChange = () => {
+            setSvg(null); // Force re-render
+        };
+
+        const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
+        mediaQuery.addEventListener('change', handleThemeChange);
+
+        return () => {
+            mediaQuery.removeEventListener('change', handleThemeChange);
+        };
+    }, []);
+
     useEffect(() => {
         let isActive = true;
         let tempDiv: HTMLDivElement | null = null;
@@ -99,9 +113,13 @@ export const Mermaid: React.FC<MermaidProps> = ({ content }) => {
         const initializeAndRender = async () => {
             try {
                 // Initialize Mermaid with default config
+                // Detect dark/light mode from body class or prefers-color-scheme
+                const isDarkMode = document.body.classList.contains('dark') || 
+                    (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+
                 mermaid.initialize({
                     startOnLoad: false,
-                    theme: 'dark',
+                    theme: isDarkMode ? 'dark' : 'default',
                     securityLevel: 'loose',
                     fontFamily: 'inherit',
                     fontSize: 16,
