@@ -321,8 +321,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             </Box>
             <Box sx={{
                 position: 'relative',
-                margin: '-16px',
-                padding: '16px',
+                margin: '-20px',
+                padding: '20px',
                 background: !isExpanded ? theme => {
                     const bgColor = theme.palette.mode === 'dark' 
                         ? theme.palette.background.default 
