@@ -1,4 +1,4 @@
-import React, { useRef, useState, useEffect, useCallback } from 'react';
+import React, { useRef, useState, useEffect, useCallback, forwardRef } from 'react';
 import { useTheme } from '@mui/material/styles';
 import { Box } from '@mui/material';
 import { CustomScrollbarStyles } from '../../styles/styles';
@@ -10,12 +10,12 @@ interface ScrollViewProps {
   onScroll?: (isAtBottom: boolean) => void;
 }
 
-export const ScrollView: React.FC<ScrollViewProps> = ({ 
+export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({ 
   children, 
   className, 
   autoScroll = false,
   onScroll 
-}) => {
+}, ref) => {
   const theme = useTheme();
   const scrollRef = useRef<HTMLDivElement>(null);
   const [showTopGradient, setShowTopGradient] = useState(false);
@@ -92,7 +92,17 @@ export const ScrollView: React.FC<ScrollViewProps> = ({
         />
       )}
       <Box
-        ref={scrollRef}
+        ref={(node) => {
+          if (node) {
+            // Assign to both the forwarded ref and our internal ref
+            if (typeof ref === 'function') {
+              ref(node);
+            } else if (ref) {
+              ref.current = node;
+            }
+            scrollRef.current = node;
+          }
+        }}
         sx={{
           height: '100%',
           overflowY: 'auto',
