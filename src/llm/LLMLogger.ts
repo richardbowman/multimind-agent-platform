@@ -15,6 +15,7 @@ export interface LLMLogEntry {
     method: string;
     input: any;
     output: any;
+    durationMs?: number;
     error?: {
         message: string;
         stack: string;
@@ -38,7 +39,7 @@ export class LLMCallLogger extends EventEmitter {
         }
     }
 
-    async logCall(method: string, input: any, output: any, error?: any) {
+    async logCall(method: string, input: any, output: any, error?: any, durationMs?: number) {
         try {
             const timestamp = new Date().toISOString();
             const logEntry = {
@@ -46,6 +47,7 @@ export class LLMCallLogger extends EventEmitter {
                 method,
                 input,
                 output,
+                durationMs,
                 error: error ? {
                     message: error.message,
                     stack: error.stack

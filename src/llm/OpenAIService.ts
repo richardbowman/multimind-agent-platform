@@ -151,11 +151,21 @@ export class OpenAIService extends BaseLLMService {
         }
     };
 
+            const startTime = Date.now();
+            const response = await this.client.chat.completions.create({
+                model: model,
+                messages,
+                temperature: params.opts?.temperature,
+                max_tokens: params.opts?.maxPredictedTokens,
+                top_p: params.opts?.topP,
+            });
+            const durationMs = Date.now() - startTime;
+
             await this.logger.logCall('sendVisionRequest', {
                 messages: params.messages,
                 systemPrompt: params.systemPrompt,
                 opts: params.opts
-            }, result.response);
+            }, result.response, undefined, durationMs);
 
             return result;
         } catch (error) {
@@ -251,11 +261,23 @@ export class OpenAIService extends BaseLLMService {
                 }
             };
 
+            const startTime = Date.now();
+            const response = await this.client.chat.completions.create({
+                model: model,
+                messages,
+                tools,
+                tool_choice: toolChoice,
+                temperature: params.opts?.temperature,
+                max_tokens: params.opts?.maxPredictedTokens,
+                top_p: params.opts?.topP,
+            });
+            const durationMs = Date.now() - startTime;
+
             await this.logger.logCall('sendLLMRequest', {
                 messages: params.messages,
                 systemPrompt: params.systemPrompt,
                 opts: params.opts
-            }, result.response);
+            }, result.response, undefined, durationMs);
 
             return result;
         } catch (error) {
