@@ -1,9 +1,9 @@
-export const CustomScrollbarStyles = {
+export const CustomScrollbarStyles = (theme) => ({
     '&::-webkit-scrollbar': {
         width: '6px',
     },
     '&::-webkit-scrollbar-track': {
-        background: '#2a2a2a',
+        background: `${theme.palette.divider} ${theme.palette.background.paper}`,
     },
     '&::-webkit-scrollbar-thumb': {
         background: '#666',
@@ -12,4 +12,4 @@ export const CustomScrollbarStyles = {
     '&::-webkit-scrollbar-thumb:hover': {
         background: '#888',
     }
-}
+});

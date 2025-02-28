@@ -61,9 +61,14 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
         setLastDownX(e.clientX);
     }, [isResizing, lastDownX, width, minWidth, maxWidth, anchor, onWidthChange]);
 
-    const handleMouseUp = useCallback(() => {
+    const handleMouseUp = useCallback((e: MouseEvent) => {
         if (isResizing && onResizeEnd) {
-            onResizeEnd(width);
+            // const offset = e.clientX - lastDownX;
+            // const newWidth = anchor === 'right' 
+            //     ? Math.max(minWidth, Math.min(maxWidth, width - offset))
+            //     : Math.max(minWidth, Math.min(maxWidth, width + offset));
+    
+            // onResizeEnd(newWidth);
         }
         setIsResizing(false);
     }, [isResizing, onResizeEnd, width]);
@@ -93,7 +98,6 @@ export const ResizableDrawer: React.FC<ResizableDrawerProps> = ({
                 sx: {
                     width: width,
                     overflow: 'visible',
-                    backgroundColor: '#2a2a2a',
                     position: 'absolute',
                 }
             }}

@@ -435,6 +435,7 @@
           "plannerType": "nextStep",
           "purpose": "My name is Product Analyst. \
   My goal is to help you define, document and refine product specifications.",
+          "supportsDelegation": true,
           "finalInstructions": "",
           "executors": [
             {
@@ -457,9 +458,13 @@
               "className": "GenerateDiagramExecutor"
             },
             {
+              "className": "CSVProcessingExecutor"
+            },
+
+            /*{
               "className": "GoalConfirmationExecutor"
             },
-            /*{
+            {
               "className": "AnswerQuestionsExecutor"
             },*/
             {
@@ -494,12 +499,16 @@
               "description": "Develop product prototype using provided user stories",
               "steps": [
                 {
-                  "executor": "goal-confirmation",
+                  "executor": "understand-goals",
                   "description": "Make sure we have the attached user stories. If not, ask the user to attach them."
                 },
                 {
                   "executor": "generate-diagram",
                   "description": "Develop sequence diagrams to better explain the flow for each user story."
+                },
+                {
+                  "executor": "generate-document",
+                  "description": "Develop PRD document to document requirements for development."
                 }
               ]
             }

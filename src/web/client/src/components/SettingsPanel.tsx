@@ -47,6 +47,7 @@ import { ActionToolbar } from './shared/ActionToolbar';
 import { AgentBuilder } from './AgentBuilder';
 import { EmbedderModelInfo } from '../../../../llm/ILLMService';
 import { asError, isError } from '../../../../types/types';
+import { ScrollView } from './shared/ScrollView';
 
 export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle }) => {
     const [settings, setSettings] = useState<Settings>({});
@@ -392,9 +393,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     flexShrink: 0,
                     '& .MuiDrawer-paper': {
                         width: 250,
-                        boxSizing: 'border-box',
-                        backgroundColor: '#2a2a2a',
-                        borderRight: '1px solid #444'
+                        boxSizing: 'border-box'
                     },
                 }}
             >
@@ -438,10 +437,6 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     gap: 2,
                     transition: 'left 225ms cubic-bezier(0, 0, 0.2, 1) 0ms'
                 }}>
-                    <Typography variant="h4" sx={{ mb: 3 }}>
-                        Settings
-                    </Typography>
-
                     {validationMessage && (
                         <Alert severity="error" sx={{ mt: 2 }}>
                             {validationMessage}
@@ -459,12 +454,11 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                     overflowY: 'auto',
                     p: 3
                 }}>
-                    <Box sx={{
+                    <ScrollView sx={{
                         display: 'flex',
                         flexDirection: 'column',
                         flex: 1,
-                        gap: 3,
-                        overflowY: 'auto'
+                        gap: 3
                     }}
                     >
                         {sortedCategories.map(([category, metadataList]) => {
@@ -534,7 +528,7 @@ export const SettingsPanel: React.FC<DrawerPage> = ({ drawerOpen, onDrawerToggle
                             );
                         })}
 
-                    </Box> {/* End of scrollable content */}
+                    </ScrollView> {/* End of scrollable content */}
                 </Box>
                 <ActionToolbar
                     align="space-between"

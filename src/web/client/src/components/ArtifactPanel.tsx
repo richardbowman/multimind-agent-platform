@@ -149,10 +149,9 @@ export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadI
     return (
         <Box sx={{ p: 1, height: '100%', overflowY: 'auto' }}>
             
-            <Typography variant="h6" sx={{ mb: 2, color: 'text.primary' }}>
+            <Typography variant="h6">
                 Artifacts
             </Typography>
-            <Divider sx={{ mb: 2 }} />
             <List>
                 {(artifacts || []).sort((a, b) => {
                     const aPinned = isPinned(a);

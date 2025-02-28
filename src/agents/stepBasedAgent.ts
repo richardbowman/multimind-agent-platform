@@ -348,7 +348,7 @@ export abstract class StepBasedAgent extends Agent {
             const tasks = Object.values(project.tasks);
             const completedResults = tasks
                 .filter(t => t.complete)
-                .filter(t => t.type === TaskType.Step)
+                // .filter(t => t.type === TaskType.Step) - we don't want this, we also roll up results from delegation
                 .map(t => (t as StepTask<StepResponse>).props?.result)
                 .filter(r => r !== undefined);
 

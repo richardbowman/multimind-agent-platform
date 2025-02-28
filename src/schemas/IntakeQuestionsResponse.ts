@@ -10,7 +10,7 @@ export interface IntakeQuestionsResponse {
     goalRestatement: string;
 
     /**
-     * @description if you believe we have enough information to proceed with other processing tasks.
+     * @description true to proceed with next steps, false to wait for answers from user.
      */
     shouldContinue?: boolean;
 }

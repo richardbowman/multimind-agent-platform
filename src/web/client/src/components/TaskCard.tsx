@@ -111,7 +111,7 @@ export const TaskCard: React.FC<TaskCardProps> = ({
                             component="span"
                             sx={{ 
                                 display: 'block',
-                                color: task.inProgress ? 'rgba(0, 0, 0, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+                                color: task.inProgress ? 'rgba(0, 0, 0, 0.7)' : 'text.secondary',
                                 textDecoration: task.complete ? 'line-through' : 'none',
                                 opacity: task.complete ? 0.7 : 1
                             }}

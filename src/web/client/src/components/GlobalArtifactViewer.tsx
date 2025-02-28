@@ -203,7 +203,6 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'center',
-                        backgroundColor: 'rgba(0, 0, 0, 0.7)',
                         border: '2px dashed #fff',
                         pointerEvents: 'none'
                     }}
@@ -222,20 +221,14 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                     flexShrink: 0,
                     '& .MuiDrawer-paper': {
                         width: 350,
-                        boxSizing: 'border-box',
-                        backgroundColor: '#2a2a2a',
-                        borderRight: '1px solid #444'
+                        boxSizing: 'border-box'
                     },
                 }}
             >
                 <Toolbar /> {/* For spacing under app bar */}
                 <Box sx={{ 
-                    p: 1,
-                    position: 'sticky',
-                    top: 0,
-                    backgroundColor: '#2a2a2a',
-                    zIndex: 1,
-                    borderBottom: '1px solid #444'
+                    pt: 4,
+                    p: 2
                 }}>
                     <Box sx={{ display: 'flex', gap: 1 }}>
                         <FormControl fullWidth size="small">

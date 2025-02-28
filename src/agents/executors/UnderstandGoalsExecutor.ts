@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import crypto from 'crypto';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { TaskManager, TaskType } from '../../tools/taskManager';
@@ -94,20 +94,12 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         prompt.addInstruction(`In this step of the process, you are reviewing if we have sufficient information to move forward on achieving the goal.
 If you would like to think about the problem to start, use <thinking> tags.
 
-Then, once you have decided if you want to more information from the user, respond with
-questions to gather the necessary information. If you have enough information to achive the goal,
+Then, once you have decided if you want to more information from the user, respond with a message that
+asks the user the necessary information. If you have enough information to achieve the goal,
 explain to the user that we'll continue.
 
-Also include in the JSON attributes a concise restatement of the user's goal to confirm understanding.
-
-IMPORTANT: 
-- Review any previous answers carefully to avoid redundant questions
-- Build upon partial answers to get more specific details
-- Focus on areas not yet covered or needing clarification
-- Create as few questions as possible to succeed at the goal.
-- If you have enough information to proceed, return no questions
-- If the user seems frustrated or asks you to move on, return no questions
-
+In the the JSON attributes, you will generate a concise restatement of the user's goal that will be used by
+future steps in the agent workflow. You will also set a flag telling the workflow whether it should continue, or await answers from the user.
 `)
         
         prompt.addContext({contentType: ContentType.INTENT, params});

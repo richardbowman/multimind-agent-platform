@@ -44,5 +44,6 @@ export enum ExecutorType {
     API_SCRAPER = "api-scraper",
     VIEW_TASKS = "view-tasks",
     GENERATE_WEBSITE = "generate-website",
-    ARTIFACT_RETRIEVER = "retrieve-full-artifact"
+    ARTIFACT_RETRIEVER = "retrieve-full-artifact",
+    CSV_PROCESSOR = "csv-processor"
 }

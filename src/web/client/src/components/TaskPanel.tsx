@@ -39,7 +39,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = () => {
     return (
         <Box sx={{ p: 2, height: '100%', overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
             <Box sx={{ display: 'flex', alignItems: 'center', gap: 1, mb: 2 }}>
-                <Typography variant="h6" sx={{ color: '#fff', mr: 2 }}>
+                <Typography variant="h6" sx={{ mr: 2 }}>
                     Tasks
                 </Typography>
                 <ToggleButtonGroup
@@ -47,15 +47,6 @@ export const TaskPanel: React.FC<TaskPanelProps> = () => {
                     exclusive
                     onChange={(_, newMode) => setViewMode(newMode)}
                     size="small"
-                    sx={{ 
-                        '& .MuiToggleButton-root': {
-                            color: '#fff',
-                            borderColor: '#fff',
-                            '&.Mui-selected': {
-                                backgroundColor: 'rgba(255, 255, 255, 0.12)'
-                            }
-                        }
-                    }}
                 >
                     <ToggleButton value="user">
                         <Tooltip title="User Tasks">

@@ -91,8 +91,6 @@ const AppContent: React.FC = () => {
     return (
         <Box sx={{
             height: '100vh',
-            backgroundColor: '#1a1a1a',
-            color: '#ffffff',
             display: 'flex',
             flexDirection: 'column',
             overflow: 'hidden'
@@ -222,10 +220,7 @@ const AppContent: React.FC = () => {
                                 width: leftDrawerWidth,
                                 flexShrink: 0,
                                 '& .MuiDrawer-paper': {
-                                    width: 250,
-                                    boxSizing: 'border-box',
-                                    backgroundColor: '#2a2a2a',
-                                    borderRight: '1px solid #444'
+                                    width: 250
                                 },
                             }}
                         >
@@ -260,10 +255,10 @@ const AppContent: React.FC = () => {
                                     open={rightDrawerOpen}
                                     width={rightDrawerWidth}
                                     onWidthChange={setRightDrawerWidth}
-                                    onResizeEnd={(newWidth) => {
-                                        // Update the chat panel width when resizing ends
-                                        setRightDrawerWidth(newWidth);
-                                    }}
+                                    // onResizeEnd={(newWidth) => {
+                                    //     // Update the chat panel width when resizing ends
+                                    //     setRightDrawerWidth(newWidth);
+                                    // }}
                                     minWidth={200}
                                     maxWidth={800}
                                     onClose={() => setRightDrawerOpen(false)}

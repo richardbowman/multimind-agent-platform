@@ -74,12 +74,12 @@ export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({
 
   return (
     <Box 
-      sx={[{
+      sx={{
         position: 'relative',
         height: '100%',
         overflow: 'hidden',
         ...(className ? { [className]: true } : {})
-      }, sx]}
+      }}
     >
       {showTopGradient && (
         <Box
@@ -110,7 +110,8 @@ export const ScrollView = forwardRef<HTMLDivElement, ScrollViewProps>(({
         sx={{
           height: '100%',
           overflowY: 'auto',
-          ...CustomScrollbarStyles(theme)
+          ...CustomScrollbarStyles(theme),
+          ...sx
         }}
         onScroll={checkScrollPosition}
       >

@@ -345,11 +345,9 @@ ${this.modelHelpers.getFinalInstructions()}
             const capabilities = (agent as StepBasedAgent).getExecutorCapabilities?.() || []
 
             if (capabilities.length > 0) {
-                output += `\n  ${agent.messagingHandle} CAPABILTIES:\n` +
+                output += `\n Capabilities include:\n` +
                     capabilities.map(cap =>
-                        `    * ${cap.stepType}: ${cap.description}\n` +
-                        (cap.exampleInput ? `      Example Input: ${cap.exampleInput}\n` : '') +
-                        (cap.exampleOutput ? `      Example Output: ${cap.exampleOutput}` : '')
+                        `    - ${cap.description}\n`
                     ).join('\n');
             }
 
