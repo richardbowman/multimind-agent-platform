@@ -133,24 +133,6 @@ export class OpenAIService extends BaseLLMService {
             const modelType = params.modelType || ModelType.REASONING;
             const model = this.settings?.models[modelType][this.settings?.providers.chat];
 
-            const response = await this.client.chat.completions.create({
-                model: model,
-                messages,
-                temperature: params.opts?.temperature,
-                max_tokens: params.opts?.maxPredictedTokens,
-                top_p: params.opts?.topP,
-            });
-
-    const result: GenerateOutputParams<T> = {
-        response: { message: response.choices[0].message?.content || '' } as T,
-        metadata: {
-            _usage: {
-                inputTokens: response.usage?.prompt_tokens || 0,
-                outputTokens: response.usage?.completion_tokens || 0
-            }
-        }
-    };
-
             const startTime = Date.now();
             const response = await this.client.chat.completions.create({
                 model: model,
@@ -159,6 +141,16 @@ export class OpenAIService extends BaseLLMService {
                 max_tokens: params.opts?.maxPredictedTokens,
                 top_p: params.opts?.topP,
             });
+
+            const result: GenerateOutputParams<T> = {
+                response: { message: response.choices[0].message?.content || '' } as T,
+                metadata: {
+                    _usage: {
+                        inputTokens: response.usage?.prompt_tokens || 0,
+                        outputTokens: response.usage?.completion_tokens || 0
+                    }
+                }
+            };
             const durationMs = Date.now() - startTime;
 
             await this.logger.logCall('sendVisionRequest', {
@@ -229,6 +221,7 @@ export class OpenAIService extends BaseLLMService {
             const modelType = params.modelType || ModelType.REASONING; //defaulting right now to reasoning since most aren't set
             const model = this.settings?.models[modelType][this.settings?.providers.chat];
 
+            const startTime = Date.now();
             const response = await this.client.chat.completions.create({
                 model: model,
                 messages,
@@ -260,17 +253,6 @@ export class OpenAIService extends BaseLLMService {
                     _message: params.parseJSON ? response.choices[0].message?.content: undefined
                 }
             };
-
-            const startTime = Date.now();
-            const response = await this.client.chat.completions.create({
-                model: model,
-                messages,
-                tools,
-                tool_choice: toolChoice,
-                temperature: params.opts?.temperature,
-                max_tokens: params.opts?.maxPredictedTokens,
-                top_p: params.opts?.topP,
-            });
             const durationMs = Date.now() - startTime;
 
             await this.logger.logCall('sendLLMRequest', {
