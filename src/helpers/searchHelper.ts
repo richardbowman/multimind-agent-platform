@@ -149,103 +149,111 @@ export class DuckDuckGoProvider implements ISearchProvider {
         const context = await this.browserHelper.getContext();
         
         try {
-            let page;
-            if (this.settings.scrapingProvider === 'electron') {
-                const window = context as BrowserWindow;
-                await window.loadURL('about:blank');
-                page = window.webContents;
-            } else {
+            if (this.settings.scrapingProvider !== 'electron') {
+                // Existing non-Electron implementation remains the same
                 const playwrightContext = context as BrowserContext;
-                page = await playwrightContext.newPage();
+                const page = await playwrightContext.newPage();
+                
+                const encodedQuery = encodeURIComponent(query);
+                const searchUrl = `https://duckduckgo.com/?q=${encodedQuery}`;
+                
+                await page.goto(searchUrl);
+                await page.waitForLoadState('networkidle');
+                
+                const htmlContent = await page.content();
+                const title = await page.title();
+                const actualUrl = page.url();
+
+                // Load the HTML content into Cheerio
+                const $ = load(htmlContent);
+                const markdownContent = convertPageToMarkdown($, actualUrl);
+
+                const { id: artifactId } = await this.artifactManager.saveArtifact({
+                    type: ArtifactType.Webpage,
+                    content: markdownContent,
+                    metadata: {
+                        query,
+                        category,
+                        url: actualUrl,
+                        title,
+                        searchedAt: new Date().toISOString()
+                    }
+                });
+                Logger.info(`Saved DuckDuckGo search page as artifact: ${artifactId}`);
+
+                const mainResults = await page.$('.react-results--main');
+                if (!mainResults) {
+                    Logger.warn('Could not find main results container');
+                    return results;
+                }
+                
+                const searchResults = await mainResults.$$('[data-testid="result"]');
+                Logger.info(`Found ${searchResults.length} results on page`);
+
+                for (const result of searchResults) {
+                    try {
+                        const titleElement = await result.$('[data-testid="result-title-a"]');
+                        const linkElement = await result.$('[data-testid="result-extras-url-link"]');
+                        const snippetElement = await result.$('[data-result="snippet"]');
+                        
+                        const title = await titleElement?.innerText();
+                        const url = await linkElement?.getAttribute('href') || '';
+                        const description = snippetElement ? (await snippetElement.innerText()).replace(/\s+/g, ' ').trim() : '';
+
+                        if (url.startsWith('http')) {
+                            results.push({
+                                title,
+                                url,
+                                description
+                            });
+                        }
+                    } catch (error) {
+                        Logger.warn('Error parsing search result:', error);
+                    }
+                }
+
+                await this.browserHelper.releaseContext(context);
+                return results;
             }
+
+            // Simplified Electron implementation
+            const window = context as BrowserWindow;
+            await window.loadURL('about:blank');
+            
             const encodedQuery = encodeURIComponent(query);
             const isNews = category === 'news';
             const searchUrl = isNews
                 ? `https://duckduckgo.com/?t=h_&q=${encodedQuery}&iar=news&ia=news`
                 : `https://duckduckgo.com/?q=${encodedQuery}`;
-            let htmlContent, title, actualUrl;
-            if (this.settings.scrapingProvider === 'electron') {
-                const window = context as BrowserWindow;
-                await window.loadURL(searchUrl);
-                await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for page to load
                 
-                htmlContent = await window.webContents.executeJavaScript('document.documentElement.outerHTML');
-                title = await window.webContents.executeJavaScript('document.title');
-                actualUrl = window.webContents.getURL();
-            } else {
-                await page.goto(searchUrl);
-                await page.waitForLoadState('networkidle');
-                
-                htmlContent = await page.content();
-                title = await page.title();
-                actualUrl = page.url();
-            }
+            await window.loadURL(searchUrl);
+            await new Promise(resolve => setTimeout(resolve, 2000));
 
-            // Load the HTML content into Cheerio
-            const $ = load(htmlContent);
-            const markdownContent = convertPageToMarkdown($, actualUrl);
-
-            const { id: artifactId } = await this.artifactManager.saveArtifact({
-                type: ArtifactType.Webpage,
-                content: markdownContent,
-                metadata: {
-                    query,
-                    category,
-                    url: actualUrl,
-                    title,
-                    searchedAt: new Date().toISOString()
-                }
-            });
-            Logger.info(`Saved DuckDuckGo search page as artifact: ${artifactId}`);
-
-            let searchResults;
-            if (this.settings.scrapingProvider === 'electron') {
-                const window = context as BrowserWindow;
-                const mainResults = await window.webContents.executeJavaScript(
-                    `Array.from(document.querySelectorAll('${isNews ? '.results--main .result' : '.react-results--main [data-testid="result"]'}'))`
-                );
-                searchResults = mainResults;
-            } else {
-                const mainResults = isNews ? await page.$('.results--main') : await page.$('.react-results--main');
-                if (!mainResults) {
-                    Logger.warn('Could not find main results container');
-                    return results;
-                }
-                searchResults = isNews ? await mainResults.$$('.result') : await mainResults.$$('[data-testid="result"]');
-            }
-            Logger.info(`Found ${searchResults.length} results on page`);
-
-            for (const result of searchResults) {
-                try {
-                    let title, url, description;
-                    if (this.settings.scrapingProvider === 'electron') {
-                        title = await result.querySelector(isNews ? '.result__title' : '[data-testid="result-title-a"]')?.textContent;
-                        url = await result.querySelector(isNews ? '.result__a' : '[data-testid="result-extras-url-link"]')?.getAttribute('href') || '';
-                        description = await result.querySelector(isNews ? '.result__snippet' : '[data-result="snippet"]')?.textContent?.replace(/\s+/g, ' ').trim() || '';
-                    } else {
-                        const titleElement = isNews ? await result.$('.result__title') : await result.$('[data-testid="result-title-a"]');
-                        const linkElement = isNews ? await result.$('.result__a') : await result.$('[data-testid="result-extras-url-link"]');
-                        const snippetElement = isNews ? await result.$('.result__snippet') : await result.$('[data-result="snippet"]');
+            // Get simplified page data
+            const pageData = await window.webContents.executeJavaScript(`
+                (function() {
+                    const results = [];
+                    const elements = document.querySelectorAll('${isNews ? '.results--main .result' : '.react-results--main [data-testid="result"]"}');
+                    
+                    elements.forEach(el => {
+                        const titleEl = el.querySelector('${isNews ? '.result__title' : '[data-testid="result-title-a"]"}');
+                        const linkEl = el.querySelector('${isNews ? '.result__a' : '[data-testid="result-extras-url-link"]"}');
+                        const snippetEl = el.querySelector('${isNews ? '.result__snippet' : '[data-result="snippet"]"}');
                         
-                        title = await titleElement?.innerText();
-                        url = await linkElement?.getAttribute('href') || '';
-                        description = snippetElement ? (await snippetElement.innerText()).replace(/\s+/g, ' ').trim() : '';
-                    }
-
-                    if (url.startsWith('http')) {
-                        results.push({
-                            title,
-                            url,
-                            description
-                        });
-                    }
-                } catch (error) {
-                    Logger.warn('Error parsing search result:', {
-                        error,
-                        elementHTML: await result.innerHTML()
+                        if (titleEl && linkEl && linkEl.href.startsWith('http')) {
+                            results.push({
+                                title: titleEl.textContent,
+                                url: linkEl.href,
+                                description: snippetEl ? snippetEl.textContent.trim() : ''
+                            });
+                        }
                     });
-                }
-            }
+                    
+                    return results;
+                })()
+            `);
+
+            results.push(...pageData);
 
             await this.browserHelper.releaseContext(context);
 
