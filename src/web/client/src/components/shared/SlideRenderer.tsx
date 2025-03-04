@@ -1,5 +1,5 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 import { NavigateBefore, NavigateNext } from '@mui/icons-material';
 
@@ -98,7 +98,9 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
         return () => unregisterActions('reveal');
     }, [registerActions, unregisterActions, navigateSlide, toggleFullscreen, currentSlide, totalSlides]);
 
+    const theme = useTheme();
     const presentationData = JSON.parse(typeof content === 'string' ? content : new TextDecoder().decode(content));
+    const revealTheme = theme.palette.mode === 'dark' ? 'dracula' : 'simple';
     
     const htmlContent = `
         <!doctype html>
@@ -108,7 +110,7 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
                 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
                 <title>${presentationData.title}</title>
                 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
-                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/${presentationData.theme}.css">
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/${revealTheme}.css">
             </head>
             <body>
                 <div class="reveal">
