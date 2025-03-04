@@ -121,7 +121,7 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
                                 data-auto-animate="${slide.autoAnimate || false}"
                             >
                                 <textarea data-template>
-                                    ${slide.title ? `# ${slide.title}\n\n` : ''}
+                                    ${slide.title ? `## ${slide.title}\n\n` : ''}
                                     ${slide.content}
                                 </textarea>
                                 ${slide.notes ? `<aside class="notes">${slide.notes}</aside>` : ''}
