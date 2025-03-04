@@ -113,18 +113,70 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
             <body>
                 <div class="reveal">
                     <div class="slides">
-                        ${presentationData.slides.map(slide => `
+                        ${presentationData.slides.map((slide, index) => `
                             <section 
                                 data-transition="${slide.transition || 'fade'}"
                                 data-background="${slide.background || ''}"
-                                data-markdown
+                                data-markdown="${!slide.layout}"
+                                data-auto-animate="${slide.autoAnimate || false}"
+                                ${slide.layout ? `data-state="${slide.layout}"` : ''}
                             >
-                                <textarea data-template>
-                                    ${slide.content}
-                                </textarea>
-                                <aside class="notes">
-                                    ${slide.notes}
-                                </aside>
+                                ${slide.layout === 'title' ? `
+                                    <h1>${slide.title}</h1>
+                                    ${slide.content ? `<p>${slide.content}</p>` : ''}
+                                ` : slide.layout === 'section' ? `
+                                    <h2>${slide.title}</h2>
+                                    ${slide.content ? `<p>${slide.content}</p>` : ''}
+                                ` : slide.layout === 'quote' ? `
+                                    <blockquote>
+                                        ${slide.content}
+                                        ${slide.title ? `<footer>${slide.title}</footer>` : ''}
+                                    </blockquote>
+                                ` : slide.layout === 'image' ? `
+                                    <img src="${slide.content}" alt="${slide.title || ''}">
+                                ` : slide.layout === 'code' ? `
+                                    <pre><code data-trim data-noescape>
+                                        ${slide.content}
+                                    </code></pre>
+                                ` : `
+                                    <textarea data-template>
+                                        ${slide.content}
+                                    </textarea>
+                                `}
+                                ${slide.notes ? `<aside class="notes">${slide.notes}</aside>` : ''}
+                                ${slide.verticalSlides?.map(vSlide => `
+                                    <section 
+                                        data-transition="${vSlide.transition || 'fade'}"
+                                        data-background="${vSlide.background || ''}"
+                                        data-markdown="${!vSlide.layout}"
+                                        data-auto-animate="${vSlide.autoAnimate || false}"
+                                        ${vSlide.layout ? `data-state="${vSlide.layout}"` : ''}
+                                    >
+                                        ${vSlide.layout === 'title' ? `
+                                            <h1>${vSlide.title}</h1>
+                                            ${vSlide.content ? `<p>${vSlide.content}</p>` : ''}
+                                        ` : vSlide.layout === 'section' ? `
+                                            <h2>${vSlide.title}</h2>
+                                            ${vSlide.content ? `<p>${vSlide.content}</p>` : ''}
+                                        ` : vSlide.layout === 'quote' ? `
+                                            <blockquote>
+                                                ${vSlide.content}
+                                                ${vSlide.title ? `<footer>${vSlide.title}</footer>` : ''}
+                                            </blockquote>
+                                        ` : vSlide.layout === 'image' ? `
+                                            <img src="${vSlide.content}" alt="${vSlide.title || ''}">
+                                        ` : vSlide.layout === 'code' ? `
+                                            <pre><code data-trim data-noescape>
+                                                ${vSlide.content}
+                                            </code></pre>
+                                        ` : `
+                                            <textarea data-template>
+                                                ${vSlide.content}
+                                            </textarea>
+                                        `}
+                                        ${vSlide.notes ? `<aside class="notes">${vSlide.notes}</aside>` : ''}
+                                    </section>
+                                `).join('\n') || ''}
                             </section>
                         `).join('\n')}
                     </div>

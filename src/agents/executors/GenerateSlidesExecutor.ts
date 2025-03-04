@@ -23,17 +23,19 @@ export interface BrainstormStepResponse extends StepResponse {
 
 @StepExecutorDecorator(ExecutorType.GENERATE_SLIDES, 'Generate a slide deck', true)
 export class GenerateSlidesExecutor implements StepExecutor<BrainstormStepResponse> {
-    protected generateSlideContent(ideas: any[]): SlideContent[] {
+    protected generateSlideContent(ideas: BrainstormIdea[]): SlideContent[] {
         return ideas.map((idea, index) => ({
             title: idea.title,
-            content: [
-                `## ${idea.title}`,
-                idea.description,
-                `### Benefits:`,
-                idea.benefits
-            ].join('\n'),
-            notes: `Additional details for ${idea.title}`,
-            transition: index === 0 ? 'slide' : 'fade'
+            content: idea.content,
+            notes: idea.notes,
+            transition: index === 0 ? 'slide' : 'fade',
+            layout: idea.layout || 'default',
+            fragments: idea.fragments,
+            verticalSlides: idea.verticalSlides?.map(vSlide => ({
+                ...vSlide,
+                transition: 'fade'
+            })),
+            autoAnimate: true
         }));
     }
 
@@ -43,10 +45,24 @@ export class GenerateSlidesExecutor implements StepExecutor<BrainstormStepRespon
             theme: "dracula",
             slides: slides.map(slide => ({
                 title: slide.title,
-                content: slide.content,
+                content: Array.isArray(slide.content) ? 
+                    slide.content.map((c, i) => 
+                        slide.fragments ? `<p class="fragment" data-fragment-index="${i}">${c}</p>` : c
+                    ).join('\n') : 
+                    slide.content,
                 notes: slide.notes,
                 transition: slide.transition,
-                background: slide.background
+                background: slide.background,
+                layout: slide.layout,
+                autoAnimate: slide.autoAnimate,
+                verticalSlides: slide.verticalSlides?.map(vSlide => ({
+                    ...vSlide,
+                    content: Array.isArray(vSlide.content) ? 
+                        vSlide.content.map((c, i) => 
+                            vSlide.fragments ? `<p class="fragment" data-fragment-index="${i}">${c}</p>` : c
+                        ).join('\n') : 
+                        vSlide.content
+                }))
             }))
         };
     }
