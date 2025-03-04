@@ -21,6 +21,35 @@ export interface BrainstormStepResponse extends StepResponse {
     }
 }
 
+export interface SlideContent {
+    title?: string;
+    content: string | string[]; // Can be single content or array for fragments
+    notes?: string;
+    transition?: string;
+    background?: string;
+    verticalSlides?: SlideContent[]; // For vertical slides
+    layout?: 'default' | 'title' | 'section' | 'quote' | 'image' | 'code';
+    fragments?: boolean; // Whether to use fragments for array content
+    autoAnimate?: boolean;
+    theme?: 'default' | 'black' | 'white' | 'league' | 'beige' | 'sky' | 'night' | 'serif' | 'simple' | 'solarized' | 'blood' | 'moon' | 'dracula';
+}
+
+export interface BrainstormIdea {
+    title: string;
+    content: string | string[];
+    notes?: string;
+    layout?: string;
+    fragments?: boolean;
+    verticalSlides?: BrainstormIdea[];
+}
+
+export interface BrainstormResponse {
+    topic: string;
+    ideas: BrainstormIdea[];
+    isComplete: boolean;
+    presentationTheme?: string;
+}
+
 @StepExecutorDecorator(ExecutorType.GENERATE_SLIDES, 'Generate a slide deck', true)
 export class GenerateSlidesExecutor implements StepExecutor<BrainstormStepResponse> {
     protected generateSlideContent(ideas: BrainstormIdea[]): SlideContent[] {
