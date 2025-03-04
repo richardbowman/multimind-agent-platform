@@ -93,137 +93,10 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
         return <Box sx={{overflow: "auto"}}><pre>{content}</pre></Box>;
     }
 
-    // Handle PDF content
-    if (mimeType === 'application/pdf' || type === 'pdf') {
-        const numPages = useRef<number | null>(null);
-        const pageNumber = useRef(1);
-        const [scale, setScale] = useState(1.0);
-        const [renderTrigger, setRenderTrigger] = useState(false);
-
-        pdfjs.GlobalWorkerOptions.workerSrc = new URL(
-            'pdfjs-dist/build/pdf.worker.min.mjs',
-            import.meta.url,
-        ).toString();
-
-        const handleLoadSuccess = ({ numPages: totalPages }: { numPages: number }) => {
-            numPages.current = totalPages;
-            // Update action states after loading
-            updateActionState('Previous Page', { disabled: pageNumber.current === 1 });
-            updateActionState('Next Page', { disabled: pageNumber.current === totalPages });
-        };
-
-        const zoomIn = () => setScale(prev => Math.min(prev + 0.2, 3));
-        const zoomOut = () => setScale(prev => Math.max(prev - 0.2, 0.5));
-
-        // Create stable action handlers that don't change on re-render
-        const handlePreviousPage = useCallback(() => {
-            pageNumber.current = Math.max(pageNumber.current - 1, 1);
-            updateActionState('pdf-renderer-prev', { disabled: pageNumber.current === 1 });
-            updateActionState('pdf-renderer-next', { disabled: pageNumber.current === numPages.current });
-            setRenderTrigger(prev => !prev); // Trigger re-render
-        }, []);
-
-        const handleNextPage = useCallback(() => {
-            pageNumber.current = Math.min(pageNumber.current + 1, numPages.current || 1);
-            updateActionState('Previous Page', { disabled: pageNumber.current === 1 });
-            updateActionState('Next Page', { disabled: pageNumber.current === numPages.current });
-            setRenderTrigger(prev => !prev); // Trigger re-render
-        }, []);
-
-        // Register actions once on mount
-        useEffect(() => {
-            const pdfActions = [
-                {
-                    id: 'pdf-renderer-prev',
-                    icon: <NavigateBeforeIcon />,
-                    label: 'Previous Page',
-                    onClick: handlePreviousPage,
-                    disabled: pageNumber.current === 1
-                },
-                {
-                    id: 'pdf-renderer-next',
-                    icon: <NavigateNextIcon />,
-                    label: 'Next Page',
-                    onClick: handleNextPage,
-                    disabled: pageNumber.current === numPages
-                },
-                {
-                    id: 'pdf-renderer-zoom-out',
-                    icon: <ZoomOutIcon />,
-                    label: 'Zoom Out',
-                    onClick: zoomOut
-                },
-                {
-                    id: 'pdf-renderer-zoom-in',
-                    icon: <ZoomInIcon />,
-                    label: 'Zoom In',
-                    onClick: zoomIn
-                }
-            ];
-
-            registerActions('pdf-renderer', pdfActions);
-            return () => unregisterActions('pdf-renderer');
-        }, [registerActions, unregisterActions]);
-
-        // Initial action state setup
-        useEffect(() => {
-            updateActionState('Previous Page', { disabled: pageNumber.current === 1 });
-            updateActionState('Next Page', { disabled: pageNumber.current === numPages.current });
-        }, [updateActionState]);
-
-        return (
-            <Box sx={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                p: 2
-            }}>
-
-                <Paper elevation={3} sx={{ p: 1, maxWidth: '100%', overflow: 'auto' }}>
-                    <Document
-                        file={`data:${mimeType};base64,${content}`}
-                        onLoadSuccess={handleLoadSuccess}
-                    >
-                        <Page
-                            pageNumber={pageNumber.current}
-                            scale={scale}
-                            renderAnnotationLayer={false}
-                            renderTextLayer={false}
-                        />
-                    </Document>
-                </Paper>
-
-                <Typography variant="caption" sx={{ mt: 1 }}>
-                    Page {pageNumber.current} of {numPages.current}
-                </Typography>
-
-                {(
-                    <Box sx={{ mb: 1, display: 'flex', gap: 1 }}>
-                        <IconButton
-                            onClick={handlePreviousPage}
-                            size="small"
-                            disabled={pageNumber.current === 1}
-                        >
-                            <NavigateBeforeIcon />
-                        </IconButton>
-                        <IconButton
-                            onClick={handleNextPage}
-                            size="small"
-                            disabled={pageNumber.current === numPages.current}
-                        >
-                            <NavigateNextIcon />
-                        </IconButton>
-                        <IconButton onClick={zoomOut} size="small">
-                            <ZoomOutIcon />
-                        </IconButton>
-                        <IconButton onClick={zoomIn} size="small">
-                            <ZoomInIcon />
-                        </IconButton>
-                    </Box>
-                )}
-            </Box>
-        );
-    }
+    // Handle PDF content                                                                                                                           
+    if (mimeType === 'application/pdf' || type === 'pdf') {                                                                                         
+        return <PDFRenderer content={content} mimeType={mimeType} />;                                                                               
+    } 
 
     // Handle chart data
     if (type === 'chart-data' || metadata?.chartType) {
@@ -242,7 +115,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
     }
 
     // Handle Reveal.js presentations
-    if (type === ArtifactType.PRESENTATION || metadata?.format === 'revealjs') {
+    if (type === ArtifactType.Presentation || metadata?.format === 'revealjs') {
         const htmlContent = typeof content === 'string' ? content : new TextDecoder().decode(content);
         const blob = new Blob([htmlContent], { type: 'text/html' });
         const url = URL.createObjectURL(blob);
