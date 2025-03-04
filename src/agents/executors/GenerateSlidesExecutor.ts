@@ -129,9 +129,19 @@ export class GenerateSlidesExecutor implements StepExecutor<BrainstormStepRespon
 
         // Parse and format the response
         const ideas = response?.ideas || [];
+        
+        // Generate markdown content for each idea
+        const formattedIdeas = ideas.map(idea => ({
+            ...idea,
+            content: [
+                `## ${idea.title}`,
+                idea.content,
+                idea.notes ? `\n**Notes:**\n${idea.notes}` : ''
+            ].join('\n\n')
+        }));
 
         // Generate slides
-        const slides = this.generateSlideContent(ideas);
+        const slides = this.generateSlideContent(formattedIdeas);
         const presentationData = this.generatePresentationData(slides);
 
         return {
