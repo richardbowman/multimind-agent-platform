@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box } from '@mui/material';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
-import { NavigateBeforeIcon, NavigateNextIcon } from '@mui/icons-material';
+import { NavigateBefore, NavigateNext } from '@mui/icons-material';
 
 interface SlideRendererProps {
     content: string;
@@ -70,14 +70,14 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
         const presentationActions = [
             {
                 id: 'reveal-prev',
-                icon: <NavigateBeforeIcon />,
+                icon: <NavigateBefore />,
                 label: 'Previous Slide',
                 onClick: () => navigateSlide('prev'),
                 disabled: currentSlide === 1
             },
             {
                 id: 'reveal-next',
-                icon: <NavigateNextIcon />,
+                icon: <NavigateNext />,
                 label: 'Next Slide',
                 onClick: () => navigateSlide('next'),
                 disabled: currentSlide === totalSlides
