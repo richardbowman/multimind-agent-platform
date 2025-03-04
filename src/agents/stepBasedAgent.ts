@@ -355,8 +355,9 @@ export abstract class StepBasedAgent extends Agent {
             const completedResponses = completedResults
                 .map(t => t.response);
 
+                
             // Combine all results into one
-            const combinedResult = completedResponses?.map(r => r?.message || r?.reasoning)
+            const combinedResult = completedResponses?.map(r => r?.message)     // removing reasoning to try and keep as clean as possible -- || r?.reasoning
                 .filter(msg => msg)
                 .join('\n\n');
 
@@ -589,10 +590,13 @@ export abstract class StepBasedAgent extends Agent {
             // Store the result in task props
             await this.projects.updateTask(task.id, {
                 props: {
-                    ...task.props,
+                    ...(projectId && {
+                        ...task.props,
+                        childProjectId: stepResult.projectId
+                    }) ?? task.props,
                     result: stepResult,
                     awaitingResponse: stepResult.needsUserInput,
-                    userPostId: userPost?.id
+                    userPostId: userPost?.id,
                 }
             } as Partial<StepTask<StepResponse>>);
 

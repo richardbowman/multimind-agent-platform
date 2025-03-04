@@ -45,6 +45,9 @@
               "className": "DelegationExecutor"
             },
             {
+              "className": "CSVProcessingExecutor"
+            },
+            {
               "className": "ScheduleTaskExecutor"
             },
             {
@@ -64,7 +67,7 @@
         "sourcePath": "configurableAgent.ts",
         "userId": "6a7d97f9-e262-4cda-92c6-7a7b2cf8268d",
         "handle": "@coder",
-        "description": "An agent who specializes in coding, particularly for managing large artifacts like CSV files.",
+        "description": "An agent who specializes in coding (use code to extract, filter, combine CSV files).",
         "enabled": true,
         "config": {
           "purpose": "My name is Sentry. My job is to help make write code to automate tasks.",
@@ -303,6 +306,9 @@
             },
             {
               "className": "AnswerQuestionsExecutor"
+            },
+            {
+              "className": "ReplyExecutor"
             }
           ],
           "stepSequences": [
@@ -322,6 +328,29 @@
                 {
                   "executor": "generate-artifact",
                   "description": "Create structured report from API data"
+                }
+              ]
+            },
+            {
+              "id": "CSV-DATA-EXTRACTION",
+              "name": "CSV Data Extraction",
+              "description": "Extract and analyze data from spreadsheets",
+              "steps": [
+                {
+                  "executor": "goal-confirmation",
+                  "description": "Confirm the API data extraction goal"
+                },
+                {
+                  "executor": "nodejs-code-execution",
+                  "description": "Extract the CSV headers"
+                },
+                {
+                  "executor": "nodejs-code-execution",
+                  "description": "Perform the actual requested data extraction or filtering"
+                },
+                {
+                  "executor": "reply",
+                  "description": "Summarize what you accomplished"
                 }
               ]
             }

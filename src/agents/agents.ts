@@ -215,7 +215,7 @@ export abstract class Agent {
 
                     const latestTask = this.projects.getTaskById(task.id);
                     if (!latestTask?.complete) {
-                        Logger.info(`Agent [${this.messagingHandle}]: Current task is not yet complete. Processed ${processedCount} tasks, exiting processign queue.`);
+                        Logger.info(`Agent [${this.messagingHandle}]: Current task is not yet complete. Processed ${processedCount} tasks, exiting processing queue.`);
                         return;
                     }
 

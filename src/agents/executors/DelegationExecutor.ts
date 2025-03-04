@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult, StepResultType } from '../interfaces/StepResult';
+import { StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -11,8 +11,8 @@ import { createUUID } from 'src/types/uuid';
 import { Agent } from '../agents';
 import { ContentType } from 'src/llm/promptBuilder';
 
-@StepExecutorDecorator('delegation', 'Create projects with tasks delegated to all agents in the channel')
-export class DelegationExecutor implements StepExecutor {
+@StepExecutorDecorator('delegation', 'Create projects with tasks delegated to agents in the channel')
+export class DelegationExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
 

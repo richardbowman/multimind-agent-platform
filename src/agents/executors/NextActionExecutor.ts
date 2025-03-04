@@ -16,7 +16,7 @@ import { ModelType } from 'src/llm/LLMServiceFactory';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResponseType, StepResult } from '../interfaces/StepResult';
+import { StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ModelResponse } from 'src/schemas/ModelResponse';
@@ -26,7 +26,7 @@ export type WithReasoning<T extends ModelResponse> = T & {
 };
 
 @StepExecutorDecorator(ExecutorType.NEXT_STEP, 'Generate focused questions to understand user goals', false)
-export class NextActionExecutor implements StepExecutor {
+export class NextActionExecutor implements StepExecutor<StepResponse> {
     readonly allowReplan: boolean = false;
     readonly alwaysComplete: boolean = true;
     
@@ -34,10 +34,10 @@ export class NextActionExecutor implements StepExecutor {
     private projects: TaskManager;
     private userId?: string;
     private modelHelpers: ModelHelpers;
-    private stepExecutors: Map<string, StepExecutor> = new Map();
+    private stepExecutors: Map<string, StepExecutor<StepResponse>> = new Map();
     private chatClient: ChatClient;
 
-    constructor(params: ExecutorConstructorParams, stepExecutors: Map<string, StepExecutor>) {
+    constructor(params: ExecutorConstructorParams, stepExecutors: Map<string, StepExecutor<StepResponse>>) {
         this.llmService = params.llmService;
         this.projects = params.taskManager;
         this.userId = params.userId;
@@ -78,7 +78,7 @@ export class NextActionExecutor implements StepExecutor {
 
         const formatCompletedTasks = (tasks: Task[]) => {
             return tasks.map(t => {
-                const type = t.type === TaskType.Step ? `**Step Type**: ${(t as StepTask).props.stepType}` : '**Task Type**: ${t.type}';
+                const type = t.type === TaskType.Step ? `**Step Type**: ${(t as StepTask<StepResponse>).props.stepType}` : '**Task Type**: ${t.type}';
                 return `- ${type}: ${t.description}`;
             }).join('\n');
         };
@@ -100,12 +100,12 @@ export class NextActionExecutor implements StepExecutor {
 
         const prompt = this.modelHelpers.createPrompt();
         prompt.addContext(ContentType.PURPOSE);
+        prompt.addContext({ contentType: ContentType.INTENT, params })
         prompt.addContext({ contentType: ContentType.AGENT_OVERVIEWS, agents: agentList||[]});
         prompt.addContext({ contentType: ContentType.GOALS_FULL, params })
-        prompt.addContext({ contentType: ContentType.INTENT, params })
-        if (params.steps) {
-            prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
-        }
+
+        params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
+        params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
 
         const sequencesPrompt = sequences.map((seq, i) => {
             const seqText = seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description} ${(params.executionMode === 'conversation' && step.interaction) ?? ""}`).join("\n");

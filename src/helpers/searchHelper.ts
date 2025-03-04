@@ -233,12 +233,12 @@ export class DuckDuckGoProvider implements ISearchProvider {
             const pageData = await window.webContents.executeJavaScript(`
                 (function() {
                     const results = [];
-                    const elements = document.querySelectorAll('${isNews ? '.results--main .result' : '.react-results--main [data-testid="result"]"}');
+                    const elements = document.querySelectorAll(${isNews ? '.results--main .result' : '.react-results--main [data-testid="result"]"'});
                     
                     elements.forEach(el => {
-                        const titleEl = el.querySelector('${isNews ? '.result__title' : '[data-testid="result-title-a"]"}');
-                        const linkEl = el.querySelector('${isNews ? '.result__a' : '[data-testid="result-extras-url-link"]"}');
-                        const snippetEl = el.querySelector('${isNews ? '.result__snippet' : '[data-result="snippet"]"}');
+                        const titleEl = el.querySelector('${isNews ? '.result__title' : '[data-testid="result-title-a"]"'});
+                        const linkEl = el.querySelector('${isNews ? '.result__a' : '[data-testid="result-extras-url-link"]"'});
+                        const snippetEl = el.querySelector('${isNews ? '.result__snippet' : '[data-result="snippet"]"'});
                         
                         if (titleEl && linkEl && linkEl.href.startsWith('http')) {
                             results.push({

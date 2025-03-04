@@ -2,14 +2,14 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "../../llm/ILLMService";
+import { JSONSchema, StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { createUUID } from 'src/types/uuid';
 import { Agent } from '../agents';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType } from '../../tools/artifact';
 import { parse } from 'csv';
 import * as fs from 'fs';
@@ -17,8 +17,9 @@ import { stringify } from 'csv-stringify/sync';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
+import { StringUtils } from 'src/utils/StringUtils';
 
-@StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Process CSV artifacts by delegating tasks for each row')
+@StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Perform a task on each row in a CSV spreadsheet')
 export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
@@ -80,7 +81,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         }
 
         // Create schema for agent selection
-        const schema = {
+        const schema : JSONSchema = {
             type: 'object',
             properties: {
                 projectName: { type: 'string' },
@@ -110,7 +111,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         
         if (supportedAgents) {
             prompt.addContext({
-                contentType: ContentType.CHANNEL_AGENT_CAPABILITIES, 
+                contentType: ContentType.AGENT_OVERVIEWS, 
                 agents: supportedAgents
             });
         }
@@ -121,16 +122,17 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             - If multiple agents could handle it, choose the one with the most relevant expertise
             - If you are capable of handling this task yourself, select @self`);
 
-        const structuredPrompt = new StructuredOutputPrompt(
-            schema,
-            prompt.build()
-        );
+        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
 
         try {
-            const responseJSON = await this.modelHelpers.generate({
+            const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
                 message: params.stepGoal,
-                instructions: structuredPrompt
+                instructions: prompt
             });
+
+            const responseJSON = StringUtils.extractAndParseJsonBlock(rawResponse.message);
+            const message = StringUtils.extractNonCodeContent(rawResponse.message);
+
 
             const { projectName, projectGoal, assignedAgent: selectedAgentHandle, responseMessage } = responseJSON;
 
@@ -188,8 +190,9 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                     projectId: project.id,
                     finished: true,
                     response: {
-                        message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
-                            taskDetails.join('\n')
+                        message,
+                        // message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
+                        // taskDetails.join('\n')
                     }
                 };
             }
@@ -255,8 +258,9 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 finished: false,
                 async: true,
                 response: {
-                    message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
-                        taskDetails.join('\n')
+                    message
+                    // message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
+                    //     taskDetails.join('\n')
                 }
             };
 
