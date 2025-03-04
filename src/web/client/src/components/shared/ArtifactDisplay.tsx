@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import { Artifact } from '../../../../../tools/artifact';
-import { Box } from '@mui/material';
+import { Box, useTheme } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
 import DownloadIcon from '@mui/icons-material/Download';
@@ -27,6 +27,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
     isSelected = false,
     onSelect
 }) => {
+    const theme = useTheme();
     const [isMetadataExpanded, setIsMetadataExpanded] = useState(false);
     const artifactRef = useRef(artifact);
     const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
@@ -137,81 +138,160 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
             }}
             onClick={() => onSelect && onSelect(artifact, !isSelected)}
         >
-            <div className="artifact-detail-header">
-                <h2>{artifact.metadata?.title || artifact.id}</h2>
-                <div className="artifact-meta">
-                    <span className="artifact-type-badge">{artifact.type}</span>
-                    <span className="artifact-id">#{artifact.id}</span>
-                </div>
-            </div>
-            <div className="artifact-content" style={{display: "flex", flexDirection:"column", overflow: "hidden"}}>
+            <Box 
+                sx={{ 
+                    p: 3,
+                    borderBottom: 1,
+                    borderColor: 'divider'
+                }}
+            >
+                <Box 
+                    component="h2" 
+                    sx={{ 
+                        mb: 1,
+                        color: 'text.primary'
+                    }}
+                >
+                    {artifact.metadata?.title || artifact.id}
+                </Box>
+                <Box 
+                    sx={{ 
+                        display: 'flex',
+                        gap: 1,
+                        alignItems: 'center'
+                    }}
+                >
+                    <Box 
+                        sx={{ 
+                            px: 1,
+                            py: 0.5,
+                            borderRadius: 1,
+                            bgcolor: 'primary.light',
+                            color: 'primary.contrastText',
+                            fontSize: '0.75rem',
+                            fontWeight: 500
+                        }}
+                    >
+                        {artifact.type}
+                    </Box>
+                    <Box 
+                        component="span" 
+                        sx={{ 
+                            fontSize: '0.875rem',
+                            color: 'text.secondary'
+                        }}
+                    >
+                        #{artifact.id}
+                    </Box>
+                </Box>
+            </Box>
+            <Box 
+                sx={{ 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    overflow: 'hidden',
+                    flex: 1
+                }}
+            >
                 {showMetadata && artifact.metadata && (
-                    <div style={{ 
-                        marginBottom: '1rem',
-                        borderBottom: '1px solid #444',
-                        paddingBottom: '0.5rem'
-                    }}>
-                        <button 
+                    <Box 
+                        sx={{ 
+                            mb: 2,
+                            borderBottom: 1,
+                            borderColor: 'divider',
+                            pb: 1
+                        }}
+                    >
+                        <Box 
+                            component="button"
                             onClick={() => setIsMetadataExpanded(!isMetadataExpanded)}
-                            style={{
+                            sx={{
                                 background: 'none',
                                 border: 'none',
-                                color: '#aaa',
+                                color: 'text.secondary',
                                 cursor: 'pointer',
                                 display: 'flex',
                                 alignItems: 'center',
-                                gap: '0.5rem',
-                                padding: '0.25rem 0',
-                                fontSize: '0.875rem'
+                                gap: 1,
+                                py: 0.25,
+                                fontSize: '0.875rem',
+                                '&:hover': {
+                                    color: 'text.primary'
+                                }
                             }}
                         >
                             {isMetadataExpanded ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
                             Metadata
-                        </button>
+                        </Box>
                         {isMetadataExpanded && (
-                    <table style={{ 
-                        width: '100%',
-                        fontSize: '0.875rem',
-                        borderCollapse: 'collapse',
-                        marginBottom: '1rem'
-                    }}>
-                        <tbody>
-                            {artifact.metadata && Object.entries(artifact.metadata)
-                                .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
-                                .map(([key, value]) => (
-                                    <tr key={key} style={{ borderBottom: '1px solid #444' }}>
-                                        <td style={{ 
-                                            padding: '4px 8px',
-                                            fontWeight: 500,
-                                            color: '#aaa',
-                                            width: '30%'
-                                        }}>{key}</td>
-                                        <td style={{ 
-                                            padding: '4px 8px',
-                                            color: '#ddd',
-                                            wordBreak: 'break-word'
-                                        }}>
-                                            {typeof value === 'object' ? JSON.stringify(value, null, 2) : 
-                                                (key.toLowerCase().includes('url') && typeof value === 'string' && value.startsWith('http') ? 
-                                                    <a 
-                                                        href={value} 
-                                                        target="_blank" 
-                                                        rel="noopener noreferrer"
-                                                        style={{ color: '#90caf9', textDecoration: 'none' }}
-                                                    >
-                                                        {value}
-                                                    </a> : 
-                                                    value
-                                                )
-                                            }
-                                        </td>
-                                    </tr>
-                                ))
-                            }
-                        </tbody>
-                    </table>
+                            <Box 
+                                component="table" 
+                                sx={{ 
+                                    width: '100%',
+                                    fontSize: '0.875rem',
+                                    borderCollapse: 'collapse',
+                                    mb: 2
+                                }}
+                            >
+                                <Box component="tbody">
+                                    {artifact.metadata && Object.entries(artifact.metadata)
+                                        .filter(([key]) => key !== 'binary' && key !== 'format' && key !== 'title')
+                                        .map(([key, value]) => (
+                                            <Box 
+                                                component="tr" 
+                                                key={key} 
+                                                sx={{ 
+                                                    borderBottom: 1,
+                                                    borderColor: 'divider'
+                                                }}
+                                            >
+                                                <Box 
+                                                    component="td" 
+                                                    sx={{ 
+                                                        p: '4px 8px',
+                                                        fontWeight: 500,
+                                                        color: 'text.secondary',
+                                                        width: '30%'
+                                                    }}
+                                                >
+                                                    {key}
+                                                </Box>
+                                                <Box 
+                                                    component="td" 
+                                                    sx={{ 
+                                                        p: '4px 8px',
+                                                        color: 'text.primary',
+                                                        wordBreak: 'break-word'
+                                                    }}
+                                                >
+                                                    {typeof value === 'object' ? JSON.stringify(value, null, 2) : 
+                                                        (key.toLowerCase().includes('url') && typeof value === 'string' && value.startsWith('http') ? 
+                                                            <Box 
+                                                                component="a" 
+                                                                href={value} 
+                                                                target="_blank" 
+                                                                rel="noopener noreferrer"
+                                                                sx={{ 
+                                                                    color: 'primary.main', 
+                                                                    textDecoration: 'none',
+                                                                    '&:hover': {
+                                                                        textDecoration: 'underline'
+                                                                    }
+                                                                }}
+                                                            >
+                                                                {value}
+                                                            </Box> : 
+                                                            value
+                                                        )
+                                                    }
+                                                </Box>
+                                            </Box>
+                                        ))
+                                    }
+                                </Box>
+                            </Box>
                         )}
-                    </div>
+                    </Box>
                 )}
                 <ContentRenderer 
                     content={artifact.content}
