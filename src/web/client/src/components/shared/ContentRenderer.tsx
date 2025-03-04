@@ -9,6 +9,7 @@ import remarkGfm from 'remark-gfm';
 import { Box, Paper, Typography, IconButton } from '@mui/material';
 import { CalendarRenderer } from './CalendarRenderer';
 import { PDFRenderer } from './PDFRenderer';
+import { SlideRenderer } from './SlideRenderer';
 import { ArtifactType, CalendarEvent } from '../../../../../tools/artifact';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 import { StringUtils } from '../../../../../utils/StringUtils';
