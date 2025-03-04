@@ -7,9 +7,7 @@ import { WebpageRenderer } from './WebpageRenderer';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { Box, Paper, Typography, IconButton } from '@mui/material';
-import { Calendar, momentLocalizer } from 'react-big-calendar';
-import moment from 'moment';
-import 'react-big-calendar/lib/css/react-big-calendar.css';
+import { CalendarRenderer } from './CalendarRenderer';
 import { Document, Page, pdfjs } from 'react-pdf';
 import 'react-pdf/dist/esm/Page/AnnotationLayer.css';
 import 'react-pdf/dist/esm/Page/TextLayer.css';
@@ -94,121 +92,7 @@ export const ContentRenderer: React.FC<ContentRendererProps> = ({
 
     // Handle calendar content
     if (mimeType === 'text/calendar' || type === 'calendar' || type == ArtifactType.Calendar) {
-        const localizer = momentLocalizer(moment);
-        const [view, setView] = useState<'month' | 'week' | 'day'>('month');
-        const [date, setDate] = useState(new Date());
-
-        const events = (content as CalendarEvent[]).map(event => ({
-            title: event.title,
-            start: new Date(event.start),
-            end: new Date(event.end),
-            description: event.description,
-            location: event.location
-        }));
-
-        const handlePrevious = useCallback(() => {
-            setDate(prev => {
-                const newDate = new Date(prev);
-                if (view === 'month') {
-                    newDate.setMonth(newDate.getMonth() - 1);
-                } else if (view === 'week') {
-                    newDate.setDate(newDate.getDate() - 7);
-                } else {
-                    newDate.setDate(newDate.getDate() - 1);
-                }
-                return newDate;
-            });
-        }, [view]);
-
-        const handleNext = useCallback(() => {
-            setDate(prev => {
-                const newDate = new Date(prev);
-                if (view === 'month') {
-                    newDate.setMonth(newDate.getMonth() + 1);
-                } else if (view === 'week') {
-                    newDate.setDate(newDate.getDate() + 7);
-                } else {
-                    newDate.setDate(newDate.getDate() + 1);
-                }
-                return newDate;
-            });
-        }, [view]);
-
-        const handleToday = useCallback(() => {
-            setDate(new Date());
-        }, []);
-
-        const handleViewChange = useCallback((newView: 'month' | 'week' | 'day') => {
-            setView(newView);
-        }, []);
-
-        useEffect(() => {
-            const calendarActions = [
-                {
-                    id: 'calendar-prev',
-                    icon: <NavigateBeforeIcon />,
-                    label: 'Previous',
-                    onClick: handlePrevious
-                },
-                {
-                    id: 'calendar-next',
-                    icon: <NavigateNextIcon />,
-                    label: 'Next',
-                    onClick: handleNext
-                },
-                {
-                    id: 'calendar-today',
-                    label: 'Today',
-                    onClick: handleToday
-                },
-                {
-                    id: 'calendar-view-month',
-                    label: 'Month',
-                    onClick: () => handleViewChange('month'),
-                    variant: view === 'month' ? 'contained' : 'outlined'
-                },
-                {
-                    id: 'calendar-view-week',
-                    label: 'Week',
-                    onClick: () => handleViewChange('week'),
-                    variant: view === 'week' ? 'contained' : 'outlined'
-                },
-                {
-                    id: 'calendar-view-day',
-                    label: 'Day',
-                    onClick: () => handleViewChange('day'),
-                    variant: view === 'day' ? 'contained' : 'outlined'
-                }
-            ];
-
-            registerActions('calendar', calendarActions);
-            return () => unregisterActions('calendar');
-        }, [handlePrevious, handleNext, handleToday, handleViewChange, view, registerActions, unregisterActions]);
-
-        // Update view button states when view changes
-        useEffect(() => {
-            updateActionState('calendar-view-month', { variant: view === 'month' ? 'contained' : 'outlined' });
-            updateActionState('calendar-view-week', { variant: view === 'week' ? 'contained' : 'outlined' });
-            updateActionState('calendar-view-day', { variant: view === 'day' ? 'contained' : 'outlined' });
-        }, [view, updateActionState]);
-
-        return (
-            <Box sx={{ height: '70vh', mt: 2 }}>
-                <Calendar
-                    localizer={localizer}
-                    events={events}
-                    startAccessor="start"
-                    endAccessor="end"
-                    view={view}
-                    onView={setView}
-                    date={date}
-                    onNavigate={setDate}
-                    defaultView="month"
-                    views={['month', 'week', 'day']}
-                    style={{ height: '100%' }}
-                />
-            </Box>
-        );
+        return <CalendarRenderer events={content} />;
     }
 
     if (type === "javascript" || type === ArtifactType.APIData || mimeType === "application/json") {
