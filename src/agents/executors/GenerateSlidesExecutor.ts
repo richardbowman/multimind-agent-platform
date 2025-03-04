@@ -23,24 +23,20 @@ export interface BrainstormStepResponse extends StepResponse {
 
 export interface SlideContent {
     title?: string;
-    content: string | string[]; // Can be single content or array for fragments
+    content: string; // Markdown content
     notes?: string;
     transition?: string;
     background?: string;
-    verticalSlides?: SlideContent[]; // For vertical slides
     layout?: 'default' | 'title' | 'section' | 'quote' | 'image' | 'code';
-    fragments?: boolean; // Whether to use fragments for array content
     autoAnimate?: boolean;
     theme?: 'default' | 'black' | 'white' | 'league' | 'beige' | 'sky' | 'night' | 'serif' | 'simple' | 'solarized' | 'blood' | 'moon' | 'dracula';
 }
 
 export interface BrainstormIdea {
     title: string;
-    content: string | string[];
+    content: string; // Markdown content
     notes?: string;
     layout?: string;
-    fragments?: boolean;
-    verticalSlides?: BrainstormIdea[];
 }
 
 export interface BrainstormResponse {
@@ -59,11 +55,6 @@ export class GenerateSlidesExecutor implements StepExecutor<BrainstormStepRespon
             notes: idea.notes,
             transition: index === 0 ? 'slide' : 'fade',
             layout: idea.layout || 'default',
-            fragments: idea.fragments,
-            verticalSlides: idea.verticalSlides?.map(vSlide => ({
-                ...vSlide,
-                transition: 'fade'
-            })),
             autoAnimate: true
         }));
     }
@@ -74,24 +65,12 @@ export class GenerateSlidesExecutor implements StepExecutor<BrainstormStepRespon
             theme: "dracula",
             slides: slides.map(slide => ({
                 title: slide.title,
-                content: Array.isArray(slide.content) ? 
-                    slide.content.map((c, i) => 
-                        slide.fragments ? `<p class="fragment" data-fragment-index="${i}">${c}</p>` : c
-                    ).join('\n') : 
-                    slide.content,
+                content: slide.content,
                 notes: slide.notes,
                 transition: slide.transition,
                 background: slide.background,
                 layout: slide.layout,
-                autoAnimate: slide.autoAnimate,
-                verticalSlides: slide.verticalSlides?.map(vSlide => ({
-                    ...vSlide,
-                    content: Array.isArray(vSlide.content) ? 
-                        vSlide.content.map((c, i) => 
-                            vSlide.fragments ? `<p class="fragment" data-fragment-index="${i}">${c}</p>` : c
-                        ).join('\n') : 
-                        vSlide.content
-                }))
+                autoAnimate: slide.autoAnimate
             }))
         };
     }
