@@ -72,7 +72,31 @@ export class GenerateSlidesExecutor implements StepExecutor<StepResponse> {
         // Add core instructions
         promptBuilder.addInstruction("You are a presentation creation assistant.");
         promptBuilder.addInstruction("Generate a slide deck based on the provided content.");
-        promptBuilder.addInstruction("Each slide should have a clear title and markdown content.");
+        promptBuilder.addInstruction(`
+            Follow these formatting rules for each slide:
+            1. Each slide must start with a level 2 heading (##) for the title
+            2. Slide content should be in markdown format
+            3. Use bullet points for lists
+            4. Use code blocks for code examples
+            5. Use level 3 headings (###) for subsections
+            6. Separate slides with a blank line
+            7. Keep each slide focused on one main idea
+            8. Use simple, clear language
+            9. Include relevant examples where appropriate
+        `);
+        promptBuilder.addInstruction(`
+            Example slide format:
+            ## Slide Title
+            - Main point 1
+            - Main point 2
+            ### Subsection
+            - Supporting detail
+            \`\`\`python
+            # Code example
+            def example():
+                print("Hello World")
+            \`\`\`
+        `);
         promptBuilder.addInstruction("Use appropriate slide layouts and transitions.");
 
         // Add context from previous steps if available
@@ -95,14 +119,21 @@ export class GenerateSlidesExecutor implements StepExecutor<StepResponse> {
         });
         
         // Extract the slide content from the response
-        const slides = StringUtils.extractMarkdownSections(rawResponse.message).map(content => ({
-            title: content.split('\n')[0].replace('#', '').trim(),
-            content,
-            notes: '',
-            transition: 'fade',
-            layout: 'default',
-            autoAnimate: true
-        }));
+        const markdownSections = StringUtils.extractMarkdownSections(rawResponse.message);
+        const slides = markdownSections.map((content, index) => {
+            const lines = content.split('\n');
+            const title = lines[0].replace(/^#+\s*/, '').trim();
+            const slideContent = lines.slice(1).join('\n').trim();
+            
+            return {
+                title,
+                content: slideContent,
+                notes: '',
+                transition: index === 0 ? 'slide' : 'fade',
+                layout: 'default',
+                autoAnimate: true
+            };
+        });
 
         // Generate presentation data
         const presentationData = this.generatePresentationData(slides);
