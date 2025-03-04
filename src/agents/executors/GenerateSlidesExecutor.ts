@@ -37,71 +37,18 @@ export class GenerateSlidesExecutor implements StepExecutor<BrainstormStepRespon
         }));
     }
 
-    protected generateRevealJS(slides: SlideContent[]): string {
-        const slideSections = slides.map(slide => `
-            <section 
-                data-transition="${slide.transition}"
-                data-background="${slide.background}"
-                data-markdown
-            >
-                <textarea data-template>
-                    ${slide.content}
-                </textarea>
-                <aside class="notes">
-                    ${slide.notes}
-                </aside>
-            </section>
-        `).join('\n');
-
-        return `<!doctype html>
-<html>
-    <head>
-        <meta charset="utf-8">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-        <title>Brainstorming Presentation</title>
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
-        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/dracula.css">
-    </head>
-    <body>
-        <div class="reveal">
-            <div class="slides">
-                ${slideSections}
-            </div>
-        </div>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/markdown/markdown.min.js"></script>
-        <script>
-            Reveal.initialize({
-                plugins: [ RevealMarkdown ],
-                hash: true,
-                postMessage: true,
-                postMessageEvents: true,
-                transition: 'fade'
-            });
-
-            // Send initial slide count
-            window.parent.postMessage(JSON.stringify({
-                namespace: 'reveal',
-                eventName: 'ready',
-                state: {
-                    totalSlides: Reveal.getTotalSlides()
-                }
-            }), '*');
-
-            // Listen for slide changes
-            Reveal.on('slidechanged', event => {
-                window.parent.postMessage(JSON.stringify({
-                    namespace: 'reveal',
-                    eventName: 'slidechanged',
-                    state: {
-                        indexh: event.indexh,
-                        indexv: event.indexv
-                    }
-                }), '*');
-            });
-        </script>
-    </body>
-</html>`;
+    protected generatePresentationData(slides: SlideContent[]): any {
+        return {
+            title: "Brainstorming Presentation",
+            theme: "dracula",
+            slides: slides.map(slide => ({
+                title: slide.title,
+                content: slide.content,
+                notes: slide.notes,
+                transition: slide.transition,
+                background: slide.background
+            }))
+        };
     }
     private modelHelpers: ModelHelpers;
 
@@ -161,7 +108,7 @@ export class GenerateSlidesExecutor implements StepExecutor<BrainstormStepRespon
 
         // Generate slides
         const slides = this.generateSlideContent(ideas);
-        const revealJS = this.generateRevealJS(slides);
+        const presentationData = this.generatePresentationData(slides);
 
         return {
             type: "brainstorm",
@@ -178,10 +125,10 @@ export class GenerateSlidesExecutor implements StepExecutor<BrainstormStepRespon
             },
             artifacts: [{
                 type: ArtifactType.Presentation,
-                content: Buffer.from(revealJS),
+                content: Buffer.from(JSON.stringify(presentationData)),
                 metadata: {
                     title: response?.topic,
-                    format: 'revealjs',
+                    format: 'revealjs-json',
                     slideCount: slides.length,
                     generatedAt: new Date().toISOString()
                 }

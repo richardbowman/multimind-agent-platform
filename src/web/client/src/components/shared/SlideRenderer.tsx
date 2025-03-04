@@ -98,7 +98,73 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
         return () => unregisterActions('reveal');
     }, [registerActions, unregisterActions, navigateSlide, toggleFullscreen, currentSlide, totalSlides]);
 
-    const htmlContent = typeof content === 'string' ? content : new TextDecoder().decode(content);
+    const presentationData = JSON.parse(typeof content === 'string' ? content : new TextDecoder().decode(content));
+    
+    const htmlContent = `
+        <!doctype html>
+        <html>
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+                <title>${presentationData.title}</title>
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+                <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/${presentationData.theme}.css">
+            </head>
+            <body>
+                <div class="reveal">
+                    <div class="slides">
+                        ${presentationData.slides.map(slide => `
+                            <section 
+                                data-transition="${slide.transition || 'fade'}"
+                                data-background="${slide.background || ''}"
+                                data-markdown
+                            >
+                                <textarea data-template>
+                                    ${slide.content}
+                                </textarea>
+                                <aside class="notes">
+                                    ${slide.notes}
+                                </aside>
+                            </section>
+                        `).join('\n')}
+                    </div>
+                </div>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+                <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/plugin/markdown/markdown.min.js"></script>
+                <script>
+                    Reveal.initialize({
+                        plugins: [ RevealMarkdown ],
+                        hash: true,
+                        postMessage: true,
+                        postMessageEvents: true,
+                        transition: 'fade'
+                    });
+
+                    // Send initial slide count
+                    window.parent.postMessage(JSON.stringify({
+                        namespace: 'reveal',
+                        eventName: 'ready',
+                        state: {
+                            totalSlides: Reveal.getTotalSlides()
+                        }
+                    }), '*');
+
+                    // Listen for slide changes
+                    Reveal.on('slidechanged', event => {
+                        window.parent.postMessage(JSON.stringify({
+                            namespace: 'reveal',
+                            eventName: 'slidechanged',
+                            state: {
+                                indexh: event.indexh,
+                                indexv: event.indexv
+                            }
+                        }), '*');
+                    });
+                </script>
+            </body>
+        </html>
+    `;
+    
     const blob = new Blob([htmlContent], { type: 'text/html' });
     const url = URL.createObjectURL(blob);
 
