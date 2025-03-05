@@ -2,7 +2,7 @@ import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent, useLayo
 import { useDataContext } from '../contexts/DataContext';
 import { Artifact, ArtifactItem } from '../../../../tools/artifact';
 import { Settings } from 'electron';
-import { AssetSelectionDialog } from './AssetSelectionDialog';
+import { ArtifactSelectionDialog } from './ArtifactSelectionDialog';
 import Attachment from '@mui/icons-material/Attachment';
 import { MicrophoneButton } from './MicrophoneButton';
 import HomeIcon from '@mui/icons-material/Home';
@@ -411,7 +411,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                     )}
                 </div>
                 {showAssetDialog && 
-                <AssetSelectionDialog
+                <ArtifactSelectionDialog
                     assets={allArtifacts}
                     onSelect={(assetIds) => {
                         const newArtifacts = allArtifacts.filter(a =>
