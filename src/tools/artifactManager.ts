@@ -3,6 +3,7 @@ import * as path from 'path';
 import { getDataPath } from '../helpers/paths';
 import Logger from '../helpers/logger';
 import { IVectorDatabase } from '../llm/IVectorDatabase';
+import { ILLMService } from '../llm/ILLMService';
 import { Artifact, ArtifactItem } from './artifact';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { asUUID, createUUID, UUID } from 'src/types/uuid';
@@ -63,9 +64,10 @@ export class ArtifactManager {
   private storageDir: string;
   private artifactMetadataFile: string;
   private vectorDb: IVectorDatabase;
+  private llmService?: ILLMService;
   private fileQueue: AsyncQueue;
 
-  constructor(vectorDb: IVectorDatabase, storageDir?: string) {
+  constructor(vectorDb: IVectorDatabase, llmService?: ILLMService, storageDir?: string) {
     this.storageDir = storageDir || path.join(getDataPath(), 'artifacts');
     this.artifactMetadataFile = path.join(this.storageDir, 'artifact.json');
     this.vectorDb = vectorDb;
@@ -174,6 +176,24 @@ export class ArtifactManager {
     await this.saveArtifactMetadata(metadata);
 
     await this.indexArtifact(artifact);
+    
+    // Generate and store summary if LLM service is available
+    if (this.llmService) {
+      try {
+        const summary = await this.generateArtifactSummary(artifact);
+        if (summary) {
+          // Update metadata with summary
+          let metadata = await this.loadArtifactMetadata();
+          metadata[artifact.id] = {
+            ...metadata[artifact.id],
+            summary
+          };
+          await this.saveArtifactMetadata(metadata);
+        }
+      } catch (error) {
+        Logger.error('Error generating artifact summary:', error);
+      }
+    }
 
     return artifact;
   }
@@ -307,6 +327,37 @@ export class ArtifactManager {
     } catch (error) {
       Logger.error('Error deleting artifact:', error);
       throw new Error(`Failed to delete artifact ${artifactId}: ${asError(error).message}`);
+    }
+  }
+
+  private async generateArtifactSummary(artifact: Artifact): Promise<string | null> {
+    if (!this.llmService) return null;
+    
+    // Skip non-text artifacts
+    const mimeType = artifact.metadata?.mimeType || '';
+    if (mimeType.startsWith('image/') || 
+        mimeType.startsWith('audio/') || 
+        mimeType.startsWith('video/') ||
+        mimeType === 'application/octet-stream') {
+      return null;
+    }
+
+    try {
+      const content = artifact.content.toString();
+      const prompt = `Please generate a concise 2-3 sentence summary of the following content. Focus on the key points and main ideas:\n\n${content.substring(0, 8000)}`; // Limit to first 8000 chars
+
+      const response = await this.llmService.sendLLMRequest({
+        messages: [{ role: 'user', content: prompt }],
+        opts: {
+          temperature: 0.2,
+          maxPredictedTokens: 200
+        }
+      });
+
+      return response.choices[0].message.content.trim();
+    } catch (error) {
+      Logger.error('Error generating summary:', error);
+      return null;
     }
   }
 
