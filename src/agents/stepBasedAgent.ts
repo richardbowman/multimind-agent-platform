@@ -171,10 +171,75 @@ export abstract class StepBasedAgent extends Agent {
                 const postId = (parentTask as StepTask<StepResponse>).props.userPostId;
                 const post = postId && await this.chatClient.getPost(postId);
                 const posts : ChatPost[]|undefined = post && await this.chatClient.getThreadChain(post);
+                
                 if (posts) {
-                    const partial = posts.find(p => p.props?.partial);
-                    if (partial) this.chatClient.updatePost(partial.id, task.description);
-                    else this.reply(post, {message: task.description}, { partial: true });
+                    // Check if this is a CSV processing task
+                    if (task.props?.csvArtifactId) {
+                        // Load the CSV artifact
+                        const csvArtifact = await this.artifactManager.loadArtifact(task.props.csvArtifactId);
+                        if (csvArtifact) {
+                            // Parse the CSV
+                            const rows: any[] = [];
+                            const parser = parse(csvArtifact.content.toString(), {
+                                columns: true,
+                                skip_empty_lines: true,
+                                trim: true,
+                                relax_quotes: true,
+                                relax_column_count: true,
+                                bom: true
+                            });
+
+                            for await (const record of parser) {
+                                rows.push(record);
+                            }
+
+                            // Add status column if it doesn't exist
+                            const headers = Object.keys(rows[0] || {});
+                            if (!headers.includes('Status')) {
+                                headers.push('Status');
+                            }
+
+                            // Update the row status
+                            const rowIndex = task.props.rowIndex;
+                            if (rowIndex >= 0 && rowIndex < rows.length) {
+                                rows[rowIndex].Status = task.status;
+                            }
+
+                            // Generate status update
+                            const statusUpdate = stringify(rows, {
+                                header: true,
+                                columns: headers
+                            });
+
+                            // Update the progress message
+                            const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
+                                `Completed ${rows.filter(r => r.Status === TaskStatus.Completed).length} of ${rows.length} rows\n\n` +
+                                `Current status:\n${statusUpdate}`;
+
+                            const partial = posts.find(p => p.props?.partial);
+                            if (partial) {
+                                await this.chatClient.updatePost(partial.id, progressMessage, {
+                                    partial: true
+                                });
+                            } else {
+                                await this.reply(post, {message: progressMessage}, { 
+                                    partial: true,
+                                    "project-ids": [parentTask.projectId]
+                                });
+                            }
+                        }
+                    } else {
+                        // Handle non-CSV task updates
+                        const partial = posts.find(p => p.props?.partial);
+                        if (partial) {
+                            await this.chatClient.updatePost(partial.id, task.description);
+                        } else {
+                            await this.reply(post, {message: task.description}, { 
+                                partial: true,
+                                "project-ids": [parentTask.projectId]
+                            });
+                        }
+                    }
                 }
             }
         }
