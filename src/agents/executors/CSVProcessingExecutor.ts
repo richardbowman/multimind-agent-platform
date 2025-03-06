@@ -98,12 +98,15 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
         // Create prompt for agent selection
         const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`Select the most appropriate agent to process this CSV file based on the goal and content.
+        prompt.addInstruction(`Select the most appropriate agent to perform processing on the data in the spreadsheet for the desired goal.
             The CSV contains ${rows.length} rows of data.
             Consider the agents' capabilities and the nature of the data when making your selection.
             JSON Output should include:
             - projectName: A short overall project name
-            - taskDescription: A task description that is stand alone and provides all necessary context on the goal. The agent will receive the contents of the row of CSV data as well.
+            - taskDescription: A description of the specific task to perform that is stand alone and provides broad and thorough
+                context on the goal. This is the only information the agent will receive in addition to the field and values of the
+                each specific row.
+                Your description might start with "The overall goals is ... For the provided data, generate..."
             - assignedAgent: The handle of the selected agent
 
             Also respond with a message explaining the selection to the user.`);
@@ -163,7 +166,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 const taskId = createUUID();
                 
                 // Create task description with headers
-                const taskData = `Process row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
+                const taskData = `The data from row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
                     Object.keys(row.data).map((header: string) => 
                         `${header}: ${row.data[header] || ''}`
                     ).join('\n');
@@ -177,12 +180,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                         rowIndex: i,
                         csvArtifactId: csvArtifact.id,
                         originalRowData: row.data,
-                        // Include all artifacts from the execution context
-                        artifacts: params.context?.artifacts?.map(a => ({
-                            id: a.id,
-                            type: a.type,
-                            metadata: a.metadata
-                        }))
+                        attachedArtifactIds: params.context?.artifacts?.map(a => a.id)
                     }
                 });
 
