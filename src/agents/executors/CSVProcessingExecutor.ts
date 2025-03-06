@@ -239,4 +239,58 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         const output = stringify(rows, { header: true });
         fs.writeFileSync(artifact.filePath, output);
     }
+
+    async handleTaskNotification(notification: TaskNotification): Promise<void> {
+        const { task, eventType } = notification;
+        
+        // Only handle task updates for our CSV processing tasks
+        if (task.type !== TaskType.Standard || !task.props?.csvArtifactId) {
+            return;
+        }
+
+        // Load the CSV artifact
+        const csvArtifact = await this.artifactManager.loadArtifact(task.props.csvArtifactId);
+        if (!csvArtifact) {
+            Logger.error(`CSV artifact ${task.props.csvArtifactId} not found`);
+            return;
+        }
+
+        // Parse the CSV
+        const rows: any[] = [];
+        const parser = parse(csvArtifact.content.toString(), {
+            columns: true,
+            skip_empty_lines: true,
+            trim: true,
+            relax_quotes: true,
+            relax_column_count: true,
+            bom: true
+        });
+
+        for await (const record of parser) {
+            rows.push(record);
+        }
+
+        // Add status column if it doesn't exist
+        const headers = Object.keys(rows[0] || {});
+        if (!headers.includes('Status')) {
+            headers.push('Status');
+        }
+
+        // Update the row status
+        const rowIndex = task.props.rowIndex;
+        if (rowIndex >= 0 && rowIndex < rows.length) {
+            rows[rowIndex].Status = task.status;
+        }
+
+        // Generate status update
+        const statusUpdate = stringify(rows, {
+            header: true,
+            columns: headers
+        });
+
+        // Update the task description with the current status
+        await this.taskManager.updateTask(task.id, {
+            description: `Current status:\n${statusUpdate}`
+        });
+    }
 }

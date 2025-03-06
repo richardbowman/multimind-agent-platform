@@ -3,6 +3,11 @@ import { ExecuteParams } from './ExecuteParams';
 import { StepResponse, StepResult } from './StepResult';
 
 
+export interface TaskNotification {
+    task: Task;
+    eventType: TaskEventType;
+}
+
 export interface StepExecutor<R extends StepResponse> {
     /**
      * @deprecated Use executeV2 instead which provides better parameter organization
@@ -11,4 +16,5 @@ export interface StepExecutor<R extends StepResponse> {
     execute?(params: ExecuteParams): Promise<StepResult<R>>;
     onTaskNotification?(task: Task): Promise<void>;
     onProjectCompleted?(project: Project): Promise<void>;
+    handleTaskNotification?(notification: TaskNotification): Promise<void>;
 }
