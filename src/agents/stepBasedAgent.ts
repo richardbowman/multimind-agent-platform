@@ -203,11 +203,17 @@ export abstract class StepBasedAgent extends Agent {
                                 rows[rowIndex].Status = task.status;
                             }
 
-                            // Generate status update
-                            const statusUpdate = stringify(rows, {
+                            // Generate status update as a string
+                            let statusUpdate = '';
+                            const stringifier = stringify(rows, {
                                 header: true,
                                 columns: headers
                             });
+                            
+                            // Collect the stream output
+                            for await (const chunk of stringifier) {
+                                statusUpdate += chunk;
+                            }
 
                             // Update the progress message with CSV in code block
                             const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
