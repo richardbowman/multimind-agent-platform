@@ -8,6 +8,7 @@ import { useMessages } from '../contexts/MessageContext';
 import { useChannels } from '../contexts/ChannelContext';
 import { useFilteredTasks } from '../contexts/FilteredTaskContext';
 import { TaskType } from '../../../../tools/taskManager';
+import { TaskStatus } from '../../../../schemas/TaskStatus';
 import { CustomScrollbarStyles } from '../styles/styles';
 
 interface WelcomePanelProps {
@@ -96,9 +97,10 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                         display: 'flex',
                         flexDirection: 'column',
                         transition: 'all 0.3s ease',
+                        opacity: task.status === TaskStatus.Completed || task.status === TaskStatus.Cancelled ? 0.7 : 1,
                         '&:hover': {
-                            transform: 'translateY(-8px)',
-                            boxShadow: '0 8px 24px rgba(0,0,0,0.12)'
+                            transform: task.status === TaskStatus.Pending ? 'translateY(-8px)' : 'none',
+                            boxShadow: task.status === TaskStatus.Pending ? '0 8px 24px rgba(0,0,0,0.12)' : 'none'
                         }
                     }}>
                         <CardContent sx={{ flexGrow: 1 }}>
@@ -122,9 +124,12 @@ export const WelcomePanel: React.FC<WelcomePanelProps> = ({ onStartTask, onSwitc
                                         create_at: Date.now()
                                     });
                                 }}
-                                disabled={task.inProgress}
+                                disabled={task.status !== TaskStatus.Pending}
                             >
-                                {task.inProgress ? 'In Progress...' : 'Start Task'}
+                                {task.status === TaskStatus.InProgress && 'In Progress...'}
+                                {task.status === TaskStatus.Pending && 'Start Task'}
+                                {task.status === TaskStatus.Completed && 'Completed'}
+                                {task.status === TaskStatus.Cancelled && 'Cancelled'}
                             </Button>
                         </Box>
                     </Card>
