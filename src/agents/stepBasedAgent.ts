@@ -121,6 +121,28 @@ export abstract class StepBasedAgent extends Agent {
     protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {
         const isMine = task.assignee === this.userId;
 
+        // Check for any outstanding async executor steps
+        const project = this.projects.getProject(task.projectId);
+        const asyncSteps = Object.values(project.tasks).filter(t => 
+            t.type === TaskType.Step && 
+            (t as StepTask<StepResponse>).props?.result?.async &&
+            t.status === TaskStatus.InProgress
+        );
+
+        // Notify all async steps about this task update
+        for (const asyncStep of asyncSteps) {
+            const executor = this.stepExecutors.get(asyncStep.props.stepType);
+            if (executor && typeof executor.handleTaskNotification === 'function') {
+                await executor.handleTaskNotification({
+                    task: asyncStep as StepTask<StepResponse>,
+                    notification: {
+                        task,
+                        eventType
+                    }
+                });
+            }
+        }
+
         // jump-start the step execution if an async step finishes
         if (isMine && eventType === TaskEventType.Completed && task.type === TaskType.Step && (task as StepTask<StepResponse>).props?.result?.async) {
             const posts = (task as StepTask<StepResponse>).props?.userPostId ? [await this.chatClient.getPost((task as StepTask<StepResponse>).props?.userPostId!)]: [{
