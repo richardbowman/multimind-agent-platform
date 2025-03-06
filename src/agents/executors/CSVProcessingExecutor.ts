@@ -287,15 +287,20 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             // Get all tasks in the project
             const project = this.taskManager.getProject(task.projectId);
             if (project) {
+                // Create a map of rowIndex to task status
+                const rowStatusMap = new Map<number, TaskStatus>();
+                
+                // Find all tasks that have a rowIndex
+                for (const task of Object.values(project.tasks)) {
+                    if (typeof task.props?.rowIndex === 'number') {
+                        rowStatusMap.set(task.props.rowIndex, task.status);
+                    }
+                }
+
                 // Update status for all rows based on their tasks
                 for (let i = 0; i < rows.length; i++) {
-                    // Find the task for this row using the stored __taskId
-                    const rowTaskId = rows[i].__taskId;
-                    if (rowTaskId) {
-                        const rowTask = project.tasks[rowTaskId];
-                        if (rowTask) {
-                            rows[i].Status = rowTask.status;
-                        }
+                    if (rowStatusMap.has(i)) {
+                        rows[i].Status = rowStatusMap.get(i);
                     }
                 }
             }
