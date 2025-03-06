@@ -83,10 +83,16 @@ export const FilteredTaskProvider = ({
       threadTaskIds.has(task.id)
     );
 
+    // Combine lists and remove duplicates using Set
+    const combinedTasks = [...list, ...currentChannelProject?.tasks||[]];
+    const uniqueTasks = Array.from(new Set(combinedTasks.map(t => t.id)))
+      .map(id => combinedTasks.find(t => t.id === id))
+      .filter((t): t is Task => !!t);
+
     setIsLoadingTasks(false);
 
-    return [...list, ...currentChannelProject?.tasks||[]].map(t => ({...t, channelId}));
-  }, [tasks, threadTaskIds]);
+    return uniqueTasks.map(t => ({...t, channelId}));
+  }, [tasks, threadTaskIds, currentChannelProject?.tasks]);
 
   const value = useMemo(() => ({
     channelId,
