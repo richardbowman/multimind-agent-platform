@@ -11,7 +11,7 @@ import { createUUID } from 'src/types/uuid';
 import { Agent } from '../agents';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType } from '../../tools/artifact';
-import { parse } from 'csv';
+import { parse } from 'csv-parse';
 import * as fs from 'fs';
 import { stringify } from 'csv-stringify/sync';
 import { ArtifactManager } from 'src/tools/artifactManager';
