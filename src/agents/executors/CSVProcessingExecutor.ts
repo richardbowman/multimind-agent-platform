@@ -107,8 +107,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             Consider the agents' capabilities and the nature of the data when making your selection.
             JSON Output should include:
             - projectName: A short overall project name
-            - taskDescription: A description of the specific task to perform that is stand alone and provides broad and thorough
-                context on the goal. This is the only information the agent will receive in addition to the field and values of the
+            - taskDescription: A description of the specific task to perform on the provided row of data. Make sure the task description supplies any broader business context. Do not explain that you are working on a spreadsheet (this can cause the task to think it should process the entire spreadsheet again). The task will be provided with the field and values of the particular row.
                 each specific row.
                 Your description might start with "The overall goals is ... For the provided data, generate..."
             - assignedAgent: The handle of the selected agent
