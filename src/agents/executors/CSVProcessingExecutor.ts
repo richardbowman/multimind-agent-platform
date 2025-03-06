@@ -249,15 +249,16 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
     async handleTaskNotification(notification: TaskNotification): Promise<void> {
         const { task, eventType, statusPost } = notification;
         
-        // Only handle task updates for our CSV processing tasks
-        if (task.type !== TaskType.Standard || !task.props?.csvArtifactId) {
+        // Get the parent task that manages the CSV processing
+        const parentTask = StepBasedAgent.getRootTask(task.id, this.taskManager);
+        if (!parentTask || !parentTask.props?.csvArtifactId) {
             return;
         }
 
-        // Load the CSV artifact
-        const csvArtifact = await this.artifactManager.loadArtifact(task.props.csvArtifactId);
+        // Load the CSV artifact from parent task
+        const csvArtifact = await this.artifactManager.loadArtifact(parentTask.props.csvArtifactId);
         if (!csvArtifact) {
-            Logger.error(`CSV artifact ${task.props.csvArtifactId} not found`);
+            Logger.error(`CSV artifact ${parentTask.props.csvArtifactId} not found`);
             return;
         }
 
@@ -282,13 +283,18 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             headers.push('Status');
         }
 
-        // Update status for all rows based on their tasks
-        const project = this.taskManager.getProject(task.projectId);
+        // Get all tasks in the project
+        const project = this.taskManager.getProject(parentTask.projectId);
         if (project) {
+            // Update status for all rows based on their tasks
             for (let i = 0; i < rows.length; i++) {
-                const rowTask = project.tasks[task.props.originalRowData?.__taskId];
-                if (rowTask) {
-                    rows[i].Status = rowTask.status;
+                // Find the task for this row using the stored __taskId
+                const rowTaskId = rows[i].__taskId;
+                if (rowTaskId) {
+                    const rowTask = project.tasks[rowTaskId];
+                    if (rowTask) {
+                        rows[i].Status = rowTask.status;
+                    }
                 }
             }
         }
@@ -317,8 +323,8 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             });
         }
 
-        // Update the task description with the current status
-        await this.taskManager.updateTask(task.id, {
+        // Update the parent task description with the current status
+        await this.taskManager.updateTask(parentTask.id, {
             description: `Current status:\n${statusUpdate}`
         });
     }
