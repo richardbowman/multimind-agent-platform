@@ -176,7 +176,13 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                     props: {
                         rowIndex: i,
                         csvArtifactId: csvArtifact.id,
-                        originalRowData: row.data
+                        originalRowData: row.data,
+                        // Include all artifacts from the execution context
+                        artifacts: params.context?.artifacts?.map(a => ({
+                            id: a.id,
+                            type: a.type,
+                            metadata: a.metadata
+                        }))
                     }
                 });
 
