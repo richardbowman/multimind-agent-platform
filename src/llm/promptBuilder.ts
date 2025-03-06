@@ -297,7 +297,12 @@ ${this.modelHelpers.getFinalInstructions()}
                 ? artifact.content
                 : `[Binary data - ${size}]`;
 
-            content = StringUtils.truncateWithEllipsis(content, 1000, `[truncated to 1000 characters out of total size: ${size}]`);
+            // Use summary from metadata if available
+            if (artifact.metadata?.summary) {
+                content = artifact.metadata.summary;
+            } else {
+                content = StringUtils.truncateWithEllipsis(content, 1000, `[truncated to 1000 characters out of total size: ${size}]`);
+            }
 
             let metadataInfo = '';
             if (artifact.metadata) {
