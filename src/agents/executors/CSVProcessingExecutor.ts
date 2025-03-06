@@ -1,5 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { StepExecutor, TaskNotification } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { JSONSchema, StructuredOutputPrompt } from "../../llm/ILLMService";
@@ -18,17 +18,21 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { StringUtils } from 'src/utils/StringUtils';
+import { ChatClient } from 'src/chat/chatClient';
+import { TaskStatus } from 'src/schemas/TaskStatus';
 
 @StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Process each row of a CSV spreadsheet')
 export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private artifactManager: ArtifactManager;
+    private chatClient: ChatClient;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
         this.artifactManager = params.artifactManager!;
+        this.chatClient = params.chatClient;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
@@ -244,7 +248,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
     }
 
     async handleTaskNotification(notification: TaskNotification): Promise<void> {
-        const { task, eventType } = notification;
+        const { task, eventType, statusPost } = notification;
         
         // Only handle task updates for our CSV processing tasks
         if (task.type !== TaskType.Standard || !task.props?.csvArtifactId) {
@@ -305,8 +309,8 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             `Current status:\n\`\`\`csv\n${statusUpdate}\n\`\`\``;
 
         // If we have a partial post ID, update the progress message
-        if (task.props?.partialPostId) {
-            await this.chatClient.updatePost(task.props.partialPostId, progressMessage, {
+        if (statusPost) {
+            await this.chatClient.updatePost(statusPost.id, progressMessage, {
                 partial: true
             });
         }
