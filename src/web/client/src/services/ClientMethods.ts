@@ -160,9 +160,14 @@ class ClientMethodsImplementation implements ClientMethods {
             });
         };
 
-        const hasArtifacts = messages.find(m => m.props?.artifactIds?.filter(a => a.id));
-        if (hasArtifacts) {
-            this.artifactProvider.fetchAllArtifacts();
+        // Get all unique artifact IDs from messages
+        const artifactIds = messages
+            .flatMap(m => m.props?.artifactIds || [])
+            .filter((a, index, self) => self.findIndex(b => b.id === a.id) === index)
+            .map(a => a.id);
+            
+        if (artifactIds.length > 0) {
+            this.artifactProvider.updateSpecificArtifacts(artifactIds);
         }
 
         // Update messages directly in context

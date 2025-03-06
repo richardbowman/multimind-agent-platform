@@ -10,6 +10,7 @@ export interface ArtifactContextType {
   fetchAllArtifacts: () => Promise<void>;
   saveArtifact: (artifact: Artifact) => Promise<Artifact>;
   deleteArtifact: (artifactId: UUID) => Promise<void>;
+  updateSpecificArtifacts: (artifactIds: UUID[]) => Promise<void>;
 }
 
 const ArtifactContext = createContext<ArtifactContextType | null>(null);
@@ -28,6 +29,27 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
       const newArtifacts = await ipcService.getRPC().listArtifacts();
       setArtifacts(newArtifacts);
       setIsLoading(false);
+    }
+  }, [ipcService]);
+
+  const updateSpecificArtifacts = useCallback(async (artifactIds: UUID[]) => {
+    if (ipcService.getRPC() && !needsConfig) {
+      const newArtifacts = await ipcService.getRPC().getArtifactsByIds(artifactIds);
+      setArtifacts(prev => {
+        const updatedArtifacts = [...prev];
+        for (const newArtifact of newArtifacts) {
+          const existingIndex = updatedArtifacts.findIndex(a => a.id === newArtifact.id);
+          if (existingIndex >= 0) {
+            // Only update if version is newer
+            if (newArtifact.version > updatedArtifacts[existingIndex].version) {
+              updatedArtifacts[existingIndex] = newArtifact;
+            }
+          } else {
+            updatedArtifacts.push(newArtifact);
+          }
+        }
+        return updatedArtifacts;
+      });
     }
   }, [ipcService]);
 
@@ -59,9 +81,10 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
     isLoading,
     fetchAllArtifacts,
     saveArtifact,
-    deleteArtifact
+    deleteArtifact,
+    updateSpecificArtifacts
   }), [artifacts, currentChannelId, currentThreadId, isLoading, 
-       fetchAllArtifacts, saveArtifact, deleteArtifact]);
+       fetchAllArtifacts, saveArtifact, deleteArtifact, updateSpecificArtifacts]);
 
   return (
     <ArtifactContext.Provider value={value}>
