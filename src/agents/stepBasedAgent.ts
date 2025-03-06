@@ -209,10 +209,10 @@ export abstract class StepBasedAgent extends Agent {
                                 columns: headers
                             });
 
-                            // Update the progress message
+                            // Update the progress message with CSV in code block
                             const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
                                 `Completed ${rows.filter(r => r.Status === TaskStatus.Completed).length} of ${rows.length} rows\n\n` +
-                                `Current status:\n${statusUpdate}`;
+                                `Current status:\n\`\`\`csv\n${statusUpdate}\n\`\`\``;
 
                             const partial = posts.find(p => p.props?.partial);
                             if (partial) {
