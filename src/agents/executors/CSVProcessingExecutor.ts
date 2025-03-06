@@ -276,10 +276,12 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             headers.push('Status');
         }
 
-        // Update the row status
-        const rowIndex = task.props.rowIndex;
-        if (rowIndex >= 0 && rowIndex < rows.length) {
-            rows[rowIndex].Status = task.status;
+        // Update status for all rows based on their tasks
+        for (let i = 0; i < rows.length; i++) {
+            const rowTask = project.tasks[task.props.originalRowData?.__taskId];
+            if (rowTask) {
+                rows[i].Status = rowTask.status;
+            }
         }
 
         // Generate status update as a string
