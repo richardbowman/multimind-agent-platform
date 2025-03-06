@@ -292,5 +292,16 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         await this.taskManager.updateTask(task.id, {
             description: `Current status:\n${statusUpdate}`
         });
+
+        // If we have a partial post ID, update the progress message
+        if (task.props?.partialPostId) {
+            const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
+                `Completed ${rows.filter(r => r.Status === TaskStatus.Completed).length} of ${rows.length} rows\n\n` +
+                `Current status:\n${statusUpdate}`;
+            
+            await this.chatClient.updatePost(task.props.partialPostId, progressMessage, {
+                partial: true
+            });
+        }
     }
 }
