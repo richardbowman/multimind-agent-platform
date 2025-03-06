@@ -265,19 +265,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             <div {...props} />
                         ),
                         code({node, inline, className, children, ...props}) {
-                            if (message.props?.partial) {
-                                return (
-                                    <Box component="span" sx={{
-                                        bgcolor: 'background.default',
-                                        p: '2px 4px',
-                                        borderRadius: 1,
-                                        fontFamily: 'monospace'
-                                    }}>
-                                        {children}
-                                    </Box>
-                                );
-                            }
-                            
                             // Skip rendering code blocks when collapsed
                             if (!isExpanded && !inline) {
                                 const isJson = className?.includes('language-json');
