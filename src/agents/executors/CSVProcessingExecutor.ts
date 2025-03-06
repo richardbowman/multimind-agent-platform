@@ -136,68 +136,17 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
             const { projectName, projectGoal, assignedAgent: selectedAgentHandle, responseMessage } = responseJSON;
 
-            // Handle @self selection
-            if (selectedAgentHandle === '@self') {
-                // Create the project
-                const project = await this.taskManager.createProject({
-                    name: projectName,
-                    metadata: {
-                        description: projectGoal,
-                        status: 'active',
-                        createdAt: new Date(),
-                        updatedAt: new Date(),
-                        parentTaskId: params.stepId
-                    }
-                });
-
-                // Create individual tasks for each row
-                const taskDetails: string[] = [];
-                
-                for (let i = 0; i < rows.length; i++) {
-                    const row = rows[i];
-                    const taskId = createUUID();
-                    
-                    // Create task description with headers
-                    const taskDescription = `Process row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
-                        Object.keys(row.data).map((header: string) => 
-                            `${header}: ${row.data[header] || ''}`
-                        ).join('\n');
-
-                    await this.taskManager.addTask(project, {
-                        id: taskId,
-                        description: taskDescription,
-                        creator: params.agentId,
-                        type: TaskType.Standard,
-                        props: {
-                            rowIndex: i,
-                            csvArtifactId: csvArtifact.id,
-                            originalRowData: row.data
-                        }
-                    });
-                    
-                    taskDetails.push(`Row ${i + 1} [${taskId}] -> @self`);
-                }
-
-                return {
-                    type: StepResultType.TaskCreation,
-                    projectId: project.id,
-                    finished: true,
-                    response: {
-                        message,
-                        // message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
-                        // taskDetails.join('\n')
-                    }
-                };
-            }
-
-            // Find the selected agent
-            const assignedAgent = supportedAgents?.find(a => a.messagingHandle === selectedAgentHandle);
+            // Find the assigned agent (self or delegated)
+            const assignedAgent = selectedAgentHandle === '@self' 
+                ? params.self 
+                : supportedAgents?.find(a => a.messagingHandle === selectedAgentHandle);
+            
             if (!assignedAgent) {
                 return {
                     type: StepResultType.Error,
                     finished: true,
                     response: {
-                        message: `Unable to delegate to unknown agent ${selectedAgentHandle}`
+                        message: `Unable to assign tasks to agent ${selectedAgentHandle}`
                     }
                 };
             }
@@ -214,7 +163,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 }
             });
 
-            // Create individual tasks for each row
+            // Create and assign tasks for each row
             const taskDetails: string[] = [];
             
             for (let i = 0; i < rows.length; i++) {
@@ -239,21 +188,19 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                     }
                 });
 
-                // Assign to agent
+                // Assign to agent (self or delegated)
                 await this.taskManager.assignTaskToAgent(taskId, assignedAgent.userId);
                 
-                taskDetails.push(`Row ${i + 1} [${taskId}] -> ${assignedAgent.messagingHandle}`);
+                taskDetails.push(`Row ${i + 1} [${taskId}] -> ${assignedAgent.messagingHandle || '@self'}`);
             }
 
             return {
-                type: StepResultType.Delegation,
+                type: selectedAgentHandle === '@self' ? StepResultType.TaskCreation : StepResultType.Delegation,
                 projectId: project.id,
-                finished: false,
-                async: true,
+                finished: selectedAgentHandle === '@self',
+                async: selectedAgentHandle !== '@self',
                 response: {
                     message
-                    // message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
-                    //     taskDetails.join('\n')
                 }
             };
 
