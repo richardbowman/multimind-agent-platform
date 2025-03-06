@@ -171,67 +171,13 @@ export abstract class StepBasedAgent extends Agent {
                 const posts : ChatPost[]|undefined = post && await this.chatClient.getThreadChain(post);
                 
                 if (posts) {
-                    // Check if this is a CSV processing task
-                    if (task.props?.csvArtifactId) {
-                        // Load the CSV artifact
-                        const csvArtifact = await this.artifactManager.loadArtifact(task.props.csvArtifactId);
-                        if (csvArtifact) {
-                            // Parse the CSV
-                            const rows: any[] = [];
-                            const parser = parse(csvArtifact.content.toString(), {
-                                columns: true,
-                                skip_empty_lines: true,
-                                trim: true,
-                                relax_quotes: true,
-                                relax_column_count: true,
-                                bom: true
-                            });
-
-                            for await (const record of parser) {
-                                rows.push(record);
-                            }
-
-                            // Add status column if it doesn't exist
-                            const headers = Object.keys(rows[0] || {});
-                            if (!headers.includes('Status')) {
-                                headers.push('Status');
-                            }
-
-                            // Update the row status
-                            const rowIndex = task.props.rowIndex;
-                            if (rowIndex >= 0 && rowIndex < rows.length) {
-                                rows[rowIndex].Status = task.status;
-                            }
-
-                            // Generate status update as a string
-                            let statusUpdate = '';
-                            const stringifier = stringify(rows, {
-                                header: true,
-                                columns: headers
-                            });
-                            
-                            // Collect the stream output
-                            for await (const chunk of stringifier) {
-                                statusUpdate += chunk;
-                            }
-
-                            // Update the progress message with CSV in code block
-                            const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
-                                `Completed ${rows.filter(r => r.Status === TaskStatus.Completed).length} of ${rows.length} rows\n\n` +
-                                `Current status:\n\`\`\`csv\n${statusUpdate}\n\`\`\``;
-
-                            const partial = posts.find(p => p.props?.partial);
-                            if (partial) {
-                                await this.chatClient.updatePost(partial.id, progressMessage, {
-                                    partial: true
-                                });
-                            } else {
-                                await this.reply(post, {message: progressMessage}, { 
-                                    partial: true,
-                                    "project-ids": [parentTask.projectId]
-                                });
-                            }
-                        }
+                    // Find the executor for the root task
+                    const executor = this.stepExecutors.get(parentTask.props.stepType);
+                    if (executor && typeof executor.handleTaskNotification === 'function') {
+                        await executor.handleTaskNotification({
+                            task: parentTask,
+                            eventType: TaskEventType.Completed
+                        });
                     } else {
                         // Handle non-CSV task updates
                         const partial = posts.find(p => p.props?.partial);
