@@ -20,6 +20,8 @@ import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ChatClient } from 'src/chat/chatClient';
 import { TaskStatus } from 'src/schemas/TaskStatus';
+import { StepBasedAgent } from '../stepBasedAgent';
+import { StepTask } from '../interfaces/ExecuteStepParams';
 
 @StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Process each row of a CSV spreadsheet')
 export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
@@ -202,7 +204,10 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 finished: false,
                 async: true,
                 response: {
-                    message
+                    message,
+                    data: {
+                        csvArtifactId: csvArtifact.id
+                    }
                 }
             };
 
@@ -247,85 +252,77 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
     }
 
     async handleTaskNotification(notification: TaskNotification): Promise<void> {
-        const { task, eventType, statusPost } = notification;
-        
-        // Get the parent task that manages the CSV processing
-        const parentTask = StepBasedAgent.getRootTask(task.id, this.taskManager);
-        if (!parentTask || !parentTask.props?.csvArtifactId) {
-            return;
-        }
+        const { task, childTask, eventType, statusPost } = notification;
+        const artifactId = (task as StepTask<StepResponse>).props.result?.response.data?.csvArtifactId;
 
-        // Load the CSV artifact from parent task
-        const csvArtifact = await this.artifactManager.loadArtifact(parentTask.props.csvArtifactId);
-        if (!csvArtifact) {
-            Logger.error(`CSV artifact ${parentTask.props.csvArtifactId} not found`);
-            return;
-        }
+        if (artifactId && statusPost) {
+            // Load the CSV artifact from parent task
+            const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
+            if (!csvArtifact) {
+                Logger.error(`CSV artifact ${artifactId} not found`);
+                return;
+            }
 
-        // Parse the CSV
-        const rows: any[] = [];
-        const parser = parse(csvArtifact.content.toString(), {
-            columns: true,
-            skip_empty_lines: true,
-            trim: true,
-            relax_quotes: true,
-            relax_column_count: true,
-            bom: true
-        });
+            // Parse the CSV
+            const rows: any[] = [];
+            const parser = parse(csvArtifact.content.toString(), {
+                columns: true,
+                skip_empty_lines: true,
+                trim: true,
+                relax_quotes: true,
+                relax_column_count: true,
+                bom: true
+            });
 
-        for await (const record of parser) {
-            rows.push(record);
-        }
+            for await (const record of parser) {
+                rows.push(record);
+            }
 
-        // Add status column if it doesn't exist
-        const headers = Object.keys(rows[0] || {});
-        if (!headers.includes('Status')) {
-            headers.push('Status');
-        }
+            // Add status column if it doesn't exist
+            const headers = Object.keys(rows[0] || {});
+            if (!headers.includes('Status')) {
+                headers.push('Status');
+            }
 
-        // Get all tasks in the project
-        const project = this.taskManager.getProject(parentTask.projectId);
-        if (project) {
-            // Update status for all rows based on their tasks
-            for (let i = 0; i < rows.length; i++) {
-                // Find the task for this row using the stored __taskId
-                const rowTaskId = rows[i].__taskId;
-                if (rowTaskId) {
-                    const rowTask = project.tasks[rowTaskId];
-                    if (rowTask) {
-                        rows[i].Status = rowTask.status;
+            // Get all tasks in the project
+            const project = this.taskManager.getProject(task.projectId);
+            if (project) {
+                // Update status for all rows based on their tasks
+                for (let i = 0; i < rows.length; i++) {
+                    // Find the task for this row using the stored __taskId
+                    const rowTaskId = rows[i].__taskId;
+                    if (rowTaskId) {
+                        const rowTask = project.tasks[rowTaskId];
+                        if (rowTask) {
+                            rows[i].Status = rowTask.status;
+                        }
                     }
                 }
             }
-        }
 
-        // Generate status update as a string
-        let statusUpdate = '';
-        const stringifier = stringify(rows, {
-            header: true,
-            columns: headers
-        });
-        
-        // Collect the stream output
-        for await (const chunk of stringifier) {
-            statusUpdate += chunk;
-        }
-
-        // Update the progress message with CSV in code block
-        const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
-            `Completed ${rows.filter(r => r.Status === TaskStatus.Completed).length} of ${rows.length} rows\n\n` +
-            `Current status:\n\`\`\`csv\n${statusUpdate}\n\`\`\``;
-
-        // If we have a partial post ID, update the progress message
-        if (statusPost) {
-            await this.chatClient.updatePost(statusPost.id, progressMessage, {
-                partial: true
+            // Generate status update as a string
+            let statusUpdate = '';
+            const stringifier = stringify(rows, {
+                header: true,
+                columns: headers
             });
-        }
+            
+            // Collect the stream output
+            for await (const chunk of stringifier) {
+                statusUpdate += chunk;
+            }
 
-        // Update the parent task description with the current status
-        await this.taskManager.updateTask(parentTask.id, {
-            description: `Current status:\n${statusUpdate}`
-        });
+            // Update the progress message with CSV in code block
+            const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
+                `Completed ${rows.filter(r => r.Status === TaskStatus.Completed).length} of ${rows.length} rows\n\n` +
+                `Current status:\n\`\`\`csv\n${statusUpdate}\n\`\`\``;
+
+            // If we have a partial post ID, update the progress message
+            if (statusPost) {
+                await this.chatClient.updatePost(statusPost.id, progressMessage, {
+                    partial: true
+                });
+            }
+        }
     }
 }
