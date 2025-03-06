@@ -97,7 +97,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             }
         };
 
-        const supportedAgents = params.agents?.filter(a => a.supportsDelegation);
+        const supportedAgents = [{...params.self, messagingHandle: "@self"}, ...params.agents?.filter(a => a.supportsDelegation)??[]].filter(a => a !== undefined);
 
         // Create prompt for agent selection
         const prompt = this.modelHelpers.createPrompt();
@@ -163,7 +163,10 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                             CSV file: ${csvArtifact.metadata?.title || 'Untitled'}                                                             
                             Row index: ${i + 1}                                                                                                
                             Row data: ${JSON.stringify(row.data)}`,                                                                            
-                        instructions: `Generate a concise task description that:                                                               
+                        instructions: `
+                        Project Description: ${projectGoal}
+
+                        Goal: You are performing a process on each row of a provided CSV file. project that:                                                               
                             1. Clearly states what needs to be done                                                                            
                             2. Includes relevant context from the row data                                                                     
                             3. Is specific and actionable                                                                                      
