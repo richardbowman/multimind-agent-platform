@@ -622,6 +622,7 @@ export abstract class StepBasedAgent extends Agent {
                     result: stepResult,
                     awaitingResponse: stepResult.needsUserInput,
                     userPostId: userPost?.id,
+                    partialPostId: params.partialPost?.id
                 }
             } as Partial<StepTask<StepResponse>>);
 
