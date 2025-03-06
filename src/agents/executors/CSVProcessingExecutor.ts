@@ -282,26 +282,33 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             rows[rowIndex].Status = task.status;
         }
 
-        // Generate status update
-        const statusUpdate = stringify(rows, {
+        // Generate status update as a string
+        let statusUpdate = '';
+        const stringifier = stringify(rows, {
             header: true,
             columns: headers
         });
+        
+        // Collect the stream output
+        for await (const chunk of stringifier) {
+            statusUpdate += chunk;
+        }
+
+        // Update the progress message with CSV in code block
+        const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
+            `Completed ${rows.filter(r => r.Status === TaskStatus.Completed).length} of ${rows.length} rows\n\n` +
+            `Current status:\n\`\`\`csv\n${statusUpdate}\n\`\`\``;
+
+        // If we have a partial post ID, update the progress message
+        if (task.props?.partialPostId) {
+            await this.chatClient.updatePost(task.props.partialPostId, progressMessage, {
+                partial: true
+            });
+        }
 
         // Update the task description with the current status
         await this.taskManager.updateTask(task.id, {
             description: `Current status:\n${statusUpdate}`
         });
-
-        // If we have a partial post ID, update the progress message
-        if (task.props?.partialPostId) {
-            const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
-                `Completed ${rows.filter(r => r.Status === TaskStatus.Completed).length} of ${rows.length} rows\n\n` +
-                `Current status:\n${statusUpdate}`;
-            
-            await this.chatClient.updatePost(task.props.partialPostId, progressMessage, {
-                partial: true
-            });
-        }
     }
 }
