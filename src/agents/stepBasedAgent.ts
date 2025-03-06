@@ -507,6 +507,8 @@ export abstract class StepBasedAgent extends Agent {
                 });
             }
 
+            const self = Object.values(this.agents.agents).find(a => a.userId === this.userId);
+
             // Get all prior completed tasks' results
             const tasks = this.projects.getProjectTasks(projectId);
             const priorSteps = tasks
@@ -552,6 +554,7 @@ export abstract class StepBasedAgent extends Agent {
                     overallGoal: project.name,
                     executionMode: userPost ? 'conversation' : 'task',
                     agents: agentsOptions,
+                    self,
                     context: {
                         channelId: userPost?.channel_id,
                         threadId: userPost?.thread_id,
