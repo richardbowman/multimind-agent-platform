@@ -19,7 +19,7 @@ import { ExecutorType } from '../interfaces/ExecutorType';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { StringUtils } from 'src/utils/StringUtils';
 
-@StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Perform a task on each row in a CSV spreadsheet')
+@StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Process each row of a CSV spreadsheet')
 export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
