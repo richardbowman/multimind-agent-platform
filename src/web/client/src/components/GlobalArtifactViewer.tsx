@@ -290,7 +290,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                         return (
                                             artifact.metadata?.title?.toLowerCase().includes(searchText) ||
                                             artifact.type.toLowerCase().includes(searchText) ||
-                                            artifact.content.toString().toLowerCase().includes(searchText)
+                                            (artifact.content ? artifact.content.toString().toLowerCase().includes(searchText) : false)
                                         );
                                     }
                                     return true;
