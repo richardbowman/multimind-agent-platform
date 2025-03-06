@@ -81,33 +81,32 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         }
 
         // Create schema for agent selection
+        const supportedAgents = [{...params.self, messagingHandle: "@self"}, ...params.agents?.filter(a => a.supportsDelegation)??[]].filter(a => a !== undefined);
+
         const schema : JSONSchema = {
             type: 'object',
             properties: {
                 projectName: { type: 'string' },
-                projectGoal: { type: 'string' },
+                taskDescription: { type: 'string' },
                 assignedAgent: { 
                     type: 'string',
-                    enum: [
-                        '@self', 
-                        ...(params.agents?.filter(a => a.supportsDelegation).map(a => a.messagingHandle) || [])
-                    ]
+                    enum: supportedAgents.map(a => a.messagingHandle) ?? []
                 },
                 responseMessage: { type: 'string' }
             }
         };
-
-        const supportedAgents = [{...params.self, messagingHandle: "@self"}, ...params.agents?.filter(a => a.supportsDelegation)??[]].filter(a => a !== undefined);
 
         // Create prompt for agent selection
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(`Select the most appropriate agent to process this CSV file based on the goal and content.
             The CSV contains ${rows.length} rows of data.
             Consider the agents' capabilities and the nature of the data when making your selection.
-            Output should include:
-            - A clear project name and goal
-            - The handle of the selected agent
-            - A response message explaining the selection to the user.`);
+            JSON Output should include:
+            - projectName: A short overall project name
+            - taskDescription: A task description that is stand alone and provides all necessary context on the goal. The agent will receive the contents of the row of CSV data as well.
+            - assignedAgent: The handle of the selected agent
+
+            Also respond with a message explaining the selection to the user.`);
         
         if (supportedAgents) {
             prompt.addContext({
@@ -115,12 +114,6 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 agents: supportedAgents
             });
         }
-
-        prompt.addInstruction(`IMPORTANT SELECTION RULES:
-            - Choose the most specialized agent for the work
-            - Consider the type of data in the CSV
-            - If multiple agents could handle it, choose the one with the most relevant expertise
-            - If you are capable of handling this task yourself, select @self`);
 
         prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
 
@@ -134,7 +127,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             const message = StringUtils.extractNonCodeContent(rawResponse.message);
 
 
-            const { projectName, projectGoal, assignedAgent: selectedAgentHandle, responseMessage } = responseJSON;
+            const { projectName, taskDescription, assignedAgent: selectedAgentHandle } = responseJSON;
 
             // Find the assigned agent (self or delegated)
             const assignedAgent = selectedAgentHandle === '@self' 
@@ -155,7 +148,6 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             const project = await this.taskManager.createProject({
                 name: projectName,
                 metadata: {
-                    description: projectGoal,
                     status: 'active',
                     createdAt: new Date(),
                     updatedAt: new Date(),
@@ -171,14 +163,14 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 const taskId = createUUID();
                 
                 // Create task description with headers
-                const taskDescription = `Process row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
+                const taskData = `Process row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
                     Object.keys(row.data).map((header: string) => 
                         `${header}: ${row.data[header] || ''}`
                     ).join('\n');
 
                 await this.taskManager.addTask(project, {
                     id: taskId,
-                    description: taskDescription,
+                    description: `GOAL: ${taskDescription} DATA: ${taskData}`,
                     creator: params.agentId,
                     type: TaskType.Standard,
                     props: {
@@ -195,10 +187,10 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             }
 
             return {
-                type: selectedAgentHandle === '@self' ? StepResultType.TaskCreation : StepResultType.Delegation,
+                type: StepResultType.Delegation,
                 projectId: project.id,
-                finished: selectedAgentHandle === '@self',
-                async: selectedAgentHandle !== '@self',
+                finished: false,
+                async: true,
                 response: {
                     message
                 }
