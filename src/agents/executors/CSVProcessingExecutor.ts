@@ -157,25 +157,15 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                     const row = rows[i];
                     const taskId = createUUID();
                     
-                    // Generate task description using the model                                                                               
-                    const taskDescription = await this.modelHelpers.generate<ModelMessageResponse>({                                                                 
-                        message: `Create a clear and actionable task description for processing this CSV row.                                  
-                            CSV file: ${csvArtifact.metadata?.title || 'Untitled'}                                                             
-                            Row index: ${i + 1}                                                                                                
-                            Row data: ${JSON.stringify(row.data)}`,                                                                            
-                        instructions: `
-                        Project Description: ${projectGoal}
+                    // Create task description with headers
+                    const taskDescription = `Process row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
+                        Object.keys(row.data).map((header: string) => 
+                            `${header}: ${row.data[header] || ''}`
+                        ).join('\n');
 
-                        Goal: You are performing a process on each row of a provided CSV file. project that:                                                               
-                            1. Clearly states what needs to be done                                                                            
-                            2. Includes relevant context from the row data                                                                     
-                            3. Is specific and actionable                                                                                      
-                            4. Uses professional language`                                                                                     
-                    });                                                                                                                        
-                                                                                                                                            
                     await this.taskManager.addTask(project, {
                         id: taskId,
-                        description: taskDescription.message,
+                        description: taskDescription,
                         creator: params.agentId,
                         type: TaskType.Standard,
                         props: {
