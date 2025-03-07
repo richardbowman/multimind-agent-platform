@@ -283,17 +283,8 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         }
     }
 
-    private async processTaskResults(projectId: string): Promise<any[]> {
-        const project = this.taskManager.getProject(projectId);
-        if (!project) {
-            return [];
-        }
-
-        // Get all completed tasks
-        const completedTasks = Object.values(project.tasks)
-            .filter(t => t.status === TaskStatus.Completed);
-
-        if (completedTasks.length === 0) {
+    private async processTaskResult(task: Task): Promise<any[]> {
+        if (task.status !== TaskStatus.Completed) {
             return [];
         }
 
@@ -331,40 +322,36 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             - rowIndex: The original row index from the CSV
             - keyInsights: Array of key value pairs to add as new columns`);
 
-        // Process each completed task
-        const results: any[] = [];
-        for (const task of completedTasks) {
-            const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
-                message: task.description,
-                instructions: prompt
-            });
+        const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
+            message: task.description,
+            instructions: prompt
+        });
 
-            try {
-                const response = StringUtils.extractAndParseJsonBlock(rawResponse.message);
-                if (response && Array.isArray(response.keyInsights)) {
-                    results.push({
-                        rowIndex: task.props?.rowIndex,
-                        data: response.keyInsights.reduce((acc, insight) => {
-                            acc[insight.columnName] = insight.value;
-                            return acc;
-                        }, {})
-                    });
-                }
-            } catch (error) {
-                Logger.error('Error processing task results:', error);
+        try {
+            const response = StringUtils.extractAndParseJsonBlock(rawResponse.message);
+            if (response && Array.isArray(response.keyInsights)) {
+                return [{
+                    rowIndex: task.props?.rowIndex,
+                    data: response.keyInsights.reduce((acc, insight) => {
+                        acc[insight.columnName] = insight.value;
+                        return acc;
+                    }, {})
+                }];
             }
+        } catch (error) {
+            Logger.error('Error processing task result:', error);
         }
 
-        return results;
+        return [];
     }
 
     async handleTaskNotification(notification: TaskNotification): Promise<void> {
         const { task, childTask, eventType, statusPost } = notification;
         const artifactId = (task as StepTask<StepResponse>).props.result?.response.data?.csvArtifactId;
 
-        // Process results if all tasks are completed
-        if (childTask?.status === TaskStatus.Completed) {
-            const results = await this.processTaskResults(childTask.projectId);
+        // Process results when a task completes
+        if (eventType === TaskEventType.Completed && childTask) {
+            const results = await this.processTaskResult(childTask);
             if (results.length > 0) {
                 const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
                 if (csvArtifact) {
