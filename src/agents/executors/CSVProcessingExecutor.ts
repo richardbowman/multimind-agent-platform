@@ -281,6 +281,10 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             return [];
         }
 
+        // Get the original goal from the parent task
+        const parentTask = this.taskManager.getTask(project.metadata.parentTaskId!);
+        const originalGoal = parentTask?.description || '';
+
         // Create schema for result extraction
         const schema: JSONSchema = {
             type: 'object',
@@ -302,7 +306,11 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         // Create prompt for result processing
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(`Analyze the completed tasks and extract key insights that should be added as new columns in the CSV file.
+            The original goal for this project was: ${originalGoal}
+            
             For each task, identify the most relevant data points that should be preserved in the spreadsheet.
+            Pay special attention to any specific columns or data types mentioned in the original goal.
+            
             Return an array of objects containing:
             - rowIndex: The original row index from the CSV
             - keyInsights: Array of key value pairs to add as new columns`);
