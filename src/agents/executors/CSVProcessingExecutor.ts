@@ -258,7 +258,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
         // Write updated CSV
         const output = stringify(rows, { header: true });
-        fs.writeFileSync(artifact.filePath, output);
+        fs.writeFileSync(artifact.metadata?.filePath, output);
 
         // Update artifact metadata
         const newColumns = Object.keys(results[0]?.data || {});
@@ -287,7 +287,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         }
 
         // Get the original goal from the parent task
-        const parentTask = this.taskManager.getTask(project.metadata.parentTaskId!);
+        const parentTask = this.taskManager.getTaskById(project.metadata.parentTaskId!);
         const originalGoal = parentTask?.description || '';
 
         // Create schema for result extraction
