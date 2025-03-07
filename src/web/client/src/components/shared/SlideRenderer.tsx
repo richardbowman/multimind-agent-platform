@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { Box, useTheme } from '@mui/material';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
-import { NavigateBefore, NavigateNext } from '@mui/icons-material';
+import { NavigateBefore, NavigateNext, Fullscreen, FullscreenExit } from '@mui/icons-material';
 
 interface SlideRendererProps {
     content: string;
@@ -84,7 +84,8 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
             },
             {
                 id: 'reveal-fullscreen',
-                label: 'Toggle Fullscreen',
+                icon: document.fullscreenElement ? <FullscreenExit /> : <Fullscreen />,
+                label: document.fullscreenElement ? 'Exit Fullscreen' : 'Enter Fullscreen',
                 onClick: toggleFullscreen
             },
             {
