@@ -5,8 +5,7 @@ import { Artifact, ArtifactItem, ArtifactType } from '../../../../tools/artifact
 import { useDataContext } from '../contexts/DataContext';
 import { Typography, Button, Box, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
-import { TreeItem2, TreeItem2Props } from '@mui/x-tree-view/TreeItem2';
-import { TreeItem2Content } from '@mui/x-tree-view/TreeItem2Content';
+import { TreeItem2, TreeItem2Content, TreeItem2Props } from '@mui/x-tree-view/TreeItem2';
 import SearchIcon from '@mui/icons-material/Search';
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
