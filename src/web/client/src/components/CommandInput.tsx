@@ -41,6 +41,7 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
     const [showAssetDialog, setShowAssetDialog] = useState(false);
     const [pendingArtifacts, setPendingArtifacts] = useState<ArtifactItem[]>([]);
+    const [lastMessage, setLastMessage] = useState<{ message: string, artifactIds?: UUID[] } | null>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     
@@ -190,11 +191,24 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                 return;
             }
 
-            // Regular message - send with any pending artifact IDs
-            onSendMessage(input.trim(), [
-                ...pendingArtifacts.map(a => a.id),
-                ...pendingFiles.map(a => a.id)
-            ]);
+            const message = input.trim();
+            
+            // Handle /retry command
+            if (message === '/retry') {
+                if (lastMessage) {
+                    onSendMessage(lastMessage.message, lastMessage.artifactIds);
+                }
+            } else {
+                // Regular message - send with any pending artifact IDs
+                const artifactIds = [
+                    ...pendingArtifacts.map(a => a.id),
+                    ...pendingFiles.map(a => a.id)
+                ];
+                onSendMessage(message, artifactIds);
+                // Store as last message
+                setLastMessage({ message, artifactIds });
+            }
+            
             setPendingArtifacts([]);
             resetPendingFiles();
             setInput('');
