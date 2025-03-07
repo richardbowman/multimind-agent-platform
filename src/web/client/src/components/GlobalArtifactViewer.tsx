@@ -293,40 +293,46 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 label: `${type} (${filteredArtifacts.length})`,
                                 children: filteredArtifacts.map(artifact => ({
                                     id: artifact.id,
-                                    label: (
-                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                            <Checkbox
-                                                size="small"
-                                                checked={selectedArtifacts.some(a => a.id === artifact.id)}
-                                                onClick={(e) => e.stopPropagation()}
-                                                onChange={(e) => {
-                                                    const newSelection = e.target.checked
-                                                        ? [...selectedArtifacts, artifact]
-                                                        : selectedArtifacts.filter(a => a.id !== artifact.id);
-                                                    setSelectedArtifacts(newSelection);
-                                                    updateActionState('bulk-delete', {
-                                                        disabled: newSelection.length < 2,
-                                                        label: `Bulk Delete Selected (${newSelection.length})`
-                                                    });
-                                                }}
-                                            />
-                                            <ArtifactCard
-                                                artifact={artifact}
-                                                selected={selectedArtifacts.some(a => a.id === artifact.id)}
-                                                onClick={() => {
-                                                    selectArtifact(artifact);
-                                                    updateActionState('bulk-delete', {
-                                                        disabled: true,
-                                                        label: `Bulk Delete Selected (1)`
-                                                    });
-                                                }}
-                                            />
-                                        </Box>
-                                    )
+                                    label: artifact.metadata?.title || `Untitled ${artifact.type}`,
+                                    artifact: artifact
                                 }))
                             }];
                         })}
-                        slots={{ item: TreeItem2 }}
+                        slots={{ 
+                            item: (props) => (
+                                <TreeItem2 {...props}>
+                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                        <Checkbox
+                                            size="small"
+                                            checked={selectedArtifacts.some(a => a.id === props.itemId)}
+                                            onClick={(e) => e.stopPropagation()}
+                                            onChange={(e) => {
+                                                const artifact = props.item.artifact;
+                                                const newSelection = e.target.checked
+                                                    ? [...selectedArtifacts, artifact]
+                                                    : selectedArtifacts.filter(a => a.id !== artifact.id);
+                                                setSelectedArtifacts(newSelection);
+                                                updateActionState('bulk-delete', {
+                                                    disabled: newSelection.length < 2,
+                                                    label: `Bulk Delete Selected (${newSelection.length})`
+                                                });
+                                            }}
+                                        />
+                                        <ArtifactCard
+                                            artifact={props.item.artifact}
+                                            selected={selectedArtifacts.some(a => a.id === props.itemId)}
+                                            onClick={() => {
+                                                selectArtifact(props.item.artifact);
+                                                updateActionState('bulk-delete', {
+                                                    disabled: true,
+                                                    label: `Bulk Delete Selected (1)`
+                                                });
+                                            }}
+                                        />
+                                    </Box>
+                                </TreeItem2>
+                            )
+                        }}
                         defaultExpandedItems={Object.keys(artifactFolders)}
                         sx={{
                             '& .MuiTreeItem-content': {
