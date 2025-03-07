@@ -11,7 +11,7 @@ import { createUUID } from 'src/types/uuid';
 import { Agent, TaskEventType } from '../agents';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType } from '../../tools/artifact';
-import { parse } from 'csv-parse';
+import { parse } from 'csv-parse/sync';
 import * as fs from 'fs';
 import { stringify } from 'csv-stringify/sync';
 import { ArtifactManager } from 'src/tools/artifactManager';
@@ -230,13 +230,18 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
         // Read existing CSV
         const rows: any[] = [];
-        await new Promise((resolve, reject) => {
-            fs.createReadStream(artifact.filePath)
-                .pipe(csv())
-                .on('data', (row) => rows.push(row))
-                .on('end', resolve)
-                .on('error', reject);
+        const parser = parse(artifact.content.toString(), {
+            columns: true,
+            skip_empty_lines: true,
+            trim: true,
+            relax_quotes: true,
+            relax_column_count: true,
+            bom: true
         });
+        
+        for await (const record of parser) {
+            rows.push(record);
+        }
 
         // Merge results with existing rows
         for (const result of results) {
