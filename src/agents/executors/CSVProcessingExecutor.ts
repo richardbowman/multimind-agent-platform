@@ -289,7 +289,10 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         }
 
         // Get the original goal from the parent task
-        const parentTask = this.taskManager.getTaskById(project.metadata.parentTaskId!);
+        const project = this.taskManager.getProject(task.projectId);
+        const parentTask = project?.metadata?.parentTaskId 
+            ? this.taskManager.getTaskById(project.metadata.parentTaskId)
+            : null;
         const originalGoal = parentTask?.description || '';
 
         // Create schema for result extraction
