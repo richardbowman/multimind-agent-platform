@@ -11,8 +11,9 @@ interface SlideRendererProps {
 export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType }) => {
     const { registerActions, unregisterActions, updateActionState } = useToolbarActions();
     const iframeRef = useRef<HTMLIFrameElement>(null);
-    const [currentSlide, setCurrentSlide] = useState(0);
+    const [currentSlide, setCurrentSlide] = useState(1);
     const [totalSlides, setTotalSlides] = useState(0);
+    const [isFullscreen, setIsFullscreen] = useState(false);
 
     const navigateSlide = useCallback((direction: 'prev' | 'next') => {
         if (iframeRef.current) {
@@ -30,10 +31,21 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
         if (iframeRef.current) {
             if (document.fullscreenElement) {
                 document.exitFullscreen();
+                setIsFullscreen(false);
             } else {
                 iframeRef.current.requestFullscreen();
+                setIsFullscreen(true);
             }
         }
+    }, []);
+
+    useEffect(() => {
+        const handleFullscreenChange = () => {
+            setIsFullscreen(!!document.fullscreenElement);
+        };
+
+        document.addEventListener('fullscreenchange', handleFullscreenChange);
+        return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
     }, []);
 
     useEffect(() => {
@@ -49,7 +61,8 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
                         updateActionState('reveal-next', { disabled: !data.result.right });
                     }
                     if (data.eventName === 'slidechanged') {
-                        updateActionState('reveal-slide-number', { label: `Slide ${data.indexh} of ${totalSlides}` });
+                        setCurrentSlide(data.indexh + 1); // Update current slide state
+                        updateActionState('reveal-slide-number', { label: `Slide ${data.indexh + 1} of ${totalSlides}` });
                     }
                     if (data.eventName === 'ready') {
                         iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ method: 'getTotalSlides' }), '*');
@@ -84,8 +97,8 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
             },
             {
                 id: 'reveal-fullscreen',
-                icon: document.fullscreenElement ? <FullscreenExit /> : <Fullscreen />,
-                label: document.fullscreenElement ? 'Exit Fullscreen' : 'Enter Fullscreen',
+                icon: isFullscreen ? <FullscreenExit /> : <Fullscreen />,
+                label: isFullscreen ? 'Exit Fullscreen' : 'Enter Fullscreen',
                 onClick: toggleFullscreen
             },
             {
@@ -168,8 +181,16 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
         </html>
     `;
     
-    const blob = new Blob([htmlContent], { type: 'text/html' });
-    const url = URL.createObjectURL(blob);
+    const [iframeSrc] = useState(() => {
+        const blob = new Blob([htmlContent], { type: 'text/html' });
+        return URL.createObjectURL(blob);
+    });
+
+    useEffect(() => {
+        return () => {
+            URL.revokeObjectURL(iframeSrc);
+        };
+    }, [iframeSrc]);
 
     return (
         <Box sx={{
@@ -181,7 +202,7 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
         }}>
             <iframe
                 ref={iframeRef}
-                src={url}
+                src={iframeSrc}
                 style={{
                     width: '100%',
                     height: '100%',
@@ -189,6 +210,7 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
                 }}
                 title="Reveal.js Presentation"
                 allowFullScreen
+                key={iframeSrc} // Add key to prevent re-renders
             />
         </Box>
     );
