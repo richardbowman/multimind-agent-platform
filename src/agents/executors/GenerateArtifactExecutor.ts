@@ -128,12 +128,23 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
                     }
                 };
 
-                if (result.artifactIndex && result.artifactIndex > 0 && result.operation === 'append' && params.context?.artifacts) {
+                if (result.artifactIndex && result.artifactIndex > 0 && (result.operation === 'append' || result.operation === 'replace') && params.context?.artifacts) {
                     try {
                         artifactUpdate.id = params.context?.artifacts[result.artifactIndex - 1].id;
                         const existingArtifact = await this.artifactManager.loadArtifact(artifactUpdate.id);
-                        artifactUpdate.content = `${existingArtifact?.content || ""}\n${result.content}`;
-                        artifactUpdate.type = existingArtifact?.type;
+                        
+                        // If types don't match, force create new artifact instead
+                        const newType = this.getArtifactType(md[0].type?.toLowerCase());
+                        if (existingArtifact?.type && newType !== existingArtifact.type) {
+                            Logger.warn(`Type mismatch: existing=${existingArtifact.type}, new=${newType}. Forcing new artifact creation.`);
+                            delete artifactUpdate.id; // Remove ID to force new artifact
+                            result.operation = 'create'; // Update operation
+                        } else {
+                            artifactUpdate.content = result.operation === 'append' 
+                                ? `${existingArtifact?.content || ""}\n${result.content}`
+                                : result.content;
+                            artifactUpdate.type = existingArtifact?.type;
+                        }
                     } catch (error) {
                         Logger.error(`Could not find existing artifact for append operation ${artifactUpdate.id}`, error);
                     }
