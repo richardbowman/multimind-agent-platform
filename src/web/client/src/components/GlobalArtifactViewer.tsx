@@ -302,7 +302,6 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                             }];
                         })}
                         multiSelect
-                        checkboxSelection
                         selectedItems={selectedItemIds}
                         onSelectedItemsChange={(event, newSelection) => {
                             setSelectedItemIds(newSelection);
@@ -343,21 +342,9 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                                 <ArtifactCard
                                                     artifact={artifact}
                                                     selected={selectedItemIds.includes(artifact.id)}
-                                                    onClick={() => {
-                                                        if (selectedItemIds.includes(artifact.id)) {
-                                                            // Deselect if already selected
-                                                            treeViewApiRef.current?.selectItem({
-                                                                itemId: artifact.id,
-                                                                shouldBeSelected: false
-                                                            });
-                                                        } else {
-                                                            // Select the item
-                                                            treeViewApiRef.current?.selectItem({
-                                                                itemId: artifact.id,
-                                                                shouldBeSelected: true,
-                                                                keepExistingSelection: true // For multi-select
-                                                            });
-                                                        }
+                                                    onClick={(e) => {
+                                                        // Let TreeView handle the selection logic
+                                                        e.stopPropagation();
                                                     }}
                                                 />
                                             </Box>
