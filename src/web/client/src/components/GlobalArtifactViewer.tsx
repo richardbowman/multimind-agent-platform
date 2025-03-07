@@ -5,7 +5,8 @@ import { Artifact, ArtifactItem, ArtifactType } from '../../../../tools/artifact
 import { useDataContext } from '../contexts/DataContext';
 import { Typography, Button, Box, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
-import { TreeItem2 } from '@mui/x-tree-view/TreeItem2';
+import { TreeItem2, TreeItem2Props } from '@mui/x-tree-view/TreeItem2';
+import { TreeItem2Content } from '@mui/x-tree-view/TreeItem2Content';
 import SearchIcon from '@mui/icons-material/Search';
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
@@ -299,39 +300,47 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                             }];
                         })}
                         slots={{ 
-                            item: (props) => (
-                                <TreeItem2 {...props}>
-                                    <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                        <Checkbox
-                                            size="small"
-                                            checked={selectedArtifacts.some(a => a.id === props.itemId)}
-                                            onClick={(e) => e.stopPropagation()}
-                                            onChange={(e) => {
-                                                const artifact = props.item.artifact;
-                                                const newSelection = e.target.checked
-                                                    ? [...selectedArtifacts, artifact]
-                                                    : selectedArtifacts.filter(a => a.id !== artifact.id);
-                                                setSelectedArtifacts(newSelection);
-                                                updateActionState('bulk-delete', {
-                                                    disabled: newSelection.length < 2,
-                                                    label: `Bulk Delete Selected (${newSelection.length})`
-                                                });
-                                            }}
-                                        />
-                                        <ArtifactCard
-                                            artifact={props.item.artifact}
-                                            selected={selectedArtifacts.some(a => a.id === props.itemId)}
-                                            onClick={() => {
-                                                selectArtifact(props.item.artifact);
-                                                updateActionState('bulk-delete', {
-                                                    disabled: true,
-                                                    label: `Bulk Delete Selected (1)`
-                                                });
-                                            }}
-                                        />
-                                    </Box>
-                                </TreeItem2>
-                            )
+                            item: (props: TreeItem2Props & { item: { artifact?: Artifact } }) => {
+                                const artifact = props.item?.artifact;
+                                if (!artifact) {
+                                    return <TreeItem2 {...props} />;
+                                }
+
+                                return (
+                                    <TreeItem2 {...props}>
+                                        <TreeItem2Content>
+                                            <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                                <Checkbox
+                                                    size="small"
+                                                    checked={selectedArtifacts.some(a => a.id === props.itemId)}
+                                                    onClick={(e) => e.stopPropagation()}
+                                                    onChange={(e) => {
+                                                        const newSelection = e.target.checked
+                                                            ? [...selectedArtifacts, artifact]
+                                                            : selectedArtifacts.filter(a => a.id !== artifact.id);
+                                                        setSelectedArtifacts(newSelection);
+                                                        updateActionState('bulk-delete', {
+                                                            disabled: newSelection.length < 2,
+                                                            label: `Bulk Delete Selected (${newSelection.length})`
+                                                        });
+                                                    }}
+                                                />
+                                                <ArtifactCard
+                                                    artifact={artifact}
+                                                    selected={selectedArtifacts.some(a => a.id === props.itemId)}
+                                                    onClick={() => {
+                                                        selectArtifact(artifact);
+                                                        updateActionState('bulk-delete', {
+                                                            disabled: true,
+                                                            label: `Bulk Delete Selected (1)`
+                                                        });
+                                                    }}
+                                                />
+                                            </Box>
+                                        </TreeItem2Content>
+                                    </TreeItem2>
+                                );
+                            }
                         }}
                         defaultExpandedItems={Object.keys(artifactFolders)}
                         sx={{
