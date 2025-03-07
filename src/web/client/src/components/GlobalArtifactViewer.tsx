@@ -3,7 +3,9 @@ import { useDropzone } from 'react-dropzone';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { Artifact, ArtifactItem, ArtifactType } from '../../../../tools/artifact';
 import { useDataContext } from '../contexts/DataContext';
-import { Typography, Button, Box, Accordion, AccordionSummary, AccordionDetails, List, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, ListItem, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import { Typography, Button, Box, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
+import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
+import { TreeItem2 } from '@mui/x-tree-view/TreeItem2';
 import SearchIcon from '@mui/icons-material/Search';
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
@@ -258,84 +260,87 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                         />
                     </Box>
                 </Box>
-                <Box 
-                    sx={{ 
-                        overflowY: 'auto',
-                        height: 'calc(100vh - 120px)',
-                        ...CustomScrollbarStyles
-                    }}
-                >
-                    {Object.entries(artifactFolders).map(([type, artifacts]) => (
-                    <Accordion key={type}>
-                        <AccordionSummary>
-                            <FolderIcon sx={{ mr: 1 }} />
-                            <Typography>{type} ({artifacts.length})</Typography>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                            <List sx={{ 
-                                width: '100%',
-                                padding: 0
-                            }}>
-                                {artifacts.filter(artifact => {
-                                    // Apply project filter
-                                    if (selectedProject !== 'all' && 
-                                        (!artifact.metadata?.projects || 
-                                        !artifact.metadata.projects.includes(selectedProject))) {
-                                        return false;
-                                    }
-                                    
-                                    // Apply text filter
-                                    if (filterText) {
-                                        const searchText = filterText.toLowerCase();
-                                        return (
-                                            artifact.metadata?.title?.toLowerCase().includes(searchText) ||
-                                            artifact.type.toLowerCase().includes(searchText) ||
-                                            (artifact.content ? artifact.content.toString().toLowerCase().includes(searchText) : false)
-                                        );
-                                    }
-                                    return true;
-                                }).map(artifact => (
-                                    <Box key={artifact.id} sx={{ 
-                                        display: 'flex', 
-                                        alignItems: 'center',
-                                        padding: 0,
-                                        overflow: 'hidden'
-                                    }}>
-                                        <Checkbox
-                                            sx={{ 
-                                                padding: '4px'
-                                            }}
-                                            checked={selectedArtifacts.some(a => a.id === artifact.id)}
-                                            onChange={(e) => {
-                                                const newSelection = e.target.checked
-                                                    ? [...selectedArtifacts, artifact]
-                                                    : selectedArtifacts.filter(a => a.id !== artifact.id);
-                                                setSelectedArtifacts(newSelection);
-                                                updateActionState('bulk-delete', {
-                                                    disabled: newSelection.length < 2,
-                                                    label: `Bulk Delete Selected (${newSelection.length})`
-                                                });
-                                            }}
-                                        />
-                                        <ArtifactCard
-                                            artifact={artifact}
-                                            selected={selectedArtifacts.some(a => a.id === artifact.id)}
-                                            onClick={() => {
-                                                // Single select when clicking the card
-                                                selectArtifact(artifact);
-                                                
-                                                updateActionState('bulk-delete', {
-                                                    disabled: true,
-                                                    label: `Bulk Delete Selected (1)`
-                                                });
-                                            }}
-                                        />
-                                    </Box>
-                                ))}
-                            </List>
-                        </AccordionDetails>
-                    </Accordion>
-                    ))}
+                <Box sx={{ 
+                    overflowY: 'auto',
+                    height: 'calc(100vh - 120px)',
+                    ...CustomScrollbarStyles,
+                    p: 1
+                }}>
+                    <RichTreeView
+                        items={Object.entries(artifactFolders).flatMap(([type, artifacts]) => {
+                            const filteredArtifacts = artifacts.filter(artifact => {
+                                // Apply project filter
+                                if (selectedProject !== 'all' && 
+                                    (!artifact.metadata?.projects || 
+                                    !artifact.metadata.projects.includes(selectedProject))) {
+                                    return false;
+                                }
+                                
+                                // Apply text filter
+                                if (filterText) {
+                                    const searchText = filterText.toLowerCase();
+                                    return (
+                                        artifact.metadata?.title?.toLowerCase().includes(searchText) ||
+                                        artifact.type.toLowerCase().includes(searchText) ||
+                                        (artifact.content ? artifact.content.toString().toLowerCase().includes(searchText) : false)
+                                    );
+                                }
+                                return true;
+                            });
+
+                            return [{
+                                id: type,
+                                label: `${type} (${filteredArtifacts.length})`,
+                                children: filteredArtifacts.map(artifact => ({
+                                    id: artifact.id,
+                                    label: (
+                                        <Box sx={{ display: 'flex', alignItems: 'center' }}>
+                                            <Checkbox
+                                                size="small"
+                                                checked={selectedArtifacts.some(a => a.id === artifact.id)}
+                                                onClick={(e) => e.stopPropagation()}
+                                                onChange={(e) => {
+                                                    const newSelection = e.target.checked
+                                                        ? [...selectedArtifacts, artifact]
+                                                        : selectedArtifacts.filter(a => a.id !== artifact.id);
+                                                    setSelectedArtifacts(newSelection);
+                                                    updateActionState('bulk-delete', {
+                                                        disabled: newSelection.length < 2,
+                                                        label: `Bulk Delete Selected (${newSelection.length})`
+                                                    });
+                                                }}
+                                            />
+                                            <ArtifactCard
+                                                artifact={artifact}
+                                                selected={selectedArtifacts.some(a => a.id === artifact.id)}
+                                                onClick={() => {
+                                                    selectArtifact(artifact);
+                                                    updateActionState('bulk-delete', {
+                                                        disabled: true,
+                                                        label: `Bulk Delete Selected (1)`
+                                                    });
+                                                }}
+                                            />
+                                        </Box>
+                                    )
+                                }))
+                            }];
+                        })}
+                        slots={{ item: TreeItem2 }}
+                        defaultExpandedItems={Object.keys(artifactFolders)}
+                        sx={{
+                            '& .MuiTreeItem-content': {
+                                padding: '4px 8px',
+                                borderRadius: '4px',
+                                '&:hover': {
+                                    backgroundColor: 'action.hover'
+                                }
+                            },
+                            '& .MuiTreeItem-group': {
+                                marginLeft: '16px'
+                            }
+                        }}
+                    />
                 </Box>
             </Drawer>
             <Box component="main" sx={{ 
