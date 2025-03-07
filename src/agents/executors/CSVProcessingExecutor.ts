@@ -8,7 +8,7 @@ import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { createUUID } from 'src/types/uuid';
-import { Agent } from '../agents';
+import { Agent, TaskEventType } from '../agents';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType } from '../../tools/artifact';
 import { parse } from 'csv-parse';
@@ -87,7 +87,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         }
 
         // Create schema for agent selection
-        const supportedAgents = [{...params.self, messagingHandle: "@self"}, ...params.agents?.filter(a => a.supportsDelegation)??[]].filter(a => a !== undefined);
+        const supportedAgents = [{...params.self, messagingHandle: "@self"} as Agent, ...params.agents?.filter(a => a.supportsDelegation)??[]].filter(a => a !== undefined);
 
         const schema : JSONSchema = {
             type: 'object',
@@ -178,7 +178,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
                 await this.taskManager.addTask(project, {
                     id: taskId,
-                    description: `GOAL: ${taskDescription} DATA: ${taskData}`,
+                    description: `This task has been initiated from a csv-processor step. Your goal is to process a single row of the spreadsheet that is provided in DATA. Processing Context: ${taskDescription} DATAp: ${taskData}`,
                     creator: params.agentId,
                     type: TaskType.Standard,
                     props: {
@@ -346,17 +346,19 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         const { task, childTask, eventType, statusPost } = notification;
         const artifactId = (task as StepTask<StepResponse>).props.result?.response.data?.csvArtifactId;
 
-        if (artifactId && statusPost) {
-            // Process results if all tasks are completed
-            if (eventType === TaskEventType.Completed) {
-                const results = await this.processTaskResults(childTask.projectId);
-                if (results.length > 0) {
-                    const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
-                    if (csvArtifact) {
-                        await this.updateCSVWithResults(csvArtifact, results);
-                    }
+        // Process results if all tasks are completed
+        if (childTask?.status === TaskStatus.Completed) {
+            const results = await this.processTaskResults(childTask.projectId);
+            if (results.length > 0) {
+                const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
+                if (csvArtifact) {
+                    await this.updateCSVWithResults(csvArtifact, results);
                 }
             }
+        }
+
+
+        if (artifactId && statusPost && task.props?.childProjectId) {            
             // Load the CSV artifact from parent task
             const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
             if (!csvArtifact) {
@@ -386,7 +388,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             }
 
             // Get all tasks in the child project
-            const project = this.taskManager.getProject(childTask.projectId);
+            const project = this.taskManager.getProject(task.props?.childProjectId);
             if (project) {
                 // Create a map of rowIndex to task status
                 const rowStatusMap = new Map<number, TaskStatus>();
@@ -424,11 +426,9 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 `Current status:\n\`\`\`csv\n${statusUpdate}\n\`\`\``;
 
             // If we have a partial post ID, update the progress message
-            if (statusPost) {
-                await this.chatClient.updatePost(statusPost.id, progressMessage, {
-                    partial: true
-                });
-            }
+            await this.chatClient.updatePost(statusPost.id, progressMessage, {
+                partial: true
+            });
         }
     }
 }
