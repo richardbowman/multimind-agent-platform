@@ -60,8 +60,8 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
         promptBuilder.addInstruction("Generate or modify a document based on the goal.");
         promptBuilder.addInstruction(`You have these options:
 1. Create a NEW document (leave artifactId blank and set operation to "create")
-2. Replace an EXISTING document (specify artifactId and set operation to "replace")
-3. Append to an EXISTING document (specify artifactId and set operation to "append")`);
+2. Completely revise an EXISTING document (specify "artifactIndex" and set operation to "replace")
+3. Add to an EXISTING document (specify "artifactIndex" and set operation to "append")`);
 
         promptBuilder.addInstruction(`IMPORTANT RULES:
 - For NEW documents: Use operation="create" and omit artifactIndex
