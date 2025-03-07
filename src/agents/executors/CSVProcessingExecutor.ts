@@ -60,7 +60,8 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             }
             
             // Parse CSV with headers
-            const parser = parse(artifact.content.toString(), {
+            const content = artifact.content.toString();
+            const parser = parse(content, {
                 columns: true,
                 skip_empty_lines: true,
                 trim: true,
@@ -69,8 +70,18 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 bom: true
             });
             
-            // Store headers separately
-            const headers = Object.keys(parser.options.columns || {});
+            // Get headers from first row
+            const firstRow = parse(content, {
+                columns: true,
+                skip_empty_lines: true,
+                trim: true,
+                relax_quotes: true,
+                relax_column_count: true,
+                bom: true,
+                to_line: 1
+            })[0];
+            
+            const headers = Object.keys(firstRow || {});
             
             for await (const record of parser) {
                 rows.push({ headers, data: record });
