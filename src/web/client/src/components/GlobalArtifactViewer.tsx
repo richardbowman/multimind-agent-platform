@@ -6,6 +6,7 @@ import { useDataContext } from '../contexts/DataContext';
 import { Typography, Button, Box, Drawer, Toolbar, Dialog, DialogActions, DialogContent, DialogContentText, DialogTitle, Paper, TextField, MenuItem, Select, FormControl, InputLabel } from '@mui/material';
 import { RichTreeView } from '@mui/x-tree-view/RichTreeView';
 import { TreeItem2, TreeItem2Content, TreeItem2Props } from '@mui/x-tree-view/TreeItem2';
+import { useTreeViewApiRef } from '@mui/x-tree-view/hooks';
 import SearchIcon from '@mui/icons-material/Search';
 import { ArtifactEditor } from './ArtifactEditor';
 import { ArtifactCard } from './ArtifactCard';
@@ -30,6 +31,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const { showFileDialog } = useDataContext();
     const [selectedArtifact, setSelectedArtifact] = useState<Artifact|null>(null);
     const [selectedArtifacts, setSelectedArtifacts] = useState<ArtifactItem[]>([]);
+    const [selectedItemIds, setSelectedItemIds] = useState<string[]>([]);
+    const treeViewApiRef = useTreeViewApiRef();
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [filterText, setFilterText] = useState('');
     const [selectedProject, setSelectedProject] = useState<string>('all');
@@ -298,6 +301,34 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 }))
                             }];
                         })}
+                        multiSelect
+                        checkboxSelection
+                        selectedItems={selectedItemIds}
+                        onSelectedItemsChange={(event, newSelection) => {
+                            setSelectedItemIds(newSelection);
+                            
+                            // Update selected artifacts
+                            const newArtifacts = Object.values(artifactFolders)
+                                .flat()
+                                .filter(artifact => newSelection.includes(artifact.id));
+                            setSelectedArtifacts(newArtifacts);
+                            
+                            // Update bulk delete state
+                            updateActionState('bulk-delete', {
+                                disabled: newSelection.length < 2,
+                                label: `Bulk Delete Selected (${newSelection.length})`
+                            });
+                            
+                            // If single selection, show the artifact
+                            if (newSelection.length === 1) {
+                                const artifact = Object.values(artifactFolders)
+                                    .flat()
+                                    .find(a => a.id === newSelection[0]);
+                                if (artifact) {
+                                    selectArtifact(artifact);
+                                }
+                            }
+                        }}
                         slots={{ 
                             item: (props: TreeItem2Props & { item: { artifact?: Artifact } }) => {
                                 const artifact = props.item?.artifact;
@@ -309,30 +340,24 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                     <TreeItem2 {...props}>
                                         <TreeItem2Content>
                                             <Box sx={{ display: 'flex', alignItems: 'center' }}>
-                                                <Checkbox
-                                                    size="small"
-                                                    checked={selectedArtifacts.some(a => a.id === props.itemId)}
-                                                    onClick={(e) => e.stopPropagation()}
-                                                    onChange={(e) => {
-                                                        const newSelection = e.target.checked
-                                                            ? [...selectedArtifacts, artifact]
-                                                            : selectedArtifacts.filter(a => a.id !== artifact.id);
-                                                        setSelectedArtifacts(newSelection);
-                                                        updateActionState('bulk-delete', {
-                                                            disabled: newSelection.length < 2,
-                                                            label: `Bulk Delete Selected (${newSelection.length})`
-                                                        });
-                                                    }}
-                                                />
                                                 <ArtifactCard
                                                     artifact={artifact}
-                                                    selected={selectedArtifacts.some(a => a.id === props.itemId)}
+                                                    selected={selectedItemIds.includes(artifact.id)}
                                                     onClick={() => {
-                                                        selectArtifact(artifact);
-                                                        updateActionState('bulk-delete', {
-                                                            disabled: true,
-                                                            label: `Bulk Delete Selected (1)`
-                                                        });
+                                                        if (selectedItemIds.includes(artifact.id)) {
+                                                            // Deselect if already selected
+                                                            treeViewApiRef.current?.selectItem({
+                                                                itemId: artifact.id,
+                                                                shouldBeSelected: false
+                                                            });
+                                                        } else {
+                                                            // Select the item
+                                                            treeViewApiRef.current?.selectItem({
+                                                                itemId: artifact.id,
+                                                                shouldBeSelected: true,
+                                                                keepExistingSelection: true // For multi-select
+                                                            });
+                                                        }
                                                     }}
                                                 />
                                             </Box>
