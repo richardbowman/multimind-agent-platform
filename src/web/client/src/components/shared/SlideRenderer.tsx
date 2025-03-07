@@ -14,6 +14,7 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
     const [currentSlide, setCurrentSlide] = useState(1);
     const [totalSlides, setTotalSlides] = useState(0);
     const [isFullscreen, setIsFullscreen] = useState(false);
+    const [slideLabel, setSlideLabel] = useState('Slide 1 of ?');
 
     const navigateSlide = useCallback((direction: 'prev' | 'next') => {
         if (iframeRef.current) {
@@ -55,14 +56,17 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
                 if (data.namespace === 'reveal') {
                     if (data.eventName === 'callback' && data.method === 'getTotalSlides') {
                         setTotalSlides(data.result);
+                        setSlideLabel(`Slide ${currentSlide} of ${data.result}`);
                     }
                     if (data.eventName === 'callback' && data.method === 'availableRoutes') {
                         updateActionState('reveal-prev', { disabled: !data.result.left });
                         updateActionState('reveal-next', { disabled: !data.result.right });
                     }
                     if (data.eventName === 'slidechanged') {
-                        setCurrentSlide(data.indexh + 1); // Update current slide state
-                        updateActionState('reveal-slide-number', { label: `Slide ${data.indexh + 1} of ${totalSlides}` });
+                        const newSlide = data.indexh + 1;
+                        setCurrentSlide(newSlide);
+                        setSlideLabel(`Slide ${newSlide} of ${totalSlides}`);
+                        updateActionState('reveal-slide-number', { label: `Slide ${newSlide} of ${totalSlides}` });
                     }
                     if (data.eventName === 'ready') {
                         iframeRef.current?.contentWindow?.postMessage(JSON.stringify({ method: 'getTotalSlides' }), '*');
@@ -103,7 +107,7 @@ export const SlideRenderer: React.FC<SlideRendererProps> = ({ content, mimeType 
             },
             {
                 id: 'reveal-slide-number',
-                label: `Slide ${currentSlide} of ${totalSlides}`,
+                label: slideLabel,
                 disabled: true
             }
         ];
