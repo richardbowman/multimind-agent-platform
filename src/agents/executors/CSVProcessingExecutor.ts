@@ -242,13 +242,96 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         for (const result of results) {
             const rowIndex = result.rowIndex;
             if (rowIndex >= 0 && rowIndex < rows.length) {
-                rows[rowIndex] = { ...rows[rowIndex], ...result.data };
+                // Add new columns while preserving existing data
+                rows[rowIndex] = { 
+                    ...rows[rowIndex], 
+                    ...result.data,
+                    __processedAt: new Date().toISOString() 
+                };
             }
         }
 
         // Write updated CSV
         const output = stringify(rows, { header: true });
         fs.writeFileSync(artifact.filePath, output);
+
+        // Update artifact metadata
+        const newColumns = Object.keys(results[0]?.data || {});
+        if (newColumns.length > 0) {
+            artifact.metadata = artifact.metadata || {};
+            artifact.metadata.processedColumns = [
+                ...(artifact.metadata.processedColumns || []),
+                ...newColumns
+            ];
+            await this.artifactManager.saveArtifact(artifact);
+        }
+    }
+
+    private async processTaskResults(projectId: string): Promise<any[]> {
+        const project = this.taskManager.getProject(projectId);
+        if (!project) {
+            return [];
+        }
+
+        // Get all completed tasks
+        const completedTasks = Object.values(project.tasks)
+            .filter(t => t.status === TaskStatus.Completed);
+
+        if (completedTasks.length === 0) {
+            return [];
+        }
+
+        // Create schema for result extraction
+        const schema: JSONSchema = {
+            type: 'object',
+            properties: {
+                rowIndex: { type: 'number' },
+                keyInsights: { 
+                    type: 'array',
+                    items: {
+                        type: 'object',
+                        properties: {
+                            columnName: { type: 'string' },
+                            value: { type: 'string' }
+                        }
+                    }
+                }
+            }
+        };
+
+        // Create prompt for result processing
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addInstruction(`Analyze the completed tasks and extract key insights that should be added as new columns in the CSV file.
+            For each task, identify the most relevant data points that should be preserved in the spreadsheet.
+            Return an array of objects containing:
+            - rowIndex: The original row index from the CSV
+            - keyInsights: Array of key value pairs to add as new columns`);
+
+        // Process each completed task
+        const results: any[] = [];
+        for (const task of completedTasks) {
+            const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
+                message: task.description,
+                instructions: prompt
+            });
+
+            try {
+                const response = StringUtils.extractAndParseJsonBlock(rawResponse.message);
+                if (response && Array.isArray(response.keyInsights)) {
+                    results.push({
+                        rowIndex: task.props?.rowIndex,
+                        data: response.keyInsights.reduce((acc, insight) => {
+                            acc[insight.columnName] = insight.value;
+                            return acc;
+                        }, {})
+                    });
+                }
+            } catch (error) {
+                Logger.error('Error processing task results:', error);
+            }
+        }
+
+        return results;
     }
 
     async handleTaskNotification(notification: TaskNotification): Promise<void> {
@@ -256,6 +339,16 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         const artifactId = (task as StepTask<StepResponse>).props.result?.response.data?.csvArtifactId;
 
         if (artifactId && statusPost) {
+            // Process results if all tasks are completed
+            if (eventType === TaskEventType.Completed) {
+                const results = await this.processTaskResults(childTask.projectId);
+                if (results.length > 0) {
+                    const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
+                    if (csvArtifact) {
+                        await this.updateCSVWithResults(csvArtifact, results);
+                    }
+                }
+            }
             // Load the CSV artifact from parent task
             const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
             if (!csvArtifact) {
