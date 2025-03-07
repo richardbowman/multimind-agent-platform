@@ -284,8 +284,8 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 headers.push('Status');
             }
 
-            // Get all tasks in the project
-            const project = this.taskManager.getProject(task.projectId);
+            // Get all tasks in the child project
+            const project = this.taskManager.getProject(childTask.projectId);
             if (project) {
                 // Create a map of rowIndex to task status
                 const rowStatusMap = new Map<number, TaskStatus>();
