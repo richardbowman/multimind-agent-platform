@@ -4,12 +4,12 @@ import { ILLMService, StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ArtifactManager } from '../../tools/artifactManager';
 import { Project, TaskManager } from '../../tools/taskManager';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { OnboardingProject, QuestionAnswer } from '../onboardingConsultant';
-import { CreateArtifact } from '../../schemas/ModelResponse';
+import { OnboardingConsultant, OnboardingProject, QuestionAnswer } from '../onboardingConsultant';
+import { CreateArtifact, ModelMessageResponse } from '../../schemas/ModelResponse';
 import { DocumentPlanResponse } from '../../schemas/DocumentPlanResponse';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { ReplanType, StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResult } from '../interfaces/StepResult';
 import { updateBusinessPlan } from '../../helpers/businessPlanHelper';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
@@ -17,6 +17,9 @@ import { AnswerMetadata } from './AnswerQuestionsExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { IntakeQuestion } from 'src/schemas/IntakeQuestionsResponse';
 import { QAAnswers } from 'src/schemas/AnswerAnalysisResponse';
+import { StringUtils } from 'src/utils/StringUtils';
+import { ArtifactType } from 'src/tools/artifact';
+import { ContentType, OutputType, PromptBuilder } from 'src/llm/promptBuilder';
 
 /**
  * Executor that creates and revises operational business guides based on user requirements.
@@ -33,7 +36,7 @@ import { QAAnswers } from 'src/schemas/AnswerAnalysisResponse';
  */
 
 @StepExecutorDecorator(ExecutorType.CREATE_PLAN, `Create (or revise) a guide for our agents of the user's desired goals (Must have selected a template prior to this step).`)
-export class CreatePlanExecutor implements StepExecutor {
+export class CreatePlanExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private userId: string;
     taskManager: TaskManager;
@@ -53,11 +56,11 @@ export class CreatePlanExecutor implements StepExecutor {
         
         // Check for template ID in prior step responses and priorResults
         const templateResult = params.previousResponses?.find(r => 
-            r.templateId
+            r.data?.selectedTemplateId
         );
         
-        if (templateResult?.templateId) {
-            const template = this.onboardingConsultant.getTemplateById(templateResult.templateId);
+        if (templateResult?.data?.selectedTemplateId) {
+            const template = this.onboardingConsultant.getTemplateById(templateResult.data?.selectedTemplateId);
             if (template) {
                 project.template = template;
             }
@@ -78,9 +81,11 @@ export class CreatePlanExecutor implements StepExecutor {
 
         const schema = await getGeneratedSchema(SchemaType.DocumentPlanResponse);
 
-        const prompt = `OVERALL GOAL: ${params.overallGoal}
-                
-                Template: ${project.template.name}
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addContext({contentType: ContentType.ABOUT});
+        prompt.addContext({contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal||params.goal});
+
+        prompt.addContext(`Template: ${project.template.name}
                 Description: ${project.template.description}
 
                 Available Sections:
@@ -95,25 +100,29 @@ export class CreatePlanExecutor implements StepExecutor {
                 ${answers.map(a => `
                 - ${a.question}
                   ${a.answer}
-                `).join('\n')}
-
-                Create a comprehensive document based on the template and gathered information.
+                `).join('\n')}`);
+        prompt.addInstruction(`Create a comprehensive document based on the template and gathered information.
                 For each section:
                 1. Use the provided answers to populate the content
                 2. Maintain the template structure
                 3. Ensure all required sections are complete
                 4. Add any additional relevant information
-                `;
+                `);
+        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
 
-        const response = await this.modelHelpers.generate<DocumentPlanResponse>({
+
+        const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
             message: params.stepGoal || params.message,
             threadPosts: params.context?.threadPosts,
-            instructions: new StructuredOutputPrompt(schema, prompt)
+            instructions: prompt
         });
+
+        const data = StringUtils.extractAndParseJsonBlock<DocumentPlanResponse>(rawResponse.message, schema);
+        const message = StringUtils.extractNonCodeContent(rawResponse.message);
 
         // Update the document draft with the generated content
         let documentContent = project.template.templateContent;
-        for (const section of response.sections) {
+        for (const section of data?.sections??[]) {
             documentContent = documentContent.replace(
                 `{${section.id}}`, 
                 section.content
@@ -129,13 +138,13 @@ export class CreatePlanExecutor implements StepExecutor {
         // Save the completed document as an artifact
         const artifact = await this.artifactManager.saveArtifact({
             id: this.taskManager.newProjectId(),
-            type: 'document',
+            type: ArtifactType.Document,
             content: documentContent,
             metadata: {
                 templateId: project.template.id,
                 completedAt: new Date().toISOString(),
                 title: project.template.name,
-                sections: response.sections.map(s => ({
+                sections: data?.sections.map(s => ({
                     id: s.id,
                     status: 'complete'
                 }))
@@ -147,8 +156,10 @@ export class CreatePlanExecutor implements StepExecutor {
             finished: true,
             artifactIds: [artifact.id],
             response: {
-                message: `Document created successfully using template: ${project.template.name}`,
-                documentContent
+                message,
+                data: {
+                    documentContent
+                }
             }
         };
     }

@@ -5,7 +5,7 @@ import { GenerateArtifactExecutor } from './GenerateArtifactExecutor';
 import { JSONSchema } from 'openai/lib/jsonschema';
 import { ArtifactType } from 'src/tools/artifact';
 
-@StepExecutorDecorator(ExecutorType.GENERATE_DOCUMENT, 'Create/revise Markdown documents')
+@StepExecutorDecorator(ExecutorType.GENERATE_DOCUMENT, 'Create/revise Markdown a single document.')
 export class GenerateDocumentExecutor extends GenerateArtifactExecutor {
     protected addContentFormattingRules(prompt: PromptBuilder) {
         prompt.addInstruction(`DOCUMENT FORMATTING RULES:

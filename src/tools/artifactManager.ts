@@ -9,6 +9,7 @@ import { AsyncQueue } from '../helpers/asyncQueue';
 import { asUUID, createUUID, UUID } from 'src/types/uuid';
 import * as pdf from 'pdf-parse';
 import { asError, isError } from 'src/types/types';
+import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 
 // Get appropriate file extension and type based on MIME type
 const getFileInfo = (mimeType?: string): { extension: string, type: string } => {
@@ -72,6 +73,7 @@ export class ArtifactManager {
     this.artifactMetadataFile = path.join(this.storageDir, 'artifact.json');
     this.vectorDb = vectorDb;
     this.fileQueue = new AsyncQueue();
+    this.llmService = llmService;
 
     // Ensure the .output directory exists
     this.fileQueue.enqueue(() =>
@@ -172,29 +174,27 @@ export class ArtifactManager {
       mimeType: artifact.metadata?.mimeType
     };
 
-    // Save updated metadata
-    await this.saveArtifactMetadata(metadata);
-
-    await this.indexArtifact(artifact);
-    
     // Generate and store summary if LLM service is available
     if (this.llmService) {
       try {
         const summary = await this.generateArtifactSummary(artifact);
         if (summary) {
           // Update metadata with summary
-          let metadata = await this.loadArtifactMetadata();
           metadata[artifact.id] = {
             ...metadata[artifact.id],
             summary
           };
-          await this.saveArtifactMetadata(metadata);
         }
       } catch (error) {
         Logger.error('Error generating artifact summary:', error);
       }
     }
+    
+    // Save updated metadata
+    await this.saveArtifactMetadata(metadata);
 
+    await this.indexArtifact(artifact);
+    
     return artifact;
   }
 
@@ -346,7 +346,7 @@ export class ArtifactManager {
       const content = artifact.content.toString();
       const prompt = `Please generate a concise 2-3 sentence summary of the following content. Focus on the key points and main ideas:\n\n${content.substring(0, 8000)}`; // Limit to first 8000 chars
 
-      const response = await this.llmService.sendLLMRequest({
+      const response = await this.llmService.sendLLMRequest<ModelMessageResponse>({
         messages: [{ role: 'user', content: prompt }],
         opts: {
           temperature: 0.2,
@@ -354,7 +354,7 @@ export class ArtifactManager {
         }
       });
 
-      return response.choices[0].message.content.trim();
+      return response.response.message;
     } catch (error) {
       Logger.error('Error generating summary:', error);
       return null;

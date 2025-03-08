@@ -94,12 +94,15 @@ export class UnderstandGoalsExecutor implements StepExecutor {
         prompt.addInstruction(`In this step of the process, you are reviewing if we have sufficient information to move forward on achieving the goal.
 If you would like to think about the problem to start, use <thinking> tags.
 
-Then, once you have decided if you want to more information from the user, respond with a message that
+${params.executionMode === 'conversation' ? `Then, once you have decided if you want to more information from the user, respond with a message that
 asks the user the necessary information. If you have enough information to achieve the goal,
-explain to the user that we'll continue.
+explain to the user that we'll continue.` : ""}
 
 In the the JSON attributes, you will generate a concise restatement of the user's goal that will be used by
-future steps in the agent workflow. You will also set a flag telling the workflow whether it should continue, or await answers from the user.
+future steps in the agent workflow. 
+
+${params.executionMode === 'conversation' ? `You will also set a flag telling the workflow whether it should continue, or await
+answers from the user.` : `You will also set a flag telling the workflow whether it should fail because it is not possible to continue.`}
 `)
         
         prompt.addContext({contentType: ContentType.INTENT, params});

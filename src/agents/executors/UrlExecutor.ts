@@ -50,7 +50,7 @@ export class UrlExecutor implements StepExecutor {
                 type: 'url_extraction',
                 replan: ReplanType.Allow,
                 response: {
-                    message: allUrls.length > 0 
+                    status: allUrls.length > 0 
                         ? "Found links:\n"+allUrls.map(a => " - " + a).join('\n')
                         : "I couldn't find any links.",
                     data: {

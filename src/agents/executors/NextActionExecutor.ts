@@ -124,13 +124,15 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
 - Review the user's message, and see if their goal has changed from the original intent. If so restate their new goal in the "revisedUserGoal" field.
 - Explain each step and why it would or would not make sense to be the next action.
 - Make sure you don't go into a loop, don't do the same action over and over again.
-- Determine the next Action Type from the AVAILABLE ACTION TYPES that the user would most benefit from.
+- If you have acheived the goal, set the Action Type to DONE.
+- If you need to continue working, determine the next Action Type from the AVAILABLE ACTION TYPES to continue to achieve the goal.
 - Consider the sequences for guidance on the order for steps to be successful. If you decide a sequence makes sense, use the 'sequence' field to share the ID.`);
 
         prompt.addContext({contentType: ContentType.FINAL_INSTRUCTIONS, instructions: this.modelHelpers.getFinalInstructions()||""});
 
         await prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema, "Before providing your action, please think out your choice out loud.");
 
+        await params.partialResponse("Planning...", true);
         const responseText = await this.modelHelpers.generate({
             message: params.message||params.stepGoal,
             instructions: prompt,
@@ -145,7 +147,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);
 
         // Create new task for the next action
-        if (response.nextAction) {
+        if (response.nextAction && response.nextAction !== "DONE") {
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
                 description: response.taskDescription || response.nextAction,
@@ -156,23 +158,31 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
                 }
             };
             await this.projects.addTask(project, newTask);
-        }
 
-        await params.partialResponse("Planning...");
-
-        return {
-            finished: true,
-            goal: response.revisedUserGoal,
-            response: {
-                type: StepResponseType.Plan,
-                reasoning: response.reasoning,
-                data: {
-                    steps: response.nextAction ? [{
-                        actionType: response.nextAction,
-                        context: response.taskDescription
-                    }] : []
+            return {
+                finished: true,
+                goal: response.revisedUserGoal,
+                response: {
+                    type: StepResponseType.Plan,
+                    reasoning: response.reasoning,
+                    data: {
+                        steps: response.nextAction ? [{
+                            actionType: response.nextAction,
+                            context: response.taskDescription
+                        }] : []
+                    }
                 }
-            }
-        };
+            };            
+        } else if (response.nextAction && response.nextAction === "DONE") {
+            return {
+                finished: true,
+                response: {
+                    type: StepResponseType.Plan,
+                    message: response.reasoning
+                }
+            };
+        } else {
+            throw new Error("Planner returned unexpected state");
+        }
     }
 }

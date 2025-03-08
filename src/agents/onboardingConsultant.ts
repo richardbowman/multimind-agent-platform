@@ -160,6 +160,7 @@ this.modelHelpers.setFinalInstructions(`Use the appropriate sequence based on us
         this.registerStepExecutor(new UnderstandGoalsExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new AnswerQuestionsExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new CreatePlanExecutor(this.getExecutorParams(), this));
+        this.registerStepExecutor(new ListTemplatesExecutor(this.getExecutorParams(), this));
         // this.registerStepExecutor(new ReviewProgressExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new CreateChannelExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new ListTemplatesExecutor(this.getExecutorParams(), this));

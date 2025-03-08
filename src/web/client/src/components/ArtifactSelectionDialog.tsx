@@ -16,7 +16,7 @@ import {
     Box
 } from '@mui/material';
 
-interface AssetSelectionDialogProps {
+interface ArtifactSelectionDialogProps {
     assets: Array<{
         id: string;
         metadata: {
@@ -30,7 +30,7 @@ interface AssetSelectionDialogProps {
     onClose: () => void;
 }
 
-export const AssetSelectionDialog: React.FC<AssetSelectionDialogProps> = ({ assets, onSelect, onClose }) => {
+export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = ({ assets, onSelect, onClose }) => {
     const [selectedAssets, setSelectedAssets] = useState<string[]>([]);
     const [searchTerm, setSearchTerm] = useState('');
     const [selectedTypes, setSelectedTypes] = useState<ArtifactType[]>([]);

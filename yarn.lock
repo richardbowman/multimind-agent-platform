@@ -3816,6 +3816,45 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@mui/x-internals@npm:7.26.0":
+  version: 7.26.0
+  resolution: "@mui/x-internals@npm:7.26.0"
+  dependencies:
+    "@babel/runtime": "npm:^7.25.7"
+    "@mui/utils": "npm:^5.16.6 || ^6.0.0"
+  peerDependencies:
+    react: ^17.0.0 || ^18.0.0 || ^19.0.0
+  checksum: 10c0/f2d05cbb346dae358d5f87aa13b8e77ca8286e43fb28b5e5f8eb422fb935cf30a732041961a8cc62028743dacc61cb888202f7561e9a9698c967fdb7717abebf
+  languageName: node
+  linkType: hard
+
+"@mui/x-tree-view@npm:^7.26.0":
+  version: 7.26.0
+  resolution: "@mui/x-tree-view@npm:7.26.0"
+  dependencies:
+    "@babel/runtime": "npm:^7.25.7"
+    "@mui/utils": "npm:^5.16.6 || ^6.0.0"
+    "@mui/x-internals": "npm:7.26.0"
+    "@types/react-transition-group": "npm:^4.4.11"
+    clsx: "npm:^2.1.1"
+    prop-types: "npm:^15.8.1"
+    react-transition-group: "npm:^4.4.5"
+  peerDependencies:
+    "@emotion/react": ^11.9.0
+    "@emotion/styled": ^11.8.1
+    "@mui/material": ^5.15.14 || ^6.0.0
+    "@mui/system": ^5.15.14 || ^6.0.0
+    react: ^17.0.0 || ^18.0.0 || ^19.0.0
+    react-dom: ^17.0.0 || ^18.0.0 || ^19.0.0
+  peerDependenciesMeta:
+    "@emotion/react":
+      optional: true
+    "@emotion/styled":
+      optional: true
+  checksum: 10c0/89ade12ff7cab3607ed60bc26aaf64fa041f1c4ffdccf41dcb4719336367ec47925a4e7c338ad4bb0c5e14ad72173cc25b7fc459a3138ce5914e3696fc36369e
+  languageName: node
+  linkType: hard
+
 "@noble/ciphers@npm:^1.0.0":
   version: 1.2.0
   resolution: "@noble/ciphers@npm:1.2.0"
@@ -6121,7 +6160,7 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/react-transition-group@npm:^4.4.12":
+"@types/react-transition-group@npm:^4.4.11, @types/react-transition-group@npm:^4.4.12":
   version: 4.4.12
   resolution: "@types/react-transition-group@npm:4.4.12"
   peerDependencies:
@@ -14996,6 +15035,7 @@ __metadata:
     "@mui/material": "npm:^6.4.2"
     "@mui/system": "npm:^6.4.2"
     "@mui/x-data-grid": "npm:^7.24.1"
+    "@mui/x-tree-view": "npm:^7.26.0"
     "@react-pdf/renderer": "npm:^4.1.6"
     "@types/babel__preset-env": "npm:^7"
     "@types/blessed": "npm:^0.1.25"

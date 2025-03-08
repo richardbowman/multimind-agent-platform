@@ -21,6 +21,7 @@ export interface ExecuteParams {
     readonly mode?: 'quick' | 'detailed';
     readonly executionMode: 'conversation' | 'task';
     readonly agents?: Agent[];
+    readonly self: Agent;
     readonly context?: {
         readonly channelId?: UUID;
         readonly threadId?: UUID;
@@ -28,5 +29,5 @@ export interface ExecuteParams {
         readonly projects?: Project[];
         readonly threadPosts?: ChatPost[];
     };
-    readonly partialResponse: (message: string) => Promise<void>;
+    readonly partialResponse: (message: string, newOnly?: boolean) => Promise<void>;
 }

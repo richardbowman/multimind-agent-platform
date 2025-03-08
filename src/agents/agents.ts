@@ -133,7 +133,7 @@ export abstract class Agent {
         });
 
         this.promptBuilder = new SystemPromptBuilder();
-        this.artifactManager = params.artifactManager || new ArtifactManager(this.vectorDBService);
+        this.artifactManager = params.artifactManager;
 
         if (this.projects) {
             this.projects.on("taskAssigned", async (task: Task) => {

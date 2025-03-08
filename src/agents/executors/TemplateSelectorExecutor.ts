@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { TemplateSelectionResponse } from '../../schemas/TemplateSelectionResponse';
@@ -10,7 +10,9 @@ import { ModelHelpers } from '../../llm/modelHelpers';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { OnboardingConsultant } from '../onboardingConsultant';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
+import { ModelMessageResponse } from 'src/schemas/ModelResponse';
+import { StringUtils } from 'src/utils/StringUtils';
 
 /**
  * Executor that selects the most appropriate document template based on user goals and requirements.
@@ -21,7 +23,7 @@ import { ContentType } from 'src/llm/promptBuilder';
  * - Suggests modifications if needed
  */
 @StepExecutorDecorator(ExecutorType.SELECT_TEMPLATE, 'Select appropriate document template based on user goals', true)
-export class TemplateSelectorExecutor implements StepExecutor {
+export class TemplateSelectorExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private onboardingConsultant: OnboardingConsultant;
 
@@ -54,24 +56,32 @@ export class TemplateSelectorExecutor implements StepExecutor {
             - The user's business context
             - Any specific requirements mentioned
 
-            Provide:
-            1. selectedTemplateId: The ID of the most appropriate template
-            2. reasoning: Explanation of why this template was chosen
-            3. suggestedModifications: Any suggested changes to better fit the user's needs
+            Provide in the JSON block:
+            - selectedTemplateId: The ID of the most appropriate template
+            
+            Also provide in your response message:
+            - Reasoning: Explanation of why this template was chosen
+            - Suggested Modifications: Any suggested changes to better fit the user's needs
             `);
-         const modelResponse = await this.modelHelpers.generate<TemplateSelectionResponse>({
+        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
+
+
+        const modelResponse = await this.modelHelpers.generate<ModelMessageResponse>({
             message: params.stepGoal || params.message,
-            instructions: new StructuredOutputPrompt(schema, prompt)
+            instructions: prompt
         });
+        const data = StringUtils.extractAndParseJsonBlock<TemplateSelectionResponse>(modelResponse.message, schema);
+
+
+        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE);
 
         return {
             type: 'template_selection',
             finished: true,
             replan: ReplanType.Allow,
             response: {
-                reasoning: modelResponse.reasoning,
-                templateId: modelResponse.selectedTemplateId,
-                suggestedModifications: modelResponse.suggestedModifications
+                reasoning: modelResponse.message,
+                data
             }
         };
     }

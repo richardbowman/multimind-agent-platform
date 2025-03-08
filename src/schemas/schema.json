@@ -1998,29 +1998,13 @@
     "TemplateSelectionResponse": {
       "additionalProperties": false,
       "properties": {
-        "notes": {
-          "description": "Any additional notes about the selection",
-          "type": "string"
-        },
-        "reasoning": {
-          "description": "Explanation of why this template was chosen",
-          "type": "string"
-        },
         "selectedTemplateId": {
           "description": "The ID of the selected template",
           "type": "string"
-        },
-        "suggestedModifications": {
-          "description": "Suggested modifications to the template",
-          "items": {
-            "type": "string"
-          },
-          "type": "array"
         }
       },
       "required": [
-        "selectedTemplateId",
-        "reasoning"
+        "selectedTemplateId"
       ],
       "type": "object"
     },

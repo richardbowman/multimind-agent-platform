@@ -7,13 +7,15 @@ import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResult } from '../interfaces/StepResult';
 import { TaskManager } from 'src/tools/taskManager';
 import { TaskStatus } from 'src/schemas/TaskStatus';
 import { ChatClient } from 'src/chat/chatClient';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { GoalProgressResponse } from 'src/schemas/goalProgress';
 import Logger from 'src/helpers/logger';
+import { StringUtils } from 'src/utils/StringUtils';
+import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 
 /**
  * Executor that analyzes thread progress against channel goals.
@@ -25,7 +27,7 @@ import Logger from 'src/helpers/logger';
  * - Provides structured feedback on goal progress
  */
 @StepExecutorDecorator(ExecutorType.GOAL_PROGRESS, 'Analyze thread progress against channel goals.')
-export class GoalProgressExecutor implements StepExecutor {
+export class GoalProgressExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private chatClient: ChatClient;
@@ -62,16 +64,20 @@ export class GoalProgressExecutor implements StepExecutor {
             promptBuilder.addContext({contentType: ContentType.CHANNEL_GOALS, tasks: params.channelGoals});
         }
 
+        promptBuilder.addOutputInstructions(OutputType.JSON_WITH_MESSAGE);
+
         // Build and execute prompt
-        const prompt = promptBuilder.build();
-        const result = await this.modelHelpers.generate<GoalProgressResponse>({
+        const rawResult = await this.modelHelpers.generate<ModelMessageResponse>({
             message: goal,
-            instructions: new StructuredOutputPrompt(schema, prompt),
+            instructions: promptBuilder,
             threadPosts: context?.threadPosts || []
         });
 
+        const result = StringUtils.extractAndParseJsonBlock<GoalProgressResponse>(rawResult.message, schema);
+        const message = StringUtils.extractNonCodeContent(rawResult.message);
+
         // Update task statuses based on the analysis
-        if (result.goalsInProgress?.length) {
+        if (result?.goalsInProgress?.length) {
             await Promise.all(result.goalsInProgress.map(async goalId => {
                 try {
                     const task = this.taskManager.getTaskById(goalId);
@@ -91,7 +97,7 @@ export class GoalProgressExecutor implements StepExecutor {
             }));
         }
 
-        if (result.goalsCompleted?.length) {
+        if (result?.goalsCompleted?.length) {
             await Promise.all(result.goalsCompleted.map(async goalId => {
                 try {
                     const task = this.taskManager.getTaskById(goalId);
@@ -119,13 +125,13 @@ export class GoalProgressExecutor implements StepExecutor {
             finished: true,
             needsUserInput: false,
             replan: ReplanType.Allow,
-            goal: result.summary,
+            goal: result?.summary,
             response: {
-                message: result.summary,
+                message,
                 data: {
-                    goalsUpdated: result.goalsUpdated,
-                    goalsInProgress: result.goalsInProgress,
-                    goalsCompleted: result.goalsCompleted
+                    goalsUpdated: result?.goalsUpdated,
+                    goalsInProgress: result?.goalsInProgress,
+                    goalsCompleted: result?.goalsCompleted
                 }
             }
         };

@@ -299,7 +299,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         prompt.addContext({ contentType: ContentType.EXECUTE_PARAMS, params });
 
         const schema = await getGeneratedSchema(SchemaType.WebScrapeSummaryResponse);
-        prompt.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, schema, "The summary should be provided in the Markdown block.");
+        prompt.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, schema, "the webpage summary");
 
         const userPrompt = "Web Search Result:" + `Page Title: ${title}\nURL: ${url}\n\n${content}`;
 

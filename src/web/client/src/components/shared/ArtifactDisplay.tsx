@@ -298,7 +298,7 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
                     type={artifact.type}
                     metadata={artifact.metadata}
                 />
-            </div>
+            </Box>
         </Box>
     );
 };

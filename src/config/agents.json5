@@ -145,7 +145,10 @@
               "className": "KnowledgeCheckExecutor"
             },
             {
-              "className": "FinalResponseExecutor"
+              "className": "GenerateDocumentExecutor"
+            },
+            {
+              "className": "GenerateSpreadsheetExecutor"
             }
           ],
           "stepSequences": [
@@ -190,8 +193,8 @@
                   "description": "Scrape selected child links"
                 },
                 {
-                  "executor": "final-response",
-                  "description": "Summarize and format results, can be used to reformat"
+                  "executor": "generate-document",
+                  "description": "Create a document of the relevant information from the webpage."
                 }
               ]
             },
@@ -213,8 +216,8 @@
                   "description": "Download selected child links"
                 },
                 {
-                  "executor": "final-response",
-                  "description": "Summarize and format results, can be used to reformat"
+                  "executor": "generate-spreadsheet",
+                  "description": "Create a spreadsheet including the URL and your findings from each relevant search result."
                 }
               ]
             },
@@ -236,15 +239,15 @@
                   "description": "Download the pages of the selected links"
                 },
                 {
-                  "executor": "final-response",
-                  "description": "Summarize your findings"
+                  "executor": "generate-spreadsheet",
+                  "description": "Create a spreadsheet including the URL and your findings from each relevant search result."
                 }
               ]
             },
             {
               "id": "FOLLOW-UP",
               "name": "Follow Up",
-              "description": "For follow-up requests, process deeper.",
+              "description": "When the user requests additional research.",
               "steps": [
                 {
                   "executor": "artifact-selector",
@@ -259,8 +262,8 @@
                   "description": "Download the pages of the selected links"
                 },
                 {
-                  "executor": "final-response",
-                  "description": "Provide final response"
+                  "executor": "generate-spreadsheet",
+                  "description": "Update any past spreadsheet of search results with additional relevant results."
                 }
               ]
             }
@@ -523,18 +526,29 @@
               ]
             },
             {
-              "id": "PROTOTYPE",
-              "name": "Product Prototype",
-              "description": "Develop product prototype using provided user stories",
+              "id": "process-all-user-stories",
+              "name": "Detailed Specifications",
+              "description": "Develop detailed product specifications from a high level spreadsheet of user stories.",
               "steps": [
                 {
                   "executor": "understand-goals",
-                  "description": "Make sure we have the attached user stories. If not, ask the user to attach them."
+                  "description": "Confirm the attachments include a user story spreadsheet. If not, ask the user to attach user stories. If they have a list in another format, use 'generate-spreadsheet' to create one."
                 },
                 {
-                  "executor": "generate-diagram",
+                  "executor": "csv-processor",
                   "description": "Develop sequence diagrams to better explain the flow for each user story."
                 },
+                {
+                  "executor": "csv-processor",
+                  "description": "Develop PRD document to document requirements for development."
+                }
+              ]
+            },
+            {
+              "id": "detailed-specification",
+              "name": "Detailed Specification for a Single User Story",
+              "description": "Develop detailed product specification for a single user story.",
+              "steps": [
                 {
                   "executor": "generate-document",
                   "description": "Develop PRD document to document requirements for development."

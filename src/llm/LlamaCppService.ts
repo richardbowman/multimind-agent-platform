@@ -120,7 +120,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
         const modelPath = path.join(repoDir, modelName);
 
         try {
-            await fs.access(modelPath);
+            await fs.access(path.join(modelPath, "model.json"));
             Logger.info(`Model already exists at ${modelPath}`);
             return modelPath;
         } catch {
@@ -136,6 +136,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
             });
 
             return new Promise((resolve, reject) => {
+                let lastProgress = 0;
                 worker.on('message', (message) => {
                     if (message.type === 'progressMsg') {
                         Logger.progress(message.message);
@@ -145,7 +146,11 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                         const currentKB = Math.floor(downloadedSize / 1024);
                         const percent = totalSize > 0 ? (downloadedSize / totalSize) : 0;
                         const percentFormatted = percent > 0 ? ` (${(percent * 100).toFixed(1)}%)` : "";
-                        Logger.progress(`Downloading ${currentKB}/${totalKB} KB${percentFormatted} of ${modelName}`, percent);
+                        
+                        if (percent > lastProgress + 0.001) {
+                            Logger.progress(`Downloading ${currentKB}/${totalKB} KB${percentFormatted} of ${modelName}`, percent);
+                            lastProgress = percent;
+                        }
                     } else if (message.type === 'complete') {
                         resolve(message.entrypointFilePath);
                         worker.terminate();

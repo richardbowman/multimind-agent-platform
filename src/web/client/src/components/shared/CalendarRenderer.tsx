@@ -4,7 +4,7 @@ import moment from 'moment';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import { Box } from '@mui/material';
 import { CalendarEvent } from '../../../../../tools/artifact';
-import { NavigateBeforeIcon, NavigateNextIcon } from '@mui/icons-material';
+import { NavigateBefore, NavigateNext } from '@mui/icons-material';
 import { useToolbarActions } from '../../contexts/ToolbarActionsContext';
 
 interface CalendarRendererProps {
@@ -65,13 +65,13 @@ export const CalendarRenderer: React.FC<CalendarRendererProps> = ({ events }) =>
         const calendarActions = [
             {
                 id: 'calendar-prev',
-                icon: <NavigateBeforeIcon />,
+                icon: <NavigateBefore />,
                 label: 'Previous',
                 onClick: handlePrevious
             },
             {
                 id: 'calendar-next',
-                icon: <NavigateNextIcon />,
+                icon: <NavigateNext />,
                 label: 'Next',
                 onClick: handleNext
             },

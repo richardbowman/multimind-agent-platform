@@ -15,6 +15,7 @@ import { TaskEventType } from "./agents";
 import { StepTask } from "./interfaces/ExecuteStepParams";
 import { StepResultType } from "./interfaces/StepResult";
 import { ExecutorType } from "./interfaces/ExecutorType";
+import { CSVProcessingExecutor } from "./executors/CSVProcessingExecutor";
 
 
 export class ResearchManager extends StepBasedAgent {
@@ -28,12 +29,16 @@ Break down Internet research requests into specific tasks and aggregate findings
 For incoming new user requests, you should typically follow this order:
 Step 1. 'understand-research-goals' to ensure clarity of request
 Step 2. 'decompose-research' step to break down the request
-Step 3. 'aggregate-research' to compile findings`);
+Step 3. 'aggregate-research' to compile findings.
+
+
+If an incoming request contains a spreadsheet, use the csv-processing to process each row`);
     
         // Register research-specific executors
         this.registerStepExecutor(new ResearchGoalsExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new ResearchDecompositionExecutor(this.getExecutorParams()));
         this.registerStepExecutor(new ResearchAggregationExecutor(this.getExecutorParams()));
+        this.registerStepExecutor(new CSVProcessingExecutor(this.getExecutorParams()));
     }
 
     protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {

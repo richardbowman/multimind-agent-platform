@@ -1,11 +1,15 @@
 import { Task, Project } from 'src/tools/taskManager';
 import { ExecuteParams } from './ExecuteParams';
 import { StepResponse, StepResult } from './StepResult';
+import { TaskEventType } from '../agents';
+import { ChatPost } from 'src/chat/chatClient';
 
 
 export interface TaskNotification {
     task: Task;
+    childTask: Task;
     eventType: TaskEventType;
+    statusPost?: ChatPost;
 }
 
 export interface StepExecutor<R extends StepResponse> {

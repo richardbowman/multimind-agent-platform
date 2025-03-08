@@ -321,7 +321,7 @@ ${this.modelHelpers.getFinalInstructions()}
         }).join('\n\n');
     }
 
-    private renderArtifactTitles({artifacts}: ArtifactsTitlesContent, offset: number = 0): string {
+    private renderArtifactTitles({artifacts}: ArtifactsTitlesContent, offset: number = 1): string {
         if (!artifacts || artifacts.length === 0) return '';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
             let metadataInfo = '';

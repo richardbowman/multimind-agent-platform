@@ -73,6 +73,8 @@ export class GenerateSlidesExecutor implements StepExecutor<StepResponse> {
         promptBuilder.addInstruction("You are a presentation creation assistant.");
         promptBuilder.addInstruction("Generate a slide deck based on the provided content.");
         promptBuilder.addInstruction(`
+            Each slide should be placed in a separate complete \`\`\`markdown code block.
+
             Follow these formatting rules for each slide:
             1. Each slide must start with a level 2 heading (##) for the title
             2. Slide content should be in markdown format
@@ -86,18 +88,15 @@ export class GenerateSlidesExecutor implements StepExecutor<StepResponse> {
         `);
         promptBuilder.addInstruction(`
             Example slide format:
+
+            \`\`\`markdown
             ## Slide Title
             - Main point 1
             - Main point 2
             ### Subsection
             - Supporting detail
-            \`\`\`python
-            # Code example
-            def example():
-                print("Hello World")
             \`\`\`
         `);
-        promptBuilder.addInstruction("Use appropriate slide layouts and transitions.");
 
         // Add context from previous steps if available
         if (params.previousResponses) {
@@ -119,9 +118,9 @@ export class GenerateSlidesExecutor implements StepExecutor<StepResponse> {
         });
         
         // Extract the slide content from the response
-        const markdownSections = StringUtils.extractMarkdownSections(rawResponse.message);
+        const markdownSections = StringUtils.extractCodeBlocks(rawResponse.message, "markdown");
         const slides = markdownSections.map((content, index) => {
-            const lines = content.split('\n');
+            const lines = content.code.split('\n');
             const title = lines[0].replace(/^#+\s*/, '').trim();
             const slideContent = lines.slice(1).join('\n').trim();
             

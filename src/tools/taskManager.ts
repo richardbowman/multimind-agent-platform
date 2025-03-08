@@ -36,7 +36,7 @@ export interface AddTaskParams {
 }
 
 export interface TaskMetadata extends Readonly<Record<string, any>> {
-    readonly clientProjectId?: UUID;
+    readonly childProjectId?: UUID;
     readonly attachedArtifactIds?: UUID[];
     readonly dueDate?: Date;
     readonly announceChannelId?: UUID;

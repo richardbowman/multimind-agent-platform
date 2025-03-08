@@ -13,7 +13,7 @@ export interface AgentConstructorParams {
     chatClient: ChatClient;
     llmService: ILLMService;
     vectorDBService: IVectorDatabase;
-    artifactManager?: ArtifactManager
+    artifactManager: ArtifactManager;
     taskManager: TaskManager;
     userId: UUID;
     config?: AgentConfig;

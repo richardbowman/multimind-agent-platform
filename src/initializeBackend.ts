@@ -133,7 +133,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
         Logger.progress('Loading vector database', 0.3, "loading");
         const vectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
-        const artifactManager = new ArtifactManager(vectorDB);
+        const artifactManager = new ArtifactManager(vectorDB, chatService);
 
         await sleep();
 

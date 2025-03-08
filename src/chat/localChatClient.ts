@@ -9,7 +9,7 @@ import { createUUID, UUID } from "src/types/uuid";
 import { ChatHandle } from "src/types/chatHandle";
 
 export class InMemoryPost implements ChatPost {
-    static fromLoad(postData: any) : InMemoryPost {
+    static fromLoad(postData: any): InMemoryPost {
         const post = new InMemoryPost(
             postData.channel_id,
             postData.message,
@@ -61,7 +61,7 @@ export class InMemoryPost implements ChatPost {
 }
 
 export class LocalChatStorage extends EventEmitter {
-    
+
     channelNames: Record<UUID, string> = {};
     channelData: Record<UUID, ChannelData> = {};
     posts: ChatPost[] = [];
@@ -92,7 +92,7 @@ export class LocalChatStorage extends EventEmitter {
         return channelId;
     }
 
-    public async addPost(post: ChatPost) : Promise<void> {
+    public async addPost(post: ChatPost): Promise<void> {
         if (!isValidChatPost(post)) {
             Logger.error(`Invalid post ${JSON.stringify(post, null, 2)}`);
             return;
@@ -110,7 +110,7 @@ export class LocalChatStorage extends EventEmitter {
     // New method to map user IDs to handle names
     public mapUserIdToHandleName(userId: string, handleName: string) {
         // if (!this.userIdToHandleName[userId]) {
-            this.userIdToHandleName[userId] = handleName;
+        this.userIdToHandleName[userId] = handleName;
         // } else {
         //     throw new Error(`Duplicate handle registration ${handleName}`);
         // }
@@ -146,14 +146,14 @@ export class LocalChatStorage extends EventEmitter {
         return this.queue.enqueue(async () => {
             try {
                 const data = await fs.readFile(this.storagePath, 'utf8');
-                
+
                 // Validate JSON structure before parsing
                 if (!data.trim()) {
                     throw new Error('Empty file');
                 }
 
                 const parsedData = JSON.parse(data);
-                
+
                 // Validate basic structure
                 if (typeof parsedData !== 'object' || parsedData === null) {
                     throw new Error('Invalid data format');
@@ -163,11 +163,11 @@ export class LocalChatStorage extends EventEmitter {
                 if (parsedData.channelNames && typeof parsedData.channelNames === 'object') {
                     this.channelNames = parsedData.channelNames;
                 }
-                
+
                 if (parsedData.channelData && typeof parsedData.channelData === 'object') {
                     this.channelData = parsedData.channelData;
                 }
-                
+
                 if (Array.isArray(parsedData.posts)) {
                     this.posts = parsedData.posts.map((p: any) => {
                         try {
@@ -178,7 +178,7 @@ export class LocalChatStorage extends EventEmitter {
                         }
                     }).filter(Boolean);
                 }
-                
+
                 if (parsedData.userIdToHandleName && typeof parsedData.userIdToHandleName === 'object') {
                     this.userIdToHandleName = parsedData.userIdToHandleName;
                 }
@@ -199,7 +199,7 @@ export class LocalChatStorage extends EventEmitter {
                         Logger.error('Failed to backup corrupted file:', backupError);
                     }
                 }
-                
+
                 // Initialize fresh storage
                 this.channelNames = {};
                 this.channelData = {};
@@ -227,7 +227,7 @@ export class LocalChatStorage extends EventEmitter {
 export class LocalTestClient implements ChatClient {
     private webSocketUrl: string;
     private userId: UUID;
-    private callback: (data: ChatPost) => void = () => {};
+    private callback: (data: ChatPost) => void = () => { };
     storage: LocalChatStorage;
 
     constructor(userId: UUID, webSocketUrl: string, storage: LocalChatStorage) {
@@ -277,7 +277,7 @@ export class LocalTestClient implements ChatClient {
     async onAddedToChannel(callback: (channelId: any, params: CreateChannelParams) => void): Promise<void> {
         this.storage.on("addChannel", (newChannelId: string, params: CreateChannelParams) => {
             //if (params.members?.includes(this.userId)) {
-                callback(newChannelId, params);
+            callback(newChannelId, params);
             //}
         });
         return;
@@ -288,11 +288,11 @@ export class LocalTestClient implements ChatClient {
         if (!channelData) {
             throw new Error(`Channel ${channelId} not found`);
         }
-        
+
         if (!channelData.artifactIds) {
             channelData.artifactIds = [];
         }
-        
+
         if (!channelData.artifactIds?.includes(artifactId)) {
             channelData.artifactIds?.push(artifactId);
             await this.storage.save();
@@ -304,9 +304,9 @@ export class LocalTestClient implements ChatClient {
         if (!channelData) {
             throw new Error(`Channel ${channelId} not found`);
         }
-        
+
         if (channelData.artifactIds) {
-            channelData.artifactIds = 
+            channelData.artifactIds =
                 channelData.artifactIds?.filter(id => id !== artifactId);
             await this.storage.save();
         }
@@ -316,14 +316,14 @@ export class LocalTestClient implements ChatClient {
         if (!this.storage.channelNames[channelId]) {
             throw new Error(`Channel ${channelId} not found`);
         }
-        
+
         // Remove all posts in the channel
         this.storage.posts = this.storage.posts.filter(p => p.channel_id !== channelId);
-        
+
         // Remove channel metadata
         delete this.storage.channelNames[channelId];
         delete this.storage.channelData[channelId];
-        
+
         await this.storage.save();
     }
 
@@ -346,13 +346,13 @@ export class LocalTestClient implements ChatClient {
         const channelData = this.storage.channelData[channelId];
         const projectId = channelData?.projectId;
 
-        const artifactIds = channelData?.artifactIds;
-        
+        const artifactIds = [...channelData?.artifactIds ?? [], ...props?.artifactIds ?? []].filter(id => id !== undefined);
+
         // Merge any existing props with the project ID
         const postProps = {
             ...(props || {}),
             ...(projectId ? { 'project-ids': [projectId] } : {}),
-            ...(artifactIds?.length??0 > 0 ? {artifactIds} : {})
+            ...(artifactIds?.length ?? 0 > 0 ? { artifactIds } : {})
         };
 
         const post = new InMemoryPost(
@@ -394,9 +394,9 @@ export class LocalTestClient implements ChatClient {
     }
 
     public async postReply(rootId: string, channelId: string, message: string, props?: Record<string, any>): Promise<ChatPost> {
-        const replyProps = props||{};
+        const replyProps = props || {};
         replyProps['root-id'] = rootId;
-        
+
         const rootPost = this.getPosts().find(p => p.id === rootId);
         if (rootPost && !rootPost.getRootId()) {
             const replyPost = new InMemoryPost(
@@ -413,10 +413,10 @@ export class LocalTestClient implements ChatClient {
     }
 
     public replyThreaded(post: ChatPost, response: string, props?: Record<string, any>, attachments?: Attachment[]): Promise<ChatPost> {
-        const rootId = post.getRootId()||post.id;
-        const replyProps : Record<string, any>= props||{};
+        const rootId = post.getRootId() || post.id;
+        const replyProps: Record<string, any> = props || {};
         replyProps['root-id'] = rootId;
-        
+
         const rootPost = this.getPosts().find(p => p.id === rootId);
         if (rootPost && !rootPost.getRootId()) {
             const replyPost = new InMemoryPost(
@@ -432,7 +432,7 @@ export class LocalTestClient implements ChatClient {
             return Promise.resolve(replyPost);
         } else {
             throw new Error("Coudln't find post or post wasn't a root post to reply to.")
-        }    
+        }
     }
 
     public async updatePost(postId: UUID, newContent: string, newProps?: ConversationContext): Promise<ChatPost> {
@@ -440,18 +440,24 @@ export class LocalTestClient implements ChatClient {
         if (!post) {
             throw new Error(`Post ${postId} not found`);
         }
-        
+
         post.message = newContent;
         post.update_at = Date.now();
         if (newProps) {
             post.props = { ...post.props, ...newProps };
         }
-        
+
         await this.storage.save();
-        
+
         // Notify listeners of the update
-        this.storage.callbacks.forEach(c => c(post));
-        
+        this.storage.callbacks.forEach(c => {
+            try {
+                c(post)
+            } catch (e) {
+                Logger.error(`Error calling chat client callbacks.`, e);
+            }
+        });
+
         return post;
     }
 

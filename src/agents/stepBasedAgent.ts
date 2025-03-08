@@ -125,18 +125,16 @@ export abstract class StepBasedAgent extends Agent {
             t.type === TaskType.Step && 
             (t as StepTask<StepResponse>).props?.result?.async &&
             t.status === TaskStatus.InProgress
-        );
+        ) as Array<StepTask<StepResponse>>;
 
         // Notify all async steps about this task update
         for (const asyncStep of asyncSteps) {
             const executor = this.stepExecutors.get(asyncStep.props.stepType);
             if (executor && typeof executor.handleTaskNotification === 'function') {
                 await executor.handleTaskNotification({
-                    task: asyncStep as StepTask<StepResponse>,
-                    notification: {
-                        task,
-                        eventType
-                    }
+                    task: asyncStep,
+                    childTask: task,
+                    eventType
                 });
             }
         }
@@ -171,18 +169,21 @@ export abstract class StepBasedAgent extends Agent {
                 const posts : ChatPost[]|undefined = post && await this.chatClient.getThreadChain(post);
                 
                 if (posts) {
+                    // Handle non-CSV task updates
+                    const statusPost = posts.find(p => p.props?.partial);      
+
                     // Find the executor for the root task
-                    const executor = this.stepExecutors.get(parentTask.props.stepType);
+                    const executor = this.stepExecutors.get((parentTask as StepTask<StepResponse>).props.stepType);
                     if (executor && typeof executor.handleTaskNotification === 'function') {
                         await executor.handleTaskNotification({
                             task: parentTask,
-                            eventType: TaskEventType.Completed
+                            childTask: task,
+                            eventType,
+                            statusPost
                         });
                     } else {
-                        // Handle non-CSV task updates
-                        const partial = posts.find(p => p.props?.partial);
-                        if (partial) {
-                            await this.chatClient.updatePost(partial.id, task.description);
+                        if (statusPost) {
+                            await this.chatClient.updatePost(statusPost.id, task.description);
                         } else {
                             await this.reply(post, {message: task.description}, { 
                                 partial: true,
@@ -487,7 +488,7 @@ export abstract class StepBasedAgent extends Agent {
     }
 
     private getPartialPost(replyTo: ChatPost | undefined, params: ExecuteNextStepParams) {
-        const partialResponse = async (message) => {
+        const partialResponse = async (message, newOnly = false) => {
             if (replyTo) {
                 if (!params.partialPost) {
                     params.partialPost = await this.reply(replyTo, {
@@ -496,7 +497,8 @@ export abstract class StepBasedAgent extends Agent {
                         partial: true,
                         "project-ids": [params.projectId]
                     });
-                } else {
+                } else if (!newOnly) {
+                    // const post = await this.chatClient.getPost(params.partialPost.id);
                     params.partialPost = await this.chatClient.updatePost(params.partialPost.id, message);
                 }
             }
@@ -541,7 +543,7 @@ export abstract class StepBasedAgent extends Agent {
             } else {
                 agentsOptions = Object.values(this.settings.agents).filter(a => a.userId).map(id => {
                     return this.agents.agents[id.userId];
-                });
+                }).filter(a => a !== undefined);
             }
 
             const self = Object.values(this.agents.agents).find(a => a.userId === this.userId);
