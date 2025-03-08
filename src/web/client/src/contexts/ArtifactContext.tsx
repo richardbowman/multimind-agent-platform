@@ -35,7 +35,8 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
   const updateSpecificArtifacts = useCallback(async (artifactIds: UUID[]) => {
     if (ipcService.getRPC() && !needsConfig) {
       try {
-        const newArtifacts = await ipcService.getRPC().getArtifactsByIds(artifactIds);
+        const allArtifacts = await ipcService.getRPC().getArtifacts();
+        const newArtifacts = allArtifacts.filter(artifact => artifactIds.includes(artifact.id));
         setArtifacts(prev => {
           const updatedArtifacts = [...prev];
           for (const newArtifact of newArtifacts) {
