@@ -287,6 +287,30 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             : null;
         const originalGoal = parentTask?.description || '';
 
+        // Get CSV headers from the artifact
+        let csvHeaders: string[] = [];
+        const csvArtifactId = task.props?.csvArtifactId;
+        if (csvArtifactId) {
+            try {
+                const csvArtifact = await this.artifactManager.loadArtifact(csvArtifactId);
+                if (csvArtifact) {
+                    // Parse just the first row to get headers
+                    const firstRow = parse(csvArtifact.content.toString(), {
+                        columns: true,
+                        skip_empty_lines: true,
+                        trim: true,
+                        relax_quotes: true,
+                        relax_column_count: true,
+                        bom: true,
+                        to_line: 1
+                    })[0];
+                    csvHeaders = Object.keys(firstRow || {});
+                }
+            } catch (error) {
+                Logger.error('Error reading CSV headers:', error);
+            }
+        }
+
         // Create schema for result extraction
         const schema: JSONSchema = {
             type: 'object',
@@ -311,8 +335,11 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         prompt.addInstruction(`Analyze the completed tasks and extract key insights that should be added as new columns in the CSV file.
             The original goal for this project was: ${originalGoal}
             
+            The CSV file currently has these columns: ${csvHeaders.join(', ')}
+            
             For each task, identify the most relevant data points that should be preserved in the spreadsheet.
             Pay special attention to any specific columns or data types mentioned in the original goal.
+            Consider how the new columns will relate to the existing ones.
             
             'columns' key: Return an array of key value pairs to add as new columns
             
