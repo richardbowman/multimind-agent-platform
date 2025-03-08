@@ -509,9 +509,11 @@ export abstract class StepBasedAgent extends Agent {
     protected async executeStep(params: ExecuteStepParams<StepResponse>): Promise<void> {
         const { projectId, task, userPost, context } = params;
         try {
-            const executor = this.stepExecutors.get(task.props.stepType);
+            // Handle step types that may be wrapped in square brackets
+            const stepType = task.props.stepType.replace(/^\[|\]$/g, '');
+            const executor = this.stepExecutors.get(stepType);
             if (!executor) {
-                throw new Error(`No executor found for step type: ${task.props.stepType}`);
+                throw new Error(`No executor found for step type: ${stepType}`);
             }
 
             Logger.info(`Executing step "${task.props.stepType}" for project "${projectId}"`);
