@@ -267,12 +267,19 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             }
         }
 
-        // Write updated CSV
+        // Write to new CSV artifact
         const output = stringify(rows, { header: true });
-        this.artifactManager.saveArtifact({
+        const newArtifact = {
             ...artifact,
+            id: createUUID(),
+            metadata: {
+                ...artifact.metadata,
+                title: `${artifact.metadata?.title || 'processed'} - Processed ${new Date().toISOString().split('T')[0]}`,
+                originalArtifactId: artifact.id
+            },
             content: output
-        });
+        };
+        await this.artifactManager.saveArtifact(newArtifact);
     }
 
     private async processTaskResult(task: Task): Promise<any[]> {
@@ -455,7 +462,8 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             // Update the progress message with CSV in code block
             const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
                 `Completed ${rows.filter(r => r.Status === TaskStatus.Completed).length} of ${rows.length} rows\n\n` +
-                `Current status:\n\`\`\`csv\n${statusUpdate}\n\`\`\``;
+                `Current status preview:\n\`\`\`csv\n${statusUpdate}\n\`\`\`\n` +
+                `A new processed CSV will be created when all rows are complete.`;
 
             // If we have a partial post ID, update the progress message
             await this.chatClient.updatePost(statusPost.id, progressMessage, {
