@@ -380,25 +380,23 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         const { task, childTask, eventType, statusPost } = notification;
         const artifactId = (task as StepTask<StepResponse>).props.result?.response.data?.csvArtifactId;
 
+        // Load the CSV artifact once
+        const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
+        if (!csvArtifact) {
+            Logger.error(`CSV artifact ${artifactId} not found`);
+            return;
+        }
+
         // Process results when a task completes
         if (eventType === TaskEventType.Completed && childTask) {
             const results = await this.processTaskResult(childTask);
             if (results.length > 0) {
-                const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
-                if (csvArtifact) {
-                    await this.updateCSVWithResults(csvArtifact, results);
-                }
+                await this.updateCSVWithResults(csvArtifact, results);
             }
         }
 
 
         if (artifactId && statusPost && task.props?.childProjectId) {            
-            // Load the CSV artifact from parent task
-            const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
-            if (!csvArtifact) {
-                Logger.error(`CSV artifact ${artifactId} not found`);
-                return;
-            }
 
             // Parse the CSV
             const rows: any[] = [];
