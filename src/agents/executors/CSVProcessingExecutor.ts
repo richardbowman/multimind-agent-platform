@@ -174,6 +174,9 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 }
             });
 
+            // Initialize processed CSV
+            await this.initializeProcessedCSV(csvArtifact);
+
             // Create and assign tasks for each row
             const taskDetails: string[] = [];
             
@@ -234,14 +237,41 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         }
     }
 
-    async updateCSVWithResults(artifact: Artifact, results: any[]): Promise<void> {
-        if (artifact.type !== ArtifactType.Spreadsheet) {
-            throw new Error('Can only update spreadsheet artifacts');
+    private processedArtifact: Artifact | null = null;
+
+    async initializeProcessedCSV(originalArtifact: Artifact): Promise<void> {
+        if (originalArtifact.type !== ArtifactType.Spreadsheet) {
+            throw new Error('Can only process spreadsheet artifacts');
         }
 
-        // Read existing CSV
+        // Create initial processed artifact
+        this.processedArtifact = {
+            ...originalArtifact,
+            id: createUUID(),
+            metadata: {
+                ...originalArtifact.metadata,
+                title: `${originalArtifact.metadata?.title || 'processed'} - Processing ${new Date().toISOString().split('T')[0]}`,
+                originalArtifactId: originalArtifact.id,
+                processingStartedAt: new Date().toISOString()
+            },
+            content: originalArtifact.content // Start with original content
+        };
+
+        await this.artifactManager.saveArtifact(this.processedArtifact);
+    }
+
+    async updateCSVWithResults(originalArtifact: Artifact, results: any[]): Promise<void> {
+        if (!this.processedArtifact) {
+            await this.initializeProcessedCSV(originalArtifact);
+        }
+
+        if (!this.processedArtifact) {
+            throw new Error('Processed CSV artifact not initialized');
+        }
+
+        // Read current processed CSV
         const rows: any[] = [];
-        const parser = parse(artifact.content.toString(), {
+        const parser = parse(this.processedArtifact.content.toString(), {
             columns: true,
             skip_empty_lines: true,
             trim: true,
@@ -267,19 +297,18 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             }
         }
 
-        // Write to new CSV artifact
+        // Update the processed artifact
         const output = stringify(rows, { header: true });
-        const newArtifact = {
-            ...artifact,
-            id: createUUID(),
+        this.processedArtifact = {
+            ...this.processedArtifact,
+            content: output,
             metadata: {
-                ...artifact.metadata,
-                title: `${artifact.metadata?.title || 'processed'} - Processed ${new Date().toISOString().split('T')[0]}`,
-                originalArtifactId: artifact.id
-            },
-            content: output
+                ...this.processedArtifact.metadata,
+                lastUpdatedAt: new Date().toISOString()
+            }
         };
-        await this.artifactManager.saveArtifact(newArtifact);
+
+        await this.artifactManager.saveArtifact(this.processedArtifact);
     }
 
     private async processTaskResult(task: Task): Promise<any[]> {
