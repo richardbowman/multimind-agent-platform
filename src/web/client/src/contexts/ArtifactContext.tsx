@@ -34,24 +34,29 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
 
   const updateSpecificArtifacts = useCallback(async (artifactIds: UUID[]) => {
     if (ipcService.getRPC() && !needsConfig) {
-      const newArtifacts = await ipcService.getRPC().getArtifactsByIds(artifactIds);
-      setArtifacts(prev => {
-        const updatedArtifacts = [...prev];
-        for (const newArtifact of newArtifacts) {
-          const existingIndex = updatedArtifacts.findIndex(a => a.id === newArtifact.id);
-          if (existingIndex >= 0) {
-            // Only update if version is newer
-            if (newArtifact.version > updatedArtifacts[existingIndex].version) {
-              updatedArtifacts[existingIndex] = newArtifact;
+      try {
+        const newArtifacts = await ipcService.getRPC().getArtifactsByIds(artifactIds);
+        setArtifacts(prev => {
+          const updatedArtifacts = [...prev];
+          for (const newArtifact of newArtifacts) {
+            const existingIndex = updatedArtifacts.findIndex(a => a.id === newArtifact.id);
+            if (existingIndex >= 0) {
+              // Only update if version is newer
+              if (newArtifact.version > updatedArtifacts[existingIndex].version) {
+                updatedArtifacts[existingIndex] = newArtifact;
+              }
+            } else {
+              updatedArtifacts.push(newArtifact);
             }
-          } else {
-            updatedArtifacts.push(newArtifact);
           }
-        }
-        return updatedArtifacts;
-      });
+          return updatedArtifacts;
+        });
+      } catch (error) {
+        console.error('Failed to update specific artifacts:', error);
+        // Optionally set some error state here if needed
+      }
     }
-  }, [ipcService]);
+  }, [ipcService, needsConfig]);
 
   useEffect(() => {
     fetchAllArtifacts();
