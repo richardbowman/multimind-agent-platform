@@ -189,7 +189,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
                 await this.taskManager.addTask(project, {
                     id: taskId,
-                    description: `This task has been initiated from a csv-processor step. Your goal is to process a single row of the spreadsheet that is provided in DATA. Processing Context: ${taskDescription} DATAp: ${taskData}`,
+                    description: `This task has been initiated from a csv-processor step. Your goal is to process a single row of the spreadsheet that is provided in DATA. Processing Context: ${taskDescription} DATA: ${taskData}`,
                     creator: params.agentId,
                     type: TaskType.Standard,
                     props: {
@@ -319,10 +319,10 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             To add a link to a created artifact, use a Markdown link with the link format of [Title](artifactId:XXXX-XXXX)
 
             `);
-        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE);
+        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
 
         // Get the task's response data
-        const responseData = task.props?.result?.response?.data || {};
+        const responseData = task.props?.result || {};
         
         const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
             message: `Task Description: ${task.description}\n\nTask Response Data: ${JSON.stringify(responseData, null, 2)}`,
