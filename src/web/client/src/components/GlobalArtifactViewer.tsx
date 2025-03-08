@@ -36,6 +36,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [filterText, setFilterText] = useState('');
     const [selectedProject, setSelectedProject] = useState<string>('all');
+    const [expandedItems, setExpandedItems] = useState<string[]>([]);
     const [availableProjects, setAvailableProjects] = useState<string[]>([]);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
     const [editorOpen, setEditorOpen] = useState(false);
@@ -154,6 +155,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 return acc;
             }, {} as Record<string, Artifact[]>);
             setArtifactFolders(folders);
+            // Set initial expanded state to all folder types
+            setExpandedItems(Object.keys(folders));
         }
     }, [allArtifacts]);
 
@@ -353,7 +356,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 );
                             }
                         }}
-                        defaultExpandedItems={Object.keys(artifactFolders)}
+                        expandedItems={expandedItems}
+                        onExpandedItemsChange={(event, newExpandedItems) => setExpandedItems(newExpandedItems)}
                         sx={{
                             '& .MuiTreeItem-content': {
                                 padding: '4px 8px',
