@@ -130,7 +130,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
 
         prompt.addContext({contentType: ContentType.FINAL_INSTRUCTIONS, instructions: this.modelHelpers.getFinalInstructions()||""});
 
-        await prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema, "Before providing your action, please think out your choice out loud.");
+        await prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema);
 
         await params.partialResponse("Planning...", true);
         const responseText = await this.modelHelpers.generate({
