@@ -321,8 +321,11 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             `);
         prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE);
 
+        // Get the task's response data
+        const responseData = task.props?.result?.response?.data || {};
+        
         const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
-            message: task.description,
+            message: `Task Description: ${task.description}\n\nTask Response Data: ${JSON.stringify(responseData, null, 2)}`,
             instructions: prompt
         });
 
