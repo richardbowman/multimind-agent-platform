@@ -141,10 +141,24 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         if (messagesContainerRef.current) {
             const { scrollTop, scrollHeight, clientHeight } = messagesContainerRef.current;
             const newIsAtBottom = scrollHeight - (scrollTop + clientHeight) < 200;
-            // console.debug('Setting isAtBottom:', newIsAtBottom, isAtBottom);
-            setIsAtBottom(newIsAtBottom);
+            return newIsAtBottom;
         }
+        return true;
     }, []);
+
+    useEffect(() => {
+        const container = messagesContainerRef.current;
+        if (container) {
+            const scrollHandler = () => {
+                const newIsAtBottom = checkScrollPosition();
+                setIsAtBottom(newIsAtBottom);
+            };
+            container.addEventListener('scroll', scrollHandler);
+            return () => {
+                container.removeEventListener('scroll', scrollHandler);
+            };
+        }
+    }, [checkScrollPosition]);
 
     const scrollToBottom = useCallback(() => {
         if (isAtBottom && messagesEndRef.current) {
@@ -173,21 +187,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
         }
     }, [currentChannelId, channels, fetchProject]);
 
-    // Handle scrolling
-    useEffect(() => {
-        const container = messagesContainerRef.current;
-        if (container) {
-            const scrollHandler = () => {
-                // console.debug('Scroll event detected');
-                requestAnimationFrame(checkScrollPosition);
-            };
-            container.addEventListener('scroll', scrollHandler);
-            return () => {
-                // console.debug('Removing scroll listener');
-                container.removeEventListener('scroll', scrollHandler);
-            };
-        }
-    }, [checkScrollPosition]);
 
     // Scroll to bottom when new messages come in for current thread/channel
     useEffect(() => {
