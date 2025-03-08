@@ -269,18 +269,10 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
         // Write updated CSV
         const output = stringify(rows, { header: true });
-        fs.writeFileSync(artifact.metadata?.filePath, output);
-
-        // Update artifact metadata
-        const newColumns = Object.keys(results[0]?.data || {});
-        if (newColumns.length > 0) {
-            artifact.metadata = artifact.metadata || {};
-            artifact.metadata.processedColumns = [
-                ...(artifact.metadata.processedColumns || []),
-                ...newColumns
-            ];
-            await this.artifactManager.saveArtifact(artifact);
-        }
+        this.artifactManager.saveArtifact({
+            ...artifact,
+            content: output
+        });
     }
 
     private async processTaskResult(task: Task): Promise<any[]> {
@@ -299,17 +291,18 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         const schema: JSONSchema = {
             type: 'object',
             properties: {
-                rowIndex: { type: 'number' },
-                keyInsights: { 
+                columns: { 
                     type: 'array',
                     items: {
                         type: 'object',
                         properties: {
-                            columnName: { type: 'string' },
-                            value: { type: 'string' }
-                        }
+                            name: { type: 'string', required: true },
+                            value: { type: 'string', required: true }
+                        },
+                        required: ['name', 'value']
                     }
-                }
+                },
+                required: ['columns']
             }
         };
 
@@ -321,9 +314,12 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             For each task, identify the most relevant data points that should be preserved in the spreadsheet.
             Pay special attention to any specific columns or data types mentioned in the original goal.
             
-            Return an array of objects containing:
-            - rowIndex: The original row index from the CSV
-            - keyInsights: Array of key value pairs to add as new columns`);
+            'columns' key: Return an array of key value pairs to add as new columns
+            
+            To add a link to a created artifact, use a Markdown link with the link format of [Title](artifactId:XXXX-XXXX)
+
+            `);
+        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE);
 
         const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
             message: task.description,
@@ -332,13 +328,15 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
         try {
             const response = StringUtils.extractAndParseJsonBlock(rawResponse.message);
-            if (response && Array.isArray(response.keyInsights)) {
+            if (response && Array.isArray(response.columns)) {
                 return [{
                     rowIndex: task.props?.rowIndex,
-                    data: response.keyInsights.reduce((acc, insight) => {
-                        acc[insight.columnName] = insight.value;
+                    data: response.columns.reduce((acc, insight) => {
+                        acc[insight.name] = insight.value;
                         return acc;
-                    }, {})
+                    }, {
+                        rowIndex: task.props?.rowIndex
+                    })
                 }];
             }
         } catch (error) {
