@@ -35,7 +35,7 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const treeViewApiRef = useTreeViewApiRef();
     const [artifactFolders, setArtifactFolders] = useState<Record<string, Artifact[]>>({});
     const [filterText, setFilterText] = useState('');
-    const [selectedProject, setSelectedProject] = useState<string>('all');
+    const [selectedProject, setSelectedProject] = useState<string>('');
     const [expandedItems, setExpandedItems] = useState<string[]>([]);
     const [availableProjects, setAvailableProjects] = useState<string[]>([]);
     const [deleteConfirmOpen, setDeleteConfirmOpen] = useState(false);
@@ -139,13 +139,15 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     useEffect(() => {
         if (allArtifacts) {
             // Extract unique projects from artifacts
-            const projects = new Set<string>(['all']);
+            const projects = new Set<string>();
             allArtifacts.forEach(artifact => {
                 if (artifact.metadata?.projects) {
                     artifact.metadata.projects.forEach((project: string) => projects.add(project));
                 }
             });
-            setAvailableProjects(Array.from(projects));
+            const projectList = Array.from(projects);
+            setAvailableProjects(['all', ...projectList]);
+            setSelectedProject('all');
 
             // Group artifacts by type
             const folders = allArtifacts.reduce((acc, artifact) => {
