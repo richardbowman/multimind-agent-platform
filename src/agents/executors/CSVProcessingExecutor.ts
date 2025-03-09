@@ -7,7 +7,7 @@ import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Project, Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
-import { createUUID } from 'src/types/uuid';
+import { createUUID, UUID } from 'src/types/uuid';
 import { Agent, TaskEventType } from '../agents';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType } from '../../tools/artifact';
@@ -23,8 +23,14 @@ import { TaskStatus } from 'src/schemas/TaskStatus';
 import { StepBasedAgent } from '../stepBasedAgent';
 import { StepTask } from '../interfaces/ExecuteStepParams';
 
+interface CSVProcessingResponse extends StepResponse {
+    data?: {
+        processedArtifactId: UUID;
+    }
+}
+
 @StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Process each row of a CSV spreadsheet')
-export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
+export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private artifactManager: ArtifactManager;
@@ -37,7 +43,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         this.chatClient = params.chatClient;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
+    async execute(params: ExecuteParams): Promise<StepResult<CSVProcessingResponse>> {
         // Find the first CSV artifact
         const csvArtifact = params.context?.artifacts?.find(a => a.type === ArtifactType.Spreadsheet);
         if (!csvArtifact) {
@@ -163,6 +169,9 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 };
             }
 
+            // Initialize processed CSV
+            const processedArtifact = await this.initializeProcessedCSV(csvArtifact);
+            
             // Create the project
             const project = await this.taskManager.createProject({
                 name: projectName,
@@ -173,9 +182,6 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                     parentTaskId: params.stepId
                 }
             });
-
-            // Initialize processed CSV
-            await this.initializeProcessedCSV(csvArtifact);
 
             // Create and assign tasks for each row
             const taskDetails: string[] = [];
@@ -198,6 +204,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                     props: {
                         rowIndex: i,
                         csvArtifactId: csvArtifact.id,
+                        processedArtifactId: processedArtifact.id,
                         originalRowData: {
                             ...row.data,
                             __taskId: taskId // Store task ID with row data
@@ -220,7 +227,8 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 response: {
                     status: message,
                     data: {
-                        csvArtifactId: csvArtifact.id
+                        csvArtifactId: csvArtifact.id,
+                        processedArtifactId: processedArtifact.id
                     }
                 }
             };
@@ -237,15 +245,13 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         }
     }
 
-    private processedArtifact: Artifact | null = null;
-
-    async initializeProcessedCSV(originalArtifact: Artifact): Promise<void> {
+    async initializeProcessedCSV(originalArtifact: Artifact): Promise<Artifact> {
         if (originalArtifact.type !== ArtifactType.Spreadsheet) {
             throw new Error('Can only process spreadsheet artifacts');
         }
 
         // Create initial processed artifact
-        this.processedArtifact = {
+        const processedArtifact = {
             ...originalArtifact,
             id: createUUID(),
             metadata: {
@@ -257,21 +263,13 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             content: originalArtifact.content // Start with original content
         };
 
-        await this.artifactManager.saveArtifact(this.processedArtifact);
+        return await this.artifactManager.saveArtifact(processedArtifact);
     }
 
-    async updateCSVWithResults(originalArtifact: Artifact, results: any[]): Promise<void> {
-        if (!this.processedArtifact) {
-            await this.initializeProcessedCSV(originalArtifact);
-        }
-
-        if (!this.processedArtifact) {
-            throw new Error('Processed CSV artifact not initialized');
-        }
-
+    async updateCSVWithResults(processedArtifact: Artifact, results: any[]): Promise<void> {
         // Read current processed CSV
         const rows: any[] = [];
-        const parser = parse(this.processedArtifact.content.toString(), {
+        const parser = parse(processedArtifact.content.toString(), {
             columns: true,
             skip_empty_lines: true,
             trim: true,
@@ -299,19 +297,15 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
         // Update the processed artifact
         const output = stringify(rows, { header: true });
-        this.processedArtifact = {
-            ...this.processedArtifact,
-            content: output,
-            metadata: {
-                ...this.processedArtifact.metadata,
-                lastUpdatedAt: new Date().toISOString()
-            }
+        const updatedArtifactData = {
+            ...processedArtifact,
+            content: output
         };
 
-        await this.artifactManager.saveArtifact(this.processedArtifact);
+        await this.artifactManager.saveArtifact(updatedArtifactData);
     }
 
-    private async processTaskResult(task: Task): Promise<any[]> {
+    private async processTaskResult(task: Task, csvArtifact: Artifact): Promise<any[]> {
         if (task.status !== TaskStatus.Completed) {
             return [];
         }
@@ -325,26 +319,21 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
         // Get CSV headers from the artifact
         let csvHeaders: string[] = [];
-        const csvArtifactId = task.props?.csvArtifactId;
-        if (csvArtifactId) {
-            try {
-                const csvArtifact = await this.artifactManager.loadArtifact(csvArtifactId);
-                if (csvArtifact) {
-                    // Parse just the first row to get headers
-                    const firstRow = parse(csvArtifact.content.toString(), {
-                        columns: true,
-                        skip_empty_lines: true,
-                        trim: true,
-                        relax_quotes: true,
-                        relax_column_count: true,
-                        bom: true,
-                        to_line: 1
-                    })[0];
-                    csvHeaders = Object.keys(firstRow || {});
-                }
-            } catch (error) {
-                Logger.error('Error reading CSV headers:', error);
+        try {
+            if (csvArtifact) {
+                // Parse just the first row to get headers
+                const firstRow = parse(csvArtifact.content.toString(), {
+                    skip_empty_lines: true,
+                    trim: true,
+                    relax_quotes: true,
+                    relax_column_count: true,
+                    bom: true,
+                    to_line: 1
+                })[0];
+                csvHeaders = firstRow;
             }
+        } catch (error) {
+            Logger.error('Error reading CSV headers:', error);
         }
 
         // Create schema for result extraction
@@ -412,23 +401,21 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         return [];
     }
 
-    async onProjectCompletionResult(project: Project): Promise<StepResult<StepResponse>> {
-        if (!this.processedArtifact) {
-            return {
-                type: StepResultType.Error,
-                finished: true,
-                response: {
-                    message: 'No processed CSV artifact found'
-                }
-            };
-        }
-
+    async onChildProjectComplete(stepTask: StepTask<CSVProcessingResponse>, project: Project): Promise<StepResult<CSVProcessingResponse>> {
         // Get the final processed CSV columns
         let csvColumns: string[] = [];
+        const artifactId = stepTask.props.result?.response.data?.processedArtifactId;
+        const artifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
+        const processedContent = artifact && artifact.content.toString();
+
+        if (!artifact || !processedContent) {
+            const error = new Error("No artifact");
+            Logger.error("No artifact could be found for child project completion.", error);
+            throw error;
+        }
+
         try {
-            const processedContent = this.processedArtifact.content.toString();
             const firstRow = parse(processedContent, {
-                columns: true,
                 skip_empty_lines: true,
                 trim: true,
                 relax_quotes: true,
@@ -452,7 +439,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             - Next steps or recommendations based on the processed data
 
             The final processed CSV contains these columns:
-            ${csvColumns.map(col => `• ${col}`).join('\n')}`);
+            ${csvColumns.map(col => `- ${col}`).join('\n')}`);
 
         prompt.addContext({
             contentType: ContentType.TASKS,
@@ -460,7 +447,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         });
 
         const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
-            message: `Processed CSV artifact ID: ${this.processedArtifact.id}`,
+            message: `Processed CSV artifact ID: ${artifact.id}`,
             instructions: prompt
         });
 
@@ -469,11 +456,11 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             finished: true,
             async: false,
             replan: ReplanType.Allow,
-            artifactIds: [this.processedArtifact.id],
+            artifactIds: [artifact?.id],
             response: {
                 status: rawResponse.message,
                 data: {
-                    processedArtifactId: this.processedArtifact.id
+                    processedArtifactId: artifact?.id
                 }
             }
         };
@@ -481,7 +468,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
     async handleTaskNotification(notification: TaskNotification): Promise<void> {
         const { task, childTask, eventType, statusPost } = notification;
-        const artifactId = (task as StepTask<StepResponse>).props.result?.response.data?.csvArtifactId;
+        const artifactId = (task as StepTask<CSVProcessingResponse>).props.result?.response.data?.processedArtifactId;
 
         // Load the CSV artifact once
         const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
@@ -492,7 +479,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
 
         // Process results when a task completes
         if (eventType === TaskEventType.Completed && childTask) {
-            const results = await this.processTaskResult(childTask);
+            const results = await this.processTaskResult(childTask, csvArtifact);
             if (results.length > 0) {
                 await this.updateCSVWithResults(csvArtifact, results);
             }
