@@ -21,7 +21,7 @@ export function setupUnhandledRejectionHandler() {
         }
 
         // Get the promise chain stack trace if available
-        const promiseStack = (promise as any)._trace || 'No promise chain trace available';
+        const promiseStack = (promise as any)._trace;
         if (promiseStack) {
             Logger.error('Promise Chain Stack:', promiseStack
                 .split('\n')

@@ -77,6 +77,7 @@ export interface ProjectMetadata {
     originalPostId?: UUID;
     parentTaskId?: UUID;
     parentProjectId?: UUID;
+    childProjectId?: UUID;
     contentArtifactId?: UUID;
 }
 

@@ -220,6 +220,13 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
 
     async markTaskInProgress(task: Task | string): Promise<Task> {
         const taskId = typeof (task) === 'string' ? task : task.id;
+
+        const existingTask = await this.getTaskById(taskId);
+        if (existingTask?.status === TaskStatus.InProgress) {
+            Logger.warn(`Task ${taskId} already marked in-progress but markTaskInProgress was called again`, new Error());
+            return existingTask;
+        }
+
         return this.updateTask(taskId, { 
             status: TaskStatus.InProgress,
             inProgress: true, // Maintain backwards compatibility
@@ -228,6 +235,12 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async completeTask(id: string): Promise<Task> {
+        const existingTask = await this.getTaskById(id);
+        if (existingTask?.status === TaskStatus.Completed) {
+            Logger.warn(`Task ${id} already marked complete but complete was called again`, new Error());
+            return existingTask;
+        }
+
         const task = await this.updateTask(id, { 
             status: TaskStatus.Completed,
             complete: true, // Maintain backwards compatibility

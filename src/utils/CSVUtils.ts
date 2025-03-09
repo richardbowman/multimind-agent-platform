@@ -10,7 +10,6 @@ export class CSVUtils {
     static getColumnHeaders(csvContent: string): string[] {
         try {
             const firstRow = parse(csvContent, {
-                columns: true,
                 skip_empty_lines: true,
                 trim: true,
                 relax_quotes: true,
@@ -18,7 +17,7 @@ export class CSVUtils {
                 bom: true,
                 to_line: 1
             })[0];
-            return Object.keys(firstRow || {});
+            return firstRow;
         } catch (error) {
             Logger.error('Error reading CSV headers:', error);
             return [];

@@ -44,7 +44,7 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
             const existingIndex = updatedArtifacts.findIndex(a => a.id === newArtifact.id);
             if (existingIndex >= 0) {
               // Only update if version is newer
-              if (newArtifact.metadata.version > updatedArtifacts[existingIndex].metadata.version) {
+              if (newArtifact.metadata.version > updatedArtifacts[existingIndex]?.metadata?.version) {
                 updatedArtifacts[existingIndex] = newArtifact;
               }
             } else {
@@ -86,7 +86,7 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
   const getArtifact = useCallback(async (artifactId: UUID) => {
     if (ipcService.getRPC() && !needsConfig) {
       try {
-        return await ipcService.getRPC().loadArtifact(artifactId);
+        return await ipcService.getRPC().getArtifact(artifactId);
       } catch (error) {
         console.error('Failed to load artifact:', error);
         return null;

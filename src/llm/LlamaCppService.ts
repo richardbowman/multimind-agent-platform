@@ -131,7 +131,7 @@ export class LlamaCppService extends BaseLLMService implements IEmbeddingService
                 workerData: {
                     modelUri: `hf:${owner}/${repo}/${modelName}`,
                     dirPath: modelPath,
-                    parallelDownloads: 1
+                    parallelDownloads: 6
                 }
             });
 

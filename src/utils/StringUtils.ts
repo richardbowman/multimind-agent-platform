@@ -2,6 +2,8 @@ import JSON5 from 'json5';
 import { marked, RendererObject } from 'marked';
 import { JSONSchema } from 'openai/lib/jsonschema';
 import { LinkRef } from 'src/helpers/scrapeHelper';
+import Ajv from "ajv";
+import addFormats from "ajv-formats";
 
 export interface CodeBlock {
     readonly type: string;
@@ -33,20 +35,20 @@ export namespace StringUtils {
         const codeBlockRegex = /```([a-zA-Z]+)(?:\[([^\]]+)\])?\n([\s\S]*?)(```|$)/g;
         const matches: CodeBlock[] = [];
         let match: RegExpExecArray | null;
-   
+
         while ((match = codeBlockRegex.exec(text)) !== null) {
             // If the match ends with the closing ```, use the full match
             // If it ends with $ (end of string), it's an incomplete block
             const isComplete = match[4] === '```';
             const code = isComplete ? match[3].trim() : match[3].trim() + '\n```';
-            
+
             matches.push({
                 type: match[1],
                 attribute: match[2],
                 code: code
             });
         }
-   
+
         return type ? matches.filter(m => m.type === type) : matches;
     }
 
@@ -66,9 +68,42 @@ export namespace StringUtils {
      * @returns Array of parsed JSON objects
      * @throws SyntaxError if JSON parsing fails
      */
-    export function extractAndParseJsonBlock<T extends Object>(text: string, schema?: JSONSchema): T|undefined {
+    export function extractAndParseJsonBlock<T extends Object>(text: string, schema?: JSONSchema): T | undefined {
         const blocks = extractCodeBlocks(text, 'json').map(m => JSON5.parse(m.code));
         if (blocks.length == 1) {
+            if (schema) {
+                // Initialize JSON schema validator with custom date-time format
+                const ajv = new Ajv({
+                    allErrors: true,
+                    strict: false,
+                    formats: {
+                        'date-time': {
+                            validate: (dateTimeStr: string) => {
+                                // Try parsing as ISO date string
+                                const date = new Date(dateTimeStr);
+                                return !isNaN(date.getTime());
+                            }
+                        }
+                    }
+                });
+                addFormats(ajv);
+                ajv.addFormat("date-time", {
+                    validate: (dateTimeStr: string) => {
+                        // Try parsing as ISO date string
+                        const date = new Date(dateTimeStr);
+                        return !isNaN(date.getTime());
+                    }
+                });
+                const validate = ajv.compile(schema);
+                // Validate response against schema
+                const isValid = validate(blocks[0]);
+                if (!isValid) {
+                    const errors = validate.errors?.map(err =>
+                        `Schema validation error at ${err.instancePath}: ${err.message}`
+                    ).join('\n');
+                    throw new Error(`Response does not conform to schema:\n${errors}`);
+                }
+            }
             return blocks[0];
         } else {
             return undefined;
@@ -94,7 +129,7 @@ export namespace StringUtils {
         while ((match = xmlBlockRegex.exec(text)) !== null) {
             const tag = match[1];
             let content = match[2].trim();
-            
+
             // Handle nested tags by recursively extracting inner content
             // First add the outer block
             matches.push({
@@ -120,7 +155,7 @@ export namespace StringUtils {
      * @param tagName The XML tag to search for
      * @returns The content of the first matching XML block or undefined if not found
      */
-    export function extractXmlBlock(text: string, tagName: string): string|undefined {
+    export function extractXmlBlock(text: string, tagName: string): string | undefined {
         const regex = new RegExp(`<${tagName}[^>]*>([\\s\\S]*?)<\\/${tagName}>`);
         const match = regex.exec(text);
         return match ? match[1].trim() : undefined;
@@ -135,13 +170,13 @@ export namespace StringUtils {
     export function extractNonCodeContent(text: string, xmlTagsToRemove: string[] = []): string {
         // Remove code blocks
         let cleanedText = text.replace(/```[\s\S]*?```/g, '');
-        
+
         // Remove specified XML blocks if any
         if (xmlTagsToRemove.length > 0) {
             const xmlRegex = new RegExp(`<(${xmlTagsToRemove.join('|')})[^>]*>[\\s\\S]*?<\\/\\1>`, 'g');
             cleanedText = cleanedText.replace(xmlRegex, '');
         }
-        
+
         // Clean up extra whitespace
         return cleanedText
             .split('\n')
@@ -195,7 +230,7 @@ export namespace StringUtils {
     export function extractLinksFromMarkdown(markdown: string): LinkRef[] {
         const links: LinkRef[] = [];
 
-        const renderer : RendererObject = {
+        const renderer: RendererObject = {
             link(args) {
                 const { href, text } = args;
                 links.push({ text, href });
@@ -221,7 +256,7 @@ export namespace StringUtils {
 
         // Try parsing as other common formats
         const formats = [
-            'MM/dd/yyyy', 
+            'MM/dd/yyyy',
             'dd/MM/yyyy',
             'yyyy-MM-dd',
             'MMMM d, yyyy',

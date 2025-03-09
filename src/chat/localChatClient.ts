@@ -337,7 +337,9 @@ export class LocalTestClient implements ChatClient {
 
     getPost(id: string): Promise<ChatPost> {
         const post = this.storage.posts.find(p => p.id === id);
-        if (!post) throw new Error(`Could not find post ${id}`);
+        if (!post) {
+            throw new Error(`Could not find post ${id}`);
+        }
         return Promise.resolve(post);
     }
 

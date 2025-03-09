@@ -379,13 +379,13 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         }
     }
     
-    async getArtifact(id: UUID): Promise<Artifact> {
+    async getArtifact(id: UUID): Promise<Artifact|undefined> {
         const artifact = await this.services.artifactManager.loadArtifact(id);
-        return this.processArtifactContent(artifact);
+        return artifact && this.processArtifactContent(artifact);
     }
 
     /** @deprecated */
-    async getArtifacts({ channelId, threadId }: { channelId: UUID; threadId: string | null }): Promise<any[]> {
+    async getArtifacts({ channelId, threadId }: { channelId: UUID; threadId: UUID|undefined }): Promise<Artifact[]> {
         // Get all messages for this channel/thread
         const messages = await this.services.chatClient.fetchPreviousMessages(channelId, 1000);
         const filteredMessages = messages.filter(message => {

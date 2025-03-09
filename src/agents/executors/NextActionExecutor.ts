@@ -22,7 +22,8 @@ import { StringUtils } from 'src/utils/StringUtils';
 import { ModelResponse } from 'src/schemas/ModelResponse';
 
 export type WithReasoning<T extends ModelResponse> = T & {
-    reasoning: string;
+    reasoning?: string;
+    message?: string;
 };
 
 @StepExecutorDecorator(ExecutorType.NEXT_STEP, 'Generate focused questions to understand user goals', false)
@@ -132,17 +133,36 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
 
         await prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema);
 
-        await params.partialResponse("Planning...", true);
+        // Try once more with the same prompt
         const responseText = await this.modelHelpers.generate({
             message: params.message||params.stepGoal,
             instructions: prompt,
             modelType: ModelType.ADVANCED_REASONING
-        }); 
+        });
 
-        const response : WithReasoning<NextActionResponse> = {
-            ...StringUtils.extractAndParseJsonBlock<NextActionResponse>(responseText.message, schema),
-            reasoning: StringUtils.extractNonCodeContent(responseText.message)
-        };
+        let response: WithReasoning<NextActionResponse>;
+         try {
+             response = {
+                 ...StringUtils.extractAndParseJsonBlock<NextActionResponse>(responseText.message, schema),
+                 reasoning: StringUtils.extractXmlBlock(responseText.message, "thinking"),
+                 message: StringUtils.extractNonCodeContent(responseText.message, ["thinking"])
+             };
+         } catch (error) {
+             Logger.warn('Failed to parse initial response, retrying once...');
+
+             // Try once more with the same prompt
+             const retryResponseText = await this.modelHelpers.generate({
+                 message: params.message||params.stepGoal,
+                 instructions: prompt,
+                 modelType: ModelType.ADVANCED_REASONING
+             });
+
+             response = {
+                 ...StringUtils.extractAndParseJsonBlock<NextActionResponse>(retryResponseText.message, schema),
+                 reasoning: StringUtils.extractXmlBlock(responseText.message, "thinking"),
+                 message: StringUtils.extractNonCodeContent(responseText.message, ["thinking"])
+             };
+         }
 
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);
 
@@ -178,7 +198,8 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
                 finished: true,
                 response: {
                     type: StepResponseType.Plan,
-                    message: response.reasoning
+                    reasoning: response.reasoning,
+                    message: response.message
                 }
             };
         } else {

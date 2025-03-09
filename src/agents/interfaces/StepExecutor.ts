@@ -3,6 +3,7 @@ import { ExecuteParams } from './ExecuteParams';
 import { StepResponse, StepResult } from './StepResult';
 import { TaskEventType } from '../agents';
 import { ChatPost } from 'src/chat/chatClient';
+import { StepTask } from './ExecuteStepParams';
 
 
 export interface TaskNotification {
@@ -26,5 +27,5 @@ export interface StepExecutor<R extends StepResponse> {
      * @param project The completed project
      * @returns Final StepResult to return to the parent step
      */
-    onProjectCompletionResult?(project: Project): Promise<StepResult<R>>;
+    onChildProjectComplete?(stepTask: StepTask<R>, project: Project): Promise<StepResult<R>>;
 }

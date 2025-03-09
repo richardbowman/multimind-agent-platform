@@ -51,8 +51,8 @@ export interface ServerMethods {
     getChannels(): Promise<ChannelData[]>;
     getThreads(params: { channelId: string }): Promise<ClientThread[]>;
     getTasks(params: { channelId?: UUID; threadId?: UUID }): Promise<Task[]>;
-    getArtifacts(params: { channelId: UUID; threadId?: UUID }): Promise<any[]>;
-    getArtifact(id: UUID): Promise<Artifact>;
+    getArtifacts(params: { channelId: UUID; threadId?: UUID }): Promise<Artifact[]>;
+    getArtifact(id: UUID): Promise<Artifact|undefined>;
     listArtifacts(): Promise<ArtifactItem[]>
     deleteArtifact(artifactId: string): Promise<any[]>;
     saveArtifact(artifact: Artifact): Promise<Artifact>;

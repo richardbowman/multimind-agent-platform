@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState } from 'react';
 import { AppBar, Tabs, Tab, Toolbar, Box, Drawer, IconButton, styled, Stack } from '@mui/material';
 import MenuIcon from '@mui/icons-material/Menu';
 import MinimizeIcon from '@mui/icons-material/Minimize';
@@ -11,11 +11,10 @@ import { SnackbarProvider, useSnackbar } from './contexts/SnackbarContext';
 import { LogProvider } from './contexts/LogContext';
 import { ToolbarActionsProvider } from './contexts/ToolbarActionsContext';
 import { ChatPanel } from './components/ChatPanel';
-import { WelcomePanel } from './components/WelcomePanel';
 import { ChannelList } from './components/ChannelList';
 import { ThreadList } from './components/ThreadList';
 import { TaskPanel } from './components/TaskPanel';
-import { ArtifactPanel } from './components/ArtifactPanel';
+import { ArtifactChatPanel } from './components/ArtifactChatPanel';
 import { GlobalArtifactViewer } from './components/GlobalArtifactViewer';
 import { LogViewer } from './components/LogViewer';
 import { SettingsPanel } from './components/SettingsPanel';
@@ -276,7 +275,7 @@ const AppContent: React.FC = () => {
                                             threadId={currentThreadId}
                                             artifactId={null}
                                         >
-                                            <ArtifactPanel
+                                            <ArtifactChatPanel
                                                 channelId={currentChannelId}
                                                 threadId={currentThreadId}
                                             />

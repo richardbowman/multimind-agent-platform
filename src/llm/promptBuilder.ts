@@ -421,12 +421,13 @@ export class PromptBuilder implements InputPrompt {
     addOutputInstructions(outputType: OutputType, schemaDef?: JSONSchema, specialInstructions?: string, type: string = 'markdown') {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schemaDef) {
             this.addInstruction(`Respond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n 
-            Then, provide a separate fully enclosed \`\`\`${type} block${specialInstructions ? ` that provides: ${specialInstructions}.` : ''}.`);
+            Then, provide a separate fenced \`\`\`${type} code block${specialInstructions ? ` that provides: ${specialInstructions}.` : ''}.`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE && schemaDef) {
-            this.addInstruction(`Respond with a user-friendly message as well as a fully enclosed code block \`\`\`json  that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+            this.addInstruction(`Respond with a user-friendly message and a fenced code block \`\`\`json with an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schemaDef) {
-            this.addInstruction(`Before you answer the user, please think about how to best interpret the instructions and context you have been provided. Include your thinking inside of a single <thinking> XML block.
-Then, respond with a user-friendly message and fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+            this.addInstruction(`1. Before you answer, think about how to best interpret the instructions and context you have been provided. Include your thinking wrapped in <thinking> </thinking> tags.
+2. Then, respond with a user-friendly message.
+3. Provide structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         }
     }
     private contentSections: Map<ContentType, any> = new Map();

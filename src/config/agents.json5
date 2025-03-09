@@ -536,10 +536,6 @@
                 },
                 {
                   "executor": "csv-processor",
-                  "description": "Develop sequence diagrams to better explain the flow for each user story."
-                },
-                {
-                  "executor": "csv-processor",
                   "description": "Develop PRD document to document requirements for development."
                 }
               ]

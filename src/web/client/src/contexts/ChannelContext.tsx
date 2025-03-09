@@ -40,7 +40,7 @@ export const ChannelProvider = ({ children }: { children: React.ReactNode }) => 
   useEffect(() => {
     const channel = channels.find(c => c.id === currentChannelId) || null;
     setCurrentChannel(channel);
-    if (channel) {
+    if (channel?.projectId) {
       ipcService.getRPC().getProject(channel.projectId).then(p => setCurrentChannelProject(p));      
     }
     

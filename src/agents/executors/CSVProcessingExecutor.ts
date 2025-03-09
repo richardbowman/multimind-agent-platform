@@ -12,7 +12,7 @@ import { Agent, TaskEventType } from '../agents';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType } from '../../tools/artifact';
 import { CSVUtils } from 'src/utils/CSVUtils';
-import * as fs from 'fs';
+import { parse } from 'csv-parse/sync';
 import { stringify } from 'csv-stringify/sync';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ExecutorType } from '../interfaces/ExecutorType';
@@ -76,21 +76,8 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                 bom: true
             });
             
-            // Get headers from first row
-            const firstRow = parse(content, {
-                columns: true,
-                skip_empty_lines: true,
-                trim: true,
-                relax_quotes: true,
-                relax_column_count: true,
-                bom: true,
-                to_line: 1
-            })[0];
-            
-            const headers = Object.keys(firstRow || {});
-            
             for await (const record of parser) {
-                rows.push({ headers, data: record });
+                rows.push({ headers: Object.keys(record), data: record });
             }
         } catch (error) {
             Logger.error('Error reading CSV file:', error);
@@ -322,14 +309,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         try {
             if (csvArtifact) {
                 // Parse just the first row to get headers
-                const firstRow = parse(csvArtifact.content.toString(), {
-                    skip_empty_lines: true,
-                    trim: true,
-                    relax_quotes: true,
-                    relax_column_count: true,
-                    bom: true,
-                    to_line: 1
-                })[0];
+                const firstRow = CSVUtils.getColumnHeaders(csvArtifact.content.toString());
                 csvHeaders = firstRow;
             }
         } catch (error) {

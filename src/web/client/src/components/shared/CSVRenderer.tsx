@@ -38,7 +38,7 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
         drawerOpen: false,
         currentArtifact: null
     });
-    const { artifacts } = useArtifacts();
+    const { artifacts, getArtifact } = useArtifacts();
     const [ artifact, setArtifact ] = useState<Artifact|null>(null);
 
     useEffect(() => {
@@ -86,13 +86,21 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                                                             cursor: 'pointer',
                                                             textDecoration: 'underline'
                                                         }}
-                                                        onClick={(e) => {
-                                                            e.preventDefault();
-                                                            setArtifact(artifacts.find(a => a.id === artifactId));
-                                                            setState({
-                                                                drawerOpen: true,
-                                                                currentArtifact: null
-                                                            });
+                                                        onClick={async (e) => {
+                                                            try {
+                                                                e.preventDefault();
+                                                                const item = artifacts.find(a => a.id === artifactId);
+                                                                if (item) {
+                                                                    const artifact = await getArtifact(item.id);
+                                                                    setArtifact(artifact);
+                                                                    setState({
+                                                                        drawerOpen: true,
+                                                                        currentArtifact: null
+                                                                    });
+                                                                }
+                                                            } catch (e) {
+                                                                console.error("Error showing artifact link", e);
+                                                            }
                                                         }}
                                                     >
                                                         {props.children}
