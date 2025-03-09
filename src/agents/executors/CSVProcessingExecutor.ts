@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor, TaskNotification } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { JSONSchema, StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -108,9 +108,9 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 assignedAgent: { 
                     type: 'string',
                     enum: supportedAgents.map(a => a.messagingHandle) ?? []
-                },
-                responseMessage: { type: 'string' }
-            }
+                }
+            },
+            required: ["projectName", "taskDescription", "assignedAgent"]
         };
 
         // Create prompt for agent selection
@@ -142,7 +142,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 instructions: prompt
             });
 
-            const responseJSON = StringUtils.extractAndParseJsonBlock(rawResponse.message);
+            const responseJSON = StringUtils.extractAndParseJsonBlock(rawResponse.message, schema);
             const message = StringUtils.extractNonCodeContent(rawResponse.message);
 
 
@@ -231,7 +231,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 type: StepResultType.Delegation,
                 finished: true,
                 response: {
-                    message: 'Failed to create the CSV processing project. Please try again later.'
+                    status: 'Failed to create the CSV processing project. Please try again later.'
                 }
             };
         }
@@ -434,8 +434,8 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             - Next steps or recommendations based on the processed data`);
 
         prompt.addContext({
-            contentType: ContentType.PROJECT_OVERVIEW,
-            project: project
+            contentType: ContentType.TASKS,
+            tasks: Object.values(project.tasks)
         });
 
         const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
@@ -446,8 +446,11 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         return {
             type: StepResultType.FinalResponse,
             finished: true,
+            async: false,
+            replan: ReplanType.Allow,
+            artifactIds: [this.processedArtifact.id],
             response: {
-                message: rawResponse.message,
+                status: rawResponse.message,
                 data: {
                     processedArtifactId: this.processedArtifact.id
                 }
