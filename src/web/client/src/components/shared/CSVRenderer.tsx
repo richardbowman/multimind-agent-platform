@@ -94,10 +94,10 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                                                 >
                                                     {props.children}
                                                 </span>
-                                            }
-                                            // If it's not a valid UUID, render as plain text
-                                            return <span>{props.children}</span>;
                                             );
+                                        }
+                                        // If it's not a valid UUID, render as plain text
+                                        return <span>{props.children}</span>;
                                         }
                                         return <CustomLink {...props} />;
                                     }
