@@ -11,7 +11,7 @@ import { createUUID, UUID } from 'src/types/uuid';
 import { Agent, TaskEventType } from '../agents';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType } from '../../tools/artifact';
-import { parse } from 'csv-parse/sync';
+import { CSVUtils } from 'src/utils/CSVUtils';
 import * as fs from 'fs';
 import { stringify } from 'csv-stringify/sync';
 import { ArtifactManager } from 'src/tools/artifactManager';
@@ -403,7 +403,6 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
 
     async onChildProjectComplete(stepTask: StepTask<CSVProcessingResponse>, project: Project): Promise<StepResult<CSVProcessingResponse>> {
         // Get the final processed CSV columns
-        let csvColumns: string[] = [];
         const artifactId = stepTask.props.result?.response.data?.processedArtifactId;
         const artifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
         const processedContent = artifact && artifact.content.toString();
@@ -414,19 +413,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             throw error;
         }
 
-        try {
-            const firstRow = parse(processedContent, {
-                skip_empty_lines: true,
-                trim: true,
-                relax_quotes: true,
-                relax_column_count: true,
-                bom: true,
-                to_line: 1
-            })[0];
-            csvColumns = Object.keys(firstRow || {});
-        } catch (error) {
-            Logger.error('Error reading processed CSV columns:', error);
-        }
+        const csvColumns = CSVUtils.getColumnHeaders(processedContent);
 
         // Generate a summary using the LLM
         const prompt = this.modelHelpers.createPrompt();
