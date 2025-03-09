@@ -1,4 +1,6 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, useRef } from 'react';
+import { ArtifactDrawer } from '../ArtifactDrawer';
+import { useFilteredArtifacts } from '../contexts/FilteredArtifactContext';
 import { DataGrid, GridColDef, GridRenderCellParams, GridRowModel } from '@mui/x-data-grid';
 import { Box, Button } from '@mui/material';
 import { parse } from 'csv-parse/browser/esm/sync';
@@ -7,10 +9,16 @@ import SaveIcon from '@mui/icons-material/Save';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CustomLink } from '../ChatPanel';
+import { Artifact } from '../../../../tools/artifact';
 
 interface CSVRendererProps {
     content: string;
     onSave?: (csvContent: string) => void;
+}
+
+interface CSVRendererState {
+    drawerOpen: boolean;
+    currentArtifact: Artifact | null;
 }
 
 export const CSVRenderer: React.FC<CSVRendererProps & { 
@@ -24,6 +32,11 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
     const [rows, setRows] = useState<any[]>([]);
     const [columns, setColumns] = useState<GridColDef[]>([]);
     const [isDirty, setIsDirty] = useState(false);
+    const [state, setState] = useState<CSVRendererState>({
+        drawerOpen: false,
+        currentArtifact: null
+    });
+    const { setArtifactId } = useFilteredArtifacts();
 
     useEffect(() => {
         try {
@@ -57,7 +70,31 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                             <ReactMarkdown
                                 remarkPlugins={[remarkGfm]}
                                 components={{
-                                    a: CustomLink
+                                    a: (props) => {
+                                        if (props.href?.startsWith('artifactId:')) {
+                                            const artifactId = props.href.split(':')[1];
+                                            return (
+                                                <span 
+                                                    style={{ 
+                                                        color: '#1976d2',
+                                                        cursor: 'pointer',
+                                                        textDecoration: 'underline'
+                                                    }}
+                                                    onClick={(e) => {
+                                                        e.preventDefault();
+                                                        setArtifactId(artifactId);
+                                                        setState({
+                                                            drawerOpen: true,
+                                                            currentArtifact: null
+                                                        });
+                                                    }}
+                                                >
+                                                    {props.children}
+                                                </span>
+                                            );
+                                        }
+                                        return <CustomLink {...props} />;
+                                    }
                                 }}
                             >
                                 {params.value||""}
@@ -145,5 +182,11 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                 </Box>
             )}
         </Box>
+        <ArtifactDrawer
+            open={state.drawerOpen}
+            onClose={() => setState(prev => ({...prev, drawerOpen: false}))}
+            currentArtifact={state.currentArtifact}
+            actions={[]}
+        />
     );
 };
