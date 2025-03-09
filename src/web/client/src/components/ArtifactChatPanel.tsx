@@ -30,7 +30,7 @@ const DrawerHeader = styled('div')(({ theme }) => ({
   }));
   
 
-export const ArtifactPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
+export const ArtifactChatPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
     const { 
         filteredArtifacts: allArtifacts,
         currentArtifact,
