@@ -5,7 +5,7 @@ import { StepResponse, StepResult, StepResultType } from '../interfaces/StepResu
 import { JSONSchema, StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { Task, TaskManager, TaskType } from '../../tools/taskManager';
+import { Project, Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { createUUID } from 'src/types/uuid';
 import { Agent, TaskEventType } from '../agents';
