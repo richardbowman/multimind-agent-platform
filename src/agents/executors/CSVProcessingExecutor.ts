@@ -451,25 +451,13 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             - The location of the processed artifact
             - Next steps or recommendations based on the processed data
 
-            The final processed CSV contains these columns: ${csvColumns.join(', ')}`);
+            The final processed CSV contains these columns:
+            ${csvColumns.map(col => `• ${col}`).join('\n')}`);
 
         prompt.addContext({
             contentType: ContentType.TASKS,
             tasks: Object.values(project.tasks)
         });
-
-        if (csvColumns.length > 0) {
-            prompt.addContext({
-                contentType: ContentType.DATA_SCHEMA,
-                schema: {
-                    type: 'object',
-                    properties: csvColumns.reduce((acc, col) => {
-                        acc[col] = { type: 'string' };
-                        return acc;
-                    }, {} as Record<string, any>)
-                }
-            });
-        }
 
         const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
             message: `Processed CSV artifact ID: ${this.processedArtifact.id}`,
