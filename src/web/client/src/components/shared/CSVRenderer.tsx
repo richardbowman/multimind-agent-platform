@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useCallback, useRef } from 'react';
 import { ArtifactDrawer } from '../ArtifactDrawer';
-import { useFilteredArtifacts } from '../contexts/FilteredArtifactContext';
 import { DataGrid, GridColDef, GridRenderCellParams, GridRowModel } from '@mui/x-data-grid';
 import { Box, Button } from '@mui/material';
 import { parse } from 'csv-parse/browser/esm/sync';
@@ -9,7 +8,8 @@ import SaveIcon from '@mui/icons-material/Save';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import { CustomLink } from '../ChatPanel';
-import { Artifact } from '../../../../tools/artifact';
+import { Artifact } from '../../../../../tools/artifact';
+import { useFilteredArtifacts } from '../../contexts/FilteredArtifactContext';
 
 interface CSVRendererProps {
     content: string;
@@ -21,13 +21,13 @@ interface CSVRendererState {
     currentArtifact: Artifact | null;
 }
 
-export const CSVRenderer: React.FC<CSVRendererProps & { 
+export const CSVRenderer: React.FC<CSVRendererProps & {
     onAddToolbarActions?: (actions: Array<{
         icon: React.ReactNode;
         label: string;
         onClick: () => void;
         disabled?: boolean;
-    }>) => void 
+    }>) => void
 }> = ({ content, onSave, onAddToolbarActions }) => {
     const [rows, setRows] = useState<any[]>([]);
     const [columns, setColumns] = useState<GridColDef[]>([]);
@@ -58,7 +58,7 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
 
             // Generate columns from headers
             if (parsedRows.length > 0) {
-                const columnDefs : GridColDef[] = Object.keys(parsedRows[0])
+                const columnDefs: GridColDef[] = Object.keys(parsedRows[0])
                     .filter(key => key !== 'id')
                     .map((key) => ({
                         type: 'string',
@@ -76,34 +76,34 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                                             const artifactId = props.href.slice('artifactId:'.length);
                                             // Validate it looks like a UUID
                                             if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(artifactId)) {
-                                            return (
-                                                <span 
-                                                    style={{ 
-                                                        color: '#1976d2',
-                                                        cursor: 'pointer',
-                                                        textDecoration: 'underline'
-                                                    }}
-                                                    onClick={(e) => {
-                                                        e.preventDefault();
-                                                        setArtifactId(artifactId);
-                                                        setState({
-                                                            drawerOpen: true,
-                                                            currentArtifact: null
-                                                        });
-                                                    }}
-                                                >
-                                                    {props.children}
-                                                </span>
-                                            );
-                                        }
-                                        // If it's not a valid UUID, render as plain text
-                                        return <span>{props.children}</span>;
+                                                return (
+                                                    <span
+                                                        style={{
+                                                            color: '#1976d2',
+                                                            cursor: 'pointer',
+                                                            textDecoration: 'underline'
+                                                        }}
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            setArtifactId(artifactId);
+                                                            setState({
+                                                                drawerOpen: true,
+                                                                currentArtifact: null
+                                                            });
+                                                        }}
+                                                    >
+                                                        {props.children}
+                                                    </span>
+                                                );
+                                            }
+                                            // If it's not a valid UUID, render as plain text
+                                            return <span>{props.children}</span>;
                                         }
                                         return <CustomLink {...props} />;
                                     }
                                 }}
                             >
-                                {params.value||""}
+                                {params.value || ""}
                             </ReactMarkdown>
                         )
                     }));
@@ -165,15 +165,15 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
         <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden', height: '100%' }}>
             {rows.length > 0 ? (
                 <DataGrid
-                        rows={rows}
-                        columns={columns}
-                        pageSize={5}
-                        rowsPerPageOptions={[5]}
-                        disableSelectionOnClick
-                        experimentalFeatures={{ newEditingApi: true }}
-                        processRowUpdate={handleProcessRowUpdate}
-                        onProcessRowUpdateError={(error) => console.error('Row update error:', error)}
-                    />
+                    rows={rows}
+                    columns={columns}
+                    pageSize={5}
+                    rowsPerPageOptions={[5]}
+                    disableSelectionOnClick
+                    experimentalFeatures={{ newEditingApi: true }}
+                    processRowUpdate={handleProcessRowUpdate}
+                    onProcessRowUpdateError={(error) => console.error('Row update error:', error)}
+                />
             ) : (
                 <Box component="pre" sx={{
                     p: 2,
@@ -187,12 +187,12 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                     {content}
                 </Box>
             )}
+            <ArtifactDrawer
+                open={state.drawerOpen}
+                onClose={() => setState(prev => ({ ...prev, drawerOpen: false }))}
+                currentArtifact={state.currentArtifact}
+                actions={[]}
+            />
         </Box>
-        <ArtifactDrawer
-            open={state.drawerOpen}
-            onClose={() => setState(prev => ({...prev, drawerOpen: false}))}
-            currentArtifact={state.currentArtifact}
-            actions={[]}
-        />
     );
 };
