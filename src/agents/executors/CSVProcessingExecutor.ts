@@ -218,7 +218,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
                 finished: false,
                 async: true,
                 response: {
-                    message,
+                    status: message,
                     data: {
                         csvArtifactId: csvArtifact.id
                     }

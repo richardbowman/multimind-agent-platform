@@ -10,6 +10,8 @@ import remarkGfm from 'remark-gfm';
 import { CustomLink } from '../ChatPanel';
 import { Artifact } from '../../../../../tools/artifact';
 import { useFilteredArtifacts } from '../../contexts/FilteredArtifactContext';
+import { useArtifacts } from '../../contexts/ArtifactContext';
+import { UUID } from '../../../../../types/uuid';
 
 interface CSVRendererProps {
     content: string;
@@ -36,7 +38,8 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
         drawerOpen: false,
         currentArtifact: null
     });
-    const { setArtifactId } = useFilteredArtifacts();
+    const { artifacts } = useArtifacts();
+    const [ artifact, setArtifact ] = useState<Artifact|null>(null);
 
     useEffect(() => {
         try {
@@ -85,7 +88,7 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                                                         }}
                                                         onClick={(e) => {
                                                             e.preventDefault();
-                                                            setArtifactId(artifactId);
+                                                            setArtifact(artifacts.find(a => a.id === artifactId));
                                                             setState({
                                                                 drawerOpen: true,
                                                                 currentArtifact: null
@@ -190,7 +193,7 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
             <ArtifactDrawer
                 open={state.drawerOpen}
                 onClose={() => setState(prev => ({ ...prev, drawerOpen: false }))}
-                currentArtifact={state.currentArtifact}
+                currentArtifact={artifact}
                 actions={[]}
             />
         </Box>
