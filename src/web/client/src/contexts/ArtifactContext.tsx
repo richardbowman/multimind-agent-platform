@@ -35,7 +35,7 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
   const updateSpecificArtifacts = useCallback(async (artifactIds: UUID[]) => {
     if (ipcService.getRPC() && !needsConfig) {
       try {
-        const allArtifacts = await ipcService.getRPC().getArtifacts();
+        const allArtifacts = await ipcService.getRPC().listArtifacts();
         const newArtifacts = allArtifacts.filter(artifact => artifactIds.includes(artifact.id));
         setArtifacts(prev => {
           const updatedArtifacts = [...prev];
@@ -43,7 +43,7 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
             const existingIndex = updatedArtifacts.findIndex(a => a.id === newArtifact.id);
             if (existingIndex >= 0) {
               // Only update if version is newer
-              if (newArtifact.version > updatedArtifacts[existingIndex].version) {
+              if (newArtifact.metadata.version > updatedArtifacts[existingIndex].metadata.version) {
                 updatedArtifacts[existingIndex] = newArtifact;
               }
             } else {
