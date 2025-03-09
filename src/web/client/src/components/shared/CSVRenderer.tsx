@@ -74,9 +74,9 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                                 remarkPlugins={[remarkGfm]}
                                 components={{
                                     a: (props) => {
-                                        if (props.href?.startsWith('artifactId:')) {
-                                            // Extract UUID after 'artifactId:' prefix
-                                            const artifactId = props.href.slice('artifactId:'.length);
+                                        if (props.href?.startsWith('/artifact/')) {
+                                            // Extract UUID after '/artifact/' prefix
+                                            const artifactId = props.href.slice('/artifact/'.length);
                                             // Validate it looks like a UUID
                                             if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(artifactId)) {
                                                 return (

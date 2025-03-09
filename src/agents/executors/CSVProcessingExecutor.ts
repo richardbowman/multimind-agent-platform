@@ -379,7 +379,7 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             
             'columns' key: Return an array of key value pairs to add as new columns
             
-            To add a link to a created artifact, use a Markdown link with the link format of [Title](artifactId:XXXX-XXXX)
+            To add a link to a created artifact, use a Markdown link with the link format of [Title](/artifact/XXXX-XXXX)
 
             `);
         prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
