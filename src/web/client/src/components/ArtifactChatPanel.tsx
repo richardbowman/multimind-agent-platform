@@ -6,10 +6,11 @@ import PushPinIcon from '@mui/icons-material/PushPin';
 import PushPinOutlinedIcon from '@mui/icons-material/PushPinOutlined';
 import { ArtifactDisplay } from './shared/ArtifactDisplay';
 import { ActionToolbar } from './shared/ActionToolbar';
-import { Box, Typography, List, Drawer, styled, useTheme, Divider, IconButton, Button } from '@mui/material';
+import { Box, Typography, List, useTheme } from '@mui/material';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
+import { ArtifactDrawer } from './ArtifactDrawer';
 import { ArtifactCard } from './ArtifactCard';
 import { useFilteredArtifacts } from '../contexts/FilteredArtifactContext';
 import { useChannels } from '../contexts/ChannelContext';
@@ -20,15 +21,6 @@ interface ArtifactPanelProps {
     threadId: string | null;
 }
 
-const DrawerHeader = styled('div')(({ theme }) => ({
-    display: 'flex',
-    alignItems: 'center',
-    padding: theme.spacing(0, 1),
-    // necessary for content to be below app bar
-    ...theme.mixins.toolbar,
-    justifyContent: 'flex-start',
-  }));
-  
 
 export const ArtifactChatPanel: React.FC<ArtifactPanelProps> = ({ channelId, threadId }) => {
     const { 
@@ -183,32 +175,12 @@ export const ArtifactChatPanel: React.FC<ArtifactPanelProps> = ({ channelId, thr
                 ))}
             </List>
 
-            <Drawer
-                anchor="right"
+            <ArtifactDrawer
                 open={drawerOpen}
                 onClose={() => setDrawerOpen(false)}
-                PaperProps={{
-                    sx: {
-                        width: '40%'
-                    }
-                }}
-            >
-                <DrawerHeader/>
-                {currentArtifact && (
-                    <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
-                        <ActionToolbar actions={actions}/>
-                        <Box sx={{ flex: 1, overflow: 'auto', p: 2 }}>
-                            <ArtifactDisplay
-                                artifact={currentArtifact}
-                                onDelete={() => setDrawerOpen(false)}
-                                onEdit={() => {
-                                    // Handle edit action
-                                }}
-                            />
-                        </Box>
-                    </Box>
-                )}
-            </Drawer>
+                currentArtifact={currentArtifact}
+                actions={actions}
+            />
         </Box>
     );
 };
