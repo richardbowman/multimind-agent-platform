@@ -412,6 +412,29 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
         return [];
     }
 
+    async onProjectCompletionResult(project: Project): Promise<StepResult<StepResponse>> {
+        if (!this.processedArtifact) {
+            return {
+                type: StepResultType.Error,
+                finished: true,
+                response: {
+                    message: 'No processed CSV artifact found'
+                }
+            };
+        }
+
+        return {
+            type: StepResultType.FinalResponse,
+            finished: true,
+            response: {
+                message: 'CSV processing complete',
+                data: {
+                    processedArtifactId: this.processedArtifact.id
+                }
+            }
+        };
+    }
+
     async handleTaskNotification(notification: TaskNotification): Promise<void> {
         const { task, childTask, eventType, statusPost } = notification;
         const artifactId = (task as StepTask<StepResponse>).props.result?.response.data?.csvArtifactId;

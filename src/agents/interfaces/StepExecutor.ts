@@ -21,4 +21,10 @@ export interface StepExecutor<R extends StepResponse> {
     onTaskNotification?(task: Task): Promise<void>;
     onProjectCompleted?(project: Project): Promise<void>;
     handleTaskNotification?(notification: TaskNotification): Promise<void>;
+    /**
+     * Optional method for async executors to provide final StepResult when their sub-project completes
+     * @param project The completed project
+     * @returns Final StepResult to return to the parent step
+     */
+    onProjectCompletionResult?(project: Project): Promise<StepResult<R>>;
 }
