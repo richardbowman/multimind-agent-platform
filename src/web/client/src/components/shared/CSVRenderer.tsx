@@ -72,7 +72,10 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                                 components={{
                                     a: (props) => {
                                         if (props.href?.startsWith('artifactId:')) {
-                                            const artifactId = props.href.split(':')[1];
+                                            // Extract UUID after 'artifactId:' prefix
+                                            const artifactId = props.href.slice('artifactId:'.length);
+                                            // Validate it looks like a UUID
+                                            if (/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(artifactId)) {
                                             return (
                                                 <span 
                                                     style={{ 
@@ -91,6 +94,9 @@ export const CSVRenderer: React.FC<CSVRendererProps & {
                                                 >
                                                     {props.children}
                                                 </span>
+                                            }
+                                            // If it's not a valid UUID, render as plain text
+                                            return <span>{props.children}</span>;
                                             );
                                         }
                                         return <CustomLink {...props} />;
