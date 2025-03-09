@@ -11,6 +11,7 @@ export interface ArtifactContextType {
   saveArtifact: (artifact: Artifact) => Promise<Artifact>;
   deleteArtifact: (artifactId: UUID) => Promise<void>;
   updateSpecificArtifacts: (artifactIds: UUID[]) => Promise<void>;
+  getArtifact: (artifactId: UUID) => Promise<Artifact | null>;
 }
 
 const ArtifactContext = createContext<ArtifactContextType | null>(null);
@@ -82,15 +83,28 @@ export const ArtifactProvider = ({ children }: { children: React.ReactNode }) =>
     setArtifacts(prev => prev.filter(a => a.id !== artifactId));
   }, [ipcService]);
 
+  const getArtifact = useCallback(async (artifactId: UUID) => {
+    if (ipcService.getRPC() && !needsConfig) {
+      try {
+        return await ipcService.getRPC().loadArtifact(artifactId);
+      } catch (error) {
+        console.error('Failed to load artifact:', error);
+        return null;
+      }
+    }
+    return null;
+  }, [ipcService, needsConfig]);
+
   const value = useMemo(() => ({
     artifacts,
     isLoading,
     fetchAllArtifacts,
     saveArtifact,
     deleteArtifact,
-    updateSpecificArtifacts
+    updateSpecificArtifacts,
+    getArtifact
   }), [artifacts, currentChannelId, currentThreadId, isLoading, 
-       fetchAllArtifacts, saveArtifact, deleteArtifact, updateSpecificArtifacts]);
+       fetchAllArtifacts, saveArtifact, deleteArtifact, updateSpecificArtifacts, getArtifact]);
 
   return (
     <ArtifactContext.Provider value={value}>
