@@ -423,11 +423,31 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             };
         }
 
+        // Generate a summary using the LLM
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addInstruction(`Summarize the CSV processing project's accomplishments in a concise, professional message.
+            Include:
+            - The original goal of the project
+            - Key statistics about the processing (number of rows processed, new columns added, etc)
+            - Any notable insights or patterns discovered
+            - The location of the processed artifact
+            - Next steps or recommendations based on the processed data`);
+
+        prompt.addContext({
+            contentType: ContentType.PROJECT_OVERVIEW,
+            project: project
+        });
+
+        const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
+            message: `Processed CSV artifact ID: ${this.processedArtifact.id}`,
+            instructions: prompt
+        });
+
         return {
             type: StepResultType.FinalResponse,
             finished: true,
             response: {
-                message: 'CSV processing complete',
+                message: rawResponse.message,
                 data: {
                     processedArtifactId: this.processedArtifact.id
                 }
