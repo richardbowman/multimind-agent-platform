@@ -423,20 +423,53 @@ export class CSVProcessingExecutor implements StepExecutor<StepResponse> {
             };
         }
 
+        // Get the final processed CSV columns
+        let csvColumns: string[] = [];
+        try {
+            const processedContent = this.processedArtifact.content.toString();
+            const firstRow = parse(processedContent, {
+                columns: true,
+                skip_empty_lines: true,
+                trim: true,
+                relax_quotes: true,
+                relax_column_count: true,
+                bom: true,
+                to_line: 1
+            })[0];
+            csvColumns = Object.keys(firstRow || {});
+        } catch (error) {
+            Logger.error('Error reading processed CSV columns:', error);
+        }
+
         // Generate a summary using the LLM
         const prompt = this.modelHelpers.createPrompt();
         prompt.addInstruction(`Summarize the CSV processing project's accomplishments in a concise, professional message.
             Include:
             - The original goal of the project
             - Key statistics about the processing (number of rows processed, new columns added, etc)
-            - Any notable insights or patterns discovered
+            - Any notable insights or patterns discovered based on the final CSV columns
             - The location of the processed artifact
-            - Next steps or recommendations based on the processed data`);
+            - Next steps or recommendations based on the processed data
+
+            The final processed CSV contains these columns: ${csvColumns.join(', ')}`);
 
         prompt.addContext({
             contentType: ContentType.TASKS,
             tasks: Object.values(project.tasks)
         });
+
+        if (csvColumns.length > 0) {
+            prompt.addContext({
+                contentType: ContentType.DATA_SCHEMA,
+                schema: {
+                    type: 'object',
+                    properties: csvColumns.reduce((acc, col) => {
+                        acc[col] = { type: 'string' };
+                        return acc;
+                    }, {} as Record<string, any>)
+                }
+            });
+        }
 
         const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
             message: `Processed CSV artifact ID: ${this.processedArtifact.id}`,
