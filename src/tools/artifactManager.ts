@@ -377,4 +377,50 @@ export class ArtifactManager {
 
     Logger.info('Finished indexing artifacts');
   }
+
+  /**
+   * Search for artifacts using vector similarity
+   * @param query The search query text
+   * @param limit Maximum number of results to return (default: 5)
+   * @param minScore Minimum similarity score (0-1) for results (default: 0.5)
+   * @param filter Optional filter criteria for metadata
+   * @returns Array of matching artifacts with their similarity scores
+   */
+  async searchArtifacts(
+    query: string, 
+    limit: number = 5, 
+    minScore: number = 0.5,
+    filter?: Record<string, any>
+  ): Promise<Array<{ artifact: ArtifactItem, score: number }>> {
+    try {
+      // Search the vector database
+      const results = await this.vectorDb.query([query], filter || {}, limit);
+
+      // Map results to artifacts with scores
+      const artifacts: Array<{ artifact: ArtifactItem, score: number }> = [];
+      for (const result of results) {
+        if (result.score >= minScore) {
+          const artifact = await this.loadArtifact(result.id as UUID);
+          if (artifact) {
+            artifacts.push({
+              artifact: {
+                id: artifact.id,
+                type: artifact.type,
+                metadata: artifact.metadata
+              },
+              score: result.score
+            });
+          }
+        }
+      }
+
+      // Sort by score descending
+      artifacts.sort((a, b) => b.score - a.score);
+
+      return artifacts;
+    } catch (error) {
+      Logger.error('Error searching artifacts:', error);
+      throw new Error(`Failed to search artifacts: ${asError(error).message}`);
+    }
+  }
 }
