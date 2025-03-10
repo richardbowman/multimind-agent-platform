@@ -264,9 +264,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         pre: ({node, ...props}) => (
                             <div {...props} />
                         ),
-                        code({node, inline, className, children, ...props}) {
+                        code({node, className, children, ...props}) {
+                            const isInline = node.type === 'element' && node.tagName === 'code' && !node.properties?.className?.includes('language-');
+                            
                             // Skip rendering code blocks when collapsed
-                            if (!isExpanded && !inline) {
+                            if (!isExpanded && !isInline) {
                                 const isJson = className?.includes('language-json');
                                 return (
                                     <Box component="span" sx={{
@@ -284,7 +286,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             const content = String(children).replace(/\n$/, '');
                             const isHidden = className?.includes('[hidden]');
                             
-                            if (!inline && match) {
+                            if (!isInline && match) {
                                 return isHidden ? null : (
                                     <ToolbarActionsProvider>
                                         <CodeBlock 
@@ -297,8 +299,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 
                             return isHidden ? null : (
                                 <code className={className} {...props} style={{
-                                    display: inline ? 'inline' : 'block',
-                                    whiteSpace: inline ? 'normal' : 'pre-wrap'
+                                    display: isInline ? 'inline' : 'block',
+                                    whiteSpace: isInline ? 'normal' : 'pre-wrap'
                                 }}>
                                     {children}
                                 </code>
