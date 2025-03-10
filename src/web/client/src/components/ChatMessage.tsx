@@ -287,10 +287,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             const isHidden = className?.includes('[hidden]');
                             
                             if (match) {
-                                return isHidden ? null : (
+                                const language = match[1];
+                                if (isHidden) return null;
+                                
+                                // Special handling for CSV
+                                if (language === 'csv') {
+                                    return (
+                                        <ToolbarActionsProvider>
+                                            <CodeBlock 
+                                                language={language}
+                                                content={content}
+                                                renderAs="spreadsheet"
+                                            />
+                                        </ToolbarActionsProvider>
+                                    );
+                                }
+                                
+                                return (
                                     <ToolbarActionsProvider>
                                         <CodeBlock 
-                                            language={match[1]} 
+                                            language={language} 
                                             content={content}
                                         />
                                     </ToolbarActionsProvider>
