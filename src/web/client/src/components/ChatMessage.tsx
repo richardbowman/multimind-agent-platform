@@ -261,14 +261,14 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     remarkPlugins={[remarkGfm]}
                     components={{
                         a: CustomLink,
-                        pre: ({node, ...props}) => (
-                            <div {...props} />
-                        ),
-                        code({node, className, children, inline, ...props}) {
-                            const isInline = inline || !node.parent || node.parent.tagName !== 'pre';
+                        pre: ({node, children, ...props}) => {
+                            // Check if this pre contains a code block
+                            const hasCodeBlock = node.children?.some(
+                                child => child.type === 'element' && child.tagName === 'code'
+                            );
                             
                             // Skip rendering code blocks when collapsed
-                            if (!isExpanded && !isInline) {
+                            if (!isExpanded && hasCodeBlock) {
                                 const isJson = className?.includes('language-json');
                                 return (
                                     <Box component="span" sx={{
@@ -286,7 +286,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             const content = String(children).replace(/\n$/, '');
                             const isHidden = className?.includes('[hidden]');
                             
-                            if (!isInline && match) {
+                            if (match) {
                                 return isHidden ? null : (
                                     <ToolbarActionsProvider>
                                         <CodeBlock 
@@ -298,10 +298,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             }
 
                             return isHidden ? null : (
-                                <code className={className} {...props} style={{
-                                    display: isInline ? 'inline' : 'block',
-                                    whiteSpace: isInline ? 'normal' : 'pre-wrap'
-                                }}>
+                                <code className={className} {...props}>
                                     {children}
                                 </code>
                             );
