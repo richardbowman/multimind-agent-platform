@@ -60,22 +60,29 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
             selectedUrls = params.previousResponses?.map(r => r.data?.selectedUrls).filter(s => s).slice(-1)[0];
         }
 
-        // Look backwards through step history to find URLs from previous scrape steps
+        // Find the most recent scrape step
+        let lastScrapeIndex = -1;
         if (params.previousResponses?.length) {
-            const previousScrapeUrls = new Set<string>();
             for (let i = params.previousResponses.length - 1; i >= 0; i--) {
-                const response = params.previousResponses[i];
-                if (response.type === StepResponseType.WebPage) {
-                    // Found a previous scrape step - add its URLs
-                    if (response.data?.processedUrls) {
-                        response.data.processedUrls.forEach(url => previousScrapeUrls.add(url));
-                    }
-                    // Stop looking further back since we found a scrape step
+                if (params.previousResponses[i].type === StepResponseType.WebPage) {
+                    lastScrapeIndex = i;
                     break;
                 }
             }
-            // Filter out URLs that were already scraped
-            selectedUrls = selectedUrls?.filter(url => !previousScrapeUrls.has(url));
+        }
+
+        // If we found a previous scrape step, only include URLs selected after that point
+        if (lastScrapeIndex >= 0) {
+            const newUrls = new Set<string>();
+            // Look through responses after the last scrape step
+            for (let i = lastScrapeIndex + 1; i < params.previousResponses.length; i++) {
+                const response = params.previousResponses[i];
+                if (response.data?.selectedUrls) {
+                    response.data.selectedUrls.forEach(url => newUrls.add(url));
+                }
+            }
+            // Filter to only URLs selected after last scrape
+            selectedUrls = selectedUrls?.filter(url => newUrls.has(url));
         }
 
         const isNews = params.previousResponses?.some(r =>
