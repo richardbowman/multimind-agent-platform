@@ -255,7 +255,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         return await this.artifactManager.saveArtifact(processedArtifact);
     }
 
-    async updateCSVWithResults(processedArtifact: Artifact, results: any[]): Promise<void> {
+    async updateCSVWithResults(processedArtifact: Artifact, results: any[]): Promise<Artifact> {
         // Read current processed CSV
         const rows: any[] = [];
         const parser = parse(processedArtifact.content.toString(), {
@@ -291,7 +291,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             content: output
         };
 
-        await this.artifactManager.saveArtifact(updatedArtifactData);
+        return await this.artifactManager.saveArtifact(updatedArtifactData);
     }
 
     private async processTaskResult(task: Task, csvArtifact: Artifact): Promise<any[]> {
@@ -364,7 +364,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         });
 
         try {
-            const response = StringUtils.extractAndParseJsonBlock(rawResponse.message);
+            const response = StringUtils.extractAndParseJsonBlock(rawResponse.message, schema);
             if (response && Array.isArray(response.columns)) {
                 return [{
                     rowIndex: task.props?.rowIndex,
@@ -402,14 +402,8 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
 
         // Generate a summary using the LLM
         const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`Summarize the CSV processing project in a concise, professional chat message.
-            Include:
-            - The original goal of the project
-            - Key statistics about the processing (number of rows processed, new columns added, etc)
-            - Any notable insights or patterns discovered based on the final CSV columns
-            - The location of the processed artifact
-
-            The final processed CSV contains ${csvData.length} rows, of which ${processedRows.length} have been processed.
+        prompt.addInstruction(`Explain that the CSV processing project is complete in a concise chat message including
+            statistics about the results of processing (new columns added, new artifacts created, etc)
 
             The final processed CSV contains these columns:
             ${csvColumns.map(col => `- ${col}`).join('\n')}`);
@@ -442,25 +436,27 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
     async handleTaskNotification(notification: TaskNotification): Promise<void> {
         const { task, childTask, eventType, statusPost } = notification;
         const artifactId = (task as StepTask<CSVProcessingResponse>).props.result?.response.data?.processedArtifactId;
+        
+        // Cancel all child tasks if we get a cancellation
+        if (eventType === TaskEventType.Cancelled && task.props?.childProjectId) {
+            const project = this.taskManager.getProject(task.props?.childProjectId);
+            if (project) {
+                const taskList = Object.keys(project.tasks);
+                for (const taskId of taskList) {
+                    await this.taskManager.cancelTask(taskId);
+                }
+            }
+            return;
+        }
 
         // Load the CSV artifact once
-        const csvArtifact = await this.artifactManager.loadArtifact(artifactId);
+        let csvArtifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
         if (!csvArtifact) {
             Logger.error(`CSV artifact ${artifactId} not found`);
             return;
         }
-
-        // Process results when a task completes
-        if (eventType === TaskEventType.Completed && childTask) {
-            const results = await this.processTaskResult(childTask, csvArtifact);
-            if (results.length > 0) {
-                await this.updateCSVWithResults(csvArtifact, results);
-            }
-        }
-
-
+        
         if (artifactId && statusPost && task.props?.childProjectId) {            
-
             // Parse the CSV
             const rows: any[] = [];
             const parser = parse(csvArtifact.content.toString(), {
@@ -515,6 +511,8 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                 statusUpdate += chunk;
             }
 
+            csvArtifact.content = statusUpdate;
+
             // Update the progress message with CSV in code block
             const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
                 `Completed ${rows.filter(r => r.Status === TaskStatus.Completed).length} of ${rows.length} rows\n\n` +
@@ -526,5 +524,14 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                 partial: true
             });
         }
+
+        // Process results when a task completes
+        if (eventType === TaskEventType.Completed && childTask) {
+            const results = await this.processTaskResult(childTask, csvArtifact);
+            if (results.length > 0) {
+                csvArtifact = await this.updateCSVWithResults(csvArtifact, results);
+            }
+        }
+
     }
 }
