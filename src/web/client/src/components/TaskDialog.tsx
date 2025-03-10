@@ -36,6 +36,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     const { handles } = useDataContext();
     const ipcService = useIPCService();
     const [projectDetails, setProjectDetails] = useState<any>(null);
+    const [childProjectDetails, setChildProjectDetails] = useState<any>(null);
+    const [childTasks, setChildTasks] = useState<any[]>([]);
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
@@ -43,6 +45,21 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 try {
                     const project = await ipcService.getRPC().getProject(selectedTask.projectId);
                     setProjectDetails(project);
+                    
+                    // Check for child project
+                    if (selectedTask.metadata?.childProjectId) {
+                        const childProject = await ipcService.getRPC().getProject(selectedTask.metadata.childProjectId);
+                        setChildProjectDetails(childProject);
+                        
+                        // Fetch tasks for child project
+                        const childProjectTasks = await ipcService.getRPC().getTasks({
+                            projectId: selectedTask.metadata.childProjectId
+                        });
+                        setChildTasks(childProjectTasks);
+                    } else {
+                        setChildProjectDetails(null);
+                        setChildTasks([]);
+                    }
                 } catch (error) {
                     console.error('Failed to fetch project details:', error);
                 }
@@ -111,6 +128,34 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                     onClick={() => setSelectedTask(task)}
                                 />
                             ))}
+                            
+                            {childProjectDetails && childTasks.length > 0 && (
+                                <>
+                                    <Typography 
+                                        variant="subtitle1" 
+                                        sx={{ 
+                                            mt: 2,
+                                            mb: 1,
+                                            position: 'sticky', 
+                                            top: 0, 
+                                            bgcolor: 'background.default', 
+                                            zIndex: 1,
+                                            color: 'text.primary'
+                                        }}
+                                    >
+                                        Child Project: {childProjectDetails.name}
+                                    </Typography>
+                                    {childTasks.map(task => (
+                                        <TaskCard
+                                            key={task.id}
+                                            task={task}
+                                            selected={task.id === selectedTask?.id}
+                                            onClick={() => setSelectedTask(task)}
+                                            sx={{ pl: 2 }}
+                                        />
+                                    ))}
+                                </>
+                            )}
                         </List>
                     </Box>
                     <Box sx={{ 
