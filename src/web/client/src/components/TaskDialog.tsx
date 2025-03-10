@@ -81,40 +81,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             <DialogContent sx={{
                 overflowY: 'hidden'
             }}>
-                {projectDetails && (
-                    <Box sx={{ 
-                        p: 2,
-                        mb: 1,
-                        display: 'flex',
-                        flexDirection: 'column',
-                        bgcolor: 'background.paper',
-                        borderRadius: 1,
-                        border: '1px solid',
-                        borderColor: 'divider'
-                    }}>
-                        <Typography variant="h6" sx={{ mb: 1 }}>
-                            Project: {projectDetails.name}
-                        </Typography>
-                        {projectDetails.description && (
-                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                {projectDetails.description}
-                            </Typography>
-                        )}
-                        <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
-                            Project ID: {projectDetails.id}
-                        </Typography>
-                        {projectDetails.metadata?.status && (
-                            <Typography variant="caption" sx={{ display: 'block' }}>
-                                Status: {projectDetails.metadata.status}
-                            </Typography>
-                        )}
-                        {projectDetails.metadata?.priority && (
-                            <Typography variant="caption" sx={{ display: 'block' }}>
-                                Priority: {projectDetails.metadata.priority}
-                            </Typography>
-                        )}
-                    </Box>
-                )}
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <Box sx={{ 
                         width: '30%',
@@ -155,6 +121,40 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     }}>
                         {selectedTask && (
                             <Stack spacing={2} sx={{ mt: 1 }}>
+                                {projectDetails && (
+                                    <Box sx={{ 
+                                        p: 2,
+                                        mb: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        bgcolor: 'background.paper',
+                                        borderRadius: 1,
+                                        border: '1px solid',
+                                        borderColor: 'divider'
+                                    }}>
+                                        <Typography variant="h6" sx={{ mb: 1 }}>
+                                            Project: {projectDetails.name}
+                                        </Typography>
+                                        {projectDetails.description && (
+                                            <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                {projectDetails.description}
+                                            </Typography>
+                                        )}
+                                        <Typography variant="caption" sx={{ display: 'block', mt: 1 }}>
+                                            Project ID: {projectDetails.id}
+                                        </Typography>
+                                        {projectDetails.metadata?.status && (
+                                            <Typography variant="caption" sx={{ display: 'block' }}>
+                                                Status: {projectDetails.metadata.status}
+                                            </Typography>
+                                        )}
+                                        {projectDetails.metadata?.priority && (
+                                            <Typography variant="caption" sx={{ display: 'block' }}>
+                                                Priority: {projectDetails.metadata.priority}
+                                            </Typography>
+                                        )}
+                                    </Box>
+                                )}
                                 <Typography variant="body1">
                                     <strong>Description:</strong> {selectedTask.description}
                                 </Typography>
