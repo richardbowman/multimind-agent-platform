@@ -8,6 +8,10 @@ import { ContentProject } from 'src/agents/contentManager';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { createUUID, UUID } from 'src/types/uuid';
 
+export enum TaskManagerEvents {
+
+}
+
 class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     private projects: Record<UUID, Project> = {};
     private filePath: string;
@@ -45,7 +49,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         }
 
         // Emit taskAdded event before saving
-        this.emit('taskAdded', { task, project });
+        await this.asyncEmit('taskAdded', { task, project });
 
         // If not explicitly set, make this task depend on the task with the next lowest order
         if (task.dependsOn === undefined) {
@@ -159,7 +163,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                     assignee
                 })
                 // Emit the 'taskAssigned' event with the task and agent ID
-                this.emit('taskAssigned', updatedTask);
+                this.asyncEmit('taskAssigned', updatedTask);
                 break;
             }
         }
@@ -226,6 +230,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             Logger.warn(`Task ${taskId} already marked in-progress but markTaskInProgress was called again`, new Error());
             return existingTask;
         }
+        if (existingTask?.status === TaskStatus.Cancelled) {
+            Logger.warn(`Trying to start task ${taskId} which is cancelled`, new Error());
+            return existingTask;
+        }
 
         return this.updateTask(taskId, { 
             status: TaskStatus.InProgress,
@@ -234,10 +242,27 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         });
     }
 
+    private async asyncEmit(eventName, ...eventArgs) {
+        // Emit the 'taskCompleted' event with the task
+        const listeners = this.listeners(eventName);
+        Logger.verbose(`Calling event listener ${eventName}`);
+        for(const listener of listeners) {
+            try {
+                await listener.apply(this, eventArgs);
+            } catch (e) {
+                Logger.error(`Error running event listener in task manager`, e);
+            }
+        }
+    }
+
     async completeTask(id: string): Promise<Task> {
         const existingTask = await this.getTaskById(id);
         if (existingTask?.status === TaskStatus.Completed) {
             Logger.warn(`Task ${id} already marked complete but complete was called again`, new Error());
+            return existingTask;
+        }
+        if (existingTask?.status === TaskStatus.Cancelled) {
+            Logger.warn(`Trying to complete task ${id} which is cancelled`, new Error());
             return existingTask;
         }
 
@@ -246,8 +271,8 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             complete: true, // Maintain backwards compatibility
             inProgress: false // Maintain backwards compatibility
         });
-        // Emit the 'taskCompleted' event with the task
-        this.emit('taskCompleted', task);
+        
+        await this.asyncEmit("taskCompleted", task);
 
         // Find any tasks that were dependent on this one
         const project = this.getProject(task.projectId);
@@ -255,17 +280,17 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
             .filter(t => t.dependsOn === task.id && !t.complete);
 
         // Emit 'ready' event for each dependent task
-        dependentTasks.forEach(dependentTask => {
-            this.emit('taskReady', {
+        for(const dependentTask of dependentTasks) {
+            await this.asyncEmit('taskReady', {
                 task: dependentTask,
                 project,
                 dependency: task
             });
-        });
+        };
 
         // Check if all tasks in the project are completed
         if (this.areAllTasksCompleted(task.projectId)) {
-            this.emit('projectCompleted', { 
+            await this.asyncEmit('projectCompleted', { 
                 project, 
                 task, 
                 creator: task.creator, 
@@ -304,9 +329,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         }
         this.projects[project.id] = project;
         // Emit taskUpdated for each task in the project
-        Object.values(project.tasks || {}).forEach(task => {
-            this.emit('taskUpdated', { task, project });
-        });
+        const tasks = Object.values(project.tasks || {});
+        for (const task of tasks) {
+            await this.asyncEmit('taskUpdated', { task, project });
+        };
         await this.save();
     }
 
@@ -384,7 +410,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         this.projects[projectId] = updatedProject;
 
         // Emit projectUpdated event
-        this.emit('projectUpdated', { project: updatedProject });
+        await this.asyncEmit('projectUpdated', { project: updatedProject });
 
         await this.save();
         return updatedProject;
@@ -398,7 +424,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
         });
         
         // Emit the 'taskCancelled' event with the task
-        this.emit('taskCancelled', task);
+        await this.asyncEmit('taskCancelled', task);
 
         // Check if this task has child projects and cancel their tasks
         if (task.props?.childProjectIds) {
@@ -453,7 +479,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                 taskFound = true;
 
                 // Emit taskUpdated event
-                this.emit('taskUpdated', { task: updatedTask, project });
+                await this.asyncEmit('taskUpdated', { task: updatedTask, project });
 
                 await this.save();
                 return updatedTask;
@@ -537,7 +563,7 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
                         Logger.info(`Task ${taskId} has missed its due date of ${new Date(dueDate).toISOString()}`);
                         
                         // Emit event for missed due date
-                        this.emit('taskMissedDueDate', { 
+                        await this.asyncEmit('taskMissedDueDate', { 
                             task, 
                             project,
                             dueDate: new Date(dueDate) 

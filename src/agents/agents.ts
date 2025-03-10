@@ -180,14 +180,19 @@ export abstract class Agent {
     }
 
     protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {
-        const isMine = task.assignee === this.userId;
-        Logger.info(`Agent [${this.messagingHandle}]: Received task notification '${eventType}': ${task.description} [${isMine ? "MINE" : "CREATOR"}]}]`);
+        try {
+            const isMine = task.assignee === this.userId;
+            Logger.info(`Agent [${this.messagingHandle}]: Received task notification '${eventType}': ${task.description} [${isMine ? "MINE" : "CREATOR"}]}]`);
 
-        // when tasks are assigned to me, start working on them; also for completed async tasks we need to kickoff queue
-        if (isMine && task.type === TaskType.Standard) {
-            await this.processTaskQueue();
+            // when tasks are assigned to me, start working on them; also for completed async tasks we need to kickoff queue
+            if (isMine && task.type === TaskType.Standard) {
+                await this.processTaskQueue();
+            }
+        } catch (error) {
+            Logger.error("failure in task notification", error);
         }
     }
+
     async processTaskQueue(): Promise<void> {
         if (this.isWorking) {
             Logger.info(`Agent [${this.messagingHandle}]: Task queue is already being processed`);

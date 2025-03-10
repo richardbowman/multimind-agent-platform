@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResponse, StepResponseType, StepResult, StepResultType, WithMessage } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType, WithMessage } from '../interfaces/StepResult';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact, ArtifactType } from 'src/tools/artifact';
@@ -57,7 +57,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
         const promptBuilder = this.modelHelpers.createPrompt();
 
         // Add core instructions
-        promptBuilder.addInstruction("Generate or modify a document based on the goal.");
+        promptBuilder.addInstruction("In this step, you are generating or modifying a document based on the goal. When you respond, provide a short description of the document you have generated (don't write your message in future tense, you should say 'I successfully created/appended/replaced a document containing...').");
         promptBuilder.addInstruction(`You have these options:
 1. Create a NEW document (leave artifactId blank and set operation to "create")
 2. Completely revise an EXISTING document (specify "artifactIndex" and set operation to "replace")
@@ -146,7 +146,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
                             artifactUpdate.type = existingArtifact?.type;
                         }
                     } catch (error) {
-                        Logger.error(`Could not find existing artifact for append operation ${artifactUpdate.id}`, error);
+                        Logger.error(`Could not find existing artifact for append operation for artifact index ${result.artifactIndex} ${artifactUpdate.id}`, error);
                     }
                 } else {
                     // Validate document type
@@ -162,9 +162,10 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
                     type: StepResultType.GenerateArtifact,
                     finished: true,
                     artifactIds: [artifact?.id],
+                    replan: ReplanType.Allow,
                     response: {
                         type: StepResponseType.GeneratedArtifact,
-                        message: result.message
+                        status: result.message
                     }
                 };
             }

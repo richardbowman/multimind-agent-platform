@@ -129,7 +129,6 @@ export abstract class StepBasedAgent extends Agent {
         if (isMine && eventType === TaskEventType.Completed && stepTask?.props?.result?.async) {
             const executor = this.stepExecutors.get(stepTask.props?.stepType);
             if (executor && typeof executor.onChildProjectComplete === 'function') {
-                // Handle non-CSV task updates
                 const statusPost = posts?.find(p => p.props?.partial);
                 const childProject = this.projects.getProject(stepTask.props?.childProjectId);
                 const stepResult = await executor.onChildProjectComplete(stepTask, childProject);
@@ -352,7 +351,7 @@ export abstract class StepBasedAgent extends Agent {
             return;
         }
 
-        this.projects.markTaskInProgress(task);
+        await this.projects.markTaskInProgress(task);
         await this.executeStep({
             ...params,
             task
@@ -586,7 +585,7 @@ export abstract class StepBasedAgent extends Agent {
                 );
             }
 
-            this.handleStepCompletion(params, stepResult);
+            await this.handleStepCompletion(params, stepResult);
         } catch (error) {
             Logger.error(`Error in step execution ${task.description}`, error);
             if (userPost) await this.reply(userPost, { message: "Sorry, I encountered an error while processing your request." });
@@ -682,6 +681,7 @@ export abstract class StepBasedAgent extends Agent {
                     await this.planSteps({
                     projectId,
                     userPost,
+                    task,
                     context: {
                         ...params.context,
                         artifacts: fullArtifactList
@@ -691,7 +691,7 @@ export abstract class StepBasedAgent extends Agent {
                 }
             }
 
-            this.projects.completeTask(task.id);
+            await this.projects.completeTask(task.id);
             Logger.info(`Completed step "${task.props.stepType}" for project "${projectId}"`);
             
             if (!stepResult.needsUserInput) {

@@ -161,7 +161,7 @@ export class ScheduleTaskExecutor implements StepExecutor {
                 if (!existingTask) {
                     throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
                 }
-                this.taskManager.completeTask(existingTask.id);
+                await this.taskManager.completeTask(existingTask.id);
             } else if (action === UpdateActions.Update && taskId) {
                 // Update existing task
                 const existingTask = this.taskManager.getTaskById(taskId);

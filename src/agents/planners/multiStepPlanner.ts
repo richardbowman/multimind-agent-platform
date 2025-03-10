@@ -157,7 +157,7 @@ ${currentSteps}`;
             // mark all incomplete tasks complete to recreate based on planning
             const incompleteTasks = tasks.filter(t => !t.complete);
             for (const task of incompleteTasks) {
-                this.projects.completeTask(task.id);
+                await this.projects.completeTask(task.id);
             }
 
             // Track which tasks are mentioned in the response

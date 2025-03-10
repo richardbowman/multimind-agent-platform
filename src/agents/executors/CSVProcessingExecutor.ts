@@ -395,17 +395,21 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             throw error;
         }
 
-        const csvColumns = CSVUtils.getColumnHeaders(processedContent);
+        const csvData = CSVUtils.getSheet(processedContent);
+        const csvColumns = Object.keys(csvData[0]);
+
+        const processedRows = csvData.filter(c => c["__processedAt"] !== undefined);
 
         // Generate a summary using the LLM
         const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`Summarize the CSV processing project's accomplishments in a concise, professional message.
+        prompt.addInstruction(`Summarize the CSV processing project in a concise, professional chat message.
             Include:
             - The original goal of the project
             - Key statistics about the processing (number of rows processed, new columns added, etc)
             - Any notable insights or patterns discovered based on the final CSV columns
             - The location of the processed artifact
-            - Next steps or recommendations based on the processed data
+
+            The final processed CSV contains ${csvData.length} rows, of which ${processedRows.length} have been processed.
 
             The final processed CSV contains these columns:
             ${csvColumns.map(col => `- ${col}`).join('\n')}`);
