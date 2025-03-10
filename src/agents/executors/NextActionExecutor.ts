@@ -20,6 +20,7 @@ import { StepResponse, StepResponseType, StepResult } from '../interfaces/StepRe
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ModelResponse } from 'src/schemas/ModelResponse';
+import { ArtifactManager } from 'src/tools/artifactManager';
 
 export type WithReasoning<T extends ModelResponse> = T & {
     reasoning?: string;
@@ -37,6 +38,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private stepExecutors: Map<string, StepExecutor<StepResponse>> = new Map();
     private chatClient: ChatClient;
+    private artifactManager: ArtifactManager;
 
     constructor(params: ExecutorConstructorParams, stepExecutors: Map<string, StepExecutor<StepResponse>>) {
         this.llmService = params.llmService;
@@ -45,6 +47,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         this.modelHelpers = params.modelHelpers;
         this.stepExecutors = stepExecutors;
         this.chatClient = params.chatClient;
+        this.artifactManager = params.artifactManager;
     }
     
     public async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
@@ -108,10 +111,26 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
         params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
 
+        // Search for relevant procedure guides
+        const procedureGuides = await this.artifactManager.searchArtifacts(params.stepGoal, 3, 0.6, { type: 'procedure-guide' });
+        
+        // Format procedure guides for prompt
+        const guidesPrompt = procedureGuides.length > 0 ?
+            `### RELEVANT PROCEDURE GUIDES:\n` +
+            procedureGuides.map((guide, i) => 
+                `#### Guide ${i+1} (${guide.score.toFixed(2)} relevance):\n` +
+                `**Title**: ${guide.artifact.metadata?.title}\n` +
+                `**Summary**: ${guide.artifact.metadata?.summary}\n`
+            ).join('\n\n') :
+            `*No relevant procedure guides found*`;
+
         const sequencesPrompt = sequences.map((seq, i) => {
             const seqText = seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description} ${(params.executionMode === 'conversation' && step.interaction) ?? ""}`).join("\n");
             return `### SEQUENCE ${i+1} of ${sequences.length}: ID: [${seq.getName()}] (${seq.getDescription()}):\n${seqText}`;
         }).join('\n\n');
+
+        // Add procedure guides to prompt
+        prompt.addContext(guidesPrompt);
             
         prompt.addInstruction(sequencesPrompt);
 
