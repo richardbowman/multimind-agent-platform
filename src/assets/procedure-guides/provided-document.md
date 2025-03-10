@@ -1,3 +1,7 @@
+---
+agent: ResearchAssistant
+---
+
 # Provided Document Procedure
 
 ## Description

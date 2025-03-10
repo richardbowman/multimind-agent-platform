@@ -1,3 +1,7 @@
+---
+agent: ProductManagerAnalyst
+---
+
 # Single User Story Specification Procedure
 
 ## Description

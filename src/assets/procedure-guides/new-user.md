@@ -1,3 +1,7 @@
+---
+agent: ResearchAssistant
+---
+
 # New User Procedure
 
 ## Description

@@ -1,3 +1,7 @@
+---
+agent: ResearchAssistant
+---
+
 # No Existing Knowledge Procedure
 
 ## Description

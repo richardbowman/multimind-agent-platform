@@ -1,3 +1,7 @@
+---
+agent: ProductManagerAnalyst
+---
+
 # Detailed Specifications Procedure
 
 ## Description
