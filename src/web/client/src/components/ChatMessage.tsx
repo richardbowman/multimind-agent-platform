@@ -264,8 +264,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         pre: ({node, ...props}) => (
                             <div {...props} />
                         ),
-                        code({node, className, children, ...props}) {
-                            const isInline = node.type === 'element' && node.tagName === 'code' && !node.properties?.className?.includes('language-');
+                        code({node, className, children, inline, ...props}) {
+                            const isInline = inline || !node.parent || node.parent.tagName !== 'pre';
                             
                             // Skip rendering code blocks when collapsed
                             if (!isExpanded && !isInline) {
