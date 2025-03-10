@@ -153,116 +153,31 @@
               "id": "NEW-USER",
               "name": "New User",
               "description": "For incoming new user requests, check existing knowledge base and validate.",
-              "steps": [
-                {
-                  "executor": "goal-confirmation",
-                  "description": "Confirm and restate the user's goal clearly with context for other steps."
-                },
-                {
-                  "executor": "check-knowledge",
-                  "description": "Check existing knowledge base"
-                },
-                {
-                  "executor": "validation",
-                  "description": "Validate information"
-                }
-              ]
+              "guide": "new-user.md"
             },
             {
               "id": "PROVIDED-URL",
               "name": "Provided URL",
               "description": "If the task includes a specific complete URL, download and process relevant links.",
-              "steps": [
-                {
-                  "executor": "url-extract",
-                  "description": "Extract the URLs from the task information"
-                },
-                {
-                  "executor": "download-webpage",
-                  "description": "Scrape provided URL"
-                },
-                {
-                  "executor": "select-links",
-                  "description": "Select child links from this page"
-                },
-                {
-                  "executor": "download-webpage",
-                  "description": "Scrape selected child links"
-                },
-                {
-                  "executor": "generate-document",
-                  "description": "Create a document of the relevant information from the webpage."
-                }
-              ]
+              "guide": "provided-url.md"
             },
             {
               "id": "PROVIDED-DOCUMENT",
               "name": "Provided Document",
               "description": "If the task mentions references to document(s) you can use to review.",
-              "steps": [
-                {
-                  "executor": "artifact-selector",
-                  "description": "Find and review the most relevant documents available"
-                },
-                {
-                  "executor": "select-links",
-                  "description": "Select child links found in the document"
-                },
-                {
-                  "executor": "download-webpage",
-                  "description": "Download selected child links"
-                },
-                {
-                  "executor": "generate-spreadsheet",
-                  "description": "Create a spreadsheet including the URL and your findings from each relevant search result."
-                }
-              ]
+              "guide": "provided-document.md"
             },
             {
               "id": "NO-EXISTING-KNOWLEDGE",
               "name": "No Existing Knowledge",
               "description": "Search, process links, and provide final response.",
-              "steps": [
-                {
-                  "executor": "run-search-engine",
-                  "description": "Get result links from the search engine"
-                },
-                {
-                  "executor": "select-links",
-                  "description": "Select best links from search results"
-                },
-                {
-                  "executor": "download-webpage",
-                  "description": "Download the pages of the selected links"
-                },
-                {
-                  "executor": "generate-spreadsheet",
-                  "description": "Create a spreadsheet including the URL and your findings from each relevant search result."
-                }
-              ]
+              "guide": "no-existing-knowledge.md"
             },
             {
               "id": "FOLLOW-UP",
               "name": "Follow Up",
               "description": "When the user requests additional research.",
-              "steps": [
-                {
-                  "executor": "artifact-selector",
-                  "description": "Select the artifact that you expect to contain the links."
-                },
-                {
-                  "executor": "select-links",
-                  "description": "Select the links from the document."
-                },
-                {
-                  "executor": "download-webpage",
-                  "description": "Download the pages of the selected links"
-                },
-                {
-                  "executor": "generate-spreadsheet",
-                  "description": "Update any past spreadsheet of search results with additional relevant results."
-                }
-              ]
+              "guide": "follow-up.md"
             }
           ]
         }
@@ -316,43 +231,13 @@
               "id": "API-DATA-EXTRACTION",
               "name": "API Data Extraction",
               "description": "Extract and analyze data from APIs",
-              "steps": [
-                {
-                  "executor": "goal-confirmation",
-                  "description": "Confirm the API data extraction goal"
-                },
-                {
-                  "executor": "api-scraper",
-                  "description": "Capture API calls and responses"
-                },
-                {
-                  "executor": "generate-artifact",
-                  "description": "Create structured report from API data"
-                }
-              ]
+              "guide": "api-data-extraction.md"
             },
             {
               "id": "CSV-DATA-EXTRACTION",
               "name": "CSV Data Extraction",
               "description": "Extract and analyze data from spreadsheets",
-              "steps": [
-                {
-                  "executor": "goal-confirmation",
-                  "description": "Confirm the API data extraction goal"
-                },
-                {
-                  "executor": "nodejs-code-execution",
-                  "description": "Extract the CSV headers"
-                },
-                {
-                  "executor": "nodejs-code-execution",
-                  "description": "Perform the actual requested data extraction or filtering"
-                },
-                {
-                  "executor": "reply",
-                  "description": "Summarize what you accomplished"
-                }
-              ]
+              "guide": "csv-data-extraction.md"
             }
           ]
         }
@@ -505,48 +390,19 @@
               "id": "VISION",
               "name": "Product vision",
               "description": "Develop product vision and high-level product requirements",
-              "steps": [
-                {
-                  "executor": "understand-goals",
-                  "description": "Gain an understanding of user's high level idea."
-                },
-                {
-                  "executor": "generate-diagram",
-                  "description": "Brainstorm the overall product considerations in a mindmap to support the idea.",
-                  "interaction": "Make sure to follow-up with a recommended next step."
-                },
-                {
-                  "executor": "generate-spreadsheet",
-                  "description": "Create the initial list of user stories that would enable creating a prototype.",
-                  "interaction": "Follow-up and see if any changes are desired"
-                }
-              ]
+              "guide": "product-vision.md"
             },
             {
               "id": "process-all-user-stories",
               "name": "Detailed Specifications",
               "description": "Develop detailed product specifications from a high level spreadsheet of user stories.",
-              "steps": [
-                {
-                  "executor": "understand-goals",
-                  "description": "Confirm the attachments include a user story spreadsheet. If not, ask the user to attach user stories. If they have a list in another format, use 'generate-spreadsheet' to create one."
-                },
-                {
-                  "executor": "csv-processor",
-                  "description": "Develop PRD document to document requirements for development."
-                }
-              ]
+              "guide": "detailed-specifications.md"
             },
             {
               "id": "detailed-specification",
               "name": "Detailed Specification for a Single User Story",
               "description": "Develop detailed product specification for a single user story.",
-              "steps": [
-                {
-                  "executor": "generate-document",
-                  "description": "Develop PRD document to document requirements for development."
-                }
-              ]
+              "guide": "single-user-story-spec.md"
             }
           ]
         }
