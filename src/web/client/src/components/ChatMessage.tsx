@@ -296,9 +296,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             }
 
                             return isHidden ? null : (
-                                <div className={className} {...props}>
+                                <code className={className} {...props} style={{
+                                    display: inline ? 'inline' : 'block',
+                                    whiteSpace: inline ? 'normal' : 'pre-wrap'
+                                }}>
                                     {children}
-                                </div>
+                                </code>
                             );
                         }
                     }}
