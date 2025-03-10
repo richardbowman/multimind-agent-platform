@@ -27,9 +27,6 @@
           "plannerType": "nextStep",
           "executors": [
             {
-              "className": "ReplyExecutor"
-            },
-            {
               "className": "GenerateDocumentExecutor"
             },
             {
