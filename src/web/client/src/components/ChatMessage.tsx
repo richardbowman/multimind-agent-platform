@@ -261,7 +261,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     remarkPlugins={[remarkGfm]}
                     components={{
                         a: CustomLink,
-                        pre: ({node, children, ...props}) => {
+                        pre: ({node, children, className, ...props}) => {
                             // Check if this pre contains a code block
                             const hasCodeBlock = node.children?.some(
                                 child => child.type === 'element' && child.tagName === 'code'
