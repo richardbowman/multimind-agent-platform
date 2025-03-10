@@ -196,6 +196,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         } else if (response.nextAction && response.nextAction === "DONE") {
             return {
                 finished: true,
+                artifactIds: params.context?.artifacts?.map(a => a.id),
                 response: {
                     type: StepResponseType.Plan,
                     reasoning: response.reasoning,

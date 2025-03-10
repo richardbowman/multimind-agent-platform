@@ -25,7 +25,8 @@ import { StepTask } from '../interfaces/ExecuteStepParams';
 
 interface CSVProcessingResponse extends StepResponse {
     data?: {
-        processedArtifactId: UUID;
+        csvArtifactId?: UUID;
+        processedArtifactId?: UUID;
     }
 }
 
@@ -211,6 +212,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                 projectId: project.id,
                 finished: false,
                 async: true,
+                artifactIds: [processedArtifact.id],
                 response: {
                     status: message,
                     data: {

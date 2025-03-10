@@ -432,7 +432,7 @@ export abstract class StepBasedAgent extends Agent {
             });
 
             let context: Partial<ExecuteContext> = {};
-            let post: Message | undefined = undefined;
+            let post: Message | undefined = undefined;      //TODO: we shouild be able to look this up
             if (task.props?.announceChannelId !== undefined) {
                 const handles = await this.chatClient.getHandles();
                 const creatorHandle = handles[task.creator];
@@ -451,6 +451,7 @@ export abstract class StepBasedAgent extends Agent {
             const execParams: ExecuteNextStepParams = {
                 projectId,
                 userPost: post,
+                task: task,
                 context: {
                     ...context,
                     projects: [parentProject],
@@ -672,10 +673,21 @@ export abstract class StepBasedAgent extends Agent {
         if (stepResult.finished || this.planner?.alwaysComplete) {
             // If this was the last planned task, add a validation step
             const remainingTasks = this.projects.getProjectTasks(projectId).filter(t => !t.complete && t.type === "step" && t.id !== task.id);
+            const stepArtifacts = await this.mapRequestedArtifacts(artifactList);
+            const fullArtifactList = ArrayUtils.deduplicateById([...stepArtifacts, ...params.context?.artifacts || []]);
+
             if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
                 //TODO: hacky, we don't really post this message
                 if (!this.planner || this.planner.allowReplan) {
-                    await this.planSteps(params);
+                    await this.planSteps({
+                    projectId,
+                    userPost,
+                    context: {
+                        ...params.context,
+                        artifacts: fullArtifactList
+                    },
+                    partialPost: params.partialPost
+                });
                 }
             }
 
@@ -683,8 +695,6 @@ export abstract class StepBasedAgent extends Agent {
             Logger.info(`Completed step "${task.props.stepType}" for project "${projectId}"`);
             
             if (!stepResult.needsUserInput) {
-                const stepArtifacts = await this.mapRequestedArtifacts(artifactList);
-                const fullArtifactList = ArrayUtils.deduplicateById([...stepArtifacts, ...params.context?.artifacts || []]);
 
                 await this.executeNextStep({
                     projectId,
