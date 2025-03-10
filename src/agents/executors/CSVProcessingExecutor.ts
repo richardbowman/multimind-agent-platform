@@ -186,7 +186,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
 
                 await this.taskManager.addTask(project, {
                     id: taskId,
-                    description: `This task has been initiated from a csv-processor step. Your goal is to process a single row of data. Processing Context: ${taskDescription}`,
+                    description: `This task has been initiated from a csv-processor step. Your goal is to process a single row of data. Processing Context: ${taskDescription}. Data: ${taskData}`,
                     creator: params.agentId,
                     type: TaskType.Standard,
                     props: {
@@ -233,7 +233,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         }
     }
 
-    async initializeProcessedCSV(originalArtifact: Artifact): Promise<Artifact> {
+    async initializeProcessedCSV(originalArtifact: Artifact): Promise<string> {
         if (originalArtifact.type !== ArtifactType.Spreadsheet) {
             throw new Error('Can only process spreadsheet artifacts');
         }
@@ -254,10 +254,10 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         return await this.artifactManager.saveArtifact(processedArtifact);
     }
 
-    async updateCSVWithResults(processedArtifact: Artifact, results: any[]): Promise<Artifact> {
+    async updateCSVWithResults(currentContent: string, results: any[]): Promise<string> {
         // Read current processed CSV
         const rows: any[] = [];
-        const parser = parse(processedArtifact.content.toString(), {
+        const parser = parse(currentContent.toString(), {
             columns: true,
             skip_empty_lines: true,
             trim: true,
@@ -285,12 +285,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
 
         // Update the processed artifact
         const output = stringify(rows, { header: true });
-        const updatedArtifactData = {
-            ...processedArtifact,
-            content: output
-        };
-
-        return await this.artifactManager.saveArtifact(updatedArtifactData);
+        return output;
     }
 
     private async processTaskResult(task: Task, csvArtifact: Artifact): Promise<any[]> {
@@ -326,14 +321,14 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                     items: {
                         type: 'object',
                         properties: {
-                            name: { type: 'string', required: true },
-                            value: { type: 'string', required: true }
+                            name: { type: 'string' },
+                            value: { type: 'string' }
                         },
                         required: ['name', 'value']
                     }
-                },
-                required: ['columns']
-            }
+                }
+            },
+            required: ['columns']
         };
 
         // Create prompt for result processing
@@ -442,7 +437,9 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             if (project) {
                 const taskList = Object.keys(project.tasks);
                 for (const taskId of taskList) {
-                    await this.taskManager.cancelTask(taskId);
+                    if (project.tasks[taskId].status !== TaskStatus.Cancelled) {
+                        await this.taskManager.cancelTask(taskId);
+                    }
                 }
             }
             return;
@@ -450,6 +447,8 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
 
         // Load the CSV artifact once
         let csvArtifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
+        let newContent : string|undefined = undefined;
+
         if (!csvArtifact) {
             Logger.error(`CSV artifact ${artifactId} not found`);
             return;
@@ -510,7 +509,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                 statusUpdate += chunk;
             }
 
-            csvArtifact.content = statusUpdate;
+            newContent = statusUpdate;
 
             // Update the progress message with CSV in code block
             const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
@@ -528,9 +527,15 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         if (eventType === TaskEventType.Completed && childTask) {
             const results = await this.processTaskResult(childTask, csvArtifact);
             if (results.length > 0) {
-                csvArtifact = await this.updateCSVWithResults(csvArtifact, results);
+                newContent = await this.updateCSVWithResults(newContent||csvArtifact.content.toString(), results);
             }
         }
 
+        if (newContent) {
+            await this.artifactManager.saveArtifact({
+                ...csvArtifact,
+                content: newContent
+            });
+        }
     }
 }
