@@ -283,8 +283,17 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             }
         }
 
-        // Update the processed artifact
-        const output = stringify(rows, { header: true });
+        // Collect all unique column names from all rows
+        const allColumns = new Set<string>();
+        for (const row of rows) {
+            Object.keys(row).forEach(col => allColumns.add(col));
+        }
+
+        // Update the processed artifact with all columns
+        const output = stringify(rows, { 
+            header: true,
+            columns: Array.from(allColumns) // Explicitly specify all columns
+        });
         return output;
     }
 
