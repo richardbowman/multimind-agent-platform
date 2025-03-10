@@ -60,6 +60,24 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
             selectedUrls = params.previousResponses?.map(r => r.data?.selectedUrls).filter(s => s).slice(-1)[0];
         }
 
+        // Look backwards through step history to find URLs from previous scrape steps
+        if (params.previousResponses?.length) {
+            const previousScrapeUrls = new Set<string>();
+            for (let i = params.previousResponses.length - 1; i >= 0; i--) {
+                const response = params.previousResponses[i];
+                if (response.type === StepResponseType.WebPage) {
+                    // Found a previous scrape step - add its URLs
+                    if (response.data?.processedUrls) {
+                        response.data.processedUrls.forEach(url => previousScrapeUrls.add(url));
+                    }
+                    // Stop looking further back since we found a scrape step
+                    break;
+                }
+            }
+            // Filter out URLs that were already scraped
+            selectedUrls = selectedUrls?.filter(url => !previousScrapeUrls.has(url));
+        }
+
         const isNews = params.previousResponses?.some(r =>
             r.data?.searchResults?.some(s => s.category === SearchCategory.News)
         );
