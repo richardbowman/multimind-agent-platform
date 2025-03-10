@@ -186,18 +186,17 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
 
                 await this.taskManager.addTask(project, {
                     id: taskId,
-                    description: `This task has been initiated from a csv-processor step. Your goal is to process a single row of the spreadsheet that is provided in DATA. Processing Context: ${taskDescription} DATA: ${taskData}`,
+                    description: `This task has been initiated from a csv-processor step. Your goal is to process a single row of data. Processing Context: ${taskDescription}`,
                     creator: params.agentId,
                     type: TaskType.Standard,
                     props: {
                         rowIndex: i,
                         csvArtifactId: csvArtifact.id,
                         processedArtifactId: processedArtifact.id,
-                        originalRowData: {
-                            ...row.data,
-                            __taskId: taskId // Store task ID with row data
-                        },
-                        attachedArtifactIds: params.context?.artifacts?.map(a => a.id)
+                        rowData: row.data, // Only pass the specific row data
+                        attachedArtifactIds: params.context?.artifacts
+                            ?.filter(a => a.id !== csvArtifact.id) // Exclude the CSV artifact
+                            .map(a => a.id)
                     }
                 });
 
