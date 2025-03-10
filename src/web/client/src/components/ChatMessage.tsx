@@ -290,7 +290,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             // Get the language from the code element's className
                             const codeClassName = codeNode?.properties?.className?.toString() || '';
                             const match = /language-(\w+)(?:\s*\[hidden\])?/.exec(codeClassName);
-                            const content = String(children).replace(/\n$/, '');
+                            // Extract text content from code block children
+                            const content = codeNode?.children
+                                ?.filter(child => child.type === 'text')
+                                .map(child => child.value)
+                                .join('')
+                                .replace(/\n$/, '') || '';
                             const isHidden = codeClassName?.includes('[hidden]');
                             
                             if (match) {
