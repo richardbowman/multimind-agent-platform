@@ -195,7 +195,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                         processedArtifactId: processedArtifact.id,
                         rowData: row.data, // Only pass the specific row data
                         attachedArtifactIds: params.context?.artifacts
-                            ?.filter(a => a.id !== csvArtifact.id) // Exclude the CSV artifact
+                            ?.filter(a => a.type !== ArtifactType.Spreadsheet) // Exclude all spreadsheet artifacts
                             .map(a => a.id)
                     }
                 });
