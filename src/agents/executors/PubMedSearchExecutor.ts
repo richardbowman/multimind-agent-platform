@@ -17,16 +17,19 @@ import crypto from 'crypto';
 import { CSVUtils, CSVContents } from "src/utils/CSVUtils";
 import { createUUID } from "src/types/uuid";
 
- interface PubMedSearchResult {
-     id: string;
-     title: string;
-     abstract?: string;
-     authors: string[];
-     journal: string;
-     publicationDate: string;
-     doi?: string;
-     pmid: string;
- }
+interface PubMedSearchResult {
+    id: string;
+    title: string;
+    abstract?: string;
+    authors: string[];
+    journal: string;
+    publicationDate: string;
+    doi?: string;
+    pmid: string;
+    pmcid?: string;
+    fullTextUrl?: string;
+    fullText?: string;
+}
 
  @StepExecutorDecorator(ExecutorType.PUBMED_SEARCH, 'Performs PubMed searches for scientific literature')
  export class PubMedSearchExecutor implements StepExecutor<StepResponse> {
@@ -39,16 +42,57 @@ import { createUUID } from "src/types/uuid";
 
      async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
          const { searchQuery, category } = await this.generateSearchQuery(params.goal, params.stepGoal, params.previousResponses);
-         const searchResults = await this.searchPubMed(searchQuery);
+        const searchResults = await this.searchPubMed(searchQuery);
+            
+        // Fetch full text for articles with PMC IDs
+        const resultsWithFullText = await Promise.all(searchResults.map(async result => {
+            if (result.pmcid) {
+                try {
+                    const fullTextResponse = await axios.get(`https://www.ncbi.nlm.nih.gov/pmc/articles/${result.pmcid}/full-text/`, {
+                        headers: {
+                            'Accept': 'text/xml',
+                            'User-Agent': 'PubMedSearchExecutor/1.0 (your-email@example.com)'
+                        }
+                    });
+                        
+                    // Extract main content from XML
+                    const parser = new DOMParser();
+                    const xmlDoc = parser.parseFromString(fullTextResponse.data, 'text/xml');
+                    const body = xmlDoc.getElementsByTagName('body')[0];
+                    result.fullText = body?.textContent || '';
+                } catch (error) {
+                    console.error(`Error fetching full text for ${result.pmcid}:`, error);
+                }
+            }
+            return result;
+        }));
 
          // Convert results to CSV using CSVUtils
-         const csvContents: CSVContents = {
-             metadata: {
-                 query: searchQuery,
-                 resultCount: searchResults.length,
-                 generatedAt: new Date().toISOString()
-             },
-             rows: searchResults.map(result => ({
+        // Create document artifacts for full text
+        const documentArtifacts = resultsWithFullText
+            .filter(result => result.fullText)
+            .map(result => ({
+                type: ArtifactType.Document,
+                content: result.fullText!,
+                metadata: {
+                    title: result.title,
+                    authors: result.authors.join(', '),
+                    journal: result.journal,
+                    publicationDate: result.publicationDate,
+                    doi: result.doi,
+                    pmid: result.pmid,
+                    pmcid: result.pmcid,
+                    generatedAt: new Date().toISOString()
+                }
+            }));
+
+        const csvContents: CSVContents = {
+            metadata: {
+                query: searchQuery,
+                resultCount: resultsWithFullText.length,
+                generatedAt: new Date().toISOString()
+            },
+            rows: resultsWithFullText.map(result => ({
                  Title: result.title,
                  Authors: result.authors.join('; '),
                  Journal: result.journal,
@@ -56,7 +100,9 @@ import { createUUID } from "src/types/uuid";
                  DOI: result.doi || '',
                  PMID: result.pmid,
                  Abstract: result.abstract || '',
-                 URL: result.doi ? `https://doi.org/${result.doi}` : `https://pubmed.ncbi.nlm.nih.gov/${result.pmid}`
+                URL: result.doi ? `https://doi.org/${result.doi}` : `https://pubmed.ncbi.nlm.nih.gov/${result.pmid}`,
+                FullText: result.fullTextUrl || '',
+                DocumentID: result.fullText ? documentArtifacts.find(a => a.metadata.pmid === result.pmid)?.id : ''
              }))
          };
          
@@ -69,17 +115,21 @@ import { createUUID } from "src/types/uuid";
              response: {
                 type: StepResponseType.GeneratedArtifact,
                 status: `Query "${searchQuery}" found ${searchResults.length} PubMed articles`,
-                artifacts: [{
-                    type: ArtifactType.Spreadsheet,
-                    content: csvContent,
-                    metadata: {
-                        title: `PubMed Search Results - ${searchQuery}`,
-                        subtype: SpreadsheetSubType.SearchResults,
-                        query: searchQuery,
-                        resultCount: searchResults.length,
-                        generatedAt: new Date().toISOString()
-                    }
-                }]
+                artifacts: [
+                    {
+                        type: ArtifactType.Spreadsheet,
+                        content: csvContent,
+                        metadata: {
+                            title: `PubMed Search Results - ${searchQuery}`,
+                            subtype: SpreadsheetSubType.SearchResults,
+                            query: searchQuery,
+                            resultCount: resultsWithFullText.length,
+                            generatedAt: new Date().toISOString(),
+                            linkedDocuments: documentArtifacts.map(a => a.id)
+                        }
+                    },
+                    ...documentArtifacts
+                ]
              }
          };
      }
@@ -134,16 +184,20 @@ import { createUUID } from "src/types/uuid";
                          return `${foreName} ${lastName}`.trim();
                      });
 
-                 return {
-                     id: getText('PMID'),
-                     title: getText('ArticleTitle'),
-                     abstract: getText('AbstractText'),
-                     authors,
-                     journal: getText('Title'),
-                     publicationDate: getText('PubDate'),
-                     doi: getText('ELocationID'),
-                     pmid: getText('PMID')
-                 };
+                const pmcid = getText('ArticleId')?.startsWith('PMC') ? getText('ArticleId') : undefined;
+                
+                return {
+                    id: getText('PMID'),
+                    title: getText('ArticleTitle'),
+                    abstract: getText('AbstractText'),
+                    authors,
+                    journal: getText('Title'),
+                    publicationDate: getText('PubDate'),
+                    doi: getText('ELocationID'),
+                    pmid: getText('PMID'),
+                    pmcid,
+                    fullTextUrl: pmcid ? `https://www.ncbi.nlm.nih.gov/pmc/articles/${pmcid}/` : undefined
+                };
              });
          } catch (error) {
              console.error('PubMed search error:', error);
