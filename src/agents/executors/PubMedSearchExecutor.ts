@@ -224,6 +224,10 @@ interface PubMedSearchResult {
             response: {
                 type: StepResponseType.GeneratedArtifact,
                 status: `Query "${searchQuery}" found ${resultsWithFullText.length} PubMed articles`,
+                data: {
+                    searchQuery,
+                    searchQueries: [...(previousResponses?.data?.searchQueries || []), searchQuery]
+                },
                 artifacts: [
                     {
                         type: ArtifactType.Spreadsheet,
@@ -329,6 +333,7 @@ interface PubMedSearchResult {
 
          const previousFindings = previousResponses?.data?.analysis?.keyFindings || [];
          const previousGaps = previousResponses?.data?.analysis?.gaps || [];
+         const previousQueries = previousResponses?.data?.searchQueries || [];
 
          const systemPrompt = `You are a scientific research assistant. Our overall goal is ${goal}.
      Consider these specific goals we're trying to achieve: ${task}
@@ -339,8 +344,12 @@ interface PubMedSearchResult {
      Identified Gaps:
      ${previousGaps.map((g: string) => `- ${g}`).join('\n')}
 
+     Previous Search Queries:
+     ${previousQueries.map((q: string) => `- ${q}`).join('\n')}
+
      Generate a focused PubMed search query using appropriate medical/scientific terminology.
-     Include relevant MeSH terms and Boolean operators when appropriate.`;
+     Include relevant MeSH terms and Boolean operators when appropriate.
+     Avoid repeating previous search queries unless necessary for completeness.`;
 
          const instructions = new StructuredOutputPrompt(schema, systemPrompt);
          const response = await this.modelHelpers.generate<SearchQueryResponse>({
