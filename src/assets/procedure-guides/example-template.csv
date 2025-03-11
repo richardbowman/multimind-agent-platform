@@ -1,0 +1,39 @@
+---
+title: "Example CSV Template"
+description: "Template for creating new CSV files with schema definition"
+artifactType: Spreadsheet
+schema:
+  columns:
+    - name: "ID"
+      type: "string"
+      description: "Unique identifier for each record"
+      required: true
+      example: "abc123"
+    - name: "Name"
+      type: "string"
+      description: "Full name of the person or entity"
+      required: true
+      example: "John Doe"
+    - name: "Age"
+      type: "number"
+      description: "Age in years"
+      required: false
+      min: 0
+      max: 120
+    - name: "Email"
+      type: "string"
+      description: "Contact email address"
+      required: false
+      format: "email"
+    - name: "IsActive"
+      type: "boolean"
+      description: "Whether the record is currently active"
+      required: true
+      default: true
+    - name: "CreatedAt"
+      type: "date"
+      description: "Date when the record was created"
+      required: true
+      format: "YYYY-MM-DD"
+---
+ID,Name,Age,Email,IsActive,CreatedAt
