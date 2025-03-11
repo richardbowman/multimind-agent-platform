@@ -53,9 +53,13 @@ interface PubMedSearchResult {
             if (result.pmcid) {
                 try {
                     const fullTextResponse = await asyncQueue.enqueue(() => 
-                        axios.get(`https://www.ncbi.nlm.nih.gov/pmc/articles/${result.pmcid}/`, {
+                        axios.get(`${this.baseUrl}/efetch.fcgi`, {
+                            params: {
+                                db: 'pmc',
+                                id: result.pmcid,
+                                retmode: 'xml'
+                            },
                             headers: {
-                                'Accept': 'text/xml',
                                 'User-Agent': 'PubMedSearchExecutor/1.0 (your-email@example.com)'
                             }
                         })
@@ -66,6 +70,7 @@ interface PubMedSearchResult {
                     const xmlDoc = parser.parseFromString(fullTextResponse.data, 'text/xml');
                     const body = xmlDoc.getElementsByTagName('body')[0];
                     result.fullText = body?.textContent || '';
+                    result.fullTextUrl = `https://www.ncbi.nlm.nih.gov/pmc/articles/${result.pmcid}/`;
                 } catch (error) {
                     console.error(`Error fetching full text for ${result.pmcid}:`, error);
                 }
