@@ -198,7 +198,8 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
                                 contentDate: summaryResponse.date,
                                 task: params.stepGoal,
                                 projectId: params.projectId,
-                                tokenUsage: summaryResponse._usage
+                                tokenUsage: summaryResponse._usage,
+                                subtype: 'Webpage Summary'
                             },
                             tokenCount: summaryResponse._usage?.outputTokens
                         });
