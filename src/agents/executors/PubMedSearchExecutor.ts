@@ -11,6 +11,7 @@ import { ModelHelpers } from "src/llm/modelHelpers";
  import { ExecutorType } from "../interfaces/ExecutorType";
  import axios from 'axios';
  import { DOMParser } from 'xmldom';
+import { withRetry } from "src/helpers/retry";
 
  interface PubMedSearchResult {
      id: string;
