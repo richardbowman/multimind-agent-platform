@@ -162,6 +162,23 @@ export class ArtifactManager {
         artifact.content :
         JSON.stringify(artifact.content);
 
+    // If it's a CSV, parse and store metadata
+    if (mimeType === 'text/csv' && typeof content === 'string') {
+      try {
+        const lines = content.split('\n');
+        const headers = lines[0].split(',');
+        const rowCount = lines.length - 1; // Subtract header row
+        
+        artifact.metadata = {
+          ...artifact.metadata,
+          csvHeaders: headers,
+          rowCount
+        };
+      } catch (error) {
+        Logger.error('Error parsing CSV metadata:', error);
+      }
+    }
+
     await this.fileQueue.enqueue(() =>
       //TODO: need to handle calendrevents
       fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
