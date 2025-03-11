@@ -283,9 +283,14 @@ export class ArtifactManager {
     }
   }
 
-  async bulkLoadArtifacts(artifactIds: UUID[]): Promise<Artifact[]> {
+  async bulkLoadArtifacts(artifactsInput: (UUID | ArtifactItem)[]): Promise<Artifact[]> {
     const metadata = await this.loadArtifactMetadata();
     const artifacts: Artifact[] = [];
+
+    // Extract IDs from input, whether they're UUIDs or ArtifactItems
+    const artifactIds = artifactsInput.map(input => 
+      typeof input === 'string' ? input : input.id
+    );
 
     // Create a list of read operations
     const readOperations = artifactIds.map(async artifactId => {
