@@ -19,13 +19,15 @@ export class AsyncQueue {
         this.timeout = options.timeout || 0;
     }
 
-    async add<T>(operation: () => Promise<T>): Promise<T> {
+    async enqueue<T>(operation: () => Promise<T>): Promise<T> {
         const stack = new Error().stack || 'No stack trace available';
         
         // Add to queue
         const promise = new Promise<T>((resolve, reject) => {
             this.queue.push(this.runOperation(operation, resolve, reject, stack));
         });
+        
+        return promise;
 
         return promise;
     }

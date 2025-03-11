@@ -52,7 +52,7 @@ interface PubMedSearchResult {
         for (const result of searchResults) {
             if (result.pmcid) {
                 try {
-                    const fullTextResponse = await asyncQueue.add(() => 
+                    const fullTextResponse = await asyncQueue.enqueue(() => 
                         axios.get(`https://www.ncbi.nlm.nih.gov/pmc/articles/${result.pmcid}/`, {
                             headers: {
                                 'Accept': 'text/xml',
