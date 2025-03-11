@@ -280,6 +280,11 @@ ${this.modelHelpers.getFinalInstructions()}
                 if (artifact.metadata.contentDate) {
                     metadataInfo += `\n- Content Date: ${new Date(artifact.metadata.contentDate).toLocaleDateString()}`;
                 }
+                // Add CSV metadata if available
+                if (artifact.type === 'csv' && artifact.metadata.csvHeaders) {
+                    metadataInfo += `\n- Columns: ${artifact.metadata.csvHeaders.join(', ')}`;
+                    metadataInfo += `\n- Rows: ${artifact.metadata.rowCount}`;
+                }
             }
 
             return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}${metadataInfo}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
@@ -315,6 +320,11 @@ ${this.modelHelpers.getFinalInstructions()}
                 if (artifact.metadata.contentDate) {
                     metadataInfo += `\n- Content Date: ${new Date(artifact.metadata.contentDate).toLocaleDateString()}`;
                 }
+                // Add CSV metadata if available
+                if (artifact.type === 'csv' && artifact.metadata.csvHeaders) {
+                    metadataInfo += `\n- Columns: ${artifact.metadata.csvHeaders.join(', ')}`;
+                    metadataInfo += `\n- Rows: ${artifact.metadata.rowCount}`;
+                }
             }
 
             return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'} [Size: ${size}]${metadataInfo}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
@@ -334,6 +344,11 @@ ${this.modelHelpers.getFinalInstructions()}
                 }
                 if (artifact.metadata.contentDate) {
                     metadataInfo += `\n- Content Date: ${new Date(artifact.metadata.contentDate).toLocaleDateString()}`;
+                }
+                // Add CSV metadata if available
+                if (artifact.type === 'csv' && artifact.metadata.csvHeaders) {
+                    metadataInfo += `\n- Columns: ${artifact.metadata.csvHeaders.join(', ')}`;
+                    metadataInfo += `\n- Rows: ${artifact.metadata.rowCount}`;
                 }
             }
             return `Artifact Index:${index + offset} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}${metadataInfo}`;
