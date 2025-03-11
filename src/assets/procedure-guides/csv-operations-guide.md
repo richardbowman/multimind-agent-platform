@@ -1,3 +1,20 @@
+---
+title: "CSV Operations Guide"
+description: "Best practices and examples for working with CSV files in the Solver agent's NodeExecutorExecutor"
+created: "2025-02-04T00:00:00.000Z"
+tags:
+  - "CSV"
+  - "data processing"
+  - "NodeExecutorExecutor"
+  - "Solver agent"
+  - "data validation"
+author: "Solver Agent Team"
+version: "1.0.0"
+relatedGuides:
+  - "batch-llm-processing-guide.md"
+  - "data-validation-guide.md"
+---
+
 # CSV Operations Guide for Solver Agent
 
 ## Best Practices for Working with CSV Files in NodeExecutorExecutor

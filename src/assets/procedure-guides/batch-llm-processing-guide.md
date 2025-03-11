@@ -1,3 +1,20 @@
+---
+title: "Batch LLM Processing Guide"
+description: "Guide for processing large datasets with LLM calls using the Solver agent's NodeExecutorExecutor"
+created: "2025-02-04T00:00:00.000Z"
+tags:
+  - "LLM"
+  - "batch processing"
+  - "data analysis"
+  - "Solver agent"
+  - "NodeExecutorExecutor"
+author: "Solver Agent Team"
+version: "1.0.0"
+relatedGuides:
+  - "data-processing-guide.md"
+  - "llm-integration-guide.md"
+---
+
 # Batch LLM Processing Guide for Solver Agent
 
 ## Best Practices for Processing Large Datasets with LLM Calls

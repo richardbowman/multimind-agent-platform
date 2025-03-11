@@ -1,3 +1,20 @@
+---
+title: "LLM Math and Letter Counting Guide"
+description: "Guide for handling mathematical operations and letter counting challenges with LLMs"
+created: "2025-02-04T00:00:00.000Z"
+tags:
+  - "LLM"
+  - "math"
+  - "letter counting"
+  - "tokenization"
+  - "data processing"
+author: "Solver Agent Team"
+version: "1.0.0"
+relatedGuides:
+  - "batch-llm-processing-guide.md"
+  - "data-validation-guide.md"
+---
+
 # LLM Challenges with Math and Letter Counting
 
 ## Overview
