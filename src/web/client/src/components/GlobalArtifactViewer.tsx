@@ -339,7 +339,9 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                             
                             // Update selected artifacts
                             const newArtifacts = Object.values(artifactFolders)
-                                .flat()
+                                .flatMap(typeGroup => 
+                                    Object.values(typeGroup.subtypes).flat()
+                                )
                                 .filter(artifact => newSelection.includes(artifact.id));
                             setSelectedArtifacts(newArtifacts);
                             
@@ -352,7 +354,9 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                             // If single selection, show the artifact
                             if (newSelection.length === 1) {
                                 const artifact = Object.values(artifactFolders)
-                                    .flat()
+                                    .flatMap(typeGroup => 
+                                        Object.values(typeGroup.subtypes).flat()
+                                    )
                                     .find(a => a.id === newSelection[0]);
                                 if (artifact) {
                                     selectArtifact(artifact);
