@@ -247,7 +247,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
         <Box>
             <Box sx={{ 
                 display: 'grid',
-                gridTemplateColumns: '120px 1fr 1fr 80px',
+                gridTemplateColumns: '120px 1fr 1fr 80px 120px 120px 120px',
                 gap: 2,
                 px: 2,
                 py: 1,
@@ -259,6 +259,9 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                 <Typography variant="subtitle2" color="textSecondary">Input</Typography>
                 <Typography variant="subtitle2" color="textSecondary">Output</Typography>
                 <Typography variant="subtitle2" color="textSecondary">Status</Typography>
+                <Typography variant="subtitle2" color="textSecondary">Agent</Typography>
+                <Typography variant="subtitle2" color="textSecondary">Step Type</Typography>
+                <Typography variant="subtitle2" color="textSecondary">Task</Typography>
             </Box>
             {paginatedLogs.filter(log =>
                 filterLog(JSON.stringify({
@@ -295,6 +298,21 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                         sx={{ fontWeight: 500 }}
                                     >
                                         {log.error ? 'ERROR' : 'SUCCESS'}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ minWidth: 120 }}>
+                                    <Typography variant="body2" noWrap>
+                                        {log.agentName || 'N/A'}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ minWidth: 120 }}>
+                                    <Typography variant="body2" noWrap>
+                                        {log.stepType || 'N/A'}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ minWidth: 120 }}>
+                                    <Typography variant="body2" noWrap>
+                                        {log.taskId ? `Task: ${log.taskId}` : 'N/A'}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -380,6 +398,19 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                             display: 'flex',
                             flexDirection: 'column'
                         }}>
+                            <Box sx={{ mb: 2 }}>
+                                <Typography variant="subtitle2" sx={{ fontWeight: 'bold', mb: 1 }}>
+                                    Context
+                                </Typography>
+                                <FormattedDataView data={{
+                                    agent: selectedLog.agentName || 'N/A',
+                                    stepType: selectedLog.stepType || 'N/A',
+                                    taskId: selectedLog.taskId || 'N/A',
+                                    projectId: selectedLog.projectId || 'N/A',
+                                    goal: selectedLog.goal || 'N/A',
+                                    stepGoal: selectedLog.stepGoal || 'N/A'
+                                }} />
+                            </Box>
                             {selectedLog?.input && typeof selectedLog.input === 'object' ? (
                                 Object.entries(selectedLog.input).map(([key, value]) => (
                                     <Box key={key} sx={{ mb: 2 }}>
