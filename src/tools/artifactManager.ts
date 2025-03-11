@@ -417,7 +417,7 @@ export class ArtifactManager {
       const artifacts: Array<{ artifact: ArtifactItem, score: number }> = [];
       for (const result of results) {
         if (result.score >= minScore) {
-          const artifact = await this.loadArtifact(result.id as UUID);
+          const artifact = await this.loadArtifact(result.metadata.artifactId as UUID);
           if (artifact) {
             artifacts.push({
               artifact: {

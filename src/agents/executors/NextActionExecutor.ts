@@ -122,17 +122,17 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
                 `**Title**: ${guide.artifact.metadata?.title}\n` +
                 `**Summary**: ${guide.artifact.metadata?.summary}\n`
             ).join('\n\n') :
-            `*No relevant procedure guides found*`;
+            `### RELEVANT PROCEDURE GUIDES:\n*No relevant procedure guides found*`;
 
-        const sequencesPrompt = sequences.map((seq, i) => {
-            const seqText = seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description} ${(params.executionMode === 'conversation' && step.interaction) ?? ""}`).join("\n");
-            return `### SEQUENCE ${i+1} of ${sequences.length}: ID: [${seq.getName()}] (${seq.getDescription()}):\n${seqText}`;
-        }).join('\n\n');
+        // const sequencesPrompt =     sequences.map((seq, i) => {
+        //     const seqText = seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description} ${(params.executionMode === 'conversation' && step.interaction) ?? ""}`).join("\n");
+        //     return `### SEQUENCE ${i+1} of ${sequences.length}: ID: [${seq.getName()}] (${seq.getDescription()}):\n${seqText}`;
+        // }).join('\n\n');
 
         // Add procedure guides to prompt
         prompt.addContext(guidesPrompt);
             
-        prompt.addInstruction(sequencesPrompt);
+        // prompt.addInstruction(sequencesPrompt);
 
         prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
             .filter(metadata => metadata.planner)
