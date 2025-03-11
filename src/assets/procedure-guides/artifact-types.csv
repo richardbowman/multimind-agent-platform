@@ -1,0 +1,10 @@
+Main Type,Description,Supported Subtypes
+Spreadsheet,"Tabular data documents",.xlsx, .csv, .ods, .numbers
+Document,"Text-based documents",Webpage Summary, Research Report, Technical Specification, Business Plan, etc.
+Webpage,"Web content",.html, .htm, .mhtml, .webarchive
+Diagram,"Visual representations",.drawio, .vsdx, .vdx, .png, .svg, .jpg, .jpeg
+Calendar,"Scheduling and events",.ics, .ical, .ifb, .vcs
+Procedure Guide,"Process documentation",.md, .txt, .docx
+API Data,"Structured API responses",.json, .xml, .yaml, .yml
+Presentation,"Slide-based content",.pptx, .key, .odp, .gslides
+Unknown,"Unrecognized or unsupported formats","(Any file type not explicitly supported by other types)"
