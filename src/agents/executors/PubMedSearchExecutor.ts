@@ -10,6 +10,7 @@ import { ModelHelpers } from "src/llm/modelHelpers";
  import { SchemaType } from "src/schemas/SchemaTypes";
  import { ExecutorType } from "../interfaces/ExecutorType";
  import axios from 'axios';
+ import { DOMParser } from 'xmldom';
 
  interface PubMedSearchResult {
      id: string;
@@ -94,7 +95,7 @@ import { ModelHelpers } from "src/llm/modelHelpers";
                  }
              );
 
-             // Parse XML response
+             // Parse XML response using xmldom
              const parser = new DOMParser();
              const xmlDoc = parser.parseFromString(detailsResponse.data, 'text/xml');
              const articles = xmlDoc.getElementsByTagName('PubmedArticle');
