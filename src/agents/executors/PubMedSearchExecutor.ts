@@ -68,18 +68,18 @@ import { createUUID } from "src/types/uuid";
              replan: ReplanType.Allow,
              response: {
                 type: StepResponseType.GeneratedArtifact,
-                status: `Query found ${searchResults.length} PubMed articles`,
-                    artifacts: [{
-                        type: ArtifactType.Spreadsheet,
-                        content: csvContent,
-                        metadata: {
-                            title: `PubMed Search Results - ${searchQuery}`,
-                            subtype: SpreadsheetSubType.SearchResults,
-                            query: searchQuery,
-                            resultCount: searchResults.length,
-                            generatedAt: new Date().toISOString()
-                        }
-                    }]
+                status: `Query "${searchQuery}" found ${searchResults.length} PubMed articles`,
+                artifacts: [{
+                    type: ArtifactType.Spreadsheet,
+                    content: csvContent,
+                    metadata: {
+                        title: `PubMed Search Results - ${searchQuery}`,
+                        subtype: SpreadsheetSubType.SearchResults,
+                        query: searchQuery,
+                        resultCount: searchResults.length,
+                        generatedAt: new Date().toISOString()
+                    }
+                }]
              }
          };
      }
