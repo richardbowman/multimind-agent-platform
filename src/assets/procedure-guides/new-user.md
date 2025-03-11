@@ -1,8 +1,9 @@
 ---
 agent: ResearchAssistant
+title: "New User Procedure"
 ---
 
-# New User Procedure
+# Overview
 
 ## Description
 For incoming new user requests, check existing knowledge base and validate.

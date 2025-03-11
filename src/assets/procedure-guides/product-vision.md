@@ -1,8 +1,9 @@
 ---
 agent: ProductManagerAnalyst
+title: "Product Vision Procedure"
 ---
 
-# Product Vision Procedure
+# Overview
 
 ## Description
 Develop product vision and high-level product requirements

@@ -1,8 +1,9 @@
 ---
 agent: ResearchAssistant
+title: "Provided Document Procedure"
 ---
 
-# Provided Document Procedure
+# Overview
 
 ## Description
 If the task mentions references to document(s) you can use to review.

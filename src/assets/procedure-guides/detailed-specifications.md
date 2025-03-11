@@ -1,8 +1,9 @@
 ---
 agent: ProductManagerAnalyst
+title: "Detailed Specifications Procedure"
 ---
 
-# Detailed Specifications Procedure
+# Overview
 
 ## Description
 Develop detailed product specifications from a high level spreadsheet of user stories.

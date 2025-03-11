@@ -1,8 +1,9 @@
 ---
 agent: ResearchAssistant
+title: "Follow Up Procedure"
 ---
 
-# Follow Up Procedure
+# Overview
 
 ## Description
 When the user requests additional research.

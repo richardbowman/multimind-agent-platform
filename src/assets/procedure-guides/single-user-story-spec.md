@@ -1,8 +1,9 @@
 ---
 agent: ProductManagerAnalyst
+title: "Single User Story Specification Procedure"
 ---
 
-# Single User Story Specification Procedure
+# Overview
 
 ## Description
 Develop detailed product specification for a single user story.
