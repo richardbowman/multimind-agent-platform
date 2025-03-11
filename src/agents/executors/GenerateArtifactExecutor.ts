@@ -53,7 +53,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
         this.taskManager = params.taskManager;
     }
 
-    protected createBasePrompt(params: ExecuteParams): PromptBuilder {
+    protected async createBasePrompt(params: ExecuteParams): Promise<PromptBuilder> {
         const promptBuilder = this.modelHelpers.createPrompt();
 
         // Add core instructions
@@ -86,7 +86,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
 
 
     async execute(params: ExecuteParams & { modelType?: ModelType}): Promise<StepResult<ArtifactGenerationStepResponse>> {
-        const promptBuilder = this.createBasePrompt(params);
+        const promptBuilder = await this.createBasePrompt(params);
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
         
         // Add content formatting rules
@@ -124,7 +124,8 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
                     metadata: {
                         title: result.title,
                         operation: result.operation || 'create',
-                        projectId: params.projectId
+                        projectId: params.projectId,
+                        ...(await this.prepareArtifactMetadata(result))
                     }
                 };
 
@@ -181,6 +182,10 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
                 }
             };
         }
+    }
+
+    protected async prepareArtifactMetadata(result: any): Promise<Record<string, any>> {
+        return {};
     }
 
     abstract getArtifactType(codeBlockType: string): ArtifactType;
