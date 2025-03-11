@@ -14,6 +14,7 @@ import { ModelHelpers } from "src/llm/modelHelpers";
 import { withRetry } from "src/helpers/retry";
 import { ArtifactType } from "src/tools/artifact";
 import crypto from 'crypto';
+import { CSVUtils, CSVContents } from "src/utils/CSVUtils";
 
  interface PubMedSearchResult {
      id: string;
@@ -39,20 +40,26 @@ import crypto from 'crypto';
          const { searchQuery, category } = await this.generateSearchQuery(params.goal, params.stepGoal, params.previousResponses);
          const searchResults = await this.searchPubMed(searchQuery);
 
-         // Create CSV content
-         const csvHeader = 'Title,Authors,Journal,Publication Date,DOI,PMID,Abstract,URL\n';
-         const csvRows = searchResults.map(result => 
-             `"${result.title.replace(/"/g, '""')}",` +
-             `"${result.authors.join('; ').replace(/"/g, '""')}",` +
-             `"${result.journal.replace(/"/g, '""')}",` +
-             `"${result.publicationDate}",` +
-             `"${result.doi || ''}",` +
-             `"${result.pmid}",` +
-             `"${(result.abstract || '').replace(/"/g, '""')}",` +
-             `"${result.doi ? `https://doi.org/${result.doi}` : `https://pubmed.ncbi.nlm.nih.gov/${result.pmid}`}"`
-         ).join('\n');
+         // Convert results to CSV using CSVUtils
+         const csvContents: CSVContents = {
+             metadata: {
+                 query: searchQuery,
+                 resultCount: searchResults.length,
+                 generatedAt: new Date().toISOString()
+             },
+             rows: searchResults.map(result => ({
+                 Title: result.title,
+                 Authors: result.authors.join('; '),
+                 Journal: result.journal,
+                 'Publication Date': result.publicationDate,
+                 DOI: result.doi || '',
+                 PMID: result.pmid,
+                 Abstract: result.abstract || '',
+                 URL: result.doi ? `https://doi.org/${result.doi}` : `https://pubmed.ncbi.nlm.nih.gov/${result.pmid}`
+             }))
+         };
          
-         const csvContent = csvHeader + csvRows;
+         const csvContent = await CSVUtils.toCSV(csvContents);
 
          return {
              finished: true,
