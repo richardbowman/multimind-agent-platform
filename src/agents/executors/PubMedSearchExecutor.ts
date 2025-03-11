@@ -41,6 +41,90 @@ interface PubMedSearchResult {
          this.modelHelpers = params.modelHelpers;
      }
 
+     private convertArticleToMarkdown(body: Element): string {
+        if (!body) return '';
+        
+        let markdown = '';
+        
+        // Process sections
+        const sections = body.getElementsByTagName('sec');
+        for (let i = 0; i < sections.length; i++) {
+            const section = sections[i];
+            const title = section.getElementsByTagName('title')[0]?.textContent;
+            
+            if (title) {
+                markdown += `## ${title}\n\n`;
+            }
+            
+            // Process paragraphs
+            const paragraphs = section.getElementsByTagName('p');
+            for (let p = 0; p < paragraphs.length; p++) {
+                const para = paragraphs[p];
+                markdown += `${para.textContent}\n\n`;
+            }
+            
+            // Process tables
+            const tables = section.getElementsByTagName('table-wrap');
+            for (let t = 0; t < tables.length; t++) {
+                const table = tables[t];
+                const tableTitle = table.getElementsByTagName('caption')[0]?.textContent;
+                const tableContent = table.getElementsByTagName('table')[0];
+                
+                if (tableTitle) {
+                    markdown += `### ${tableTitle}\n\n`;
+                }
+                
+                if (tableContent) {
+                    markdown += this.convertTableToMarkdown(tableContent);
+                }
+            }
+            
+            // Process figures
+            const figures = section.getElementsByTagName('fig');
+            for (let f = 0; f < figures.length; f++) {
+                const figure = figures[f];
+                const figTitle = figure.getElementsByTagName('caption')[0]?.textContent;
+                const graphic = figure.getElementsByTagName('graphic')[0];
+                
+                if (figTitle) {
+                    markdown += `### ${figTitle}\n\n`;
+                }
+                
+                if (graphic) {
+                    const href = graphic.getAttribute('xlink:href');
+                    if (href) {
+                        markdown += `![Figure](${href})\n\n`;
+                    }
+                }
+            }
+        }
+        
+        return markdown.trim();
+    }
+
+    private convertTableToMarkdown(table: Element): string {
+        let markdown = '';
+        const rows = table.getElementsByTagName('row');
+        
+        // Process header
+        const header = table.getElementsByTagName('thead')[0];
+        if (header) {
+            const headerCells = header.getElementsByTagName('cell');
+            const headers = Array.from(headerCells).map(cell => cell.textContent?.trim() || '');
+            markdown += `| ${headers.join(' | ')} |\n`;
+            markdown += `| ${headers.map(() => '---').join(' | ')} |\n`;
+        }
+        
+        // Process body
+        for (let r = 0; r < rows.length; r++) {
+            const cells = rows[r].getElementsByTagName('cell');
+            const rowData = Array.from(cells).map(cell => cell.textContent?.trim() || '');
+            markdown += `| ${rowData.join(' | ')} |\n`;
+        }
+        
+        return markdown + '\n';
+    }
+
      async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
          const { searchQuery, category } = await this.generateSearchQuery(params.goal, params.stepGoal, params.previousResponses);
         const searchResults = await this.searchPubMed(searchQuery);
@@ -65,11 +149,11 @@ interface PubMedSearchResult {
                         })
                     );
                     
-                    // Extract main content from XML
+                    // Parse XML and convert to formatted Markdown
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(fullTextResponse.data, 'text/xml');
                     const body = xmlDoc.getElementsByTagName('body')[0];
-                    result.fullText = body?.textContent || '';
+                    result.fullText = this.convertArticleToMarkdown(body);
                     result.fullTextUrl = `https://www.ncbi.nlm.nih.gov/pmc/articles/${result.pmcid}/`;
                 } catch (error) {
                     console.error(`Error fetching full text for ${result.pmcid}:`, error);
