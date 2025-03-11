@@ -381,16 +381,16 @@ export class ArtifactManager {
   /**
    * Search for artifacts using vector similarity
    * @param query The search query text
+   * @param filter Optional filter criteria for metadata
    * @param limit Maximum number of results to return (default: 5)
    * @param minScore Minimum similarity score (0-1) for results (default: 0.5)
-   * @param filter Optional filter criteria for metadata
    * @returns Array of matching artifacts with their similarity scores
    */
   async searchArtifacts(
-    query: string, 
+    query: string,
+    filter?: Record<string, any>,
     limit: number = 5, 
-    minScore: number = 0.5,
-    filter?: Record<string, any>
+    minScore: number = 0.5
   ): Promise<Array<{ artifact: ArtifactItem, score: number }>> {
     try {
       // Convert filter to vector DB query format

@@ -112,7 +112,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
 
         // Search for relevant procedure guides
-        const procedureGuides = await this.artifactManager.searchArtifacts(params.stepGoal, 3, 0.6, { type: 'procedure-guide' });
+        const procedureGuides = await this.artifactManager.searchArtifacts(params.stepGoal, { type: 'procedure-guide' }, 3, 0.6);
         
         // Format procedure guides for prompt
         const guidesPrompt = procedureGuides.length > 0 ?
