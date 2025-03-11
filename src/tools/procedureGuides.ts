@@ -4,6 +4,7 @@ import fs from "node:fs";
 import { ArtifactType } from "./artifact";
 import { createUUID } from "src/types/uuid";
 import path from "node:path";
+import * as yaml from 'js-yaml';
 
 export async function loadProcedureGuides(basePath: string, guidePath: string, artifactManager: ArtifactManager): Promise<void> {
     const guidesDir = path.join(basePath, guidePath);
@@ -23,7 +24,22 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
         const file = markdownFiles[i];
         Logger.progress(`Loading agent procedures (${i + 1} of ${markdownFiles.length})`, (i + 1) / markdownFiles.length, "agent-procedures");
         const filePath = path.join(guidesDir, file);
-        const content = fs.readFileSync(filePath, 'utf-8');
+        let content = fs.readFileSync(filePath, 'utf-8');
+        let frontmatter = {};
+        
+        // Extract YAML front matter if present
+        const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+        const match = content.match(frontmatterRegex);
+        if (match) {
+            try {
+                frontmatter = yaml.load(match[1]) || {};
+                // Remove the frontmatter from the content
+                content = content.slice(match[0].length);
+            } catch (error) {
+                Logger.warn(`Failed to parse YAML frontmatter in ${file}: ${error}`);
+            }
+        }
+        
         const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
 
         // Check if guide exists and has same content
@@ -41,11 +57,13 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
 
         // Try to load metadata file if it exists
         const metadataPath = path.join(guidesDir, `${path.basename(file, '.md')}.metadata.json`);
+        // Start with YAML frontmatter as base metadata
         let metadata: Record<string, any> = {
-            title: path.basename(file, '.md'),
+            ...frontmatter,
+            title: frontmatter['title'] || path.basename(file, '.md'),
             mimeType: 'text/markdown',
-            description: 'Procedure guide document',
-            created: new Date().toISOString(),
+            description: frontmatter['description'] || 'Procedure guide document',
+            created: frontmatter['created'] || new Date().toISOString(),
             source: path.relative(basePath, filePath),
             contentHash: contentHash
         };
