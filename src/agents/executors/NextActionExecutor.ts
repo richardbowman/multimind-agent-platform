@@ -195,13 +195,19 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
 
         // Create new task for the next action
         if (response.nextAction && response.nextAction !== "DONE") {
+            // Find the procedure guide if one is being followed
+            const procedureGuide = response.sequence !== "none" 
+                ? procedureGuides.find(g => g.metadata?.title === response.sequence)
+                : undefined;
+
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
                 description: response.taskDescription || response.nextAction,
                 creator: this.userId,
                 order: currentTasks.length, // Add to end of current tasks
                 props: {
-                    stepType: response.nextAction
+                    stepType: response.nextAction,
+                    ...(procedureGuide && { procedureGuideId: procedureGuide.id })
                 }
             };
             await this.projects.addTask(project, newTask);
@@ -215,7 +221,16 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
                     data: {
                         steps: response.nextAction ? [{
                             actionType: response.nextAction,
-                            context: response.taskDescription
+                            context: response.taskDescription,
+                            ...(response.sequence !== "none" && { 
+                                procedureGuide: {
+                                    title: response.sequence,
+                                    // Only include artifactId if we found a matching guide
+                                    ...(procedureGuides.some(g => g.metadata?.title === response.sequence) && {
+                                        artifactId: procedureGuides.find(g => g.metadata?.title === response.sequence)?.id
+                                    }
+                                )}
+                            })
                         }] : []
                     }
                 }
