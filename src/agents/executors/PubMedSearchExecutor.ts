@@ -197,21 +197,29 @@ interface PubMedSearchResult {
                          return `${foreName} ${lastName}`.trim();
                      });
 
-                const pmcid = getText('ArticleId')?.startsWith('PMC') ? getText('ArticleId') : undefined;
-                
+                const articleIds = Array.from(article.getElementsByTagName('ArticleId'))
+                    .reduce((acc, el) => {
+                        const idType = el.getAttribute('IdType');
+                        const value = el.textContent || '';
+                        if (idType && value) {
+                            acc[idType] = value;
+                        }
+                        return acc;
+                    }, {} as Record<string, string>);
+
                 return {
-                    id: getText('PMID'),
+                    id: articleIds.pubmed || getText('PMID'),
                     title: getText('ArticleTitle'),
                     abstract: getText('AbstractText'),
                     authors,
                     journal: getText('Title'),
                     publicationDate: getText('PubDate'),
-                    doi: Array.from(article.getElementsByTagName('ELocationID'))
+                    doi: articleIds.doi || Array.from(article.getElementsByTagName('ELocationID'))
                         .find(el => el.getAttribute('EIdType') === 'doi')
                         ?.textContent || '',
-                    pmid: getText('PMID'),
-                    pmcid,
-                    fullTextUrl: pmcid ? `https://www.ncbi.nlm.nih.gov/pmc/articles/${pmcid}/` : undefined
+                    pmid: articleIds.pubmed || getText('PMID'),
+                    pmcid: articleIds.pmc,
+                    fullTextUrl: articleIds.pmc ? `https://www.ncbi.nlm.nih.gov/pmc/articles/${articleIds.pmc}/` : undefined
                 };
              });
          } catch (error) {
