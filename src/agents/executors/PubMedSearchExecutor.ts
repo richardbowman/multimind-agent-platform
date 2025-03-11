@@ -12,6 +12,8 @@ import { ModelHelpers } from "src/llm/modelHelpers";
  import axios from 'axios';
  import { DOMParser } from 'xmldom';
 import { withRetry } from "src/helpers/retry";
+import { ArtifactType } from "src/tools/artifact";
+import crypto from 'crypto';
 
  interface PubMedSearchResult {
      id: string;
@@ -37,6 +39,21 @@ import { withRetry } from "src/helpers/retry";
          const { searchQuery, category } = await this.generateSearchQuery(params.goal, params.stepGoal, params.previousResponses);
          const searchResults = await this.searchPubMed(searchQuery);
 
+         // Create CSV content
+         const csvHeader = 'Title,Authors,Journal,Publication Date,DOI,PMID,Abstract,URL\n';
+         const csvRows = searchResults.map(result => 
+             `"${result.title.replace(/"/g, '""')}",` +
+             `"${result.authors.join('; ').replace(/"/g, '""')}",` +
+             `"${result.journal.replace(/"/g, '""')}",` +
+             `"${result.publicationDate}",` +
+             `"${result.doi || ''}",` +
+             `"${result.pmid}",` +
+             `"${(result.abstract || '').replace(/"/g, '""')}",` +
+             `"${result.doi ? `https://doi.org/${result.doi}` : `https://pubmed.ncbi.nlm.nih.gov/${result.pmid}`}"`
+         ).join('\n');
+         
+         const csvContent = csvHeader + csvRows;
+
          return {
              finished: true,
              type: 'pubmed_search_results',
@@ -44,19 +61,17 @@ import { withRetry } from "src/helpers/retry";
              response: {
                  status: `Query found ${searchResults.length} PubMed articles`,
                  data: {
-                     type: StepResponseType.SearchResults,
-                     searchResults: searchResults.map(result => ({
-                         title: result.title,
-                         url: result.doi ? `https://doi.org/${result.doi}` : `https://pubmed.ncbi.nlm.nih.gov/${result.pmid}`,
-                         snippet: result.abstract || '',
-                         source: 'PubMed',
+                     type: StepResponseType.Artifact,
+                     artifact: {
+                         id: crypto.randomUUID() as UUID,
+                         type: ArtifactType.Spreadsheet,
+                         content: Buffer.from(csvContent, 'utf-8'),
                          metadata: {
-                             authors: result.authors,
-                             journal: result.journal,
-                             publicationDate: result.publicationDate
+                             query: searchQuery,
+                             resultCount: searchResults.length,
+                             generatedAt: new Date().toISOString()
                          }
-                     })),
-                     query: searchQuery
+                     }
                  }
              }
          };
