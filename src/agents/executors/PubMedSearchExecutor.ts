@@ -13,7 +13,7 @@ import { ModelHelpers } from "src/llm/modelHelpers";
  import { DOMParser } from 'xmldom';
 import { withRetry } from "src/helpers/retry";
 import { AsyncQueue } from "src/helpers/asyncQueue";
-import { ArtifactType, SpreadsheetSubType } from "src/tools/artifact";
+import { ArtifactType, DocumentSubtype, SpreadsheetSubType } from "src/tools/artifact";
 import crypto from 'crypto';
 import { CSVUtils, CSVContents } from "src/utils/CSVUtils";
 import { createUUID } from "src/types/uuid";
@@ -86,6 +86,7 @@ interface PubMedSearchResult {
                 type: ArtifactType.Document,
                 content: result.fullText!,
                 metadata: {
+                    subtype: DocumentSubtype.PubMedFullArticle,
                     title: result.title,
                     authors: result.authors.join(', '),
                     journal: result.journal,
