@@ -26,6 +26,35 @@ export class BedrockConfig {
 }
 
 
+export class PubMedConfig {
+    @ClientSettings({
+        label: 'PubMed Max Results',
+        category: 'Search Settings',
+        type: 'number',
+        description: 'Maximum number of results to return from PubMed searches',
+        visibleWhen: (settings: Settings) => settings.searchProvider === 'pubmed'
+    })
+    maxResults: number = 10;
+
+    @ClientSettings({
+        label: 'PubMed API Email',
+        category: 'Search Settings',
+        type: 'string',
+        description: 'Email address for PubMed API (required for rate limit tracking)',
+        visibleWhen: (settings: Settings) => settings.searchProvider === 'pubmed'
+    })
+    apiEmail: string = '';
+
+    @ClientSettings({
+        label: 'PubMed API Tool',
+        category: 'Search Settings',
+        type: 'string',
+        description: 'Tool name for PubMed API (required for rate limit tracking)',
+        visibleWhen: (settings: Settings) => settings.searchProvider === 'pubmed'
+    })
+    apiTool: string = 'YourAppName';
+}
+
 export class DuckDuckGoConfig {
     @ClientSettings({
         label: 'DuckDuckGo Headless Mode',
@@ -406,7 +435,7 @@ export class Settings {
         label: 'Search Provider',
         category: 'Search Settings',
         type: 'select',
-        options: ['duckduckgo', 'searxng', 'google', 'brave']
+        options: ['duckduckgo', 'searxng', 'google', 'brave', 'pubmed']
     })
     searchProvider: string = 'duckduckgo';
 
@@ -660,6 +689,13 @@ export class Settings {
         type: 'section'
     })
     brave: BraveConfig = new BraveConfig();
+
+    @ClientSettings({
+        label: 'PubMed Settings',
+        category: 'Search Settings',
+        type: 'section'
+    })
+    pubmed: PubMedConfig = new PubMedConfig();
 
     // Agent configuration
     agents!: {
