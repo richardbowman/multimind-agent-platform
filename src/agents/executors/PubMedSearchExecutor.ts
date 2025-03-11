@@ -69,6 +69,9 @@ import { ModelHelpers } from "src/llm/modelHelpers";
                      term: query,
                      retmode: 'json',
                      retmax: 10
+                 },
+                 headers: {
+                     'User-Agent': 'PubMedSearchExecutor/1.0 (your-email@example.com)'
                  }
              });
 
@@ -76,13 +79,31 @@ import { ModelHelpers } from "src/llm/modelHelpers";
              if (idList.length === 0) return [];
 
              // Fetch details for the found articles
-             const detailsResponse = await axios.get(`${this.baseUrl}/efetch.fcgi`, {
-                 params: {
-                     db: 'pubmed',
-                     id: idList.join(','),
-                     retmode: 'xml'
+             // Add retry logic with exponential backoff
+             const maxRetries = 3;
+             let retryCount = 0;
+             let detailsResponse;
+             
+             while (retryCount < maxRetries) {
+                 try {
+                     detailsResponse = await axios.get(`${this.baseUrl}/efetch.fcgi`, {
+                         params: {
+                             db: 'pubmed',
+                             id: idList.join(','),
+                             retmode: 'xml'
+                         },
+                         timeout: 10000 // 10 second timeout
+                     });
+                     break;
+                 } catch (error) {
+                     retryCount++;
+                     if (retryCount === maxRetries) {
+                         throw error;
+                     }
+                     // Exponential backoff
+                     await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
                  }
-             });
+             }
 
              // Parse XML response
              const parser = new DOMParser();
