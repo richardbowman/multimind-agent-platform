@@ -22,45 +22,47 @@ export class AsyncQueue {
     async enqueue<T>(operation: () => Promise<T>): Promise<T> {
         const stack = new Error().stack || 'No stack trace available';
         
-        // Add to queue
-        const promise = new Promise<T>((resolve, reject) => {
-            this.queue.push(this.runOperation(operation, resolve, reject, stack));
+        return new Promise<T>((resolve, reject) => {
+            // Store the operation and its callbacks
+            this.queue.push({
+                operation,
+                resolve,
+                reject,
+                stack
+            });
+            this.processNext();
         });
-        
-        return promise;
-
-        return promise;
     }
 
-    private async runOperation<T>(
+    private async runOperation<T>(item: {
         operation: () => Promise<T>,
         resolve: (value: T) => void,
         reject: (reason?: any) => void,
         stack: string
-    ): Promise<void> {
+    }): Promise<void> {
         // Wait for an available slot
         while (this.activeCount >= this.concurrency) {
             await new Promise(resolve => setTimeout(resolve, 10));
         }
 
         this.activeCount++;
-        AsyncQueue.Logger?.verbose(`AsyncQueue executing operation from:\n${stack}`);
+        AsyncQueue.Logger?.verbose(`AsyncQueue executing operation from:\n${item.stack}`);
 
         try {
             // Run the operation with timeout if specified
             const result = this.timeout > 0
                 ? await Promise.race([
-                    operation(),
+                    item.operation(),
                     new Promise<T>((_, reject) => 
                         setTimeout(() => reject(new Error('Operation timed out')), this.timeout)
                     )
                 ])
-                : await operation();
+                : await item.operation();
                 
-            resolve(result);
+            item.resolve(result);
         } catch (error) {
-            AsyncQueue.Logger?.error(`AsyncQueue operation failed from:\n${stack}\nError:`, error);
-            reject(error);
+            AsyncQueue.Logger?.error(`AsyncQueue operation failed from:\n${item.stack}\nError:`, error);
+            item.reject(error);
         } finally {
             this.activeCount--;
             this.processNext();
@@ -69,9 +71,9 @@ export class AsyncQueue {
 
     private processNext() {
         if (this.queue.length > 0 && this.activeCount < this.concurrency) {
-            const nextOperation = this.queue.shift();
-            if (nextOperation) {
-                nextOperation();
+            const nextItem = this.queue.shift();
+            if (nextItem) {
+                this.runOperation(nextItem);
             }
         }
     }
