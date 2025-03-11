@@ -12,9 +12,10 @@ import { ModelHelpers } from "src/llm/modelHelpers";
  import axios from 'axios';
  import { DOMParser } from 'xmldom';
 import { withRetry } from "src/helpers/retry";
-import { ArtifactType } from "src/tools/artifact";
+import { ArtifactType, SpreadsheetSubType } from "src/tools/artifact";
 import crypto from 'crypto';
 import { CSVUtils, CSVContents } from "src/utils/CSVUtils";
+import { createUUID } from "src/types/uuid";
 
  interface PubMedSearchResult {
      id: string;
@@ -66,20 +67,18 @@ import { CSVUtils, CSVContents } from "src/utils/CSVUtils";
              type: 'pubmed_search_results',
              replan: ReplanType.Allow,
              response: {
-                 status: `Query found ${searchResults.length} PubMed articles`,
-                 data: {
-                     type: StepResponseType.Artifact,
-                     artifact: {
-                         id: crypto.randomUUID() as UUID,
-                         type: ArtifactType.Spreadsheet,
-                         content: Buffer.from(csvContent, 'utf-8'),
-                         metadata: {
-                             query: searchQuery,
-                             resultCount: searchResults.length,
-                             generatedAt: new Date().toISOString()
-                         }
-                     }
-                 }
+                type: StepResponseType.GeneratedArtifact,
+                status: `Query found ${searchResults.length} PubMed articles`,
+                    artifacts: [{
+                        type: ArtifactType.Spreadsheet,
+                        content: csvContent,
+                        metadata: {
+                        subtype: SpreadsheetSubType.SearchResults,
+                            query: searchQuery,
+                            resultCount: searchResults.length,
+                            generatedAt: new Date().toISOString()
+                        }
+                    }]
              }
          };
      }
