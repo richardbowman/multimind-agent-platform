@@ -12,6 +12,7 @@ import { ModelHelpers } from "src/llm/modelHelpers";
  import axios from 'axios';
  import { DOMParser } from 'xmldom';
 import { withRetry } from "src/helpers/retry";
+import { AsyncQueue } from "src/helpers/asyncQueue";
 import { ArtifactType, SpreadsheetSubType } from "src/tools/artifact";
 import crypto from 'crypto';
 import { CSVUtils, CSVContents } from "src/utils/CSVUtils";
@@ -44,17 +45,22 @@ interface PubMedSearchResult {
          const { searchQuery, category } = await this.generateSearchQuery(params.goal, params.stepGoal, params.previousResponses);
         const searchResults = await this.searchPubMed(searchQuery);
             
-        // Fetch full text for articles with PMC IDs
-        const resultsWithFullText = await Promise.all(searchResults.map(async result => {
+        // Fetch full text for articles with PMC IDs with rate limiting
+        const asyncQueue = new AsyncQueue({ concurrency: 3, timeout: 10000 });
+        const resultsWithFullText = [];
+        
+        for (const result of searchResults) {
             if (result.pmcid) {
                 try {
-                    const fullTextResponse = await axios.get(`https://www.ncbi.nlm.nih.gov/pmc/articles/${result.pmcid}/full-text/`, {
-                        headers: {
-                            'Accept': 'text/xml',
-                            'User-Agent': 'PubMedSearchExecutor/1.0 (your-email@example.com)'
-                        }
-                    });
-                        
+                    const fullTextResponse = await asyncQueue.add(() => 
+                        axios.get(`https://www.ncbi.nlm.nih.gov/pmc/articles/${result.pmcid}/full-text/`, {
+                            headers: {
+                                'Accept': 'text/xml',
+                                'User-Agent': 'PubMedSearchExecutor/1.0 (your-email@example.com)'
+                            }
+                        })
+                    );
+                    
                     // Extract main content from XML
                     const parser = new DOMParser();
                     const xmlDoc = parser.parseFromString(fullTextResponse.data, 'text/xml');
@@ -64,8 +70,8 @@ interface PubMedSearchResult {
                     console.error(`Error fetching full text for ${result.pmcid}:`, error);
                 }
             }
-            return result;
-        }));
+            resultsWithFullText.push(result);
+        }
 
          // Convert results to CSV using CSVUtils
         // Create document artifacts for full text
