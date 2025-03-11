@@ -149,15 +149,32 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             setAvailableProjects(['all', ...projectList]);
             setSelectedProject('all');
 
-            // Group artifacts by type
+            // Group artifacts by type and subtype
             const folders = allArtifacts.reduce((acc, artifact) => {
                 const type = artifact.type;
-                if (!acc[type]) acc[type] = [];
-                acc[type].push(artifact);
+                const subtype = artifact.metadata?.subtype || 'Other';
+                
+                // Initialize type group if it doesn't exist
+                if (!acc[type]) {
+                    acc[type] = {
+                        _type: 'type',
+                        artifacts: [],
+                        subtypes: {}
+                    };
+                }
+                
+                // Initialize subtype group if it doesn't exist
+                if (!acc[type].subtypes[subtype]) {
+                    acc[type].subtypes[subtype] = [];
+                }
+                
+                // Add artifact to subtype group
+                acc[type].subtypes[subtype].push(artifact);
                 return acc;
-            }, {} as Record<string, Artifact[]>);
+            }, {} as Record<string, { _type: 'type', artifacts: Artifact[], subtypes: Record<string, Artifact[]> }>);
+            
             setArtifactFolders(folders);
-            // Set initial expanded state to all folder types
+            // Set initial expanded state to all type groups
             setExpandedItems(Object.keys(folders));
         }
     }, [allArtifacts]);
@@ -275,8 +292,10 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                     p: 1
                 }}>
                     <RichTreeView
-                        items={Object.entries(artifactFolders).flatMap(([type, artifacts]) => {
-                            const filteredArtifacts = artifacts.filter(artifact => {
+                        items={Object.entries(artifactFolders).flatMap(([type, typeGroup]) => {
+                            // Filter artifacts within each subtype
+                            const filteredSubtypes = Object.entries(typeGroup.subtypes).map(([subtype, artifacts]) => {
+                                const filteredArtifacts = artifacts.filter(artifact => {
                                 // Apply project filter
                                 if (selectedProject !== 'all' && 
                                     (!artifact.metadata?.projects || 
@@ -296,15 +315,22 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                                 return true;
                             });
 
+                                return {
+                                    id: `${type}-${subtype}`,
+                                    label: `${subtype} (${filteredArtifacts.length})`,
+                                    children: filteredArtifacts.map(artifact => ({
+                                        id: artifact.id,
+                                        label: artifact.metadata?.title || `Untitled ${artifact.type}`,
+                                        artifact: artifact
+                                    }))
+                                };
+                            }).filter(subtype => subtype.children.length > 0);
+
                             return [{
                                 id: type,
-                                label: `${type} (${filteredArtifacts.length})`,
-                                children: filteredArtifacts.map(artifact => ({
-                                    id: artifact.id,
-                                    label: artifact.metadata?.title || `Untitled ${artifact.type}`,
-                                    artifact: artifact
-                                }))
-                            }];
+                                label: `${type} (${filteredSubtypes.reduce((acc, subtype) => acc + subtype.children.length, 0)})`,
+                                children: filteredSubtypes
+                            }].filter(type => type.children.length > 0);
                         })}
                         multiSelect
                         selectedItems={selectedItemIds}
