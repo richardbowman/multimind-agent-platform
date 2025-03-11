@@ -3,21 +3,17 @@ import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { StepExecutor } from "../interfaces/StepExecutor";
-import { ReplanType, StepResponse, StepResponseType, StepResult } from "../interfaces/StepResult";
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
 import { CSVUtils, CSVContents } from "src/utils/CSVUtils";
-import { ArtifactType, SpreadsheetSubType } from "src/tools/artifact";
-import { createUUID } from "src/types/uuid";
+import { Artifact, ArtifactType, SpreadsheetSubType } from "src/tools/artifact";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { ExecutorType } from "../interfaces/ExecutorType";
+import { MergePlanResponse } from "src/schemas/MergePlanResponse";
+import { StringUtils } from "src/utils/StringUtils";
+import { ContentType, OutputType } from "src/llm/promptBuilder";
+import { ModelMessageResponse } from "src/schemas/ModelResponse";
 
-interface MergePlan {
-    artifactIds: string[];
-    mergeStrategy: 'union' | 'intersection' | 'specific_columns';
-    columnsToKeep?: string[];
-    deduplicate: boolean;
-}
 
 @StepExecutorDecorator(ExecutorType.CSV_MERGE, 'Merges multiple CSV artifacts into a single spreadsheet')
 export class CSVMergeExecutor implements StepExecutor<StepResponse> {
@@ -29,10 +25,19 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         // Get merge plan from LLM
-        const mergePlan = await this.generateMergePlan(params.goal, params.stepGoal, params.artifacts);
+        const mergePlan = await this.generateMergePlan(params.goal, params.stepGoal, params.context?.artifacts||[]);
+
+        if (!mergePlan) {
+            return {
+                type: StepResultType.Error,
+                response: {
+                    message: 'Could not generate merge plan'
+                }
+            };
+        }
 
         // Load and merge CSV artifacts
-        const mergedContents = await this.mergeCSVArtifacts(mergePlan, params.artifacts);
+        const mergedContents = await this.mergeCSVArtifacts(mergePlan, params.context?.artifacts||[]);
 
         // Create new merged artifact
         const csvContent = await CSVUtils.toCSV(mergedContents);
@@ -43,14 +48,14 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
             replan: ReplanType.Allow,
             response: {
                 type: StepResponseType.GeneratedArtifact,
-                status: `Successfully merged ${mergePlan.artifactIds.length} CSV artifacts`,
+                status: `Successfully merged ${mergedContents.metadata.sourceArtifactIds.length} CSV artifacts`,
                 artifacts: [{
                     type: ArtifactType.Spreadsheet,
                     content: csvContent,
                     metadata: {
                         title: `Merged CSV - ${params.stepGoal}`,
                         subtype: SpreadsheetSubType.DataTypes,
-                        sourceArtifactIds: mergePlan.artifactIds,
+                        sourceArtifactIds: mergedContents.metadata.sourceArtifactIds,
                         mergeStrategy: mergePlan.mergeStrategy,
                         generatedAt: new Date().toISOString()
                     }
@@ -59,25 +64,28 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
         };
     }
 
-    private async mergeCSVArtifacts(mergePlan: MergePlan, artifacts: any[]): Promise<CSVContents> {
+    private async mergeCSVArtifacts(mergePlan: MergePlanResponse, artifacts: any[]): Promise<CSVContents> {
         const mergedContents: CSVContents = {
             metadata: {
                 mergeStrategy: mergePlan.mergeStrategy,
-                sourceArtifactIds: mergePlan.artifactIds,
+                sourceArtifactIds: [],
                 generatedAt: new Date().toISOString()
             },
             rows: []
         };
 
         // Load and process each artifact
-        for (const artifactId of mergePlan.artifactIds) {
-            const artifact = artifacts.find(a => a.id === artifactId);
+        for (const artifactIndex of mergePlan.artifactIndexes) {
+            const artifact = artifacts[artifactIndex-1];
+
             if (!artifact || artifact.type !== ArtifactType.Spreadsheet) continue;
+
+            mergedContents.metadata.sourceArtifactIds.push(artifact.id);
 
             const contents = await CSVUtils.fromCSV(artifact.content.toString());
             
             // Filter columns if needed
-            const filteredRows = mergePlan.columnsToKeep 
+            const filteredRows = mergePlan.columnsToKeep?.length||0 > 0
                 ? contents.rows.map(row => {
                     const filteredRow: Record<string, any> = {};
                     mergePlan.columnsToKeep!.forEach(col => {
@@ -105,26 +113,32 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
         return mergedContents;
     }
 
-    private async generateMergePlan(goal: string, task: string, artifacts: any[]): Promise<MergePlan> {
+    private async generateMergePlan(goal: string, task: string, artifacts: Artifact[]): Promise<MergePlanResponse|undefined> {
         const schema = await getGeneratedSchema(SchemaType.MergePlanResponse);
 
-        const systemPrompt = `You are a data integration assistant. Our overall goal is ${goal}.
-        Consider these specific goals we're trying to achieve: ${task}
 
-        Available Artifacts:
-        ${artifacts.map(a => `- ${a.id}: ${a.metadata?.title || 'Untitled'} (${a.type})`).join('\n')}
+        const instructions = this.modelHelpers.createPrompt();
 
-        Generate a plan for merging CSV artifacts that best supports the goal. Consider:
+        instructions.addContext({contentType: ContentType.PURPOSE});
+        instructions.addContext({contentType: ContentType.STEP_GOAL, goal: goal});
+
+        instructions.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts})
+
+        instructions.addInstruction(`Generate a plan for merging CSV artifacts that best supports the goal. Consider:
         - Which artifacts should be merged
         - Whether to keep all columns or specific ones
         - Whether to deduplicate rows
-        - The best merge strategy (union, intersection, or specific columns)`;
+        - The best merge strategy (union, intersection, or specific columns)`);
 
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const response = await this.modelHelpers.generate<MergePlan>({
+        instructions.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
+
+
+        const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
             message: `Task: ${task}`,
             instructions
         });
+
+        const response = StringUtils.extractAndParseJsonBlock<MergePlanResponse>(rawResponse.message, schema);
 
         return response;
     }
