@@ -404,8 +404,8 @@ export class ArtifactManager {
             // Handle nested objects
             where[key] = value;
           } else {
-            // Handle simple equality
-            where[key] = value;
+            // Handle simple equality with $eq operator
+            where[key] = { $eq: value };
           }
         }
       }
