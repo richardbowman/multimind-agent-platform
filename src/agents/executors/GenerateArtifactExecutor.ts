@@ -184,7 +184,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
         }
     }
 
-    private async loadSupportedSubtypes(artifactType: string): Promise<string[]> {
+    private async getSupportedSubtypesContent(artifactType: string): Promise<string | null> {
         try {
             // Look for the supported subtypes artifact
             const artifacts = await this.artifactManager.getArtifacts({ 
@@ -194,25 +194,21 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
             if (artifacts.length > 0) {
                 const artifact = await this.artifactManager.loadArtifact(artifacts[0].id);
                 if (artifact?.content && typeof artifact.content === 'string') {
-                    return JSON.parse(artifact.content) as string[];
+                    return artifact.content;
                 }
             }
         } catch (error) {
             Logger.error(`Error loading supported ${artifactType} subtypes:`, error);
         }
-        return [];
+        return null;
     }
 
     protected async prepareArtifactMetadata(result: any): Promise<Record<string, any>> {
         const metadata = await super.prepareArtifactMetadata(result);
         
-        // Get the artifact type from the subclass
-        const artifactType = this.getArtifactType();
-        if (artifactType) {
-            const supportedSubtypes = await this.loadSupportedSubtypes(artifactType);
-            if (result.subtype && supportedSubtypes.includes(result.subtype)) {
-                metadata.subtype = result.subtype;
-            }
+        // Set subtype if provided in result
+        if (result.subtype) {
+            metadata.subtype = result.subtype;
         }
 
         return metadata;

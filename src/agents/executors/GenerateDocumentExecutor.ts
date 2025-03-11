@@ -34,13 +34,10 @@ export class GenerateDocumentExecutor extends GenerateArtifactExecutor {
 
     protected async createBasePrompt(params: ExecuteParams): Promise<PromptBuilder> {
         const prompt = await super.createBasePrompt(params);
-        const supportedSubtypes = await this.loadSupportedSubtypes(this.getArtifactType());
+        const subtypesContent = await this.getSupportedSubtypesContent(this.getArtifactType());
 
-        if (supportedSubtypes.length > 0) {
-            prompt.addInstruction(`SUPPORTED DOCUMENT SUBTYPES:\n` +
-                supportedSubtypes.map((subtype, index) => 
-                    `${index + 1}. ${subtype}`
-                ).join('\n'));
+        if (subtypesContent) {
+            prompt.addInstruction(`SUPPORTED DOCUMENT SUBTYPES:\n${subtypesContent}`);
             prompt.addInstruction(`When creating a document, specify the most appropriate subtype in your response.`);
         }
 
