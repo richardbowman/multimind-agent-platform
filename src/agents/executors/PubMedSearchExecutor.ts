@@ -92,7 +92,7 @@ import { createUUID } from "src/types/uuid";
                      db: 'pubmed',
                      term: query,
                      retmode: 'json',
-                     retmax: 10
+                     retmax: 100
                  },
                  headers: {
                      'User-Agent': 'PubMedSearchExecutor/1.0 (your-email@example.com)'
