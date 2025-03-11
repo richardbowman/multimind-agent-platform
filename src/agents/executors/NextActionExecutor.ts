@@ -145,7 +145,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         // Format procedure guides for prompt
         const guidesPrompt = procedureGuides.length > 0 ?
             `# RELEVANT PROCEDURE GUIDES:\n` +
-            procedureGuideList.filter((guide, i) => i < 3).map((guide, i) => 
+            artifactGuideList.filter((guide, i) => i < 3).map((guide, i) => 
                 `## Guide ${i+1} (${guide.score.toFixed(2)} relevance):\n` +
                 `###: ${guide.artifact.metadata?.title}\n` +
                 `<guide>${procedureGuides.find(p => p.id === guide.artifact.id)?.content}</guide>\n`
