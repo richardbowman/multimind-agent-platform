@@ -27,7 +27,7 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
         const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
 
         // Check if guide exists and has same content
-        const relativePath = path.relative(app.getAppPath(), filePath);
+        const relativePath = path.relative(basePath, filePath);
         const existingGuide = existingGuideMap.get(relativePath);
         if (existingGuide) {
             const existingHash = existingGuide.metadata?.contentHash;
