@@ -150,6 +150,32 @@ interface LLMLogViewerProps {
     filterLog: (content: string) => boolean;
 }
 
+// Helper functions to extract meaningful messages
+const getLastMessage = (input: any): string => {
+    if (!input) return '';
+    
+    if (Array.isArray(input)) {
+        const lastMessage = input[input.length - 1];
+        return lastMessage?.content || JSON.stringify(lastMessage);
+    }
+    
+    if (typeof input === 'object') {
+        return input?.content || input?.message || JSON.stringify(input);
+    }
+    
+    return input.toString();
+};
+
+const getOutputMessage = (output: any): string => {
+    if (!output) return '';
+    
+    if (typeof output === 'object') {
+        return output?.message || output?.content || JSON.stringify(output);
+    }
+    
+    return output.toString();
+};
+
 export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, highlightText, filterLog }) => {
     const [selectedLog, setSelectedLog] = useState<any>(null);
     const [selectedLogIndex, setSelectedLogIndex] = useState<number>(-1);
@@ -219,6 +245,21 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
 
     return (
         <Box>
+            <Box sx={{ 
+                display: 'grid',
+                gridTemplateColumns: '120px 1fr 1fr 80px',
+                gap: 2,
+                px: 2,
+                py: 1,
+                borderBottom: '1px solid',
+                borderColor: 'divider',
+                backgroundColor: 'background.default'
+            }}>
+                <Typography variant="subtitle2" color="textSecondary">Timestamp</Typography>
+                <Typography variant="subtitle2" color="textSecondary">Input</Typography>
+                <Typography variant="subtitle2" color="textSecondary">Output</Typography>
+                <Typography variant="subtitle2" color="textSecondary">Status</Typography>
+            </Box>
             {paginatedLogs.filter(log =>
                 filterLog(JSON.stringify({
                     method: log?.method,
