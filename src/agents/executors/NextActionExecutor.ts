@@ -114,10 +114,28 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
         params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
 
-        // Search for relevant procedure guides
-        const procedureGuideList = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.ProcedureGuide }, 10);
-        const allProcedureGuides = await this.artifactManager.bulkLoadArtifacts(procedureGuideList.map(p => p.artifact));
-        const procedureGuides = this.agentName ? allProcedureGuides.filter(a => a.metadata?.agent === this.agentName) : allProcedureGuides;
+        // Search for relevant procedure guides from artifacts
+        const artifactGuideList = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.ProcedureGuide }, 10);
+        const allProcedureGuides = await this.artifactManager.bulkLoadArtifacts(artifactGuideList.map(p => p.artifact));
+        
+        // Also search through past responses for any pre-selected guides
+        const pastGuides = params.previousResponses?.flatMap(response => 
+            response.data?.steps?.flatMap(step => 
+                step.procedureGuide?.artifactId ? [step.procedureGuide] : []
+            ) || []
+        ) || [];
+        
+        // Combine both sources of guides
+        const allGuides = [
+            ...allProcedureGuides,
+            ...await this.artifactManager.bulkLoadArtifacts(pastGuides.map(g => g.artifactId))
+        ];
+        
+        // Filter by agent if specified
+        const procedureGuides = this.agentName ? 
+            allGuides.filter(a => a.metadata?.agent === this.agentName) : 
+            allGuides;
+            
         if (procedureGuides.length === 0) {
             Logger.warn(`No procedure guides found for agent ${this.agentName} ${params.agentId}`);
         }
