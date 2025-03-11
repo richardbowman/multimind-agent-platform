@@ -20,6 +20,13 @@ export interface LLMLogEntry {
         message: string;
         stack: string;
     };
+    agentId?: string;
+    agentName?: string;
+    stepType?: string;
+    taskId?: string;
+    projectId?: string;
+    goal?: string;
+    stepGoal?: string;
 }
 
 export class LLMCallLogger extends EventEmitter {
@@ -39,10 +46,25 @@ export class LLMCallLogger extends EventEmitter {
         }
     }
 
-    async logCall(method: string, input: any, output: any, error?: any, durationMs?: number) {
+    async logCall(
+        method: string, 
+        input: any, 
+        output: any, 
+        error?: any, 
+        durationMs?: number,
+        context?: {
+            agentId?: string;
+            agentName?: string;
+            stepType?: string;
+            taskId?: string;
+            projectId?: string;
+            goal?: string;
+            stepGoal?: string;
+        }
+    ) {
         try {
             const timestamp = new Date().toISOString();
-            const logEntry = {
+            const logEntry: LLMLogEntry = {
                 timestamp,
                 method,
                 input,
@@ -51,7 +73,8 @@ export class LLMCallLogger extends EventEmitter {
                 error: error ? {
                     message: error.message,
                     stack: error.stack
-                } : undefined
+                } : undefined,
+                ...context
             };
 
             await LLMCallLogger.fileQueue.enqueue(async () => {
