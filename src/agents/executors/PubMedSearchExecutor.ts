@@ -53,7 +53,7 @@ interface PubMedSearchResult {
             if (result.pmcid) {
                 try {
                     const fullTextResponse = await asyncQueue.add(() => 
-                        axios.get(`https://www.ncbi.nlm.nih.gov/pmc/articles/${result.pmcid}/full-text/`, {
+                        axios.get(`https://www.ncbi.nlm.nih.gov/pmc/articles/${result.pmcid}/`, {
                             headers: {
                                 'Accept': 'text/xml',
                                 'User-Agent': 'PubMedSearchExecutor/1.0 (your-email@example.com)'
