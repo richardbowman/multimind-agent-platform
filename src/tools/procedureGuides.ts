@@ -50,8 +50,10 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
         const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
 
         // Check if guide exists and has same content
+        // Use the same key for both markdown and CSV by removing the extension
         const relativePath = path.relative(basePath, filePath);
-        const existingGuide = existingGuideMap.get(relativePath);
+        const basePathKey = relativePath.replace(/\.(md|csv)$/, '');
+        const existingGuide = existingGuideMap.get(basePathKey);
         if (existingGuide) {
             const existingHash = existingGuide.metadata?.contentHash;
             if (existingHash === contentHash) {
@@ -71,7 +73,7 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
             mimeType: 'text/markdown',
             description: frontmatter['description'] || 'Procedure guide document',
             created: frontmatter['created'] || new Date().toISOString(),
-            source: path.relative(basePath, filePath),
+            source: path.relative(basePath, filePath).replace(/\.(md|csv)$/, ''),
             contentHash: contentHash
         };
 
