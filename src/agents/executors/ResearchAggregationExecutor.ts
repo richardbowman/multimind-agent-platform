@@ -14,7 +14,7 @@ import { ResearchArtifactResponse } from '../../schemas/research-manager';
 import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StringUtils } from 'src/utils/StringUtils';
-import { ArtifactType } from 'src/tools/artifact';
+import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 
 /**
  * Executor that combines and synthesizes research findings into comprehensive reports.
@@ -71,13 +71,14 @@ And put the report inside of \`\`\`markdown tags.`;
 
         if (docBlocks.length > 0) {
             const artifact = await this.artifactManager.saveArtifact({
-                type: 'report',
+                type: ArtifactType.Document,
                 content: docBlocks.length>0?docBlocks[0].code:"(No content provided)",
                 tokenCount: result._usage?.outputTokens,
                 metadata: {
                     title: title,
                     projectId: projectId,
-                    tokenUsage: result._usage
+                    tokenUsage: result._usage,
+                    subtype: DocumentSubtype.ResearchReport
                 }
             });
 
@@ -109,11 +110,11 @@ And put the report inside of \`\`\`markdown tags.`;
 
         const queryTexts = [goal];
         const where: any = {
-            // "$and": [
-            //     { "type": { "$eq": ArtifactType.Document } },
-            //     // { "title": /^Summary Report/}
-            //     //{ "projectId": { "$eq": projectId } }
-            // ]
+            "$and": [
+                { "type": { "$eq": ArtifactType.Document } },
+                { "subtype": { "$eq": DocumentSubtype.WebpageSummary }},
+                { "projectId": { "$eq": projectId } }
+            ]
         };
         const nResults = 20;
 

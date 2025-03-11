@@ -10,7 +10,7 @@ import { Planner } from './planners/planner';
 import { MultiStepPlanner } from './planners/multiStepPlanner';
 import { PlanStepsResponse } from '../schemas/PlanStepsResponse';
 import { AgentConfig } from 'src/tools/settings';
-import { ReplanType, StepResponse, StepResult } from './interfaces/StepResult';
+import { ReplanType, StepResponse, StepResult, StepResultType } from './interfaces/StepResult';
 import { StepExecutor } from './interfaces/StepExecutor';
 import { ExecuteContext, ExecuteNextStepParams } from './interfaces/ExecuteNextStepParams';
 import { ExecuteStepParams, StepTask } from './interfaces/ExecuteStepParams';
@@ -19,10 +19,7 @@ import { ExecutorType } from './interfaces/ExecutorType';
 import { asUUID, UUID } from 'src/types/uuid';
 import { ArrayUtils } from 'src/utils/ArrayUtils';
 import { Artifact } from 'src/tools/artifact';
-import { parse, stringify } from 'csv';
 import Logger from '../helpers/logger';
-import { ModelMessageResponse } from 'src/schemas/ModelResponse';
-import { ExecuteParams } from './interfaces/ExecuteParams';
 
 interface ExecutorCapability {
     stepType: string;
@@ -99,14 +96,14 @@ export abstract class StepBasedAgent extends Agent {
         }
     }
 
-    static getRootTask(taskId: UUID, projects: TaskManager, depth?: number): Task | null {
+    static async getRootTask(taskId: UUID, projects: TaskManager, depth?: number): Promise<Task | null> {
         // handle weird issues
         if (depth == 10) {
             Logger.error(`Recursive getRootTask call with ${taskId}.`);
             return null;
         }
 
-        const task = projects.getTaskById(taskId);
+        const task = await projects.getTaskById(taskId);
         if (!task) return null;
 
         const project = projects.getProject(task.projectId);
@@ -129,7 +126,7 @@ export abstract class StepBasedAgent extends Agent {
         if (isMine && eventType === TaskEventType.Completed && stepTask?.props?.result?.async) {
             const executor = this.stepExecutors.get(stepTask.props?.stepType);
             if (executor && typeof executor.onChildProjectComplete === 'function') {
-                const statusPost = posts?.find(p => p.props?.partial);
+                const statusPost =  posts?.find(p => p.props?.partial);
                 const childProject = this.projects.getProject(stepTask.props?.childProjectId);
                 const stepResult = await executor.onChildProjectComplete(stepTask, childProject);
                 const artifactIds = stepResult?.artifactIds;
@@ -150,7 +147,7 @@ export abstract class StepBasedAgent extends Agent {
                 await this.handleStepCompletion(params, stepResult);
             }
         } else if (task.creator === this.userId && task.type === TaskType.Standard) {
-            const parentTask = StepBasedAgent.getRootTask(task.id, this.projects);
+            const parentTask = await StepBasedAgent.getRootTask(task.id, this.projects);
 
             if (parentTask && parentTask.creator === this.userId && parentTask.type === TaskType.Step) {
                 const postId = (parentTask as StepTask<StepResponse>).props.userPostId;
@@ -308,7 +305,7 @@ export abstract class StepBasedAgent extends Agent {
         };
 
         if (this.planner === null) {
-            const goal = `Perform planning for ${plannerParams.userPost ? `user's goal: ${plannerParams.userPost?.message}` : `task: ${params.task?.description}`}`;
+            const goal = `Perform planning for ${plannerParams.userPost ? `user's goal: ${plannerParams.userPost?.message}` : `task: '${params.task?.description}' as part of project '${project.name}'`}`;
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
                 description: goal,
@@ -493,96 +490,106 @@ export abstract class StepBasedAgent extends Agent {
             // Handle step types that may be wrapped in square brackets
             const stepType = task.props.stepType.replace(/^\[|\]$/g, '');
             const executor = this.stepExecutors.get(stepType);
-            if (!executor) {
-                throw new Error(`No executor found for step type: ${stepType}`);
-            }
-
-            Logger.info(`Executing step "${task.props.stepType}" for project "${projectId}"`);
-
-            const project = this.projects.getProject(projectId);
-            if (!project) {
-                throw new Error(`Project ${projectId} not found`);
-            }
-
-            // get overall goals
-            let channelGoals: Task[] = [];
-            let agentsOptions: Agent[] = [];
-            if (context?.channelId) {
-                const channelData = await this.chatClient.getChannelData(context?.channelId);
-                const channelProject = channelData?.projectId
-                    ? this.projects.getProject(channelData.projectId)
-                    : null;
-                channelGoals = [
-                    ...channelGoals,
-                    ...Object.values(channelProject?.tasks || {})
-                ]
-
-                // Get agent descriptions from settings for channel members
-                agentsOptions = (channelData.members || [])
-                    .filter(memberId => this.userId !== memberId)
-                    .map(memberId => {
-                        return this.agents.agents[memberId];
-                    });
-            } else {
-                agentsOptions = Object.values(this.settings.agents).filter(a => a.userId).map(id => {
-                    return this.agents.agents[id.userId];
-                }).filter(a => a !== undefined);
-            }
-
-            const self = Object.values(this.agents.agents).find(a => a.userId === this.userId);
-            if (!self) {
-                throw new Error("Could not find the current agent in step processing");
-            }
-
-            // Get all prior completed tasks' results
-            const tasks = this.projects.getProjectTasks(projectId);
-            const priorSteps = tasks
-                .filter(t => t.type === "step")
-                .map(t => t as StepTask<StepResponse>)
-                .filter(t => (t.complete || t.inProgress))
-                .sort((a, b) => (a.order || 0) - (b.order || 0));
-
-            const priorResults = priorSteps
-                .map(t => t.props?.result)
-                .filter(r => r !== undefined && r !== null)
-                .map(s => s?.response)
-                .filter(r => r); // Remove undefined/null results
-
-
             let stepResult: StepResult<StepResponse>;
 
-            if (executor.execute) {
-                stepResult = await executor.execute({
-                    agentId: this.userId,
-                    goal: `[Step: ${task.description}] [Project: ${project.name}] Solve the user's request: ${userPost?.message}`,
-                    step: task.props.stepType,
-                    stepId: task.id,
-                    channelGoals,
-                    projectId: projectId,
-                    previousResponses: priorResults,
-                    steps: priorSteps,
-                    message: userPost?.message,
-                    stepGoal: task.description,
-                    overallGoal: project.name,
-                    executionMode: userPost ? 'conversation' : 'task',
-                    agents: agentsOptions,
-                    self,
-                    context: {
-                        channelId: userPost?.channel_id,
-                        threadId: userPost?.thread_id,
-                        threadPosts: params.context?.threadPosts,
-                        artifacts: params.context?.artifacts,
-                        projects: params.context?.projects
-                    },
-                    partialResponse: this.getPartialPost(userPost, params)
-                });
+            if (!executor) {
+                const error = `Step type '${stepType}' not supported. Only use available types.`;
+                Logger.error(error);
+                stepResult = {
+                    finished: true,
+                    replan: ReplanType.Force,
+                    type: StepResultType.Error,
+                    response: {
+                        status: error
+                    }
+                }
             } else {
-                stepResult = await executor.executeOld(
-                    `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message}`,
-                    task.props.stepType,
-                    projectId,
-                    priorResults
-                );
+
+                Logger.info(`Executing step "${task.props.stepType}" for project "${projectId}"`);
+
+                const project = this.projects.getProject(projectId);
+                if (!project) {
+                    throw new Error(`Project ${projectId} not found`);
+                }
+
+                // get overall goals
+                let channelGoals: Task[] = [];
+                let agentsOptions: Agent[] = [];
+                if (context?.channelId) {
+                    const channelData = await this.chatClient.getChannelData(context?.channelId);
+                    const channelProject = channelData?.projectId
+                        ? this.projects.getProject(channelData.projectId)
+                        : null;
+                    channelGoals = [
+                        ...channelGoals,
+                        ...Object.values(channelProject?.tasks || {})
+                    ]
+
+                    // Get agent descriptions from settings for channel members
+                    agentsOptions = (channelData.members || [])
+                        .filter(memberId => this.userId !== memberId)
+                        .map(memberId => {
+                            return this.agents.agents[memberId];
+                        });
+                } else {
+                    agentsOptions = Object.values(this.settings.agents).filter(a => a.userId).map(id => {
+                        return this.agents.agents[id.userId];
+                    }).filter(a => a !== undefined);
+                }
+
+                const self = Object.values(this.agents.agents).find(a => a.userId === this.userId);
+                if (!self) {
+                    throw new Error("Could not find the current agent in step processing");
+                }
+
+                // Get all prior completed tasks' results
+                const tasks = this.projects.getProjectTasks(projectId);
+                const priorSteps = tasks
+                    .filter(t => t.type === "step")
+                    .map(t => t as StepTask<StepResponse>)
+                    .filter(t => (t.complete || t.inProgress))
+                    .sort((a, b) => (a.order || 0) - (b.order || 0));
+
+                const priorResults = priorSteps
+                    .map(t => t.props?.result)
+                    .filter(r => r !== undefined && r !== null)
+                    .map(s => s?.response)
+                    .filter(r => r); // Remove undefined/null results
+
+
+                if (executor.execute) {
+                    stepResult = await executor.execute({
+                        agentId: this.userId,
+                        goal: `[Step: ${task.description}] [Project: ${project.name}] Solve the user's request: ${userPost?.message}`,
+                        step: task.props.stepType,
+                        stepId: task.id,
+                        channelGoals,
+                        projectId: projectId,
+                        previousResponses: priorResults,
+                        steps: priorSteps,
+                        message: userPost?.message,
+                        stepGoal: task.description,
+                        overallGoal: project.name,
+                        executionMode: userPost ? 'conversation' : 'task',
+                        agents: agentsOptions,
+                        self,
+                        context: {
+                            channelId: userPost?.channel_id,
+                            threadId: userPost?.thread_id,
+                            threadPosts: params.context?.threadPosts,
+                            artifacts: params.context?.artifacts,
+                            projects: params.context?.projects
+                        },
+                        partialResponse: this.getPartialPost(userPost, params)
+                    });
+                } else {
+                    stepResult = await executor.executeOld(
+                        `[Step: ${task.description}] [Project: ${project.name}] ${userPost?.message}`,
+                        task.props.stepType,
+                        projectId,
+                        priorResults
+                    );
+                }
             }
 
             await this.handleStepCompletion(params, stepResult);
@@ -604,15 +611,16 @@ export abstract class StepBasedAgent extends Agent {
             replyTo = await this.chatClient.getPost(project.metadata.originalPostId);
         }
 
-
+        //TODO: figure out how to handle restated goals
         // step wants to revise overall goal
-        if (stepResult.goal) {
-            project.name = stepResult.goal;
-        }
+        // if (stepResult.goal) {
+        //     project.name = stepResult.goal;
+        // }
 
         // check to see if user cancelled steps (run-away?)
         const checkTask = await this.projects.getTaskById(task.id);
-        if (!checkTask || checkTask?.status === TaskStatus.Cancelled) {
+        const checkParentTask = project.props?.parentTaskId && await this.projects.getTaskById(project.props.parentTaskId);
+        if (!checkTask || checkTask?.status === TaskStatus.Cancelled || checkParentTask?.status === TaskStatus.Cancelled) {
             Logger.info("Step task was cancelled, aborting process");
             return;
         }

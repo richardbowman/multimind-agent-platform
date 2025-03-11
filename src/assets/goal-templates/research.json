@@ -3,7 +3,7 @@
     "name": "Web Research Channel",
     "description": "Template for setting up a web research channel with a research manager",
     "supportingAgents": [
-        "@research",
+        "@research-manager",
         "@research-assistant",
         "@router"
     ],

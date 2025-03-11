@@ -35,13 +35,22 @@ export enum ArtifactType {
   Unknown = "unknown"
 }
 
+export enum DocumentSubtype {
+  ResearchReport = "Research Report",
+  WebpageSummary = "Webpage Summary"
+}
+
+export enum SpreadsheetSubType {
+  DataTypes = "Data Types"
+}
+
 export interface Artifact extends ArtifactItem {
   content: string | Buffer | CalendarEvent[]; // The actual data, could be text, binary, or calendar events
 }
 
 export interface ArtifactItem {
   id: UUID;
-  type: ArtifactType; // e.g., 'report', 'draft-email', 'calendar'
-  metadata?: Record<string, any>; // Optional additional information about the artifact
-  tokenCount?: number; // Optional token count for the content
+  type: ArtifactType;
+  metadata?: Record<string, any>;
+  tokenCount?: number;
 }

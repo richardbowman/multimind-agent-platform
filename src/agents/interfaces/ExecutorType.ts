@@ -45,5 +45,6 @@ export enum ExecutorType {
     VIEW_TASKS = "view-tasks",
     GENERATE_WEBSITE = "generate-website",
     ARTIFACT_RETRIEVER = "retrieve-full-artifact",
-    CSV_PROCESSOR = "csv-processor"
+    CSV_PROCESSOR = "csv-processor",
+    PUBMED_SEARCH = "pubmed-search"
 }

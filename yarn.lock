@@ -6023,6 +6023,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@types/js-yaml@npm:^4":
+  version: 4.0.9
+  resolution: "@types/js-yaml@npm:4.0.9"
+  checksum: 10c0/24de857aa8d61526bbfbbaa383aa538283ad17363fcd5bb5148e2c7f604547db36646440e739d78241ed008702a8920665d1add5618687b6743858fae00da211
+  languageName: node
+  linkType: hard
+
 "@types/json-schema@npm:*, @types/json-schema@npm:^7.0.15, @types/json-schema@npm:^7.0.8, @types/json-schema@npm:^7.0.9":
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
@@ -6398,6 +6405,13 @@ __metadata:
   dependencies:
     "@types/node": "npm:*"
   checksum: 10c0/a5430aa479bde588e69cb9175518d72f9338b6999e3b2ae16fc03d3bdcff8347e486dc031e4ed14601260463c07e1f9a0d7511dfc653712b047c439c680b0b34
+  languageName: node
+  linkType: hard
+
+"@types/xmldom@npm:^0":
+  version: 0.1.34
+  resolution: "@types/xmldom@npm:0.1.34"
+  checksum: 10c0/9cd8428f2fbdedb3003d48841b62000fc218a15d9ce2129f47a768f0d0ec840b942a4dcec0ce567a35d314feb86bfc1f86bca23e180bf87f8dd52ef982f06e45
   languageName: node
   linkType: hard
 
@@ -15107,6 +15121,7 @@ __metadata:
     "@types/fs-extra": "npm:^11.0.4"
     "@types/ical": "npm:^0"
     "@types/jest": "npm:^29.5.14"
+    "@types/js-yaml": "npm:^4"
     "@types/mermaid": "npm:^9.2.0"
     "@types/mime": "npm:3"
     "@types/mime-types": "npm:^2"
@@ -15119,6 +15134,7 @@ __metadata:
     "@types/wav": "npm:^1"
     "@types/webpack-node-externals": "npm:^3.0.4"
     "@types/ws": "npm:^8.5.13"
+    "@types/xmldom": "npm:^0"
     "@xenova/transformers": "npm:^2.17.2"
     ajv: "npm:^8.17.1"
     ajv-formats: "npm:^3.0.1"
@@ -15153,6 +15169,7 @@ __metadata:
     ical-parser: "npm:^1.2.0"
     jest: "npm:^29.7.0"
     jest-mock: "npm:^29.7.0"
+    js-yaml: "npm:^4.1.0"
     json-schema: "npm:^0.4.0"
     json5: "npm:^2.2.3"
     kafkajs: "npm:^2.2.4"
@@ -15213,6 +15230,7 @@ __metadata:
     webpack-dev-server: "npm:^5.2.0"
     webpack-node-externals: "npm:^3.0.0"
     ws: "npm:^8.18.0"
+    xmldom: "npm:^0.6.0"
   languageName: unknown
   linkType: soft
 
@@ -20636,6 +20654,13 @@ __metadata:
   version: 11.0.1
   resolution: "xmlbuilder@npm:11.0.1"
   checksum: 10c0/74b979f89a0a129926bc786b913459bdbcefa809afaa551c5ab83f89b1915bdaea14c11c759284bb9b931e3b53004dbc2181e21d3ca9553eeb0b2a7b4e40c35b
+  languageName: node
+  linkType: hard
+
+"xmldom@npm:^0.6.0":
+  version: 0.6.0
+  resolution: "xmldom@npm:0.6.0"
+  checksum: 10c0/93cbb4854f73f431a402e7942baa87a59e8445fd0b4ae6bf6af3a1007809e849da8ac70bbe1509242212bce5d19e30b55ea282cbd9d87281701d1bdc13b74623
   languageName: node
   linkType: hard
 

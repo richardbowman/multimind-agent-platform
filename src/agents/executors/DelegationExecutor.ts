@@ -10,8 +10,9 @@ import Logger from '../../helpers/logger';
 import { createUUID } from 'src/types/uuid';
 import { Agent } from '../agents';
 import { ContentType } from 'src/llm/promptBuilder';
+import { ExecutorType } from '../interfaces/ExecutorType';
 
-@StepExecutorDecorator('delegation', 'Create projects with tasks delegated to agents in the channel')
+@StepExecutorDecorator(ExecutorType.DELEGATION, 'Create projects with tasks delegated to agents in the channel')
 export class DelegationExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;

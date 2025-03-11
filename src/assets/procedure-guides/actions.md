@@ -1,4 +1,8 @@
-# Executors Reference
+---
+title: "Action Type Reference"
+description: "A list of all supported actions that agents can perform."
+---
+# Action Reference
 
 | Type Key | Class Name | Description |
 |----------|------------|-------------|

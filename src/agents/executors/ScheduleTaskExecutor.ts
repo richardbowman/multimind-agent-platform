@@ -149,7 +149,7 @@ export class ScheduleTaskExecutor implements StepExecutor {
             let task: Task;
             if (action === UpdateActions.Delete && taskId) {
                 // Remove existing task
-                const existingTask = this.taskManager.getTaskById(taskId);
+                const existingTask = await this.taskManager.getTaskById(taskId);
                 if (!existingTask) {
                     throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
                 }
@@ -157,14 +157,14 @@ export class ScheduleTaskExecutor implements StepExecutor {
                 await this.taskManager.cancelTask(existingTask.id);
             } else if (action === UpdateActions.Complete && taskId) {
                 // Complete task
-                const existingTask = this.taskManager.getTaskById(taskId);
+                const existingTask = await this.taskManager.getTaskById(taskId);
                 if (!existingTask) {
                     throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
                 }
                 await this.taskManager.completeTask(existingTask.id);
             } else if (action === UpdateActions.Update && taskId) {
                 // Update existing task
-                const existingTask = this.taskManager.getTaskById(taskId);
+                const existingTask = await this.taskManager.getTaskById(taskId);
                 if (!existingTask) {
                     throw new Error(`Task ${taskId} not found in project ${channelProject.id}`);
                 }

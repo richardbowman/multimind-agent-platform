@@ -139,6 +139,9 @@
               "className": "ValidationExecutor"
             },
             {
+              "className": "CSVProcessingExecutor"
+            },
+            {
               "className": "KnowledgeCheckExecutor"
             },
             {
@@ -147,37 +150,54 @@
             {
               "className": "GenerateSpreadsheetExecutor"
             }
-          ],
-          "stepSequences": [
+          ]
+        }
+      },
+      "ScienceAssistant": {
+        "className": "ConfigurableAgent",
+        "sourcePath": "configurableAgent.ts",
+        "userId": "c5ba5ff1-5f6b-47af-bdd1-2d07aca00a9a",
+        "handle": "@science-assistant",
+        "description": "Performs scentific searches and summarizes matching pages. Can download a specific page if provided.",
+        "enabled": true,
+        "config": {
+          "purpose": "You are a scientific assistant who performs PubMed searches to meet the goal.",
+          "finalInstructions": "IN YOUR REASONING, Explain the step strategies you considered.",
+          "supportsDelegation": true,
+          "plannerType": "nextStep",
+          "executors": [
             {
-              "id": "NEW-USER",
-              "name": "New User",
-              "description": "For incoming new user requests, check existing knowledge base and validate.",
-              "guide": "new-user.md"
+              "className": "UrlExecutor"
             },
             {
-              "id": "PROVIDED-URL",
-              "name": "Provided URL",
-              "description": "If the task includes a specific complete URL, download and process relevant links.",
-              "guide": "provided-url.md"
+              "className": "GoalConfirmationExecutor"
             },
             {
-              "id": "PROVIDED-DOCUMENT",
-              "name": "Provided Document",
-              "description": "If the task mentions references to document(s) you can use to review.",
-              "guide": "provided-document.md"
+              "className": "PubMedSearchExecutor"
             },
             {
-              "id": "NO-EXISTING-KNOWLEDGE",
-              "name": "No Existing Knowledge",
-              "description": "Search, process links, and provide final response.",
-              "guide": "no-existing-knowledge.md"
+              "className": "LinkSelectionExecutor"
             },
             {
-              "id": "FOLLOW-UP",
-              "name": "Follow Up",
-              "description": "When the user requests additional research.",
-              "guide": "follow-up.md"
+              "className": "ArtifactSelectorExecutor"
+            },
+            {
+              "className": "WebScrapeExecutor"
+            },
+            {
+              "className": "ValidationExecutor"
+            },
+            {
+              "className": "CSVProcessingExecutor"
+            },
+            {
+              "className": "KnowledgeCheckExecutor"
+            },
+            {
+              "className": "GenerateDocumentExecutor"
+            },
+            {
+              "className": "GenerateSpreadsheetExecutor"
             }
           ]
         }
@@ -243,14 +263,39 @@
         }
       },
       "ResearchManager": {
-        "className": "ResearchManager",
-        "sourcePath": "researchManager.ts",
+        "className": "ConfigurableAgent",
+        "sourcePath": "configurableAgent.ts",
         "supportsDelegation": true,
         "userId": "48d176a8-9f55-47c2-90ca-6dd2bba8e262",
-        "handle": "@research",
+        "handle": "@research-manager",
         "description": "Manages and coordinates complex research activities that span multiple topics, requiring multiple independent research assistants to assist them.",
-        "enabled": true
-      },
+        "enabled": true,
+        "config": {
+          "purpose": "My name is Jarvis. I can help structure larger research projects that require multiple steps and multiple research processes.",
+          "finalInstructions": "",
+          "plannerType": "nextStep",
+          "executors": [
+            {
+              "className": "GenerateDocumentExecutor"
+            },
+            {
+              "className": "GenerateSpreadsheetExecutor"
+            },
+            {
+              "className": "GenerateSlidesExecutor"
+            },
+            {
+              "className": "DelegationExecutor"
+            },
+            {
+              "className": "CSVProcessingExecutor"
+            },
+            {
+              "className": "KnowledgeCheckExecutor"
+            }
+          ]
+        }
+      },       
       "ContentManager": {
         "className": "ContentManager",
         "sourcePath": "contentManager.ts",
@@ -383,26 +428,6 @@
             },*/
             {
               className: "UnderstandGoalsExecutor"
-            }
-          ],
-          "stepSequences": [
-            {
-              "id": "VISION",
-              "name": "Product vision",
-              "description": "Develop product vision and high-level product requirements",
-              "guide": "product-vision.md"
-            },
-            {
-              "id": "process-all-user-stories",
-              "name": "Detailed Specifications",
-              "description": "Develop detailed product specifications from a high level spreadsheet of user stories.",
-              "guide": "detailed-specifications.md"
-            },
-            {
-              "id": "detailed-specification",
-              "name": "Detailed Specification for a Single User Story",
-              "description": "Develop detailed product specification for a single user story.",
-              "guide": "single-user-story-spec.md"
             }
           ]
         }

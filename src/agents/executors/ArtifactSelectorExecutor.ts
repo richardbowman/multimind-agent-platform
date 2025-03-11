@@ -118,7 +118,7 @@ ${JSON.stringify(schema, null, 2)}
                 artifactIds: selectedArtifacts.map(a => a.id),
                 response: {
                     type: StepResponseType.WebPage,
-                    message: `I've successfully reviewed the document and found ${selectedArtifacts.length} artifacts containing ${allLinks.length} links:\n
+                    status: `I've successfully reviewed the document and found ${selectedArtifacts.length} artifacts containing ${allLinks.length} links:\n
 ${json.selectionReason}. Now I need to select the relevant links from the links in the document. My next step would typically be [${ExecutorType.SELECT_LINKS}]`,
                     data: {
                         selectedArtifacts,

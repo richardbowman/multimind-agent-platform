@@ -80,7 +80,7 @@ export class GoalProgressExecutor implements StepExecutor<StepResponse> {
         if (result?.goalsInProgress?.length) {
             await Promise.all(result.goalsInProgress.map(async goalId => {
                 try {
-                    const task = this.taskManager.getTaskById(goalId);
+                    const task = await this.taskManager.getTaskById(goalId);
                     if (task && task.status !== TaskStatus.InProgress) {
                         await this.taskManager.markTaskInProgress(goalId);
                         // Update project status if needed
@@ -100,7 +100,7 @@ export class GoalProgressExecutor implements StepExecutor<StepResponse> {
         if (result?.goalsCompleted?.length) {
             await Promise.all(result.goalsCompleted.map(async goalId => {
                 try {
-                    const task = this.taskManager.getTaskById(goalId);
+                    const task = await this.taskManager.getTaskById(goalId);
                     if (task && task.status !== TaskStatus.Completed) {
                         await this.taskManager.completeTask(goalId);
                         // Check if all tasks in project are complete

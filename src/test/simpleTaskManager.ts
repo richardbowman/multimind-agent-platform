@@ -417,11 +417,11 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async cancelTask(taskId: string): Promise<Task> {
-        const task = await this.updateTask(taskId, { 
+        const task = await this._updateTask(taskId, { 
             status: TaskStatus.Cancelled,
             complete: false, // Maintain backwards compatibility
             inProgress: false // Maintain backwards compatibility
-        });
+        }, false);
         
         // Emit the 'taskCancelled' event with the task
         await this.asyncEmit('taskCancelled', task);
@@ -445,6 +445,10 @@ class SimpleTaskManager extends Events.EventEmitter implements TaskManager {
     }
 
     async updateTask(taskId: string, updates: Partial<Task>): Promise<Task> {
+        return this._updateTask(taskId, updates);
+    }
+
+    protected async _updateTask(taskId: string, updates: Partial<Task>, fireEvent: boolean = true): Promise<Task> {
         let taskFound = false;
         for (const projectId in this.projects) {
             const project = this.projects[projectId];

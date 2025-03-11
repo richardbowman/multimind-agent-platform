@@ -3,8 +3,6 @@ agent: ResearchAssistant
 title: "No Existing Knowledge Procedure"
 ---
 
-# Overview
-
 ## Description
 Search, process links, and provide final response.
 

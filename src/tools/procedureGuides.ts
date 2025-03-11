@@ -1,7 +1,7 @@
 import Logger from "src/helpers/logger";
 import { ArtifactManager } from "./artifactManager";
 import fs from "node:fs";
-import { ArtifactType } from "./artifact";
+import { ArtifactType, SpreadsheetSubType } from "./artifact";
 import { createUUID } from "src/types/uuid";
 import path from "node:path";
 import * as yaml from 'js-yaml';
@@ -21,7 +21,8 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
 
     // Get existing guides from artifact manager
     const existingGuides = await artifactManager.getArtifacts({ type: ArtifactType.ProcedureGuide });
-    const existingGuideMap = new Map(existingGuides.map(g => [g.metadata?.source, g]));
+    const existingTables = await artifactManager.getArtifacts({ type: ArtifactType.Spreadsheet });
+    const existingGuideMap = new Map([...existingGuides, ...existingTables].map(g => [g.metadata?.source, g]));
 
     for (let i = 0; i < supportedFiles.length; i++) {
         const file = supportedFiles[i];

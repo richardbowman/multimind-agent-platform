@@ -218,7 +218,7 @@ export abstract class Agent {
                     // Attempt to process the task
                     await this.processTask(task);
 
-                    const latestTask = this.projects.getTaskById(task.id);
+                    const latestTask = await this.projects.getTaskById(task.id);
                     if (!latestTask?.complete) {
                         Logger.info(`Agent [${this.messagingHandle}]: Current task is not yet complete. Processed ${processedCount} tasks, exiting processing queue.`);
                         return;

@@ -1,3 +1,7 @@
+---
+title: "Supported Document Artifact Sub-types"
+artifactType: Document
+---
 Subtype,Description
 Webpage Summary,"Summarized content extracted from web pages"
 Research Report,"Detailed findings from research activities"

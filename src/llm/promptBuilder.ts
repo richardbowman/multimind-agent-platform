@@ -397,11 +397,17 @@ ${this.modelHelpers.getFinalInstructions()}
         // let output = `🎯 Project: ${project.name}\n`;
         // output += `📝 Description: ${project.metadata?.description || 'No description'}\n`;
         // output += `📊 Status: ${project.metadata?.status || 'active'}\n\n`;
-        return `📋 Tasks:\n` +
+        return `# 📋 Tasks:\n` +
             Object.values(tasks)
                 .sort((a, b) => (a.order || 0) - (b.order || 0))
                 .map((task, index) =>
-                    `${index + 1}. ID:[${task.id}] ${task.description} (${task.status})`
+`## TASK ${index + 1} OF ${tasks.length}:
+<details>
+  - Task Status: ${task.status}
+  - Task ID: ${task.id}
+  - Task Goal: ${task.description}
+  - Task Metadata: ${JSON.stringify(task.props, undefined, 2)}
+</details>`
                 ).join('\n');;
     }
 

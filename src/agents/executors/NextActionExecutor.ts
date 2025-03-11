@@ -21,6 +21,7 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StringUtils } from 'src/utils/StringUtils';
 import { ModelResponse } from 'src/schemas/ModelResponse';
 import { ArtifactManager } from 'src/tools/artifactManager';
+import { ArtifactType } from 'src/tools/artifact';
 
 export type WithReasoning<T extends ModelResponse> = T & {
     reasoning?: string;
@@ -112,15 +113,16 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
 
         // Search for relevant procedure guides
-        const procedureGuides = await this.artifactManager.searchArtifacts(params.stepGoal, { type: 'procedure-guide' }, 3, 0.6);
+        const procedureGuideList = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.ProcedureGuide }, 3);
+        const procedureGuides = await this.artifactManager.bulkLoadArtifacts(procedureGuideList.map(p => p.artifact));
         
         // Format procedure guides for prompt
         const guidesPrompt = procedureGuides.length > 0 ?
-            `### RELEVANT PROCEDURE GUIDES:\n` +
-            procedureGuides.map((guide, i) => 
-                `#### Guide ${i+1} (${guide.score.toFixed(2)} relevance):\n` +
-                `**Title**: ${guide.artifact.metadata?.title}\n` +
-                `**Summary**: ${guide.artifact.metadata?.summary}\n`
+            `# RELEVANT PROCEDURE GUIDES:\n` +
+            procedureGuideList.map((guide, i) => 
+                `## Guide ${i+1} (${guide.score.toFixed(2)} relevance):\n` +
+                `###: ${guide.artifact.metadata?.title}\n` +
+                `<guide>${procedureGuides.find(p => p.id === guide.artifact.id)?.content}</guide>\n`
             ).join('\n\n') :
             `### RELEVANT PROCEDURE GUIDES:\n*No relevant procedure guides found*`;
 

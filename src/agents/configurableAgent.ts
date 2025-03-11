@@ -43,19 +43,19 @@ export class ConfigurableAgent extends StepBasedAgent {
         await this.initializeFromConfig(agentConfig);
 
         // Initialize step sequences from config if present
-        if (agentConfig.stepSequences) {
-            for (const seq of agentConfig.stepSequences) {
-                this.modelHelpers.addStepSequence(
-                    seq.id,
-                    seq.description || '',
-                    seq.steps.map(step => ({
-                        type: ExecutorType[Object.keys(ExecutorType).find(k => ExecutorType[k] === step.executor)||""],
-                        description: step.description || '',
-                        interaction: step.interaction
-                    }))
-                );
-            }
-        }
+        // if (agentConfig.stepSequences) {
+        //     for (const seq of agentConfig.stepSequences) {
+        //         this.modelHelpers.addStepSequence(
+        //             seq.id,
+        //             seq.description || '',
+        //             seq.steps.map(step => ({
+        //                 type: ExecutorType[Object.keys(ExecutorType).find(k => ExecutorType[k] === step.executor)||""],
+        //                 description: step.description || '',
+        //                 interaction: step.interaction
+        //             }))
+        //         );
+        //     }
+        // }
 
         if (this.planner === null) {
             this.registerStepExecutor(new NextActionExecutor(this.getExecutorParams(), this.stepExecutors));

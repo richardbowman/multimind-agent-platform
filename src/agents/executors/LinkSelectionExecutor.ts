@@ -14,6 +14,8 @@ import { LinkRef } from "src/helpers/scrapeHelper";
 import { prev } from "cheerio/dist/commonjs/api/traversing";
 import { Settings } from "src/tools/settings";
 import { StringUtils } from "src/utils/StringUtils";
+import { OutputType } from "src/llm/promptBuilder";
+import { ModelMessageResponse } from "src/schemas/ModelResponse";
 
 @StepExecutorDecorator(ExecutorType.SELECT_LINKS, 'Analyzes and selects relevant links to follow')
 export class LinkSelectionExecutor implements StepExecutor<StepResponse> {
@@ -90,7 +92,6 @@ export class LinkSelectionExecutor implements StepExecutor<StepResponse> {
 
 Given the following web search results and links from existing pages you've scraped, select 1-${this.settings.maxSelectedLinks} URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them. If you don't think any are relevant, return an empty array.`);
 
-        const instructions = new StructuredOutputPrompt(schema, prompt);
         const message = `Links from previously scraped pages:
 ${previousLinks?.map(l => `- ${l.href}: ${l.text}`).join('\n') || "(No previous scraped page results)"}
 
@@ -100,12 +101,15 @@ ${searchResults && searchResults
                 .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${StringUtils.truncateWithEllipsis(sr.description, 200)}`)
                 .join("\n\n")}`}`;
 
+        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
 
-        const response = await this.modelHelpers.generate<WebSearchResponse>({
+        const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
             message,
-            instructions
+            instructions: prompt
         });
 
-        return response.urls.filter(url => typeof url === 'string');
+        const response = StringUtils.extractAndParseJsonBlock<WebSearchResponse>(rawResponse.message, schema);
+
+        return response?.urls.filter(url => typeof url === 'string')||[];
     }
 }
