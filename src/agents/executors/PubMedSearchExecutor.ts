@@ -79,31 +79,20 @@ import { ModelHelpers } from "src/llm/modelHelpers";
              if (idList.length === 0) return [];
 
              // Fetch details for the found articles
-             // Add retry logic with exponential backoff
-             const maxRetries = 3;
-             let retryCount = 0;
-             let detailsResponse;
-             
-             while (retryCount < maxRetries) {
-                 try {
-                     detailsResponse = await axios.get(`${this.baseUrl}/efetch.fcgi`, {
-                         params: {
-                             db: 'pubmed',
-                             id: idList.join(','),
-                             retmode: 'xml'
-                         },
-                         timeout: 10000 // 10 second timeout
-                     });
-                     break;
-                 } catch (error) {
-                     retryCount++;
-                     if (retryCount === maxRetries) {
-                         throw error;
+             const detailsResponse = await withRetry(
+                 () => axios.get(`${this.baseUrl}/efetch.fcgi`, {
+                     params: {
+                         db: 'pubmed',
+                         id: idList.join(','),
+                         retmode: 'xml'
                      }
-                     // Exponential backoff
-                     await new Promise(resolve => setTimeout(resolve, 1000 * Math.pow(2, retryCount)));
+                 }),
+                 (response) => response.status === 200 && response.data?.length > 0,
+                 {
+                     timeoutMs: 10000,
+                     maxRetries: 3
                  }
-             }
+             );
 
              // Parse XML response
              const parser = new DOMParser();
