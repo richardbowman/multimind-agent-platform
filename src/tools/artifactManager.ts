@@ -81,14 +81,14 @@ export class ArtifactManager {
     ).catch(err => Logger.error('Error creating output directory:', err));
   }
 
-  async getArtifacts(filter: { type?: string } = {}): Promise<ArtifactItem[]> {
+  async getArtifacts(filter: { type?: string, subtype?: string } = {}): Promise<ArtifactItem[]> {
     const artifacts = await this.listArtifacts();
 
-    if (filter.type) {
-      return artifacts.filter(artifact => artifact.type === filter.type);
-    }
-
-    return artifacts;
+    return artifacts.filter(artifact => {
+      const typeMatch = !filter.type || artifact.type === filter.type;
+      const subtypeMatch = !filter.subtype || artifact.metadata?.subtype === filter.subtype;
+      return typeMatch && subtypeMatch;
+    });
   }
 
   private async loadArtifactMetadata(): Promise<Record<string, any>> {
@@ -120,7 +120,10 @@ export class ArtifactManager {
     const mimeType = artifactParam.metadata?.mimeType;
     const fileInfo = getFileInfo(mimeType);
     // Use the type from fileInfo if no type was explicitly set
+    // Use the type from fileInfo if no type was explicitly set
     const type = artifactParam.type || fileInfo.type || 'file';
+    // Extract subtype if provided in metadata
+    const subtype = artifactParam.metadata?.subtype || undefined;
     
     const artifact = {
       id: createUUID(),
@@ -169,6 +172,7 @@ export class ArtifactManager {
       ...artifact.metadata, // Include additional metadata attributes if any
       contentPath: filePath,
       type: artifact.type,
+      subtype: subtype,
       version,
       tokenCount: artifact.tokenCount,
       mimeType: artifact.metadata?.mimeType
@@ -388,7 +392,7 @@ export class ArtifactManager {
    */
   async searchArtifacts(
     query: string,
-    filter?: Record<string, any>,
+    filter?: Record<string, any> & { subtype?: string },
     limit: number = 5, 
     minScore: number = 0.5
   ): Promise<Array<{ artifact: ArtifactItem, score: number }>> {
