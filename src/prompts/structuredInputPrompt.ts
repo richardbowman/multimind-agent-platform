@@ -1,7 +1,7 @@
 import { Task } from "src/tools/taskManager";
 
 export interface InputPrompt {
-    getInstructions(): string;
+    getInstructions(): Promise<string>|string;
 }
 
 export class StructuredInputPrompt implements InputPrompt {

@@ -54,7 +54,7 @@ export interface PlannerParams extends GenerateParams {
 }
 
 export interface GenerateInputParams extends GenerateParams {
-    instructions: string | InputPrompt | StructuredOutputPrompt;
+    instructions: string | Promise<string> | InputPrompt | StructuredOutputPrompt;
     userPost?: Message;
     threadPosts?: Message[];
     modelType?: ModelType;

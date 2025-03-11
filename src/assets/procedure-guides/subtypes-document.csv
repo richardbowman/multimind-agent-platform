@@ -1,6 +1,7 @@
 ---
 title: "Supported Document Artifact Sub-types"
-artifactType: Document
+artifactType: document
+subtype: "Artifact Subtypes"
 ---
 Subtype,Description
 Webpage Summary,"Summarized content extracted from web pages"

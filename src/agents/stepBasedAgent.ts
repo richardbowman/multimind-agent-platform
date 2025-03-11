@@ -20,6 +20,7 @@ import { asUUID, UUID } from 'src/types/uuid';
 import { ArrayUtils } from 'src/utils/ArrayUtils';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../helpers/logger';
+import { ExecutorConstructorParams } from './interfaces/ExecutorConstructorParams';
 
 interface ExecutorCapability {
     stepType: string;
@@ -44,7 +45,7 @@ export abstract class StepBasedAgent extends Agent {
         );
     }
 
-    protected getExecutorParams() {
+    protected getExecutorParams() : ExecutorConstructorParams {
         // Create standardized params
         const executorParams = {
             llmService: this.llmService,
@@ -619,7 +620,7 @@ export abstract class StepBasedAgent extends Agent {
 
         // check to see if user cancelled steps (run-away?)
         const checkTask = await this.projects.getTaskById(task.id);
-        const checkParentTask = project.props?.parentTaskId && await this.projects.getTaskById(project.props.parentTaskId);
+        const checkParentTask = project.metadata?.parentTaskId && await this.projects.getTaskById(project.metadata.parentTaskId);
         if (!checkTask || checkTask?.status === TaskStatus.Cancelled || checkParentTask?.status === TaskStatus.Cancelled) {
             Logger.info("Step task was cancelled, aborting process");
             return;
@@ -651,9 +652,14 @@ export abstract class StepBasedAgent extends Agent {
         }
 
         // check if they provided artifact objects for us to save
-        const artifactIds = stepResult.artifacts && (await Promise.all<Artifact>(stepResult.artifacts?.map(a => this.artifactManager.saveArtifact(a)))).map(a => a.id);
+        const createdArtifacts : UUID[] = [];
+        if (stepResult.response.artifacts?.length||0 > 0) {
+            const artifacts = await Promise.all<Artifact>(stepResult.response.artifacts!.map(a => this.artifactManager.saveArtifact(a)));
+            const ids = artifacts.map(a => a.id);
+            createdArtifacts.push(...ids);
+        }
 
-        const artifactList = [...artifactIds || [], ...stepResult.artifactIds || [], ...stepResult.response?.artifactIds || [], stepResult.response?.data?.artifactId];
+        const artifactList = [...createdArtifacts || [], ...stepResult.artifactIds || [], ...stepResult.response?.artifactIds || [], stepResult.response?.data?.artifactId];
 
         // Only send replies if we have a userPost to reply to
         if (replyTo && stepResult.response.message) {

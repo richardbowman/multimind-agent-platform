@@ -4,6 +4,7 @@ import { ILLMService, LLMOptions, LLMRequestParams, LLMTool, StructuredOutputPro
 import { LLMCallLogger } from "./LLMLogger";
 import { ModelType } from "./LLMServiceFactory";
 import { ModelInfo } from "./types";
+import { PromptBuilder } from "./promptBuilder";
 
 export abstract class BaseLLMService implements ILLMService {
     protected logger: LLMCallLogger;
@@ -74,7 +75,10 @@ export abstract class BaseLLMService implements ILLMService {
         ];
 
         const schema = instructions.getSchema();
-        const prompt = instructions.getPrompt();
+        let prompt = await instructions.getPrompt();
+        if (prompt instanceof PromptBuilder) {
+            prompt = await prompt.build();
+        }
 
         const result = await this.sendLLMRequest<T>({
             messages,

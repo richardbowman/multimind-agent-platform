@@ -15,6 +15,7 @@ export interface ExecutorConstructorParams {
     artifactManager: ArtifactManager;
     settings: Settings;
     userId: UUID;
+    agentName?: string; // only provided by Configurable Agents
     config?: Record<string, any>;
     modelHelpers: ModelHelpers;
     chatClient: ChatClient;

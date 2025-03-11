@@ -202,7 +202,7 @@ export class RouterAgent extends Agent {
         const posts = [rootPost, ...threadPosts].filter(p => p !== undefined);
         const response = await this.modelHelpers.generate<RoutingResponse>({
             message: userPost.message,
-            instructions: new StructuredOutputPrompt(schema, promptBuilder.build()),
+            instructions: new StructuredOutputPrompt(schema, await promptBuilder.build()),
             threadPosts: posts
         });
 

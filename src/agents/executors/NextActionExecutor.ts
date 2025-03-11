@@ -40,6 +40,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
     private stepExecutors: Map<string, StepExecutor<StepResponse>> = new Map();
     private chatClient: ChatClient;
     private artifactManager: ArtifactManager;
+    private agentName?: string;
 
     constructor(params: ExecutorConstructorParams, stepExecutors: Map<string, StepExecutor<StepResponse>>) {
         this.llmService = params.llmService;
@@ -49,6 +50,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         this.stepExecutors = stepExecutors;
         this.chatClient = params.chatClient;
         this.artifactManager = params.artifactManager;
+        this.agentName = params.agentName;
     }
     
     public async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
@@ -113,13 +115,17 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
 
         // Search for relevant procedure guides
-        const procedureGuideList = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.ProcedureGuide }, 3);
-        const procedureGuides = await this.artifactManager.bulkLoadArtifacts(procedureGuideList.map(p => p.artifact));
+        const procedureGuideList = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.ProcedureGuide }, 10);
+        const allProcedureGuides = await this.artifactManager.bulkLoadArtifacts(procedureGuideList.map(p => p.artifact));
+        const procedureGuides = this.agentName ? allProcedureGuides.filter(a => a.metadata?.agent === this.agentName) : allProcedureGuides;
+        if (procedureGuides.length === 0) {
+            Logger.warn(`No procedure guides found for agent ${this.agentName} ${params.agentId}`);
+        }
         
         // Format procedure guides for prompt
         const guidesPrompt = procedureGuides.length > 0 ?
             `# RELEVANT PROCEDURE GUIDES:\n` +
-            procedureGuideList.map((guide, i) => 
+            procedureGuideList.filter((guide, i) => i < 3).map((guide, i) => 
                 `## Guide ${i+1} (${guide.score.toFixed(2)} relevance):\n` +
                 `###: ${guide.artifact.metadata?.title}\n` +
                 `<guide>${procedureGuides.find(p => p.id === guide.artifact.id)?.content}</guide>\n`
@@ -132,7 +138,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         // }).join('\n\n');
 
         // Add procedure guides to prompt
-        prompt.addContext(guidesPrompt);
+    prompt.addContext(guidesPrompt);
             
         // prompt.addInstruction(sequencesPrompt);
 

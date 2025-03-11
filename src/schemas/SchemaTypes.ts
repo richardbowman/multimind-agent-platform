@@ -49,5 +49,6 @@ export enum SchemaType {
     IntentionsResponse = "IntentionsResponse",
     TaskCreationResponse = "TaskCreationResponse",
     BarChartData = "BarChartData",
-    ArtifactSelectionResponse = "ArtifactSelectionResponse"
+    ArtifactSelectionResponse = "ArtifactSelectionResponse",
+    MergePlanResponse = "MergePlanResponse"
 }

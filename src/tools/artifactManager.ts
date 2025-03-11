@@ -4,7 +4,7 @@ import { getDataPath } from '../helpers/paths';
 import Logger from '../helpers/logger';
 import { IVectorDatabase } from '../llm/IVectorDatabase';
 import { ILLMService } from '../llm/ILLMService';
-import { Artifact, ArtifactItem } from './artifact';
+import { Artifact, ArtifactItem, ArtifactType } from './artifact';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import { asUUID, createUUID, UUID } from 'src/types/uuid';
 import * as pdf from 'pdf-parse';
@@ -201,11 +201,11 @@ export class ArtifactManager {
         JSON.stringify(artifact.content);
 
     // If it's a CSV, parse and store metadata
-    if (mimeType === 'text/csv' && typeof content === 'string') {
+    if ((type === ArtifactType.Spreadsheet || mimeType === 'text/csv') && typeof content === 'string') {
       try {
         const lines = content.split('\n');
         const headers = lines[0].split(',');
-        const rowCount = lines.length - 1; // Subtract header row
+        const rowCount = Math.min(0,lines.length - 1); // Exclude an assumed header row
         
         artifact.metadata = {
           ...artifact.metadata,

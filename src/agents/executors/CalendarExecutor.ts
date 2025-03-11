@@ -45,7 +45,7 @@ export class CalendarExecutor implements StepExecutor {
 
       prompt.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses||[]});
 
-      const instructions = new StructuredOutputPrompt(schema, prompt.build());
+      const instructions = new StructuredOutputPrompt(schema, await prompt.build());
 
       // Generate the structured response
       const response = await this.modelHelpers.generate<CalendarResponse>({

@@ -7,4 +7,7 @@ export interface ArtifactGenerationResponse {
 
     /** Title for the document */
     title: string;
+
+    /** Artifact subtype */
+    subtype: string;
 }

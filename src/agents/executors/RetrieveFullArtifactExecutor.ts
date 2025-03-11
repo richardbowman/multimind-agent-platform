@@ -12,11 +12,12 @@ import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ArtifactSelectionResponse } from "src/schemas/ArtifactSelectionResponse";
+import { UUID } from "src/types/uuid";
 
 export interface FullArtifactStepResponse extends StepResponse {
-    type: StepResponseType.WebPage;
+    type: StepResponseType.FullArtifact;
     data?: {
-        selectedArtifacts: string[]; // Array of full artifact content
+        selectedArtifactIds: UUID[]; // Array of full artifact content
         selectionReason: string;
     };
 }
@@ -29,6 +30,12 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
     constructor(params: ExecutorConstructorParams) {
         this.artifactManager = params.artifactManager;
         this.modelHelpers = params.modelHelpers;
+
+        this.modelHelpers.createPrompt().registerStepResultRenderer<FullArtifactStepResponse>(StepResponseType.FullArtifact, async (response : FullArtifactStepResponse) => {
+            const artifactIds = response.data?.selectedArtifactIds;
+            const artifacts = artifactIds?.length||0>0 && await this.artifactManager.bulkLoadArtifacts(artifactIds);
+            return artifacts?.length||0>0 ? artifacts?.map((a, index) => `LOADED FULL ARTIFACT {$index} of {$artifacts.length}\n<content>\n${a}</content>\n`)?.join("\n") : "[NO LOADED ARTIFACTS]";
+        });
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<FullArtifactStepResponse>> {
@@ -39,10 +46,10 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
             return {
                 finished: true,
                 response: {
-                    type: StepResponseType.WebPage,
+                    type: StepResponseType.FullArtifact,
                     message: 'No artifacts available to retrieve',
                     data: {
-                        selectedArtifacts: [],
+                        selectedArtifactIds: [],
                         selectionReason: 'No artifacts available'
                     }
                 }
@@ -76,18 +83,18 @@ ${JSON.stringify(schema, null, 2)}
             const json = StringUtils.extractAndParseJsonBlock<ArtifactSelectionResponse>(unstructuredResult.message, schema);
             
             // Convert indexes to artifact content (indexes are 1-based)
-            const selectedArtifacts = json?.artifactIndexes
+            const selectedArtifactIds = json?.artifactIndexes
                 .filter(index => index > 0 && index <= allArtifacts.length)
-                .map(index => allArtifacts[index - 1].content.toString())||[];
+                .map(index => allArtifacts[index - 1].id)||[];
 
             return {
                 finished: true,
                 replan: ReplanType.Allow,
                 response: {
-                    type: StepResponseType.WebPage,
-                    message: `Retrieved ${selectedArtifacts.length} artifacts:\n${json.selectionReason}`,
+                    type: StepResponseType.FullArtifact,
+                    message: `Retrieved ${selectedArtifactIds.length} artifacts:\n${json?.selectionReason}`,
                     data: {
-                        selectedArtifacts,
+                        selectedArtifactIds,
                         selectionReason: json?.selectionReason||"[Unknown reason]"
                     }
                 }
@@ -98,7 +105,7 @@ ${JSON.stringify(schema, null, 2)}
                 replan: ReplanType.Allow,
                 needsUserInput: true,
                 response: {
-                    type: StepResponseType.WebPage,
+                    type: StepResponseType.FullArtifact,
                     message: 'Failed to retrieve artifacts. Please try again later.'
                 }
             };

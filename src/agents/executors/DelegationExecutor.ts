@@ -68,7 +68,7 @@ export class DelegationExecutor implements StepExecutor<StepResponse> {
 
         const structuredPrompt = new StructuredOutputPrompt(
             schema,
-           prompt.build()
+            prompt.build()
         );
 
         try {

@@ -9,10 +9,10 @@ import { parseAndMergeNestedHeaders } from "@mattermost/client/lib/client4";
 import { NextActionExecutor } from "./executors/NextActionExecutor";
 import { StepSequence } from "src/llm/modelHelpers";
 import { ExecutorType } from "./interfaces/ExecutorType";
+import { ExecutorConstructorParams } from "./interfaces/ExecutorConstructorParams";
 
 export class ConfigurableAgent extends StepBasedAgent {
-    agentName: string | undefined;
-    private stepSequences: StepSequence[] = [];
+    protected agentName: string | undefined;
 
     constructor(params: AgentConstructorParams, planner?: Planner) {
         super(params, planner);
@@ -42,27 +42,14 @@ export class ConfigurableAgent extends StepBasedAgent {
 
         await this.initializeFromConfig(agentConfig);
 
-        // Initialize step sequences from config if present
-        // if (agentConfig.stepSequences) {
-        //     for (const seq of agentConfig.stepSequences) {
-        //         this.modelHelpers.addStepSequence(
-        //             seq.id,
-        //             seq.description || '',
-        //             seq.steps.map(step => ({
-        //                 type: ExecutorType[Object.keys(ExecutorType).find(k => ExecutorType[k] === step.executor)||""],
-        //                 description: step.description || '',
-        //                 interaction: step.interaction
-        //             }))
-        //         );
-        //     }
-        // }
-
         if (this.planner === null) {
             this.registerStepExecutor(new NextActionExecutor(this.getExecutorParams(), this.stepExecutors));
         }
     }
 
-    getStepSequences(): StepSequence[] {
-        return this.stepSequences;
+    protected getExecutorParams(): ExecutorConstructorParams {
+        const params = super.getExecutorParams();
+        params.agentName = this.agentName;
+        return params;
     }
 }

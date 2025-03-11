@@ -63,6 +63,10 @@
           ],
           "type": "string"
         },
+        "subtype": {
+          "description": "Artifact subtype",
+          "type": "string"
+        },
         "title": {
           "description": "Title for the document",
           "type": "string"
@@ -70,7 +74,8 @@
       },
       "required": [
         "operation",
-        "title"
+        "title",
+        "subtype"
       ],
       "type": "object"
     },
@@ -1013,24 +1018,29 @@
     },
     "ImplementationStep": {
       "additionalProperties": false,
+      "description": "Represents an implementation step",
       "properties": {
-        "considerations": {
-          "type": "string"
-        },
         "description": {
+          "description": "Detailed description",
           "type": "string"
         },
-        "expectedOutcome": {
+        "outcome": {
+          "description": "Expected outcome",
           "type": "string"
         },
-        "phase": {
+        "timeline": {
+          "description": "Timeline estimate",
+          "type": "string"
+        },
+        "title": {
+          "description": "Step title/name",
           "type": "string"
         }
       },
       "required": [
-        "phase",
+        "title",
         "description",
-        "expectedOutcome"
+        "outcome"
       ],
       "type": "object"
     },
@@ -1167,6 +1177,40 @@
       ],
       "type": "object"
     },
+    "MergePlanResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "artifactIndexes": {
+          "items": {
+            "type": "number"
+          },
+          "type": "array"
+        },
+        "columnsToKeep": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "deduplicate": {
+          "type": "boolean"
+        },
+        "mergeStrategy": {
+          "enum": [
+            "union",
+            "intersection",
+            "specific_columns"
+          ],
+          "type": "string"
+        }
+      },
+      "required": [
+        "artifactIndexes",
+        "mergeStrategy",
+        "deduplicate"
+      ],
+      "type": "object"
+    },
     "ModelMessageResponse": {
       "properties": {
         "message": {
@@ -1254,32 +1298,39 @@
     },
     "OperationalGuide": {
       "additionalProperties": false,
+      "description": "Represents an operational guide item",
       "properties": {
         "businessContext": {
+          "description": "Business context description",
           "type": "string"
         },
         "implementationApproach": {
+          "description": "Implementation approach details",
           "type": "string"
         },
+        "implementationSteps": {
+          "description": "Recommended implementation steps",
+          "items": {
+            "$ref": "#/definitions/ImplementationStep"
+          },
+          "type": "array"
+        },
         "keyConsiderations": {
+          "description": "Key considerations and notes",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "questionsAndAnswers": {
+          "description": "Questions and answers from analysis",
           "items": {
             "$ref": "#/definitions/QAItem"
           },
           "type": "array"
         },
-        "recommendedSteps": {
-          "items": {
-            "$ref": "#/definitions/ImplementationStep"
-          },
-          "type": "array"
-        },
         "serviceStrategy": {
+          "description": "Service strategy outline",
           "type": "string"
         }
       },
@@ -1287,18 +1338,21 @@
         "businessContext",
         "serviceStrategy",
         "implementationApproach",
-        "recommendedSteps",
+        "implementationSteps",
         "questionsAndAnswers"
       ],
       "type": "object"
     },
     "OperationalGuideResponse": {
       "additionalProperties": false,
+      "description": "Response wrapper for operational guide",
       "properties": {
         "operationalGuide": {
-          "$ref": "#/definitions/OperationalGuide"
+          "$ref": "#/definitions/OperationalGuide",
+          "description": "The generated operational guide"
         },
         "summary": {
+          "description": "Summary of the guide",
           "type": "string"
         }
       },
@@ -1432,14 +1486,18 @@
     },
     "QAItem": {
       "additionalProperties": false,
+      "description": "Represents a Q&A item",
       "properties": {
         "answer": {
+          "description": "The provided answer",
           "type": "string"
         },
         "category": {
+          "description": "Optional category/type",
           "type": "string"
         },
         "question": {
+          "description": "The question asked",
           "type": "string"
         }
       },
@@ -1699,14 +1757,17 @@
     },
     "ReviewProgressResponse": {
       "additionalProperties": false,
+      "description": "Interface for the complete review progress response",
       "properties": {
         "progress": {
+          "description": "List of progress details for each task",
           "items": {
             "$ref": "#/definitions/TaskProgress"
           },
           "type": "array"
         },
         "summary": {
+          "description": "Overall summary of the project's progress",
           "type": "string"
         }
       },
@@ -1825,7 +1886,8 @@
         "IntentionsResponse",
         "TaskCreationResponse",
         "BarChartData",
-        "ArtifactSelectionResponse"
+        "ArtifactSelectionResponse",
+        "MergePlanResponse"
       ],
       "type": "string"
     },
@@ -1939,32 +2001,32 @@
     },
     "TaskProgress": {
       "additionalProperties": false,
+      "description": "Interface for individual task progress details",
       "properties": {
         "analysis": {
+          "description": "Detailed analysis of the task's current state",
           "type": "string"
         },
         "blockers": {
+          "description": "List of current blockers preventing progress",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "nextSteps": {
+          "description": "List of recommended next steps",
           "items": {
             "type": "string"
           },
           "type": "array"
         },
         "status": {
-          "enum": [
-            "Not Started",
-            "In Progress",
-            "Blocked",
-            "Complete"
-          ],
-          "type": "string"
+          "$ref": "#/definitions/TaskReviewStatus",
+          "description": "Current status of the task"
         },
         "taskId": {
+          "description": "Unique identifier of the task",
           "type": "string"
         }
       },

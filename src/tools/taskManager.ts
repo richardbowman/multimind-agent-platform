@@ -97,23 +97,23 @@ export interface CreateProjectParams {
 
 export interface TaskManager extends EventEmitter {
     replaceProject(project: Project): unknown;
-    completeTask(id: string): Promise<Task>;
-    cancelTask(id: string): Promise<Task>;
+    completeTask(id: UUID): Promise<Task>;
+    cancelTask(id: UUID): Promise<Task>;
     addProject(project: Partial<Project>): Promise<Project>;
     createProject(params: CreateProjectParams): Promise<Project>;
     addTask(project: Project, params: AddTaskParams): Promise<Task>;
-    getProject(projectId: string): Project;
+    getProject(projectId: UUID): Project;
     newProjectId(): UUID;
     save(): Promise<void>;
     load(): Promise<void>;
-    assignTaskToAgent(taskId: string, agentId: string): Promise<void>;
+    assignTaskToAgent(taskId: UUID, agentId: string): Promise<void>;
     getNextTaskForUser(userId: string): Promise<Task | null>;
     getProjects(): Project[];
-    getNextTask(projectId: string, type?: TaskType): Task | null;
+    getNextTask(projectId: UUID, type?: TaskType): Task | null;
     getProjectTasks(projectId: string): Task[];
     getAllTasks(): Task[];
     markTaskInProgress(task: Task | string): Promise<Task>;
-    getTaskById(taskId: string): Promise<Readonly<Task> | null>;
-    updateTask(taskId: string, updates: Partial<Task>): Promise<Task>;
+    getTaskById(taskId: UUID): Promise<Readonly<Task> | null>;
+    updateTask(taskId: UUID, updates: Partial<Task>): Promise<Task>;
     updateProject(projectId: string, updates: Partial<Project>): Promise<Project>;
 }

@@ -46,5 +46,6 @@ export enum ExecutorType {
     GENERATE_WEBSITE = "generate-website",
     ARTIFACT_RETRIEVER = "retrieve-full-artifact",
     CSV_PROCESSOR = "csv-processor",
-    PUBMED_SEARCH = "pubmed-search"
+    PUBMED_SEARCH = "pubmed-search",
+    CSV_MERGE = "csv-merge"
 }

@@ -59,10 +59,10 @@ Consider multiple angles and potential implications. You cannot run code, but yo
 
         return {
             type: StepResultType.Thinking,
-            finished: true,
+            finished: true, 
             replan: ReplanType.Allow,
             response: {
-                message: `**Reasoning Process:**\n\n${result.reasoning}\n\n**Conclusion (so far):**\n\n${result.conclusion}`
+                status: `**Reasoning Process:**\n\n${result.reasoning}\n\n**Conclusion (so far):**\n\n${result.conclusion}`
             }
         };
     }

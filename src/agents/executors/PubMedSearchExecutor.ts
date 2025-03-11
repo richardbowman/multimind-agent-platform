@@ -167,6 +167,7 @@ interface PubMedSearchResult {
         const documentArtifacts = resultsWithFullText
             .filter(result => result.fullText)
             .map(result => ({
+                id: createUUID(),
                 type: ArtifactType.Document,
                 content: result.fullText!,
                 metadata: {
@@ -198,7 +199,7 @@ interface PubMedSearchResult {
                  Abstract: result.abstract || '',
                 URL: result.doi ? `https://doi.org/${result.doi}` : `https://pubmed.ncbi.nlm.nih.gov/${result.pmid}`,
                 FullText: result.fullTextUrl || '',
-                DocumentID: result.fullText ? documentArtifacts.find(a => a.metadata.pmid === result.pmid)?.id : ''
+                DocumentLink: result.fullText ? `[${result.title}](/artifact/${documentArtifacts.find(a => a.metadata.pmid === result.pmid)?.id})` : ''
              }))
          };
          
@@ -211,8 +212,7 @@ interface PubMedSearchResult {
                 replan: ReplanType.Allow,
                 response: {
                     type: StepResponseType.Message,
-                    status: `Query "${searchQuery}" returned no results`,
-                    message: `No PubMed articles found for query: ${searchQuery}`
+                    status: `No PubMed articles found for query: ${searchQuery}`
                 }
             };
         }

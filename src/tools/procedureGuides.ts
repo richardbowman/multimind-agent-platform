@@ -87,14 +87,18 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
             }
         }
 
-        await artifactManager.saveArtifact({
-            id: artifactId,
-            type: artifactType,
-            mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
-            content: content,
-            metadata: metadata
-        });
+        try {
+            await artifactManager.saveArtifact({
+                id: artifactId,
+                type: artifactType,
+                mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
+                content: content,
+                metadata: metadata
+            });
 
-        Logger.info(`Loaded procedure guide: ${file}`);
+            Logger.info(`Loaded procedure guide: ${file}`);
+        } catch (e) {
+            Logger.error(`Failed to save procedure guide ${file}`, e);
+        }
     }
 }

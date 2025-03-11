@@ -143,7 +143,7 @@ export default class LMStudioService extends BaseLLMService implements IEmbeddin
         // Set the maxTokens parameter for the LLaMA model
         const input = {
             message,
-            instructions: instructions.getPrompt(),
+            instructions: (await instructions.getPrompt()),
             history,
             contextWindowLength,
             maxTokens

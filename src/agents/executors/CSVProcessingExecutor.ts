@@ -10,7 +10,7 @@ import Logger from '../../helpers/logger';
 import { createUUID, UUID } from 'src/types/uuid';
 import { Agent, TaskEventType } from '../agents';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
-import { Artifact, ArtifactType } from '../../tools/artifact';
+import { Artifact, ArtifactType, SpreadsheetSubType } from '../../tools/artifact';
 import { CSVUtils } from 'src/utils/CSVUtils';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ExecutorType } from '../interfaces/ExecutorType';
@@ -44,7 +44,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
 
     async execute(params: ExecuteParams): Promise<StepResult<CSVProcessingResponse>> {
         // Find the first CSV artifact
-        const csvArtifact = params.context?.artifacts?.find(a => a.type === ArtifactType.Spreadsheet);
+        const csvArtifact = params.context?.artifacts?.find(a => a.type === ArtifactType.Spreadsheet && a.metadata?.subtype !== SpreadsheetSubType.EvaluationCriteria && a.metadata?.subtype !== SpreadsheetSubType.Template);
         if (!csvArtifact) {
             return {
                 type: StepResultType.Error,
@@ -67,7 +67,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             // Parse CSV with headers
             const content = artifact.content.toString();
             const csv = await CSVUtils.fromCSV(content);
-            rows.push(csv.rows);
+            rows.push(...csv.rows);
         } catch (error) {
             Logger.error('Error reading CSV file:', error);
             return {
@@ -168,8 +168,8 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                 
                 // Create task description with headers
                 const taskData = `The data from row ${i + 1} from ${csvArtifact.metadata?.title || 'CSV file'}:\n` +
-                    Object.keys(row.data).map((header: string) => 
-                        `${header}: ${row.data[header] || ''}`
+                    Object.keys(row).map((header: string) => 
+                        `${header}: ${row[header] || ''}`
                     ).join('\n');
 
                 await this.taskManager.addTask(project, {
@@ -181,9 +181,10 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                         rowIndex: i,
                         csvArtifactId: csvArtifact.id,
                         processedArtifactId: processedArtifact.id,
-                        rowData: row.data, // Only pass the specific row data
+                        rowData: row,
                         attachedArtifactIds: params.context?.artifacts
-                            ?.filter(a => a.type !== ArtifactType.Spreadsheet) // Exclude all spreadsheet artifacts
+                            // Exclude spreadsheets other than eval criteria/templates
+                            ?.filter(a => a.type !== ArtifactType.Spreadsheet ||  (a.metadata?.subtype === SpreadsheetSubType.EvaluationCriteria || a.metadata?.subtype === SpreadsheetSubType.Template))
                             .map(a => a.id)
                     }
                 });
@@ -460,7 +461,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             }
 
             // Generate status update as a string
-            const statusUpdate = CSVUtils.toCSV({ rows, metadata: {} });
+            const statusUpdate = await CSVUtils.toCSV({ rows, metadata: {} });
 
             // Update the progress message with CSV in code block
             const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +

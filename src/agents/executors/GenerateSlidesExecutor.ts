@@ -27,6 +27,8 @@ export interface SlideResponse {
 
 @StepExecutorDecorator(ExecutorType.GENERATE_SLIDES, 'Generate a slide deck', true)
 export class GenerateSlidesExecutor implements StepExecutor<StepResponse> {
+    private modelHelpers: ModelHelpers;
+    
     protected generateSlideContent(slides: SlideContent[]): SlideContent[] {
         return slides.map((slide, index) => ({
             title: slide.title,
@@ -53,7 +55,6 @@ export class GenerateSlidesExecutor implements StepExecutor<StepResponse> {
             }))
         };
     }
-    private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
         this.modelHelpers = params.modelHelpers;

@@ -23,12 +23,4 @@ export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
     getArtifactType(): string {
         return ArtifactType.Spreadsheet;
     }
-
-    getArtifactType(codeBlockType: string): ArtifactType {
-        if (codeBlockType === "csv") {
-            return ArtifactType.Spreadsheet;
-        } else {
-            return ArtifactType.Unknown;
-        }
-    }
 }

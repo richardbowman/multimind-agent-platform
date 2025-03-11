@@ -34,7 +34,8 @@ export enum StepResponseType {
     Plan = "plan",
     Brainstorm = "brainstorm",
     SearchResults = "SearchResults",
-    Message = "Message"
+    Message = "Message",
+    FullArtifact = "FullArtifact"
 }
 
 export enum ReplanType {
@@ -57,6 +58,7 @@ export interface StepResponse {
     data?: StepResponseData;
     reasoning?: string;
     status?: string;
+    artifacts?: Partial<Artifact>[];
 }
 
 export interface StepResult<TypedStepResponse extends StepResponse> {

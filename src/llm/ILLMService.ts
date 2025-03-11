@@ -96,9 +96,9 @@ export interface LLMRequestParams {
 
 export class StructuredOutputPrompt {
     private schema: any;
-    private prompt: string|PromptBuilder;
+    private prompt: Promise<string>|string|PromptBuilder;
 
-    constructor(schema: any, prompt: string|PromptBuilder) {
+    constructor(schema: any, prompt: Promise<string>|string|PromptBuilder) {
         this.schema = schema;
         this.prompt = prompt;
     }
@@ -107,7 +107,7 @@ export class StructuredOutputPrompt {
         return this.schema;
     }
 
-    public getPrompt(): string|PromptBuilder {
+    public getPrompt(): Promise<string>|string|PromptBuilder {
         return this.prompt;
     }
 }

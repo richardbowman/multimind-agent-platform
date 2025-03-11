@@ -13,7 +13,7 @@ import { StructuredOutputPrompt } from "./ILLMService";
 import { SearchResult } from "./IVectorDatabase";
 import { PromptBuilder, PromptRegistry } from "./promptBuilder";
 import { isObject } from "src/types/types";
-import { InputPrompt } from "src/prompts/structuredInputPrompt";
+import { InputPrompt, StructuredInputPrompt } from "src/prompts/structuredInputPrompt";
 import { ExecutorType } from "src/agents/interfaces/ExecutorType";
 
 export interface ModelHelpersParams {
@@ -311,9 +311,9 @@ export class ModelHelpers {
 
         // Fetch the latest memory artifact for the channel
         let     augmentedInstructions;
-        const prompt = structure.getPrompt();
+        const prompt = await structure.getPrompt();
         if (isObject(prompt) && prompt instanceof PromptBuilder) {
-            augmentedInstructions = prompt.build();
+            augmentedInstructions = await prompt.build();
         } else if (typeof prompt === "string") {
             augmentedInstructions = this.addDateToSystemPrompt(prompt);
             augmentedInstructions = `OVERALL PURPOSE: ${this.getPurpose()}\n\n${augmentedInstructions}\n\nOverall agent instructions: ${this.getFinalInstructions()}`;
@@ -463,7 +463,7 @@ export class ModelHelpers {
         return message;
     }
 
-    private async generateOld(instructions: string|InputPrompt, params: GenerateInputParams): Promise<ModelMessageResponse> {
+    private async generateOld(instructions: Promise<string>|string|InputPrompt, params: GenerateInputParams): Promise<ModelMessageResponse> {
         // Check cache first
         const cacheContext = { params };
         // const cachedResponse = this.modelCache.get(instructions, cacheContext);
@@ -474,7 +474,7 @@ export class ModelHelpers {
         let augmentedInstructions : string;
         if (typeof instructions === "string") {
             // Fetch the latest memory artifact for the channel
-            augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`);
+            augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${augmentedInstructions}`);
             if (this.isMemoryEnabled && params.userPost) {
                 const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
     
@@ -499,8 +499,10 @@ export class ModelHelpers {
                     augmentedInstructions += `\n\n<artifact>Artifact ID: ${artifact.id}\nTitle: ${artifact.metadata?.title || 'No title'}\nContent:\n${artifactContent}</artifact>`;
                 }
             }    
+        } else if (instructions instanceof Promise) {
+            augmentedInstructions = await instructions;
         } else {
-            augmentedInstructions = instructions.getInstructions();
+            augmentedInstructions = await instructions.getInstructions();
         }
        
         // Augment instructions with context and generate a response

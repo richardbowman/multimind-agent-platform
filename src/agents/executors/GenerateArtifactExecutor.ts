@@ -81,6 +81,13 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
             promptBuilder.addContext({contentType: ContentType.STEP_RESPONSE, responses: params.previousResponses});
         }
 
+        const subtypesContent = await this.getSupportedSubtypesContent(this.getArtifactType());
+
+        if (subtypesContent) {
+            promptBuilder.addInstruction(`SUPPORTED DOCUMENT SUBTYPES:\n${subtypesContent}`);
+            promptBuilder.addInstruction(`When creating a document, specify the most appropriate subtype in your response.`);
+        }
+
         return promptBuilder;
     }
 
@@ -184,12 +191,13 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
         }
     }
 
-    private async getSupportedSubtypesContent(artifactType: string): Promise<string | null> {
+    protected async getSupportedSubtypesContent(artifactType: string): Promise<string | null> {
         try {
             // Look for the supported subtypes artifact
             const artifacts = await this.artifactManager.getArtifacts({ 
-                type: artifactType, 
-                subtype: `Supported ${artifactType} Artifact Sub-types` 
+                artifactType, 
+                type: ArtifactType.Spreadsheet,
+                subtype: `Artifact Subtypes` 
             });
             if (artifacts.length > 0) {
                 const artifact = await this.artifactManager.loadArtifact(artifacts[0].id);
@@ -204,14 +212,9 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
     }
 
     protected async prepareArtifactMetadata(result: any): Promise<Record<string, any>> {
-        const metadata = await super.prepareArtifactMetadata(result);
-        
-        // Set subtype if provided in result
-        if (result.subtype) {
-            metadata.subtype = result.subtype;
-        }
-
-        return metadata;
+        return {
+            subtype: result.subtype
+        };
     }
 
     abstract getArtifactType(): string;

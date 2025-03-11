@@ -330,7 +330,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         const userPrompt = "Web Search Result:" + `Page Title: ${title}\nURL: ${url}\n\n${content}`;
 
         const summary = await this.modelHelpers.generate({
-            instructions: prompt.build(),
+            instructions: prompt,
             message: userPrompt,
             threadPosts: params.context?.threadPosts,
             modelType: ModelType.DOCUMENT
@@ -367,7 +367,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
             .`);
 
         const response = await this.modelHelpers.generate({
-            instructions: prompt.build(),
+            instructions: prompt,
             message: content,
             modelType: ModelType.DOCUMENT
         });
