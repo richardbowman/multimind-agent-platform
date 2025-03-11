@@ -184,9 +184,39 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
         }
     }
 
-    protected async prepareArtifactMetadata(result: any): Promise<Record<string, any>> {
-        return {};
+    private async loadSupportedSubtypes(artifactType: string): Promise<string[]> {
+        try {
+            // Look for the supported subtypes artifact
+            const artifacts = await this.artifactManager.getArtifacts({ 
+                type: artifactType, 
+                subtype: `Supported ${artifactType} Artifact Sub-types` 
+            });
+            if (artifacts.length > 0) {
+                const artifact = await this.artifactManager.loadArtifact(artifacts[0].id);
+                if (artifact?.content && typeof artifact.content === 'string') {
+                    return JSON.parse(artifact.content) as string[];
+                }
+            }
+        } catch (error) {
+            Logger.error(`Error loading supported ${artifactType} subtypes:`, error);
+        }
+        return [];
     }
 
-    abstract getArtifactType(codeBlockType: string): ArtifactType;
+    protected async prepareArtifactMetadata(result: any): Promise<Record<string, any>> {
+        const metadata = await super.prepareArtifactMetadata(result);
+        
+        // Get the artifact type from the subclass
+        const artifactType = this.getArtifactType();
+        if (artifactType) {
+            const supportedSubtypes = await this.loadSupportedSubtypes(artifactType);
+            if (result.subtype && supportedSubtypes.includes(result.subtype)) {
+                metadata.subtype = result.subtype;
+            }
+        }
+
+        return metadata;
+    }
+
+    abstract getArtifactType(): string;
 }

@@ -20,6 +20,10 @@ export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
         return ['csv'];
     }
 
+    getArtifactType(): string {
+        return ArtifactType.Spreadsheet;
+    }
+
     getArtifactType(codeBlockType: string): ArtifactType {
         if (codeBlockType === "csv") {
             return ArtifactType.Spreadsheet;
