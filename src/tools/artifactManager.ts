@@ -393,8 +393,25 @@ export class ArtifactManager {
     filter?: Record<string, any>
   ): Promise<Array<{ artifact: ArtifactItem, score: number }>> {
     try {
+      // Convert filter to vector DB query format
+      const where: Record<string, any> = {};
+      if (filter) {
+        for (const [key, value] of Object.entries(filter)) {
+          if (Array.isArray(value)) {
+            // Handle array values with $in operator
+            where[key] = { $in: value };
+          } else if (typeof value === 'object' && value !== null) {
+            // Handle nested objects
+            where[key] = value;
+          } else {
+            // Handle simple equality
+            where[key] = value;
+          }
+        }
+      }
+
       // Search the vector database
-      const results = await this.vectorDb.query([query], filter || {}, limit);
+      const results = await this.vectorDb.query([query], where, limit);
 
       // Map results to artifacts with scores
       const artifacts: Array<{ artifact: ArtifactItem, score: number }> = [];
