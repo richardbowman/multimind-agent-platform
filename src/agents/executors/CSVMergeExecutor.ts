@@ -54,7 +54,7 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
                     content: csvContent,
                     metadata: {
                         title: `Merged CSV - ${params.stepGoal}`,
-                        subtype: SpreadsheetSubType.DataTypes,
+                        subtype: this.getCommonSubtype(artifacts),
                         sourceArtifactIds: mergedContents.metadata.sourceArtifactIds,
                         mergeStrategy: mergePlan.mergeStrategy,
                         generatedAt: new Date().toISOString()
@@ -111,6 +111,22 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
         }
 
         return mergedContents;
+    }
+
+    private getCommonSubtype(artifacts: Artifact[]): SpreadsheetSubType {
+        // Get all subtypes from spreadsheet artifacts
+        const subtypes = artifacts
+            .filter(a => a.type === ArtifactType.Spreadsheet)
+            .map(a => a.metadata?.subtype)
+            .filter(Boolean);
+            
+        // If all subtypes are the same, use that one
+        if (subtypes.length > 0 && new Set(subtypes).size === 1) {
+            return subtypes[0];
+        }
+        
+        // Default to DataTypes if no common subtype
+        return SpreadsheetSubType.DataTypes;
     }
 
     private async generateMergePlan(goal: string, task: string, artifacts: Artifact[]): Promise<MergePlanResponse|undefined> {
