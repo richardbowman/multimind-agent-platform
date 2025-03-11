@@ -14,15 +14,18 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
     }
 
     const files = fs.readdirSync(guidesDir);
-    const markdownFiles = files.filter(f => path.extname(f).toLowerCase() === '.md');
+    const supportedFiles = files.filter(f => {
+        const ext = path.extname(f).toLowerCase();
+        return ext === '.md' || ext === '.csv';
+    });
 
     // Get existing guides from artifact manager
     const existingGuides = await artifactManager.getArtifacts({ type: ArtifactType.ProcedureGuide });
     const existingGuideMap = new Map(existingGuides.map(g => [g.metadata?.source, g]));
 
-    for (let i = 0; i < markdownFiles.length; i++) {
-        const file = markdownFiles[i];
-        Logger.progress(`Loading agent procedures (${i + 1} of ${markdownFiles.length})`, (i + 1) / markdownFiles.length, "agent-procedures");
+    for (let i = 0; i < supportedFiles.length; i++) {
+        const file = supportedFiles[i];
+        Logger.progress(`Loading agent procedures (${i + 1} of ${supportedFiles.length})`, (i + 1) / supportedFiles.length, "agent-procedures");
         const filePath = path.join(guidesDir, file);
         let content = fs.readFileSync(filePath, 'utf-8');
         let frontmatter = {};
@@ -39,6 +42,10 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
                 Logger.warn(`Failed to parse YAML frontmatter in ${file}: ${error}`);
             }
         }
+
+        // Determine artifact type based on file extension
+        const ext = path.extname(file).toLowerCase();
+        const artifactType = ext === '.csv' ? ArtifactType.Spreadsheet : ArtifactType.ProcedureGuide;
         
         const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
 
@@ -79,7 +86,8 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
 
         await artifactManager.saveArtifact({
             id: artifactId,
-            type: ArtifactType.ProcedureGuide,
+            type: artifactType,
+            mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
             content: content,
             metadata: metadata
         });
