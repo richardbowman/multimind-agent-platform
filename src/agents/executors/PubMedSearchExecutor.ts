@@ -206,7 +206,9 @@ interface PubMedSearchResult {
                     authors,
                     journal: getText('Title'),
                     publicationDate: getText('PubDate'),
-                    doi: getText('ELocationID'),
+                    doi: Array.from(article.getElementsByTagName('ELocationID'))
+                        .find(el => el.getAttribute('EIdType') === 'doi')
+                        ?.textContent || '',
                     pmid: getText('PMID'),
                     pmcid,
                     fullTextUrl: pmcid ? `https://www.ncbi.nlm.nih.gov/pmc/articles/${pmcid}/` : undefined
