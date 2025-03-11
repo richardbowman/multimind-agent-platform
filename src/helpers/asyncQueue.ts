@@ -1,43 +1,75 @@
+export interface AsyncQueueOptions {
+    concurrency?: number;
+    timeout?: number;
+}
+
 export class AsyncQueue {
     public static Logger : {
         verbose: Function,
         error: Function
     }|null = null;
 
-    private queue: Promise<any> = Promise.resolve();
-    private locked = false;
-    private waitingOperations: { stack: string }[] = [];
+    private queue: Promise<any>[] = [];
+    private activeCount = 0;
+    private concurrency: number;
+    private timeout: number;
 
-    async enqueue<T>(operation: () => Promise<T>): Promise<T> {
+    constructor(options: AsyncQueueOptions = {}) {
+        this.concurrency = options.concurrency || 1;
+        this.timeout = options.timeout || 0;
+    }
+
+    async add<T>(operation: () => Promise<T>): Promise<T> {
         const stack = new Error().stack || 'No stack trace available';
         
-        if (this.locked) {
-            this.waitingOperations.push({ stack });
-            AsyncQueue.Logger?.verbose(`AsyncQueue: ${this.waitingOperations.length} operations waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
-        }
+        // Add to queue
+        const promise = new Promise<T>((resolve, reject) => {
+            this.queue.push(this.runOperation(operation, resolve, reject, stack));
+        });
 
-        while (this.locked) {
+        return promise;
+    }
+
+    private async runOperation<T>(
+        operation: () => Promise<T>,
+        resolve: (value: T) => void,
+        reject: (reason?: any) => void,
+        stack: string
+    ): Promise<void> {
+        // Wait for an available slot
+        while (this.activeCount >= this.concurrency) {
             await new Promise(resolve => setTimeout(resolve, 10));
         }
-        
-        this.locked = true;
-        if (this.waitingOperations.length > 0) {
-            this.waitingOperations = this.waitingOperations.filter(op => op.stack !== stack);
-        }
 
+        this.activeCount++;
         AsyncQueue.Logger?.verbose(`AsyncQueue executing operation from:\n${stack}`);
-        
+
         try {
-            const result = await this.queue.then(operation);
-            return result;
+            // Run the operation with timeout if specified
+            const result = this.timeout > 0
+                ? await Promise.race([
+                    operation(),
+                    new Promise<T>((_, reject) => 
+                        setTimeout(() => reject(new Error('Operation timed out')), this.timeout)
+                    )
+                ])
+                : await operation();
+                
+            resolve(result);
         } catch (error) {
             AsyncQueue.Logger?.error(`AsyncQueue operation failed from:\n${stack}\nError:`, error);
-            throw error;
+            reject(error);
         } finally {
-            this.queue = Promise.resolve();
-            this.locked = false;
-            if (this.waitingOperations.length > 0) {
-                AsyncQueue.Logger?.verbose(`AsyncQueue: ${this.waitingOperations.length} operations still waiting:\n${this.waitingOperations.map(op => op.stack).join('\n\n')}`);
+            this.activeCount--;
+            this.processNext();
+        }
+    }
+
+    private processNext() {
+        if (this.queue.length > 0 && this.activeCount < this.concurrency) {
+            const nextOperation = this.queue.shift();
+            if (nextOperation) {
+                nextOperation();
             }
         }
     }
