@@ -272,11 +272,32 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                 <ListItemButton onClick={() => handleOpenDetails(log, index)} sx={{ p: 0 }}>
                     <ListItemText
                         primary={
-                            <>
-                                <span className="log-timestamp">{new Date(log.timestamp).toLocaleString()}</span>
-                                <span className="log-level">{log.error ? 'Error occurred' : 'Success'}</span>
-                                <span className="log-method" dangerouslySetInnerHTML={{ __html: highlightText(log.method) }} />
-                            </>
+                            <Box sx={{ display: 'flex', gap: 2, alignItems: 'center' }}>
+                                <Box sx={{ minWidth: 120 }}>
+                                    <Typography variant="body2" color="textSecondary">
+                                        {new Date(log.timestamp).toLocaleString()}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography variant="body2" noWrap>
+                                        {getLastMessage(log.input?.messages || log.input?.prompt || log.input)}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ flex: 1, minWidth: 0 }}>
+                                    <Typography variant="body2" noWrap color="textSecondary">
+                                        {getOutputMessage(log.output)}
+                                    </Typography>
+                                </Box>
+                                <Box sx={{ minWidth: 80 }}>
+                                    <Typography 
+                                        variant="body2" 
+                                        color={log.error ? 'error.main' : 'success.main'}
+                                        sx={{ fontWeight: 500 }}
+                                    >
+                                        {log.error ? 'ERROR' : 'SUCCESS'}
+                                    </Typography>
+                                </Box>
+                            </Box>
                         }
                         sx={{ my: 0 }}
                     />
