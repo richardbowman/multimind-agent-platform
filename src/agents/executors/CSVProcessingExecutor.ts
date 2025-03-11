@@ -12,8 +12,6 @@ import { Agent, TaskEventType } from '../agents';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType } from '../../tools/artifact';
 import { CSVUtils } from 'src/utils/CSVUtils';
-import { parse } from 'csv-parse/sync';
-import { stringify } from 'csv-stringify/sync';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
@@ -68,18 +66,8 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             
             // Parse CSV with headers
             const content = artifact.content.toString();
-            const parser = parse(content, {
-                columns: true,
-                skip_empty_lines: true,
-                trim: true,
-                relax_quotes: true,
-                relax_column_count: true,
-                bom: true
-            });
-            
-            for await (const record of parser) {
-                rows.push({ headers: Object.keys(record), data: record });
-            }
+            const csv = await CSVUtils.fromCSV(content);
+            rows.push(csv.rows);
         } catch (error) {
             Logger.error('Error reading CSV file:', error);
             return {
@@ -233,7 +221,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         }
     }
 
-    async initializeProcessedCSV(originalArtifact: Artifact): Promise<string> {
+    async initializeProcessedCSV(originalArtifact: Artifact): Promise<Artifact> {
         if (originalArtifact.type !== ArtifactType.Spreadsheet) {
             throw new Error('Can only process spreadsheet artifacts');
         }
@@ -251,50 +239,27 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             content: originalArtifact.content // Start with original content
         };
 
-        return await this.artifactManager.saveArtifact(processedArtifact);
+        const artifact = await this.artifactManager.saveArtifact(processedArtifact);
+        return artifact;
     }
 
     async updateCSVWithResults(currentContent: string, results: any[]): Promise<string> {
-        // Read current processed CSV
-        const rows: any[] = [];
-        const parser = parse(currentContent.toString(), {
-            columns: true,
-            skip_empty_lines: true,
-            trim: true,
-            relax_quotes: true,
-            relax_column_count: true,
-            bom: true
-        });
-        
-        for await (const record of parser) {
-            rows.push(record);
-        }
+        const csv = await CSVUtils.fromCSV(currentContent);
 
         // Merge results with existing rows
         for (const result of results) {
             const rowIndex = result.rowIndex;
-            if (rowIndex >= 0 && rowIndex < rows.length) {
+            if (rowIndex >= 0 && rowIndex < csv.rows.length) {
                 // Add new columns while preserving existing data
-                rows[rowIndex] = { 
-                    ...rows[rowIndex], 
+                csv.rows[rowIndex] = { 
+                    ...csv.rows[rowIndex], 
                     ...result.data,
                     __processedAt: new Date().toISOString() 
                 };
             }
         }
 
-        // Collect all unique column names from all rows
-        const allColumns = new Set<string>();
-        for (const row of rows) {
-            Object.keys(row).forEach(col => allColumns.add(col));
-        }
-
-        // Update the processed artifact with all columns
-        const output = stringify(rows, { 
-            header: true,
-            columns: Array.from(allColumns) // Explicitly specify all columns
-        });
-        return output;
+        return CSVUtils.toCSV(csv);
     }
 
     private async processTaskResult(task: Task, csvArtifact: Artifact): Promise<any[]> {
@@ -305,7 +270,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         // Get the original goal from the parent task
         const project = this.taskManager.getProject(task.projectId);
         const parentTask = project?.metadata?.parentTaskId 
-            ? this.taskManager.getTaskById(project.metadata.parentTaskId)
+            ? await this.taskManager.getTaskById(project.metadata.parentTaskId)
             : null;
         const originalGoal = parentTask?.description || '';
 
@@ -353,7 +318,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             
             'columns' key: Return an array of key value pairs to add as new columns
             
-            To add a link to a created artifact, use a Markdown link with the link format of [Title](/artifact/XXXX-XXXX)
+            To add a link to an artifact created by the tasks, use a Markdown link with the link format of [Title](/artifact/XXXX-XXXX). Also, include the word Link in the column name for clarity.
 
             `);
         prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
@@ -465,19 +430,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         
         if (artifactId && statusPost && task.props?.childProjectId) {            
             // Parse the CSV
-            const rows: any[] = [];
-            const parser = parse(csvArtifact.content.toString(), {
-                columns: true,
-                skip_empty_lines: true,
-                trim: true,
-                relax_quotes: true,
-                relax_column_count: true,
-                bom: true
-            });
-
-            for await (const record of parser) {
-                rows.push(record);
-            }
+            const { rows } = await CSVUtils.fromCSV(csvArtifact.content.toString());
 
             // Add status column if it doesn't exist
             const headers = Object.keys(rows[0] || {});
@@ -507,18 +460,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             }
 
             // Generate status update as a string
-            let statusUpdate = '';
-            const stringifier = stringify(rows, {
-                header: true,
-                columns: headers
-            });
-            
-            // Collect the stream output
-            for await (const chunk of stringifier) {
-                statusUpdate += chunk;
-            }
-
-            newContent = statusUpdate;
+            const statusUpdate = CSVUtils.toCSV({ rows, metadata: {} });
 
             // Update the progress message with CSV in code block
             const progressMessage = `Processing CSV ${csvArtifact.metadata?.title || ''}:\n` +
