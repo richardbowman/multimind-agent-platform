@@ -73,7 +73,8 @@ import { createUUID } from "src/types/uuid";
                         type: ArtifactType.Spreadsheet,
                         content: csvContent,
                         metadata: {
-                        subtype: SpreadsheetSubType.SearchResults,
+                            title: `PubMed Search Results - ${searchQuery}`,
+                            subtype: SpreadsheetSubType.SearchResults,
                             query: searchQuery,
                             resultCount: searchResults.length,
                             generatedAt: new Date().toISOString()
