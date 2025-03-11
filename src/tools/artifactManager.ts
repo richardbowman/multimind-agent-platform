@@ -283,6 +283,36 @@ export class ArtifactManager {
     }
   }
 
+  async bulkLoadArtifacts(artifactIds: UUID[]): Promise<Artifact[]> {
+    const metadata = await this.loadArtifactMetadata();
+    const artifacts: Artifact[] = [];
+
+    // Create a list of read operations
+    const readOperations = artifactIds.map(async artifactId => {
+      if (!metadata[artifactId]) {
+        Logger.warn(`Artifact not found in metadata: ${artifactId}`);
+        return null;
+      }
+
+      const contentPath = metadata[artifactId].contentPath;
+      try {
+        const content = (await this.fileQueue.enqueue(() => fs.readFile(contentPath))).toString();
+        const type = metadata[artifactId].type;
+        return { id: artifactId, type, content, metadata: metadata[artifactId] };
+      } catch (error) {
+        if (asError(error).code === 'ENOENT') {
+          Logger.warn(`Artifact file not found: ${contentPath}`);
+          return null;
+        }
+        throw error;
+      }
+    });
+
+    // Execute all read operations in parallel
+    const results = await Promise.all(readOperations);
+    return results.filter(artifact => artifact !== null) as Artifact[];
+  }
+
   async listArtifacts(): Promise<ArtifactItem[]> {
     const metadata = await this.loadArtifactMetadata();
     const artifacts: ArtifactItem[] = [];
