@@ -302,17 +302,17 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                 </Box>
                                 <Box sx={{ minWidth: 120 }}>
                                     <Typography variant="body2" noWrap>
-                                        {log.agentName || 'N/A'}
+                                        {log?.agentName || 'N/A'}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ minWidth: 120 }}>
                                     <Typography variant="body2" noWrap>
-                                        {log.stepType || 'N/A'}
+                                        {log?.stepType || 'N/A'}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ minWidth: 120 }}>
                                     <Typography variant="body2" noWrap>
-                                        {log.taskId ? `Task: ${log.taskId}` : 'N/A'}
+                                        {log?.taskId ? `Task: ${log.taskId}` : 'N/A'}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -403,12 +403,12 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                     Context
                                 </Typography>
                                 <FormattedDataView data={{
-                                    agent: selectedLog.agentName || 'N/A',
-                                    stepType: selectedLog.stepType || 'N/A',
-                                    taskId: selectedLog.taskId || 'N/A',
-                                    projectId: selectedLog.projectId || 'N/A',
-                                    goal: selectedLog.goal || 'N/A',
-                                    stepGoal: selectedLog.stepGoal || 'N/A'
+                                    agent: selectedLog?.agentName || 'N/A',
+                                    stepType: selectedLog?.stepType || 'N/A',
+                                    taskId: selectedLog?.taskId || 'N/A',
+                                    projectId: selectedLog?.projectId || 'N/A',
+                                    goal: selectedLog?.goal || 'N/A',
+                                    stepGoal: selectedLog?.stepGoal || 'N/A'
                                 }} />
                             </Box>
                             {selectedLog?.input && typeof selectedLog.input === 'object' ? (
