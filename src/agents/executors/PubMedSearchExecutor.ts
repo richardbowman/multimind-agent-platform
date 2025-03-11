@@ -108,13 +108,26 @@ interface PubMedSearchResult {
          
          const csvContent = await CSVUtils.toCSV(csvContents);
 
-         return {
-             finished: true,
-             type: 'pubmed_search_results',
-             replan: ReplanType.Allow,
-             response: {
+        if (resultsWithFullText.length === 0) {
+            return {
+                finished: true,
+                type: 'pubmed_search_results',
+                replan: ReplanType.Allow,
+                response: {
+                    type: StepResponseType.Message,
+                    status: `Query "${searchQuery}" returned no results`,
+                    message: `No PubMed articles found for query: ${searchQuery}`
+                }
+            };
+        }
+
+        return {
+            finished: true,
+            type: 'pubmed_search_results',
+            replan: ReplanType.Allow,
+            response: {
                 type: StepResponseType.GeneratedArtifact,
-                status: `Query "${searchQuery}" found ${searchResults.length} PubMed articles`,
+                status: `Query "${searchQuery}" found ${resultsWithFullText.length} PubMed articles`,
                 artifacts: [
                     {
                         type: ArtifactType.Spreadsheet,
@@ -130,8 +143,8 @@ interface PubMedSearchResult {
                     },
                     ...documentArtifacts
                 ]
-             }
-         };
+            }
+        };
      }
 
      private async searchPubMed(query: string): Promise<PubMedSearchResult[]> {
