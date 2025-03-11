@@ -114,22 +114,24 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
         params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
 
-        // Search for relevant procedure guides from artifacts
+        // Get artifact IDs from both search and past responses
         const artifactGuideList = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.ProcedureGuide }, 10);
-        const allProcedureGuides = await this.artifactManager.bulkLoadArtifacts(artifactGuideList.map(p => p.artifact));
-        
-        // Also search through past responses for any pre-selected guides
-        const pastGuides = params.previousResponses?.flatMap(response => 
+        const pastGuideIds = params.previousResponses?.flatMap(response => 
             response.data?.steps?.flatMap(step => 
-                step.procedureGuide?.artifactId ? [step.procedureGuide] : []
+                step.procedureGuide?.artifactId ? [step.procedureGuide.artifactId] : []
             ) || []
         ) || [];
         
-        // Combine both sources of guides
-        const allGuides = [
-            ...allProcedureGuides,
-            ...await this.artifactManager.bulkLoadArtifacts(pastGuides.map(g => g.artifactId))
+        // Combine and deduplicate all artifact IDs
+        const allGuideIds = [
+            ...new Set([
+                ...artifactGuideList.map(p => p.artifact.id),
+                ...pastGuideIds
+            ])
         ];
+        
+        // Load all guides in a single bulk operation
+        const allGuides = await this.artifactManager.bulkLoadArtifacts(allGuideIds);
         
         // Filter by agent if specified
         const procedureGuides = this.agentName ? 
