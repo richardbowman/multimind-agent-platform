@@ -196,8 +196,8 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         // Create new task for the next action
         if (response.nextAction && response.nextAction !== "DONE") {
             // Find the procedure guide if one is being followed
-            const procedureGuide = response.sequence !== "none" 
-                ? procedureGuides.find(g => g.metadata?.title === response.sequence)
+            const procedureGuide = response.procedureGuideTitle !== "none" 
+                ? procedureGuides.find(g => g.metadata?.title === response.procedureGuideTitle)
                 : undefined;
 
             const newTask: AddTaskParams = {
@@ -222,12 +222,12 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
                         steps: response.nextAction ? [{
                             actionType: response.nextAction,
                             context: response.taskDescription,
-                            ...(response.sequence !== "none" && { 
+                            ...(response.procedureGuideTitle !== "none" && { 
                                 procedureGuide: {
-                                    title: response.sequence,
+                                    title: response.procedureGuideTitle,
                                     // Only include artifactId if we found a matching guide
-                                    ...(procedureGuides.some(g => g.metadata?.title === response.sequence) && {
-                                        artifactId: procedureGuides.find(g => g.metadata?.title === response.sequence)?.id
+                                    ...(procedureGuides.some(g => g.metadata?.title === response.procedureGuideTitle) && {
+                                        artifactId: procedureGuides.find(g => g.metadata?.title === response.procedureGuideTitle)?.id
                                     }
                                 )}
                             })

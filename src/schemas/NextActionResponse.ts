@@ -4,7 +4,7 @@ export interface NextActionResponse {
     /** The goal for performing this action type */
     taskDescription: string;
     /** The title of procedure guide being followed (or "none") */
-    sequence: string;
+    procedureGuideTitle: string;
     /** Revised user goal */
     revisedUserGoal?: string;
 }
