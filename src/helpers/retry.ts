@@ -3,7 +3,10 @@ export interface RetryOptions {
     initialDelayMs?: number;
     timeoutMs?: number;
     backoffFactor?: number;
+    minDelayBetweenTasksMs?: number; // Minimum time between any task executions
 }
+
+let lastTaskTime = 0;
 
 export async function withRetry<T>(
     fn: () => Promise<T>,
@@ -22,6 +25,19 @@ export async function withRetry<T>(
 
     while (retryCount < maxRetries) {
         try {
+            // Calculate time since last task
+            const timeSinceLastTask = Date.now() - lastTaskTime;
+            const { minDelayBetweenTasksMs = 1000 } = options;
+            
+            // Wait if needed to maintain minimum delay
+            if (timeSinceLastTask < minDelayBetweenTasksMs) {
+                await new Promise(resolve => 
+                    setTimeout(resolve, minDelayBetweenTasksMs - timeSinceLastTask)
+                );
+            }
+
+            // Execute task and track time
+            lastTaskTime = Date.now();
             const result = await Promise.race([
                 fn(),
                 new Promise<T>((_, reject) => 
