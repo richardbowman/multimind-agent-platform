@@ -2,7 +2,7 @@ import Logger from "../helpers/logger";
 import { Attachment, ChatClient, ChatPost, ConversationContext, isValidChatPost, ProjectChainResponse } from "../chat/chatClient";
 import * as fs from "fs/promises";
 import { AsyncQueue } from "../helpers/asyncQueue";
-import { ChannelData, CreateChannelParams } from "src/shared/channelTypes";
+import { ChannelData, ChannelHandle, CreateChannelParams } from "src/shared/channelTypes";
 import { EventEmitter } from "stream";
 import { _getPathRecursive } from "@langchain/core/dist/utils/fast-json-patch/src/helpers";
 import { createUUID, UUID } from "src/types/uuid";
@@ -61,6 +61,7 @@ export class InMemoryPost implements ChatPost {
 }
 
 import { ChatPostModel, ChannelDataModel, UserHandleModel } from './chatModels';
+import { Sequelize } from "sequelize";
 
 export class LocalChatStorage extends EventEmitter {
     private sequelize: Sequelize;
@@ -101,11 +102,11 @@ export class LocalChatStorage extends EventEmitter {
         this.callbacks.forEach(c => c(post));
     }
 
-    public async registerChannel(channelId: string, channelName: string) {
+    public async registerChannel(channelId: UUID, channelName: ChannelHandle) {
         await ChannelDataModel.update({ name: channelName }, { where: { id: channelId } });
     }
 
-    public async mapUserIdToHandleName(userId: string, handleName: string) {
+    public async mapUserIdToHandleName(userId: UUID, handleName: ChatHandle) {
         await UserHandleModel.upsert({
             user_id: userId,
             handle: handleName
@@ -121,9 +122,13 @@ export class LocalChatStorage extends EventEmitter {
         await this.sequelize.sync();
     }
 
-    public async announceChannels() {
+    public async getChannels() : Promise<ChannelDataModel[]> {
         const channels = await ChannelDataModel.findAll();
-        channels.forEach(channel => {
+        return channels;
+    }
+
+    public async announceChannels() {
+        (await this.getChannels()).forEach(channel => {
             this.emit("addChannel", channel.id, {
                 name: channel.name,
                 description: channel.description,
@@ -147,7 +152,7 @@ export class LocalTestClient implements ChatClient {
         this.storage = storage;
     }
 
-    public registerHandle(handleName: string) {
+    public registerHandle(handleName: ChatHandle) {
         this.storage.mapUserIdToHandleName(this.userId, handleName);
     }
 
@@ -175,7 +180,7 @@ export class LocalTestClient implements ChatClient {
     }
 
     public async getChannelData(channelId: string): Promise<ChannelData> {
-        const channelData = this.storage.channelData[channelId];
+        const channelData = (await this.getChannels()).find(c => c.id === channelId);
         if (!channelData) {
             throw new Error(`Channel ${channelId} not found`);
         }
@@ -281,7 +286,7 @@ export class LocalTestClient implements ChatClient {
 
     public async postInChannel(channelId: string, message: string, props?: Record<string, any>, attachments?: Attachment[]): Promise<ChatPost> {
         // Get the channel's project ID if it exists
-        const channelData = this.storage.channelData[channelId];
+        const channelData = await this.getChannelData(channelId);
         const projectId = channelData?.projectId;
 
         const artifactIds = [...channelData?.artifactIds ?? [], ...props?.artifactIds ?? []].filter(id => id !== undefined);
@@ -385,7 +390,7 @@ export class LocalTestClient implements ChatClient {
             post.props = { ...post.props, ...newProps };
         }
 
-        await this.storage.save();
+        await this.storage.sync();
 
         // Notify listeners of the update
         this.storage.callbacks.forEach(c => {
@@ -401,6 +406,6 @@ export class LocalTestClient implements ChatClient {
 
     private async pushPost(post: ChatPost): Promise<void> {
         this.storage.addPost(post);
-        await this.storage.save();
+        await this.storage.sync();
     }
 }
