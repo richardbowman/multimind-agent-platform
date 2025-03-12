@@ -409,7 +409,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
                             {uniqueArtifacts
                                 .filter(a => a)
-                                .slice(0, 3)
+                                .slice(0, 6)
                                 .map((artifactId: string) => {
                                     const artifact = allArtifacts.find(a => a.id === artifactId);
                                     return (
@@ -433,24 +433,25 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 );})}
                             {uniqueArtifacts.length > 3 && (
                                 <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
-                                    and {uniqueArtifacts.length - 3} more...
+                                    and {uniqueArtifacts.length - 6} more...
                                 </Typography>
                             )}
                         </Box>
                     )}
+                    {attachmentsExpanded && (
                     <Collapse in={attachmentsExpanded}>
                         <Box sx={{ mt: 1 }}>
                             {uniqueArtifacts
                                 .filter(a => a)
                                 .map((artifactId: string, index) => (
-                                    <Box key={artifactId} sx={{ display: index < 10 ? 'block' : 'none' }}>
+                                    <Box key={artifactId} sx={{ display: index < 3 ? 'block' : 'none' }}>
                                         <ArtifactLoader 
                                             artifactId={artifactId}
                                         />
                                     </Box>
                                 ))}
                         </Box>
-                    </Collapse>
+                    </Collapse>)}
                 </Box>
             )}
             {loadedArtifact && (
