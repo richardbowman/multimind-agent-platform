@@ -40,7 +40,7 @@ const Main = styled('main', { shouldForwardProp: (prop) => prop !== 'leftOpen' &
         easing: theme.transitions.easing.sharp,
         duration: theme.transitions.duration.leavingScreen,
     }),
-    marginLeft: leftOpen ? 0 : `-${leftDrawerWidth}px`,
+    marginLeft: leftOpen ? 0 : 0,
     marginRight: rightOpen ? 0 : `-${rightDrawerWidth}px`,
     ...(leftOpen && {
         transition: theme.transitions.create(['margin'], {
