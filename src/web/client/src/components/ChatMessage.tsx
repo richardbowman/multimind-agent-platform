@@ -111,7 +111,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
 }) => {
     const isExpanded = expandedMessages.has(message.id);
     const hasThread = !currentThreadId && message.replyCount||0 > 0;
-    const [showAttachments, setShowAttachments] = useState(isExpanded && (message.showAttachments || message.props?.artifactIds?.length > 0));
+    const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
     const uniqueArtifacts = [...new Set((message.props?.artifactIds||[]).filter(a => a))];
     const hasAttachments = uniqueArtifacts.length||0 > 0;
     const inProgress = message.props?.partial;
@@ -205,7 +205,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         {hasAttachments && (
                             <IconButton
                                 size="small"
-                                onClick={() => setShowAttachments(!showAttachments)}
+                                onClick={() => setAttachmentsExpanded(!attachmentsExpanded)}
+                                disabled={!isExpanded}
                                 sx={{
                                     p: 0.5,
                                     bgcolor: 'action.hover',
@@ -365,7 +366,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             </Box>
             {hasAttachments && (
                 <Box sx={{ mt: 2 }}>
-                    <Collapse in={isExpanded}>
+                    <Collapse in={attachmentsExpanded && isExpanded}>
                         <Box sx={{ mt: 1 }}>
                             {isExpanded ? (
                                 uniqueArtifacts.filter(a => a).map((artifactId: string) => (
