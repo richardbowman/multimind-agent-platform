@@ -406,7 +406,13 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             {hasAttachments && isExpanded && (
                 <Box sx={{ mt: 2 }}>
                     {!attachmentsExpanded && (
-                        <Box sx={{ display: 'flex', gap: 1, alignItems: 'center' }}>
+                        <Box sx={{ 
+                            display: 'flex', 
+                            gap: 1, 
+                            alignItems: 'center',
+                            flexWrap: 'wrap',
+                            maxWidth: '100%'
+                        }}>
                             {uniqueArtifacts
                                 .filter(a => a)
                                 .slice(0, 6)
