@@ -205,10 +205,6 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
             console.error('Error loading more logs:', error);
         }
     }, [fetchLogs, page, pageSize]);
-        // This would call your backend API to get paginated logs
-        const data = await ipcService.getRPC().getLLMLogsPaginated({ offset, limit });
-        return data;
-    };
 
     useEffect(() => {
         let isMounted = true;
