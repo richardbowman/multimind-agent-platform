@@ -19,6 +19,7 @@ import { CustomLink } from './ChatPanel';
 import { UUID } from '../../../../types/uuid';
 import { ChatPost } from '../../../../chat/chatClient';
 import { useIPCService } from '../contexts/IPCContext';
+import { useArtifacts } from '../contexts/ArtifactContext';
 import { Artifact } from '../../../../tools/artifact';
 import { ToolbarActionsProvider } from '../contexts/ToolbarActionsContext';
 import { AttachmentCard } from './shared/AttachmentCard';
@@ -112,6 +113,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     const isExpanded = expandedMessages.has(message.id);
     const hasThread = !currentThreadId && message.replyCount||0 > 0;
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
+    const { artifacts: allArtifacts } = useArtifacts();
     const uniqueArtifacts = [...new Set((message.props?.artifactIds||[]).filter(a => a))];
     const hasAttachments = uniqueArtifacts.length||0 > 0;
     const inProgress = message.props?.partial;
@@ -371,14 +373,17 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             {uniqueArtifacts
                                 .filter(a => a)
                                 .slice(0, 3)
-                                .map((artifactId: string) => (
+                                .map((artifactId: string) => {
+                                    const artifact = allArtifacts.find(a => a.id === artifactId);
+                                    return (
                                     <AttachmentCard
                                         key={artifactId}
                                         type="artifact"
-                                        title={`Artifact ${artifactId.slice(0, 6)}...`}
+                                        title={artifact?.metadata?.title || `Artifact ${artifactId.slice(0, 6)}...`}
+                                        subtitle={artifact?.type}
                                         onRemove={() => {}}
                                     />
-                                ))}
+                                );})}
                             {uniqueArtifacts.length > 3 && (
                                 <Typography variant="caption" sx={{ ml: 1, color: 'text.secondary' }}>
                                     and {uniqueArtifacts.length - 3} more...
