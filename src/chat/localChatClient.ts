@@ -350,7 +350,7 @@ export class LocalTestClient implements ChatClient {
         const replyProps = props || {};
         replyProps['root-id'] = rootId;
 
-        const rootPost = this.getPosts().find(p => p.id === rootId);
+        const rootPost = (await this.getPosts()).find(p => p.id === rootId);
         if (rootPost && !rootPost.getRootId()) {
             const replyPost = new InMemoryPost(
                 channelId,
