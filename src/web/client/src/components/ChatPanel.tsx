@@ -285,68 +285,72 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const [lastMessage, setLastMessage] = useState<string | null>(null);
 
     const handleSendMessage = async (content: string, artifactIds?: string) => {
-        if (!currentChannelId) return;
+        try {
+            if (!currentChannelId) return;
 
-        // Handle special commands
-        if (content.startsWith('/')) {
-            const [command, ...args] = content.split(' ');
+            // Handle special commands
+            if (content.startsWith('/')) {
+                const [command, ...args] = content.split(' ');
 
-            switch (command) {
-                case '/retry':
-                    if (lastMessage) {
-                        sendMessage({
-                            channel_id: currentChannelId,
-                            thread_id: currentThreadId || undefined,
-                            message: lastMessage,
-                            user_id: userId,
-                            create_at: Date.now(),
-                            props: {
-                                artifactIds
-                            }
-                        });
-                    }
-                    return;
+                switch (command) {
+                    case '/retry':
+                        if (lastMessage) {
+                            sendMessage({
+                                channel_id: currentChannelId,
+                                thread_id: currentThreadId || undefined,
+                                message: lastMessage,
+                                user_id: userId,
+                                create_at: Date.now(),
+                                props: {
+                                    artifactIds
+                                }
+                            });
+                        }
+                        return;
 
-                case '/channel':
-                    // Send message to channel root regardless of current thread
-                    const channelMessage = args.join(' ');
-                    if (channelMessage) {
-                        sendMessage({
-                            channel_id: currentChannelId,
-                            message: channelMessage,
-                            user_id: userId,
-                            create_at: Date.now(),
-                            props: {
-                                artifactIds
-                            }
-                        });
-                    }
-                    return;
+                    case '/channel':
+                        // Send message to channel root regardless of current thread
+                        const channelMessage = args.join(' ');
+                        if (channelMessage) {
+                            sendMessage({
+                                channel_id: currentChannelId,
+                                message: channelMessage,
+                                user_id: userId,
+                                create_at: Date.now(),
+                                props: {
+                                    artifactIds
+                                }
+                            });
+                        }
+                        return;
 
-                default:
-                    // If not a special command, send as regular message
-                    break;
+                    default:
+                        // If not a special command, send as regular message
+                        break;
+                }
             }
-        }
-
-        // Store non-command messages for /retry
-        if (!content.startsWith('/')) {
-            setLastMessage(content);
-        }
-
-        const message = {
-            channel_id: currentChannelId,
-            message: content,
-            user_id: userId,
-            create_at: Date.now(),
-            thread_id: currentThreadId || undefined,
-            props: {
-                artifactIds,
-                ...(currentThreadId ? { 'root-id': currentThreadId } : {})
+            // Store non-command messages for /retry
+            if (!content.startsWith('/')) {
+                setLastMessage(content);
             }
-        };
 
-        sendMessage(message);
+            const message = {
+                channel_id: currentChannelId,
+                message: content,
+                user_id: userId,
+                create_at: Date.now(),
+                thread_id: currentThreadId || undefined,
+                props: {
+                    artifactIds,
+                    ...(currentThreadId ? { 'root-id': currentThreadId } : {})
+                }
+            };
+
+            sendMessage(message);
+        } catch (e) {
+            console.error(e);
+            throw e;
+        }
     };
 
     const uniqueTasks = Array.from(new Map((tasks || []).map(task => [task.id, task])).values()).filter(t => t.inProgress);
