@@ -7,7 +7,7 @@ export interface RetryOptions {
 
 export async function withRetry<T>(
     fn: () => Promise<T>,
-    validate: (result: T) => boolean,
+    validate: (result: T) => Promise<boolean>|boolean,
     options: RetryOptions = {}
 ): Promise<T> {
     const {
@@ -29,7 +29,7 @@ export async function withRetry<T>(
                 )
             ]);
 
-            if (validate(result)) {
+            if (await validate(result)) {
                 return result;
             }
 
