@@ -255,7 +255,8 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                     }
                 }
             };            
-        } else if (response.nextAction && response.nextAction === "DONE") {
+        } else if ((response.nextAction && response.nextAction === "DONE") || 
+                  (!response.nextAction && response.message)) {
             return {
                 finished: true,
                 artifactIds: params.context?.artifacts?.map(a => a.id),
@@ -266,7 +267,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                 }
             };
         } else {
-            throw new Error("Planner returned unexpected state");
+            throw new Error("Planner returned unexpected state: No next action and no completion message");
         }
     }
 }
