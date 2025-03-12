@@ -384,7 +384,11 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         title={artifact?.metadata?.title || `Artifact ${artifactId.slice(0, 6)}...`}
                                         subtitle={artifact?.type}
                                         onRemove={() => {}}
-                                        onClick={() => setSelectedArtifact(artifact)}
+                                        onClick={() => {
+                                            if (artifact) {
+                                                setSelectedArtifact(artifact);
+                                            }
+                                        }}
                                     />
                                 );})}
                             {uniqueArtifacts.length > 3 && (
@@ -406,18 +410,20 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     </Collapse>
                 </Box>
             )}
-            <ArtifactDrawer
-                open={!!selectedArtifact}
-                onClose={() => setSelectedArtifact(null)}
-                currentArtifact={selectedArtifact}
-                actions={[
-                    {
-                        label: 'Close',
-                        onClick: () => setSelectedArtifact(null),
-                        variant: 'outlined'
-                    }
-                ]}
-            />
+            {selectedArtifact && (
+                <ArtifactDrawer
+                    open={!!selectedArtifact}
+                    onClose={() => setSelectedArtifact(null)}
+                    currentArtifact={selectedArtifact}
+                    actions={[
+                        {
+                            label: 'Close',
+                            onClick: () => setSelectedArtifact(null),
+                            variant: 'outlined'
+                        }
+                    ]}
+                />
+            )}
         </Paper>
     );
 };
