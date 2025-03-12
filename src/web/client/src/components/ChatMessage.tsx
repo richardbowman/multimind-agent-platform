@@ -115,7 +115,24 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     const hasThread = !currentThreadId && message.replyCount||0 > 0;
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
     const { artifacts: allArtifacts } = useArtifacts();
-    const uniqueArtifacts = [...new Set((message.props?.artifactIds||[]).filter(a => a))];
+    const ipcService = useIPCService();
+    const [uniqueArtifacts, setUniqueArtifacts] = useState([...new Set((message.props?.artifactIds||[]).filter(a => a))]);
+
+    const handleRemoveArtifact = async (artifactId: string) => {
+        try {
+            // Remove from local state first for immediate UI update
+            setUniqueArtifacts(prev => prev.filter(id => id !== artifactId));
+            
+            // Update message metadata via IPC
+            await ipcService.getRPC().updateMessageMetadata(message.id, {
+                artifactIds: uniqueArtifacts.filter(id => id !== artifactId)
+            });
+        } catch (err) {
+            console.error('Error removing artifact:', err);
+            // Revert if update fails
+            setUniqueArtifacts([...new Set((message.props?.artifactIds||[]).filter(a => a))]);
+        }
+    };
     const [selectedArtifact, setSelectedArtifact] = useState<ArtifactItem | null>(null);
     const [loadedArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
     const ipcService = useIPCService();
@@ -401,7 +418,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         type="artifact"
                                         title={artifact?.metadata?.title || `Artifact ${artifactId.slice(0, 6)}...`}
                                         subtitle={artifact?.type}
-                                        onRemove={() => {}}
+                                        onRemove={() => handleRemoveArtifact(artifactId)}
                                         onClick={() => {
                                             if (artifact) {
                                                 setSelectedArtifact({
