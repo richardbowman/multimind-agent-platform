@@ -211,47 +211,41 @@ export class LocalTestClient implements ChatClient {
     }
 
     public async addArtifactToChannel(channelId: UUID, artifactId: UUID): Promise<void> {
-        const channelData = await this.getChannelData(channelId);
-        if (!channelData) {
+        const channel = await ChannelDataModel.findByPk(channelId);
+        if (!channel) {
             throw new Error(`Channel ${channelId} not found`);
         }
 
-        if (!channelData.artifactIds) {
-            channelData.artifactIds = [];
-        }
-
-        if (!channelData.artifactIds?.includes(artifactId)) {
-            channelData.artifactIds?.push(artifactId);
-            await this.storage.save();
+        const artifactIds = channel.artifactIds || [];
+        if (!artifactIds.includes(artifactId)) {
+            artifactIds.push(artifactId);
+            await channel.update({ artifactIds });
         }
     }
 
     public async removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void> {
-        const channelData = await this.getChannelData(channelId);
-        if (!channelData) {
+        const channel = await ChannelDataModel.findByPk(channelId);
+        if (!channel) {
             throw new Error(`Channel ${channelId} not found`);
         }
 
-        if (channelData.artifactIds) {
-            channelData.artifactIds =
-                channelData.artifactIds?.filter(id => id !== artifactId);
-            await this.storage.save();
+        if (channel.artifactIds) {
+            const artifactIds = channel.artifactIds.filter(id => id !== artifactId);
+            await channel.update({ artifactIds });
         }
     }
 
     public async deleteChannel(channelId: string): Promise<void> {
-        if (!this.storage.channelNames[channelId]) {
+        const channel = await ChannelDataModel.findByPk(channelId);
+        if (!channel) {
             throw new Error(`Channel ${channelId} not found`);
         }
 
-        // Remove all posts in the channel
-        this.storage.posts = this.storage.posts.filter(p => p.channel_id !== channelId);
-
-        // Remove channel metadata
-        delete this.storage.channelNames[channelId];
-        delete this.storage.channelData[channelId];
-
-        await this.storage.save();
+        // Delete all posts in the channel
+        await ChatPostModel.destroy({ where: { channel_id: channelId } });
+        
+        // Delete the channel
+        await channel.destroy();
     }
 
     public async getPosts(): Promise<ChatPost[]> {
