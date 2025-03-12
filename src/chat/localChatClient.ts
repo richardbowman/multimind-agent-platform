@@ -60,36 +60,31 @@ export class InMemoryPost implements ChatPost {
     }
 }
 
+import { ChatPostModel, ChannelDataModel, UserHandleModel } from './chatModels';
+
 export class LocalChatStorage extends EventEmitter {
+    private sequelize: Sequelize;
+    private callbacks: Function[] = [];
 
-    channelNames: Record<UUID, string> = {};
-    channelData: Record<UUID, ChannelData> = {};
-    posts: ChatPost[] = [];
-    callbacks: Function[] = [];
-    userIdToHandleName: Record<UUID, ChatHandle> = {}; // New mapping for user IDs to handle names
-
-    private storagePath: string;
-    private queue: AsyncQueue;
-
-    constructor(storagePath: string) {
+    constructor(sequelize: Sequelize) {
         super();
-        this.storagePath = storagePath;
-        this.queue = new AsyncQueue();
+        this.sequelize = sequelize;
         this.setMaxListeners(100);
+        
+        // Initialize models
+        ChatPostModel.initialize(sequelize);
+        ChannelDataModel.initialize(sequelize);
+        UserHandleModel.initialize(sequelize);
     }
 
     async createChannel(params: CreateChannelParams): Promise<UUID> {
-        const channelId = createUUID();
-        this.registerChannel(channelId, params.name);
-        this.channelData[channelId] = {
+        const channel = await ChannelDataModel.create({
             ...params,
-            id: channelId
-        };
+            id: createUUID()
+        });
 
-        await this.save();
-
-        this.emit("addChannel", channelId, params);
-        return channelId;
+        this.emit("addChannel", channel.id, params);
+        return channel.id;
     }
 
     public async addPost(post: ChatPost): Promise<void> {
@@ -97,28 +92,29 @@ export class LocalChatStorage extends EventEmitter {
             Logger.error(`Invalid post ${JSON.stringify(post, null, 2)}`);
             return;
         }
-        this.posts.push(post);
-        await this.save();
-        // Logger.info(JSON.stringify(this.posts, null, 2))
+        
+        await ChatPostModel.create({
+            ...post,
+            attachments: post.attachments || []
+        });
+        
         this.callbacks.forEach(c => c(post));
     }
 
-    public registerChannel(channelId: string, channelName: string) {
-        this.channelNames[channelId] = channelName;
+    public async registerChannel(channelId: string, channelName: string) {
+        await ChannelDataModel.update({ name: channelName }, { where: { id: channelId } });
     }
 
-    // New method to map user IDs to handle names
-    public mapUserIdToHandleName(userId: string, handleName: string) {
-        // if (!this.userIdToHandleName[userId]) {
-        this.userIdToHandleName[userId] = handleName;
-        // } else {
-        //     throw new Error(`Duplicate handle registration ${handleName}`);
-        // }
+    public async mapUserIdToHandleName(userId: string, handleName: string) {
+        await UserHandleModel.upsert({
+            user_id: userId,
+            handle: handleName
+        });
     }
 
-    // Optional: Method to get the handle name for a given user ID
-    public getHandleNameForUserId(userId: string): string | undefined {
-        return this.userIdToHandleName[userId];
+    public async getHandleNameForUserId(userId: string): Promise<string | undefined> {
+        const handle = await UserHandleModel.findOne({ where: { user_id: userId } });
+        return handle?.handle;
     }
 
     public async save(): Promise<void> {
@@ -210,15 +206,15 @@ export class LocalChatStorage extends EventEmitter {
         });
     }
 
-    public announceChannels() {
-        Object.keys(this.channelData).forEach(channelId => {
-            const data = this.channelData[channelId];
-            this.emit("addChannel", channelId, {
-                name: this.channelNames[channelId],
-                description: data.description,
-                members: data.members,
-                defaultResponderId: data.defaultResponderId,
-                projectId: data.projectId
+    public async announceChannels() {
+        const channels = await ChannelDataModel.findAll();
+        channels.forEach(channel => {
+            this.emit("addChannel", channel.id, {
+                name: channel.name,
+                description: channel.description,
+                members: channel.members,
+                defaultResponderId: channel.defaultResponderId,
+                projectId: channel.projectId
             } as CreateChannelParams);
         });
     }
@@ -240,26 +236,27 @@ export class LocalTestClient implements ChatClient {
         this.storage.mapUserIdToHandleName(this.userId, handleName);
     }
 
-    public getChannels(): Promise<ChannelData[]> {
-        return Promise.resolve(
-            Object.entries(this.storage.channelNames).map(([id, name]) => {
-                const channelData = this.storage.channelData[id as UUID];
-                return {
-                    id: id as UUID,
-                    name,
-                    description: channelData.description,
-                    members: channelData?.members,
-                    defaultResponderId: channelData?.defaultResponderId,
-                    projectId: channelData?.projectId,
-                    artifactIds: channelData?.artifactIds,
-                    goalTemplateId: channelData?.goalTemplateId
-                };
-            })
-        );
+    public async getChannels(): Promise<ChannelData[]> {
+        const channels = await ChannelDataModel.findAll();
+        return channels.map(channel => ({
+            id: channel.id,
+            name: channel.name,
+            description: channel.description,
+            members: channel.members,
+            defaultResponderId: channel.defaultResponderId,
+            projectId: channel.projectId,
+            artifactIds: channel.artifactIds,
+            goalTemplateId: channel.goalTemplate
+        }));
     }
 
-    public getHandles(): Promise<Record<UUID, ChatHandle>> {
-        return Promise.resolve(this.storage.userIdToHandleName);
+    public async getHandles(): Promise<Record<UUID, ChatHandle>> {
+        const handles = await UserHandleModel.findAll();
+        const result: Record<UUID, ChatHandle> = {};
+        handles.forEach(handle => {
+            result[handle.user_id] = handle.handle;
+        });
+        return result;
     }
 
     public async getChannelData(channelId: string): Promise<ChannelData> {
@@ -327,20 +324,44 @@ export class LocalTestClient implements ChatClient {
         await this.storage.save();
     }
 
-    public getPosts() {
-        return this.storage.posts;
+    public async getPosts(): Promise<ChatPost[]> {
+        const posts = await ChatPostModel.findAll();
+        return posts.map(post => new InMemoryPost(
+            post.channel_id,
+            post.message,
+            post.user_id,
+            post.props,
+            post.create_at
+        ));
     }
 
-    public fetchPreviousMessages(channelId: string, limit: number = 5): Promise<ChatPost[]> {
-        return Promise.resolve(this.getPosts().filter(p => p.channel_id === channelId).slice(-limit));
+    public async fetchPreviousMessages(channelId: string, limit: number = 5): Promise<ChatPost[]> {
+        const posts = await ChatPostModel.findAll({
+            where: { channel_id: channelId },
+            order: [['create_at', 'DESC']],
+            limit
+        });
+        return posts.map(post => new InMemoryPost(
+            post.channel_id,
+            post.message,
+            post.user_id,
+            post.props,
+            post.create_at
+        ));
     }
 
-    getPost(id: string): Promise<ChatPost> {
-        const post = this.storage.posts.find(p => p.id === id);
+    public async getPost(id: string): Promise<ChatPost> {
+        const post = await ChatPostModel.findByPk(id);
         if (!post) {
             throw new Error(`Could not find post ${id}`);
         }
-        return Promise.resolve(post);
+        return new InMemoryPost(
+            post.channel_id,
+            post.message,
+            post.user_id,
+            post.props,
+            post.create_at
+        );
     }
 
     public async postInChannel(channelId: string, message: string, props?: Record<string, any>, attachments?: Attachment[]): Promise<ChatPost> {
