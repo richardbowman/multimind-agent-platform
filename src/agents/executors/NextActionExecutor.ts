@@ -237,6 +237,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                 response: {
                     type: StepResponseType.Plan,
                     reasoning: response.reasoning,
+                    status: response.message,
                     data: {
                         steps: response.nextAction ? [{
                             actionType: response.nextAction,
