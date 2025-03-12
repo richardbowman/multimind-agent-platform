@@ -121,7 +121,14 @@ export class ChannelDataModel extends Model<ChannelDataAttributes>
         defaultValue: false
       },
       members: {
-        type: DataTypes.ARRAY(DataTypes.UUID)
+        type: DataTypes.JSON,
+        get() {
+          const rawValue = this.getDataValue('members');
+          return rawValue ? JSON.parse(rawValue) : [];
+        },
+        set(value: UUID[]) {
+          this.setDataValue('members', JSON.stringify(value));
+        }
       },
       defaultResponderId: {
         type: DataTypes.UUID

@@ -180,11 +180,21 @@ export class LocalTestClient implements ChatClient {
     }
 
     public async getChannelData(channelId: string): Promise<ChannelData> {
-        const channelData = (await this.getChannels()).find(c => c.id === channelId);
-        if (!channelData) {
+        const channel = await ChannelDataModel.findByPk(channelId);
+        if (!channel) {
             throw new Error(`Channel ${channelId} not found`);
         }
-        return channelData;
+        
+        return {
+            id: channel.id,
+            name: channel.name,
+            description: channel.description,
+            members: channel.members || [],
+            defaultResponderId: channel.defaultResponderId,
+            projectId: channel.projectId,
+            artifactIds: channel.artifactIds || [],
+            goalTemplate: channel.goalTemplate
+        };
     }
 
     public async createChannel(params: CreateChannelParams): Promise<UUID> {
