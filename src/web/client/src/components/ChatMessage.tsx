@@ -21,6 +21,7 @@ import { ChatPost } from '../../../../chat/chatClient';
 import { useIPCService } from '../contexts/IPCContext';
 import { Artifact } from '../../../../tools/artifact';
 import { ToolbarActionsProvider } from '../contexts/ToolbarActionsContext';
+import { AttachmentCard } from './shared/AttachmentCard';
 
 interface ChatMessageProps {
     message: ChatPost;
