@@ -216,6 +216,55 @@ ${this.modelHelpers.getFinalInstructions()}
 
     private async renderSteps({ steps, posts }: StepsContent): Promise<string> {
         const filteredSteps = steps.filter(s => s.props.result && s.props.stepType !== ExecutorType.NEXT_STEP);
+        
+        // If we have posts, group steps by post
+        if (posts && posts.length > 0) {
+            const postMap = new Map<string, string[]>();
+            
+            // Initialize map with posts
+            posts.forEach(post => {
+                postMap.set(post.id, []);
+            });
+
+            // Process steps and group by post
+            await Promise.all(filteredSteps.map(async (step) => {
+                const stepResult = step.props.result!;
+                let body;
+                if (stepResult.response.type) {
+                    const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type)||globalRegistry.stepResponseRenderers.get(stepResult.response.type);
+                    if (typeRenderer) {
+                        body = await typeRenderer(stepResult.response);
+                    }
+                }
+                
+                const stepInfo = `- STEP [${step.props.stepType}]:
+  Description: ${step.description}
+  Result: <stepInformation>${body || stepResult.response.message || stepResult.response.reasoning || stepResult.response.status}</stepInformation>`;
+                
+                // If step has a threadId, add to corresponding post
+                if (step.props.threadId) {
+                    const existing = postMap.get(step.props.threadId) || [];
+                    existing.push(stepInfo);
+                    postMap.set(step.props.threadId, existing);
+                }
+            }));
+
+            // Build output grouped by posts
+            let output = "# 📝 STEP HISTORY BY POST:\n\n";
+            posts.forEach((post, index) => {
+                const postSteps = postMap.get(post.id);
+                if (postSteps && postSteps.length > 0) {
+                    output += `## POST ${index + 1}:\n`;
+                    output += `- User: ${post.user_id}\n`;
+                    output += `- Message: ${post.message}\n`;
+                    output += `### Steps for this post:\n`;
+                    output += postSteps.join('\n') + '\n\n';
+                }
+            });
+            return output;
+        }
+
+        // If no posts, render steps normally
         const stepProcessors = await Promise.all(filteredSteps.map(async (step, index) => {
             const stepResult = step.props.result!;
             let body;
@@ -225,7 +274,6 @@ ${this.modelHelpers.getFinalInstructions()}
                     body = await typeRenderer(stepResult.response);
                 }
             }
-            // Default renderer for unknown types
             return `- STEP ${index + 1} of ${filteredSteps.length} ${index + 1 == filteredSteps.length ? "[LAST COMPLETED STEP]" : ""}:
 Step Type [${step.props.stepType}]
 Step Description: ${step.description}
