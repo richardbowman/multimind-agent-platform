@@ -134,7 +134,11 @@ interface PubMedSearchResult {
         const searchResults = await this.searchPubMed(searchQuery);
             
         // Fetch full text for articles with PMC IDs with rate limiting
-        const asyncQueue = new AsyncQueue({ concurrency: 3, timeout: 10000 });
+        const asyncQueue = new AsyncQueue({ 
+            concurrency: 3, 
+            timeout: 10000,
+            minDelayBetweenTasksMs: 3000 // 3 seconds between efetch calls
+        });
         const resultsWithFullText = [];
         
         for (const result of searchResults) {
