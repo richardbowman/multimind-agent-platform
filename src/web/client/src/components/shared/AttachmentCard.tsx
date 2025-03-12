@@ -39,7 +39,14 @@ export const AttachmentCard: React.FC<AttachmentCardProps> = ({
             flexDirection: type === 'artifact' ? 'row' : 'column',
             gap: '8px',
             alignItems: type === 'artifact' ? 'center' : 'stretch',
-            border: type === 'artifact' ? '1px solid #444' : 'none'
+            border: type === 'artifact' ? '1px solid #444' : 'none',
+            cursor: 'pointer',
+            transition: 'all 0.2s ease',
+            '&:hover': {
+                transform: 'translateY(-2px)',
+                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
+                backgroundColor: type === 'artifact' ? '#333' : '#f5f5f5'
+            }
         }}>
             {type === 'file' && previewUrl && (
                 <img
