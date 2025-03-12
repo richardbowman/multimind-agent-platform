@@ -1,7 +1,7 @@
 import Logger from "src/helpers/logger";
 import { ArtifactManager } from "./artifactManager";
 import fs from "node:fs";
-import { ArtifactType, SpreadsheetSubType } from "./artifact";
+import { ArtifactType, DocumentSubtype, SpreadsheetSubType } from "./artifact";
 import { createUUID } from "src/types/uuid";
 import path from "node:path";
 import * as yaml from 'js-yaml';
@@ -20,8 +20,8 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
     });
 
     // Get existing guides from artifact manager
-    const existingGuides = await artifactManager.getArtifacts({ type: ArtifactType.ProcedureGuide });
-    const existingTables = await artifactManager.getArtifacts({ type: ArtifactType.Spreadsheet });
+    const existingGuides = await artifactManager.getArtifacts({ type: ArtifactType.Document, subtype: DocumentSubtype.Procedure });
+    const existingTables = await artifactManager.getArtifacts({ type: ArtifactType.Spreadsheet, subtype: SpreadsheetSubType.Procedure });
     const existingGuideMap = new Map([...existingGuides, ...existingTables].map(g => [g.metadata?.source, g]));
 
     for (let i = 0; i < supportedFiles.length; i++) {
@@ -46,7 +46,7 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
 
         // Determine artifact type based on file extension
         const ext = path.extname(file).toLowerCase();
-        const artifactType = ext === '.csv' ? ArtifactType.Spreadsheet : ArtifactType.ProcedureGuide;
+        const artifactType = ext === '.csv' ? ArtifactType.Spreadsheet : ArtifactType.Document;
         
         const contentHash = require('crypto').createHash('sha256').update(content).digest('hex');
 
@@ -68,9 +68,10 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
         const metadataPath = path.join(guidesDir, `${path.basename(file, '.md')}.metadata.json`);
         // Start with YAML frontmatter as base metadata
         let metadata: Record<string, any> = {
+            subtype: ext === '.csv' ? SpreadsheetSubType.Procedure : DocumentSubtype.Procedure,
             ...frontmatter,
             title: frontmatter['title'] || path.basename(file, '.md'),
-            mimeType: 'text/markdown',
+            mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
             description: frontmatter['description'] || 'Procedure guide document',
             created: frontmatter['created'] || new Date().toISOString(),
             source: path.relative(basePath, filePath).replace(/\.(md|csv)$/, ''),
@@ -89,7 +90,6 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
         try {
             await artifactManager.saveArtifact({
                 type: artifactType,
-                mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
                 content: content,
                 metadata: metadata
             });

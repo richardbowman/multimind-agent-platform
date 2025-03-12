@@ -35,7 +35,8 @@ export enum StepResponseType {
     Brainstorm = "brainstorm",
     SearchResults = "SearchResults",
     Message = "Message",
-    FullArtifact = "FullArtifact"
+    FullArtifact = "FullArtifact",
+    CompletionMessage = "CompletionMessage"
 }
 
 export enum ReplanType {

@@ -19,6 +19,7 @@ export interface IVectorDatabase extends EventEmitter {
         projectId: string, 
         title: string, 
         type?: string, 
+        subtype?: string, 
         artifactId?: string
     ): Promise<void>;
     clearCollection(): Promise<void>;

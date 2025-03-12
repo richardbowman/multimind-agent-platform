@@ -4,7 +4,7 @@ import express from 'express';
 import { createBirpc } from 'birpc';
 import { createSafeServerRPCHandlers } from './rpcUtils';
 import Logger from '../helpers/logger';
-import { ServerRPCHandler } from './RPCHandler';
+import { ServerRPCHandler } from './ServerRPCHandler';
 import { BackendServices } from '../types/BackendServices';
 import { ClientMethods, ServerMethods } from 'src/shared/RPCInterface';
 import { OllamaRouter } from './OllamaRouter';

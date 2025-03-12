@@ -215,7 +215,7 @@ ${this.modelHelpers.getFinalInstructions()}
     }
 
     private async renderSteps({ steps, posts }: StepsContent): Promise<string> {
-        const filteredSteps = steps.filter(s => s.props.result && s.props.stepType !== ExecutorType.NEXT_STEP);
+        const filteredSteps = steps.filter(s => s.props.result && s.props.stepType !== ExecutorType.NEXT_STEP || s.props.result?.response.type === StepResponseType.CompletionMessage);
         
         // If we have posts, group steps by post
         if (posts && posts.length > 0) {
@@ -242,10 +242,10 @@ ${this.modelHelpers.getFinalInstructions()}
   Result: <stepInformation>${body || stepResult.response.message || stepResult.response.reasoning || stepResult.response.status}</stepInformation>`;
                 
                 // If step has a threadId, add to corresponding post
-                if (step.props.threadId) {
-                    const existing = postMap.get(step.props.threadId) || [];
+                if (step.props.userPostId) {
+                    const existing = postMap.get(step.props.userPostId) || [];
                     existing.push(stepInfo);
-                    postMap.set(step.props.threadId, existing);
+                    postMap.set(step.props.userPostId, existing);
                 }
             }));
 
@@ -365,14 +365,13 @@ Step Result: <stepInformation>${body || stepResult.response.message || stepResul
                 ? `${artifact.content.length} characters`
                 : `${artifact.content.length} bytes`;
 
-            let summary = undefined;
             let content = typeof artifact.content === 'string'
                 ? artifact.content
                 : `[Binary data - ${size}]`;
 
             // Use summary from metadata if available
             if (artifact.metadata?.summary) {
-                summary = artifact.metadata.summary;
+                content = ` - High-Level Overview: ${artifact.metadata.summary}`;
             } else {
                 content = `\`\`\`${artifact.type}\n${StringUtils.truncateWithEllipsis(content, 1000, `[truncated to 1000 characters out of total size: ${size}]`)}\n\`\`\``;
             }
@@ -398,7 +397,7 @@ Step Result: <stepInformation>${body || stepResult.response.message || stepResul
                 }
             }
 
-            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'} [Size: ${size}]${metadataInfo}\n${artifact.metadata?.summary||content}\n`;
+            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'} [Size: ${size}]${metadataInfo}\n${content}\n`;
         }).join('\n\n');
     }
 

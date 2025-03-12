@@ -29,7 +29,6 @@ export enum ArtifactType {
   Webpage = "webpage",
   Diagram = "diagram",
   Calendar = "calendar",
-  ProcedureGuide = "procedure-guide",
   APIData = "api-data",
   Presentation = "presentation",
   Unknown = "unknown"
@@ -38,7 +37,8 @@ export enum ArtifactType {
 export enum DocumentSubtype {
   ResearchReport = "Research Report",
   WebpageSummary = "Webpage Summary",
-  PubMedFullArticle = "PubMed Full Article"
+  PubMedFullArticle = "PubMed Full Article",
+  Procedure = "Procedure"
 }
 
 export enum SpreadsheetSubType {
@@ -46,7 +46,8 @@ export enum SpreadsheetSubType {
   SearchResults = "Search Results",
   EvaluationCriteria = "Evaluation Criteria",
   Template = "Template",
-  Other = "Other"
+  Other = "Other",
+  Procedure = "Procedure"
 }
 
 export interface Artifact extends ArtifactItem {

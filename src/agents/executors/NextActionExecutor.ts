@@ -22,7 +22,7 @@ import { StringUtils } from 'src/utils/StringUtils';
 import { withRetry } from 'src/helpers/retry';
 import { ModelResponse } from 'src/schemas/ModelResponse';
 import { ArtifactManager } from 'src/tools/artifactManager';
-import { ArtifactType } from 'src/tools/artifact';
+import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
 
 export type WithReasoning<T extends ModelResponse> = T & {
     reasoning?: string;
@@ -113,7 +113,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
         params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps, posts: params.context?.threadPosts});
 
         // Get artifact IDs from both search and past responses
-        const artifactGuideList = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.ProcedureGuide }, 10);
+        const artifactGuideList = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.Document, subtype: DocumentSubtype.Procedure }, 10);
         const pastGuideIds = params.previousResponses?.flatMap(response => 
             response.data?.steps?.flatMap(step => 
                 step.procedureGuide?.artifactId ? [step.procedureGuide.artifactId] : []
@@ -259,7 +259,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                 finished: true,
                 artifactIds: params.context?.artifacts?.map(a => a.id),
                 response: {
-                    type: StepResponseType.Plan,
+                    type: StepResponseType.CompletionMessage,
                     reasoning: response.reasoning,
                     message: response.message
                 }

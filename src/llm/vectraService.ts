@@ -102,6 +102,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
         projectId: string,
         title: string,
         type = 'content',
+        subtype: string,
         artifactId?: UUID
     ): Promise<void> {
         const splitter = new RecursiveCharacterTextSplitter({
@@ -132,6 +133,7 @@ class VectraService extends EventEmitter implements IVectorDatabase {
                 url,
                 projectId,
                 type,
+                subtype,
                 task,
                 title,
                 docId,

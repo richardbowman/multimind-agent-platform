@@ -207,7 +207,7 @@ export abstract class StepBasedAgent extends Agent {
                 threadId: params.userPost?.thread_id,
                 projects: params.projects,
                 artifacts: params.artifacts,
-                threadPosts: params.threadPosts
+                threadPosts: [...params.threadPosts||[], params.userPost]
             }
         };
         const plan = await this.planSteps(execParams);
@@ -216,6 +216,14 @@ export abstract class StepBasedAgent extends Agent {
 
     protected async handlerThread(params: HandlerParams): Promise<void> {
         const { id: projectId } = params.projects?.filter(p => p.metadata.tags?.includes("agent-internal-steps"))[0] || { id: undefined };
+
+        const executionContext = {
+            channelId: params.userPost?.channel_id,
+            threadId: params.userPost?.thread_id,
+            projects: params.projects,
+            artifacts: params.artifacts,
+            threadPosts: [...params.rootPost?[params.rootPost]:[], ...params.threadPosts||[], params.userPost]
+        };
 
         // If no active project, treat it as a new conversation
         if (!projectId) {
@@ -230,13 +238,7 @@ export abstract class StepBasedAgent extends Agent {
             const execParams: ExecuteNextStepParams = {
                 projectId,
                 userPost: params.userPost,
-                context: {
-                    channelId: params.userPost?.channel_id,
-                    threadId: params.userPost?.thread_id,
-                    projects: params.projects,
-                    artifacts: params.artifacts,
-                    threadPosts: params.threadPosts
-                }
+                context: executionContext
             };
             const plan = await this.planSteps(execParams);
             await this.executeNextStep(execParams);
@@ -249,13 +251,7 @@ export abstract class StepBasedAgent extends Agent {
         const execParams: ExecuteNextStepParams = {
             projectId,
             userPost: params.userPost,
-            context: {
-                channelId: params.userPost?.channel_id,
-                threadId: params.userPost?.thread_id,
-                projects: params.projects,
-                artifacts: params.artifacts,
-                threadPosts: params.threadPosts
-            }
+            context: executionContext
         };
 
         if (!task) {

@@ -322,12 +322,11 @@ export class ArtifactManager {
         contentToIndex = pdfText.text;
 
         // Update metadata to include extracted text
-        let metadata = await this.loadArtifactMetadata();
-        metadata[artifact.id] = {
-          ...metadata[artifact.id],
+        let record = await this.getArtifactRecord(artifact.id);
+        await ArtifactModel.update({ metadata: {
+          ...record?.metadata,
           extractedText: contentToIndex
-        };
-        await this.saveArtifactMetadata(metadata);
+        }}, { where: { id: artifact.id } });
       } catch (error) {
         Logger.error('Error extracting text from PDF:', error);
         return;
@@ -342,6 +341,7 @@ export class ArtifactManager {
       artifact.metadata?.projectId,
       artifact.metadata?.title,
       artifact.type,
+      artifact.metadata?.subtype,
       artifact.id
     );
   }

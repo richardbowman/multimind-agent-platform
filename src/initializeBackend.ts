@@ -12,7 +12,7 @@ import { getDataPath } from "./helpers/paths";
 import fs from 'node:fs';
 import path from "node:path";
 import { sleep } from "./utils/sleep";
-import { ServerRPCHandler } from "./server/RPCHandler";
+import { ServerRPCHandler } from "./server/ServerRPCHandler";
 import { asUUID, createUUID, UUID } from "./types/uuid";
 import { ConfigurationError } from "./errors/ConfigurationError";
 import { Agent } from "./agents/agents";

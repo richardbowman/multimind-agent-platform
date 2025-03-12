@@ -12,7 +12,7 @@ import { IVectorDatabase } from '../../llm/IVectorDatabase';
 import { Settings } from '../../tools/settings';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { ChatClient } from 'src/chat/chatClient';
-import { ServerRPCHandler } from 'src/server/RPCHandler';
+import { ServerRPCHandler } from 'src/server/ServerRPCHandler';
 import { createChannelHandle, CreateChannelHandlerParams } from 'src/shared/channelTypes';
 
 @StepExecutorDecorator(ExecutorType.CREATE_CHANNEL, 'Create channels with appropriate templates and settings')
