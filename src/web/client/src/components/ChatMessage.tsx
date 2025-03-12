@@ -362,16 +362,29 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     </Box>
                 )}
             </Box>
-            {hasAttachments && isExpanded && (
+            {hasAttachments && (
                 <Box sx={{ mt: 2 }}>
-                    <Collapse in={true}>
+                    <Collapse in={isExpanded}>
                         <Box sx={{ mt: 1 }}>
-                            {uniqueArtifacts.filter(a => a).map((artifactId: string) => (
-                                <ArtifactLoader 
-                                    key={artifactId}
-                                    artifactId={artifactId}
-                                />
-                            ))}
+                            {isExpanded ? (
+                                uniqueArtifacts.filter(a => a).map((artifactId: string) => (
+                                    <ArtifactLoader 
+                                        key={artifactId}
+                                        artifactId={artifactId}
+                                    />
+                                ))
+                            ) : (
+                                <Box sx={{ display: 'flex', gap: 1 }}>
+                                    {uniqueArtifacts.filter(a => a).map((artifactId: string) => (
+                                        <AttachmentCard
+                                            key={artifactId}
+                                            type="artifact"
+                                            title={`Artifact ${artifactId.slice(0, 6)}...`}
+                                            onRemove={() => {}}
+                                        />
+                                    ))}
+                                </Box>
+                            )}
                         </Box>
                     </Collapse>
                 </Box>
