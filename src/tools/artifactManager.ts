@@ -183,16 +183,37 @@ export class ArtifactManager {
       // Extract subtype if provided in metadata
       const subtype = artifactParam.metadata?.subtype || undefined;
       
-      // Create artifact with database-generated ID
-      const record = await ArtifactModel.create({
-        type,
-        contentPath: '', // Temporary placeholder
-        version: 1,
-        tokenCount: artifactParam.tokenCount,
-        mimeType: artifactParam.metadata?.mimeType,
-        subtype,
-        metadata: artifactParam.metadata
-      });
+      let record: ArtifactModel;
+      let version: number;
+      
+      if (artifactParam.id) {
+        // Update existing artifact
+        record = await ArtifactModel.findByPk(artifactParam.id);
+        if (!record) {
+          throw new Error(`Artifact ${artifactParam.id} not found`);
+        }
+        version = record.version + 1;
+        
+        await record.update({
+          type,
+          tokenCount: artifactParam.tokenCount,
+          mimeType: artifactParam.metadata?.mimeType,
+          subtype,
+          metadata: artifactParam.metadata
+        });
+      } else {
+        // Create new artifact
+        record = await ArtifactModel.create({
+          type,
+          contentPath: '', // Temporary placeholder
+          version: 1,
+          tokenCount: artifactParam.tokenCount,
+          mimeType: artifactParam.metadata?.mimeType,
+          subtype,
+          metadata: artifactParam.metadata
+        });
+        version = 1;
+      }
 
       const artifact = {
         id: record.id,
@@ -202,9 +223,6 @@ export class ArtifactManager {
       
       const artifactDir = path.join(this.storageDir, record.id);
       
-      // Check if artifact exists and get version
-      const existing = await this.getArtifactRecord(artifact.id);
-      const version = existing ? existing.version + 1 : 1;
       
       const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${fileInfo.extension}`);
       try {
