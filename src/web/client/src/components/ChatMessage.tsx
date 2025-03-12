@@ -116,7 +116,25 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
     const { artifacts: allArtifacts } = useArtifacts();
     const uniqueArtifacts = [...new Set((message.props?.artifactIds||[]).filter(a => a))];
-    const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
+    const [selectedArtifact, setSelectedArtifact] = useState<ArtifactItem | null>(null);
+    const [loadedArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
+    const ipcService = useIPCService();
+
+    useEffect(() => {
+        const loadArtifactContent = async () => {
+            if (selectedArtifact) {
+                try {
+                    const artifact = await ipcService.getRPC().getArtifact(selectedArtifact.id);
+                    setLoadedArtifact(artifact);
+                } catch (err) {
+                    console.error('Error loading artifact content:', err);
+                    setLoadedArtifact(null);
+                }
+            }
+        };
+
+        loadArtifactContent();
+    }, [selectedArtifact, ipcService]);
     const hasAttachments = uniqueArtifacts.length||0 > 0;
     const inProgress = message.props?.partial;
 
@@ -386,7 +404,12 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         onRemove={() => {}}
                                         onClick={() => {
                                             if (artifact) {
-                                                setSelectedArtifact(artifact);
+                                                setSelectedArtifact({
+                                                    id: artifact.id,
+                                                    type: artifact.type,
+                                                    metadata: artifact.metadata,
+                                                    tokenCount: artifact.tokenCount
+                                                });
                                             }
                                         }}
                                     />
@@ -410,11 +433,14 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     </Collapse>
                 </Box>
             )}
-            {selectedArtifact && (
+            {loadedArtifact && (
                 <ArtifactDrawer
-                    open={!!selectedArtifact}
-                    onClose={() => setSelectedArtifact(null)}
-                    currentArtifact={selectedArtifact}
+                    open={!!loadedArtifact}
+                    onClose={() => {
+                        setSelectedArtifact(null);
+                        setLoadedArtifact(null);
+                    }}
+                    currentArtifact={loadedArtifact}
                     actions={[
                         {
                             label: 'Close',
