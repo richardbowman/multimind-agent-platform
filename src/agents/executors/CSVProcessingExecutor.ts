@@ -172,6 +172,15 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                         `${header}: ${row[header] || ''}`
                     ).join('\n');
 
+                // Scan row data for artifact links
+                const artifactLinks = Object.values(row).flatMap(value => {
+                    if (typeof value === 'string') {
+                        const matches = value.match(/\/artifact\/([a-f0-9-]{36})/gi);
+                        return matches ? matches.map(m => m.split('/')[2]) : [];
+                    }
+                    return [];
+                });
+
                 await this.taskManager.addTask(project, {
                     id: taskId,
                     description: `This task has been initiated from a csv-processor step. Your goal is to process a single row of data. Processing Context: ${taskDescription}. Data: ${taskData}`,
@@ -182,10 +191,13 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                         csvArtifactId: csvArtifact.id,
                         processedArtifactId: processedArtifact.id,
                         rowData: row,
-                        attachedArtifactIds: params.context?.artifacts
-                            // Exclude spreadsheets other than eval criteria/templates
-                            ?.filter(a => a.type !== ArtifactType.Spreadsheet ||  (a.metadata?.subtype === SpreadsheetSubType.EvaluationCriteria || a.metadata?.subtype === SpreadsheetSubType.Template))
-                            .map(a => a.id)
+                        attachedArtifactIds: [
+                            ...(params.context?.artifacts
+                                // Exclude spreadsheets other than eval criteria/templates
+                                ?.filter(a => a.type !== ArtifactType.Spreadsheet ||  (a.metadata?.subtype === SpreadsheetSubType.EvaluationCriteria || a.metadata?.subtype === SpreadsheetSubType.Template))
+                                .map(a => a.id) || []),
+                            ...artifactLinks
+                        ]
                     }
                 });
 
