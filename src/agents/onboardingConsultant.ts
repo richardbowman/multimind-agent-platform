@@ -91,65 +91,9 @@ When you gather a sufficient profile to understand how our other agents should s
 Goals Understanding:
 - How they hope to use MutliMind and how the agents can help them and their desired outcomes
 `);
-// Define sequences for different scenarios
-const selectTemplateSequence = [
-    { 
-        type: ExecutorType.ESTABLISH_INTENT,
-        description: "Establish your own intentions for what you would like to accomplish"
-    },
-    { 
-        type: ExecutorType.LIST_TEMPLATES,
-        description: "Understand the template options available"
-    },
-    { 
-        type: ExecutorType.UNDERSTAND_GOALS,
-        description: "Understand the user's business goals and requirements"
-    },
-    // { 
-    //     type: ExecutorType.ANSWER_QUESTIONS,
-    //     description: "Interpret answers provided"
-    // },
-    {
-    type: ExecutorType.SELECT_TEMPLATE,
-        description: "Select appropriate document template based on user goals"
-    },
-    {
-        type: ExecutorType.GOAL_PROGRESS,
-        description: "Mark channel goal complete"
-    },
-    { 
-        type: ExecutorType.ESTABLISH_INTENT,
-        description: "Once completing this sequence, re-esablish a new intention."
-    },
-];
-
-
-const createChannelSequence = [
-    { 
-        type: ExecutorType.ESTABLISH_INTENT,
-        description: "Establish your own intentions for what you would like to accomplish"
-    },
-    {
-        type: ExecutorType.CREATE_PLAN,
-        description: "Create a comprehensive guide for agents based on user goals"
-    },
-    { 
-        type: ExecutorType.CREATE_CHANNEL,
-        description: "Understand the user's business goals and requirements"
-    }
-];
-
-this.modelHelpers.addStepSequence(
-    'template-selection-flow',
-    'Standard sequence for new users needing an onboarding template',
-    selectTemplateSequence
-);
-
-this.modelHelpers.addStepSequence(
-    'create-channel-flow',
-    'Once you have generated their plan, setup a channel for agents to begin working',
-    createChannelSequence
-)
+// Load procedure guides from markdown files
+this.modelHelpers.loadProcedureGuide('template-selection-flow');
+this.modelHelpers.loadProcedureGuide('create-channel-flow');
 
 this.modelHelpers.setFinalInstructions(`Use the appropriate sequence based on user context:
 - For new users: Follow the new-user sequence to understand their goals
