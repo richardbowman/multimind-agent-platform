@@ -21,7 +21,7 @@ import { ChatPost } from '../../../../chat/chatClient';
 import { useIPCService } from '../contexts/IPCContext';
 import { useArtifacts } from '../contexts/ArtifactContext';
 import { ArtifactDrawer } from './ArtifactDrawer';
-import { Artifact } from '../../../../tools/artifact';
+import { Artifact, ArtifactItem } from '../../../../tools/artifact';
 import { ToolbarActionsProvider } from '../contexts/ToolbarActionsContext';
 import { AttachmentCard } from './shared/AttachmentCard';
 
@@ -117,6 +117,8 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     const { artifacts: allArtifacts } = useArtifacts();
     const ipcService = useIPCService();
     const [uniqueArtifacts, setUniqueArtifacts] = useState([...new Set((message.props?.artifactIds||[]).filter(a => a))]);
+    const [selectedArtifact, setSelectedArtifact] = useState<ArtifactItem | null>(null);
+    const [loadedArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
 
     const handleRemoveArtifact = async (artifactId: string) => {
         try {
@@ -131,9 +133,6 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             setUniqueArtifacts([...new Set((message.props?.artifactIds||[]).filter(a => a))]);
         }
     };
-    const [selectedArtifact, setSelectedArtifact] = useState<ArtifactItem | null>(null);
-    const [loadedArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
-    const ipcService = useIPCService();
 
     useEffect(() => {
         const loadArtifactContent = async () => {
