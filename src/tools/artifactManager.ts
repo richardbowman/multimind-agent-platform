@@ -183,12 +183,24 @@ export class ArtifactManager {
       // Extract subtype if provided in metadata
       const subtype = artifactParam.metadata?.subtype || undefined;
       
+      // Create artifact with database-generated ID
+      const record = await ArtifactModel.create({
+        type,
+        contentPath: '', // Temporary placeholder
+        version: 1,
+        tokenCount: artifactParam.tokenCount,
+        mimeType: artifactParam.metadata?.mimeType,
+        subtype,
+        metadata: artifactParam.metadata
+      });
+
       const artifact = {
+        id: record.id,
         type,
         ...artifactParam,
       } as Artifact;
       
-      const artifactDir = path.join(this.storageDir, artifact.id);
+      const artifactDir = path.join(this.storageDir, record.id);
       
       // Check if artifact exists and get version
       const existing = await this.getArtifactRecord(artifact.id);
@@ -238,18 +250,10 @@ export class ArtifactManager {
       );
 
       // Create or update the artifact record
-      const record = await ArtifactModel.create({
-        type: artifact.type,
-        contentPath: filePath,
-        version,
-        tokenCount: artifact.tokenCount,
-        mimeType: artifact.metadata?.mimeType,
-        subtype: subtype,
-        metadata: artifact.metadata
+      // Update the record with the actual content path
+      await record.update({
+        contentPath: filePath
       });
-      
-      // Use the database-generated ID
-      artifact.id = record.id;
 
       // Generate and store summary if LLM service is available
       if (this.llmService) {
