@@ -63,6 +63,46 @@ export namespace StringUtils {
     }
 
     /**
+     * Validates a JSON object against a schema using AJV
+     * @param json The JSON object to validate
+     * @param schema The JSON schema to validate against
+     * @throws Error if validation fails
+     */
+    export function validateJsonAgainstSchema(json: any, schema: JSONSchema): void {
+        // Initialize JSON schema validator with custom date-time format
+        const ajv = new Ajv({
+            allErrors: true,
+            strict: false,
+            formats: {
+                'date-time': {
+                    validate: (dateTimeStr: string) => {
+                        // Try parsing as ISO date string
+                        const date = new Date(dateTimeStr);
+                        return !isNaN(date.getTime());
+                    }
+                }
+            }
+        });
+        addFormats(ajv);
+        ajv.addFormat("date-time", {
+            validate: (dateTimeStr: string) => {
+                // Try parsing as ISO date string
+                const date = new Date(dateTimeStr);
+                return !isNaN(date.getTime());
+            }
+        });
+        const validate = ajv.compile(schema);
+        // Validate response against schema
+        const isValid = validate(json);
+        if (!isValid) {
+            const errors = validate.errors?.map(err =>
+                `Schema validation error at ${err.instancePath}: ${err.message}`
+            ).join('\n');
+            throw new Error(`Response does not conform to schema:\n${errors}`);
+        }
+    }
+
+    /**
      * Extracts first JSON from code blocks and optionally parses it against a schema
      * @param text Input text containing JSON code blocks
      * @returns Array of parsed JSON objects
@@ -72,37 +112,7 @@ export namespace StringUtils {
         const blocks = extractCodeBlocks(text, 'json').map(m => JSON5.parse(m.code));
         if (blocks.length == 1) {
             if (schema) {
-                // Initialize JSON schema validator with custom date-time format
-                const ajv = new Ajv({
-                    allErrors: true,
-                    strict: false,
-                    formats: {
-                        'date-time': {
-                            validate: (dateTimeStr: string) => {
-                                // Try parsing as ISO date string
-                                const date = new Date(dateTimeStr);
-                                return !isNaN(date.getTime());
-                            }
-                        }
-                    }
-                });
-                addFormats(ajv);
-                ajv.addFormat("date-time", {
-                    validate: (dateTimeStr: string) => {
-                        // Try parsing as ISO date string
-                        const date = new Date(dateTimeStr);
-                        return !isNaN(date.getTime());
-                    }
-                });
-                const validate = ajv.compile(schema);
-                // Validate response against schema
-                const isValid = validate(blocks[0]);
-                if (!isValid) {
-                    const errors = validate.errors?.map(err =>
-                        `Schema validation error at ${err.instancePath}: ${err.message}`
-                    ).join('\n');
-                    throw new Error(`Response does not conform to schema:\n${errors}`);
-                }
+                validateJsonAgainstSchema(blocks[0], schema);
             }
             return blocks[0];
         } else {
