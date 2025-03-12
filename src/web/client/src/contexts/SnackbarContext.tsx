@@ -57,13 +57,23 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
             percentComplete: log.details.percentComplete
           };
 
-          const updatedMeters = meterIndex >= 0 
+          let updatedMeters = meterIndex >= 0 
             ? [
                 ...existingMeters.slice(0, meterIndex),
                 newMeter,
                 ...existingMeters.slice(meterIndex + 1)
               ]
             : [...existingMeters, newMeter];
+
+          // If progress is complete, schedule removal after 2 seconds
+          if (log.details.percentComplete >= 1) {
+            setTimeout(() => {
+              setOptions(prev => ({
+                ...prev,
+                progressMeters: prev.progressMeters?.filter(m => m.id !== log.details.id) || []
+              }));
+            }, 2000);
+          }
 
           return {
             ...prev,
