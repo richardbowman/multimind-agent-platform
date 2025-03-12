@@ -15,10 +15,9 @@ export class InMemoryPost implements ChatPost {
             postData.message,
             postData.user_id,
             postData.props,
-            postData.create_at
+            postData.create_at,
+            postData.id // Pass the database ID directly
         );
-        // override back to original ID
-        post.id = postData.id;
         post.attachments = postData.attachments || [];
         return post;
     }
@@ -32,8 +31,8 @@ export class InMemoryPost implements ChatPost {
     public directed_at: string;
     public attachments?: Attachment[];
 
-    constructor(channel_id: UUID, message: string, user_id: UUID, props?: Record<string, any>, create_at?: number) {
-        this.id = createUUID();
+    constructor(channel_id: UUID, message: string, user_id: UUID, props?: Record<string, any>, create_at?: number, id?: UUID) {
+        this.id = id || createUUID();
         this.channel_id = channel_id;
         this.message = message;
         this.user_id = user_id;
@@ -253,13 +252,7 @@ export class LocalTestClient implements ChatClient {
 
     public async getPosts(): Promise<ChatPost[]> {
         const posts = await ChatPostModel.findAll();
-        return posts.map(post => new InMemoryPost(
-            post.channel_id,
-            post.message,
-            post.user_id,
-            post.props,
-            post.create_at
-        ));
+        return posts.map(post => InMemoryPost.fromLoad(post));
     }
 
     public async fetchPreviousMessages(channelId: string, limit: number = 5): Promise<ChatPost[]> {
@@ -268,13 +261,7 @@ export class LocalTestClient implements ChatClient {
             order: [['create_at', 'DESC']],
             limit
         });
-        return posts.map(post => new InMemoryPost(
-            post.channel_id,
-            post.message,
-            post.user_id,
-            post.props,
-            post.create_at
-        ));
+        return posts.map(post => InMemoryPost.fromLoad(post));
     }
 
     public async getPost(id: string): Promise<ChatPost> {
@@ -282,13 +269,7 @@ export class LocalTestClient implements ChatClient {
         if (!post) {
             throw new Error(`Could not find post ${id}`);
         }
-        return new InMemoryPost(
-            post.channel_id,
-            post.message,
-            post.user_id,
-            post.props,
-            post.create_at
-        );
+        return InMemoryPost.fromLoad(post);
     }
 
     public async postInChannel(channelId: string, message: string, props?: Record<string, any>, attachments?: Attachment[]): Promise<ChatPost> {
