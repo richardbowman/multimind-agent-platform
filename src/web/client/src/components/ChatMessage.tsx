@@ -124,9 +124,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             setUniqueArtifacts(prev => prev.filter(id => id !== artifactId));
             
             // Update message metadata via IPC
-            await ipcService.getRPC().updateMessageMetadata(message.id, {
-                artifactIds: uniqueArtifacts.filter(id => id !== artifactId)
-            });
+            await ipcService.getRPC().removeMessageAttachment(message.id, artifactId);
         } catch (err) {
             console.error('Error removing artifact:', err);
             // Revert if update fails

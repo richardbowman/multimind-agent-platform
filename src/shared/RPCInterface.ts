@@ -56,6 +56,7 @@ export interface ServerMethods {
     listArtifacts(): Promise<ArtifactItem[]>
     deleteArtifact(artifactId: string): Promise<any[]>;
     saveArtifact(artifact: Artifact): Promise<Artifact>;
+    removeMessageAttachment(messageId: UUID, artifactId: UUID): Promise<void>;
     addArtifactToChannel(channelId: string, artifactId: string): Promise<void>;
     removeArtifactFromChannel(channelId: string, artifactId: string): Promise<void>;
     getSettings(): Promise<Settings>;
