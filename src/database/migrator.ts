@@ -16,6 +16,14 @@ export class DatabaseMigrator {
         // Ensure migrations directory exists
         await fs.mkdir(this.migrationsDir, { recursive: true });
 
+        // Create SequelizeMeta table if it doesn't exist
+        await this.sequelize.query(`
+            CREATE TABLE IF NOT EXISTS "SequelizeMeta" (
+                "name" VARCHAR(255) NOT NULL UNIQUE, 
+                PRIMARY KEY ("name")
+            );
+        `);
+
         // Get applied migrations
         const [results] = await this.sequelize.query(
             "SELECT name FROM SequelizeMeta"

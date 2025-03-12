@@ -97,10 +97,13 @@ export class ArtifactManager {
       ArtifactModel.initialize(this.sequelize);
 
       // Ensure the .output directory exists and run migrations
-      this.fileQueue.enqueue(async () => {
+      await this.fileQueue.enqueue(async () => {
           await fs.mkdir(this.storageDir, { recursive: true });
           await this.migrator.migrate();
       }).catch(err => Logger.error('Error initializing database:', err));
+      
+      // Wait for initial migration to complete
+      await this.sequelize.sync();
   }
 
   async getArtifacts(filter: { type?: string, subtype?: string, [key: string]: any } = {}): Promise<ArtifactItem[]> {
