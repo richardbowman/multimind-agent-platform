@@ -42,10 +42,12 @@ export class InMemoryPost implements ChatPost {
         this.directed_at = props?.directed_at;
     }
 
+    /* @deprecated */
     public getRootId(): UUID | null {
         return this.props['root-id'] || null;
     }
 
+    /* @deprecated */
     public isReply(): boolean {
         return !!this.props['root-id'];
     }
@@ -55,6 +57,7 @@ export class InMemoryPost implements ChatPost {
         return uuidPattern.test(this.message);
     }
 
+    /* @deprecated */
     public getActivityType(): string | null {
         return this.props['activity-type'] || null;
     }
@@ -415,7 +418,6 @@ export class LocalTestClient implements ChatClient {
     }
 
     private async pushPost(post: ChatPost): Promise<void> {
-        this.storage.addPost(post);
-        await this.storage.sync();
+        await this.storage.addPost(post);
     }
 }
