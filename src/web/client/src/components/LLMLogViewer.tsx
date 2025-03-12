@@ -187,14 +187,18 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
     const ipcService = useIPCService();
     const pageSize = 50;
 
-    const loadMoreLogs = async () => {
-        const newLogs = await fetchLogs(page * pageSize, pageSize);
-        if (newLogs.length > 0) {
-            setPaginatedLogs(prev => [...prev, ...newLogs]);
-            setPage(prev => prev + 1);
+    const loadMoreLogs = React.useCallback(async () => {
+        try {
+            const newLogs = await fetchLogs(page * pageSize, pageSize);
+            if (newLogs.length > 0) {
+                setPaginatedLogs(prev => [...prev, ...newLogs]);
+                setPage(prev => prev + 1);
+            }
+            setHasMore(newLogs.length === pageSize);
+        } catch (error) {
+            console.error('Error loading more logs:', error);
         }
-        setHasMore(newLogs.length === pageSize);
-    };
+    }, [fetchLogs, page, pageSize]);
 
     const fetchLogs = async (offset: number, limit: number) => {
         // This would call your backend API to get paginated logs
@@ -203,33 +207,50 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
     };
 
     useEffect(() => {
-        loadMoreLogs();
-    }, []);
+        let isMounted = true;
+        
+        const loadInitial = async () => {
+            const newLogs = await fetchLogs(0, pageSize);
+            if (isMounted) {
+                setPaginatedLogs(newLogs);
+                setPage(1);
+                setHasMore(newLogs.length === pageSize);
+            }
+        };
+        
+        loadInitial();
+        
+        return () => {
+            isMounted = false;
+        };
+    }, [fetchLogs, pageSize]);
 
-    const handleOpenDetails = (log: any, index: number) => {
-        // Only create the sorted array if we don't have one yet
-        if (allLogs.length === 0) {
-            const logsArray = Object.entries(logs?.llm || {})
-                .flatMap(([service, entries]) =>
-                    (Array.isArray(entries) ? [...entries] : [])
-                        .filter(log =>
-                            filterLog(JSON.stringify({
-                                method: log?.method,
-                                input: log?.input,
-                                output: log?.output,
-                                error: log?.error
-                            }))
-                        )
-                        .map(log => ({ ...log, service }))
-                )
-                .sort((a, b) => b.timestamp - a.timestamp);
-
-            setAllLogs(logsArray);
-        }
-
+    const handleOpenDetails = React.useCallback((log: any, index: number) => {
         setSelectedLog(log);
-        setSelectedLogIndex(allLogs.findIndex(l => l.timestamp === log.timestamp && l.service === log.service));
-    };
+        setSelectedLogIndex(prevIndex => {
+            // Only create the sorted array if we don't have one yet
+            if (allLogs.length === 0) {
+                const logsArray = Object.entries(logs?.llm || {})
+                    .flatMap(([service, entries]) =>
+                        (Array.isArray(entries) ? [...entries] : [])
+                            .filter(log =>
+                                filterLog(JSON.stringify({
+                                    method: log?.method,
+                                    input: log?.input,
+                                    output: log?.output,
+                                    error: log?.error
+                                }))
+                            )
+                            .map(log => ({ ...log, service }))
+                    )
+                    .sort((a, b) => b.timestamp - a.timestamp);
+
+                setAllLogs(logsArray);
+                return logsArray.findIndex(l => l.timestamp === log.timestamp && l.service === log.service);
+            }
+            return allLogs.findIndex(l => l.timestamp === log.timestamp && l.service === log.service);
+        });
+    }, [allLogs, logs, filterLog]);
 
     const handleNavigate = (direction: 'prev' | 'next') => {
         const newIndex = direction === 'prev' ? selectedLogIndex - 1 : selectedLogIndex + 1;
