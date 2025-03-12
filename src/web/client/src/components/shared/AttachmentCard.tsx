@@ -9,6 +9,7 @@ interface AttachmentCardProps {
     subtitle?: string;
     previewUrl?: string;
     onRemove: () => void;
+    onClick?: () => void;
 }
 
 export const AttachmentCard: React.FC<AttachmentCardProps> = ({ 
@@ -16,7 +17,8 @@ export const AttachmentCard: React.FC<AttachmentCardProps> = ({
     title, 
     subtitle, 
     previewUrl, 
-    onRemove 
+    onRemove,
+    onClick
 }) => {
     return (
         <Box sx={{

@@ -20,6 +20,7 @@ import { UUID } from '../../../../types/uuid';
 import { ChatPost } from '../../../../chat/chatClient';
 import { useIPCService } from '../contexts/IPCContext';
 import { useArtifacts } from '../contexts/ArtifactContext';
+import { ArtifactDrawer } from './ArtifactDrawer';
 import { Artifact } from '../../../../tools/artifact';
 import { ToolbarActionsProvider } from '../contexts/ToolbarActionsContext';
 import { AttachmentCard } from './shared/AttachmentCard';
@@ -115,6 +116,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
     const { artifacts: allArtifacts } = useArtifacts();
     const uniqueArtifacts = [...new Set((message.props?.artifactIds||[]).filter(a => a))];
+    const [selectedArtifact, setSelectedArtifact] = useState<Artifact | null>(null);
     const hasAttachments = uniqueArtifacts.length||0 > 0;
     const inProgress = message.props?.partial;
 
@@ -382,6 +384,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                         title={artifact?.metadata?.title || `Artifact ${artifactId.slice(0, 6)}...`}
                                         subtitle={artifact?.type}
                                         onRemove={() => {}}
+                                        onClick={() => setSelectedArtifact(artifact)}
                                     />
                                 );})}
                             {uniqueArtifacts.length > 3 && (
@@ -403,6 +406,18 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     </Collapse>
                 </Box>
             )}
+            <ArtifactDrawer
+                open={!!selectedArtifact}
+                onClose={() => setSelectedArtifact(null)}
+                currentArtifact={selectedArtifact}
+                actions={[
+                    {
+                        label: 'Close',
+                        onClick: () => setSelectedArtifact(null),
+                        variant: 'outlined'
+                    }
+                ]}
+            />
         </Paper>
     );
 };

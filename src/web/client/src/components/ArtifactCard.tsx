@@ -51,7 +51,10 @@ export const ArtifactCard: React.FC<ArtifactCardProps> = ({
                 },
                 overflow: 'hidden'
             }}
-            onClick={onClick}
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick?.();
+            }}
         >
             {artifact.type === 'webpage' ? (
                 <LanguageIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
