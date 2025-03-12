@@ -1,5 +1,6 @@
 import * as fs from 'fs/promises';
 import * as path from 'path';
+import { Sequelize } from 'sequelize';
 import { getDataPath } from '../helpers/paths';
 import Logger from '../helpers/logger';
 import { IVectorDatabase } from '../llm/IVectorDatabase';
@@ -10,6 +11,7 @@ import { asUUID, createUUID, UUID } from 'src/types/uuid';
 import * as pdf from 'pdf-parse';
 import { asError, isError } from 'src/types/types';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
+import { ArtifactModel } from './artifactModel';
 
 // Get appropriate file extension and type based on MIME type
 const getFileInfo = (mimeType?: string): { extension: string, type: string } => {
@@ -63,7 +65,7 @@ const getFileInfo = (mimeType?: string): { extension: string, type: string } => 
 
 export class ArtifactManager {
   private storageDir: string;
-  private artifactMetadataFile: string;
+  private sequelize: Sequelize;
   private vectorDb: IVectorDatabase;
   private llmService?: ILLMService;
   private fileQueue: AsyncQueue;
@@ -71,16 +73,27 @@ export class ArtifactManager {
 
   constructor(vectorDb: IVectorDatabase, llmService?: ILLMService, storageDir?: string) {
     this.storageDir = storageDir || path.join(getDataPath(), 'artifacts');
-    this.artifactMetadataFile = path.join(this.storageDir, 'artifact.json');
     this.vectorDb = vectorDb;
     this.fileQueue = new AsyncQueue();
     this.saveQueue = new AsyncQueue();
     this.llmService = llmService;
 
-    // Ensure the .output directory exists
-    this.fileQueue.enqueue(() =>
-      fs.mkdir(this.storageDir, { recursive: true })
-    ).catch(err => Logger.error('Error creating output directory:', err));
+    // Initialize SQLite database
+    const dbPath = path.join(this.storageDir, 'artifacts.db');
+    this.sequelize = new Sequelize({
+      dialect: 'sqlite',
+      storage: dbPath,
+      logging: msg => Logger.verbose(msg)
+    });
+
+    // Initialize models
+    ArtifactModel.initialize(this.sequelize);
+
+    // Ensure the .output directory exists and sync database
+    this.fileQueue.enqueue(async () => {
+      await fs.mkdir(this.storageDir, { recursive: true });
+      await this.sequelize.sync();
+    }).catch(err => Logger.error('Error initializing database:', err));
   }
 
   async getArtifacts(filter: { type?: string, subtype?: string, [key: string]: any } = {}): Promise<ArtifactItem[]> {
@@ -131,28 +144,12 @@ export class ArtifactManager {
     });
   }
 
-  private async loadArtifactMetadata(): Promise<Record<string, any>> {
-    try {
-      const data = await this.fileQueue.enqueue(() =>
-        fs.readFile(this.artifactMetadataFile, 'utf-8')
-      );
-      return JSON.parse(data);
-    } catch (error) {
-      if (asError(error).code === 'ENOENT') {
-        // Create initial empty metadata file
-        const emptyMetadata = {};
-        await this.saveArtifactMetadata(emptyMetadata);
-        return emptyMetadata;
-      }
-      Logger.error('Error loading artifact metadata:', error);
-      throw error;
-    }
+  private async getArtifactRecord(id: UUID): Promise<ArtifactModel | null> {
+    return ArtifactModel.findByPk(id);
   }
 
-  private async saveArtifactMetadata(metadata: Record<string, any>): Promise<void> {
-    await this.fileQueue.enqueue(() =>
-      fs.writeFile(this.artifactMetadataFile, JSON.stringify(metadata, null, 2))
-    );
+  private async getAllArtifactRecords(): Promise<ArtifactModel[]> {
+    return ArtifactModel.findAll();
   }
 
   async saveArtifact(artifactParam: Partial<Artifact>): Promise<Artifact> {
@@ -174,13 +171,9 @@ export class ArtifactManager {
       
       const artifactDir = path.join(this.storageDir, artifact.id);
       
-      // Load existing metadata
-      let metadata = await this.loadArtifactMetadata();
-      let version = 1;
-      if (metadata[artifact.id]) {
-        const existingVersion = metadata[artifact.id].version || 0;
-        version = existingVersion + 1;
-      }
+      // Check if artifact exists and get version
+      const existing = await this.getArtifactRecord(artifact.id);
+      const version = existing ? existing.version + 1 : 1;
       
       const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${fileInfo.extension}`);
       try {
@@ -225,35 +218,32 @@ export class ArtifactManager {
         fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
       );
 
-      // Update or add the artifact metadata
-      metadata[artifact.id] = {
-        ...artifact.metadata, // Include additional metadata attributes if any
-        contentPath: filePath,
+      // Create or update the artifact record
+      await ArtifactModel.upsert({
+        id: artifact.id,
         type: artifact.type,
-        subtype: subtype,
+        contentPath: filePath,
         version,
         tokenCount: artifact.tokenCount,
-        mimeType: artifact.metadata?.mimeType
-      };
+        mimeType: artifact.metadata?.mimeType,
+        subtype: subtype,
+        metadata: artifact.metadata
+      });
 
       // Generate and store summary if LLM service is available
       if (this.llmService) {
         try {
           const summary = await this.generateSummary(artifact);
           if (summary) {
-            // Update metadata with summary
-            metadata[artifact.id] = {
-              ...metadata[artifact.id],
-              summary
-            };
+            await ArtifactModel.update(
+              { metadata: { ...artifact.metadata, summary } },
+              { where: { id: artifact.id } }
+            );
           }
         } catch (error) {
           Logger.error('Error generating artifact summary:', error);
         }
       }
-      
-      // Save updated metadata
-      await this.saveArtifactMetadata(metadata);
 
       await this.indexArtifact(artifact);
       
@@ -318,15 +308,15 @@ export class ArtifactManager {
       return null;
     }
 
-    const metadata = await this.loadArtifactMetadata();
-    if (!metadata[artifactId]) {
-      Logger.warn(`Artifact not found in metadata: ${artifactId}`);
+    const record = await this.getArtifactRecord(artifactId);
+    if (!record) {
+      Logger.warn(`Artifact not found: ${artifactId}`);
       return null;
     }
 
-    let contentPath = metadata[artifactId].contentPath;
+    let contentPath = record.contentPath;
     if (version) {
-      contentPath = path.join(this.storageDir, artifactId, `${metadata[artifactId].type}_v${version}.md`);
+      contentPath = path.join(this.storageDir, artifactId, `${record.type}_v${version}.md`);
     }
 
     try {
@@ -343,22 +333,17 @@ export class ArtifactManager {
   }
 
   async bulkLoadArtifacts(artifactsInput: (UUID | ArtifactItem)[]): Promise<Artifact[]> {
-    const metadata = await this.loadArtifactMetadata();
+    const records = await ArtifactModel.findAll({
+      where: {
+        id: artifactsInput.map(input => typeof input === 'string' ? input : input.id)
+      }
+    });
+
     const artifacts: Artifact[] = [];
 
-    // Extract IDs from input, whether they're UUIDs or ArtifactItems
-    const artifactIds = artifactsInput.map(input => 
-      typeof input === 'string' ? input : input.id
-    );
-
     // Create a list of read operations
-    const readOperations = artifactIds.map(async artifactId => {
-      if (!metadata[artifactId]) {
-        Logger.warn(`Artifact not found in metadata: ${artifactId}`);
-        return null;
-      }
-
-      const contentPath = metadata[artifactId].contentPath;
+    const readOperations = records.map(async record => {
+      const contentPath = record.contentPath;
       try {
         const content = (await this.fileQueue.enqueue(() => fs.readFile(contentPath))).toString();
         const type = metadata[artifactId].type;
@@ -378,27 +363,20 @@ export class ArtifactManager {
   }
 
   async listArtifacts(): Promise<ArtifactItem[]> {
-    const metadata = await this.loadArtifactMetadata();
-    const artifacts: ArtifactItem[] = [];
-    for (const artifactId in metadata) {
-      try {
-        const uuid = asUUID(artifactId);
-        const type = metadata[uuid].type; // Retrieve the artifact type from metadata
-        artifacts.push({ id: uuid, type, metadata: metadata[uuid] });
-      } catch (error) {
-        Logger.verbose(`Artifact not loadable: ${artifactId}`, error);
-      }
-    }
+    const records = await this.getAllArtifactRecords();
+    const artifacts: ArtifactItem[] = records.map(record => ({
+      id: record.id,
+      type: record.type as ArtifactType,
+      metadata: record.metadata
+    }));
     return artifacts;
   }
 
   async deleteArtifact(artifactId: string): Promise<void> {
     this.saveQueue.enqueue(async () => {
-      // Load current metadata
-      const metadata = await this.loadArtifactMetadata();
-
       // Check if artifact exists
-      if (!metadata[artifactId]) {
+      const record = await this.getArtifactRecord(artifactId);
+      if (!record) {
         throw new Error(`Artifact ${artifactId} not found`);
       }
 
@@ -411,9 +389,8 @@ export class ArtifactManager {
           fs.rm(artifactDir, { recursive: true, force: true })
         );
 
-        // Remove from metadata
-        delete metadata[artifactId];
-        await this.saveArtifactMetadata(metadata);
+        // Remove from database
+        await ArtifactModel.destroy({ where: { id: artifactId } });
 
         // Remove from vector database
         try {
