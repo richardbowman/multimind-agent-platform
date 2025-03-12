@@ -96,8 +96,8 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         };
 
         // Create prompt for agent selection
-        const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`Select the most appropriate agent to perform processing on the data in the spreadsheet for the desired goal.
+        const instructions = this.modelHelpers.createPrompt();
+        instructions.addInstruction(`Select the most appropriate agent to perform processing on the data in the spreadsheet for the desired goal.
             The CSV contains ${rows.length} rows of data.
             Consider the agents' capabilities and the nature of the data when making your selection.
             JSON Output should include:
@@ -110,18 +110,18 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             Also respond with a message explaining the selection to the user.`);
         
         if (supportedAgents) {
-            prompt.addContext({
+            instructions.addContext({
                 contentType: ContentType.AGENT_OVERVIEWS, 
                 agents: supportedAgents
             });
         }
 
-        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
+        instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
         try {
-            const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
+            const rawResponse = await this.modelHelpers.generateMessage({
                 message: params.stepGoal,
-                instructions: prompt
+                instructions
             });
 
             const responseJSON = StringUtils.extractAndParseJsonBlock(rawResponse.message, schema);
@@ -307,8 +307,8 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         };
 
         // Create prompt for result processing
-        const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`Analyze the completed tasks and extract key insights that should be added as new columns in the CSV file.
+        const instructions = this.modelHelpers.createPrompt();
+        instructions.addInstruction(`Analyze the completed tasks and extract key insights that should be added as new columns in the CSV file.
             The original goal for this project was: ${originalGoal}
             
             The CSV file currently has these columns: ${csvHeaders.join(', ')}
@@ -322,14 +322,14 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             To add a link to an artifact created by the tasks, use a Markdown link with the link format of [Title](/artifact/XXXX-XXXX). Also, include the word Link in the column name for clarity.
 
             `);
-        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
+        instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
         // Get the task's response data
         const responseData = task.props?.result || {};
         
-        const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
+        const rawResponse = await this.modelHelpers.generateMessage({
             message: `Task Description: ${task.description}\n\nTask Response Data: ${JSON.stringify(responseData, null, 2)}`,
-            instructions: prompt
+            instructions
         });
 
         try {
@@ -382,7 +382,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
             tasks: Object.values(project.tasks)
         });
 
-        const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
+        const rawResponse = await this.modelHelpers.generateMessage({
             message: `Processed CSV artifact ID: ${artifact.id}`,
             instructions: prompt
         });
