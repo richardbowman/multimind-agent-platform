@@ -1,4 +1,5 @@
 import React, { useState, KeyboardEvent, useEffect, useRef, ChangeEvent, useLayoutEffect } from 'react';
+import { ArtifactDrawer } from './ArtifactDrawer';
 import { useDataContext } from '../contexts/DataContext';
 import { Artifact, ArtifactItem } from '../../../../tools/artifact';
 import { Settings } from 'electron';
@@ -42,6 +43,8 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     const [showAttachmentMenu, setShowAttachmentMenu] = useState(false);
     const [showAssetDialog, setShowAssetDialog] = useState(false);
     const [pendingArtifacts, setPendingArtifacts] = useState<ArtifactItem[]>([]);
+    const [selectedArtifact, setSelectedArtifact] = useState<ArtifactItem | null>(null);
+    const [loadedArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
     const [lastMessage, setLastMessage] = useState<{ message: string, artifactIds?: UUID[] } | null>(null);
     const suggestionsRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -55,8 +58,25 @@ export const CommandInput: React.FC<CommandInputProps> = ({
         handles, 
         pendingFiles, 
         resetPendingFiles, 
-        showFileDialog
+        showFileDialog,
+        ipcService
     } = useDataContext();
+
+    useEffect(() => {
+        const loadArtifactContent = async () => {
+            if (selectedArtifact) {
+                try {
+                    const artifact = await ipcService.getRPC().getArtifact(selectedArtifact.id);
+                    setLoadedArtifact(artifact);
+                } catch (err) {
+                    console.error('Error loading artifact content:', err);
+                    setLoadedArtifact(null);
+                }
+            }
+        };
+
+        loadArtifactContent();
+    }, [selectedArtifact, ipcService]);
 
     // Get handles filtered by current channel members
     const userHandles = React.useMemo(() => {
@@ -561,9 +581,29 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                                     prev.filter((_, i) => i !== index)
                                 );
                             }}
+                            onClick={() => {
+                                setSelectedArtifact(artifact);
+                            }}
                         />
                     ))}
                 </div>
+            )}
+            {loadedArtifact && (
+                <ArtifactDrawer
+                    open={!!loadedArtifact}
+                    onClose={() => {
+                        setSelectedArtifact(null);
+                        setLoadedArtifact(null);
+                    }}
+                    currentArtifact={loadedArtifact}
+                    actions={[
+                        {
+                            label: 'Close',
+                            onClick: () => setSelectedArtifact(null),
+                            variant: 'outlined'
+                        }
+                    ]}
+                />
             )}
         </Box>
     );
