@@ -95,7 +95,8 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 } else {
                     return !message.props?.['root-id'];
                 }
-            });
+            })
+            .sort((a, b) => a.create_at - b.create_at); // Sort by create_at ascending
 
         // Always expand the last message and its attachments
         if (filtered.length > 0) {
