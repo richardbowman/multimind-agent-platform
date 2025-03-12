@@ -171,7 +171,7 @@ export class OpenAIService extends BaseLLMService {
     }
 
     async sendLLMRequest<T extends ModelResponse = ModelMessageResponse>(
-        params: LLMRequestParams
+        params: LLMRequestParams & { context?: LLMContext }
     ): Promise<GenerateOutputParams<T>> {
         try {
             const messages = params.messages.map(m => ({
@@ -259,7 +259,7 @@ export class OpenAIService extends BaseLLMService {
                 messages: params.messages,
                 systemPrompt: params.systemPrompt,
                 opts: params.opts
-            }, result.response, undefined, durationMs);
+            }, result.response, undefined, durationMs, params.context);
 
             return result;
         } catch (error) {

@@ -395,11 +395,11 @@ export class ModelHelpers {
         throw new Error('Failed to generate valid response after retries');
     }
 
-    public async generate<T extends WithTokens<ModelResponse>>(params: GenerateInputParams): Promise<T> {
+    public async generate<T extends WithTokens<ModelResponse>>(params: GenerateInputParams, context?: LLMContext): Promise<T> {
         if (params.instructions instanceof StructuredOutputPrompt) {
-            return this.generateStructured<T>(params.instructions, params);
+            return this.generateStructured<T>(params.instructions, {...params, context});
         } else {
-            return this.generateOld(params.instructions, params);
+            return this.generateOld(params.instructions, {...params, context});
         }
     }
 

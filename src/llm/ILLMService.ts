@@ -85,6 +85,16 @@ export interface IEmbeddingService {
     getEmbeddingModel(): IEmbeddingFunction;
 }
 
+export interface LLMContext {
+    agentId?: string;
+    agentName?: string;
+    stepType?: string;
+    taskId?: string;
+    projectId?: string;
+    goal?: string;
+    stepGoal?: string;
+}
+
 export interface LLMRequestParams {
     messages: { role: string; content: string | VisionContent | (string | VisionContent)[] }[];
     systemPrompt?: string;
@@ -92,6 +102,7 @@ export interface LLMRequestParams {
     parseJSON?: boolean;
     modelType?: ModelType;
     embeddingFunction?: IEmbeddingFunction;
+    context?: LLMContext;
 }
 
 export class StructuredOutputPrompt {
