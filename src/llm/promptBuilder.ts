@@ -464,7 +464,14 @@ export class PromptBuilder implements InputPrompt {
         return this.build();
     }
 
-    addOutputInstructions(outputType: OutputType, schemaDef?: JSONSchema, specialInstructions?: string, type: string = 'markdown') {
+    interface OutputInstructionsParams {
+        outputType: OutputType;
+        schemaDef?: JSONSchema;
+        specialInstructions?: string;
+        type?: string;
+    }
+
+    addOutputInstructions({ outputType, schemaDef, specialInstructions, type = 'markdown' }: OutputInstructionsParams) {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schemaDef) {
             this.addInstruction(`Respond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n 
             Then, provide a separate fenced \`\`\`${type} code block${specialInstructions ? ` that provides: ${specialInstructions}.` : ''}.`);
