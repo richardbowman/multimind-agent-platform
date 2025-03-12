@@ -355,12 +355,13 @@ export class LocalTestClient implements ChatClient {
         }
     }
 
-    public replyThreaded(post: ChatPost, response: string, props?: Record<string, any>, attachments?: Attachment[]): Promise<ChatPost> {
+    public async replyThreaded(post: ChatPost, response: string, props?: Record<string, any>, attachments?: Attachment[]): Promise<ChatPost> {
         const rootId = post.getRootId() || post.id;
         const replyProps: Record<string, any> = props || {};
         replyProps['root-id'] = rootId;
 
-        const rootPost = this.getPosts().find(p => p.id === rootId);
+        const posts = await this.getPosts();
+        const rootPost = posts.find(p => p.id === rootId);
         if (rootPost && !rootPost.getRootId()) {
             const replyPost = new InMemoryPost(
                 post.channel_id,
@@ -371,10 +372,10 @@ export class LocalTestClient implements ChatClient {
             if (attachments) {
                 replyPost.attachments = attachments;
             }
-            this.pushPost(replyPost);
-            return Promise.resolve(replyPost);
+            await this.pushPost(replyPost);
+            return replyPost;
         } else {
-            throw new Error("Coudln't find post or post wasn't a root post to reply to.")
+            throw new Error("Couldn't find post or post wasn't a root post to reply to.")
         }
     }
 
