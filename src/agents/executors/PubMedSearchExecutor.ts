@@ -17,6 +17,10 @@ import { ArtifactType, DocumentSubtype, SpreadsheetSubType } from "src/tools/art
 import crypto from 'crypto';
 import { CSVUtils, CSVContents } from "src/utils/CSVUtils";
 import { createUUID } from "src/types/uuid";
+import { ArrayUtils } from "src/utils/ArrayUtils";
+import { ModelMessageResponse } from "src/schemas/ModelResponse";
+import { OutputType } from "src/llm/promptBuilder";
+import { StringUtils } from "src/utils/StringUtils";
 
 interface PubMedSearchResult {
     id: string;
@@ -212,7 +216,11 @@ interface PubMedSearchResult {
                 replan: ReplanType.Allow,
                 response: {
                     type: StepResponseType.Message,
-                    status: `No PubMed articles found for query: ${searchQuery}`
+                    status: `No PubMed articles found for query: ${searchQuery}`,
+                    data: {
+                        searchQuery,
+                        resultCount: 0
+                    }
                 }
             };
         }
@@ -223,10 +231,10 @@ interface PubMedSearchResult {
             replan: ReplanType.Allow,
             response: {
                 type: StepResponseType.GeneratedArtifact,
-                status: `Query "${searchQuery}" found ${resultsWithFullText.length} PubMed articles`,
+                status: `Query "${searchQuery}" found ${resultsWithFullText.length} PubMed articles. Created CSV spreadsheet with results.`,
                 data: {
                     searchQuery,
-                    searchQueries: [...(previousResponses?.data?.searchQueries || []), searchQuery]
+                    resultCount: resultsWithFullText.length,
                 },
                 artifacts: [
                     {
@@ -235,7 +243,7 @@ interface PubMedSearchResult {
                         metadata: {
                             title: `PubMed Search Results - ${searchQuery}`,
                             subtype: SpreadsheetSubType.SearchResults,
-                            query: searchQuery,
+                            searchQuery,
                             resultCount: resultsWithFullText.length,
                             generatedAt: new Date().toISOString(),
                             linkedDocuments: documentArtifacts.map(a => a.id)
@@ -277,7 +285,9 @@ interface PubMedSearchResult {
                  (response) => response.status === 200 && response.data?.length > 0,
                  {
                      timeoutMs: 10000,
-                     maxRetries: 3
+                     maxRetries: 3,
+                     initialDelayMs: 1000,
+                     minDelayBetweenTasksMs: 3000
                  }
              );
 
@@ -328,14 +338,18 @@ interface PubMedSearchResult {
          }
      }
 
-     private async generateSearchQuery(goal: string, task: string, previousResponses?: any): Promise<SearchQueryResponse> {
+     private async generateSearchQuery(goal: string, task: string, previousResponses?: StepResponse[]): Promise<SearchQueryResponse> {
          const schema = await getGeneratedSchema(SchemaType.SearchQueryResponse);
 
-         const previousFindings = previousResponses?.data?.analysis?.keyFindings || [];
-         const previousGaps = previousResponses?.data?.analysis?.gaps || [];
-         const previousQueries = previousResponses?.data?.searchQueries || [];
+         const previousFindings = previousResponses?.map(r => r.data?.analysis?.keyFindings).filter(ArrayUtils.isDefined) || [];
+         const previousGaps = previousResponses?.map(r => r.data?.analysis?.gaps).filter(ArrayUtils.isDefined) || [];
+         const previousQueries = previousResponses?.map(r => (r.data?.searchQuery && {
+            searchQuery: r.data?.searchQuery,
+            resultCount: r.data?.resultCount
+        })).filter(ArrayUtils.isDefined) || [];
 
-         const systemPrompt = `You are a scientific research assistant. Our overall goal is ${goal}.
+         const instructions = this.modelHelpers.createPrompt();
+         instructions.addInstruction(`You are a scientific research assistant. Our overall goal is ${goal}.
      Consider these specific goals we're trying to achieve: ${task}
 
      Previous Research Findings:
@@ -345,18 +359,27 @@ interface PubMedSearchResult {
      ${previousGaps.map((g: string) => `- ${g}`).join('\n')}
 
      Previous Search Queries:
-     ${previousQueries.map((q: string) => `- ${q}`).join('\n')}
+     ${previousQueries.map((q) => `- QUERY: "${q.searchQuery}" RESULTS FOUND: ${q.resultCount}`).join('\n')}
 
-     Generate a focused PubMed search query using appropriate medical/scientific terminology.
-     Include relevant MeSH terms and Boolean operators when appropriate.
-     Avoid repeating previous search queries unless necessary for completeness.`;
+     Generate a PubMed search query using appropriate medical/scientific terminology.
+     Include relevant MeSH tems and Boolean operators when appropriate.
+     Review previous search queries to understand if you're finding enough results with your query style.
+     Don't include pubmed as a search term.
+     
+     Before answering with the query, think out loud.`
 
-         const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-         const response = await this.modelHelpers.generate<SearchQueryResponse>({
-             message: `Task: ${task}`,
-             instructions
-         });
+        );
+        instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
+            
+        const response = await withRetry<SearchQueryResponse|undefined>(async () => {
+            const rawResponse = await this.modelHelpers.generateMessage({
+                message: `Task: ${task}`,
+                instructions
+            });
+            const response = StringUtils.extractAndParseJsonBlock<SearchQueryResponse>(rawResponse.message, schema);
+            return response;
+        }, (r) => r?.searchQuery !== undefined)
 
-         return response;
+         return response!;
      }
  }
