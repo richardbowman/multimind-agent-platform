@@ -21,7 +21,12 @@ export const AttachmentCard: React.FC<AttachmentCardProps> = ({
     onClick
 }) => {
     return (
-        <Box sx={{
+        <Box 
+            onClick={(e) => {
+                e.stopPropagation();
+                onClick?.();
+            }}
+            sx={{
             position: 'relative',
             width: type === 'file' ? '100px' : '180px',
             height: '100px',
