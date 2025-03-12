@@ -163,7 +163,9 @@ export class ArtifactManager {
   }
 
   private async getArtifactRecord(id: UUID): Promise<ArtifactModel | null> {
-    return ArtifactModel.findByPk(id);
+    return ArtifactModel.findByPk(id, {
+      rejectOnEmpty: false
+    });
   }
 
   private async getAllArtifactRecords(): Promise<ArtifactModel[]> {
@@ -182,7 +184,6 @@ export class ArtifactManager {
       const subtype = artifactParam.metadata?.subtype || undefined;
       
       const artifact = {
-        id: createUUID(),
         type,
         ...artifactParam,
       } as Artifact;
@@ -237,8 +238,7 @@ export class ArtifactManager {
       );
 
       // Create or update the artifact record
-      await ArtifactModel.upsert({
-        id: artifact.id,
+      const record = await ArtifactModel.create({
         type: artifact.type,
         contentPath: filePath,
         version,
@@ -247,6 +247,9 @@ export class ArtifactManager {
         subtype: subtype,
         metadata: artifact.metadata
       });
+      
+      // Use the database-generated ID
+      artifact.id = record.id;
 
       // Generate and store summary if LLM service is available
       if (this.llmService) {
@@ -532,6 +535,10 @@ export class ArtifactManager {
       for (const result of results) {
         if (result.score >= minScore) {
           const artifact = await this.loadArtifact(result.metadata.artifactId as UUID);
+          if (!artifact) {
+            Logger.warn(`Artifact not found in database: ${result.metadata.artifactId}`);
+            continue;
+          }
           if (artifact) {
             artifacts.push({
               artifact: {
