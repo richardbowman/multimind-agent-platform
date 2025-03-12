@@ -419,14 +419,14 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
     }
 
     async removeMessageAttachment(messageId: UUID, artifactId: UUID): Promise<void> {
-        const message = await this.services.chatClient.getMessage(messageId);
+        const message = await this.services.chatClient.getPost(messageId);
         if (!message) {
             throw new Error(`Message ${messageId} not found`);
         }
         
         // Remove artifact ID from message metadata
         const artifactIds = message.props?.artifactIds?.filter(id => id !== artifactId) || [];
-        await this.services.chatClient.updateMessageMetadata(messageId, {
+        await this.services.chatClient.updatePost(messageId, undefined, {
             artifactIds
         });
     }

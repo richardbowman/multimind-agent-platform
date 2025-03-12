@@ -364,17 +364,23 @@ export class LocalTestClient implements ChatClient {
         }
     }
 
-    public async updatePost(postId: UUID, newContent: string, newProps?: ConversationContext): Promise<ChatPost> {
+    public async updatePost(postId: UUID, newContent: string|undefined, newProps?: ConversationContext): Promise<ChatPost> {
         const post = await ChatPostModel.findByPk(postId);
         if (!post) {
             throw new Error(`Post ${postId} not found`);
         }
 
-        await post.update({
-            message: newContent,
-            update_at: Date.now(),
-            props: newProps ? { ...post.props, ...newProps } : post.props
-        });
+        const updateKeys : Record<string, any> = {
+            update_at: Date.now()
+        }
+        if (newContent) {
+            updateKeys.message = newContent;
+        }
+        if (newProps) {
+            updateKeys.props = { ...post.props, ...newProps };
+        }
+
+        await post.update(updateKeys, {where: { id: post.id } });
 
         // Notify listeners of the update
         const updatedPost = new InMemoryPost(

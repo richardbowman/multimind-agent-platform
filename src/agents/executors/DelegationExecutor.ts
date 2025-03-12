@@ -123,7 +123,7 @@ export class DelegationExecutor implements StepExecutor<StepResponse> {
                 finished: false,
                 async: true,
                 response: {
-                    message: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
+                    status: `${responseMessage}\n\nProject "${projectName}" created with ID: ${project.id}\n\nTasks:\n` +
                         taskDetails.join('\n')
                 }
             };
@@ -134,7 +134,7 @@ export class DelegationExecutor implements StepExecutor<StepResponse> {
                 type: StepResultType.Delegation,
                 finished: true,
                 response: {
-                    message: 'Failed to create the delegated project. Please try again later.'
+                    status: 'Failed to create the delegated project. Please try again later.'
                 }
             };
         }

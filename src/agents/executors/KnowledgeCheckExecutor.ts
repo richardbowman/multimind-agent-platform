@@ -130,7 +130,7 @@ Analyze relevant results (skipping irrelevant results):
             finished: true,
             replan: ReplanType.Allow,
             response: {
-                message: analysis.message,
+                status: analysis.message,
                 data: {
                     queries: queryResult.queries,
                     searchResults

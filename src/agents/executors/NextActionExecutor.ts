@@ -201,7 +201,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                      message: StringUtils.extractNonCodeContent(result.message, ["thinking"])
                  };
              },
-             (result) => !!result && !!result.nextAction, // Validate we got a proper response
+             (result) => !!result && (!!result.nextAction || !!result.message), // Validate we got a proper response
              {
                  maxRetries: 3,
                  initialDelayMs: 100,

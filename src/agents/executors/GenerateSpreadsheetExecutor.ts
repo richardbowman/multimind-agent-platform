@@ -4,10 +4,11 @@ import { ExecutorType } from '../interfaces/ExecutorType';
 import { GenerateArtifactExecutor } from './GenerateArtifactExecutor';
 import { PromptBuilder } from 'src/llm/promptBuilder';
 import { ArtifactType } from 'src/tools/artifact';
+import { ModelConversation } from '../interfaces/StepExecutor';
 
 @StepExecutorDecorator(ExecutorType.GENERATE_SPREADSHEET, 'Create/revise CSV spreadsheets (that you can fit into context, not for large spreadsheets)')
 export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
-    protected addContentFormattingRules(prompt: PromptBuilder) {
+    protected addContentFormattingRules(prompt: ModelConversation) {
         prompt.addInstruction(`SPREADSHEET FORMATTING RULES:
 - Use comma-separated values (CSV) format
 - Include a header row with column names
@@ -20,7 +21,7 @@ export class GenerateSpreadsheetExecutor extends GenerateArtifactExecutor {
         return ['csv'];
     }
 
-    getArtifactType(): string {
+    getArtifactType(codeBlockType: string): ArtifactType {
         return ArtifactType.Spreadsheet;
     }
 }

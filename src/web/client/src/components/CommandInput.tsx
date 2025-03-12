@@ -14,6 +14,7 @@ import { UUID } from '../../../../types/uuid';
 import { useArtifacts } from '../contexts/ArtifactContext';
 import { useFilteredTasks } from '../contexts/FilteredTaskContext';
 import { useChannels } from '../contexts/ChannelContext';
+import { useIPCService } from '../contexts/IPCContext';
 
 interface CommandInputProps {
     onSendMessage: (message: string, artifactIds?: UUID[]) => void;
@@ -52,14 +53,14 @@ export const CommandInput: React.FC<CommandInputProps> = ({
     const { channels } = useChannels();    
     const { filteredTasks: tasks } = useFilteredTasks();    
     const { artifacts : allArtifacts } = useArtifacts();    
+    const ipcService = useIPCService();
 
     const { 
         settings, 
         handles, 
         pendingFiles, 
         resetPendingFiles, 
-        showFileDialog,
-        ipcService
+        showFileDialog
     } = useDataContext();
 
     useEffect(() => {

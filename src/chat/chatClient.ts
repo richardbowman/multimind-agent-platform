@@ -12,7 +12,7 @@ export interface ChatClient {
      * @param newProps - Optional new properties to update
      * @returns Promise resolving to the updated post
      */
-    updatePost(postId: UUID, newContent: string, newProps?: ConversationContext): Promise<ChatPost>;
+    updatePost(postId: UUID, newContent: string|undefined, newProps?: ConversationContext): Promise<ChatPost>;
 
     getThreadChain(post: ChatPost): Promise<ChatPost[]>;
     getPost(confirmationPostId: UUID): Promise<ChatPost>;

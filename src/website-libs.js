@@ -1,10 +1,9 @@
 import '@babel/standalone';
-import { createTheme } from '@mui/material/styles';
 export { default as React } from 'react';
 export { default as ReactDOM } from 'react-dom';
 export * as ReactDOMClient from 'react-dom/client';
 export * as MaterialUI from '@mui/material';
-export { ThemeProvider } from '@mui/material/styles';
+export { ThemeProvider, createTheme } from '@mui/material/styles';
 
 export const getTheme = (themeName) => {
     switch(themeName) {

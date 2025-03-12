@@ -20,8 +20,8 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
     });
 
     // Get existing guides from artifact manager
-    const existingGuides = await artifactManager.getArtifacts({ type: ArtifactType.Document, subtype: DocumentSubtype.Procedure });
-    const existingTables = await artifactManager.getArtifacts({ type: ArtifactType.Spreadsheet, subtype: SpreadsheetSubType.Procedure });
+    const existingGuides = await artifactManager.getArtifacts({ type: ArtifactType.Document });
+    const existingTables = await artifactManager.getArtifacts({ type: ArtifactType.Spreadsheet });
     const existingGuideMap = new Map([...existingGuides, ...existingTables].map(g => [g.metadata?.source, g]));
 
     for (let i = 0; i < supportedFiles.length; i++) {

@@ -28,8 +28,8 @@ export const AttachmentCard: React.FC<AttachmentCardProps> = ({
             }}
             sx={{
             position: 'relative',
-            width: type === 'file' ? '100px' : '180px',
-            height: '100px',
+            width: '240px',
+            height: '80px',
             borderRadius: '4px',
             overflow: 'hidden',
             flexShrink: 0,

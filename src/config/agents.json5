@@ -45,6 +45,9 @@
               "className": "RetrieveFullArtifactExecutor"
             },
             {
+              "className": "SearchArtifactExecutor"
+            },
+            {
               "className": "CSVProcessingExecutor"
             },
             {

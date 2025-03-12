@@ -48,5 +48,5 @@ export enum ExecutorType {
     CSV_PROCESSOR = "csv-processor",
     PUBMED_SEARCH = "pubmed-search",
     CSV_MERGE = "csv-merge",
-    SEARCH_ARTIFACT = "search-artifact"
+    SEARCH_ARTIFACT = "artifact-excerpts"
 }

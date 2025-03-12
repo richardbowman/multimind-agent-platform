@@ -92,7 +92,7 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
     }
 
 
-    async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
+    async execute(params: ExecuteParams, modelType?: ModelType): Promise<StepResult<ArtifactGenerationStepResponse>> {
         const promptBuilder = await this.createBasePrompt(params);
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
         
@@ -107,7 +107,7 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
                 message: params.message || params.stepGoal,
                 instructions: promptBuilder,
                 threadPosts: params.context?.threadPosts,
-                modelType: ModelType.DOCUMENT
+                modelType: modelType||ModelType.DOCUMENT
             });
 
             const json = StringUtils.extractAndParseJsonBlock<ArtifactGenerationResponse>(unstructuredResult.message, schema);
@@ -217,5 +217,5 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
         };
     }
 
-    abstract getArtifactType(): string;
+    abstract getArtifactType(codeBlockType: string): ArtifactType;
 }
