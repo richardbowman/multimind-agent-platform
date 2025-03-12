@@ -364,7 +364,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     </Box>
                 )}
             </Box>
-            {hasAttachments && (
+            {hasAttachments && isExpanded && (
                 <Box sx={{ mt: 2 }}>
                     {!attachmentsExpanded && (
                         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -378,7 +378,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                             ))}
                         </Box>
                     )}
-                    <Collapse in={attachmentsExpanded && isExpanded}>
+                    <Collapse in={attachmentsExpanded}>
                         <Box sx={{ mt: 1 }}>
                             {uniqueArtifacts.filter(a => a).map((artifactId: string) => (
                                 <ArtifactLoader 
