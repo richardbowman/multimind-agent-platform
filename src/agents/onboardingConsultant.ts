@@ -91,9 +91,6 @@ When you gather a sufficient profile to understand how our other agents should s
 Goals Understanding:
 - How they hope to use MutliMind and how the agents can help them and their desired outcomes
 `);
-// Load procedure guides from markdown files
-this.modelHelpers.loadProcedureGuide('template-selection-flow');
-this.modelHelpers.loadProcedureGuide('create-channel-flow');
 
 this.modelHelpers.setFinalInstructions(`Use the appropriate sequence based on user context:
 - For new users: Follow the new-user sequence to understand their goals

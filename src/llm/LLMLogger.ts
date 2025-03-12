@@ -4,6 +4,7 @@ import Logger from '../helpers/logger';
 import { AsyncQueue } from '../helpers/asyncQueue';
 import EventEmitter from 'events';
 import { getDataPath } from '../helpers/paths';
+import { LLMContext } from './ILLMService';
 
 export interface LogParam {
     type: string;
@@ -52,15 +53,7 @@ export class LLMCallLogger extends EventEmitter {
         output: any, 
         error?: any, 
         durationMs?: number,
-        context?: {
-            agentId?: string;
-            agentName?: string;
-            stepType?: string;
-            taskId?: string;
-            projectId?: string;
-            goal?: string;
-            stepGoal?: string;
-        }
+        context?: LLMContext
     ) {
         try {
             const timestamp = new Date().toISOString();

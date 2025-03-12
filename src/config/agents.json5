@@ -203,6 +203,9 @@
               "className": "GenerateSpreadsheetExecutor"
             },
             {
+              "className": "RetrieveFullArtifactExecutor"
+            },
+            {
               "className": "ThinkingExecutor"
             }
           ]

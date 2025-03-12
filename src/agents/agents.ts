@@ -8,7 +8,7 @@ import { Artifact } from "src/tools/artifact";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Project, ProjectMetadata, Task, TaskManager, TaskType } from "src/tools/taskManager";
 import { ModelHelpers } from 'src/llm/modelHelpers';
-import { ILLMService } from 'src/llm/ILLMService';
+import { ILLMService, LLMContext } from 'src/llm/ILLMService';
 import { SearchResult, IVectorDatabase } from 'src/llm/IVectorDatabase';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
@@ -58,11 +58,15 @@ export interface GenerateInputParams extends GenerateParams {
     userPost?: Message;
     threadPosts?: Message[];
     modelType?: ModelType;
+    context?: LLMContext;
 }
 
 export interface GenerateParams {
+    /* @deprecated */
     artifacts?: Artifact[];
+    /* @deprecated */
     projects?: Project[];
+    /* @deprecated */
     searchResults?: SearchResult[]
     message?: string;
     contextWindow?: number;
@@ -129,7 +133,7 @@ export abstract class Agent {
             llmService: params.llmService,
             userId: params.userId,
             messagingHandle: params.messagingHandle,
-            sequences: []
+            context: this.buildLLMContext()
         });
 
         this.promptBuilder = new SystemPromptBuilder();
@@ -177,6 +181,13 @@ export abstract class Agent {
 
     public async initialize(): Promise<void> {
         this.processTaskQueue();
+    }
+
+
+    protected buildLLMContext(): LLMContext {
+        return {
+            agentId: this.userId
+        }
     }
 
     protected async taskNotification(task: Task, eventType: TaskEventType): Promise<void> {
@@ -251,7 +262,7 @@ export abstract class Agent {
         this.modelHelpers.enableMemory();
     }
 
-    protected async send(post: CreateMessage, channelId: UUID): Promise<ChatPost|null> {
+    protected async send(post: CreateMessage, channelId: UUID): Promise<ChatPost | null> {
         try {
             // Assuming you have a chatClient or similar service to send messages to the channel
             return await this.chatClient.postInChannel(channelId, post.message, post.props);
@@ -329,7 +340,7 @@ export abstract class Agent {
                     // continue responding to chats i initally responded to, but don't respond to myself
                     if (posts.length > 1 && posts[1].user_id === this.userId && post.id !== this.userId) {
                         // Get all available actions for this response type
-                        const projectIds = [...new Set(posts.map(p => p.props["project-ids"]||[]).flat().filter(id => id !== undefined))];
+                        const projectIds = [...new Set(posts.map(p => p.props["project-ids"] || []).flat().filter(id => id !== undefined))];
                         const projects: Project[] = [];
                         for (const projectId of projectIds) {
                             const project = this.projects.getProject(projectId);
@@ -372,7 +383,7 @@ export abstract class Agent {
                 const channelAgents = (channelData.members || [])
                     .map(memberId => this.agents.agents[memberId]);
 
-                const post = await this.send({message: "Typing...", props: {partial: true, messageType: 'welcome'}}, monitorChannelId);
+                const post = await this.send({ message: "Typing...", props: { partial: true, messageType: 'welcome' } }, monitorChannelId);
                 if (!post) {
                     Logger.error("Failed to create post for welcome message");
                 } else {

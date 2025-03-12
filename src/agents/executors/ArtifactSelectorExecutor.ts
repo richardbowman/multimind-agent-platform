@@ -1,12 +1,12 @@
 import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
-import { StepExecutor } from "../interfaces/StepExecutor";
+import { BaseStepExecutor, StepExecutor } from "../interfaces/StepExecutor";
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { Artifact, ArtifactType } from "src/tools/artifact";
 import { ModelHelpers } from "src/llm/modelHelpers";
-import { ContentType } from "src/llm/promptBuilder";
+import { ContentType, OutputType } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
@@ -26,11 +26,12 @@ export interface ArtifactSelectionStepResponse extends StepResponse {
 }
 
 @StepExecutorDecorator(ExecutorType.ARTIFACT_SELECTOR, 'Review relevant artifacts from attachments and get all of the embedded links.')
-export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionStepResponse> {
+export class ArtifactSelectorExecutor extends BaseStepExecutor<ArtifactSelectionStepResponse> {
     private artifactManager: ArtifactManager;
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.artifactManager = params.artifactManager;
         this.modelHelpers = params.modelHelpers;
     }
@@ -55,26 +56,19 @@ export class ArtifactSelectorExecutor implements StepExecutor<ArtifactSelectionS
         }
 
         // Generate structured prompt
-        const prompt = this.modelHelpers.createPrompt();
+        const prompt = this.startModel(params);
+        const schema = await getGeneratedSchema(SchemaType.ArtifactSelectionResponse);
         prompt.addInstruction(`Your task is to select the most relevant artifacts from the available collection based on the user's request.`);
         prompt.addContext({contentType: ContentType.PURPOSE});
         prompt.addContext({contentType: ContentType.GOALS_FULL, params});
         prompt.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
         prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: allArtifacts});
-
-        const schema = await getGeneratedSchema(SchemaType.ArtifactSelectionResponse);
-        
-        prompt.addInstruction(`OUTPUT INSTRUCTIONS:
-1. Include a JSON object in your response, enclosed in a \`\`\`json code block matching this schema:
-${JSON.stringify(schema, null, 2)}
-2. The artifactIndexes field should contain the list numbers (1-N) from the ARTIFACTS EXCERPTS above
-3. Include a clear selectionReason explaining why these artifacts were chosen`);
+        prompt.addInstruction(`The artifactIndexes field should contain the list numbers (1-N) from the ARTIFACTS EXCERPTS above; Include a clear selectionReason explaining why these artifacts were chosen`);
+        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
         try {
-            const unstructuredResult = await this.modelHelpers.generate({
+            const unstructuredResult = await prompt.generate({
                 message: params.message || params.stepGoal,
-                instructions: prompt,
-                threadPosts: params.context?.threadPosts,
                 modelType: ModelType.REASONING
             });
 

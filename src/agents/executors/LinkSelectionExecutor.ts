@@ -87,8 +87,8 @@ export class LinkSelectionExecutor implements StepExecutor<StepResponse> {
     ): Promise<string[]> {
         const schema = await getGeneratedSchema(SchemaType.WebSearchResponse);
 
-        const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
+        const instructions = this.modelHelpers.createPrompt();
+        instructions.addInstruction(`You are a research assistant. Our overall goal is ${goal}, and we're currently working on researching ${task}.
 
 Given the following web search results and links from existing pages you've scraped, select 1-${this.settings.maxSelectedLinks} URLs that are most relevant to our goal and would help expand our knowledge beyond what we already know. Don't pick PDFs, we can't scrape them. If you don't think any are relevant, return an empty array.`);
 
@@ -101,11 +101,11 @@ ${searchResults && searchResults
                 .map((sr, i) => `${i + 1}. Title: ${sr.title}\nURL: ${sr.url}\nDescription: ${StringUtils.truncateWithEllipsis(sr.description, 200)}`)
                 .join("\n\n")}`}`;
 
-        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
+        instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
-        const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
+        const rawResponse = await this.modelHelpers.generateMessage({
             message,
-            instructions: prompt
+            instructions
         });
 
         const response = StringUtils.extractAndParseJsonBlock<WebSearchResponse>(rawResponse.message, schema);

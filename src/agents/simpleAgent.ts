@@ -6,6 +6,7 @@ import { Project, Task } from 'src/tools/taskManager';
 import { PromptBuilder, ContentType } from 'src/llm/promptBuilder';
 import { ModelType } from 'src/llm/LLMServiceFactory';
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
+import { LLMContext } from 'src/llm/ILLMService';
 
 export class SimpleAgent extends Agent {
     protected projectCompleted(project: Project): void {
@@ -39,11 +40,14 @@ export class SimpleAgent extends Agent {
                 instructions.addInstruction("You are a helpful agent. You may respond using SSML if you need to introduce pauses.");
             }
 
-            const response = await this.modelHelpers.generate<ModelMessageResponse>({
+            const response = await this.modelHelpers.generateMessage({
                 instructions,
                 message: params.userPost.message,
                 threadPosts: params.threadPosts,
                 modelType: ModelType.CONVERSATION,
+                context: {
+                    stepType: "handleMessage"
+                }
             });
             await this.reply(
                 params.userPost,
@@ -53,7 +57,15 @@ export class SimpleAgent extends Agent {
             Logger.error("Error handling content creation message", error);
         }
     }
+
     protected async handleChannel(params: HandlerParams): Promise<void> {
         this.handlerThread(params);
+    }
+
+    protected buildLLMContext(): LLMContext {
+        return {
+            ...super.buildLLMContext(),
+            agentName: "SimpleAgent"
+        }
     }
 }

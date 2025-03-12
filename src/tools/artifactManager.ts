@@ -67,12 +67,14 @@ export class ArtifactManager {
   private vectorDb: IVectorDatabase;
   private llmService?: ILLMService;
   private fileQueue: AsyncQueue;
+  private saveQueue: AsyncQueue;
 
   constructor(vectorDb: IVectorDatabase, llmService?: ILLMService, storageDir?: string) {
     this.storageDir = storageDir || path.join(getDataPath(), 'artifacts');
     this.artifactMetadataFile = path.join(this.storageDir, 'artifact.json');
     this.vectorDb = vectorDb;
     this.fileQueue = new AsyncQueue();
+    this.saveQueue = new AsyncQueue();
     this.llmService = llmService;
 
     // Ensure the .output directory exists
@@ -154,107 +156,109 @@ export class ArtifactManager {
   }
 
   async saveArtifact(artifactParam: Partial<Artifact>): Promise<Artifact> {
-    // Set type based on MIME type if provided
-    const mimeType = artifactParam.metadata?.mimeType;
-    const fileInfo = getFileInfo(mimeType);
-    // Use the type from fileInfo if no type was explicitly set
-    // Use the type from fileInfo if no type was explicitly set
-    const type = artifactParam.type || fileInfo.type || 'file';
-    // Extract subtype if provided in metadata
-    const subtype = artifactParam.metadata?.subtype || undefined;
-    
-    const artifact = {
-      id: createUUID(),
-      type,
-      ...artifactParam,
-    } as Artifact;
-    
-    const artifactDir = path.join(this.storageDir, artifact.id);
-    
-    // Load existing metadata
-    let metadata = await this.loadArtifactMetadata();
-    let version = 1;
-    if (metadata[artifact.id]) {
-      const existingVersion = metadata[artifact.id].version || 0;
-      version = existingVersion + 1;
-    }
-    
-    const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${fileInfo.extension}`);
-    try {
-      await this.fileQueue.enqueue(() =>
-        fs.mkdir(artifactDir, { recursive: true })
-      );
-    } catch (error) {
-      Logger.error('Error creating directory:', error);
-    }
+    return this.saveQueue.enqueue(async () => {
+      // Set type based on MIME type if provided
+      const mimeType = artifactParam.metadata?.mimeType;
+      const fileInfo = getFileInfo(mimeType);
+      // Use the type from fileInfo if no type was explicitly set
+      // Use the type from fileInfo if no type was explicitly set
+      const type = artifactParam.type || fileInfo.type || 'file';
+      // Extract subtype if provided in metadata
+      const subtype = artifactParam.metadata?.subtype || undefined;
+      
+      const artifact = {
+        id: createUUID(),
+        type,
+        ...artifactParam,
+      } as Artifact;
+      
+      const artifactDir = path.join(this.storageDir, artifact.id);
+      
+      // Load existing metadata
+      let metadata = await this.loadArtifactMetadata();
+      let version = 1;
+      if (metadata[artifact.id]) {
+        const existingVersion = metadata[artifact.id].version || 0;
+        version = existingVersion + 1;
+      }
+      
+      const filePath = path.join(artifactDir, `${artifact.type}_v${version}.${fileInfo.extension}`);
+      try {
+        await this.fileQueue.enqueue(() =>
+          fs.mkdir(artifactDir, { recursive: true })
+        );
+      } catch (error) {
+        Logger.error('Error creating directory:', error);
+      }
 
-    // Validate content is not undefined or empty
-    if (!artifact.content) {
-      throw new Error(`Cannot save artifact ${artifact.id}: content is undefined or empty`);
-    }
+      // Validate content is not undefined or empty
+      if (!artifact.content) {
+        throw new Error(`Cannot save artifact ${artifact.id}: content is undefined or empty`);
+      }
 
-    // Ensure content is always a string or Buffer
-    const content = typeof artifact.content === 'string' ?
-      artifact.content :
-      Buffer.isBuffer(artifact.content) ?
+      // Ensure content is always a string or Buffer
+      const content = typeof artifact.content === 'string' ?
         artifact.content :
-        JSON.stringify(artifact.content);
+        Buffer.isBuffer(artifact.content) ?
+          artifact.content :
+          JSON.stringify(artifact.content);
 
-    // If it's a CSV, parse and store metadata
-    if ((type === ArtifactType.Spreadsheet || mimeType === 'text/csv') && typeof content === 'string') {
-      try {
-        const lines = content.split('\n');
-        const headers = lines[0].split(',');
-        const rowCount = Math.min(0,lines.length - 1); // Exclude an assumed header row
-        
-        artifact.metadata = {
-          ...artifact.metadata,
-          csvHeaders: headers,
-          rowCount
-        };
-      } catch (error) {
-        Logger.error('Error parsing CSV metadata:', error);
-      }
-    }
-
-    await this.fileQueue.enqueue(() =>
-      //TODO: need to handle calendrevents
-      fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
-    );
-
-    // Update or add the artifact metadata
-    metadata[artifact.id] = {
-      ...artifact.metadata, // Include additional metadata attributes if any
-      contentPath: filePath,
-      type: artifact.type,
-      subtype: subtype,
-      version,
-      tokenCount: artifact.tokenCount,
-      mimeType: artifact.metadata?.mimeType
-    };
-
-    // Generate and store summary if LLM service is available
-    if (this.llmService) {
-      try {
-        const summary = await this.generateArtifactSummary(artifact);
-        if (summary) {
-          // Update metadata with summary
-          metadata[artifact.id] = {
-            ...metadata[artifact.id],
-            summary
+      // If it's a CSV, parse and store metadata
+      if ((type === ArtifactType.Spreadsheet || mimeType === 'text/csv') && typeof content === 'string') {
+        try {
+          const lines = content.split('\n');
+          const headers = lines[0].split(',');
+          const rowCount = Math.max(0,lines.length - 1); // Exclude an assumed header row
+          
+          artifact.metadata = {
+            ...artifact.metadata,
+            csvHeaders: headers,
+            rowCount
           };
+        } catch (error) {
+          Logger.error('Error parsing CSV metadata:', error);
         }
-      } catch (error) {
-        Logger.error('Error generating artifact summary:', error);
       }
-    }
-    
-    // Save updated metadata
-    await this.saveArtifactMetadata(metadata);
 
-    await this.indexArtifact(artifact);
-    
-    return artifact;
+      await this.fileQueue.enqueue(() =>
+        //TODO: need to handle calendrevents
+        fs.writeFile(filePath, Buffer.isBuffer(artifact.content) ? artifact.content : Buffer.from(artifact.content!))
+      );
+
+      // Update or add the artifact metadata
+      metadata[artifact.id] = {
+        ...artifact.metadata, // Include additional metadata attributes if any
+        contentPath: filePath,
+        type: artifact.type,
+        subtype: subtype,
+        version,
+        tokenCount: artifact.tokenCount,
+        mimeType: artifact.metadata?.mimeType
+      };
+
+      // Generate and store summary if LLM service is available
+      if (this.llmService) {
+        try {
+          const summary = await this.generateSummary(artifact);
+          if (summary) {
+            // Update metadata with summary
+            metadata[artifact.id] = {
+              ...metadata[artifact.id],
+              summary
+            };
+          }
+        } catch (error) {
+          Logger.error('Error generating artifact summary:', error);
+        }
+      }
+      
+      // Save updated metadata
+      await this.saveArtifactMetadata(metadata);
+
+      await this.indexArtifact(artifact);
+      
+      return artifact;
+    });
   }
 
   protected async indexArtifact(artifact: Artifact): Promise<void> {
@@ -389,42 +393,44 @@ export class ArtifactManager {
   }
 
   async deleteArtifact(artifactId: string): Promise<void> {
-    // Load current metadata
-    const metadata = await this.loadArtifactMetadata();
+    this.saveQueue.enqueue(async () => {
+      // Load current metadata
+      const metadata = await this.loadArtifactMetadata();
 
-    // Check if artifact exists
-    if (!metadata[artifactId]) {
-      throw new Error(`Artifact ${artifactId} not found`);
-    }
-
-    try {
-      // Get the artifact directory path
-      const artifactDir = path.join(this.storageDir, artifactId);
-
-      // Delete all files in the artifact directory
-      await this.fileQueue.enqueue(() =>
-        fs.rm(artifactDir, { recursive: true, force: true })
-      );
-
-      // Remove from metadata
-      delete metadata[artifactId];
-      await this.saveArtifactMetadata(metadata);
-
-      // Remove from vector database
-      try {
-        await this.vectorDb.deleteDocuments({ artifactId });
-      } catch (error) {
-        Logger.error('Error deleting artifact from vector database:', error);
+      // Check if artifact exists
+      if (!metadata[artifactId]) {
+        throw new Error(`Artifact ${artifactId} not found`);
       }
 
-      Logger.info(`Successfully deleted artifact: ${artifactId}`);
-    } catch (error) {
-      Logger.error('Error deleting artifact:', error);
-      throw new Error(`Failed to delete artifact ${artifactId}: ${asError(error).message}`);
-    }
+      try {
+        // Get the artifact directory path
+        const artifactDir = path.join(this.storageDir, artifactId);
+
+        // Delete all files in the artifact directory
+        await this.fileQueue.enqueue(() =>
+          fs.rm(artifactDir, { recursive: true, force: true })
+        );
+
+        // Remove from metadata
+        delete metadata[artifactId];
+        await this.saveArtifactMetadata(metadata);
+
+        // Remove from vector database
+        try {
+          await this.vectorDb.deleteDocuments({ artifactId });
+        } catch (error) {
+          Logger.error('Error deleting artifact from vector database:', error);
+        }
+
+        Logger.info(`Successfully deleted artifact: ${artifactId}`);
+      } catch (error) {
+        Logger.error('Error deleting artifact:', error);
+        throw new Error(`Failed to delete artifact ${artifactId}: ${asError(error).message}`);
+      }
+    });
   }
 
-  private async generateArtifactSummary(artifact: Artifact): Promise<string | null> {
+  private async generateSummary(artifact: Artifact): Promise<string | null> {
     if (!this.llmService) return null;
     
     // Skip non-text artifacts
@@ -445,6 +451,10 @@ export class ArtifactManager {
         opts: {
           temperature: 0.2,
           maxPredictedTokens: 200
+        },
+        context: {
+          agentName: "ArtifactManager",
+          stepType: "generateSummary"
         }
       });
 
@@ -482,7 +492,7 @@ export class ArtifactManager {
    */
   async searchArtifacts(
     query: string,
-    filter?: Record<string, any> & { subtype?: string },
+    filter?: Record<string, any>,
     limit: number = 5, 
     minScore: number = 0.5
   ): Promise<Array<{ artifact: ArtifactItem, score: number }>> {
@@ -505,7 +515,14 @@ export class ArtifactManager {
       }
 
       // Search the vector database
-      const results = await this.vectorDb.query([query], where, limit);
+      let results;
+      try {
+        results = await this.vectorDb.query([query], where, limit);
+      } catch (e) {
+        const message = `Vectra search failed: ${asError(e).message} for "${query}" and where clause "${JSON.stringify(where, null, 2)}" with limit ${limit}`;
+        Logger.error(message, e)
+        throw new Error(message);
+      }
 
       // Map results to artifacts with scores
       const artifacts: Array<{ artifact: ArtifactItem, score: number }> = [];

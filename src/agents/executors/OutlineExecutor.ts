@@ -2,7 +2,6 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
@@ -10,7 +9,6 @@ import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/ex
 import { ContentOutline } from 'src/schemas/outline';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StructuredInputPrompt } from 'src/prompts/structuredInputPrompt';
 import { OutlineApprovalCheck } from 'src/schemas/OutlineApprovalCheck';
 
 /**

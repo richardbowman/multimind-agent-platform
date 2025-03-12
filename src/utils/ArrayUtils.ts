@@ -9,4 +9,8 @@ export namespace ArrayUtils {
             return true;
         });
     }
+
+    export function isDefined(item: any) {
+        return item !== undefined;
+    }
 }

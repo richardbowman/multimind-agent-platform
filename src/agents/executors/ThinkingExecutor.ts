@@ -1,6 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ThinkingResponse } from '../../schemas/thinking';
@@ -28,7 +28,7 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
  * - Documents thinking steps clearly
  */
 @StepExecutorDecorator(ExecutorType.THINKING, 'Develop ideas and reasoning through careful analysis and deep thinking')
-export class ThinkingExecutor implements StepExecutor {
+export class ThinkingExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {

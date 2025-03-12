@@ -67,7 +67,7 @@ export class GoalProgressExecutor implements StepExecutor<StepResponse> {
         promptBuilder.addOutputInstructions(OutputType.JSON_WITH_MESSAGE);
 
         // Build and execute prompt
-        const rawResult = await this.modelHelpers.generate<ModelMessageResponse>({
+        const rawResult = await this.modelHelpers.generateMessage({
             message: goal,
             instructions: promptBuilder,
             threadPosts: context?.threadPosts || []

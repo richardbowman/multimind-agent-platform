@@ -77,7 +77,6 @@ describe('GoalConfirmationExecutor', () => {
         };
 
         mockModelHelpers.generate.mockResolvedValue(mockResponse);
-        mockModelHelpers.formatArtifacts.mockReturnValue('Formatted artifacts');
 
         const result = await executor.execute({
             ...mockParams,
@@ -90,7 +89,6 @@ describe('GoalConfirmationExecutor', () => {
             }
         });
 
-        expect(mockModelHelpers.formatArtifacts).toHaveBeenCalled();
         expect(mockModelHelpers.generate).toHaveBeenCalledWith(expect.objectContaining({
             message: 'Test goal',
             instructions: expect.any(StructuredOutputPrompt)

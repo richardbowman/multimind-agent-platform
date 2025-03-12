@@ -4,6 +4,7 @@ import { LLMCallLogger } from "./LLMLogger";
 import { ModelType } from "./LLMServiceFactory";
 import { ModelInfo } from "./types";
 import { PromptBuilder } from "./promptBuilder";
+import { UUID } from "src/types/uuid";
 
 export interface EmbedderModelInfo extends ModelInfo {
     pipelineTag: string;
@@ -28,7 +29,8 @@ export interface ModelSearchParams {
 }
 
 export interface LLMOptions extends Record<string, any> {
-    modelType: ModelType
+    modelType: ModelType;
+    context: LLMContext;
 }
 
 export interface ILLMService {
@@ -86,6 +88,7 @@ export interface IEmbeddingService {
 }
 
 export interface LLMContext {
+    traceId?: UUID;
     agentId?: string;
     agentName?: string;
     stepType?: string;

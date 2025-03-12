@@ -84,20 +84,11 @@ export class AnswerQuestionsExecutor implements StepExecutor {
             project.documentDraft = project.template.templateContent;
         }
 
-        // Add artifact context if available
-        let artifacts = "";
-        if (params.context?.artifacts) {
-            artifacts += '\n\n' + this.modelHelpers.formatArtifacts(params.context.artifacts);
-        }
-
         const prompt = this.modelHelpers.createPrompt();
         prompt.addContext({contentType: ContentType.ABOUT})
         prompt.addContext({contentType: ContentType.INTENT, params})
+        prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts});
         prompt.addInstruction(`OVERALL GOAL: ${params.overallGoal}
-
-Artifacts Attached To This Conversation:
-${artifacts}
-
 
 Here is the current state of our questions and answers:
 

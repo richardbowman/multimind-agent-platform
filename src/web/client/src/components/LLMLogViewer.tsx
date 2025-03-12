@@ -424,6 +424,7 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                     Context
                                 </Typography>
                                 <FormattedDataView data={{
+                                    traceId: selectedLog?.traceId || 'N/A',
                                     agent: selectedLog?.agentName || 'N/A',
                                     stepType: selectedLog?.stepType || 'N/A',
                                     taskId: selectedLog?.taskId || 'N/A',

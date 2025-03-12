@@ -12,7 +12,7 @@ export abstract class BaseLLMService implements ILLMService {
     abstract initializeEmbeddingModel(modelPath: string): Promise<void>;
     abstract initializeChatModel(modelPath: string): Promise<void>;
     abstract getEmbeddingModel(): any;
-    abstract sendLLMRequest<T extends ModelResponse>(params: LLMRequestParams & { modelType?: ModelType }): Promise<GenerateOutputParams<T>>;
+    abstract sendLLMRequest<T extends ModelResponse>(params: LLMRequestParams): Promise<GenerateOutputParams<T>>;
     abstract countTokens(content: string): Promise<number>;
     abstract getAvailableModels(): Promise<ModelInfo[]>;
     abstract shutdown(): Promise<void>;
@@ -37,7 +37,8 @@ export abstract class BaseLLMService implements ILLMService {
         const result = await this.sendLLMRequest<T>({
             messages,
             systemPrompt: instructions,
-            modelType: opts?.modelType
+            modelType: opts?.modelType,
+            context: opts?.context
         });
 
         return typeof result === "string" ? {message: result as string} as T : result.response;

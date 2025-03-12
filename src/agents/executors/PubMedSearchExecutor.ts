@@ -137,7 +137,7 @@ interface PubMedSearchResult {
         const asyncQueue = new AsyncQueue({ 
             concurrency: 3, 
             timeout: 10000,
-            minDelayBetweenTasksMs: 3000 // 3 seconds between efetch calls
+            minDelayBetweenTasksMs: 1000
         });
         const resultsWithFullText = [];
         
@@ -291,7 +291,7 @@ interface PubMedSearchResult {
                      timeoutMs: 10000,
                      maxRetries: 3,
                      initialDelayMs: 1000,
-                     minDelayBetweenTasksMs: 3000
+                     minDelayBetweenTasksMs: 500
                  }
              );
 

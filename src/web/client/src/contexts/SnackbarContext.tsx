@@ -44,62 +44,63 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   useEffect(() => {
     const statusHandler = (log) => {
-    // Update progress bar based on message
-    if (log.details.percentComplete !== undefined && log.details.percentComplete >= 0) {
-      setOptions(prev => {
-        const existingMeters = prev.progressMeters || [];
-        const meterIndex = existingMeters.findIndex(m => m.id === log.details.id);
-        
-        // Only create meter if we have a valid percentage
-        if (log.details.percentComplete !== undefined) {
-          const newMeter = {
-            id: log.details.id,
-            message: log.message,
-            percentComplete: log.details.percentComplete
-          };
+      // Update progress bar based on message
+      if (log.details.percentComplete !== undefined && log.details.percentComplete >= 0) {
+        setOptions(prev => {
+          const existingMeters = prev.progressMeters || [];
+          const meterIndex = existingMeters.findIndex(m => m.id === log.details.id);
 
-          let updatedMeters = meterIndex >= 0 
-            ? [
+          // Only create meter if we have a valid percentage
+          if (log.details.percentComplete !== undefined) {
+            const newMeter = {
+              id: log.details.id,
+              message: log.message,
+              percentComplete: log.details.percentComplete
+            };
+
+            let updatedMeters = meterIndex >= 0
+              ? [
                 ...existingMeters.slice(0, meterIndex),
                 newMeter,
                 ...existingMeters.slice(meterIndex + 1)
               ]
-            : [...existingMeters, newMeter];
+              : [...existingMeters, newMeter];
 
-          // If progress is complete, schedule removal after 2 seconds
-          if (log.details.percentComplete >= 1) {
-            setTimeout(() => {
-              setOptions(prev => ({
-                ...prev,
-                progressMeters: prev.progressMeters?.filter(m => m.id !== log.details.id) || []
-              }));
-            }, 2000);
+            // If progress is complete, schedule removal after 2 seconds
+            if (log.details.percentComplete >= 1) {
+              setTimeout(() => {
+                setOptions(prev => ({
+                  ...prev,
+                  progressMeters: prev.progressMeters?.filter(m => m.id !== log.details.id) || []
+                }));
+              }, 2000);
+            }
+
+            return {
+              ...prev,
+              progressMeters: updatedMeters,
+              persist: log.details.percentComplete < 1,
+              severity: 'progress',
+              message: '' // Clear the message when showing progress
+            };
           }
-
-          return {
-            ...prev,
-            progressMeters: updatedMeters,
-            persist: log.details.percentComplete < 1,
-            severity: 'progress',
-            message: '' // Clear the message when showing progress
-          };
-        }
-        return prev;
-      });
-    } else {
-      setOptions(prev => ({
-        ...prev,
-        message: log.message,
-        severity: 'info',
-        progressMeters: [] // Clear progress meters when showing regular messages
-      }));
+          return prev;
+        });
+      } else {
+        setOptions(prev => ({
+          ...prev,
+          message: log.message,
+          severity: 'info',
+          progressMeters: [] // Clear progress meters when showing regular messages
+        }));
+      };
     };
-    
-    (window as any).electron.status(statusHandler);
-    
+
+    const removeCallback = (window as any).electron.status(statusHandler);
+
     // Cleanup listener when component unmounts
     return () => {
-      (window as any).electron.removeListener('status', statusHandler);
+      removeCallback();
     };
   }, []);
 

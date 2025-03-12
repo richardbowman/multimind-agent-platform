@@ -1229,6 +1229,9 @@
     "ModelResponseMetadata": {
       "additionalProperties": false,
       "properties": {
+        "_id": {
+          "$ref": "#/definitions/UUID"
+        },
         "_usage": {
           "additionalProperties": false,
           "properties": {
@@ -1247,7 +1250,8 @@
         }
       },
       "required": [
-        "_usage"
+        "_usage",
+        "_id"
       ],
       "type": "object"
     },
@@ -1258,12 +1262,12 @@
           "description": "The action to perform next",
           "type": "string"
         },
-        "revisedUserGoal": {
-          "description": "Revised user goal",
+        "procedureGuideTitle": {
+          "description": "The title of procedure guide being followed (or \"none\")",
           "type": "string"
         },
-        "sequence": {
-          "description": "The sequence you are planning to follow (or \"none\")",
+        "revisedUserGoal": {
+          "description": "Revised user goal",
           "type": "string"
         },
         "taskDescription": {
@@ -1274,7 +1278,7 @@
       "required": [
         "nextAction",
         "taskDescription",
-        "sequence"
+        "procedureGuideTitle"
       ],
       "type": "object"
     },
@@ -2087,6 +2091,9 @@
         "conclusion"
       ],
       "type": "object"
+    },
+    "UUID": {
+      "type": "string"
     },
     "UpdateActions": {
       "enum": [

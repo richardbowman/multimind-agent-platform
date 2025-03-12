@@ -54,7 +54,7 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
                     content: csvContent,
                     metadata: {
                         title: `Merged CSV - ${params.stepGoal}`,
-                        subtype: this.getCommonSubtype(artifacts),
+                        subtype: mergedContents.metadata.subtype,
                         sourceArtifactIds: mergedContents.metadata.sourceArtifactIds,
                         mergeStrategy: mergePlan.mergeStrategy,
                         generatedAt: new Date().toISOString()
@@ -64,7 +64,8 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
         };
     }
 
-    private async mergeCSVArtifacts(mergePlan: MergePlanResponse, artifacts: any[]): Promise<CSVContents> {
+    private async mergeCSVArtifacts(mergePlan: MergePlanResponse, artifacts: Artifact[]): Promise<CSVContents> {
+        const mergedArtifacts : Artifact[] = [];
         const mergedContents: CSVContents = {
             metadata: {
                 mergeStrategy: mergePlan.mergeStrategy,
@@ -81,6 +82,7 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
             if (!artifact || artifact.type !== ArtifactType.Spreadsheet) continue;
 
             mergedContents.metadata.sourceArtifactIds.push(artifact.id);
+            mergedArtifacts.push(artifact);
 
             const contents = await CSVUtils.fromCSV(artifact.content.toString());
             
@@ -109,6 +111,8 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
             });
             mergedContents.rows = Array.from(uniqueRows.values());
         }
+
+        mergedContents.metadata.subtype = this.getCommonSubtype(mergedArtifacts);
 
         return mergedContents;
     }
@@ -146,10 +150,10 @@ export class CSVMergeExecutor implements StepExecutor<StepResponse> {
         - Whether to deduplicate rows
         - The best merge strategy (union, intersection, or specific columns)`);
 
-        instructions.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
+        instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
 
-        const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
+        const rawResponse = await this.modelHelpers.generateMessage({
             message: `Task: ${task}`,
             instructions
         });

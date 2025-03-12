@@ -5,7 +5,7 @@ import { StepExecutor } from "../interfaces/StepExecutor";
 import { ReplanType, StepResponse, StepResponseType, StepResult } from "../interfaces/StepResult";
 import { ArtifactManager } from "src/tools/artifactManager";
 import { ModelHelpers } from "src/llm/modelHelpers";
-import { ContentType } from "src/llm/promptBuilder";
+import { ContentType, globalRegistry } from "src/llm/promptBuilder";
 import { ModelType } from "src/llm/LLMServiceFactory";
 import { ExecutorType } from "../interfaces/ExecutorType";
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
@@ -13,6 +13,7 @@ import { SchemaType } from 'src/schemas/SchemaTypes';
 import { StringUtils } from 'src/utils/StringUtils';
 import { ArtifactSelectionResponse } from "src/schemas/ArtifactSelectionResponse";
 import { UUID } from "src/types/uuid";
+import { Artifact } from "src/tools/artifact";
 
 export interface FullArtifactStepResponse extends StepResponse {
     type: StepResponseType.FullArtifact;
@@ -31,10 +32,10 @@ export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactSt
         this.artifactManager = params.artifactManager;
         this.modelHelpers = params.modelHelpers;
 
-        this.modelHelpers.createPrompt().registerStepResultRenderer<FullArtifactStepResponse>(StepResponseType.FullArtifact, async (response : FullArtifactStepResponse) => {
+        globalRegistry.stepResponseRenderers.set(StepResponseType.FullArtifact, async (response : StepResponse) => {
             const artifactIds = response.data?.selectedArtifactIds;
-            const artifacts = artifactIds?.length||0>0 && await this.artifactManager.bulkLoadArtifacts(artifactIds);
-            return artifacts?.length||0>0 ? artifacts?.map((a, index) => `LOADED FULL ARTIFACT {$index} of {$artifacts.length}\n<content>\n${a}</content>\n`)?.join("\n") : "[NO LOADED ARTIFACTS]";
+            const artifacts : Artifact[] = artifactIds && await this.artifactManager.bulkLoadArtifacts(artifactIds);
+            return (artifacts?.length||0>0 ? artifacts?.map((a, index) => `LOADED FULL ARTIFACT ${index} of ${artifacts.length}\n<content>\n${a.content.toString()}</content>\n`)?.join("\n") : undefined) ?? "[NO LOADED ARTIFACTS]";
         });
     }
 

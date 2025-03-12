@@ -17,7 +17,8 @@ export async function withRetry<T>(
         maxRetries = 3,
         initialDelayMs = 1000,
         timeoutMs = 10000,
-        backoffFactor = 2
+        backoffFactor = 2,
+        minDelayBetweenTasksMs = 100
     } = options;
 
     let retryCount = 0;
@@ -27,7 +28,6 @@ export async function withRetry<T>(
         try {
             // Calculate time since last task
             const timeSinceLastTask = Date.now() - lastTaskTime;
-            const { minDelayBetweenTasksMs = 1000 } = options;
             
             // Wait if needed to maintain minimum delay
             if (timeSinceLastTask < minDelayBetweenTasksMs) {

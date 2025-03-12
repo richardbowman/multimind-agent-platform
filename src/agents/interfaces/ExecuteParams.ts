@@ -5,6 +5,8 @@ import { UUID } from 'src/types/uuid';
 import { ChatPost } from 'src/chat/chatClient';
 import { Agent } from '../agents';
 import { StepResponse } from './StepResult';
+import { ExecuteContext } from './ExecuteNextStepParams';
+import { ExecutorType } from './ExecutorType';
 
 export interface ExecuteParams {
     readonly agentId: UUID;
@@ -12,7 +14,7 @@ export interface ExecuteParams {
     readonly stepGoal: string;
     readonly overallGoal?: string;
     readonly goal: string;
-    readonly step: string;
+    readonly step: ExecutorType;
     readonly stepId: UUID;
     readonly projectId: UUID;
     readonly previousResponses?: StepResponse[];
@@ -20,14 +22,8 @@ export interface ExecuteParams {
     readonly steps: StepTask<StepResponse>[],
     readonly mode?: 'quick' | 'detailed';
     readonly executionMode: 'conversation' | 'task';
-    readonly agents?: Agent[];
+    readonly agents: Agent[];
     readonly self: Agent;
-    readonly context?: {
-        readonly channelId?: UUID;
-        readonly threadId?: UUID;
-        readonly artifacts?: Artifact[];
-        readonly projects?: Project[];
-        readonly threadPosts?: ChatPost[];
-    };
+    readonly context?: ExecuteContext;
     readonly partialResponse: (message: string, newOnly?: boolean) => Promise<void>;
 }

@@ -1,5 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor, TaskNotification } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, StepExecutor, TaskNotification } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { JSONSchema, StructuredOutputPrompt } from "../../llm/ILLMService";
@@ -7,7 +7,7 @@ import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { Project, Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
-import { createUUID, UUID } from 'src/types/uuid';
+import { asUUID, createUUID, UUID } from 'src/types/uuid';
 import { Agent, TaskEventType } from '../agents';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { Artifact, ArtifactType, SpreadsheetSubType } from '../../tools/artifact';
@@ -29,13 +29,14 @@ interface CSVProcessingResponse extends StepResponse {
 }
 
 @StepExecutorDecorator(ExecutorType.CSV_PROCESSOR, 'Process each row of a CSV spreadsheet')
-export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse> {
+export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private artifactManager: ArtifactManager;
     private chatClient: ChatClient;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
         this.artifactManager = params.artifactManager!;
@@ -96,7 +97,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         };
 
         // Create prompt for agent selection
-        const instructions = this.modelHelpers.createPrompt();
+        const instructions = this.startModel(params);
         instructions.addInstruction(`Select the most appropriate agent to perform processing on the data in the spreadsheet for the desired goal.
             The CSV contains ${rows.length} rows of data.
             Consider the agents' capabilities and the nature of the data when making your selection.
@@ -119,9 +120,8 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
         try {
-            const rawResponse = await this.modelHelpers.generateMessage({
-                message: params.stepGoal,
-                instructions
+            const rawResponse = await instructions.generate({
+                message: params.stepGoal
             });
 
             const responseJSON = StringUtils.extractAndParseJsonBlock(rawResponse.message, schema);
@@ -176,7 +176,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                 const artifactLinks = Object.values(row).flatMap(value => {
                     if (typeof value === 'string') {
                         const matches = value.match(/\/artifact\/([a-f0-9-]{36})/gi);
-                        return matches ? matches.map(m => m.split('/')[2]) : [];
+                        return matches ? matches.map(m => asUUID(m.split('/')[2])) : [];
                     }
                     return [];
                 });
@@ -192,8 +192,8 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
                         processedArtifactId: processedArtifact.id,
                         rowData: row,
                         attachedArtifactIds: [
+                            // Exclude spreadsheets other than eval criteria/templates
                             ...(params.context?.artifacts
-                                // Exclude spreadsheets other than eval criteria/templates
                                 ?.filter(a => a.type !== ArtifactType.Spreadsheet ||  (a.metadata?.subtype === SpreadsheetSubType.EvaluationCriteria || a.metadata?.subtype === SpreadsheetSubType.Template))
                                 .map(a => a.id) || []),
                             ...artifactLinks
@@ -275,7 +275,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         return CSVUtils.toCSV(csv);
     }
 
-    private async processTaskResult(task: Task, csvArtifact: Artifact): Promise<any[]> {
+    private async processTaskResult(params: Partial<ExecuteParams>, task: Task, csvArtifact: Artifact): Promise<any> {
         if (task.status !== TaskStatus.Completed) {
             return [];
         }
@@ -319,7 +319,7 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         };
 
         // Create prompt for result processing
-        const instructions = this.modelHelpers.createPrompt();
+        const instructions = this.startModel(params, "processTaskResult");
         instructions.addInstruction(`Analyze the completed tasks and extract key insights that should be added as new columns in the CSV file.
             The original goal for this project was: ${originalGoal}
             
@@ -339,23 +339,24 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
         // Get the task's response data
         const responseData = task.props?.result || {};
         
-        const rawResponse = await this.modelHelpers.generateMessage({
-            message: `Task Description: ${task.description}\n\nTask Response Data: ${JSON.stringify(responseData, null, 2)}`,
-            instructions
+        const rawResponse = await instructions.generate({
+            message: `Task Description: ${task.description}\n\nTask Response Data: ${JSON.stringify(responseData, null, 2)}`
         });
+
 
         try {
             const response = StringUtils.extractAndParseJsonBlock(rawResponse.message, schema);
             if (response && Array.isArray(response.columns)) {
-                return [{
+                return {
                     rowIndex: task.props?.rowIndex,
                     data: response.columns.reduce((acc, insight) => {
                         acc[insight.name] = insight.value;
                         return acc;
                     }, {
                         rowIndex: task.props?.rowIndex
-                    })
-                }];
+                    }),
+                    traceId: rawResponse.metadata?._id
+                };
             }
         } catch (error) {
             Logger.error('Error processing task result:', error);
@@ -489,7 +490,12 @@ export class CSVProcessingExecutor implements StepExecutor<CSVProcessingResponse
 
         // Process results when a task completes
         if (eventType === TaskEventType.Completed && childTask) {
-            const results = await this.processTaskResult(childTask, csvArtifact);
+            const results = await this.processTaskResult({
+                step: ExecutorType.CSV_PROCESSOR,
+                agentId: this.params.userId,
+                goal: task.description
+            }, childTask, csvArtifact);
+
             if (results.length > 0) {
                 newContent = await this.updateCSVWithResults(newContent||csvArtifact.content.toString(), results);
             }

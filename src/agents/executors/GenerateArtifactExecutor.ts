@@ -1,5 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, ModelConversation, StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType, WithMessage } from '../interfaces/StepResult';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -39,22 +39,22 @@ export interface ArtifactGenerationStepResponse extends StepResponse {
  * - Generates unique IDs for new artifacts
  * - Preserves existing IDs during revisions
 */
-export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactGenerationStepResponse> {
+export abstract class GenerateArtifactExecutor extends BaseStepExecutor<ArtifactGenerationStepResponse> {
     protected modelHelpers: ModelHelpers;
     protected artifactManager: ArtifactManager;
     protected taskManager?: TaskManager;
-    protected addContentFormattingRules?(prompt: PromptBuilder);
+    protected addContentFormattingRules?(prompt: ModelConversation);
     protected abstract getSupportedFormats(): string[];
     
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
-
         this.artifactManager = params.artifactManager!;
         this.taskManager = params.taskManager;
     }
 
-    protected async createBasePrompt(params: ExecuteParams): Promise<PromptBuilder> {
-        const promptBuilder = this.modelHelpers.createPrompt();
+    protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation> {
+        const promptBuilder = this.startModel(params);
 
         // Add core instructions
         promptBuilder.addInstruction("In this step, you are generating or modifying a document based on the goal. When you respond, provide a short description of the document you have generated (don't write your message in future tense, you should say 'I successfully created/appended/replaced a document containing...').");
@@ -92,13 +92,13 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
     }
 
 
-    async execute(params: ExecuteParams & { modelType?: ModelType}): Promise<StepResult<ArtifactGenerationStepResponse>> {
+    async execute(params: ExecuteParams): Promise<StepResult<ArtifactGenerationStepResponse>> {
         const promptBuilder = await this.createBasePrompt(params);
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
         
         // Add content formatting rules
         if (this.addContentFormattingRules) this.addContentFormattingRules(promptBuilder);
-        promptBuilder.addOutputInstructions(OutputType.JSON_AND_MARKDOWN, schema, "", this.getSupportedFormats().join(" OR "));
+        promptBuilder.addOutputInstructions({outputType: OutputType.JSON_AND_MARKDOWN, schema, specialInstructions: "", type: this.getSupportedFormats().join(" OR ")});
         
         // Add Q&A context from project metadata
 
@@ -107,7 +107,7 @@ export abstract class GenerateArtifactExecutor implements StepExecutor<ArtifactG
                 message: params.message || params.stepGoal,
                 instructions: promptBuilder,
                 threadPosts: params.context?.threadPosts,
-                modelType: params.modelType
+                modelType: ModelType.DOCUMENT
             });
 
             const json = StringUtils.extractAndParseJsonBlock<ArtifactGenerationResponse>(unstructuredResult.message, schema);

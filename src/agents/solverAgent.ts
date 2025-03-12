@@ -22,11 +22,6 @@ export class SolverAgent extends StepBasedAgent {
 
         this.planner = null;
         this.supportsDelegation = true;
-        // Load procedure guides from markdown files
-        this.modelHelpers.loadProcedureGuide('standard-problem-solving');
-        this.modelHelpers.loadProcedureGuide('csv-focused');
-        this.modelHelpers.loadProcedureGuide('code-focused');
-        this.modelHelpers.loadProcedureGuide('simple-problem-solving');
 
         this.modelHelpers.setFinalInstructions(`SOLVING INSTRUCTIONS
         Use the appropriate sequence based on problem context:

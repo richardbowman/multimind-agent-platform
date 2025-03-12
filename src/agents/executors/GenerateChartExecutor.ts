@@ -77,7 +77,7 @@ export class GenerateChartExecutor implements StepExecutor<ChartResponse> {
 ${JSON.stringify(schema, null, 2)}`);
 
         try {
-            const unstructuredResult = await this.modelHelpers.generate<ModelMessageResponse>({
+            const unstructuredResult = await this.modelHelpers.generateMessage({
                 message: params.message || params.stepGoal,
                 instructions: promptBuilder,
                 threadPosts: params.context?.threadPosts

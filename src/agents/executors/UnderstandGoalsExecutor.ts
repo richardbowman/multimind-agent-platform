@@ -110,7 +110,7 @@ answers from the user.` : `You will also set a flag telling the workflow whether
         prompt.addContext({contentType: ContentType.EXECUTE_PARAMS, params});
         prompt.addContext({contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts});
 
-        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema);
+        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
         
         const rawMessage = await this.modelHelpers.generate({
             message: params.message || params.stepGoal,

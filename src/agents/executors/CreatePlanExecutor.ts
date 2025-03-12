@@ -81,11 +81,11 @@ export class CreatePlanExecutor implements StepExecutor<StepResponse> {
 
         const schema = await getGeneratedSchema(SchemaType.DocumentPlanResponse);
 
-        const prompt = this.modelHelpers.createPrompt();
-        prompt.addContext({contentType: ContentType.ABOUT});
-        prompt.addContext({contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal||params.goal});
+        const instructions = this.modelHelpers.createPrompt();
+        instructions.addContext({contentType: ContentType.ABOUT});
+        instructions.addContext({contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal||params.goal});
 
-        prompt.addContext(`Template: ${project.template.name}
+        instructions.addContext(`Template: ${project.template.name}
                 Description: ${project.template.description}
 
                 Available Sections:
@@ -101,20 +101,20 @@ export class CreatePlanExecutor implements StepExecutor<StepResponse> {
                 - ${a.question}
                   ${a.answer}
                 `).join('\n')}`);
-        prompt.addInstruction(`Create a comprehensive document based on the template and gathered information.
+        instructions.addInstruction(`Create a comprehensive document based on the template and gathered information.
                 For each section:
                 1. Use the provided answers to populate the content
                 2. Maintain the template structure
                 3. Ensure all required sections are complete
                 4. Add any additional relevant information
                 `);
-        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
+        instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
 
-        const rawResponse = await this.modelHelpers.generate<ModelMessageResponse>({
+        const rawResponse = await this.modelHelpers.generateMessage({
             message: params.stepGoal || params.message,
             threadPosts: params.context?.threadPosts,
-            instructions: prompt
+            instructions
         });
 
         const data = StringUtils.extractAndParseJsonBlock<DocumentPlanResponse>(rawResponse.message, schema);

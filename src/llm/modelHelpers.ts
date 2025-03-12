@@ -1,20 +1,18 @@
 import { ChatPost } from "src/chat/chatClient";
-import { ILLMService } from "./ILLMService";
+import { ILLMService, LLMContext } from "./ILLMService";
 import { ModelCache } from "./modelCache";
 import { ModelMessageResponse, ModelResponse } from "src/schemas/ModelResponse";
-import Ajv from "ajv";
-import addFormats from "ajv-formats";
 import Logger from "src/helpers/logger";
 import JSON5 from "json5";
-import { GenerateInputParams, GenerateParams, HandlerParams, ProjectHandlerParams, ThreadSummary } from "src/agents/agents";
+import { GenerateInputParams, ProjectHandlerParams, ThreadSummary } from "src/agents/agents";
 import { Artifact } from "src/tools/artifact";
-import { ArtifactManager } from "src/tools/artifactManager";
 import { StructuredOutputPrompt } from "./ILLMService";
 import { SearchResult } from "./IVectorDatabase";
 import { PromptBuilder, PromptRegistry } from "./promptBuilder";
-import { isObject } from "src/types/types";
-import { InputPrompt, StructuredInputPrompt } from "src/prompts/structuredInputPrompt";
-import { ExecutorType } from "src/agents/interfaces/ExecutorType";
+import { asError, isObject } from "src/types/types";
+import { InputPrompt } from "src/prompts/structuredInputPrompt";
+import { StringUtils } from "src/utils/StringUtils";
+import { withRetry } from "src/helpers/retry";
 
 export interface ModelHelpersParams {
     llmService: ILLMService;
@@ -22,7 +20,8 @@ export interface ModelHelpersParams {
     purpose?: string;
     finalInstructions?: string;
     messagingHandle?: string;
-    sequences: StepSequence[];
+    context: LLMContext;
+    promptRegistry: PromptRegistry;
 }
 
 export type WithTokens<T> = T extends object ? T & {
@@ -32,69 +31,30 @@ export type WithTokens<T> = T extends object ? T & {
     };
 } : never;
 
-export interface StepSequenceItem {
-    type: ExecutorType;
-    description?: string;
-    interaction?: string;
-}
-
-export class StepSequence {
-    private steps: StepSequenceItem[] = [];
-    private currentStepIndex = 0;
-    private name: string;
-    private description: string;
-
-    constructor(
-        name: string,
-        description: string,
-        initialSteps?: StepSequenceItem[]
-    ) {
-        this.name = name;
-        this.description = description;
-        if (initialSteps) {
-            this.steps = initialSteps;
-        }
-    }
-
-    getName() {
-        return this.name;
-    }
-
-    getDescription() {
-        return this.description;
-    }
-
-    addStep(type: string, description: string) {
-        this.steps.push({ type, description });
-    }
-
-    getNextStep() {
-        if (this.currentStepIndex >= this.steps.length) {
-            return null;
-        }
-        return this.steps[this.currentStepIndex++];
-    }
-
-    reset() {
-        this.currentStepIndex = 0;
-    }
-
-    getAllSteps() {
-        return this.steps;
-    }
-
-    getCurrentStep() {
-        if (this.currentStepIndex >= this.steps.length) {
-            return null;
-        }
-        return this.steps[this.currentStepIndex];
-    }
-}
-
 export class ModelHelpers {
-    private stepSequences: StepSequence[] = [];
-    private promptRegistry: PromptRegistry = new PromptRegistry(this);
-
+    protected promptRegistry: PromptRegistry;
+    protected context: LLMContext;
+    protected llmService: ILLMService;
+    protected isMemoryEnabled: boolean = false;
+    protected purpose: string = 'You are a helpful agent.';
+    protected modelCache: ModelCache;
+    protected threadSummaries: Map<string, ThreadSummary> = new Map();
+    protected userId: string;
+    protected finalInstructions?: string;
+    readonly messagingHandle?: string;
+    
+    constructor(params: ModelHelpersParams) {
+        this.userId = params.userId;
+        this.llmService = params.llmService;
+        this.finalInstructions = params.finalInstructions;
+        this.messagingHandle = params.messagingHandle;
+        this.modelCache = new ModelCache();
+        if (params.purpose) this.purpose = params.purpose;
+        this.finalInstructions = params.finalInstructions;
+        this.context = params.context;
+        this.promptRegistry = params.promptRegistry||new PromptRegistry(this);
+    }
+    
     createPrompt() {
         const prompt = new PromptBuilder(this.promptRegistry);
 
@@ -112,42 +72,6 @@ export class ModelHelpers {
     }
     getFinalInstructions() {
         return this.finalInstructions;
-    }
-
-    addStepSequence(name: string, description: string, steps: { type: ExecutorType, description: string }[]) {
-        this.stepSequences.push(new StepSequence(name, description, steps));
-    }
-
-    getStepSequences() {
-        return this.stepSequences;
-    }
-
-    getStepSequence(name?: string) {
-        if (name) {
-            return this.stepSequences.find(s => s.getName() === name);
-        }
-        return this.stepSequences[0]; // Default to first sequence
-    }
-
-
-    protected llmService: ILLMService;
-    protected isMemoryEnabled: boolean = false;
-    protected purpose: string = 'You are a helpful agent.';
-    private modelCache: ModelCache;
-    private threadSummaries: Map<string, ThreadSummary> = new Map();
-    protected userId: string;
-    protected finalInstructions?: string;
-    readonly messagingHandle?: string;
-
-    constructor(params: ModelHelpersParams) {
-        this.userId = params.userId;
-        this.llmService = params.llmService;
-        this.finalInstructions = params.finalInstructions;
-        this.messagingHandle = params.messagingHandle;
-        this.modelCache = new ModelCache();
-        this.stepSequences = [...params.sequences||[]];
-        if (params.purpose) this.purpose = params.purpose;
-        this.finalInstructions = params.finalInstructions;
     }
 
     protected addDateToSystemPrompt(content: string): string {
@@ -275,43 +199,15 @@ export class ModelHelpers {
         return importantPoints;
     }
 
-    private async generateStructured<T extends ModelResponse>(structure: StructuredOutputPrompt, params: GenerateParams): Promise<T> {
-        // Initialize JSON schema validator with custom date-time format
-        const ajv = new Ajv({
-            allErrors: true,
-            strict: false,
-            formats: {
-                'date-time': {
-                    validate: (dateTimeStr: string) => {
-                        // Try parsing as ISO date string
-                        const date = new Date(dateTimeStr);
-                        return !isNaN(date.getTime());
-                    }
-                }
-            }
-        });
-        addFormats(ajv);
-        ajv.addFormat("date-time", {
-            validate: (dateTimeStr: string) => {
-                // Try parsing as ISO date string
-                const date = new Date(dateTimeStr);
-                return !isNaN(date.getTime());
-            } 
-        });
-        const validate = ajv.compile(structure.getSchema());
-        // Check cache first
-        const cacheContext = {
-            params,
-            schema: structure.getSchema()
-        };
-        // const cachedResponse = this.modelCache.get(structure.getPrompt(), cacheContext);
-        // if (cachedResponse) {
-        //     return cachedResponse as T;
-        // }
-
-        // Fetch the latest memory artifact for the channel
-        let     augmentedInstructions;
+    private async generateStructured<T extends ModelResponse>(structure: StructuredOutputPrompt, params: GenerateInputParams): Promise<T> {
+        const { contextWindow, maxTokens } = params;
         const prompt = await structure.getPrompt();
+        let augmentedInstructions;
+        let response: T;
+        
+        // Augment instructions with context and generate a response
+        const history = params.threadPosts || params.projectChain?.posts.slice(0, -1) || [];
+
         if (isObject(prompt) && prompt instanceof PromptBuilder) {
             augmentedInstructions = await prompt.build();
         } else if (typeof prompt === "string") {
@@ -319,188 +215,52 @@ export class ModelHelpers {
             augmentedInstructions = `OVERALL PURPOSE: ${this.getPurpose()}\n\n${augmentedInstructions}\n\nOverall agent instructions: ${this.getFinalInstructions()}`;
         };
 
-        if (this.isMemoryEnabled) {
-            const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
-
-            // Append the memory content to the instructions if it exists
-            if (memoryArtifact && memoryArtifact.content) {
-                const memoryContent = memoryArtifact.content.toString();
-                augmentedInstructions += `\n\nContext from previous interactions:\n${memoryContent}`;
-            }
-        }
-
-        // Deduplicate artifacts first, then search results
-        const deduplicatedArtifacts = params.artifacts ? this.deduplicateArtifacts(params.artifacts) : [];
-        const deduplicatedSearchResults = params.searchResults ? this.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
-
-        if (deduplicatedSearchResults) {
-            augmentedInstructions += `\n\nSearch results from knowledge base:\n${deduplicatedSearchResults.map(s => `<searchresult>Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}</searchresult>\n\n`)}`;
-        }
-
-        if (deduplicatedArtifacts) {
-            for (const artifact of deduplicatedArtifacts) {
-                const artifactContent = artifact.content ? artifact.content.toString() : 'No content available';
-                augmentedInstructions += `\n\n<artifact>Artifact ID: ${artifact.id}\nTitle: ${artifact.metadata?.title || 'No title'}\nContent:\n${artifactContent}</artifact>`;
-            }
-        }
-
-        // Augment instructions with context and generate a response
-        const history = params.threadPosts || params.projectChain?.posts.slice(0, -1) || [];
-
-        const { contextWindow, maxTokens } = params;
-
-        let response: T;
-        let attempts = 0;
-        const maxAttempts = 2;
-
-        while (attempts < maxAttempts) {
-            try {
-                const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
-                response = await this.llmService.generateStructured<T>(params.userPost ? params.userPost : params.message ? params : { message: "" }, augmentedStructuredInstructions, history, contextWindow, maxTokens);
-
-                // Validate response against schema
-                const isValid = validate(response);
-                if (!isValid) {
-                    const errors = validate.errors?.map(err =>
-                        `Schema validation error at ${err.instancePath}: ${err.message}`
-                    ).join('\n');
-
-                    if (attempts < maxAttempts - 1) {
-                        // Add error feedback to instructions for retry
-                        augmentedInstructions += `\n\nPrevious attempt failed validation. Please ensure your response includes all required properties:\n${errors}`;
-                        attempts++;
-                        continue;
-                    }
-                    throw new Error(`Response does not conform to schema:\n${errors}`);
-                }
-
-                //TODO: seems confusing hopefully not used
-                // if (params.artifacts) {
-                //     response.artifactIds = params.artifacts?.map(a => a.id);
-                // }
-
-                // Cache the response
-                //this.modelCache.set(structure.getPrompt(), cacheContext, response);
-
-                return response;
-            } catch (error) {
-                Logger.error("Error generating", error);
-                if (attempts >= maxAttempts - 1) {
+        try {
+            return withRetry<T>(async () => {
+                try {
+                    const augmentedStructuredInstructions = new StructuredOutputPrompt(structure.getSchema(), augmentedInstructions);
+                    response = await this.llmService.generateStructured<T>(params.userPost ? params.userPost : params.message ? params : { message: "" }, augmentedStructuredInstructions, history, contextWindow, maxTokens);
+                    return response;
+                } catch (error) {
+                    Logger.error("Error generating", error);
                     throw error;
                 }
-                attempts++;
-            }
-        }
-
-        throw new Error('Failed to generate valid response after retries');
-    }
-
-    public async generate<T extends WithTokens<ModelResponse>>(params: GenerateInputParams, context?: LLMContext): Promise<T> {
-        if (params.instructions instanceof StructuredOutputPrompt) {
-            return this.generateStructured<T>(params.instructions, {...params, context});
-        } else {
-            return this.generateOld(params.instructions, {...params, context});
-        }
-    }
-
-    /**
-     * @deprecated
-     */
-    public deduplicateArtifacts(artifacts: Artifact[]): Artifact[] {
-        const seenArtifacts = new Set<string>();
-        return artifacts.filter(artifact => {
-            const { id: artifactId } = artifact;
-            if (seenArtifacts.has(artifactId)) {
-                return false;
-            }
-            seenArtifacts.add(artifactId);
-            return true;
-        });
-    }
-
-    public deduplicateSearchResults(searchResults: SearchResult[], artifacts: Artifact[]): SearchResult[] {
-        const seenChunks = new Set<string>();
-        const artifactUrls = new Set<string>(artifacts.map(a => `artifact://${a.id}`));
-
-        return searchResults.filter(result => {
-            if (seenChunks.has(result.id)) {
-                return false;
-            }
-            if (artifactUrls.has(result.metadata.url)) {
-                return false;
-            }
-
-            seenChunks.add(result.id);
-            return true;
-        });
-    }
-
-    public async fetchLatestMemoryArtifact(channelId: string, artifactManager: ArtifactManager): Promise<Artifact | null> {
-        const artifact = await artifactManager.loadArtifact(`${channelId}-${this.userId}-memory`);
-        return artifact;
-    }
-
-    public formatArtifacts(artifacts?: Artifact[]): string {
-        if (!artifacts || artifacts.length === 0) return '';
-
-        let message = "📁 Attached Artifacts:\n\n";
-        artifacts.forEach((artifact, index) => {
-            message += `Artifact ${index + 1} (${artifact.type}):\n`;
-            if (typeof artifact.content === 'string') {
-                const maxLength = 1000;
-                const content = artifact.content;
-                if (content.length > maxLength) {
-                    message += `[First ${maxLength} characters shown - document truncated]\n`;
-                    message += content.substring(0, maxLength) + '\n\n';
-                    message += `[Document continues... Total length: ${content.length} characters]\n\n`;
-                } else {
-                    message += content + '\n\n';
+            }, (response) => {
+                // Validate response against schema
+                try {
+                    StringUtils.validateJsonAgainstSchema(response, structure.getSchema());
+                    return true;
+                } catch (error) {
+                    // Add error feedback to instructions for retry
+                    augmentedInstructions += `\n\nPrevious attempt failed validation. Please ensure your response includes all required properties:\n${error.message}`;
+                    throw new Error(`Response does not conform to schema:\n${asError(error).message}`);
                 }
-            } else {
-                message += `[Binary data - ${artifact.content.length} bytes]\n\n`;
-            }
-        });
-        return message;
+            }, {
+                maxRetries: 2
+            })
+        } catch (error) {
+            throw new Error(`Failed to generate valid response after retries: ${asError(error).message}`);
+        }
     }
 
-    private async generateOld(instructions: Promise<string>|string|InputPrompt, params: GenerateInputParams): Promise<ModelMessageResponse> {
-        // Check cache first
-        const cacheContext = { params };
-        // const cachedResponse = this.modelCache.get(instructions, cacheContext);
-        // if (cachedResponse) {
-        //     return cachedResponse;
-        // }
-        
+    public async generate<T extends WithTokens<ModelResponse>>(params: GenerateInputParams): Promise<T> {
+        if (params.instructions instanceof StructuredOutputPrompt) {
+            return this.generateStructured<T>(params.instructions, params);
+        } else {
+            return this.generateMessage(params);
+        }
+    }
+
+   
+    public async generateMessage(params: GenerateInputParams): Promise<WithTokens<ModelMessageResponse>> {
+        const instructions = params.instructions;
         let augmentedInstructions : string;
         if (typeof instructions === "string") {
-            // Fetch the latest memory artifact for the channel
-            augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${augmentedInstructions}`);
-            if (this.isMemoryEnabled && params.userPost) {
-                const memoryArtifact = await this.fetchLatestMemoryArtifact(params.userPost.channel_id);
-    
-                // Append the memory content to the instructions if it exists
-                if (memoryArtifact && memoryArtifact.content) {
-                    const memoryContent = memoryArtifact.content.toString();
-                    augmentedInstructions += `\n\nContext from previous interactions:\n${memoryContent}`;
-                }
-            }
-    
-            // Deduplicate artifacts first, then search results
-            const deduplicatedArtifacts = params.artifacts ? this.deduplicateArtifacts(params.artifacts) : [];
-            const deduplicatedSearchResults = params.searchResults ? this.deduplicateSearchResults(params.searchResults, deduplicatedArtifacts) : undefined;
-    
-            if (deduplicatedSearchResults) {
-                augmentedInstructions += `\n\nSearch results from knowledge base:\n${deduplicatedSearchResults.map(s => `<searchresult>Result ID: ${s.id}\nResult Title:${s.metadata.title}\nResult Content:\n${s.text}</searchresult>\n\n`)}`;
-            }
-    
-            if (deduplicatedArtifacts) {
-                for (const artifact of deduplicatedArtifacts) {
-                    const artifactContent = artifact.content ? artifact.content.toString() : 'No content available';
-                    augmentedInstructions += `\n\n<artifact>Artifact ID: ${artifact.id}\nTitle: ${artifact.metadata?.title || 'No title'}\nContent:\n${artifactContent}</artifact>`;
-                }
-            }    
+            augmentedInstructions = this.addDateToSystemPrompt(`AGENT PURPOSE: ${this.purpose}\n\nINSTRUCTIONS: ${instructions}`);
         } else if (instructions instanceof Promise) {
             augmentedInstructions = await instructions;
+        } else if (instructions instanceof StructuredOutputPrompt) {
+            throw new Error("GenerateMessage does not support structured output");
         } else {
             augmentedInstructions = await instructions.getInstructions();
         }
@@ -508,7 +268,11 @@ export class ModelHelpers {
         // Augment instructions with context and generate a response
         const history = params.threadPosts || (params as ProjectHandlerParams).projectChain?.posts.slice(0, -1) || [];
         const response = await this.llmService.generate(augmentedInstructions, params.userPost || { message: params.message || params.content || "" }, history, {
-            modelType: params.modelType
+            modelType: params.modelType,
+            context: {
+                ...this.context,
+                ...params.context
+            }
         });
 
         // Ensure response is an object with message property
@@ -520,9 +284,6 @@ export class ModelHelpers {
         if (params.artifacts?.length) {
             formattedResponse.artifactIds = params.artifacts.map(a => a.id);
         }
-
-        // Cache the response
-        // this.modelCache.set(augmentedInstructions, cacheContext, formattedResponse);
 
         return formattedResponse;
     }

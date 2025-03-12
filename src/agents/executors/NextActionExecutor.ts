@@ -13,7 +13,7 @@ import { ChatClient } from 'src/chat/chatClient';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { StepTask } from '../interfaces/ExecuteStepParams';
 import { ModelType } from 'src/llm/LLMServiceFactory';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
@@ -29,11 +29,10 @@ export type WithReasoning<T extends ModelResponse> = T & {
 };
 
 @StepExecutorDecorator(ExecutorType.NEXT_STEP, 'Generate focused questions to understand user goals', false)
-export class NextActionExecutor implements StepExecutor<StepResponse> {
+export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
     readonly allowReplan: boolean = false;
     readonly alwaysComplete: boolean = true;
     
-    private llmService: ILLMService;
     private projects: TaskManager;
     private userId?: string;
     private modelHelpers: ModelHelpers;
@@ -43,7 +42,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
     private agentName?: string;
 
     constructor(params: ExecutorConstructorParams, stepExecutors: Map<string, StepExecutor<StepResponse>>) {
-        this.llmService = params.llmService;
+        super(params);
         this.projects = params.taskManager;
         this.userId = params.userId;
         this.modelHelpers = params.modelHelpers;
@@ -102,10 +101,8 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
             .map(({ key, description }) => `[${key}]: ${description}`)
             .join("\n");
 
-        // Get all available sequences
-        const sequences = this.modelHelpers.getStepSequences();
+        const prompt = this.startModel(params);
 
-        const prompt = this.modelHelpers.createPrompt();
         prompt.addContext(ContentType.PURPOSE);
         prompt.addContext({ contentType: ContentType.INTENT, params })
         prompt.addContext({ contentType: ContentType.AGENT_OVERVIEWS, agents: agentList||[]});
@@ -158,7 +155,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
         // }).join('\n\n');
 
         // Add procedure guides to prompt
-    prompt.addContext(guidesPrompt);
+        prompt.addContext(guidesPrompt);
             
         // prompt.addInstruction(sequencesPrompt);
 
@@ -178,10 +175,10 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
 
         prompt.addContext({contentType: ContentType.FINAL_INSTRUCTIONS, instructions: this.modelHelpers.getFinalInstructions()||""});
 
-        await prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema);
+        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
 
         // Try once more with the same prompt
-        const responseText = await this.modelHelpers.generate({
+        const responseText = await prompt.generate({
             message: params.message||params.stepGoal,
             instructions: prompt,
             modelType: ModelType.ADVANCED_REASONING
@@ -198,7 +195,7 @@ export class NextActionExecutor implements StepExecutor<StepResponse> {
              Logger.warn('Failed to parse initial response, retrying once...');
 
              // Try once more with the same prompt
-             const retryResponseText = await this.modelHelpers.generate({
+             const retryResponseText = await prompt.generate({
                  message: params.message||params.stepGoal,
                  instructions: prompt,
                  modelType: ModelType.ADVANCED_REASONING

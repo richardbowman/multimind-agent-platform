@@ -21,6 +21,7 @@ import { ArrayUtils } from 'src/utils/ArrayUtils';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../helpers/logger';
 import { ExecutorConstructorParams } from './interfaces/ExecutorConstructorParams';
+import { LLMContext } from 'src/llm/ILLMService';
 
 interface ExecutorCapability {
     stepType: string;
@@ -61,7 +62,7 @@ export abstract class StepBasedAgent extends Agent {
                 messagingHandle: this.messagingHandle,
                 purpose: this.modelHelpers.getPurpose(),
                 finalInstructions: this.modelHelpers.getFinalInstructions(),
-                sequences: this.modelHelpers.getStepSequences()
+                context: this.buildLLMContext()
             }),
             settings: this.settings
         };
@@ -474,7 +475,8 @@ export abstract class StepBasedAgent extends Agent {
                         message
                     }, {
                         partial: true,
-                        "project-ids": [params.projectId]
+                        "project-ids": [params.projectId],
+                        "artifactIds": params.context?.artifacts?.map(a => a.id)
                     });
                 } else if (!newOnly) {
                     // const post = await this.chatClient.getPost(params.partialPost.id);
@@ -640,36 +642,38 @@ export abstract class StepBasedAgent extends Agent {
             }
         } as Partial<StepTask<StepResponse>>);
 
-        if (stepResult.response.status) {
-            const partialPostFn = this.getPartialPost(replyTo, params);
-            await partialPostFn(stepResult.response.status);
-        }
-
+        
         if (stepResult.projectId) {
             const newProject = this.projects.getProject(stepResult.projectId);
             newProject.metadata.parentTaskId = task.id;
             //TODO need a way to update project to disk
         }
-
+        
         // check if they provided artifact objects for us to save
         const createdArtifacts : UUID[] = [];
         if (stepResult.response.artifacts?.length||0 > 0) {
             const artifacts = await Promise.all<Artifact>(stepResult.response.artifacts!.map(a => this.artifactManager.saveArtifact(a)));
             const ids = artifacts.map(a => a.id);
             createdArtifacts.push(...ids);
+            delete stepResult.response.artifacts;
         }
-
+        
         const artifactList = [...createdArtifacts || [], ...stepResult.artifactIds || [], ...stepResult.response?.artifactIds || [], stepResult.response?.data?.artifactId];
+        const props = {
+            "project-ids": [stepResult.projectId, projectId],
+            artifactIds: artifactList
+        };
+        
+        if (stepResult.response.status) {
+            const partialPostFn = this.getPartialPost(replyTo, { ...params, ...props });
+            await partialPostFn(stepResult.response.status);
+        }
 
         // Only send replies if we have a userPost to reply to
         if (replyTo && stepResult.response.message) {
             const messageResponse = {
                 message: stepResult.response?.message
             }
-            const props = {
-                "project-ids": [stepResult.projectId, projectId],
-                artifactIds: artifactList
-            };
             if (params.partialPost) {
                 await this.chatClient.updatePost(
                     (params.partialPost as ChatPost).id,

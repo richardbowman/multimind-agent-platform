@@ -1,3 +1,4 @@
+import { UUID } from "node:crypto";
 
 export interface ModelResponse extends Record<string, any> {
 
@@ -8,6 +9,7 @@ export interface ModelResponseMetadata {
         inputTokens: number,
         outputTokens:number
     }
+    _id: UUID;
 }
 
 export interface GenerateOutputParams<M extends ModelResponse> {

@@ -38,12 +38,12 @@ export class TemplateSelectorExecutor implements StepExecutor<StepResponse> {
         // Get available templates
         const templates = this.onboardingConsultant.getAvailableTemplates();
 
-        const prompt = this.modelHelpers.createPrompt();
-        prompt.addContext({contentType: ContentType.ABOUT});
-        prompt.addContext({contentType: ContentType.INTENT, params});
-        prompt.addContext({contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal||""});
-        prompt.addContext({contentType: ContentType.CONVERSATION, posts: params.context?.threadPosts||[]});
-        prompt.addInstruction( `Available Templates:
+        const instructions = this.modelHelpers.createPrompt();
+        instructions.addContext({contentType: ContentType.ABOUT});
+        instructions.addContext({contentType: ContentType.INTENT, params});
+        instructions.addContext({contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal||""});
+        instructions.addContext({contentType: ContentType.CONVERSATION, posts: params.context?.threadPosts||[]});
+        instructions.addInstruction( `Available Templates:
             ${templates.map(t => `
             - ${t.name} (${t.id})
               ${t.description}
@@ -63,17 +63,15 @@ export class TemplateSelectorExecutor implements StepExecutor<StepResponse> {
             - Reasoning: Explanation of why this template was chosen
             - Suggested Modifications: Any suggested changes to better fit the user's needs
             `);
-        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE, schema);
+        instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
-
-        const modelResponse = await this.modelHelpers.generate<ModelMessageResponse>({
+        const modelResponse = await this.modelHelpers.generateMessage({
             message: params.stepGoal || params.message,
-            instructions: prompt
+            instructions
         });
         const data = StringUtils.extractAndParseJsonBlock<TemplateSelectionResponse>(modelResponse.message, schema);
 
 
-        prompt.addOutputInstructions(OutputType.JSON_WITH_MESSAGE);
 
         return {
             type: 'template_selection',

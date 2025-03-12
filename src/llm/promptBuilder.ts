@@ -1,9 +1,7 @@
-import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "src/agents/interfaces/StepResult";
+import { StepResponse, StepResponseType } from "src/agents/interfaces/StepResult";
 import { StepBasedAgent } from "src/agents/stepBasedAgent";
 import Logger from "src/helpers/logger";
 import { ModelHelpers } from "./modelHelpers";
-import { SchemaType } from "src/schemas/SchemaTypes";
-import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelNameContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepResponseContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent, OverallGoalContent, FullGoalsContent, StepsContent, TasksContent, ChannelDetailsContent, StepGoalContent } from "./ContentTypeDefinitions";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { IntentionsResponse } from "src/schemas/goalAndPlan";
@@ -11,8 +9,13 @@ import { ExecutorType } from "src/agents/interfaces/ExecutorType";
 import { StringUtils } from "src/utils/StringUtils";
 import { JSONSchema } from "./ILLMService";
 import { ArtifactType } from "src/tools/artifact";
+import { FullArtifactStepResponse } from "src/agents/executors/RetrieveFullArtifactExecutor";
 
 export interface ContentRenderer<T> {
+    (content: T): Promise<string> | string;
+}
+
+export interface StepResponseRenderer<T extends StepResponse> {
     (content: T): Promise<string> | string;
 }
 
@@ -50,6 +53,12 @@ export enum OutputType {
     JSON_WITH_MESSAGE_AND_REASONING
 }
 
+export class GlobalRegistry {
+    public readonly contentRenderers: Map<ContentType, ContentRenderer<any>> = new Map();
+    public readonly stepResponseRenderers = new Map<StepResponseType, StepResponseRenderer<StepResponse>>();
+}
+
+export const globalRegistry = new GlobalRegistry();
 
 export class PromptRegistry {
     private contentRenderers: Map<ContentType, ContentRenderer<any>> = new Map();
@@ -211,7 +220,7 @@ ${this.modelHelpers.getFinalInstructions()}
             const stepResult = step.props.result!;
             let body;
             if (stepResult.response.type) {
-                const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type);
+                const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type)||globalRegistry.stepResponseRenderers.get(stepResult.response.type);
                 if (typeRenderer) {
                     body = await typeRenderer(stepResult.response);
                 }
@@ -226,18 +235,19 @@ Step Result: <stepInformation>${body || stepResult.response.message || stepResul
         return "# 📝 STEP HISTORY:\n" + stepProcessors.join('\n') + "\n";
     }
 
-    private renderStepResponses({ responses }: StepResponseContent): string {
-        return "📝 Past Step Responses:\n" + responses.filter(r => r).map((stepResponse, index) => {
+    private async renderStepResponses({ responses }: StepResponseContent): Promise<string> {
+        const resolvedResponses = await Promise.all(responses.filter(r => r).map(async (stepResponse, index) => {
             let body;
             if (stepResponse.type) {
-                const typeRenderer = this.stepResponseRenderers.get(stepResponse.type!);
+                const typeRenderer = this.stepResponseRenderers.get(stepResponse.type!)||globalRegistry.stepResponseRenderers.get(stepResponse.type);;
                 if (typeRenderer) {
-                    body = typeRenderer(stepResponse);
+                    body = await typeRenderer(stepResponse);
                 }
             }
             // Default renderer for unknown types
             return `Step ${index + 1} (${stepResponse.type ?? ""}):\n<stepInformation>${body || stepResponse.message || stepResponse.reasoning || stepResponse.status}</stepInformation>`;
-        }).join('\n') + "\n";
+        }));
+        return "📝 Past Step Responses:\n" + resolvedResponses.join('\n') + "\n";
     }
 
     private renderValidationResponse(response: StepResponse): string {
@@ -265,7 +275,7 @@ Step Result: <stepInformation>${body || stepResult.response.message || stepResul
     }
 
     getRenderer(contentType: ContentType): ContentRenderer<any> | undefined {
-        return this.contentRenderers.get(contentType);
+        return this.contentRenderers.get(contentType)||globalRegistry.contentRenderers.get(contentType);
     }
 
     private renderArtifacts({ artifacts }: ArtifactsFullContent): string {
@@ -450,6 +460,13 @@ Step Result: <stepInformation>${body || stepResult.response.message || stepResul
     }
 }
 
+export interface OutputInstructionsParams {
+    outputType: OutputType;
+    schema?: JSONSchema;
+    specialInstructions?: string;
+    type?: string;
+}
+
 export class PromptBuilder implements InputPrompt {
     private contentSections: Map<ContentType, any> = new Map();
     private instructions: (Promise<string> | string)[] = [];
@@ -464,23 +481,17 @@ export class PromptBuilder implements InputPrompt {
         return this.build();
     }
 
-    interface OutputInstructionsParams {
-        outputType: OutputType;
-        schemaDef?: JSONSchema;
-        specialInstructions?: string;
-        type?: string;
-    }
 
-    addOutputInstructions({ outputType, schemaDef, specialInstructions, type = 'markdown' }: OutputInstructionsParams) {
-        if (outputType === OutputType.JSON_AND_MARKDOWN && schemaDef) {
-            this.addInstruction(`Respond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n 
+    addOutputInstructions({ outputType, schema, specialInstructions, type = 'markdown' }: OutputInstructionsParams) {
+        if (outputType === OutputType.JSON_AND_MARKDOWN && schema) {
+            this.addInstruction(`Respond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n 
             Then, provide a separate fenced \`\`\`${type} code block${specialInstructions ? ` that provides: ${specialInstructions}.` : ''}.`);
-        } else if (outputType === OutputType.JSON_WITH_MESSAGE && schemaDef) {
-            this.addInstruction(`Respond with a user-friendly message and a fenced code block \`\`\`json with an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
-        } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schemaDef) {
+        } else if (outputType === OutputType.JSON_WITH_MESSAGE && schema) {
+            this.addInstruction(`Respond with a user-friendly message and a fenced code block \`\`\`json with an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+        } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schema) {
             this.addInstruction(`1. Before you answer, think about how to best interpret the instructions and context you have been provided. Include your thinking wrapped in <thinking> </thinking> tags.
 2. Then, respond with a user-friendly message.
-3. Provide structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+3. Provide structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         }
     }
     

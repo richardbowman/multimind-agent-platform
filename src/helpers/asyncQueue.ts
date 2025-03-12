@@ -20,7 +20,7 @@ export class AsyncQueue {
     constructor(options: AsyncQueueOptions = {}) {
         this.concurrency = options.concurrency || 1;
         this.timeout = options.timeout || 0;
-        this.minDelayBetweenTasksMs = options.minDelayBetweenTasksMs || 1000; // Default 1 second delay
+        this.minDelayBetweenTasksMs = options.minDelayBetweenTasksMs || 0;
     }
 
     async enqueue<T>(operation: () => Promise<T>): Promise<T> {
@@ -48,6 +48,9 @@ export class AsyncQueue {
         while (this.activeCount >= this.concurrency) {
             await new Promise(resolve => setTimeout(resolve, 10));
         }
+        this.activeCount++;
+        this.lastTaskTime = Date.now();
+        AsyncQueue.Logger?.verbose(`AsyncQueue executing operation from:\n${item.stack}`);
 
         // Calculate time since last task
         const timeSinceLastTask = Date.now() - this.lastTaskTime;
@@ -59,9 +62,6 @@ export class AsyncQueue {
             );
         }
 
-        this.activeCount++;
-        this.lastTaskTime = Date.now();
-        AsyncQueue.Logger?.verbose(`AsyncQueue executing operation from:\n${item.stack}`);
 
         try {
             // Run the operation with timeout if specified
