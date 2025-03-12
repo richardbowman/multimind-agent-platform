@@ -1,15 +1,12 @@
 import Logger from "../helpers/logger";
-import { Attachment, ChatClient, ChatPost, ConversationContext, isValidChatPost, ProjectChainResponse } from "../chat/chatClient";
-import * as fs from "fs/promises";
-import { AsyncQueue } from "../helpers/asyncQueue";
+import { Attachment, ChatClient, ChatPost, ConversationContext, isValidPostParams } from "../chat/chatClient";
 import { ChannelData, ChannelHandle, CreateChannelParams } from "src/shared/channelTypes";
 import { EventEmitter } from "stream";
-import { _getPathRecursive } from "@langchain/core/dist/utils/fast-json-patch/src/helpers";
-import { createUUID, UUID } from "src/types/uuid";
+import { UUID } from "src/types/uuid";
 import { ChatHandle } from "src/types/chatHandle";
 
-export class InMemoryPost implements ChatPost {
-    static fromLoad(postData: any): InMemoryPost {
+export class InMemoryPost implements Partial<ChatPost> {
+    static fromLoad(postData: any): ChatPost {
         const post = new InMemoryPost(
             postData.channel_id,
             postData.message,
@@ -19,10 +16,10 @@ export class InMemoryPost implements ChatPost {
             postData.id // Pass the database ID directly
         );
         post.attachments = postData.attachments || [];
-        return post;
+        return post as ChatPost;
     }
 
-    public id: UUID;
+    public id?: UUID;
     public channel_id: UUID;
     public message: string;
     public user_id: UUID;
@@ -32,7 +29,7 @@ export class InMemoryPost implements ChatPost {
     public attachments?: Attachment[];
 
     constructor(channel_id: UUID, message: string, user_id: UUID, props?: Record<string, any>, create_at?: number, id?: UUID) {
-        this.id = id || createUUID();
+        this.id = id;
         this.channel_id = channel_id;
         this.message = message;
         this.user_id = user_id;
@@ -82,26 +79,28 @@ export class LocalChatStorage extends EventEmitter {
 
     async createChannel(params: CreateChannelParams): Promise<UUID> {
         const channel = await ChannelDataModel.create({
-            ...params,
-            id: createUUID()
+            ...params
         });
 
         this.emit("addChannel", channel.id, params);
         return channel.id;
     }
 
-    public async addPost(post: ChatPost): Promise<void> {
-        if (!isValidChatPost(post)) {
-            Logger.error(`Invalid post ${JSON.stringify(post, null, 2)}`);
-            return;
+    public async addPost(post: ChatPost): Promise<ChatPost> {
+        if (!isValidPostParams(post)) {
+            const message = `Invalid post ${JSON.stringify(post, null, 2)}`;
+            Logger.error(message);
+            throw new Error(message);
         }
         
-        await ChatPostModel.create({
+        const postModel = await ChatPostModel.create({
             ...post,
             attachments: post.attachments || []
         });
+        const savedPost = InMemoryPost.fromLoad(postModel);
         
-        this.callbacks.forEach(c => c(post));
+        this.callbacks.forEach(c => c(savedPost));
+        return savedPost;
     }
 
     public async registerChannel(channelId: UUID, channelName: ChannelHandle) {
@@ -295,9 +294,8 @@ export class LocalTestClient implements ChatClient {
         if (attachments) {
             post.attachments = attachments;
         }
-        await this.pushPost(post);
-
-        return post;
+        const savedPost = await this.pushPost(post);
+        return savedPost;
     }
 
     public getWebSocketUrl(): string {
@@ -328,7 +326,7 @@ export class LocalTestClient implements ChatClient {
         const replyProps = props || {};
         replyProps['root-id'] = rootId;
 
-        const rootPost = (await this.getPosts()).find(p => p.id === rootId);
+        const rootPost = await this.getPost(rootId);
         if (rootPost && !rootPost.getRootId()) {
             const replyPost = new InMemoryPost(
                 channelId,
@@ -336,8 +334,8 @@ export class LocalTestClient implements ChatClient {
                 this.userId,
                 replyProps
             );
-            await this.pushPost(replyPost);
-            return replyPost;
+            const savedPost = await this.pushPost(replyPost);
+            return savedPost;
         } else {
             throw new Error("Coudln't find post or post wasn't a root post to reply to.")
         }
@@ -348,8 +346,7 @@ export class LocalTestClient implements ChatClient {
         const replyProps: Record<string, any> = props || {};
         replyProps['root-id'] = rootId;
 
-        const posts = await this.getPosts();
-        const rootPost = posts.find(p => p.id === rootId);
+        const rootPost = await this.getPost(rootId);
         if (rootPost && !rootPost.getRootId()) {
             const replyPost = new InMemoryPost(
                 post.channel_id,
@@ -360,8 +357,8 @@ export class LocalTestClient implements ChatClient {
             if (attachments) {
                 replyPost.attachments = attachments;
             }
-            await this.pushPost(replyPost);
-            return replyPost;
+            const savedPost = await this.pushPost(replyPost);
+            return savedPost;
         } else {
             throw new Error("Couldn't find post or post wasn't a root post to reply to.")
         }
@@ -385,7 +382,8 @@ export class LocalTestClient implements ChatClient {
             post.message,
             post.user_id,
             post.props,
-            post.create_at
+            post.create_at,
+            postId
         );
         this.storage.callbacks.forEach(c => {
             try {
@@ -395,10 +393,10 @@ export class LocalTestClient implements ChatClient {
             }
         });
 
-        return updatedPost;
+        return updatedPost as ChatPost;
     }
 
-    private async pushPost(post: ChatPost): Promise<void> {
-        await this.storage.addPost(post);
+    private async pushPost(post: ChatPost): Promise<ChatPost> {
+        return await this.storage.addPost(post);
     }
 }

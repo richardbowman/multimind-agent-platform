@@ -242,7 +242,6 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
         // Create initial processed artifact
         const processedArtifact = {
             ...originalArtifact,
-            id: createUUID(),
             metadata: {
                 ...originalArtifact.metadata,
                 title: `${originalArtifact.metadata?.title || 'processed'} - Processing ${new Date().toISOString().split('T')[0]}`,
@@ -252,8 +251,8 @@ export class CSVProcessingExecutor extends BaseStepExecutor<CSVProcessingRespons
             content: originalArtifact.content // Start with original content
         };
 
-        const artifact = await this.artifactManager.saveArtifact(processedArtifact);
-        return artifact;
+        const savedArtifact = await this.artifactManager.saveArtifact(processedArtifact);
+        return savedArtifact;
     }
 
     async updateCSVWithResults(currentContent: string, results: any[]): Promise<string> {

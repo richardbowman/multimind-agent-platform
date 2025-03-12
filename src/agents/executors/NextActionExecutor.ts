@@ -110,7 +110,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
         prompt.addContext({ contentType: ContentType.GOALS_FULL, params })
 
         params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
-        params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps});
+        params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps, posts: params.context?.threadPosts});
 
         // Get artifact IDs from both search and past responses
         const artifactGuideList = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.ProcedureGuide }, 10);
@@ -204,9 +204,9 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
              (result) => !!result && !!result.nextAction, // Validate we got a proper response
              {
                  maxRetries: 3,
-                 initialDelayMs: 1000,
+                 initialDelayMs: 100,
                  backoffFactor: 2,
-                 timeoutMs: 10000
+                 timeoutMs: 20000
              }
          );
 

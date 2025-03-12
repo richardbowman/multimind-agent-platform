@@ -118,7 +118,6 @@ export class ContentCombinationExecutor implements StepExecutor {
 
         // Create artifact
         const content: Artifact = {
-            id: createUUID(),
             content: formattedContent,
             type: "content",
             metadata: {
@@ -131,17 +130,17 @@ export class ContentCombinationExecutor implements StepExecutor {
         };
 
         // Save artifact
-        await this.artifactManager.saveArtifact(content);
+        const savedArtifact = await this.artifactManager.saveArtifact(content);
 
         // Store artifact ID in project metadata
-        project.metadata.contentArtifactId = content.id;
+        project.metadata.contentArtifactId = savedArtifact.id;
 
         return {
             finished: true,
             response: {
                 message: 'Content successfully combined'
             },
-            artifactIds: [content.id]
+            artifactIds: [savedArtifact.id]
         };
     }
 }

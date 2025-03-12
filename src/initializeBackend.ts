@@ -24,10 +24,11 @@ import { runInThisContext } from "node:vm";
 import { Message } from "./chat/chatClient";
 import _crypto from 'node:crypto';
 import { loadProcedureGuides } from "./tools/procedureGuides";
+import { Sequelize } from "sequelize";
 
 if (!global.crypto) {
     global.crypto = _crypto;
-} 
+}
 
 export async function initializeBackend(settingsManager: SettingsManager, options: {
     reindex?: boolean
@@ -69,6 +70,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         Logger.progress('Loading vector database', 0.3, "loading");
         const vectorDB = createVectorDatabase(_s.vectorDatabaseType, embeddingService, chatService);
         const artifactManager = new ArtifactManager(vectorDB, chatService);
+        await artifactManager.initialize();
 
         await sleep();
 
@@ -81,7 +83,6 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
         const dataDir = getDataPath();
 
-        const chatStorage = new LocalChatStorage(path.join(dataDir, "chats.json"));
         const tasks = new SimpleTaskManager(path.join(dataDir, "tasks.json"));
 
         // Load previously saved tasks
@@ -90,7 +91,13 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         await sleep();
 
         Logger.progress("Loading chats", 0.6, "loading");
-        await chatStorage.load();
+        const sequelize = new Sequelize({
+            dialect: 'sqlite',
+            storage: path.join(getDataPath(), 'chat.db')
+        });
+
+        const chatStorage = new LocalChatStorage(sequelize);
+        await chatStorage.sync();
         await sleep();
 
         // Handle graceful shutdown
@@ -148,7 +155,9 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         const userClient = new LocalTestClient(USER_ID, "@user", chatStorage);
         userClient.registerHandle("@user");
 
-        if (!Object.values(chatStorage.channelNames).includes("#general")) {
+        const channels = await chatStorage.getChannels();
+
+        if (!channels.find(c => c.name === "#general")) {
             // Create RPC handler and use it to create channel
             const mappedParams = await ServerRPCHandler.createChannelHelper(userClient, tasks, {
                 name: createChannelHandle("#general"),
@@ -158,7 +167,7 @@ export async function initializeBackend(settingsManager: SettingsManager, option
             await userClient.createChannel(mappedParams);
         }
 
-        if (!Object.values(chatStorage.channelNames).includes("#onboarding")) {
+        if (!channels.find(c => c.name === "#onboarding")) {
             // Create RPC handler and use it to create channel
             const mappedParams = await ServerRPCHandler.createChannelHelper(userClient, tasks, {
                 name: createChannelHandle("#onboarding"),

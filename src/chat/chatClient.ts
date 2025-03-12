@@ -132,3 +132,14 @@ export const isValidChatPost = (post: any): post is ChatPost => {
            (post.directed_at === undefined || typeof post.directed_at === 'string') &&
            typeof post.props === 'object';
 };
+
+// Validate that userPost is a proper ChatPost
+export const isValidPostParams = (post: any): post is Partial<ChatPost> => {
+    return post && 
+           typeof post.channel_id === 'string' &&
+           typeof post.message === 'string' &&
+           typeof post.user_id === 'string' &&
+           typeof post.create_at === 'number' &&
+           (post.directed_at === undefined || typeof post.directed_at === 'string') &&
+           typeof post.props === 'object';
+};

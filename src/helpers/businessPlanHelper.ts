@@ -78,9 +78,8 @@ export async function updateBusinessPlan(
     });
 
     // Create or update the business plan artifact
-    const artifactId = existingPlan?.id || crypto.randomUUID();
-    await artifactManager.saveArtifact({
-        id: artifactId,
+    const artifact = await artifactManager.saveArtifact({
+        id: existingPlan?.id,
         type: 'business-plan',
         content: response.content,
         metadata: {
@@ -89,5 +88,5 @@ export async function updateBusinessPlan(
         }
     });
 
-    return artifactId;
+    return artifact.id;
 }

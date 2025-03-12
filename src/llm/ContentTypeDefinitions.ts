@@ -134,6 +134,7 @@ export interface FullGoalsContent {
 export interface StepsContent {
     contentType: ContentType.STEPS;
     steps: StepTask<StepResponse>[];
+    posts?: ChatPost[];
 }
 
 export interface TasksContent {

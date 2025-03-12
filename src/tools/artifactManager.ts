@@ -183,7 +183,7 @@ export class ArtifactManager {
       // Extract subtype if provided in metadata
       const subtype = artifactParam.metadata?.subtype || undefined;
       
-      let record: ArtifactModel;
+      let record: ArtifactModel|null;
       let version: number;
       
       if (artifactParam.id) {

@@ -55,11 +55,6 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         // First try to extract URLs from stepGoal
         let selectedUrls = [...new Set(StringUtils.extractUrls(params.goal))];
 
-        // If no URLs in stepGoal, check previousResponses (LinkSelectionExecutor)
-        if (!selectedUrls?.length) {
-            selectedUrls = params.previousResponses?.map(r => r.data?.selectedUrls).filter(s => s).slice(-1)[0];
-        }
-
         // Find the most recent scrape step
         let lastScrapeIndex = -1;
         if (params.previousResponses?.length) {
@@ -82,7 +77,7 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
                 }
             }
             // Filter to only URLs selected after last scrape
-            selectedUrls = selectedUrls?.filter(url => newUrls.has(url));
+            selectedUrls = [...selectedUrls, ...newUrls];
         }
 
         const isNews = params.previousResponses?.some(r =>
@@ -189,7 +184,6 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
 
                     if (summaryResponse.relevant) {
                         const artifact = await this.artifactManager.saveArtifact({
-                            id: createUUID(),
                             type: ArtifactType.Document,
                             content: summaryResponse.summary,
                             metadata: {

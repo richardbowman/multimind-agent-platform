@@ -364,7 +364,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     </Box>
                 )}
             </Box>
-            {hasAttachments && isExpanded && (
+            {/* {hasAttachments && isExpanded && (
                 <Box sx={{ mt: 2 }}>
                     {!attachmentsExpanded && (
                         <Box sx={{ display: 'flex', gap: 1 }}>
@@ -389,7 +389,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                         </Box>
                     </Collapse>
                 </Box>
-            )}
+            )} */}
         </Paper>
     );
 };

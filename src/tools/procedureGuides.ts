@@ -63,7 +63,6 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
             }
             Logger.info(`Updating procedure guide: ${file}`);
         }
-        const artifactId = createUUID();
 
         // Try to load metadata file if it exists
         const metadataPath = path.join(guidesDir, `${path.basename(file, '.md')}.metadata.json`);
@@ -89,7 +88,6 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
 
         try {
             await artifactManager.saveArtifact({
-                id: artifactId,
                 type: artifactType,
                 mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
                 content: content,

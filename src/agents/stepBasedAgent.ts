@@ -468,21 +468,23 @@ export abstract class StepBasedAgent extends Agent {
     }
 
     private getPartialPost(replyTo: ChatPost | undefined, params: ExecuteNextStepParams) {
-        const partialResponse = async (message, newOnly = false) => {
+        const partialResponse = async (message, newOnly = false) : Promise<ChatPost|undefined> => {
             if (replyTo) {
                 if (!params.partialPost) {
-                    params.partialPost = await this.reply(replyTo, {
+                    const statusPost = await this.reply(replyTo, {
                         message
                     }, {
                         partial: true,
                         "project-ids": [params.projectId],
                         "artifactIds": params.context?.artifacts?.map(a => a.id)
                     });
+                    params.partialPost = statusPost;
                 } else if (!newOnly) {
                     // const post = await this.chatClient.getPost(params.partialPost.id);
                     params.partialPost = await this.chatClient.updatePost(params.partialPost.id, message);
                 }
             }
+            return params.partialPost;
         };
         return partialResponse;
     }
@@ -666,7 +668,7 @@ export abstract class StepBasedAgent extends Agent {
         
         if (stepResult.response.status) {
             const partialPostFn = this.getPartialPost(replyTo, { ...params, ...props });
-            await partialPostFn(stepResult.response.status);
+            params.partialPost = await partialPostFn(stepResult.response.status);
         }
 
         // Only send replies if we have a userPost to reply to

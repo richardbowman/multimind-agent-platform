@@ -214,7 +214,7 @@ ${this.modelHelpers.getFinalInstructions()}
         return output;
     }
 
-    private async renderSteps({ steps }: StepsContent): Promise<string> {
+    private async renderSteps({ steps, posts }: StepsContent): Promise<string> {
         const filteredSteps = steps.filter(s => s.props.result && s.props.stepType !== ExecutorType.NEXT_STEP);
         const stepProcessors = await Promise.all(filteredSteps.map(async (step, index) => {
             const stepResult = step.props.result!;
@@ -350,7 +350,7 @@ Step Result: <stepInformation>${body || stepResult.response.message || stepResul
                 }
             }
 
-            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'} [Size: ${size}]${metadataInfo}\n{$summary|content}\n`;
+            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'} [Size: ${size}]${metadataInfo}\n${artifact.metadata?.summary||content}\n`;
         }).join('\n\n');
     }
 

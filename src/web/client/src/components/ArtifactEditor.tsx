@@ -58,7 +58,7 @@ export const ArtifactEditor: React.FC<ArtifactEditorProps> = ({
             }
             
             const newArtifact: Artifact = {
-                id: artifact?.id || createUUID(),
+                id: artifact?.id,
                 type: artifactType,
                 content: artifactContent,
                 metadata: metadataObj

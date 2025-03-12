@@ -175,7 +175,6 @@ interface PubMedSearchResult {
         const documentArtifacts = resultsWithFullText
             .filter(result => result.fullText)
             .map(result => ({
-                id: createUUID(),
                 type: ArtifactType.Document,
                 content: result.fullText!,
                 metadata: {
@@ -249,8 +248,7 @@ interface PubMedSearchResult {
                             subtype: SpreadsheetSubType.SearchResults,
                             searchQuery,
                             resultCount: resultsWithFullText.length,
-                            generatedAt: new Date().toISOString(),
-                            linkedDocuments: documentArtifacts.map(a => a.id)
+                            generatedAt: new Date().toISOString()
                         }
                     },
                     ...documentArtifacts
