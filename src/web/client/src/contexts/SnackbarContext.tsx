@@ -42,7 +42,8 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
 
   const ipcContext = useIPCService();
 
-  (window as any).electron.status((log) => {
+  useEffect(() => {
+    const statusHandler = (log) => {
     // Update progress bar based on message
     if (log.details.percentComplete !== undefined && log.details.percentComplete >= 0) {
       setOptions(prev => {
@@ -92,9 +93,15 @@ export const SnackbarProvider: React.FC<{ children: React.ReactNode }> = ({ chil
         severity: 'info',
         progressMeters: [] // Clear progress meters when showing regular messages
       }));
-    }
-    setOpen(true);
-  });
+    };
+    
+    (window as any).electron.status(statusHandler);
+    
+    // Cleanup listener when component unmounts
+    return () => {
+      (window as any).electron.removeListener('status', statusHandler);
+    };
+  }, []);
 
   function setUpdateStatus(status: UpdateStatus, percentComplete?: number) {
     setOptions({
