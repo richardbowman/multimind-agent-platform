@@ -19,6 +19,7 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StringUtils } from 'src/utils/StringUtils';
+import { withRetry } from 'src/helpers/retry';
 import { ModelResponse } from 'src/schemas/ModelResponse';
 import { ArtifactManager } from 'src/tools/artifactManager';
 import { ArtifactType } from 'src/tools/artifact';
@@ -185,28 +186,29 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
         });
 
         let response: WithReasoning<NextActionResponse>;
-         try {
-             response = {
-                 ...StringUtils.extractAndParseJsonBlock<NextActionResponse>(responseText.message, schema),
-                 reasoning: StringUtils.extractXmlBlock(responseText.message, "thinking"),
-                 message: StringUtils.extractNonCodeContent(responseText.message, ["thinking"])
-             };
-         } catch (error) {
-             Logger.warn('Failed to parse initial response, retrying once...');
-
-             // Try once more with the same prompt
-             const retryResponseText = await prompt.generate({
-                 message: params.message||params.stepGoal,
-                 instructions: prompt,
-                 modelType: ModelType.ADVANCED_REASONING
-             });
-
-             response = {
-                 ...StringUtils.extractAndParseJsonBlock<NextActionResponse>(retryResponseText.message, schema),
-                 reasoning: StringUtils.extractXmlBlock(responseText.message, "thinking"),
-                 message: StringUtils.extractNonCodeContent(responseText.message, ["thinking"])
-             };
-         }
+         // Use retry helper for more robust error handling
+         response = await withRetry(
+             async () => {
+                 const result = await prompt.generate({
+                     message: params.message||params.stepGoal,
+                     instructions: prompt,
+                     modelType: ModelType.ADVANCED_REASONING
+                 });
+                 
+                 return {
+                     ...StringUtils.extractAndParseJsonBlock<NextActionResponse>(result.message, schema),
+                     reasoning: StringUtils.extractXmlBlock(result.message, "thinking"),
+                     message: StringUtils.extractNonCodeContent(result.message, ["thinking"])
+                 };
+             },
+             (result) => !!result && !!result.nextAction, // Validate we got a proper response
+             {
+                 maxRetries: 3,
+                 initialDelayMs: 1000,
+                 backoffFactor: 2,
+                 timeoutMs: 10000
+             }
+         );
 
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);
 
