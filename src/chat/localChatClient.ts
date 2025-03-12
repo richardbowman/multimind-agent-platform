@@ -390,29 +390,34 @@ export class LocalTestClient implements ChatClient {
     }
 
     public async updatePost(postId: UUID, newContent: string, newProps?: ConversationContext): Promise<ChatPost> {
-        const post = this.storage.posts.find(p => p.id === postId);
+        const post = await ChatPostModel.findByPk(postId);
         if (!post) {
             throw new Error(`Post ${postId} not found`);
         }
 
-        post.message = newContent;
-        post.update_at = Date.now();
-        if (newProps) {
-            post.props = { ...post.props, ...newProps };
-        }
-
-        await this.storage.sync();
+        await post.update({
+            message: newContent,
+            update_at: Date.now(),
+            props: newProps ? { ...post.props, ...newProps } : post.props
+        });
 
         // Notify listeners of the update
+        const updatedPost = new InMemoryPost(
+            post.channel_id,
+            post.message,
+            post.user_id,
+            post.props,
+            post.create_at
+        );
         this.storage.callbacks.forEach(c => {
             try {
-                c(post)
+                c(updatedPost)
             } catch (e) {
                 Logger.error(`Error calling chat client callbacks.`, e);
             }
         });
 
-        return post;
+        return updatedPost;
     }
 
     private async pushPost(post: ChatPost): Promise<void> {
