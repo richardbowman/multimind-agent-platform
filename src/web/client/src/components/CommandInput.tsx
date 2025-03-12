@@ -8,6 +8,7 @@ import { MicrophoneButton } from './MicrophoneButton';
 import HomeIcon from '@mui/icons-material/Home';
 import ChatIcon from '@mui/icons-material/Chat';
 import { Box } from '@mui/material';
+import { AttachmentCard } from './shared/AttachmentCard';
 import { UUID } from '../../../../types/uuid';
 import { useArtifacts } from '../contexts/ArtifactContext';
 import { useFilteredTasks } from '../contexts/FilteredTaskContext';
@@ -527,119 +528,40 @@ export const CommandInput: React.FC<CommandInputProps> = ({
                     overflowX: 'auto',
                     padding: '8px 0'
                 }}>
-                    {pendingFiles.map((file, index) => (
-                        <div
-                            key={`file-${index}`}
-                            style={{
-                                position: 'relative',
-                                width: '100px',
-                                height: '100px',
-                                borderRadius: '4px',
-                                overflow: 'hidden',
-                                flexShrink: 0
-                            }}
-                        >
-                            <img
-                                src={
-                                    file.metadata?.mimeType?.startsWith('image/')
-                                        ? `data:${file.metadata?.mimeType};base64,${typeof file.content === 'string'
-                                            ? file.content.replace(/^data:image\/\w+;base64,/, '')
-                                            : btoa(String.fromCharCode(...new Uint8Array(file.content as ArrayBuffer)))
-                                        }`
-                                        : ''
-                                }
-                                alt={file.metadata?.title || 'Image preview'}
-                                style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: 'cover'
-                                }}
-                            />
-                            <button
-                                onClick={() => {
+                    {pendingFiles.map((file, index) => {
+                        const previewUrl = file.metadata?.mimeType?.startsWith('image/')
+                            ? `data:${file.metadata?.mimeType};base64,${typeof file.content === 'string'
+                                ? file.content.replace(/^data:image\/\w+;base64,/, '')
+                                : btoa(String.fromCharCode(...new Uint8Array(file.content as ArrayBuffer)))
+                            }`
+                            : undefined;
+
+                        return (
+                            <AttachmentCard
+                                key={`file-${index}`}
+                                type="file"
+                                title={file.metadata?.title || 'Image preview'}
+                                previewUrl={previewUrl}
+                                onRemove={() => {
                                     setPendingFiles(prev =>
                                         prev.filter((_, i) => i !== index)
                                     );
                                 }}
-                                style={{
-                                    position: 'absolute',
-                                    top: '4px',
-                                    right: '4px',
-                                    background: 'rgba(0,0,0,0.7)',
-                                    border: 'none',
-                                    borderRadius: '50%',
-                                    width: '20px',
-                                    height: '20px',
-                                    color: '#fff',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                ×
-                            </button>
-                        </div>
-                    ))}
+                            />
+                        );
+                    })}
                     {pendingArtifacts.map((artifact, index) => (
-                        <div
+                        <AttachmentCard
                             key={`artifact-${index}`}
-                            style={{
-                                position: 'relative',
-                                width: '150px',
-                                height: '100px',
-                                borderRadius: '4px',
-                                backgroundColor: '#2a2a2a',
-                                padding: '8px',
-                                flexShrink: 0,
-                                display: 'flex',
-                                flexDirection: 'column',
-                                gap: '4px'
+                            type="artifact"
+                            title={artifact.metadata?.title || 'Untitled Artifact'}
+                            subtitle={artifact.type}
+                            onRemove={() => {
+                                setPendingArtifacts(prev =>
+                                    prev.filter((_, i) => i !== index)
+                                );
                             }}
-                        >
-                            <div style={{
-                                fontSize: '0.9em',
-                                fontWeight: 'bold',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                            }}>
-                                {artifact.metadata?.title || 'Untitled Artifact'}
-                            </div>
-                            <div style={{
-                                fontSize: '0.8em',
-                                color: '#aaa',
-                                whiteSpace: 'nowrap',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis'
-                            }}>
-                                {artifact.type}
-                            </div>
-                            <button
-                                onClick={() => {
-                                    setPendingArtifacts(prev =>
-                                        prev.filter((_, i) => i !== index)
-                                    );
-                                }}
-                                style={{
-                                    position: 'absolute',
-                                    top: '4px',
-                                    right: '4px',
-                                    background: 'rgba(0,0,0,0.7)',
-                                    border: 'none',
-                                    borderRadius: '50%',
-                                    width: '20px',
-                                    height: '20px',
-                                    color: '#fff',
-                                    cursor: 'pointer',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    justifyContent: 'center'
-                                }}
-                            >
-                                ×
-                            </button>
-                        </div>
+                        />
                     ))}
                 </div>
             )}
