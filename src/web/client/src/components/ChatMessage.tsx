@@ -366,27 +366,26 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
             </Box>
             {hasAttachments && (
                 <Box sx={{ mt: 2 }}>
+                    {!attachmentsExpanded && (
+                        <Box sx={{ display: 'flex', gap: 1 }}>
+                            {uniqueArtifacts.filter(a => a).map((artifactId: string) => (
+                                <AttachmentCard
+                                    key={artifactId}
+                                    type="artifact"
+                                    title={`Artifact ${artifactId.slice(0, 6)}...`}
+                                    onRemove={() => {}}
+                                />
+                            ))}
+                        </Box>
+                    )}
                     <Collapse in={attachmentsExpanded && isExpanded}>
                         <Box sx={{ mt: 1 }}>
-                            {isExpanded ? (
-                                uniqueArtifacts.filter(a => a).map((artifactId: string) => (
-                                    <ArtifactLoader 
-                                        key={artifactId}
-                                        artifactId={artifactId}
-                                    />
-                                ))
-                            ) : (
-                                <Box sx={{ display: 'flex', gap: 1 }}>
-                                    {uniqueArtifacts.filter(a => a).map((artifactId: string) => (
-                                        <AttachmentCard
-                                            key={artifactId}
-                                            type="artifact"
-                                            title={`Artifact ${artifactId.slice(0, 6)}...`}
-                                            onRemove={() => {}}
-                                        />
-                                    ))}
-                                </Box>
-                            )}
+                            {uniqueArtifacts.filter(a => a).map((artifactId: string) => (
+                                <ArtifactLoader 
+                                    key={artifactId}
+                                    artifactId={artifactId}
+                                />
+                            ))}
                         </Box>
                     </Collapse>
                 </Box>
