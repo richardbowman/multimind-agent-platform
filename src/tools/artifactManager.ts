@@ -12,6 +12,7 @@ import * as pdf from 'pdf-parse';
 import { asError, isError } from 'src/types/types';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { ArtifactModel } from './artifactModel';
+import { DatabaseMigrator } from 'src/database/migrator';
 
 // Get appropriate file extension and type based on MIME type
 const getFileInfo = (mimeType?: string): { extension: string, type: string } => {
@@ -71,29 +72,35 @@ export class ArtifactManager {
   private fileQueue: AsyncQueue;
   private saveQueue: AsyncQueue;
 
+  private migrator: DatabaseMigrator;
+
   constructor(vectorDb: IVectorDatabase, llmService?: ILLMService, storageDir?: string) {
-    this.storageDir = storageDir || path.join(getDataPath(), 'artifacts');
-    this.vectorDb = vectorDb;
-    this.fileQueue = new AsyncQueue();
-    this.saveQueue = new AsyncQueue();
-    this.llmService = llmService;
+      this.storageDir = storageDir || path.join(getDataPath(), 'artifacts');
+      this.vectorDb = vectorDb;
+      this.fileQueue = new AsyncQueue();
+      this.saveQueue = new AsyncQueue();
+      this.llmService = llmService;
 
-    // Initialize SQLite database
-    const dbPath = path.join(this.storageDir, 'artifacts.db');
-    this.sequelize = new Sequelize({
-      dialect: 'sqlite',
-      storage: dbPath,
-      logging: msg => Logger.verbose(msg)
-    });
+      // Initialize SQLite database
+      const dbPath = path.join(this.storageDir, 'artifacts.db');
+      this.sequelize = new Sequelize({
+          dialect: 'sqlite',
+          storage: dbPath,
+          logging: msg => Logger.verbose(msg)
+      });
 
-    // Initialize models
-    ArtifactModel.initialize(this.sequelize);
+      // Initialize migrator
+      const migrationsDir = path.join(this.storageDir, 'migrations');
+      this.migrator = new DatabaseMigrator(this.sequelize, migrationsDir);
 
-    // Ensure the .output directory exists and sync database
-    this.fileQueue.enqueue(async () => {
-      await fs.mkdir(this.storageDir, { recursive: true });
-      await this.sequelize.sync();
-    }).catch(err => Logger.error('Error initializing database:', err));
+      // Initialize models
+      ArtifactModel.initialize(this.sequelize);
+
+      // Ensure the .output directory exists and run migrations
+      this.fileQueue.enqueue(async () => {
+          await fs.mkdir(this.storageDir, { recursive: true });
+          await this.migrator.migrate();
+      }).catch(err => Logger.error('Error initializing database:', err));
   }
 
   async getArtifacts(filter: { type?: string, subtype?: string, [key: string]: any } = {}): Promise<ArtifactItem[]> {
