@@ -321,8 +321,12 @@ export class ArtifactManager {
 
     try {
       const content = (await this.fileQueue.enqueue(() => fs.readFile(contentPath))).toString();
-      const type = metadata[artifactId].type; // Retrieve the artifact type from metadata
-      return { id: artifactId, type, content, metadata: metadata[artifactId] };
+      return { 
+        id: artifactId, 
+        type: record.type as ArtifactType, 
+        content, 
+        metadata: record.metadata 
+      };
     } catch (error) {
       if (asError(error).code === 'ENOENT') {
         Logger.warn(`Artifact file not found: ${contentPath}`);
@@ -346,8 +350,12 @@ export class ArtifactManager {
       const contentPath = record.contentPath;
       try {
         const content = (await this.fileQueue.enqueue(() => fs.readFile(contentPath))).toString();
-        const type = metadata[artifactId].type;
-        return { id: artifactId, type, content, metadata: metadata[artifactId] };
+        return { 
+          id: record.id, 
+          type: record.type as ArtifactType, 
+          content, 
+          metadata: record.metadata 
+        };
       } catch (error) {
         if (asError(error).code === 'ENOENT') {
           Logger.warn(`Artifact file not found: ${contentPath}`);
