@@ -116,7 +116,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
     const { artifacts: allArtifacts } = useArtifacts();
     const ipcService = useIPCService();
-    const [uniqueArtifacts, setUniqueArtifacts] = useState([...new Set((message.props?.artifactIds||[]).filter(a => a))]);
+    const [uniqueArtifacts, setUniqueArtifacts] = useState(() => {
+        const ids = message.props?.artifactIds || [];
+        return Array.from(new Set(ids.filter(a => a)));
+    });
     const [selectedArtifact, setSelectedArtifact] = useState<ArtifactItem | null>(null);
     const [loadedArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
 
@@ -437,12 +440,15 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     )}
                     <Collapse in={attachmentsExpanded}>
                         <Box sx={{ mt: 1 }}>
-                            {uniqueArtifacts.filter(a => a).map((artifactId: string) => (
-                                <ArtifactLoader 
-                                    key={artifactId}
-                                    artifactId={artifactId}
-                                />
-                            ))}
+                            {uniqueArtifacts
+                                .filter(a => a)
+                                .map((artifactId: string, index) => (
+                                    <Box key={artifactId} sx={{ display: index < 10 ? 'block' : 'none' }}>
+                                        <ArtifactLoader 
+                                            artifactId={artifactId}
+                                        />
+                                    </Box>
+                                ))}
                         </Box>
                     </Collapse>
                 </Box>
