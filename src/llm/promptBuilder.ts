@@ -451,6 +451,15 @@ Step Result: <stepInformation>${body || stepResult.response.message || stepResul
 }
 
 export class PromptBuilder implements InputPrompt {
+    private contentSections: Map<ContentType, any> = new Map();
+    private instructions: (Promise<string> | string)[] = [];
+    private context: (Promise<string> | string)[] = [];
+    private registry: PromptRegistry;
+    
+    constructor(registry: PromptRegistry) {
+        this.registry = registry;
+    }
+    
     getInstructions(): Promise<string> {
         return this.build();
     }
@@ -467,15 +476,7 @@ export class PromptBuilder implements InputPrompt {
 3. Provide structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schemaDef, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         }
     }
-    private contentSections: Map<ContentType, any> = new Map();
-    private instructions: (Promise<string> | string)[] = [];
-    private context: (Promise<string> | string)[] = [];
-    private registry: PromptRegistry;
-
-    constructor(registry: PromptRegistry) {
-        this.registry = registry;
-    }
-
+    
     registerRenderer<T>(contentType: ContentType, renderer: ContentRenderer<T>): void {
         this.registry.registerRenderer(contentType, renderer);
     }
@@ -533,7 +534,7 @@ export class PromptBuilder implements InputPrompt {
 
         // Add context
         if (this.context.length > 0) {
-            sections.push("## Context\n" + this.context.join('\n\n'));
+            sections.push("## Context\n" + (await Promise.all(this.context)).join('\n\n'));
         }
 
         // Render and add content sections
