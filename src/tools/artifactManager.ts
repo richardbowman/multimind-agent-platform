@@ -91,7 +91,7 @@ export class ArtifactManager {
 
       // Initialize migrator
       const migrationsDir = path.join(this.storageDir, 'migrations');
-      this.migrator = new DatabaseMigrator(this.sequelize, migrationsDir);
+      this.migrator = new DatabaseMnigrator(this.sequelize, migrationsDir);
 
       // Initialize models
       ArtifactModel.initialize(this.sequelize);
