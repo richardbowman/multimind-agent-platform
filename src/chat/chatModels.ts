@@ -140,7 +140,14 @@ export class ChannelDataModel extends Model<ChannelDataAttributes>
         type: DataTypes.STRING
       },
       artifactIds: {
-        type: DataTypes.ARRAY(DataTypes.UUID)
+        type: DataTypes.JSON,
+        get() {
+          const rawValue = this.getDataValue('artifactIds');
+          return rawValue ? JSON.parse(rawValue) : [];
+        },
+        set(value: UUID[]) {
+          this.setDataValue('artifactIds', JSON.stringify(value));
+        }
       }
     }, {
       sequelize,
