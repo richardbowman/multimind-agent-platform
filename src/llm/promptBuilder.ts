@@ -44,7 +44,8 @@ export enum ContentType {
     VALIDATION_RESULTS = "VALIDATION_RESULTS",
     GOALS_FULL = "GOALS_FULL",
     STEPS = "STEPS",
-    ALL_AGENTS = "ALL_AGENTS"
+    ALL_AGENTS = "ALL_AGENTS",
+    AGENT_HANDLES = "AGENT_HANDLES"
 }
 
 export enum OutputType {
@@ -90,6 +91,7 @@ export class PromptRegistry {
         this.registerRenderer(ContentType.CHANNEL_AGENT_CAPABILITIES, this.renderAgentCapabilities.bind(this));
         this.registerRenderer(ContentType.ALL_AGENTS, this.renderFullAgentList.bind(this));
         this.registerRenderer(ContentType.AGENT_OVERVIEWS, this.renderAgentOverviews.bind(this));
+        this.registerRenderer(ContentType.AGENT_HANDLES, this.renderAgentHandles.bind(this));
 
         this.registerRenderer(ContentType.GOALS_FULL, this.renderAllGoals.bind(this));
         this.registerRenderer(ContentType.CHANNEL_GOALS, this.renderChannelGoals.bind(this));
@@ -227,7 +229,10 @@ ${this.modelHelpers.getPurpose()}
                 
                 const stepInfo = `- STEP [${step.props.stepType}]:
   Description: ${step.description}
-  Result: <stepInformation>${body || stepResult.response.message || stepResult.response.reasoning || stepResult.response.status}</stepInformation>`;
+  Result: ${body && `<toolResult>${body}</toolResult>` || 
+            stepResult.response.message && `<agentResponse>${stepResult.response.message}</agentResponse>` ||
+            stepResult.response.reasoning && `<thinking>${stepResult.response.reasoning}</thinking>` || 
+            stepResult.response.status && `<toolResult>${stepResult.response.status}</toolResult>`}`;
                 
                 // If step has a threadId, add to corresponding post
                 if (step.props.userPostId) {
@@ -443,6 +448,12 @@ Step Result: <stepInformation>${body || stepResult.response.message || stepResul
             let output = `- ${agent.messagingHandle}: ${agent.description}`;
             return output;
         }).join('\n');
+    }
+
+    private renderAgentHandles({ agents }: AgentOverviewsContent): string {
+        if (!agents || agents.length === 0) return '';
+
+        return `🤖 AGENTS IN THIS CHANNEL: ${agents.filter(a => a && a.messagingHandle && a.description).map(agent => agent.messagingHandle).join(', ')}\n`;
     }
 
     private renderFullAgentList({ agents }: AgentOverviewsContent): string {

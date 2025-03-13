@@ -16,6 +16,9 @@ sections:
 
 # Brainstorming Session Onboarding
 
+## Overall Concept
+<!-- What's the concept for our brainstorming to focus around -->
+
 ## Session Goals
 <!--
 Description: Define the purpose and objectives of the brainstorming session

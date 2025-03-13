@@ -11,7 +11,7 @@ import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResult } from '../interfaces/StepResult';
 import { TaskManager } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { StringUtils } from 'src/utils/StringUtils';
 
 /**
@@ -54,15 +54,15 @@ export class GoalConfirmationExecutor extends BaseStepExecutor<StepResponse> {
         params.context?.artifacts && promptBuilder.addContext({ contentType: ContentType.ARTIFACTS_EXCERPTS, artifacts: params.context?.artifacts });
         promptBuilder.addContext({ contentType: ContentType.CHANNEL_GOALS, tasks: params.channelGoals });
         promptBuilder.addContext({ contentType: ContentType.EXECUTE_PARAMS, params: params });
+        promptBuilder.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
-        promptBuilder.addInstruction(`IMPORTANT RESPONSE INSTRUCTIONS:
-            YOU MUST ELIMINATE acronyms or other terminology that may be ambigous or confusing to other agents.
+        promptBuilder.addInstruction(`You are a thinking step requested by the agent. YOU MUST ELIMINATE acronyms or other terminology that may be ambigous or confusing to other agents.
 
-            1. Determine if the goal, or any terminology used is ambiguous.
-            2. If the goal or terminology is ambiguous, respond with the additional information you need and understanding=false (only available in conversation mode)
-            3. If the goal and terminology is clear, respond with understanding=true. Restate the user's goal to be as clear and unambiguous as possible. Do not pose a question because the agent will move forward.
-            
-            Try not to be pedantic. Be sensible in helping refine the goal yourself.`);
+1. Determine if the goal, or any terminology used is ambiguous.
+2. If the goal or terminology is ambiguous, respond with the additional information you need and understanding=false (only available in conversation mode). Your response should we worded to explain to the agent what information you think they should gather.
+3. If the goal and terminology is clear, respond with understanding=true. Restate the user's goal to be as clear and unambiguous as possible. Do not pose a question because the agent will move forward.
+
+Try not to be pedantic. Be sensible in helping refine the goal yourself.`);
             
         // Build and execute prompt
         const rawResult = await promptBuilder.generate({
@@ -74,12 +74,10 @@ export class GoalConfirmationExecutor extends BaseStepExecutor<StepResponse> {
 
 
         return {
-            finished: params.executionMode === "task" ? true : result.understanding,
-            needsUserInput: params.executionMode === "task" ? false : !result.understanding,
+            finished: true,
             replan: ReplanType.Allow,
-            goal: message,
             response: {
-                message,
+                status: message,
                 data: {
                     understandable: result.understanding
                 }

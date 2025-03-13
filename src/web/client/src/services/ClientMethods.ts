@@ -39,6 +39,8 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 
     async onMessage(messages: ClientMessage[]) {
+        console.debug('Messages received from backend', messages);
+
         // Check for messages with verbal conversation flag
         const userHandle = this.contextMethods.handles.find(h => h.handle === '@user');
         for (const message of messages) {

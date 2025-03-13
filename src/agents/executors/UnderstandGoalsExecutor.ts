@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import crypto from 'crypto';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { TaskManager, TaskType } from '../../tools/taskManager';
@@ -14,7 +14,7 @@ import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
 import { Artifact } from '../../tools/artifact';
 import { StepTask } from '../interfaces/ExecuteStepParams';
-import { ContentType, OutputType } from 'src/llm/promptBuilder';
+import { ContentType, globalRegistry, OutputType } from 'src/llm/promptBuilder';
 import { StringUtils } from 'src/utils/StringUtils';
 import { attr } from 'cheerio/dist/commonjs/api/attributes';
 import { response } from 'express';
@@ -33,7 +33,7 @@ import { response } from 'express';
  * - Ensures comprehensive requirement gathering
  * - Supports iterative question refinement
  */
-@StepExecutorDecorator(ExecutorType.UNDERSTAND_GOALS, 'Generate focused questions to understand user goals')
+@StepExecutorDecorator(ExecutorType.UNDERSTAND_GOALS, 'Assess how well we understand how to proceed')
 export class UnderstandGoalsExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private userId: string;
@@ -44,6 +44,11 @@ export class UnderstandGoalsExecutor extends BaseStepExecutor<StepResponse> {
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
         this.userId = params.userId || 'executor';
+
+        globalRegistry.stepResponseRenderers.set(StepResponseType.GoalAssessment, (stepResponse) => 
+            stepResponse.data?.shouldContinue ? `RECOMMEND CONTINUING: ${stepResponse.status}` :
+                `RECOMMEND AWAITING FURTHER INFORMATION: ${stepResponse.status}`
+        );
     }
 
     private formatMessage(project: any, artifacts?: Artifact[]): string {
@@ -117,11 +122,11 @@ answers from the user.` : `You will also set a flag telling the workflow whether
 
         return {
             finished: true,
-            needsUserInput: !shouldContinue,
             replan: shouldContinue ? ReplanType.Allow : ReplanType.None,
             goal: attributes?.goalRestatement,
             response: {
-                message: message,
+                type: StepResponseType.GoalAssessment,
+                status: message,
                 reasoning: reasoning,
                 data: attributes
             }

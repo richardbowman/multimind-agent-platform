@@ -359,7 +359,7 @@
               "className": "OutlineExecutor"
             },
             {
-              "className": "WritingExecutor"
+              "className": "AssignWritersExecutor"
             },
             {
               "className": "EditingExecutor"
@@ -390,13 +390,10 @@
           "plannerType": "nextStep",
           "executors": [
             {
-              "className": "ThinkingExecutor"
+              "className": "KnowledgeCheckExecutor"
             },
             {
               "className": "GenerateDocumentExecutor",
-              "config": {
-                "defaultFormat": "markdown"
-              }
             },
             {
               "className": "GenerateSpreadsheetExecutor"

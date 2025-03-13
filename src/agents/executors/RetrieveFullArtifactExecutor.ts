@@ -24,7 +24,7 @@ export interface FullArtifactStepResponse extends StepResponse {
     };
 }
 
-@StepExecutorDecorator(ExecutorType.ARTIFACT_RETRIEVER, 'Retrieve full content of relevant artifacts')
+@StepExecutorDecorator(ExecutorType.ARTIFACT_RETRIEVER, 'Retrieve full content of attached artifacts')
 export class RetrieveFullArtifactExecutor implements StepExecutor<FullArtifactStepResponse> {
     private artifactManager: ArtifactManager;
     private modelHelpers: ModelHelpers;

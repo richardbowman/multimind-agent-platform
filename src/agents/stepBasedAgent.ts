@@ -303,7 +303,7 @@ export abstract class StepBasedAgent extends Agent {
         };
 
         if (this.planner === null) {
-            const goal = `Perform planning for ${plannerParams.userPost ? `user's goal: ${plannerParams.userPost?.message}` : `task: '${params.task?.description}' as part of project '${project.name}'`}`;
+            const goal = plannerParams.userPost ? `Reply to incoming message: ${plannerParams.userPost?.message}` : `Plan for task: '${params.task?.description}' as part of project '${project.name}'`;
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
                 description: goal,

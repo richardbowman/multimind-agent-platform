@@ -201,7 +201,7 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
             if (artifacts.length > 0) {
                 const artifact = await this.artifactManager.loadArtifact(artifacts[0].id);
                 const csv = artifact && await CSVUtils.fromCSV(artifact.content.toString());
-                return csv?.rows.map(c => ` - ${c.subtype}: ${c.description}`).join("\n");
+                return csv?.rows.map(c => ` - ${c.Subtype}: ${c.Description}`).join("\n");
             }
         } catch (error) {
             Logger.error(`Error loading supported ${artifactType} subtypes:`, error);

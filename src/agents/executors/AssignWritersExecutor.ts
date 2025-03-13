@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResponse, StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
@@ -30,7 +30,7 @@ import { createUUID } from 'src/types/uuid';
  * - Maintains project-wide content strategy
  */
 @StepExecutorDecorator(ExecutorType.WRITING, 'Take an existing outline and break out sections to writers.')
-export class AssignWritersExecutor implements StepExecutor {
+export class AssignWritersExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
 

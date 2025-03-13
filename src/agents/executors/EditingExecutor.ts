@@ -1,8 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResponse, StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -11,6 +10,7 @@ import { EditingResponse } from '../../schemas/editing';
 import { ArtifactManager } from '../../tools/artifactManager';
 import { TaskManager } from 'src/tools/taskManager';
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { ExecuteParams } from '../interfaces/ExecuteParams';
 
 /**
  * Executor that reviews and improves content quality.
@@ -27,7 +27,7 @@ import { ExecutorType } from '../interfaces/ExecutorType';
  * - Creates structured edit summaries
  */
 @StepExecutorDecorator(ExecutorType.EDITING, 'Review and improve content quality')
-export class EditingExecutor implements StepExecutor {
+export class EditingExecutor implements StepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private artifactManager: ArtifactManager;
     private taskManager: TaskManager
@@ -39,7 +39,8 @@ export class EditingExecutor implements StepExecutor {
         this.taskManager = params.taskManager!;
     }
 
-    async executeOld(goal: string, step: string, projectId: string, previousResponses?: any): Promise<StepResult<StepResponse>> {
+    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
+        const {goal, step, projectId, previousResponses} = params;
         const schema = await getGeneratedSchema(SchemaType.EditingResponse);
 
         // Get the project metadata to find the content artifact
@@ -97,7 +98,6 @@ ${contentArtifact.content}`;
 
 
         return {
-            type: "editing",
             finished: true,
             response: {
                 message: `**${result.title}**\n\n**Content Review**\n\n${result.improvements.map(imp =>

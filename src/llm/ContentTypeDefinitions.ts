@@ -80,6 +80,11 @@ export interface AgentOverviewsContent {
     agents: Agent[];
 }
 
+export interface AgentHandlesContent {
+    contentType: ContentType.AGENT_HANDLES;
+    agents: Agent[];
+}
+
 export interface AllAgentOverviewsContent {
     contentType: ContentType.ALL_AGENTS;
     agents: Agent[];
@@ -156,6 +161,7 @@ export type ContentInput =
     | ExecuteParamsContent 
     | AgentCapabilitiesContent 
     | AgentOverviewsContent 
+    | AgentHandlesContent
     | AllAgentOverviewsContent
     | PurposeContent 
     | ChannelNameContent 

@@ -106,7 +106,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 
         prompt.addContext(ContentType.PURPOSE);
         prompt.addContext({ contentType: ContentType.INTENT, params })
-        prompt.addContext({ contentType: ContentType.AGENT_OVERVIEWS, agents: agentList||[]});
+        prompt.addContext({ contentType: ContentType.AGENT_HANDLES, agents: agentList||[]});
         prompt.addContext({ contentType: ContentType.GOALS_FULL, params })
 
         params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
@@ -142,9 +142,10 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             allGuides;
             
         // Format searched guides for prompt
+        const filtered = searchedGuides.filter(g => procedureGuides.find(p => p.id === g.artifact.id));
         const searchedGuidesPrompt = searchedGuides.length > 0 ?
             `# SEARCHED PROCEDURE GUIDES:\n` +
-            searchedGuides.map((guide, i) => 
+            filtered.map((guide, i) => 
                 `## Guide ${i+1} (${guide.score.toFixed(2)} relevance):\n` +
                 `###: ${guide.artifact.metadata?.title}\n` +
                 `<guide>${procedureGuides.find(p => p.id === guide.artifact.id)?.content}</guide>\n`
@@ -164,6 +165,8 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             }).join('\n\n') :
             `### IN-USE PROCEDURE GUIDES:\n*No procedure guides in use*`;
 
+        const completionAction = params.executionMode === 'conversation' ? 'REPLY' : 'DONE';
+
         // Add both sections to prompt
         prompt.addContext(searchedGuidesPrompt);
         prompt.addContext(inUseGuidesPrompt);
@@ -171,13 +174,15 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
         prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
             .filter(metadata => metadata.planner)
             .map(({ key, description }) => `[${key}]: ${description}`)
-            .join("\n")}`);
+            .join("\n")}\n[${completionAction}]: ${params.executionMode === 'conversation' ? 'Send your reply message to the user' : 'Mark the task as complete with your message containing the final data.'}`);
+
+
         prompt.addInstruction(`
 - IN YOUR REASONING, describe this process:
 - Review the STEP HISTORY to see what you've already done, don't keep repeating your action.
 - Review the user's message, and see if their goal has changed from the original intent. If so restate their new goal in the "revisedUserGoal" field.
 - Explain each step and why it would or would not make sense to be the next action.
-- If you have acheived the goal, set the Action Type to DONE.
+- If you have acheived the goal or need to reply to the user with questions, set the Action Type to ${completionAction}.
 - If you need to continue working, determine the next Action Type from the AVAILABLE ACTION TYPES to continue to achieve the goal.
 - Consider Procedure Guides for help on step order required to be successful. If you use a guide, use the 'procedureGuideTitle' field to share the title.`);
 
@@ -220,7 +225,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);
 
         // Create new task for the next action
-        if (response.nextAction && response.nextAction !== "DONE") {
+        if (response.nextAction && response.nextAction !== completionAction) {
             // Find the procedure guide if one is being followed
             const procedureGuide = response.procedureGuideTitle !== "none" 
                 ? procedureGuides.find(g => g.metadata?.title === response.procedureGuideTitle)
@@ -262,7 +267,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                     }
                 }
             };            
-        } else if ((response.nextAction && response.nextAction === "DONE") || 
+        } else if ((response.nextAction && response.nextAction === completionAction) || 
                   (!response.nextAction && response.message)) {
             return {
                 finished: true,

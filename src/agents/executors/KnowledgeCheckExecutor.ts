@@ -84,7 +84,7 @@ export class KnowledgeCheckExecutor implements StepExecutor {
         const analysisPrompt = `You are a step in an agent. Agent's purpose: ${this.modelHelpers.getPurpose()}. You are helping search for existing information for: "${goal}"
 
 ATTACHED KNOWLEDGE BASE ARTIFACTS:
-${artifacts?.map(a => `ID: ${a.id}
+${artifacts?.map(a => `Artifact ID: ${a.id}
 Title: ${a.metadata?.title}
 Content: ${a.content.slice(0, 1000)} ${a.content.length > 1000 ? `[truncated, full size is available ${a.content.length}]` : ''}
 Date Created: ${a.metadata?.dateCreated}
@@ -94,7 +94,7 @@ Date Created: ${a.metadata?.version}
 
 
 NOT-ATTACHED SEARCH RESULTS FROM KNOWLEDGE BASE:
-${searchResults.map(r => `
+${searchResults.map(r => `Artifact ID: ${r.metadata?.docId}
 Source: ${r.metadata?.title || 'Untitled'} (Score: ${r.score?.toFixed(3)})
 Content: ${r.text}
 ---`).join('\n')}

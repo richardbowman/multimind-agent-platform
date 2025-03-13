@@ -15,7 +15,7 @@ Generate 100 marketing messages using a hierarchical and iterative approach. Fir
    Confirm the marketing objectives, target audience, and key product features with the user.
 
 2. **Theme Development**  
-   Action Type: outline  
+2a. Action Type: outline  
    Generate 5-7 core marketing themes that align with the goals.  
    Example themes:  
    - Product benefits  
@@ -24,9 +24,12 @@ Generate 100 marketing messages using a hierarchical and iterative approach. Fir
    - Emotional appeal  
    - Problem/Solution  
 
+2b. Action Type: reply
+   If in conversation mode, confirm with the user before continuing.
+
 3. **Message Generation**  
-   Action Type: writing  
-   For each theme:  
+   Action Type: assign-writers  
+   For each theme, assign the content writers to generate a batch of these messages. Request they do so in CSV spreadsheets for easy management.
    a. Generate 15-20 message variations  
    b. Review for quality and consistency  
    c. Refine based on feedback  
