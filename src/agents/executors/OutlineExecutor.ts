@@ -1,6 +1,6 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
-import { StepResult } from '../interfaces/StepResult';
+import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
+import { StepResponse, StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
@@ -24,19 +24,19 @@ import { OutlineApprovalCheck } from 'src/schemas/OutlineApprovalCheck';
  * - Integrates with content generation workflow
  */
 @StepExecutorDecorator(ExecutorType.OUTLINE, 'Create structured content outlines')
-export class OutlineExecutor implements StepExecutor {
+export class OutlineExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
-
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.ContentOutline);
 
         // Check if we have a previous outline result
-        const previousOutline = params. previousResponses?.find?.(
+        const previousOutline = params.previousResponses?.find?.(
             (result) => result.type === 'draft-outline'
         );
 
@@ -62,7 +62,7 @@ Also provide a confidence score (0-100) in your assessment and a brief summary o
                     type: "outline",
                     finished: true,
                     response: {
-                        message: "Outline approved! Proceeding to next steps.",
+                        status: "Outline approved! Proceeding to next steps.",
                         type: "final-outline",
                         data: previousOutline.data
                     }
@@ -75,13 +75,11 @@ Also provide a confidence score (0-100) in your assessment and a brief summary o
                 });
 
                 return {
-                    type: "outline",
-                    finished: false,
-                    needsUserInput: true,
+                    finished: true,
                     response: {
                         message: `**Revised Content Outline**\n\n# ${revisedOutline.title}\n\n${revisedOutline.sections.map(s => 
                             `## ${s.heading}\n${s.description}\n\nKey Points:\n${s.keyPoints.map(p => `- ${p}`).join('\n')}`
-                        ).join('\n\n')}\n\n**Strategy:**\n${revisedOutline.strategy}\n\nPlease review this revised outline and provide feedback or approval to proceed.`,
+                        ).join('\n\n')}\n\n**Strategy:**\n${revisedOutline.strategy}\n\Request that user reviews this revised outline and provide feedback or approval to proceed.`,
                         type: "draft-outline",
                         data: revisedOutline
                     }
