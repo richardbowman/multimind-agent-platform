@@ -10,6 +10,10 @@ const DrawerHeader = styled('div')(({ theme }) => ({
     padding: theme.spacing(0, 1),
     ...theme.mixins.toolbar,
     justifyContent: 'flex-start',
+    cursor: 'pointer',
+    '&:hover': {
+        backgroundColor: theme.palette.action.hover
+    }
 }));
 
 interface ArtifactDrawerProps {
@@ -43,7 +47,7 @@ export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({
                 }
             }}
         >
-            <DrawerHeader/>
+            <DrawerHeader onClick={onClose}/>
             {currentArtifact && (
                 <Box sx={{ display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
                     <ActionToolbar actions={actions}/>
