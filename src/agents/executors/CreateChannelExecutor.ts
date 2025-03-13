@@ -47,128 +47,84 @@ export class CreateChannelExecutor implements StepExecutor<ChannelStepResponse> 
     async execute(params: ExecuteParams): Promise<StepResult<ChannelStepResponse>> {
         const { goal, context } = params;
         
-        // Extract channel creation requirements from the goal
         const channelPurpose = goal;
+        const templates = await ServerRPCHandler.loadGoalTemplates();
         
-        // Generate a channel name using the LLM
-        const namePrompt = `Generate a concise, descriptive channel name for a channel with this purpose:
-${channelPurpose}
+        // Single LLM call to get all needed information
+        const prompt = `You are creating a new channel with this purpose: ${channelPurpose}
 
-The name should:
-- Start with # symbol
-- Be 2-4 words
-- Use lowercase with hyphens between words
-- Be clear and specific
-- Avoid special characters except hyphens and the leading #
+Available templates:
+${templates.map(t => 
+    `Template: ${t.name} (ID: ${t.id})
+    Description: ${t.description}
+    Supporting Agents: ${t.supportingAgents.join(', ')}
+    Initial Tasks: ${t.initialTasks.map(t => t.description).join(', ')}`
+).join('\n\n')}
 
-Return ONLY the channel name.`;
+Please provide:
+1. A channel name (start with #, 2-4 words, lowercase with hyphens)
+2. A channel description
+3. The most appropriate template ID
+4. A clear explanation of:
+   - What the channel is for
+   - Why this template was chosen
+   - Which agents are included and why
+   - What initial tasks have been set up
+   - How to use the channel effectively
 
-        const nameResponse = await this.modelHelpers.generate({
-            message: namePrompt,
-            instructions: ''
+Return your response as a JSON object matching this schema:
+{
+    "name": string,
+    "description": string,
+    "templateId": string,
+    "explanation": string,
+    "initialTasks": string[],
+    "supportingAgents": string[]
+}`;
+
+        const response = await this.modelHelpers.generate({
+            message: prompt,
+            instructions: '',
+            parseJSON: true
         });
-        
-        // Ensure channel name starts with #, remove any existing # first
-        const baseName = nameResponse.message;
-        const channelName = createChannelHandle(baseName);
-        
-        const selectedTemplate = await this.findBestTemplate(channelPurpose);
 
-        if (!selectedTemplate) {
-            return {
-                finished: true,
-                response: {
-                    message: "Could not find a suitable template for this channel purpose",
-                    reasoning: "No matching template found in available templates"
-                }
-            };
-        }
+        const channelData = response.message as CreateChannelResponse;
+        
+        // Ensure channel name starts with #
+        const channelName = createChannelHandle(channelData.name);
 
-        // get artifacts created/used in this channel to attach to new channel
+        // Get artifacts created/used in this channel to attach to new channel
         const artifactIds = [
             ...new Set([
                 ...context?.artifacts?.map(a => a.id) || [],
                 ...params.steps.filter(s => s.props.stepType === "create_revise_plan").map(s => s.props?.result?.response?.artifactId)
             ].filter(s => s))
-        ]
+        ];
 
         // Create the channel using the selected template
         const channelId = await this.createChannel({
             name: channelName,
-            description: `Channel for: ${channelPurpose}`,
+            description: channelData.description,
             isPrivate: false,
-            members: selectedTemplate.supportingAgents,
-            goalTemplate: selectedTemplate.id,
-            goalDescriptions: selectedTemplate.initialTasks.map(t => t.description),
-            defaultResponder: selectedTemplate.defaultResponder,
+            members: channelData.supportingAgents,
+            goalTemplate: channelData.templateId,
+            goalDescriptions: channelData.initialTasks,
+            defaultResponder: templates.find(t => t.id === channelData.templateId)?.defaultResponder,
             artifactIds: artifactIds
-        });
-
-        // Generate a detailed explanation using the LLM
-        const explanationPrompt = `You just created a new channel called "${channelName}" using the "${selectedTemplate.name}" template. 
-The channel includes these supporting agents: ${selectedTemplate.supportingAgents.join(', ')}.
-The channel's purpose is: ${channelPurpose}
-
-Please write a clear, friendly chat response to the user explaining:
-1. What the channel is for
-2. Which agents are included and why
-3. What initial tasks have been set up
-4. How they can use the channel to achieve their goals
-
-Write in a professional but approachable tone.`;
-
-        const explanationResponse = await this.modelHelpers.generate({
-            message: explanationPrompt,
-            instructions: ''
         });
 
         return {
             finished: true,
             response: {
-                message: explanationResponse.message || `Created new channel "${channelPurpose}"`,
-                reasoning: `Selected template ${selectedTemplate.name} based on channel purpose: ${channelPurpose}`,
+                message: channelData.explanation || `Created new channel "${channelPurpose}"`,
+                reasoning: `Selected template ${channelData.templateId} based on channel purpose: ${channelPurpose}`,
                 data: {
                     channelId,
-                    template: selectedTemplate,
-                    initialTasks: selectedTemplate.initialTasks,
+                    templateId: channelData.templateId,
+                    initialTasks: channelData.initialTasks,
                     artifactIds
                 }
             }
         };
-    }
-
-    private async findBestTemplate(channelPurpose: string): Promise<GoalTemplate | undefined> {
-        // Create a prompt for the LLM to select the best template
-        const templates = await ServerRPCHandler.loadGoalTemplates();
-        const templateOptions = templates.map(t => 
-            `Template: ${t.name}\nDescription: ${t.description}\nID: ${t.id}`
-        ).join('\n\n');
-
-        const prompt = `You are helping select the best channel template for a new project. 
-Here are the available templates:
-
-${templateOptions}
-
-The channel purpose is: ${channelPurpose}
-
-Please select the most appropriate template ID from the list above. 
-Return ONLY the template ID as your response.`;
-
-        try {
-            const response = await this.modelHelpers.llmService.sendLLMRequest({
-                messages: [{ role: 'user', content: prompt }],
-                parseJSON: false
-            });
-
-            const selectedId = response.response.message?.trim();
-            if (!selectedId) {
-                return undefined;
-            }
-
-            return templates.find(t => t.id === selectedId);
-        } catch (error) {
-            console.error('Error selecting template:', error);
-            return undefined;
-        }
     }
 }
