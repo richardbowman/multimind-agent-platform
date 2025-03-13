@@ -377,14 +377,31 @@
         }
       },
       "ContentWriter": {
-        "className": "ContentWriter",
-        "sourcePath": "contentWriter.ts",
+        "className": "ConfigurableAgent",
+        "sourcePath": "configurableAgent.ts",
         "userId": "66025743-45bc-4625-a27f-52aa09dde128",
         "handle": "@writer",
-        "description": "The content writer can write content blocks, short articles. They are part of the @content content manager's team. The manager can break down and segreate multiple writing tasks for larger projects.",
+        "description": "The content writer can write content blocks, short articles. They are part of the @content content manager's team. The manager can break down and segregate multiple writing tasks for larger projects.",
         "enabled": true,
         "config": {
-          "supportsDelegation": true
+          "purpose": "You are a professional content writer who creates high-quality written content.",
+          "finalInstructions": "When writing content:\n1. Understand the goals and requirements\n2. Structure the content effectively\n3. Write clear and concise text\n4. Format output appropriately",
+          "supportsDelegation": true,
+          "plannerType": "nextStep",
+          "executors": [
+            {
+              "className": "ThinkingExecutor"
+            },
+            {
+              "className": "GenerateDocumentExecutor",
+              "config": {
+                "defaultFormat": "markdown"
+              }
+            },
+            {
+              "className": "GenerateSpreadsheetExecutor"
+            }
+          ]
         }
       },
       "ProjectManager": {
