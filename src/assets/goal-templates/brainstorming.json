@@ -1,0 +1,21 @@
+{
+    "id": "#brainstorming",
+    "name": "Brainstorming Channel",
+    "description": "Template for collaborative brainstorming sessions, facilitated by an AI assistant",
+    "supportingAgents": ["@assistant"],
+    "defaultResponder": "@assistant",
+    "initialTasks": [
+        {
+            "description": "Establish brainstorming goals and scope",
+            "type": "setup"
+        },
+        {
+            "description": "Facilitate idea generation and discussion",
+            "type": "brainstorming"
+        },
+        {
+            "description": "Organize and prioritize ideas",
+            "type": "organization"
+        }
+    ]
+}
