@@ -1,15 +1,9 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
-import { StepResponse, StepResult } from '../interfaces/StepResult';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ModelHelpers } from 'src/llm/modelHelpers';
-import { getGeneratedSchema } from '../../helpers/schemaUtils';
-import { SchemaType } from '../../schemas/SchemaTypes';
-import { StepExecutorDecorator as StepExecutorDecorator } from '../decorators/executorDecorator';
-import { ContentOutline } from 'src/schemas/outline';
+import { GenerateArtifactExecutor } from './GenerateArtifactExecutor';
+import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { OutlineApprovalCheck } from 'src/schemas/OutlineApprovalCheck';
+import { ArtifactType } from 'src/tools/artifact';
+import { ModelConversation } from '../interfaces/StepExecutor';
 
 /**
  * Executor that creates structured content outlines for documents.
@@ -24,93 +18,24 @@ import { OutlineApprovalCheck } from 'src/schemas/OutlineApprovalCheck';
  * - Integrates with content generation workflow
  */
 @StepExecutorDecorator(ExecutorType.OUTLINE, 'Create structured content outlines')
-export class OutlineExecutor extends BaseStepExecutor<StepResponse> {
-    private modelHelpers: ModelHelpers;
-
-    constructor(params: ExecutorConstructorParams) {
-        super(params);
-        this.modelHelpers = params.modelHelpers;
+export class OutlineExecutor extends GenerateArtifactExecutor {
+    protected addContentFormattingRules(prompt: ModelConversation) {
+        prompt.addInstruction(`OUTLINE FORMATTING RULES:
+- Use Markdown headings for structure (H1 for title, H2 for sections)
+- Each section should have:
+  * A clear heading
+  * A detailed description
+  * 3-5 key points
+- Include a content strategy section at the end
+- Use bullet points for key points
+- Maintain consistent formatting throughout`);
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        const schema = await getGeneratedSchema(SchemaType.ContentOutline);
+    protected getSupportedFormats(): string[] {
+        return ['markdown'];
+    }
 
-        // Check if we have a previous outline result
-        const previousOutline = params.previousResponses?.find?.(
-            (result) => result.type === 'draft-outline'
-        );
-
-        // If we have a message and a previous outline, treat it as feedback
-        if (params.message && previousOutline) {
-            const feedback = params.message;
-            
-            // Analyze if the feedback indicates approval using structured output
-            const approvalSchema = await getGeneratedSchema(SchemaType.OutlineApprovalCheck);
-            const approvalCheck = await this.modelHelpers.generate<OutlineApprovalCheck>({
-                message: `Does this feedback indicate the outline is approved? Feedback: ${feedback}`,
-                instructions: new StructuredOutputPrompt(
-                    approvalSchema,
-                    `Analyze the feedback and determine if it indicates approval of the outline.
-If the feedback contains words like "approved", "looks good", "proceed", or similar positive confirmation, return approved: true.
-If the feedback contains requests for changes, return approved: false and list the requested changes.
-Also provide a confidence score (0-100) in your assessment and a brief summary of the feedback.`
-                )
-            });
-
-            if (approvalCheck.approved) {
-                return {
-                    type: "outline",
-                    finished: true,
-                    response: {
-                        status: "Outline approved! Proceeding to next steps.",
-                        type: "final-outline",
-                        data: previousOutline.data
-                    }
-                };
-            } else {
-                // Revise outline based on feedback
-                const revisedOutline = await this.modelHelpers.generate<ContentOutline>({
-                    message: `Original outline: ${JSON.stringify(previousOutline.data)}\n\nFeedback: ${feedback}`,
-                    instructions: new StructuredOutputPrompt(schema, `Revise the outline based on the provided feedback.`)
-                });
-
-                return {
-                    finished: true,
-                    response: {
-                        message: `**Revised Content Outline**\n\n# ${revisedOutline.title}\n\n${revisedOutline.sections.map(s => 
-                            `## ${s.heading}\n${s.description}\n\nKey Points:\n${s.keyPoints.map(p => `- ${p}`).join('\n')}`
-                        ).join('\n\n')}\n\n**Strategy:**\n${revisedOutline.strategy}\n\Request that user reviews this revised outline and provide feedback or approval to proceed.`,
-                        type: "draft-outline",
-                        data: revisedOutline
-                    }
-                };
-            }
-        }
-
-        // First pass - create initial outline
-        const prompt = `You are a content outline specialist.
-Given a content goal and research findings, create a well-structured outline.
-Break the content into logical sections with clear descriptions and key points.
-
-${params.previousResponses ? `Use these research findings to inform the outline:\n${JSON.stringify(params.previousResponses, null, 2)}` : ''}`;
-
-        const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.modelHelpers.generate<ContentOutline>({
-            message: params.stepGoal || params.message,
-            instructions
-        });
-
-        return {
-            type: "outline",
-            finished: params.executionMode === "conversation" ? false : true,
-            needsUserInput: params.executionMode === "conversation" ? true : false,
-            response: {
-                message: `**Draft Content Outline**\n\n# ${result.title}\n\n${result.sections.map(s => 
-                    `## ${s.heading}\n${s.description}\n\nKey Points:\n${s.keyPoints.map(p => `- ${p}`).join('\n')}`
-                ).join('\n\n')}\n\n**Strategy:**\n${result.strategy}\n\nPlease review this outline and provide feedback or approval to proceed.`,
-                type: "draft-outline",
-                data: result
-            }
-        };
+    getArtifactType(codeBlockType: string): ArtifactType {
+        return ArtifactType.Document;
     }
 }
