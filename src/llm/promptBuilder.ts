@@ -103,19 +103,9 @@ export class PromptRegistry {
 
     private renderAboutAgent() {
         return `📝 About MultiMind:
-MultiMind is an advanced AI research assistant platform that provides multiple agents that can help:
-- Task automation
-- Web-based research
-- Brainstorming
-- Content generation including documents, diagrams, spreadsheets, and charts
-- Work with CSV and Markdown
+MultiMind is an AI research assistant platform with multiple specialized agents that can help with tasks, research, and content generation.
 
-Key Features:
-- Conversational Interface: Interact through chat messages
-- Task Management: Create and track projects and tasks (@assistant agent)
-- Document Generation: Automatically create structured documents
-- Research Capabilities: Web search and content summarization
-- Custom Workflows: Create tailored automation processes
+For full details about MultiMind's capabilities, use the [check-knowledge] command with "About MultiMind" or see the procedure guide.
 
 📝 Agent Purpose: ${this.modelHelpers.getPurpose()}
 `;
@@ -178,9 +168,7 @@ ${this.modelHelpers.getPurpose()}
     }
 
     renderFinalInstructions() {
-        return `KEY INSTRUCTIONS:
-${this.modelHelpers.getFinalInstructions()}
-`;
+        return this.modelHelpers.getFinalInstructions()||"";
     }
 
     renderChannel({ channel }: ChannelNameContent) {
@@ -531,12 +519,12 @@ export class PromptBuilder implements InputPrompt {
 
     addOutputInstructions({ outputType, schema, specialInstructions, type = 'markdown' }: OutputInstructionsParams) {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schema) {
-            this.addInstruction(`Respond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n 
+            this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n 
             Then, provide a separate fenced \`\`\`${type} code block${specialInstructions ? ` that provides: ${specialInstructions}.` : ''}.`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE && schema) {
-            this.addInstruction(`Respond with a user-friendly message and a fenced code block \`\`\`json with an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+            this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message and a fenced code block \`\`\`json with an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         } else if (outputType === OutputType.JSON_WITH_MESSAGE_AND_REASONING && schema) {
-            this.addInstruction(`1. Before you answer, think about how to best interpret the instructions and context you have been provided. Include your thinking wrapped in <thinking> </thinking> tags.
+            this.addInstruction(`# RESPONSE FORMAT\n1. Before you answer, think about how to best interpret the instructions and context you have been provided. Include your thinking wrapped in <thinking> </thinking> tags.
 2. Then, respond with a user-friendly message.
 3. Provide structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         }

@@ -104,7 +104,6 @@ export interface ChannelDetailsContent {
 
 export interface FinalInstructionsContent {
     contentType: ContentType.FINAL_INSTRUCTIONS;
-    instructions: string;
 }
 
 export interface OverallGoalContent {

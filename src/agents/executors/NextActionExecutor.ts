@@ -150,16 +150,9 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             ).join('\n\n') :
             `### RELEVANT PROCEDURE GUIDES:\n*No relevant procedure guides found*`;
 
-        // const sequencesPrompt =     sequences.map((seq, i) => {
-        //     const seqText = seq.getAllSteps().map((step, i) => `${i + 1}. [${step.type}]: ${step.description} ${(params.executionMode === 'conversation' && step.interaction) ?? ""}`).join("\n");
-        //     return `### SEQUENCE ${i+1} of ${sequences.length}: ID: [${seq.getName()}] (${seq.getDescription()}):\n${seqText}`;
-        // }).join('\n\n');
-
         // Add procedure guides to prompt
         prompt.addContext(guidesPrompt);
             
-        // prompt.addInstruction(sequencesPrompt);
-
         prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
             .filter(metadata => metadata.planner)
             .map(({ key, description }) => `[${key}]: ${description}`)
@@ -169,12 +162,11 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 - Review the STEP HISTORY to see what you've already done, don't keep repeating your action.
 - Review the user's message, and see if their goal has changed from the original intent. If so restate their new goal in the "revisedUserGoal" field.
 - Explain each step and why it would or would not make sense to be the next action.
-- Make sure you don't go into a loop, don't do the same action over and over again.
 - If you have acheived the goal, set the Action Type to DONE.
 - If you need to continue working, determine the next Action Type from the AVAILABLE ACTION TYPES to continue to achieve the goal.
-- Consider the sequences for guidance on the order for steps to be successful. If you decide a sequence makes sense, use the 'sequence' field to share the ID.`);
+- Consider Procedure Guides for help on step order required to be successful. If you use a guide, use the 'procedureGuideTitle' field to share the title.`);
 
-        prompt.addContext({contentType: ContentType.FINAL_INSTRUCTIONS, instructions: this.modelHelpers.getFinalInstructions()||""});
+        prompt.addContext({contentType: ContentType.FINAL_INSTRUCTIONS});
 
         prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
 

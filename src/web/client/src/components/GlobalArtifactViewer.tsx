@@ -87,31 +87,47 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
         // Update the artifact in the folders list
         setArtifactFolders(prevFolders => {
             const updatedFolders = { ...prevFolders };
+            const type = artifact.type;
+            const subtype = artifact.metadata?.subtype || 'Other';
+            
+            // Initialize type group if it doesn't exist
+            if (!updatedFolders[type]) {
+                updatedFolders[type] = {
+                    _type: 'type',
+                    artifacts: [],
+                    subtypes: {}
+                };
+            }
+            
+            // Initialize subtype group if it doesn't exist
+            if (!updatedFolders[type].subtypes[subtype]) {
+                updatedFolders[type].subtypes[subtype] = [];
+            }
             
             // Check if this is an existing artifact
-            const existing = Object.values(updatedFolders)
-                .flat()
-                .find(a => a.id === artifact.id);
-                
-            if (existing) {
+            const existingIndex = updatedFolders[type].subtypes[subtype].findIndex(a => a.id === artifact.id);
+            
+            if (existingIndex !== -1) {
                 // Update existing artifact
-                for (const [type, artifacts] of Object.entries(updatedFolders)) {
-                    const index = artifacts.findIndex(a => a.id === artifact.id);
-                    if (index !== -1) {
-                        updatedFolders[type][index] = artifact;
-                        break;
-                    }
-                }
+                updatedFolders[type].subtypes[subtype][existingIndex] = artifact;
             } else {
                 // Add new artifact
-                if (!updatedFolders[artifact.type]) {
-                    updatedFolders[artifact.type] = [];
-                }
-                updatedFolders[artifact.type].push(artifact);
+                updatedFolders[type].subtypes[subtype].push(artifact);
             }
             
             return updatedFolders;
         });
+        
+        // Ensure the type and subtype are expanded
+        setExpandedItems(prevExpanded => {
+            const newExpanded = new Set(prevExpanded);
+            newExpanded.add(artifact.type);
+            newExpanded.add(`${artifact.type}-${artifact.metadata?.subtype || 'Other'}`);
+            return Array.from(newExpanded);
+        });
+        
+        // Set the selected item
+        setSelectedItemIds([artifact.id]);
         
         // Refresh from server
         fetchAllArtifacts();

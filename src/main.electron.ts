@@ -1,6 +1,6 @@
 import './register-paths';
 
-import 'reflect-metadata';
+//import 'reflect-metadata';
 
 import { initializeConfig } from './helpers/config';
 import { app, BrowserWindow, ipcMain } from 'electron';
