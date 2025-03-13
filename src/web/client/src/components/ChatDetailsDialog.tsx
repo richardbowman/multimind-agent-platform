@@ -36,6 +36,24 @@ export const ChatDetailsDialog: React.FC<ChatDetailsDialogProps> = ({
             <DialogContent>
                 {selectedMessage && (
                     <Stack spacing={2} sx={{ mt: 2 }}>
+                        <Box sx={{
+                            p: 1,
+                            bgcolor: 'background.paper',
+                            borderRadius: 1,
+                            border: '1px solid',
+                            borderColor: 'divider',
+                            mb: 1
+                        }}>
+                            <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
+                                Message Content
+                            </Typography>
+                            <Typography variant="body2" sx={{
+                                whiteSpace: 'pre-wrap',
+                                wordBreak: 'break-word'
+                            }}>
+                                {selectedMessage.message}
+                            </Typography>
+                        </Box>
                         <Typography variant="body1">
                             <strong>ID:</strong> {selectedMessage.id}
                         </Typography>
