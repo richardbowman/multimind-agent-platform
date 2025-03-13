@@ -20,8 +20,9 @@ export async function loadTemplates(basePath: string, templatePath: string, arti
         const filePath = path.join(templatesDir, file);
         let content = fs.readFileSync(filePath, 'utf-8');
         
-        // Extract metadata from HTML comment
-        const metadataMatch = content.match(/<!-- METADATA\n([\s\S]*?)\n-->/);
+        // Extract YAML front matter
+        const frontmatterRegex = /^---\s*\n([\s\S]*?)\n---\s*\n/;
+        const match = content.match(frontmatterRegex);
         let metadata: Record<string, any> = {
             type: ArtifactType.Document,
             subtype: DocumentSubtype.Procedure,
@@ -32,12 +33,14 @@ export async function loadTemplates(basePath: string, templatePath: string, arti
             contentHash: require('crypto').createHash('sha256').update(content).digest('hex')
         };
 
-        if (metadataMatch) {
+        if (match) {
             try {
-                const parsedMetadata = yaml.load(metadataMatch[1]) || {};
+                const parsedMetadata = yaml.load(match[1]) || {};
                 metadata = { ...metadata, ...parsedMetadata };
+                // Remove the frontmatter from the content
+                content = content.slice(match[0].length);
             } catch (error) {
-                Logger.warn(`Failed to parse metadata in ${file}: ${error}`);
+                Logger.warn(`Failed to parse YAML frontmatter in ${file}: ${error}`);
             }
         }
 

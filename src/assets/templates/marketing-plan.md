@@ -1,36 +1,36 @@
-# Marketing Plan
-
-## Executive Summary
-{executive-summary}
-
-## Target Market
-{target-market}
-
-## Unique Value Proposition
-{value-proposition}
-
-## Marketing Channels
-{marketing-channels}
-
-## Budget & ROI
-{budget-roi}
-
-<!-- METADATA
+---
 id: marketing-plan
 name: Marketing Plan Template
 description: Template for creating a marketing strategy
 sections:
   - id: executive-summary
     title: Executive Summary
-    description: Overview of marketing strategy
-    placeholder: "{executive-summary}"
-    questions: ["marketing-goals", "target-audience"]
-    status: "empty"
+    required: true
   - id: target-market
     title: Target Market
-    description: Detailed description of target audience
-    placeholder: "{target-market}"
-    questions: ["target-demographics", "customer-needs"]
-    status: "empty"
-requiredSections: ["executive-summary", "target-market"]
+    required: true
+---
+
+# Marketing Plan
+
+## Executive Summary
+<!-- 
+Description: Overview of marketing strategy
+Questions: 
+  - What are the key marketing goals?
+  - Who is the target audience?
 -->
+
+## Target Market
+<!--
+Description: Detailed description of target audience
+Questions:
+  - What are the target demographics?
+  - What are the customer needs?
+-->
+
+## Unique Value Proposition
+
+## Marketing Channels
+
+## Budget & ROI
