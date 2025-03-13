@@ -1,0 +1,10 @@
+---
+title: "Supported Webpage Artifact Sub-types"
+artifactType: webpage
+subtype: "Artifact Subtypes"
+---
+Subtype,Description
+App,"Interactive Web-based application"
+Mockup,"A protype or mockup of a potential product or service"
+Marketing Website,"A marketing website"
+Other,"Other kinds of webpages"

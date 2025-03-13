@@ -177,7 +177,7 @@ export namespace StringUtils {
      * @param xmlTagsToRemove Optional array of XML tags to remove from the content
      * @returns String with all content outside of code blocks and specified XML blocks
      */
-    export function extractNonCodeContent(text: string, xmlTagsToRemove: string[] = [], codeBlockTypesToRemove: string[] = ['json']): string {
+    export function extractNonCodeContent(text: string, xmlTagsToRemove: string[] = [], codeBlockTypesToRemove: string[] = []): string {
         // Remove specific code block types
         let cleanedText = text;
         if (codeBlockTypesToRemove.length > 0) {

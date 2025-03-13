@@ -1,6 +1,8 @@
 import { DataTypes, Model, Optional } from 'sequelize';
 import { UUID } from '../types/uuid';
 import { ChatHandle } from '../types/chatHandle';
+import { asError } from 'src/types/types';
+import Logger from 'src/helpers/logger';
 
 interface ChatPostAttributes {
   id: UUID;
@@ -121,14 +123,7 @@ export class ChannelDataModel extends Model<ChannelDataAttributes>
         defaultValue: false
       },
       members: {
-        type: DataTypes.JSON,
-        get() {
-          const rawValue = this.getDataValue('members');
-          return rawValue ? JSON.parse(rawValue) : [];
-        },
-        set(value: UUID[]) {
-          this.setDataValue('members', JSON.stringify(value));
-        }
+        type: DataTypes.JSON
       },
       defaultResponderId: {
         type: DataTypes.UUID
@@ -140,14 +135,7 @@ export class ChannelDataModel extends Model<ChannelDataAttributes>
         type: DataTypes.STRING
       },
       artifactIds: {
-        type: DataTypes.JSON,
-        get() {
-          const rawValue = this.getDataValue('artifactIds');
-          return rawValue ? JSON.parse(rawValue) : [];
-        },
-        set(value: UUID[]) {
-          this.setDataValue('artifactIds', JSON.stringify(value));
-        }
+        type: DataTypes.JSON
       }
     }, {
       sequelize,

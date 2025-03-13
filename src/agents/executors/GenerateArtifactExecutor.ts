@@ -13,6 +13,7 @@ import { StringUtils } from 'src/utils/StringUtils';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ModelType } from 'src/llm/LLMServiceFactory';
+import { CSVUtils } from 'src/utils/CSVUtils';
 
 
 export interface ArtifactGenerationStepData {
@@ -93,20 +94,18 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
 
 
     async execute(params: ExecuteParams, modelType?: ModelType): Promise<StepResult<ArtifactGenerationStepResponse>> {
-        const promptBuilder = await this.createBasePrompt(params);
+        const conversation = await this.createBasePrompt(params);
         const schema = await getGeneratedSchema(SchemaType.ArtifactGenerationResponse)
         
         // Add content formatting rules
-        if (this.addContentFormattingRules) this.addContentFormattingRules(promptBuilder);
-        promptBuilder.addOutputInstructions({outputType: OutputType.JSON_AND_MARKDOWN, schema, specialInstructions: "", type: this.getSupportedFormats().join(" OR ")});
+        if (this.addContentFormattingRules) this.addContentFormattingRules(conversation);
+        conversation.addOutputInstructions({outputType: OutputType.JSON_AND_MARKDOWN, schema, specialInstructions: "", type: this.getSupportedFormats().join(" OR ")});
         
         // Add Q&A context from project metadata
 
         try {
-            const unstructuredResult = await this.modelHelpers.generate({
+            const unstructuredResult = await conversation.generate({
                 message: params.message || params.stepGoal,
-                instructions: promptBuilder,
-                threadPosts: params.context?.threadPosts,
                 modelType: modelType||ModelType.DOCUMENT
             });
 
@@ -191,7 +190,7 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
         }
     }
 
-    protected async getSupportedSubtypesContent(artifactType: string): Promise<string | null> {
+    protected async getSupportedSubtypesContent(artifactType: string): Promise<string | undefined> {
         try {
             // Look for the supported subtypes artifact
             const artifacts = await this.artifactManager.getArtifacts({ 
@@ -201,14 +200,13 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
             });
             if (artifacts.length > 0) {
                 const artifact = await this.artifactManager.loadArtifact(artifacts[0].id);
-                if (artifact?.content && typeof artifact.content === 'string') {
-                    return artifact.content;
-                }
+                const csv = artifact && await CSVUtils.fromCSV(artifact.content.toString());
+                return csv?.rows.map(c => ` - ${c.subtype}: ${c.description}`).join("\n");
             }
         } catch (error) {
             Logger.error(`Error loading supported ${artifactType} subtypes:`, error);
         }
-        return null;
+        return undefined;
     }
 
     protected async prepareArtifactMetadata(result: any): Promise<Record<string, any>> {

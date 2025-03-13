@@ -25,41 +25,46 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
 `You are creating a website. Follow these guidelines:
 - Use modern, responsive design principles
 - You may use React 19 and Material-UI (MUI) components
-
 - Use these exact script references in your HTML:;
-- Your JavaScript must be inside of a text/babel script so the JSX can be processed:
-'''html
-<script src='../website-libs/website-libs.min.js'></script>
-<script type="text/babel">
- ...
-</script>
-'''
-
+- Your JavaScript must be inside of a 'text/babel' script so the JSX can be processed.
 - To access needed libraries: 
   - Ensure all MUI component imports are properly destructured from MaterialUI variable;
   - Do not use any other CDN-hosted libraries;
 
-'''javascript
-// The generated code must properly initialize React and MUI components;
-const { React, ReactDOM, ReactDOMClient, MaterialUI... } = WebsiteLibs;
-const { CssBaseline, Container, Container, Button... } = MaterialUI;
-// use MUI themes
-const theme = WebsiteLibs.getTheme('themeName');
-const ThemeProvider = WebsiteLibs.ThemeProvider;
+'''html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Todo List App</title>
+  <script src='../website-libs/website-libs.min.js'></script>
+  <script type="text/babel">
+    // The generated code must properly initialize React and MUI components;
+    const { React, ReactDOM, ReactDOMClient, MaterialUI... } = WebsiteLibs;
+    const { CssBaseline, Container, Container, Button... } = MaterialUI;
+    // use MUI themes
+    const theme = WebsiteLibs.getTheme('themeName');
+    const ThemeProvider = WebsiteLibs.ThemeProvider;
 
-const App = () => {
-  ..
-  return (
-    <ThemeProvider theme={theme}>
-      <CssBaseline/>
-      ...your app components...
-    </ThemeProvider>
-  );
-};
+    const App = () => {
+        ...
+        return (
+            <ThemeProvider theme={theme}>
+            <CssBaseline/>
+            ...your app components...
+            </ThemeProvider>
+        );
+    };
 
-// Use ReactDOMClient.createRoot to mount your root component:
-const root = ReactDOMClient.createRoot(document.getElementById('root'));
-root.render(<App />);
+    // Use ReactDOMClient.createRoot to mount your root component:
+    const root = ReactDOMClient.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</head>
+<body>
+  <div id="root"></div>
+</div>
 '''
 
 - Available MUI themes (use createTheme() to customize):
