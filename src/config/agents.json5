@@ -368,6 +368,9 @@
               "className": "DocumentRetrievalExecutor"
             },
             {
+              "className": "RetrieveFullArtifactExecutor"
+            },
+            {
               "className": "ContentCombinationExecutor"
             }
           ]
