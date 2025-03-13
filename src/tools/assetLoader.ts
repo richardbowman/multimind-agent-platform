@@ -1,10 +1,61 @@
 import Logger from "src/helpers/logger";
 import { ArtifactManager } from "./artifactManager";
 import fs from "node:fs";
-import { ArtifactType, DocumentSubtype, SpreadsheetSubType } from "./artifact";
+import { ArtifactType, DocumentSubtype, SpreadsheetSubType, Artifact } from "./artifact";
 import { createUUID } from "src/types/uuid";
 import path from "node:path";
 import * as yaml from 'js-yaml';
+
+export async function loadTemplates(basePath: string, templatePath: string, artifactManager: ArtifactManager): Promise<Artifact[]> {
+    const templatesDir = path.join(basePath, templatePath);
+    if (!fs.existsSync(templatesDir)) {
+        Logger.warn(`Templates directory not found at ${templatesDir}`);
+        return [];
+    }
+
+    const files = fs.readdirSync(templatesDir).filter(f => f.endsWith('.md'));
+    const loadedTemplates: Artifact[] = [];
+
+    for (const file of files) {
+        const filePath = path.join(templatesDir, file);
+        let content = fs.readFileSync(filePath, 'utf-8');
+        
+        // Extract metadata from HTML comment
+        const metadataMatch = content.match(/<!-- METADATA\n([\s\S]*?)\n-->/);
+        let metadata: Record<string, any> = {
+            type: ArtifactType.Document,
+            subtype: DocumentSubtype.Procedure,
+            title: path.basename(file, '.md'),
+            description: 'Document template',
+            created: new Date().toISOString(),
+            source: path.relative(basePath, filePath),
+            contentHash: require('crypto').createHash('sha256').update(content).digest('hex')
+        };
+
+        if (metadataMatch) {
+            try {
+                const parsedMetadata = yaml.load(metadataMatch[1]) || {};
+                metadata = { ...metadata, ...parsedMetadata };
+            } catch (error) {
+                Logger.warn(`Failed to parse metadata in ${file}: ${error}`);
+            }
+        }
+
+        try {
+            const artifact = await artifactManager.saveArtifact({
+                type: ArtifactType.Document,
+                content: content,
+                metadata: metadata
+            });
+            loadedTemplates.push(artifact);
+            Logger.info(`Loaded template: ${file}`);
+        } catch (e) {
+            Logger.error(`Failed to save template ${file}`, e);
+        }
+    }
+
+    return loadedTemplates;
+}
 
 export async function loadProcedureGuides(basePath: string, guidePath: string, artifactManager: ArtifactManager): Promise<void> {
     const guidesDir = path.join(basePath, guidePath);
