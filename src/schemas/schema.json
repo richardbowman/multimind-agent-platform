@@ -723,6 +723,22 @@
       ],
       "type": "object"
     },
+    "CreateChannelResponse": {
+      "additionalProperties": false,
+      "properties": {
+        "description": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        }
+      },
+      "required": [
+        "name",
+        "description"
+      ],
+      "type": "object"
+    },
     "DocumentPlanResponse": {
       "additionalProperties": false,
       "properties": {
@@ -1891,7 +1907,8 @@
         "TaskCreationResponse",
         "BarChartData",
         "ArtifactSelectionResponse",
-        "MergePlanResponse"
+        "MergePlanResponse",
+        "CreateChannelResponse"
       ],
       "type": "string"
     },

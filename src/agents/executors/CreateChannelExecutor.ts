@@ -1,6 +1,6 @@
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResult } from '../interfaces/StepResult';
+import { StepResponse, StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { GoalTemplate } from '../../schemas/goalTemplateSchema';
@@ -14,9 +14,19 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { ChatClient } from 'src/chat/chatClient';
 import { ServerRPCHandler } from 'src/server/ServerRPCHandler';
 import { createChannelHandle, CreateChannelHandlerParams } from 'src/shared/channelTypes';
+import { UUID } from 'src/types/uuid';
+import { Channel } from 'diagnostics_channel';
+
+interface ChannelStepResponse extends StepResponse {
+    data?: {
+        channelId: UUID;
+        channelName: string;
+        channelDescription: string;
+    }
+}
 
 @StepExecutorDecorator(ExecutorType.CREATE_CHANNEL, 'Create channels with appropriate templates and settings')
-export class CreateChannelExecutor implements StepExecutor {
+export class CreateChannelExecutor implements StepExecutor<ChannelStepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private artifactManager: ArtifactManager;
@@ -29,12 +39,12 @@ export class CreateChannelExecutor implements StepExecutor {
         this.chatClient = params.chatClient;
     }
 
-    private async createChannel(params: CreateChannelHandlerParams): Promise<string> {
+    private async createChannel(params: CreateChannelHandlerParams): Promise<UUID> {
         const mappedParams = await ServerRPCHandler.createChannelHelper(this.chatClient, this.taskManager, params);
         return await this.chatClient.createChannel(mappedParams);
     }
 
-    async execute(params: ExecuteParams & { executionMode: 'conversation' | 'task' }): Promise<StepResult<StepResponse>> {
+    async execute(params: ExecuteParams): Promise<StepResult<ChannelStepResponse>> {
         const { goal, context } = params;
         
         // Extract channel creation requirements from the goal
@@ -120,7 +130,6 @@ Write in a professional but approachable tone.`;
                 data: {
                     channelId,
                     template: selectedTemplate,
-                    supportingAgents: selectedTemplate.supportingAgents,
                     initialTasks: selectedTemplate.initialTasks,
                     artifactIds
                 }
