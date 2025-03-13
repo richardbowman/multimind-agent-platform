@@ -206,16 +206,22 @@ export namespace StringUtils {
      */
     export function extractNonCodeContent(text: string, xmlTagsToRemove: string[] = [], codeBlockTypesToRemove: string[] = []): string {
         let cleanedText = text;
-        
-        // Remove all code blocks by default, or specific types if specified
-        const codeBlockTypes = codeBlockTypesToRemove.length > 0 ? codeBlockTypesToRemove : ['[^`]+'];
-        const codeBlockRegex = new RegExp(`\`\`\`(${codeBlockTypes.join('|')})(?:\\[.*?\\])?\\n[\\s\\S]*?\`\`\``, 'g');
-        cleanedText = cleanedText.replace(codeBlockRegex, '');
 
         // Remove specified XML blocks if any
         if (xmlTagsToRemove.length > 0) {
             const xmlRegex = new RegExp(`<(${xmlTagsToRemove.join('|')})[^>]*>[\\s\\S]*?<\\/\\1>`, 'g');
             cleanedText = cleanedText.replace(xmlRegex, '');
+        }
+
+        // Remove code blocks - all if no types specified, or specific types if provided
+        if (codeBlockTypesToRemove.length > 0) {
+            // Remove only specified code block types
+            const codeBlockRegex = new RegExp(`\`\`\`(${codeBlockTypesToRemove.join('|')})(?:\\[.*?\\])?\\n[\\s\\S]*?\`\`\``, 'g');
+            cleanedText = cleanedText.replace(codeBlockRegex, '');
+        } else {
+            // Remove all code blocks
+            const codeBlockRegex = /```[^`]+(?:\[.*?\])?\n[\s\S]*?```/g;
+            cleanedText = cleanedText.replace(codeBlockRegex, '');
         }
 
         // Clean up extra whitespace
