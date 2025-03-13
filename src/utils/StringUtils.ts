@@ -108,7 +108,34 @@ export namespace StringUtils {
      * @returns Array of parsed JSON objects
      * @throws SyntaxError if JSON parsing fails
      */
+    /**
+     * Checks if the text contains a valid JSON code block
+     * @param text Input text to check
+     * @returns true if text contains a valid JSON code block, false otherwise
+     */
+    export function hasJsonBlock(text: string): boolean {
+        try {
+            const blocks = extractCodeBlocks(text, 'json');
+            if (blocks.length === 0) return false;
+            // Try parsing the first block to validate it's JSON
+            JSON5.parse(blocks[0].code);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
+    /**
+     * Extracts first JSON from code blocks and optionally parses it against a schema
+     * @param text Input text containing JSON code blocks
+     * @returns Array of parsed JSON objects
+     * @throws SyntaxError if JSON parsing fails
+     */
     export function extractAndParseJsonBlock<T extends Object>(text: string, schema?: JSONSchema): T {
+        if (!hasJsonBlock(text)) {
+            throw new Error("No JSON blocks found in response");
+        }
+        
         const blocks = extractCodeBlocks(text, 'json').map(m => JSON5.parse(m.code));
         if (blocks.length == 1) {
             if (schema) {

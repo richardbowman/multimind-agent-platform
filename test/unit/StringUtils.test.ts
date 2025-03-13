@@ -160,6 +160,31 @@ describe('StringUtils', () => {
         });
     });
 
+    describe('hasJsonBlock', () => {
+        it('should return true when valid JSON block exists', () => {
+            const text = `
+                \`\`\`json
+                {"key": "value"}
+                \`\`\`
+            `;
+            expect(StringUtils.hasJsonBlock(text)).toBe(true);
+        });
+
+        it('should return false when no JSON block exists', () => {
+            const text = 'Just plain text';
+            expect(StringUtils.hasJsonBlock(text)).toBe(false);
+        });
+
+        it('should return false when invalid JSON exists in block', () => {
+            const text = `
+                \`\`\`json
+                {invalid: json}
+                \`\`\`
+            `;
+            expect(StringUtils.hasJsonBlock(text)).toBe(false);
+        });
+    });
+
     describe('extractAndParseJsonBlocks', () => {
         it('should extract and parse JSON blocks', () => {
             const text = `
