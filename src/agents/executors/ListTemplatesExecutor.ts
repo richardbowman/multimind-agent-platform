@@ -46,7 +46,7 @@ export class ListTemplatesExecutor implements StepExecutor<TemplateListStepRespo
         const templateList = templates.map(t => `
             - ${t.name} (${t.id})
               ${t.description}
-              Sections: ${t.sections.join(', ')}
+              Sections: ${t.sections.map(s => s.title).join(', ')}
               Required: ${t.requiredSections.join(', ')}
         `).join('\n');
 
