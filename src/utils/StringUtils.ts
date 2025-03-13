@@ -108,7 +108,7 @@ export namespace StringUtils {
      * @returns Array of parsed JSON objects
      * @throws SyntaxError if JSON parsing fails
      */
-    export function extractAndParseJsonBlock<T extends Object>(text: string, schema?: JSONSchema): T | undefined {
+    export function extractAndParseJsonBlock<T extends Object>(text: string, schema?: JSONSchema): T {
         const blocks = extractCodeBlocks(text, 'json').map(m => JSON5.parse(m.code));
         if (blocks.length == 1) {
             if (schema) {
@@ -116,7 +116,7 @@ export namespace StringUtils {
             }
             return blocks[0];
         } else {
-            return undefined;
+            throw new Error("No JSON blocks found in response");
         }
     }
 
