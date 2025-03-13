@@ -112,15 +112,23 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
         params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
         params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps, posts: params.context?.threadPosts});
 
-        // Get procedure guides from search
-        const searchedGuides = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.Document, subtype: DocumentSubtype.Procedure }, 3);
-        
         // Get procedure guides already in use from previous responses
         const pastGuideIds = params.previousResponses?.flatMap(response => 
             response.data?.steps?.flatMap(step => 
                 step.procedureGuide?.artifactId ? [step.procedureGuide.artifactId] : []
             ) || []
         ) || [];
+        
+        // Get procedure guides from search, excluding any already in use
+        const searchedGuides = (await this.artifactManager.searchArtifacts(
+            params.stepGoal, 
+            { 
+                type: ArtifactType.Document, 
+                subtype: DocumentSubtype.Procedure 
+            }, 
+            3 + pastGuideIds.length // Get extra in case we need to filter some out
+        )).filter(guide => !pastGuideIds.includes(guide.artifact.id))
+          .slice(0, 3); // Take top 3 after filtering
         
         // Load all guides in a single bulk operation
         const allGuides = await this.artifactManager.bulkLoadArtifacts([
