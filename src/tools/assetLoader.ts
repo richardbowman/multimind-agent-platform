@@ -16,7 +16,14 @@ export async function loadTemplates(basePath: string, templatePath: string, arti
     const files = fs.readdirSync(templatesDir).filter(f => f.endsWith('.md'));
     const loadedTemplates: Artifact[] = [];
 
-    for (const file of files) {
+    // Get existing templates from artifact manager
+    const existingTemplates = await artifactManager.getArtifacts({ type: ArtifactType.Document, subtype: DocumentSubtype.Template });
+    const existingTemplateMap = new Map(existingTemplates.map(t => [t.metadata?.source, t]));
+
+    for (let i = 0; i < files.length; i++) {
+        const file = files[i];
+        Logger.progress(`Loading templates (${i + 1} of ${files.length})`, (i + 1) / files.length, "templates");
+        
         const filePath = path.join(templatesDir, file);
         let content = fs.readFileSync(filePath, 'utf-8');
         
@@ -40,6 +47,19 @@ export async function loadTemplates(basePath: string, templatePath: string, arti
             } catch (error) {
                 Logger.warn(`Failed to parse YAML frontmatter in ${file}: ${error}`);
             }
+        }
+
+        // Check if template exists and has same content
+        const relativePath = path.relative(basePath, filePath);
+        const existingTemplate = existingTemplateMap.get(relativePath);
+        if (existingTemplate) {
+            const existingHash = existingTemplate.metadata?.contentHash;
+            if (existingHash === metadata.contentHash) {
+                Logger.info(`Template unchanged: ${file}`);
+                loadedTemplates.push(existingTemplate);
+                continue;
+            }
+            Logger.info(`Updating template: ${file}`);
         }
 
         try {
