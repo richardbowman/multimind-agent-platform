@@ -39,7 +39,7 @@ export const ArtifactDrawer: React.FC<ArtifactDrawerProps> = ({
             onClose={onClose}
             PaperProps={{
                 sx: {
-                    width: '40%'
+                    width: '80%'
                 }
             }}
         >
