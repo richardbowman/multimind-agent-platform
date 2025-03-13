@@ -112,46 +112,53 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
         params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
         params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps, posts: params.context?.threadPosts});
 
-        // Get artifact IDs from both search and past responses
-        const artifactGuideList = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.Document, subtype: DocumentSubtype.Procedure }, 10);
+        // Get procedure guides from search
+        const searchedGuides = await this.artifactManager.searchArtifacts(params.stepGoal, { type: ArtifactType.Document, subtype: DocumentSubtype.Procedure }, 3);
+        
+        // Get procedure guides already in use from previous responses
         const pastGuideIds = params.previousResponses?.flatMap(response => 
             response.data?.steps?.flatMap(step => 
                 step.procedureGuide?.artifactId ? [step.procedureGuide.artifactId] : []
             ) || []
         ) || [];
         
-        // Combine and deduplicate all artifact IDs
-        const allGuideIds = [
-            ...new Set([
-                ...artifactGuideList.map(p => p.artifact.id),
-                ...pastGuideIds
-            ])
-        ];
-        
         // Load all guides in a single bulk operation
-        const allGuides = await this.artifactManager.bulkLoadArtifacts(allGuideIds);
+        const allGuides = await this.artifactManager.bulkLoadArtifacts([
+            ...searchedGuides.map(p => p.artifact.id),
+            ...pastGuideIds
+        ]);
         
         // Filter by agent if specified
         const procedureGuides = this.agentName ? 
             allGuides.filter(a => a.metadata?.agent === this.agentName) : 
             allGuides;
             
-        if (procedureGuides.length === 0) {
-            Logger.warn(`No procedure guides found for agent ${this.agentName} ${params.agentId}`);
-        }
-        
-        // Format procedure guides for prompt
-        const guidesPrompt = procedureGuides.length > 0 ?
-            `# RELEVANT PROCEDURE GUIDES:\n` +
-            artifactGuideList.filter((guide, i) => i < 3).map((guide, i) => 
+        // Format searched guides for prompt
+        const searchedGuidesPrompt = searchedGuides.length > 0 ?
+            `# SEARCHED PROCEDURE GUIDES:\n` +
+            searchedGuides.map((guide, i) => 
                 `## Guide ${i+1} (${guide.score.toFixed(2)} relevance):\n` +
                 `###: ${guide.artifact.metadata?.title}\n` +
                 `<guide>${procedureGuides.find(p => p.id === guide.artifact.id)?.content}</guide>\n`
             ).join('\n\n') :
-            `### RELEVANT PROCEDURE GUIDES:\n*No relevant procedure guides found*`;
+            `### SEARCHED PROCEDURE GUIDES:\n*No relevant procedure guides found*`;
 
-        // Add procedure guides to prompt
-        prompt.addContext(guidesPrompt);
+        // Format in-use guides for prompt
+        const inUseGuidesPrompt = pastGuideIds.length > 0 ?
+            `# IN-USE PROCEDURE GUIDES:\n` +
+            pastGuideIds.map((id, i) => {
+                const guide = procedureGuides.find(p => p.id === id);
+                return guide ? 
+                    `## Guide ${i+1}:\n` +
+                    `###: ${guide.metadata?.title}\n` +
+                    `<guide>${guide.content}</guide>\n` :
+                    '';
+            }).join('\n\n') :
+            `### IN-USE PROCEDURE GUIDES:\n*No procedure guides in use*`;
+
+        // Add both sections to prompt
+        prompt.addContext(searchedGuidesPrompt);
+        prompt.addContext(inUseGuidesPrompt);
             
         prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
             .filter(metadata => metadata.planner)
