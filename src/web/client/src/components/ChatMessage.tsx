@@ -471,7 +471,10 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                     actions={[
                         {
                             label: 'Close',
-                            onClick: () => setSelectedArtifact(null),
+                            onClick: () => { 
+                                setSelectedArtifact(null)
+                                setLoadedArtifact(null);
+                            },
                             variant: 'outlined'
                         }
                     ]}
