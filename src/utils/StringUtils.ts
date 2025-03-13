@@ -205,12 +205,12 @@ export namespace StringUtils {
      * @returns String with all content outside of code blocks and specified XML blocks
      */
     export function extractNonCodeContent(text: string, xmlTagsToRemove: string[] = [], codeBlockTypesToRemove: string[] = []): string {
-        // Remove specific code block types
         let cleanedText = text;
-        if (codeBlockTypesToRemove.length > 0) {
-            const codeBlockRegex = new RegExp(`\`\`\`(${codeBlockTypesToRemove.join('|')})(?:\\[.*?\\])?\\n[\\s\\S]*?\`\`\``, 'g');
-            cleanedText = cleanedText.replace(codeBlockRegex, '');
-        }
+        
+        // Remove all code blocks by default, or specific types if specified
+        const codeBlockTypes = codeBlockTypesToRemove.length > 0 ? codeBlockTypesToRemove : ['[^`]+'];
+        const codeBlockRegex = new RegExp(`\`\`\`(${codeBlockTypes.join('|')})(?:\\[.*?\\])?\\n[\\s\\S]*?\`\`\``, 'g');
+        cleanedText = cleanedText.replace(codeBlockRegex, '');
 
         // Remove specified XML blocks if any
         if (xmlTagsToRemove.length > 0) {
