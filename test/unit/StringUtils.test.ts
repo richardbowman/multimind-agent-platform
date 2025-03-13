@@ -92,6 +92,37 @@ describe('StringUtils', () => {
             expect(result).toBe('Start\nEnd');
         });
 
+        it('should remove specified code block types', () => {
+            const text = `
+                Start
+                \`\`\`js
+                const code = true;
+                \`\`\`
+                \`\`\`json
+                {"key": "value"}
+                \`\`\`
+                End
+            `;
+            const result = StringUtils.extractNonCodeContent(text, [], ['json']);
+            expect(result).toBe('Start\nEnd');
+        });
+
+        it('should remove both specified code block types and XML blocks', () => {
+            const text = `
+                Start
+                \`\`\`js
+                const code = true;
+                \`\`\`
+                \`\`\`json
+                {"key": "value"}
+                \`\`\`
+                <thinking>Thought</thinking>
+                End
+            `;
+            const result = StringUtils.extractNonCodeContent(text, ['thinking'], ['json']);
+            expect(result).toBe('Start\nEnd');
+        });
+
         it('should return original text when no blocks to remove', () => {
             const text = 'Just plain text';
             const result = StringUtils.extractNonCodeContent(text);

@@ -181,7 +181,7 @@ export namespace StringUtils {
         // Remove specific code block types
         let cleanedText = text;
         if (codeBlockTypesToRemove.length > 0) {
-            const codeBlockRegex = new RegExp(`\`\`\`(${codeBlockTypesToRemove.join('|')})[\\s\\S]*?\`\`\``, 'g');
+            const codeBlockRegex = new RegExp(`\`\`\`(${codeBlockTypesToRemove.join('|')})(?:\\[.*?\\])?\\n[\\s\\S]*?\`\`\``, 'g');
             cleanedText = cleanedText.replace(codeBlockRegex, '');
         }
 
