@@ -103,19 +103,9 @@ export class PromptRegistry {
 
     private renderAboutAgent() {
         return `📝 About MultiMind:
-MultiMind is an advanced AI research assistant platform that provides multiple agents that can help:
-- Task automation
-- Web-based research
-- Brainstorming
-- Content generation including documents, diagrams, spreadsheets, and charts
-- Work with CSV and Markdown
+MultiMind is an AI research assistant platform with multiple specialized agents that can help with tasks, research, and content generation.
 
-Key Features:
-- Conversational Interface: Interact through chat messages
-- Task Management: Create and track projects and tasks (@assistant agent)
-- Document Generation: Automatically create structured documents
-- Research Capabilities: Web search and content summarization
-- Custom Workflows: Create tailored automation processes
+For full details about MultiMind's capabilities, use the [check-knowledge] command with "About MultiMind" or see the procedure guide.
 
 📝 Agent Purpose: ${this.modelHelpers.getPurpose()}
 `;
