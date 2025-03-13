@@ -1,12 +1,20 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { OnboardingConsultant } from '../onboardingConsultant';
 import { ContentType } from 'src/llm/promptBuilder';
+import { ArtifactItem } from 'src/tools/artifact';
+
+interface TemplateListStepResponse {
+    type: StepResponseType.ChannelTemplates,
+    data?: {
+        templates?: ArtifactItem[]
+    }
+}
 
 /**
  * Executor that lists available document templates with their descriptions.
@@ -16,7 +24,7 @@ import { ContentType } from 'src/llm/promptBuilder';
  * - Returns template information without selection logic
  */
 @StepExecutorDecorator(ExecutorType.LIST_TEMPLATES, 'List available document templates', true)
-export class ListTemplatesExecutor implements StepExecutor {
+export class ListTemplatesExecutor implements StepExecutor<TemplateListStepResponse> {
     private modelHelpers: ModelHelpers;
     private onboardingConsultant: OnboardingConsultant;
 
@@ -25,7 +33,7 @@ export class ListTemplatesExecutor implements StepExecutor {
         this.onboardingConsultant = onboardingConsultant;
     }
 
-    async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
+    async execute(params: ExecuteParams): Promise<StepResult<TemplateListStepResponse>> {
         // Get available templates
         const templates = this.onboardingConsultant.getAvailableTemplates();
 
@@ -47,8 +55,11 @@ export class ListTemplatesExecutor implements StepExecutor {
             replan: ReplanType.Allow,
             finished: true,
             response: {
-                templates: templateList,
-                count: templates.length
+                type: StepResponseType.ChannelTemplates,
+                status: templateList,
+                data: {
+                    templates: templateList
+                }
             }
         };
     }
