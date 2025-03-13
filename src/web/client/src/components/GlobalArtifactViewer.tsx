@@ -118,6 +118,17 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             return updatedFolders;
         });
         
+        // Ensure the type and subtype are expanded
+        setExpandedItems(prevExpanded => {
+            const newExpanded = new Set(prevExpanded);
+            newExpanded.add(artifact.type);
+            newExpanded.add(`${artifact.type}-${artifact.metadata?.subtype || 'Other'}`);
+            return Array.from(newExpanded);
+        });
+        
+        // Set the selected item
+        setSelectedItemIds([artifact.id]);
+        
         // Refresh from server
         fetchAllArtifacts();
     };
