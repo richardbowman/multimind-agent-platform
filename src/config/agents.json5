@@ -337,15 +337,40 @@
         }
       },       
       "ContentManager": {
-        "className": "ContentManager",
-        "sourcePath": "contentManager.ts",
+        "className": "ConfigurableAgent",
+        "sourcePath": "configurableAgent.ts",
         "userId": "9d039c4e-f99d-4fb7-a160-452ac261569c",
         "handle": "@content",
-        "supportsDelegation": true,
         "description": "Manages content creation and organization for larger writing assignments that need multiple sections (the writer is part of their team).",
         "enabled": true,
         "config": {
-          "supportsDelegation": true
+          "purpose": "You are planning how to create high-quality content. Break down the content creation into steps of research, outlining, writing and editing.",
+          "finalInstructions": "For an initial request, follow this pattern:\n1. Start with 'goal_confirmation' step to gather relevant information\n2. Use 'check_knowledge' step to gather relevant information\n3. Follow with 'outline' step to structure the content\n4. Then 'writing' to create the sections\n5. Then 'content_combination' to combine their work together\n6. End with an 'editing' step to improve the final content",
+          "supportsDelegation": true,
+          "plannerType": "nextStep",
+          "executors": [
+            {
+              "className": "GoalConfirmationExecutor"
+            },
+            {
+              "className": "KnowledgeCheckExecutor"
+            },
+            {
+              "className": "OutlineExecutor"
+            },
+            {
+              "className": "WritingExecutor"
+            },
+            {
+              "className": "EditingExecutor"
+            },
+            {
+              "className": "DocumentRetrievalExecutor"
+            },
+            {
+              "className": "ContentCombinationExecutor"
+            }
+          ]
         }
       },
       "ContentWriter": {
