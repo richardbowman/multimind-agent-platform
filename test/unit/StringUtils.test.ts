@@ -62,9 +62,16 @@ describe('StringUtils', () => {
                 const code = true;
                 \`\`\`
                 More text
+                \`\`\`json
+                { "test": "value" }
+                \`\`\`
+                Other text
+                \`\`\`markdown
+                # Markdown content
+                \`\`\`
             `;
             const result = StringUtils.extractNonCodeContent(text);
-            expect(result).toBe('Some text\nMore text');
+            expect(result).toBe('Some text\nMore text\nOther text');
         });
 
         it('should remove specified XML blocks', () => {
@@ -104,7 +111,7 @@ describe('StringUtils', () => {
                 End
             `;
             const result = StringUtils.extractNonCodeContent(text, [], ['json']);
-            expect(result).toBe('Start\nEnd');
+            expect(result).toBe("Start\n\`\`\`js\nconst code = true;\n\`\`\`\nEnd");
         });
 
         it('should remove both specified code block types and XML blocks', () => {
@@ -120,7 +127,7 @@ describe('StringUtils', () => {
                 End
             `;
             const result = StringUtils.extractNonCodeContent(text, ['thinking'], ['json']);
-            expect(result).toBe('Start\nEnd');
+            expect(result).toBe('Start\n\`\`\`js\nconst code = true;\n\`\`\`\nEnd');
         });
 
         it('should return original text when no blocks to remove', () => {

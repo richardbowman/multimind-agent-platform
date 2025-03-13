@@ -102,12 +102,8 @@ module.exports = {
           to: path.resolve(__dirname, 'dist/agents.json5')
         },
         {
-          from: path.resolve(__dirname, 'src/assets/goal-templates'),
-          to: path.resolve(__dirname, 'dist/assets/goal-templates')
-        },
-        {
-          from: path.resolve(__dirname, 'src/assets/procedure-guides'),
-          to: path.resolve(__dirname, 'dist/assets/procedure-guides')
+          from: path.resolve(__dirname, 'src/assets/'),
+          to: path.resolve(__dirname, 'dist/assets/')
         },
         {
           from: pdfWorkerPath,

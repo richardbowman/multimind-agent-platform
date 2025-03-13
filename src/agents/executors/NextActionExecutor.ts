@@ -188,7 +188,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                  });
                  
                  return {
-                     ...StringUtils.extractAndParseJsonBlock<NextActionResponse>(result.message, schema),
+                     ...StringUtils.hasJsonBlock(result.message) && StringUtils.extractAndParseJsonBlock<NextActionResponse>(result.message, schema) || {},
                      reasoning: StringUtils.extractXmlBlock(result.message, "thinking"),
                      message: StringUtils.extractNonCodeContent(result.message, ["thinking"], ["json"])
                  };

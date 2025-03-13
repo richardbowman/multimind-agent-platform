@@ -1,47 +1,44 @@
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResponse, StepResult } from '../interfaces/StepResult';
+import { StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { GoalTemplate } from '../../schemas/goalTemplateSchema';
-import { TaskManager, TaskType } from '../../tools/taskManager';
+import { TaskManager } from '../../tools/taskManager';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ArtifactManager } from '../../tools/artifactManager';
-import { ILLMService } from '../../llm/ILLMService';
-import { IVectorDatabase } from '../../llm/IVectorDatabase';
-import { Settings } from '../../tools/settings';
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
 import { ChatClient } from 'src/chat/chatClient';
 import { ServerRPCHandler } from 'src/server/ServerRPCHandler';
-import { createChannelHandle, CreateChannelHandlerParams } from 'src/shared/channelTypes';
-import { UUID } from 'src/types/uuid';
-import { Channel } from 'diagnostics_channel';
+import { ChannelHandle, createChannelHandle } from 'src/shared/channelTypes';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
+import { StringUtils } from 'src/utils/StringUtils';
+import { getGeneratedSchema } from 'src/helpers/schemaUtils';
+import { SchemaType } from 'src/schemas/SchemaTypes';
+import { CreateChannelResponse } from 'src/schemas/CreateChannnelResponse';
+import { createChatHandle } from 'src/types/chatHandle';
 
 interface ChannelStepResponse extends StepResponse {
+    type: StepResponseType.Channel,
     data?: {
-        channelId: UUID;
-        channelName: string;
-        channelDescription: string;
+        channelHandle: ChannelHandle,
+        templateId?: ChannelHandle,
+        channelDescription?: string
     }
 }
 
 @StepExecutorDecorator(ExecutorType.CREATE_CHANNEL, 'Create channels with appropriate templates and settings')
-export class CreateChannelExecutor implements StepExecutor<ChannelStepResponse> {
+export class CreateChannelExecutor extends BaseStepExecutor<ChannelStepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private artifactManager: ArtifactManager;
     private chatClient: ChatClient;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
         this.artifactManager = params.artifactManager!;
         this.chatClient = params.chatClient;
-    }
-
-    private async createChannel(params: CreateChannelHandlerParams): Promise<UUID> {
-        const mappedParams = await ServerRPCHandler.createChannelHelper(this.chatClient, this.taskManager, params);
-        return await this.chatClient.createChannel(mappedParams);
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<ChannelStepResponse>> {
@@ -49,19 +46,21 @@ export class CreateChannelExecutor implements StepExecutor<ChannelStepResponse> 
         
         const channelPurpose = goal;
         const templates = await ServerRPCHandler.loadGoalTemplates();
-        
-        // Single LLM call to get all needed information
-        const prompt = `You are creating a new channel with this purpose: ${channelPurpose}
-
-Available templates:
+        const templatePrompt = `Available templates:
 ${templates.map(t => 
     `Template: ${t.name} (ID: ${t.id})
     Description: ${t.description}
     Supporting Agents: ${t.supportingAgents.join(', ')}
     Initial Tasks: ${t.initialTasks.map(t => t.description).join(', ')}`
-).join('\n\n')}
+).join('\n\n')}`;
 
-Please provide:
+        // Single LLM call to get all needed information
+        const schema = await getGeneratedSchema(SchemaType.CreateChannelResponse);
+        const prompt = this.startModel(params);
+        prompt.addInstruction('You are a chat channel creating step')
+            .addContext({contentType: ContentType.GOALS_FULL, params})
+            .addContext(templatePrompt)
+            .addInstruction(`Please provide:
 1. A channel name (start with #, 2-4 words, lowercase with hyphens)
 2. A channel description
 3. The most appropriate template ID
@@ -70,25 +69,14 @@ Please provide:
    - Why this template was chosen
    - Which agents are included and why
    - What initial tasks have been set up
-   - How to use the channel effectively
-
-Return your response as a JSON object matching this schema:
-{
-    "name": string,
-    "description": string,
-    "templateId": string,
-    "explanation": string,
-    "initialTasks": string[],
-    "supportingAgents": string[]
-}`;
-
-        const response = await this.modelHelpers.generate({
-            message: prompt,
-            instructions: '',
-            parseJSON: true
+   - How to use the channel effectively`)
+            .addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
+          
+        const rawResponse = await prompt.generate({
+            message: params.stepGoal||params.message
         });
-
-        const channelData = response.message as CreateChannelResponse;
+        const channelData = StringUtils.extractAndParseJsonBlock<CreateChannelResponse>(rawResponse.message, schema);
+        const message = StringUtils.extractNonCodeContent(rawResponse.message, [], ["json"]);
         
         // Ensure channel name starts with #
         const channelName = createChannelHandle(channelData.name);
@@ -97,17 +85,17 @@ Return your response as a JSON object matching this schema:
         const artifactIds = [
             ...new Set([
                 ...context?.artifacts?.map(a => a.id) || [],
-                ...params.steps.filter(s => s.props.stepType === "create_revise_plan").map(s => s.props?.result?.response?.artifactId)
+                ...params.steps.map(s => s.props?.result?.response?.data?.artifactIds||[])
             ].filter(s => s))
         ];
 
         // Create the channel using the selected template
-        const channelId = await this.createChannel({
+        const channel = await ServerRPCHandler.createChannelHelper(this.chatClient, this.taskManager, {
             name: channelName,
             description: channelData.description,
             isPrivate: false,
-            members: channelData.supportingAgents,
-            goalTemplate: channelData.templateId,
+            members: channelData.supportingAgents.map(a => createChatHandle(a)),
+            goalTemplate: createChannelHandle(channelData.templateId),
             goalDescriptions: channelData.initialTasks,
             defaultResponder: templates.find(t => t.id === channelData.templateId)?.defaultResponder,
             artifactIds: artifactIds
@@ -116,13 +104,13 @@ Return your response as a JSON object matching this schema:
         return {
             finished: true,
             response: {
-                message: channelData.explanation || `Created new channel "${channelPurpose}"`,
+                type: StepResponseType.Channel,
+                message,
                 reasoning: `Selected template ${channelData.templateId} based on channel purpose: ${channelPurpose}`,
                 data: {
-                    channelId,
-                    templateId: channelData.templateId,
-                    initialTasks: channelData.initialTasks,
-                    artifactIds
+                    channelHandle: channelName,
+                    channelDescription: channel.description,
+                    templateId: channel.goalTemplate
                 }
             }
         };

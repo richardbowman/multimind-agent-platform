@@ -37,7 +37,9 @@ export enum StepResponseType {
     Message = "Message",
     FullArtifact = "FullArtifact",
     CompletionMessage = "CompletionMessage",
-    Chunks = "Chunks"
+    Chunks = "Chunks",
+    Channel = "Channel",
+    ChannelTemplates = "ChannelTemplates"
 }
 
 export enum ReplanType {

@@ -517,7 +517,7 @@ export class PromptBuilder implements InputPrompt {
     }
 
 
-    addOutputInstructions({ outputType, schema, specialInstructions, type = 'markdown' }: OutputInstructionsParams) {
+    addOutputInstructions({ outputType, schema, specialInstructions, type = 'markdown' }: OutputInstructionsParams) : PromptBuilder {
         if (outputType === OutputType.JSON_AND_MARKDOWN && schema) {
             this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message as well as two separate fully enclosed code blocks. One fully enclosed code block \`\`\`json that follows this schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n 
             Then, provide a separate fenced \`\`\`${type} code block${specialInstructions ? ` that provides: ${specialInstructions}.` : ''}.`);
@@ -528,6 +528,7 @@ export class PromptBuilder implements InputPrompt {
 2. Then, respond with a user-friendly message.
 3. Provide structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         }
+        return this;
     }
     
     registerRenderer<T>(contentType: ContentType, renderer: ContentRenderer<T>): void {
@@ -548,7 +549,7 @@ export class PromptBuilder implements InputPrompt {
         });
     }
 
-    addInstruction(instruction?: ContentInput): void {
+    addInstruction(instruction?: ContentInput): PromptBuilder {
         if (typeof instruction === 'string') {
             this.instructions.push(instruction);
         } else if (instruction) {
@@ -562,9 +563,10 @@ export class PromptBuilder implements InputPrompt {
                 }
             }
         }
+        return this;
     }
 
-    addContext(context?: ContentInput): void {
+    addContext(context?: ContentInput): PromptBuilder {
         if (typeof context === 'string') {
             this.context.push(context);
         } else if (context) {
@@ -580,6 +582,7 @@ export class PromptBuilder implements InputPrompt {
                 Logger.error(`PromptBuilder renderer for content type ${context.contentType} not found`);
             }
         }
+        return this;
     }
 
     async build(): Promise<string> {

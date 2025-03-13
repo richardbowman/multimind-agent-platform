@@ -729,13 +729,31 @@
         "description": {
           "type": "string"
         },
+        "initialTasks": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
         "name": {
+          "type": "string"
+        },
+        "supportingAgents": {
+          "items": {
+            "type": "string"
+          },
+          "type": "array"
+        },
+        "templateId": {
           "type": "string"
         }
       },
       "required": [
         "name",
-        "description"
+        "description",
+        "templateId",
+        "initialTasks",
+        "supportingAgents"
       ],
       "type": "object"
     },
