@@ -102,7 +102,15 @@ export const ArtifactDisplay: React.FC<ArtifactDisplayProps> = ({
             id: 'artifact-display-delete', 
             icon: <DeleteIcon fontSize="small" />,
             label: 'Delete Artifact',
-            onClick: () => onDelete && onDelete(artifactRef.current)
+            onClick: async () => {
+                if (onDelete) {
+                    await onDelete(artifactRef.current);
+                    // Clear selection after deletion
+                    if (onSelect) {
+                        onSelect(artifactRef.current, false);
+                    }
+                }
+            }
         },
         {
             id: 'artifact-display-export',

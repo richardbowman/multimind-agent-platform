@@ -136,14 +136,22 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
     const handleDelete = async () => {
         if (selectedArtifacts.length > 0) {
             await Promise.all(selectedArtifacts.map(artifact => deleteArtifact(artifact.id)));
+            
+            // Clear all selections and refresh state
             setSelectedArtifacts([]);
             setSelectedArtifact(null);
-
+            setSelectedItemIds([]);
+            
+            // Update bulk delete state
             updateActionState('bulk-delete', {
                 disabled: true,
                 label: 'Bulk Delete Selected (0)'
             });
-            fetchAllArtifacts();
+            
+            // Force refresh the tree by fetching artifacts and resetting folders
+            await fetchAllArtifacts();
+            setArtifactFolders({});
+            
             setDeleteConfirmOpen(false);
         }
     };
