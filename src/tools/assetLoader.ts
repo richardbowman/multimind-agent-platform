@@ -25,10 +25,8 @@ export async function loadTemplates(basePath: string, templatePath: string, arti
         const match = content.match(frontmatterRegex);
         let metadata: Record<string, any> = {
             type: ArtifactType.Document,
-            subtype: DocumentSubtype.Procedure,
+            subtype: DocumentSubtype.Template,
             title: path.basename(file, '.md'),
-            description: 'Document template',
-            created: new Date().toISOString(),
             source: path.relative(basePath, filePath),
             contentHash: require('crypto').createHash('sha256').update(content).digest('hex')
         };
@@ -123,11 +121,10 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
         // Start with YAML frontmatter as base metadata
         let metadata: Record<string, any> = {
             subtype: ext === '.csv' ? SpreadsheetSubType.Procedure : DocumentSubtype.Procedure,
-            ...frontmatter,
             title: frontmatter['title'] || path.basename(file, '.md'),
+            description: 'Procedure guide document',
+            ...frontmatter,
             mimeType: ext === '.csv' ? 'text/csv' : 'text/markdown',
-            description: frontmatter['description'] || 'Procedure guide document',
-            created: frontmatter['created'] || new Date().toISOString(),
             source: path.relative(basePath, filePath).replace(/\.(md|csv)$/, ''),
             contentHash: contentHash
         };
