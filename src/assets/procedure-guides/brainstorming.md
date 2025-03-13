@@ -14,7 +14,7 @@ Guide a user through a brainstorming session to generate and organize ideas.
    Clarify the topic and scope of the brainstorming session with the user.
 
 2. **Retrieve Artifacts**  
-   Action Type: artifact-retriever  
+   Action Type: retrieve-full-artifact  
    If the user has attached any relevant documents or files, retrieve and summarize their contents to use as input.
 
 3. **Generate Mindmap**  
