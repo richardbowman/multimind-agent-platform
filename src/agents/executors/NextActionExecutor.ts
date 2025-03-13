@@ -198,7 +198,7 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                  return {
                      ...StringUtils.extractAndParseJsonBlock<NextActionResponse>(result.message, schema),
                      reasoning: StringUtils.extractXmlBlock(result.message, "thinking"),
-                     message: StringUtils.extractNonCodeContent(result.message, ["thinking"])
+                     message: StringUtils.extractNonCodeContent(result.message, ["thinking"], ["json"])
                  };
              },
              (result) => !!result && (!!result.nextAction || !!result.message), // Validate we got a proper response

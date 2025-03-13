@@ -177,9 +177,13 @@ export namespace StringUtils {
      * @param xmlTagsToRemove Optional array of XML tags to remove from the content
      * @returns String with all content outside of code blocks and specified XML blocks
      */
-    export function extractNonCodeContent(text: string, xmlTagsToRemove: string[] = []): string {
-        // Remove code blocks
-        let cleanedText = text.replace(/```[\s\S]*?```/g, '');
+    export function extractNonCodeContent(text: string, xmlTagsToRemove: string[] = [], codeBlockTypesToRemove: string[] = ['json']): string {
+        // Remove specific code block types
+        let cleanedText = text;
+        if (codeBlockTypesToRemove.length > 0) {
+            const codeBlockRegex = new RegExp(`\`\`\`(${codeBlockTypesToRemove.join('|')})[\\s\\S]*?\`\`\``, 'g');
+            cleanedText = cleanedText.replace(codeBlockRegex, '');
+        }
 
         // Remove specified XML blocks if any
         if (xmlTagsToRemove.length > 0) {
