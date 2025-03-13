@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { TemplateSelectionResponse } from '../../schemas/TemplateSelectionResponse';
@@ -10,9 +10,12 @@ import { ModelHelpers } from '../../llm/modelHelpers';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { OnboardingConsultant } from '../onboardingConsultant';
-import { ContentType, OutputType } from 'src/llm/promptBuilder';
+import { ContentType, globalRegistry, OutputType } from 'src/llm/promptBuilder';
 import { ModelMessageResponse } from 'src/schemas/ModelResponse';
 import { StringUtils } from 'src/utils/StringUtils';
+import { ArtifactManager } from 'src/tools/artifactManager';
+import { Artifact, ArtifactType, DocumentSubtype } from 'src/tools/artifact';
+import { asError } from 'src/types/types';
 
 /**
  * Executor that selects the most appropriate document template based on user goals and requirements.
@@ -23,64 +26,82 @@ import { StringUtils } from 'src/utils/StringUtils';
  * - Suggests modifications if needed
  */
 @StepExecutorDecorator(ExecutorType.SELECT_TEMPLATE, 'Select appropriate document template based on user goals', true)
-export class TemplateSelectorExecutor implements StepExecutor<StepResponse> {
+export class TemplateSelectorExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
-    private onboardingConsultant: OnboardingConsultant;
+    private artifactManager: ArtifactManager;
 
-    constructor(params: ExecutorConstructorParams, onboardingConsultant: OnboardingConsultant) {
+    constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
-        this.onboardingConsultant = onboardingConsultant;
+        this.artifactManager = params.artifactManager;
+
+        globalRegistry.stepResponseRenderers.set(StepResponseType.DocumentTemplate, async (response : StepResponse) => {
+            const artifactId = response.data?.selectedTemplateId;
+            const artifact : Artifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
+            return (artifact && `DOCUMENT TEMPLATE ${artifact.metadata?.title}:\n<content>\n${artifact.content.toString()}</content>\n`) ?? "[NO LOADED TEMPLATE]";
+        });
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        const schema = await getGeneratedSchema(SchemaType.TemplateSelectionResponse);
+        let message;
+        try {
+            const schema = await getGeneratedSchema(SchemaType.TemplateSelectionResponse);
 
-        // Get available templates
-        const templates = this.onboardingConsultant.getAvailableTemplates();
+            // Get available templates
+            const templates = await this.artifactManager.getArtifacts({type: ArtifactType.Document, subtype: DocumentSubtype.Template});
 
-        const instructions = this.modelHelpers.createPrompt();
-        instructions.addContext({contentType: ContentType.ABOUT});
-        instructions.addContext({contentType: ContentType.INTENT, params});
-        instructions.addContext({contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal||""});
-        instructions.addContext({contentType: ContentType.CONVERSATION, posts: params.context?.threadPosts||[]});
-        instructions.addInstruction( `Available Templates:
-            ${templates.map(t => `
-            - ${t.name} (${t.id})
-              ${t.description}
-            `).join('\n')}
+            const instructions = this.startModel(params);
+            instructions.addContext({contentType: ContentType.ABOUT});
+            instructions.addContext({contentType: ContentType.INTENT, params});
+            instructions.addContext({contentType: ContentType.OVERALL_GOAL, goal: params.overallGoal||""});
+            instructions.addContext({contentType: ContentType.CONVERSATION, posts: params.context?.threadPosts||[]});
+            instructions.addInstruction( `Available Templates:
+                ${templates.map(t => `
+                - ${t.metadata?.title} (${t.id})
+                ${t.metadata?.description}
+                `).join('\n')}
 
-            Analyze the user's goals and requirements to select the most appropriate template.
-            Consider:
-            - The type of document needed
-            - The level of detail required
-            - The user's business context
-            - Any specific requirements mentioned
+                Analyze the user's goals and requirements to select the most appropriate template.
+                Consider:
+                - The type of document needed
+                - The level of detail required
+                - The user's business context
+                - Any specific requirements mentioned
 
-            Provide in the JSON block:
-            - selectedTemplateId: The ID of the most appropriate template
-            
-            Also provide in your response message:
-            - Reasoning: Explanation of why this template was chosen
-            - Suggested Modifications: Any suggested changes to better fit the user's needs
-            `);
-        instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
+                Provide in the JSON block:
+                - selectedTemplateId: The ID of the most appropriate template
+                
+                Also provide in your response message:
+                - Reasoning: Explanation of why this template was chosen
+                - Suggested Modifications: Any suggested changes to better fit the user's needs
+                `);
+            instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
-        const modelResponse = await this.modelHelpers.generateMessage({
-            message: params.stepGoal || params.message,
-            instructions
-        });
-        const data = StringUtils.extractAndParseJsonBlock<TemplateSelectionResponse>(modelResponse.message, schema);
+            const modelResponse = await instructions.generate({
+                message: params.stepGoal || params.message,
+                instructions
+            });
+            message = StringUtils.extractNonCodeContent(modelResponse.message);
+            const data = StringUtils.extractAndParseJsonBlock<TemplateSelectionResponse>(modelResponse.message, schema);
 
-
-
-        return {
-            type: 'template_selection',
-            finished: true,
-            replan: ReplanType.Allow,
-            response: {
-                reasoning: modelResponse.message,
-                data
-            }
-        };
+            return {
+                finished: true,
+                replan: ReplanType.Allow,
+                response: {
+                    type: StepResponseType.DocumentTemplate,
+                    status: message,
+                    data
+                }
+            };
+        } catch (error) {
+            return {
+                type: StepResultType.Error,
+                finished: true,
+                replan: ReplanType.Allow,
+                response: {
+                    status: `[Could not select template. Error: ${asError(error).message}] ${message}`
+                }
+            };
+        }
     }
 }

@@ -1,6 +1,6 @@
 import { BaseStepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { TaskManager } from '../../tools/taskManager';
@@ -57,19 +57,11 @@ ${templates.map(t =>
         // Single LLM call to get all needed information
         const schema = await getGeneratedSchema(SchemaType.CreateChannelResponse);
         const prompt = this.startModel(params);
-        prompt.addInstruction('You are a chat channel creating step')
+        prompt.addInstruction(`You are a function that creates a chat channel for the user and appropriate agents. In the JSON attributes,
+provide information for the system to create the desired channel. Your channel name must be in the format "#channel-name". Then, respond to the user
+explaining that you've created a channel, which agents are a part of the channel, and how to get started.`)
             .addContext({contentType: ContentType.GOALS_FULL, params})
             .addContext(templatePrompt)
-            .addInstruction(`Please provide:
-1. A channel name (start with #, 2-4 words, lowercase with hyphens)
-2. A channel description
-3. The most appropriate template ID
-4. A clear explanation of:
-   - What the channel is for
-   - Why this template was chosen
-   - Which agents are included and why
-   - What initial tasks have been set up
-   - How to use the channel effectively`)
             .addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
           
         const rawResponse = await prompt.generate({
@@ -106,7 +98,6 @@ ${templates.map(t =>
             response: {
                 type: StepResponseType.Channel,
                 message,
-                reasoning: `Selected template ${channelData.templateId} based on channel purpose: ${channelPurpose}`,
                 data: {
                     channelHandle: channelName,
                     channelDescription: channel.description,

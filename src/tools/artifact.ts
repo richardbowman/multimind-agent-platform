@@ -38,7 +38,8 @@ export enum DocumentSubtype {
   ResearchReport = "Research Report",
   WebpageSummary = "Webpage Summary",
   PubMedFullArticle = "PubMed Full Article",
-  Procedure = "Procedure"
+  Procedure = "Procedure",
+  Template = "Template"
 }
 
 export enum SpreadsheetSubType {

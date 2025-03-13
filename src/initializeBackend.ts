@@ -18,7 +18,7 @@ import { createChannelHandle } from "./shared/channelTypes";
 import { app } from "electron";
 import { Message } from "./chat/chatClient";
 import _crypto from 'node:crypto';
-import { loadProcedureGuides } from "./tools/procedureGuides";
+import { loadProcedureGuides, loadTemplates } from "./tools/assetLoader";
 import { Sequelize } from "sequelize";
 
 if (!global.crypto) {
@@ -119,8 +119,9 @@ export async function initializeBackend(settingsManager: SettingsManager, option
 
         // Load procedure guides
         const guidesDir = path.join('dist', 'assets', "procedure-guides");
+        const templatesDir = path.join('dist', 'assets', "templates");
         await loadProcedureGuides(app.getAppPath(), guidesDir, artifactManager);
-
+        await loadTemplates(app.getAppPath(), templatesDir, artifactManager);
 
         const agents: Agents = { agents: {} };
 

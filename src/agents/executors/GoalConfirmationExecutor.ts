@@ -1,5 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from "../../llm/modelHelpers";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -8,10 +8,11 @@ import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResult } from '../interfaces/StepResult';
 import { TaskManager } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType } from 'src/llm/promptBuilder';
+import { StringUtils } from 'src/utils/StringUtils';
 
 /**
  * Executor that validates and confirms user goals before proceeding.
@@ -26,12 +27,13 @@ import { ContentType } from 'src/llm/promptBuilder';
  * - Manages goal revision workflow
  */
 @StepExecutorDecorator(ExecutorType.GOAL_CONFIRMATION, 'Confirm the goals of the user.')
-export class GoalConfirmationExecutor implements StepExecutor {
+export class GoalConfirmationExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private chatClient: ChatClient;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager;
         this.chatClient = params.chatClient;
@@ -42,7 +44,7 @@ export class GoalConfirmationExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.GoalConfirmationResponse);
 
         // Create prompt using PromptBuilder
-        const promptBuilder = this.modelHelpers.createPrompt();
+        const promptBuilder = this.startModel(params);
         
         // Add core instructions
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
@@ -63,19 +65,24 @@ export class GoalConfirmationExecutor implements StepExecutor {
             Try not to be pedantic. Be sensible in helping refine the goal yourself.`);
             
         // Build and execute prompt
-        const result = await this.modelHelpers.generate<GoalConfirmationResponse>({
-            message: goal,
-            instructions: new StructuredOutputPrompt(schema, promptBuilder),
-            threadPosts: params.context?.threadPosts || []
+        const rawResult = await promptBuilder.generate({
+            message: goal
         });
+
+        const message = StringUtils.extractNonCodeContent(rawResult.message);
+        const result = StringUtils.extractAndParseJsonBlock<GoalConfirmationResponse>(rawResult.message, schema);
+
 
         return {
             finished: params.executionMode === "task" ? true : result.understanding,
             needsUserInput: params.executionMode === "task" ? false : !result.understanding,
             replan: ReplanType.Allow,
-            goal: result.message,
+            goal: message,
             response: {
-                message: result.message
+                message,
+                data: {
+                    understandable: result.understanding
+                }
             }
         };
     }

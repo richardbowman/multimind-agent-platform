@@ -656,7 +656,12 @@ export abstract class StepBasedAgent extends Agent {
             delete stepResult.response.artifacts;
         }
         
-        const artifactList = [...createdArtifacts || [], ...stepResult.artifactIds || [], ...stepResult.response?.artifactIds || [], stepResult.response?.data?.artifactId];
+        const artifactList : UUID[] = [...new Set([...params.context?.artifacts?.map(a => a.id)||[],
+            ...createdArtifacts || [], 
+            ...stepResult.artifactIds || [], 
+            ...stepResult.response?.artifactIds || [], 
+            ...stepResult.response?.data?.artifactId?[stepResult.response?.data?.artifactId]:[]])];
+
         const props = {
             "project-ids": [stepResult.projectId, projectId],
             artifactIds: artifactList
@@ -689,7 +694,6 @@ export abstract class StepBasedAgent extends Agent {
             // If this was the last planned task, add a validation step
             const remainingTasks = this.projects.getProjectTasks(projectId).filter(t => !t.complete && t.type === "step" && t.id !== task.id);
             const stepArtifacts = await this.mapRequestedArtifacts(artifactList);
-            const fullArtifactList = ArrayUtils.deduplicateById([...stepArtifacts, ...params.context?.artifacts || []]);
 
             if ((stepResult.replan === ReplanType.Allow && remainingTasks.length === 0) || stepResult.replan === ReplanType.Force) {
                 //TODO: hacky, we don't really post this message
@@ -700,7 +704,7 @@ export abstract class StepBasedAgent extends Agent {
                     task,
                     context: {
                         ...params.context,
-                        artifacts: fullArtifactList
+                        artifacts: stepArtifacts
                     },
                     partialPost: params.partialPost
                 });
@@ -717,7 +721,7 @@ export abstract class StepBasedAgent extends Agent {
                     userPost,
                     context: {
                         ...params.context,
-                        artifacts: fullArtifactList
+                        artifacts: stepArtifacts
                     },
                     partialPost: params.partialPost
                 });

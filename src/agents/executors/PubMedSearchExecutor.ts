@@ -1,24 +1,20 @@
 import { ModelHelpers } from "src/llm/modelHelpers";
- import { SearchQueryResponse } from "src/schemas/SearchQueryResponse";
- import { StepExecutorDecorator } from "../decorators/executorDecorator";
- import { ExecuteParams } from "../interfaces/ExecuteParams";
- import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
- import { StepExecutor } from "../interfaces/StepExecutor";
- import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
- import { getGeneratedSchema } from "src/helpers/schemaUtils";
- import { StructuredOutputPrompt } from "src/llm/ILLMService";
- import { SchemaType } from "src/schemas/SchemaTypes";
- import { ExecutorType } from "../interfaces/ExecutorType";
- import axios from 'axios';
- import { DOMParser } from 'xmldom';
+import { SearchQueryResponse } from "src/schemas/SearchQueryResponse";
+import { StepExecutorDecorator } from "../decorators/executorDecorator";
+import { ExecuteParams } from "../interfaces/ExecuteParams";
+import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
+import { BaseStepExecutor } from "../interfaces/StepExecutor";
+import { ReplanType, StepResponse, StepResponseType, StepResult } from "../interfaces/StepResult";
+import { getGeneratedSchema } from "src/helpers/schemaUtils";
+import { SchemaType } from "src/schemas/SchemaTypes";
+import { ExecutorType } from "../interfaces/ExecutorType";
+import axios from 'axios';
+import { DOMParser } from 'xmldom';
 import { withRetry } from "src/helpers/retry";
 import { AsyncQueue } from "src/helpers/asyncQueue";
 import { ArtifactType, DocumentSubtype, SpreadsheetSubType } from "src/tools/artifact";
-import crypto from 'crypto';
 import { CSVUtils, CSVContents } from "src/utils/CSVUtils";
-import { createUUID } from "src/types/uuid";
 import { ArrayUtils } from "src/utils/ArrayUtils";
-import { ModelMessageResponse } from "src/schemas/ModelResponse";
 import { OutputType } from "src/llm/promptBuilder";
 import { StringUtils } from "src/utils/StringUtils";
 
@@ -37,12 +33,13 @@ interface PubMedSearchResult {
 }
 
  @StepExecutorDecorator(ExecutorType.PUBMED_SEARCH, 'Performs PubMed searches for scientific literature')
- export class PubMedSearchExecutor implements StepExecutor<StepResponse> {
+ export class PubMedSearchExecutor extends BaseStepExecutor<StepResponse> {
      private modelHelpers: ModelHelpers;
      private readonly baseUrl = 'https://eutils.ncbi.nlm.nih.gov/entrez/eutils';
 
      constructor(params: ExecutorConstructorParams) {
-         this.modelHelpers = params.modelHelpers;
+        super(params);
+        this.modelHelpers = params.modelHelpers;
      }
 
      private convertArticleToMarkdown(body: Element): string {
@@ -130,7 +127,7 @@ interface PubMedSearchResult {
     }
 
      async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-         const { searchQuery, category } = await this.generateSearchQuery(params.goal, params.stepGoal, params.previousResponses);
+         const { searchQuery, category } = await this.generateSearchQuery(params);
         const searchResults = await this.searchPubMed(searchQuery);
             
         // Fetch full text for articles with PMC IDs with rate limiting
@@ -340,8 +337,9 @@ interface PubMedSearchResult {
          }
      }
 
-     private async generateSearchQuery(goal: string, task: string, previousResponses?: StepResponse[]): Promise<SearchQueryResponse> {
-         const schema = await getGeneratedSchema(SchemaType.SearchQueryResponse);
+     private async generateSearchQuery(params: ExecuteParams): Promise<SearchQueryResponse> {
+        const { goal, stepGoal, previousResponses } = params;
+        const schema = await getGeneratedSchema(SchemaType.SearchQueryResponse);
 
          const previousFindings = previousResponses?.map(r => r.data?.analysis?.keyFindings).filter(ArrayUtils.isDefined) || [];
          const previousGaps = previousResponses?.map(r => r.data?.analysis?.gaps).filter(ArrayUtils.isDefined) || [];
@@ -350,9 +348,8 @@ interface PubMedSearchResult {
             resultCount: r.data?.resultCount
         })).filter(ArrayUtils.isDefined) || [];
 
-         const instructions = this.modelHelpers.createPrompt();
+         const instructions = this.startModel(params);
          instructions.addInstruction(`You are a scientific research assistant. Our overall goal is ${goal}.
-     Consider these specific goals we're trying to achieve: ${task}
 
      Previous Research Findings:
      ${previousFindings.map((f: any) => `- ${f.finding}`).join('\n')}
@@ -374,9 +371,8 @@ interface PubMedSearchResult {
         instructions.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
             
         const response = await withRetry<SearchQueryResponse|undefined>(async () => {
-            const rawResponse = await this.modelHelpers.generateMessage({
-                message: `Task: ${task}`,
-                instructions
+            const rawResponse = await instructions.generate({
+                message: `Consider these specific goals we're trying to achieve: ${stepGoal}`
             });
             const response = StringUtils.extractAndParseJsonBlock<SearchQueryResponse>(rawResponse.message, schema);
             return response;

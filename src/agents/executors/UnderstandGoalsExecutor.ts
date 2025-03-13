@@ -1,5 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import crypto from 'crypto';
@@ -34,14 +34,14 @@ import { response } from 'express';
  * - Supports iterative question refinement
  */
 @StepExecutorDecorator(ExecutorType.UNDERSTAND_GOALS, 'Generate focused questions to understand user goals')
-export class UnderstandGoalsExecutor implements StepExecutor {
+export class UnderstandGoalsExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private userId: string;
     taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
-
         this.taskManager = params.taskManager!;
         this.userId = params.userId || 'executor';
     }
@@ -82,14 +82,7 @@ export class UnderstandGoalsExecutor implements StepExecutor {
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const schema = await getGeneratedSchema(SchemaType.IntakeQuestionsResponse);
-        
-        const project = this.taskManager.getProject(params.projectId);
-        
-        // const formattedMessage = this.formatMessage(project, params.context?.artifacts);
-
-        const prompt = this.modelHelpers.createPrompt();
-
-
+        const prompt = this.startModel(params);
 
         prompt.addInstruction(`In this step of the process, you are reviewing if we have sufficient information to move forward on achieving the goal.
 If you would like to think about the problem to start, use <thinking> tags.
@@ -112,10 +105,8 @@ answers from the user.` : `You will also set a flag telling the workflow whether
 
         prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
         
-        const rawMessage = await this.modelHelpers.generate({
-            message: params.message || params.stepGoal,
-            instructions: prompt,
-            threadPosts: params.context?.threadPosts
+        const rawMessage = await prompt.generate({
+            message: params.message || params.stepGoal
         });
 
         const attributes = StringUtils.extractAndParseJsonBlock<IntakeQuestionsResponse>(rawMessage.message, schema);

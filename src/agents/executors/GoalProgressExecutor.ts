@@ -1,6 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
-import { StructuredOutputPrompt } from "../../llm/ILLMService";
+import { BaseStepExecutor } from '../interfaces/StepExecutor';
 import { ModelHelpers } from "../../llm/modelHelpers";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { getGeneratedSchema } from "../../helpers/schemaUtils";
@@ -15,7 +14,7 @@ import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { GoalProgressResponse } from 'src/schemas/goalProgress';
 import Logger from 'src/helpers/logger';
 import { StringUtils } from 'src/utils/StringUtils';
-import { ModelMessageResponse } from 'src/schemas/ModelResponse';
+import { isUUID } from 'src/types/uuid';
 
 /**
  * Executor that analyzes thread progress against channel goals.
@@ -27,23 +26,24 @@ import { ModelMessageResponse } from 'src/schemas/ModelResponse';
  * - Provides structured feedback on goal progress
  */
 @StepExecutorDecorator(ExecutorType.GOAL_PROGRESS, 'Analyze thread progress against channel goals.')
-export class GoalProgressExecutor implements StepExecutor<StepResponse> {
+export class GoalProgressExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
     private chatClient: ChatClient;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager;
         this.chatClient = params.chatClient;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        const { goal, projectId, context } = params;
+        const { goal, context } = params;
         const schema = await getGeneratedSchema(SchemaType.GoalProgressResponse);
 
         // Create prompt using PromptBuilder
-        const promptBuilder = this.modelHelpers.createPrompt();
+        const promptBuilder = this.startModel(params);
         
         // Add core instructions
         promptBuilder.addInstruction(this.modelHelpers.getFinalInstructions());
@@ -64,13 +64,11 @@ export class GoalProgressExecutor implements StepExecutor<StepResponse> {
             promptBuilder.addContext({contentType: ContentType.CHANNEL_GOALS, tasks: params.channelGoals});
         }
 
-        promptBuilder.addOutputInstructions(OutputType.JSON_WITH_MESSAGE);
+        promptBuilder.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
 
         // Build and execute prompt
-        const rawResult = await this.modelHelpers.generateMessage({
-            message: goal,
-            instructions: promptBuilder,
-            threadPosts: context?.threadPosts || []
+        const rawResult = await promptBuilder.generate({
+            message: goal
         });
 
         const result = StringUtils.extractAndParseJsonBlock<GoalProgressResponse>(rawResult.message, schema);
@@ -80,7 +78,7 @@ export class GoalProgressExecutor implements StepExecutor<StepResponse> {
         if (result?.goalsInProgress?.length) {
             await Promise.all(result.goalsInProgress.map(async goalId => {
                 try {
-                    const task = await this.taskManager.getTaskById(goalId);
+                    const task = isUUID(goalId) && await this.taskManager.getTaskById(goalId);
                     if (task && task.status !== TaskStatus.InProgress) {
                         await this.taskManager.markTaskInProgress(goalId);
                         // Update project status if needed
@@ -100,7 +98,7 @@ export class GoalProgressExecutor implements StepExecutor<StepResponse> {
         if (result?.goalsCompleted?.length) {
             await Promise.all(result.goalsCompleted.map(async goalId => {
                 try {
-                    const task = await this.taskManager.getTaskById(goalId);
+                    const task = isUUID(goalId) && await this.taskManager.getTaskById(goalId);
                     if (task && task.status !== TaskStatus.Completed) {
                         await this.taskManager.completeTask(goalId);
                         // Check if all tasks in project are complete

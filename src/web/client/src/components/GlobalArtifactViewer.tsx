@@ -148,10 +148,6 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 label: 'Bulk Delete Selected (0)'
             });
             
-            // Force refresh the tree by fetching artifacts and resetting folders
-            await fetchAllArtifacts();
-            setArtifactFolders({});
-            
             setDeleteConfirmOpen(false);
         }
     };

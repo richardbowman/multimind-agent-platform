@@ -1,5 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
 import { ModelHelpers } from "../../llm/modelHelpers";
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -8,7 +8,7 @@ import { getGeneratedSchema } from "../../helpers/schemaUtils";
 import { SchemaType } from "../../schemas/SchemaTypes";
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { TaskManager } from 'src/tools/taskManager';
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType } from 'src/llm/promptBuilder';
@@ -23,10 +23,11 @@ import { StringUtils } from 'src/utils/StringUtils';
  * - Provides structured feedback on the plan
  */
 @StepExecutorDecorator(ExecutorType.ESTABLISH_INTENT, 'Establish your master intention (do this until a clear intention is established).')
-export class EstablishIntentExecutor implements StepExecutor {
+export class EstablishIntentExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
 
     }
@@ -35,7 +36,7 @@ export class EstablishIntentExecutor implements StepExecutor {
         const schema = await getGeneratedSchema(SchemaType.IntentionsResponse);
 
         // Create prompt using PromptBuilder
-        const promptBuilder = this.modelHelpers.createPrompt();
+        const promptBuilder = this.startModel(params);
         
         // Add core instructions
         promptBuilder.addContext({contentType: ContentType.ABOUT});
@@ -71,10 +72,8 @@ my goal is to have you answer some questions in order for me to select an on-boa
 `);
 
         // Build and execute prompt
-        const result = await this.modelHelpers.generate({
-            message: params.message,
-            instructions: promptBuilder,
-            threadPosts: params.context?.threadPosts || []
+        const result = await promptBuilder.generate({
+            message: params.message
         });
 
         const planResponse = StringUtils.extractAndParseJsonBlock<IntentionsResponse>(result.message, schema);

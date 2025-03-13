@@ -890,17 +890,12 @@
       "additionalProperties": false,
       "description": "Interface for goal confirmation response",
       "properties": {
-        "message": {
-          "description": "A clear restatement of the goal and confirmation of understanding",
-          "type": "string"
-        },
         "understanding": {
           "description": "Whether the goal is clear and actionable",
           "type": "boolean"
         }
       },
       "required": [
-        "message",
         "understanding"
       ],
       "type": "object"

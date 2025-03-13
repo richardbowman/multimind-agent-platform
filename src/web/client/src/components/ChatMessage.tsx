@@ -418,7 +418,7 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
                                 .slice(0, 6)
                                 .map((artifactId: string) => {
                                     const artifact = allArtifacts.find(a => a.id === artifactId);
-                                    return (
+                                    return artifact && ( 
                                     <AttachmentCard
                                         key={artifactId}
                                         type="artifact"

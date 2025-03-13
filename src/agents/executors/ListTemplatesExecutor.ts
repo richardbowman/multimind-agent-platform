@@ -1,15 +1,15 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { ExecutorType } from '../interfaces/ExecutorType';
-import { OnboardingConsultant } from '../onboardingConsultant';
 import { ContentType } from 'src/llm/promptBuilder';
-import { ArtifactItem } from 'src/tools/artifact';
+import { ArtifactItem, ArtifactType, DocumentSubtype } from 'src/tools/artifact';
+import { ArtifactManager } from 'src/tools/artifactManager';
 
-interface TemplateListStepResponse {
+interface TemplateListStepResponse extends StepResponse {
     type: StepResponseType.ChannelTemplates,
     data?: {
         templates?: ArtifactItem[]
@@ -24,41 +24,33 @@ interface TemplateListStepResponse {
  * - Returns template information without selection logic
  */
 @StepExecutorDecorator(ExecutorType.LIST_TEMPLATES, 'List available document templates', true)
-export class ListTemplatesExecutor implements StepExecutor<TemplateListStepResponse> {
+export class ListTemplatesExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
-    private onboardingConsultant: OnboardingConsultant;
+    private artifactManager: ArtifactManager;
 
-    constructor(params: ExecutorConstructorParams, onboardingConsultant: OnboardingConsultant) {
+    constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
-        this.onboardingConsultant = onboardingConsultant;
+        this.artifactManager = params.artifactManager;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<TemplateListStepResponse>> {
         // Get available templates
-        const templates = this.onboardingConsultant.getAvailableTemplates();
-
-        const prompt = this.modelHelpers.createPrompt();
-        prompt.addContext({contentType: ContentType.ABOUT});
-        prompt.addContext({contentType: ContentType.INTENT, params});
-        prompt.addInstruction(`List all available templates with their descriptions:`);
+        const templates = await this.artifactManager.getArtifacts({type: ArtifactType.Document, subtype: DocumentSubtype.Template});
 
         // Format template information
         const templateList = templates.map(t => `
-            - ${t.name} (${t.id})
-              ${t.description}
-              Sections: ${t.sections.map(s => s.title).join(', ')}
-              Required: ${t.requiredSections.join(', ')}
-        `).join('\n');
+            - ${t.metadata?.title} (${t.id})
+              ${t.metadata?.description}`).join('\n');
 
         return {
-            type: 'template_list',
             replan: ReplanType.Allow,
             finished: true,
             response: {
                 type: StepResponseType.ChannelTemplates,
-                status: templateList,
+                status: `Available Templates:\n${templateList}`,
                 data: {
-                    templates: templateList
+                    templates
                 }
             }
         };
