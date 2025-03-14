@@ -4,6 +4,7 @@ import EventEmitter from 'events';
 import { LLMContext } from './ILLMService';
 import { LLMLogModel, LLMLogEntry } from './LLMLogModel';
 import { getDataPath } from 'src/helpers/paths';
+import fs from 'node:fs';
 import path from 'node:path';
 
 export class LLMCallLogger extends EventEmitter {
