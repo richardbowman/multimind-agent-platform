@@ -95,19 +95,34 @@ export const ChatDetailsDialog: React.FC<ChatDetailsDialogProps> = ({
                                                 }
                                             }}
                                             onClick={() => {
-                                                const projectTasks = tasks.filter(t => (t.props?.["project-ids"]||[]).includes(value));
+                                                // Ensure value is treated as string since project IDs are strings
+                                                const projectId = String(value);
+                                                
+                                                // Find tasks that match this project ID
+                                                const projectTasks = tasks.filter(t => 
+                                                    Array.isArray(t.props?.["project-ids"]) && 
+                                                    t.props["project-ids"].includes(projectId)
+                                                );
+                                                
                                                 if (projectTasks.length > 0) {
-                                                    onTaskClick(projectTasks[0]);
+                                                    // Pass all matching tasks to the task dialog
+                                                    onTaskClick({
+                                                        ...projectTasks[0],
+                                                        relatedTasks: projectTasks
+                                                    });
                                                 } else {
                                                     // If no tasks found, create a new task for this project
                                                     onTaskClick({
-                                                        projectId: value,
-                                                        description: `New task for project ${value}`,
+                                                        projectId: projectId,
+                                                        description: `New task for project ${projectId}`,
                                                         type: 'standard',
                                                         complete: false,
                                                         inProgress: false,
                                                         createdAt: new Date().toISOString(),
-                                                        updatedAt: new Date().toISOString()
+                                                        updatedAt: new Date().toISOString(),
+                                                        props: {
+                                                            "project-ids": [projectId]
+                                                        }
                                                     });
                                                 }
                                             }}
