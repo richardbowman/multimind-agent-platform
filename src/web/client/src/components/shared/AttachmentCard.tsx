@@ -33,19 +33,19 @@ export const AttachmentCard: React.FC<AttachmentCardProps> = ({
             borderRadius: '4px',
             overflow: 'hidden',
             flexShrink: 0,
-            backgroundColor: type === 'artifact' ? '#2a2a2a' : 'transparent',
+            backgroundColor: type === 'artifact' ? (theme) => theme.palette.background.paper : 'transparent',
             padding: type === 'artifact' ? '12px' : '0',
             display: 'flex',
             flexDirection: type === 'artifact' ? 'row' : 'column',
             gap: '8px',
             alignItems: type === 'artifact' ? 'center' : 'stretch',
-            border: type === 'artifact' ? '1px solid #444' : 'none',
+            border: type === 'artifact' ? (theme) => `1px solid ${theme.palette.divider}` : 'none',
             cursor: 'pointer',
             transition: 'all 0.2s ease',
             '&:hover': {
                 transform: 'translateY(-2px)',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-                backgroundColor: type === 'artifact' ? '#333' : '#f5f5f5'
+                boxShadow: (theme) => theme.shadows[2],
+                backgroundColor: type === 'artifact' ? (theme) => theme.palette.action.hover : (theme) => theme.palette.action.hover
             }
         }}>
             {type === 'file' && previewUrl && (
@@ -113,18 +113,18 @@ export const AttachmentCard: React.FC<AttachmentCardProps> = ({
                     position: 'absolute',
                     top: '4px',
                     right: '4px',
-                    background: 'rgba(0,0,0,0.7)',
+                    background: (theme) => theme.palette.action.active,
                     border: 'none',
                     borderRadius: '50%',
                     width: '20px',
                     height: '20px',
-                    color: '#fff',
+                    color: (theme) => theme.palette.common.white,
                     cursor: 'pointer',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
                     '&:hover': {
-                        background: 'rgba(255,255,255,0.2)'
+                        background: (theme) => theme.palette.action.hover
                     }
                 }}
             >
