@@ -133,49 +133,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                 />
                             ))}
                             
-                            {childProjectDetails && childTasks.length > 0 && (
-                                <>
-                                    <Box sx={{ 
-                                        mt: 2,
-                                        mb: 1,
-                                        position: 'sticky', 
-                                        top: 0, 
-                                        bgcolor: 'background.default', 
-                                        zIndex: 1,
-                                        display: 'flex',
-                                        alignItems: 'center',
-                                        gap: 1
-                                    }}>
-                                        <Typography 
-                                            variant="subtitle1" 
-                                            sx={{ color: 'text.primary' }}
-                                        >
-                                            Child Project: {childProjectDetails.name}
-                                        </Typography>
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            onClick={() => {
-                                                if (setParentTask) {
-                                                    setParentTask(selectedTask);
-                                                    setSelectedTask(childTasks[0]);
-                                                }
-                                            }}
-                                        >
-                                            Navigate
-                                        </Button>
-                                    </Box>
-                                    {childTasks.map(task => (
-                                        <TaskCard
-                                            key={task.id}
-                                            task={task}
-                                            selected={task.id === selectedTask?.id}
-                                            onClick={() => setSelectedTask(task)}
-                                            sx={{ pl: 2 }}
-                                        />
-                                    ))}
-                                </>
-                            )}
                         </List>
                     </Box>
                     <Box sx={{ 
