@@ -54,12 +54,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     if (selectedTask.props?.childProjectId) {
                         const childProject = await ipcService.getRPC().getProject(selectedTask.props.childProjectId);
                         setChildProjectDetails(childProject);
-                        
-                        // Fetch tasks for child project
-                        const childProjectTasks = await ipcService.getRPC().getTasks({
-                            projectId: selectedTask.props.childProjectId
-                        });
-                        setChildTasks(childProjectTasks);
+                        setChildTasks(childProject.tasks);
                     } else {
                         setChildProjectDetails(null);
                         setChildTasks([]);
