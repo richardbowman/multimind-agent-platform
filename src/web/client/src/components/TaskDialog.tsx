@@ -18,6 +18,7 @@ import { useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { TaskCard } from './TaskCard';
 import { AttachmentCard } from './shared/AttachmentCard';
+import { useArtifacts } from '../contexts/ArtifactContext';
 
 interface TaskDialogProps {
     open: boolean;
@@ -43,6 +44,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     const [projectDetails, setProjectDetails] = useState<any>(null);
     const [childProjectDetails, setChildProjectDetails] = useState<any>(null);
     const [childTasks, setChildTasks] = useState<any[]>([]);
+    const { artifacts } = useArtifacts();
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
@@ -295,21 +297,25 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                             Attached Artifacts
                                         </Typography>
                                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                            {selectedTask.props.attachedArtifactIds.map((artifactId: string) => (
-                                                <AttachmentCard
-                                                    key={artifactId}
-                                                    type="artifact"
-                                                    title={`Artifact ${artifactId.slice(0, 6)}`}
-                                                    onRemove={() => {
-                                                        // TODO: Implement artifact removal
-                                                        console.log('Remove artifact', artifactId);
-                                                    }}
-                                                    onClick={() => {
-                                                        // TODO: Implement artifact viewing
-                                                        console.log('View artifact', artifactId);
-                                                    }}
-                                                />
-                                            ))}
+                                            {selectedTask.props.attachedArtifactIds.map((artifactId: string) => {
+                                                const artifact = artifacts.find(a => a.id === artifactId);
+                                                return (
+                                                    <AttachmentCard
+                                                        key={artifactId}
+                                                        type="artifact"
+                                                        title={artifact?.metadata?.title || `Artifact ${artifactId.slice(0, 6)}`}
+                                                        subtitle={artifact?.type}
+                                                        onRemove={() => {
+                                                            // TODO: Implement artifact removal
+                                                            console.log('Remove artifact', artifactId);
+                                                        }}
+                                                        onClick={() => {
+                                                            // TODO: Implement artifact viewing
+                                                            console.log('View artifact', artifactId);
+                                                        }}
+                                                    />
+                                                );
+                                            })}
                                         </Box>
                                     </Box>
                                 )}
