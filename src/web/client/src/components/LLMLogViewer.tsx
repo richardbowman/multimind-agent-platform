@@ -323,17 +323,17 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                 </Box>
                                 <Box sx={{ minWidth: 120 }}>
                                     <Typography variant="body2" noWrap>
-                                        {log?.agentName || 'N/A'}
+                                        {log?.context?.agentName || 'N/A'}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ minWidth: 120 }}>
                                     <Typography variant="body2" noWrap>
-                                        {log?.stepType || 'N/A'}
+                                        {log?.context?.stepType || 'N/A'}
                                     </Typography>
                                 </Box>
                                 <Box sx={{ minWidth: 120 }}>
                                     <Typography variant="body2" noWrap>
-                                        {log?.taskId ? `Task: ${log.taskId}` : 'N/A'}
+                                        {log?.context?.taskId ? `Task: ${log.context.taskId}` : 'N/A'}
                                     </Typography>
                                 </Box>
                             </Box>
@@ -424,13 +424,13 @@ export const LLMLogViewer: React.FC<LLMLogViewerProps> = ({ logs, filterText, hi
                                     Context
                                 </Typography>
                                 <FormattedDataView data={{
-                                    traceId: selectedLog?.traceId || 'N/A',
-                                    agent: selectedLog?.agentName || 'N/A',
-                                    stepType: selectedLog?.stepType || 'N/A',
-                                    taskId: selectedLog?.taskId || 'N/A',
-                                    projectId: selectedLog?.projectId || 'N/A',
-                                    goal: selectedLog?.goal || 'N/A',
-                                    stepGoal: selectedLog?.stepGoal || 'N/A'
+                                    traceId: selectedLog?.context?.traceId || 'N/A',
+                                    agent: selectedLog?.context?.agentName || 'N/A',
+                                    stepType: selectedLog?.context?.stepType || 'N/A',
+                                    taskId: selectedLog?.context?.taskId || 'N/A',
+                                    projectId: selectedLog?.context?.projectId || 'N/A',
+                                    goal: selectedLog?.context?.goal || 'N/A',
+                                    stepGoal: selectedLog?.context?.stepGoal || 'N/A'
                                 }} />
                             </Box>
                             {selectedLog?.input && typeof selectedLog.input === 'object' ? (
