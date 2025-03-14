@@ -24,6 +24,8 @@ interface TaskDialogProps {
     selectedTask: any;
     setSelectedTask: (task: any) => void;
     tasks: any[];
+    parentTask?: any;
+    setParentTask?: (task: any) => void;
 }
 
 export const TaskDialog: React.FC<TaskDialogProps> = ({ 
@@ -31,7 +33,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     onClose, 
     selectedTask, 
     setSelectedTask,
-    tasks
+    tasks,
+    parentTask,
+    setParentTask
 }) => {
     const { handles } = useDataContext();
     const ipcService = useIPCService();
@@ -131,20 +135,36 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                             
                             {childProjectDetails && childTasks.length > 0 && (
                                 <>
-                                    <Typography 
-                                        variant="subtitle1" 
-                                        sx={{ 
-                                            mt: 2,
-                                            mb: 1,
-                                            position: 'sticky', 
-                                            top: 0, 
-                                            bgcolor: 'background.default', 
-                                            zIndex: 1,
-                                            color: 'text.primary'
-                                        }}
-                                    >
-                                        Child Project: {childProjectDetails.name}
-                                    </Typography>
+                                    <Box sx={{ 
+                                        mt: 2,
+                                        mb: 1,
+                                        position: 'sticky', 
+                                        top: 0, 
+                                        bgcolor: 'background.default', 
+                                        zIndex: 1,
+                                        display: 'flex',
+                                        alignItems: 'center',
+                                        gap: 1
+                                    }}>
+                                        <Typography 
+                                            variant="subtitle1" 
+                                            sx={{ color: 'text.primary' }}
+                                        >
+                                            Child Project: {childProjectDetails.name}
+                                        </Typography>
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            onClick={() => {
+                                                if (setParentTask) {
+                                                    setParentTask(selectedTask);
+                                                    setSelectedTask(childTasks[0]);
+                                                }
+                                            }}
+                                        >
+                                            Navigate
+                                        </Button>
+                                    </Box>
                                     {childTasks.map(task => (
                                         <TaskCard
                                             key={task.id}
@@ -166,6 +186,38 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     }}>
                         {selectedTask && (
                             <Stack spacing={2} sx={{ mt: 1 }}>
+                                {parentTask && (
+                                    <Box sx={{ 
+                                        p: 2,
+                                        mb: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        bgcolor: 'background.paper',
+                                        borderRadius: 1,
+                                        border: '1px solid',
+                                        borderColor: 'divider'
+                                    }}>
+                                        <Typography variant="h6" sx={{ mb: 1 }}>
+                                            Parent Task
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                            {parentTask.description}
+                                        </Typography>
+                                        <Button
+                                            variant="outlined"
+                                            size="small"
+                                            sx={{ mt: 1, alignSelf: 'flex-start' }}
+                                            onClick={() => {
+                                                if (setParentTask) {
+                                                    setSelectedTask(parentTask);
+                                                    setParentTask(null);
+                                                }
+                                            }}
+                                        >
+                                            Back to Parent Task
+                                        </Button>
+                                    </Box>
+                                )}
                                 {projectDetails && (
                                     <Box sx={{ 
                                         p: 2,
