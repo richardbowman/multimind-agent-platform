@@ -285,7 +285,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                         <strong>Depends On:</strong> {selectedTask.dependsOn}
                                     </Typography>
                                 )}
-                                {(selectedTask.props?.attachedArtifactIds?.length > 0 || selectedTask.props?.artifactIds?.length > 0) && (
+                                {(selectedTask.props?.attachedArtifactIds?.length > 0 || 
+                                  selectedTask.props?.artifactIds?.length > 0 ||
+                                  selectedTask.props?.result?.artifactIds?.length > 0) && (
                                     <Box sx={{ 
                                         p: 2,
                                         mb: 1,
@@ -300,7 +302,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                             Attached Artifacts
                                         </Typography>
                                         <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
-                                            {(selectedTask.props.attachedArtifactIds || selectedTask.props.artifactIds || []).map((artifactId: string) => {
+                                            {[
+                                              ...(selectedTask.props?.attachedArtifactIds || []),
+                                              ...(selectedTask.props?.artifactIds || []),
+                                              ...(selectedTask.props?.result?.artifactIds || [])
+                                            ].filter((id): id is string => !!id).map((artifactId: string) => {
                                                 const artifact = artifacts.find(a => a.id === artifactId);
                                                 return (
                                                     <AttachmentCard
