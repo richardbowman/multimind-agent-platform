@@ -244,6 +244,8 @@ ${this.modelHelpers.getPurpose()}
 
             // Build output grouped by posts
             let output = "# 📝 STEP HISTORY BY POST:\n\n";
+            
+            // First show steps grouped by posts
             posts.forEach((post, index) => {
                 const postSteps = postMap.get(post.id);
                 if (postSteps && postSteps.length > 0) {
@@ -254,6 +256,23 @@ ${this.modelHelpers.getPurpose()}
                     output += postSteps.join('\n') + '\n\n';
                 }
             });
+
+            // Then collect any steps that didn't match a post
+            const orphanedSteps: string[] = [];
+            filteredSteps.forEach(step => {
+                if (!step.props.userPostId || !postMap.has(step.props.userPostId)) {
+                    orphanedSteps.push(`- STEP [${step.props.stepType}]:
+  Description: ${step.description}
+  Result: ${step.props.result?.response.message || step.props.result?.response.reasoning || step.props.result?.response.status}`);
+                }
+            });
+
+            // Add orphaned steps section if any exist
+            if (orphanedSteps.length > 0) {
+                output += `## ORPHANED STEPS (NOT LINKED TO ANY POST):\n`;
+                output += orphanedSteps.join('\n') + '\n\n';
+            }
+
             return output;
         }
 
