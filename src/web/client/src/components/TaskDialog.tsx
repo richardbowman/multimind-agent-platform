@@ -49,31 +49,49 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
-            if (selectedTask?.projectId) {
-                try {
-                    // Fetch project details
-                    const project = await ipcService.getRPC().getProject(selectedTask.projectId);
-                    setProjectDetails(project);
-                    setProjectTasks(project.tasks);
+            const projectId = selectedTask?.projectId;
+            if (!projectId) return;
 
-                    // Check for child project
-                    if (selectedTask.props?.childProjectId) {
-                        const childProject = await ipcService.getRPC().getProject(selectedTask.props.childProjectId);
-                        console.log('Fetched child project:', childProject);
-                        setChildProjectDetails(childProject);
-                        setChildTasks(childProject.tasks);
-                    } else {
-                        setChildProjectDetails(null);
-                        setChildTasks([]);
-                    }
-                } catch (error) {
-                    console.error('Failed to fetch project details:', error);
+            try {
+                // Fetch project details
+                const project = await ipcService.getRPC().getProject(projectId);
+                setProjectDetails(project);
+
+                // Fetch tasks for this project
+                const tasks = project.tasks || [];
+                setProjectTasks(tasks);
+
+                // If no selected task yet, select the first task
+                if (!selectedTask && tasks.length > 0) {
+                    setSelectedTask(tasks[0]);
                 }
+
+                // Check for child project
+                if (selectedTask?.props?.childProjectId) {
+                    const childProject = await ipcService.getRPC().getProject(selectedTask.props.childProjectId);
+                    console.log('Fetched child project:', childProject);
+                    setChildProjectDetails(childProject);
+                    setChildTasks(childProject.tasks || []);
+                } else {
+                    setChildProjectDetails(null);
+                    setChildTasks([]);
+                }
+            } catch (error) {
+                console.error('Failed to fetch project details:', error);
+                setProjectDetails({
+                    id: projectId,
+                    name: 'Error loading project',
+                    description: error instanceof Error ? error.message : 'Failed to load project details',
+                    metadata: {
+                        status: 'error'
+                    }
+                });
+                setProjectTasks([]);
             }
         };
 
         fetchProjectDetails();
-    }, [ipcService, selectedTask]);
+    }, [ipcService, selectedTask?.projectId]);
 
     return (
         <Dialog 

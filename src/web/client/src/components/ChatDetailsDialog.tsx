@@ -98,7 +98,8 @@ export const ChatDetailsDialog: React.FC<ChatDetailsDialogProps> = ({
                                                 onTaskClick({
                                                     projectId: value,
                                                     description: `Tasks for project ${value}`,
-                                                    type: 'standard'
+                                                    type: 'standard',
+                                                    id: `project-${value}` // Add a temporary ID
                                                 });
                                             }}
                                         >
