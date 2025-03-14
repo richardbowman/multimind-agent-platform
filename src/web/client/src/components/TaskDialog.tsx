@@ -175,7 +175,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                         </Button>
                                     </Box>
                                 )}
-                                {selectedTask.props?.childProjectId && (
+                                {selectedTask.props?.childProjectId && childTasks.length > 0 && (
                                     <Box sx={{ 
                                         p: 2,
                                         mb: 1,
@@ -196,10 +196,12 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                             variant="contained"
                                             size="small"
                                             sx={{ alignSelf: 'flex-start' }}
-                                            onClick={() => {
-                                                if (setParentTask) {
+                                            onClick={async () => {
+                                                if (setParentTask && childTasks.length > 0) {
                                                     setParentTask(selectedTask);
                                                     setSelectedTask(childTasks[0]);
+                                                } else {
+                                                    console.error('No child tasks found');
                                                 }
                                             }}
                                         >
