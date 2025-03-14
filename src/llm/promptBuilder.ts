@@ -509,7 +509,7 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
                 return guide ? 
                     `## Guide ${i+1}:\n` +
                     `###: ${guide.metadata?.title}\n` +
-                    `<guide>${guide.content}</guide>\n` :
+                    `\'\'\'${guide.type}\n${guide.content}\n\'\'\'\n` :
                     '';
             }).join('\n\n') :
             `### ${guideType === "in-use" ? "IN-USE PROCEDURE GUIDES:\n*No procedure guides in use*" : `### SEARCHED PROCEDURE GUIDES:\n*No relevant procedure guides found*`}`;
