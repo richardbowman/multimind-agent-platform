@@ -17,6 +17,7 @@ import { useIPCService } from '../contexts/IPCContext';
 import { useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { TaskCard } from './TaskCard';
+import { AttachmentCard } from './shared/AttachmentCard';
 
 interface TaskDialogProps {
     open: boolean;
@@ -278,6 +279,39 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                     <Typography variant="body1">
                                         <strong>Depends On:</strong> {selectedTask.dependsOn}
                                     </Typography>
+                                )}
+                                {selectedTask.props?.attachedArtifactIds?.length > 0 && (
+                                    <Box sx={{ 
+                                        p: 2,
+                                        mb: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        bgcolor: 'background.paper',
+                                        borderRadius: 1,
+                                        border: '1px solid',
+                                        borderColor: 'divider'
+                                    }}>
+                                        <Typography variant="h6" sx={{ mb: 1 }}>
+                                            Attached Artifacts
+                                        </Typography>
+                                        <Box sx={{ display: 'flex', gap: 1, flexWrap: 'wrap' }}>
+                                            {selectedTask.props.attachedArtifactIds.map((artifactId: string) => (
+                                                <AttachmentCard
+                                                    key={artifactId}
+                                                    type="artifact"
+                                                    title={`Artifact ${artifactId.slice(0, 6)}`}
+                                                    onRemove={() => {
+                                                        // TODO: Implement artifact removal
+                                                        console.log('Remove artifact', artifactId);
+                                                    }}
+                                                    onClick={() => {
+                                                        // TODO: Implement artifact viewing
+                                                        console.log('View artifact', artifactId);
+                                                    }}
+                                                />
+                                            ))}
+                                        </Box>
+                                    </Box>
                                 )}
                                 {selectedTask.props && Object.entries(selectedTask.props).map(([key, value]) => (
                                     <Box key={key} sx={{ 
