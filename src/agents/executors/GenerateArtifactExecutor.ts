@@ -62,11 +62,15 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
         promptBuilder.addInstruction(`You have these options:
 1. Create a NEW document (leave artifactId blank and set operation to "create")
 2. Completely revise an EXISTING document (specify "artifactIndex" and set operation to "replace")
-3. Add to an EXISTING document (specify "artifactIndex" and set operation to "append")`);
+3. Add to an EXISTING document (specify "artifactIndex" and set operation to "append")
+4. Edit an EXISTING document using merge conflict style syntax (specify "artifactIndex" and set operation to "edit")`);
 
         promptBuilder.addInstruction(`IMPORTANT RULES:
 - For NEW documents: Use operation="create" and omit artifactIndex
-- For EXISTING documents: Use operation="replace" or "append" and provide "artifactIndex" field with the list number of the Attached Artifacts list from above.`);
+- For EXISTING documents: Use operation="replace", "append" or "edit" and provide "artifactIndex" field with the list number of the Attached Artifacts list from above.
+- For EDIT operations: Use merge conflict syntax to specify changes:
+  <<<<<<< SEARCH
+  text to find and replace
 
         promptBuilder.addContext({contentType: ContentType.ABOUT})
         promptBuilder.addContext({contentType: ContentType.GOALS_FULL, params});
@@ -147,9 +151,33 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
                             delete artifactUpdate.id; // Remove ID to force new artifact
                             result.operation = 'create'; // Update operation
                         } else {
-                            artifactUpdate.content = result.operation === 'append' 
-                                ? `${existingArtifact?.content || ""}\n${result.content}`
-                                : result.content;
+                            if (result.operation === 'append') {
+                                artifactUpdate.content = `${existingArtifact?.content || ""}\n${result.content}`;
+                            } else if (result.operation === 'replace') {
+                                artifactUpdate.content = result.content;
+                            } else if (result.operation === 'edit') {
+                                // Handle merge conflict style editing
+                                const existingContent = existingArtifact?.content || "";
+                                const editContent = result.content;
+                    
+                                // Parse the edit content looking for conflict markers
+                                const conflictRegex = /<<<<<<< SEARCH\n([\s\S]*?)\n=======\n([\s\S]*?)\n>>>>>>> REPLACE/g;
+                                let finalContent = existingContent;
+                                let match;
+                    
+                                while ((match = conflictRegex.exec(editContent)) !== null) {
+                                    const [fullMatch, searchText, replacementText] = match;
+                                    // Replace the search text with replacement text in the existing content
+                                    finalContent = finalContent.replace(searchText, replacementText);
+                                }
+                    
+                                // If no conflict markers were found, append the edit content
+                                if (!match) {
+                                    finalContent = `${existingContent}\n${editContent}`;
+                                }
+                    
+                                artifactUpdate.content = finalContent;
+                            }
                             artifactUpdate.type = existingArtifact?.type;
                         }
                     } catch (error) {
