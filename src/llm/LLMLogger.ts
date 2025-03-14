@@ -3,16 +3,24 @@ import Logger from '../helpers/logger';
 import EventEmitter from 'events';
 import { LLMContext } from './ILLMService';
 import { LLMLogModel, LLMLogEntry } from './LLMLogModel';
+import { getDataPath } from 'src/helpers/paths';
+import path from 'node:path';
 
 export class LLMCallLogger extends EventEmitter {
     private sequelize: Sequelize;
     private serviceName: string;
 
-    constructor(serviceName: string, sequelize: Sequelize) {
+    constructor(serviceName: string, storageDir: string) {
         super();
         this.serviceName = serviceName;
-        this.sequelize = sequelize;
-        LLMLogModel.initialize(sequelize);
+        const logDir = path.join(getDataPath(), 'llm');
+        // Initialize SQLite database
+       const dbPath = path.join(logDir, 'logs.db');
+       this.sequelize = new Sequelize({
+           dialect: 'sqlite',
+           storage: dbPath,
+           logging: msg => Logger.verbose(msg)
+       });
     }
 
     async logCall(
