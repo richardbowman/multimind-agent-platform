@@ -34,20 +34,13 @@ Create engaging podcast scripts using a structured approach. Develop episode out
    c. Include sound effect cues  
    d. Format for readability  
 
-4. **Review & Refinement**  
-   Action Type: editing  
-   Review scripts for:  
-   - Natural flow and pacing  
-   - Clear messaging  
-   - Proper timing  
-   - Engaging content  
-
-5. **Final Production**  
-   Action Type: document-retrieval  
-   Deliver final scripts in:  
-   - PDF format for printing  
-   - Markdown format for teleprompters  
-   - CSV format for production tracking  
+4. **Final Production**  
+   Action Type: combining  
+   Combine all script segments into a final markdown document with:  
+   - Proper formatting and timing markers  
+   - Consistent style throughout  
+   - Clear section transitions  
+   - Ready for teleprompter use  
 
 ## Roles
 
