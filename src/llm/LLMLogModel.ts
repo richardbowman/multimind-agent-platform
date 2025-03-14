@@ -4,7 +4,7 @@ import { LLMContext } from './ILLMService';
 
 export interface LLMLogEntry {
     id?: number;
-    timestamp: string;
+    timestamp: Date;
     method: string;
     input: any;
     output: any;
@@ -17,17 +17,7 @@ export interface LLMLogEntry {
     context?: LLMContext;
 }
 
-export class LLMLogModel extends Model<LLMLogEntry> {
-    public id!: number;
-    public timestamp!: string;
-    public method!: string;
-    public input!: any;
-    public output!: any;
-    public durationMs?: number;
-    public error?: any;
-    public serviceName!: string;
-    public context?: any;
-
+export class LLMLogModel extends Model {
     public static initialize(sequelize: Sequelize) {
         if (!sequelize) {
             throw new Error('Sequelize instance is required');

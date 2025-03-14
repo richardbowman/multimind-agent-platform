@@ -64,10 +64,21 @@ export class LLMCallLogger extends EventEmitter {
 
     async getLogs(): Promise<LLMLogEntry[]> {
         try {
-            return await LLMLogModel.findAll({
+            const results = await LLMLogModel.findAll({
                 where: { serviceName: this.serviceName },
                 order: [['timestamp', 'DESC']]
             });
+            return results.map(r => ({
+                id: r.getDataValue('id'),
+                timestamp: new Date(r.getDataValue('timestamp')),
+                method: r.getDataValue('method'),
+                input: r.getDataValue('input'),
+                output: r.getDataValue('output'),
+                durationMs: r.getDataValue('durationMs'),
+                error: r.getDataValue('error'),
+                serviceName: r.getDataValue('serviceName'),
+                context: r.getDataValue('context')
+            }));
         } catch (err) {
             Logger.error('Failed to read LLM logs:', err);
             return [];
@@ -76,13 +87,25 @@ export class LLMCallLogger extends EventEmitter {
 
     static async getAllLogs(): Promise<Record<string, LLMLogEntry[]>> {
         try {
-            const allEntries = await LLMLogModel.findAll({
+            const results = await LLMLogModel.findAll({
                 order: [['timestamp', 'DESC']]
             });
 
             // Group by service name while maintaining the global sort order
             const sortedLogs: Record<string, LLMLogEntry[]> = {};
-            for (const entry of allEntries) {
+            for (const r of results) {
+                const entry = {
+                    id: r.getDataValue('id'),
+                    timestamp: new Date(r.getDataValue('timestamp')),
+                    method: r.getDataValue('method'),
+                    input: r.getDataValue('input'),
+                    output: r.getDataValue('output'),
+                    durationMs: r.getDataValue('durationMs'),
+                    error: r.getDataValue('error'),
+                    serviceName: r.getDataValue('serviceName'),
+                    context: r.getDataValue('context')
+                };
+                
                 if (!sortedLogs[entry.serviceName]) {
                     sortedLogs[entry.serviceName] = [];
                 }
@@ -98,12 +121,23 @@ export class LLMCallLogger extends EventEmitter {
 
     async getLogsPaginated(offset: number, limit: number): Promise<LLMLogEntry[]> {
         try {
-            return await LLMLogModel.findAll({
+            const results = await LLMLogModel.findAll({
                 where: { serviceName: this.serviceName },
                 order: [['timestamp', 'DESC']],
                 offset,
                 limit
             });
+            return results.map(r => ({
+                id: r.getDataValue('id'),
+                timestamp: new Date(r.getDataValue('timestamp')),
+                method: r.getDataValue('method'),
+                input: r.getDataValue('input'),
+                output: r.getDataValue('output'),
+                durationMs: r.getDataValue('durationMs'),
+                error: r.getDataValue('error'),
+                serviceName: r.getDataValue('serviceName'),
+                context: r.getDataValue('context')
+            }));
         } catch (err) {
             Logger.error('Failed to read LLM logs:', err);
             return [];
@@ -112,11 +146,22 @@ export class LLMCallLogger extends EventEmitter {
 
     async getAllLogsPaginated(offset: number, limit: number): Promise<LLMLogEntry[]> {
         try {
-            return await LLMLogModel.findAll({
+            const results = await LLMLogModel.findAll({
                 order: [['timestamp', 'DESC']],
                 offset,
                 limit
             });
+            return results.map(r => ({
+                id: r.getDataValue('id'),
+                timestamp: new Date(r.getDataValue('timestamp')),
+                method: r.getDataValue('method'),
+                input: r.getDataValue('input'),
+                output: r.getDataValue('output'),
+                durationMs: r.getDataValue('durationMs'),
+                error: r.getDataValue('error'),
+                serviceName: r.getDataValue('serviceName'),
+                context: r.getDataValue('context')
+            }));
         } catch (err) {
             Logger.error('Failed to read all LLM logs:', err);
             return [];
