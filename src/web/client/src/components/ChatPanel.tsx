@@ -289,6 +289,11 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
     const handleSendMessage = async (content: string, artifactIds?: string) => {
         try {
             if (!currentChannelId) return;
+            
+            // If welcome panel is showing, switch to chat view
+            if (showWelcome) {
+                onSwitchToWelcome(false);
+            }
 
             // Handle special commands
             if (content.startsWith('/')) {
