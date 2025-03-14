@@ -1,50 +1,18 @@
-import * as fs from 'fs';
-import * as path from 'path';
+import { Sequelize } from 'sequelize';
 import Logger from '../helpers/logger';
-import { AsyncQueue } from '../helpers/asyncQueue';
 import EventEmitter from 'events';
-import { getDataPath } from '../helpers/paths';
 import { LLMContext } from './ILLMService';
-
-export interface LogParam {
-    type: string;
-    entry: any;
-}
-
-export interface LLMLogEntry {
-    timestamp: string;
-    method: string;
-    input: any;
-    output: any;
-    durationMs?: number;
-    error?: {
-        message: string;
-        stack: string;
-    };
-    agentId?: string;
-    agentName?: string;
-    stepType?: string;
-    taskId?: string;
-    projectId?: string;
-    goal?: string;
-    stepGoal?: string;
-}
+import { LLMLogModel, LLMLogEntry } from './LLMLogModel';
 
 export class LLMCallLogger extends EventEmitter {
-    private logDir: string;
-    private sessionId: string;
-    private logFile: string;
-    private static fileQueue = new AsyncQueue();
+    private sequelize: Sequelize;
+    private serviceName: string;
 
-    constructor(serviceName: string) {
+    constructor(serviceName: string, sequelize: Sequelize) {
         super();
-        
-        this.sessionId = new Date().toISOString().replace(/[:.]/g, '-');
-        this.logDir = path.join(getDataPath(), 'llm');
-        this.logFile = path.join(this.logDir, `${serviceName}-${this.sessionId}.jsonl`);
-        if (!fs.existsSync(this.logDir)) {
-            fs.mkdirSync(this.logDir, { recursive: true });
-        }
+        this.serviceName = serviceName;
+        this.sequelize = sequelize;
+        LLMLogModel.initialize(sequelize);
     }
 
     async logCall(
@@ -56,9 +24,8 @@ export class LLMCallLogger extends EventEmitter {
         context?: LLMContext
     ) {
         try {
-            const timestamp = new Date().toISOString();
-            const logEntry: LLMLogEntry = {
-                timestamp,
+            const logEntry = await LLMLogModel.create({
+                timestamp: new Date(),
                 method,
                 input,
                 output,
@@ -67,15 +34,8 @@ export class LLMCallLogger extends EventEmitter {
                     message: error.message,
                     stack: error.stack
                 } : undefined,
-                ...context
-            };
-
-            await LLMCallLogger.fileQueue.enqueue(async () => {
-                await fs.promises.appendFile(
-                    this.logFile,
-                    JSON.stringify(logEntry) + '\n',
-                    'utf8'
-                );
+                serviceName: this.serviceName,
+                context
             });
 
             this.emit("log", logEntry);
@@ -86,16 +46,10 @@ export class LLMCallLogger extends EventEmitter {
 
     async getLogs(): Promise<LLMLogEntry[]> {
         try {
-            if (!fs.existsSync(this.logFile)) {
-                return [];
-            }
-
-            const content = await LLMCallLogger.fileQueue.enqueue(async () => {
-                return await fs.promises.readFile(this.logFile, 'utf8');
+            return await LLMLogModel.findAll({
+                where: { serviceName: this.serviceName },
+                order: [['timestamp', 'DESC']]
             });
-            const lines = content.trim().split('\n');
-            return lines.map(line => JSON.parse(line))
-                       .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
         } catch (err) {
             Logger.error('Failed to read LLM logs:', err);
             return [];
@@ -104,37 +58,9 @@ export class LLMCallLogger extends EventEmitter {
 
     static async getAllLogs(): Promise<Record<string, LLMLogEntry[]>> {
         try {
-            const logDir = path.join(getDataPath(), 'llm');
-            if (!fs.existsSync(logDir)) {
-                return {};
-            }
-
-            const files = await fs.promises.readdir(logDir);
-            const logs: Record<string, LLMLogEntry[]> = {};
-
-            // Collect all entries across all files
-            const allEntries: LLMLogEntry[] = [];
-            
-            for (const file of files) {
-                if (!file.endsWith('.jsonl')) continue;
-                
-                const content = await LLMCallLogger.fileQueue.enqueue(async () => {
-                    return await fs.promises.readFile(
-                        path.join(logDir, file),
-                        'utf8'
-                    );
-                });
-                const lines = content.trim().split('\n');
-                const serviceName = file.split('-')[0];
-                const entries = lines.map(line => ({
-                    ...JSON.parse(line),
-                    serviceName
-                }));
-                allEntries.push(...entries);
-            }
-
-            // Sort all entries by timestamp descending
-            allEntries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
+            const allEntries = await LLMLogModel.findAll({
+                order: [['timestamp', 'DESC']]
+            });
 
             // Group by service name while maintaining the global sort order
             const sortedLogs: Record<string, LLMLogEntry[]> = {};
@@ -154,19 +80,12 @@ export class LLMCallLogger extends EventEmitter {
 
     async getLogsPaginated(offset: number, limit: number): Promise<LLMLogEntry[]> {
         try {
-            if (!fs.existsSync(this.logFile)) {
-                return [];
-            }
-
-            const content = await LLMCallLogger.fileQueue.enqueue(async () => {
-                return await fs.promises.readFile(this.logFile, 'utf8');
+            return await LLMLogModel.findAll({
+                where: { serviceName: this.serviceName },
+                order: [['timestamp', 'DESC']],
+                offset,
+                limit
             });
-
-            const lines = content.trim().split('\n');
-            const allEntries = lines.map(line => JSON.parse(line))
-                                  .sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-            return allEntries.slice(offset, offset + limit);
         } catch (err) {
             Logger.error('Failed to read LLM logs:', err);
             return [];
@@ -175,41 +94,11 @@ export class LLMCallLogger extends EventEmitter {
 
     async getAllLogsPaginated(offset: number, limit: number): Promise<LLMLogEntry[]> {
         try {
-            const logDir = path.join(getDataPath(), 'llm');
-            if (!fs.existsSync(logDir)) {
-                return [];
-            }
-
-            const files = await fs.promises.readdir(logDir);
-            const logs: Record<string, LLMLogEntry[]> = {};
-
-            // Collect all entries across all files
-            const allEntries: LLMLogEntry[] = [];
-
-            for (const file of files) {
-                if (!file.endsWith('.jsonl')) continue;
-
-                const content = await LLMCallLogger.fileQueue.enqueue(async () => {
-                    return await fs.promises.readFile(
-                        path.join(logDir, file),
-                        'utf8'
-                    );
-                });
-                const lines = content.trim().split('\n');
-                const serviceName = file.split('-')[0];
-                const entries = lines.map(line => ({
-                    ...JSON.parse(line),
-                    serviceName
-                }));
-                allEntries.push(...entries);
-            }
-
-            // Sort all entries by timestamp descending
-            allEntries.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime());
-
-            // Get the paginated slice
-            const paginatedEntries = allEntries.slice(offset, offset + limit);
-            return paginatedEntries;
+            return await LLMLogModel.findAll({
+                order: [['timestamp', 'DESC']],
+                offset,
+                limit
+            });
         } catch (err) {
             Logger.error('Failed to read all LLM logs:', err);
             return [];
