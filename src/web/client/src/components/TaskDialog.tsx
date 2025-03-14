@@ -51,13 +51,13 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     setProjectDetails(project);
                     
                     // Check for child project
-                    if (selectedTask.metadata?.childProjectId) {
-                        const childProject = await ipcService.getRPC().getProject(selectedTask.metadata.childProjectId);
+                    if (selectedTask.props?.childProjectId) {
+                        const childProject = await ipcService.getRPC().getProject(selectedTask.props.childProjectId);
                         setChildProjectDetails(childProject);
                         
                         // Fetch tasks for child project
                         const childProjectTasks = await ipcService.getRPC().getTasks({
-                            projectId: selectedTask.metadata.childProjectId
+                            projectId: selectedTask.props.childProjectId
                         });
                         setChildTasks(childProjectTasks);
                     } else {
@@ -218,7 +218,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                         </Button>
                                     </Box>
                                 )}
-                                {selectedTask.metadata?.childProjectId && (
+                                {selectedTask.props?.childProjectId && (
                                     <Box sx={{ 
                                         p: 2,
                                         mb: 1,
