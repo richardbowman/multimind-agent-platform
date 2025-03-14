@@ -83,7 +83,7 @@ export const ChatDetailsDialog: React.FC<ChatDetailsDialogProps> = ({
                                     <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                                         {key}
                                     </Typography>
-                                    {isProjectIds ? (
+                                    {isProjectIds && tasks?.length > 1 ? (
                                         <Button
                                             variant="text"
                                             sx={{
@@ -98,33 +98,10 @@ export const ChatDetailsDialog: React.FC<ChatDetailsDialogProps> = ({
                                                 // Ensure value is treated as string since project IDs are strings
                                                 const projectId = String(value);
                                                 
-                                                // Find tasks that match this project ID
-                                                const projectTasks = tasks.filter(t => 
-                                                    Array.isArray(t.props?.["project-ids"]) && 
-                                                    t.props["project-ids"].includes(projectId)
-                                                );
-                                                
-                                                if (projectTasks.length > 0) {
-                                                    // Pass all matching tasks to the task dialog
-                                                    onTaskClick({
-                                                        ...projectTasks[0],
-                                                        relatedTasks: projectTasks
-                                                    });
-                                                } else {
-                                                    // If no tasks found, create a new task for this project
-                                                    onTaskClick({
-                                                        projectId: projectId,
-                                                        description: `New task for project ${projectId}`,
-                                                        type: 'standard',
-                                                        complete: false,
-                                                        inProgress: false,
-                                                        createdAt: new Date().toISOString(),
-                                                        updatedAt: new Date().toISOString(),
-                                                        props: {
-                                                            "project-ids": [projectId]
-                                                        }
-                                                    });
-                                                }
+                                                onTaskClick({
+                                                    ...tasks[0],
+                                                    relatedTasks: tasks
+                                                });
                                             }}
                                         >
                                             <Typography variant="body2" sx={{
