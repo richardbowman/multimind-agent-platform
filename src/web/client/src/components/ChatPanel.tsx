@@ -474,7 +474,6 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                 onClose={() => setTaskDialogOpen(false)}
                 selectedTask={selectedTask}
                 setSelectedTask={setSelectedTask}
-                tasks={selectedTask?.relatedTasks || [selectedTask].filter(Boolean)}
             />
         </Box>
     );

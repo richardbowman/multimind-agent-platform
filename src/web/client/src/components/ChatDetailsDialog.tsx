@@ -99,8 +99,9 @@ export const ChatDetailsDialog: React.FC<ChatDetailsDialogProps> = ({
                                                 const projectId = String(value);
                                                 
                                                 onTaskClick({
-                                                    ...tasks[0],
-                                                    relatedTasks: tasks
+                                                    projectId: value,
+                                                    description: `Tasks for project ${value}`,
+                                                    type: 'standard'
                                                 });
                                             }}
                                         >

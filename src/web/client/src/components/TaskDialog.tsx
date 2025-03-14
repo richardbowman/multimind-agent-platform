@@ -35,7 +35,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     onClose, 
     selectedTask, 
     setSelectedTask,
-    tasks,
+    tasks: initialTasks,
     parentTask,
     setParentTask
 }) => {
@@ -44,15 +44,21 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     const [projectDetails, setProjectDetails] = useState<any>(null);
     const [childProjectDetails, setChildProjectDetails] = useState<any>(null);
     const [childTasks, setChildTasks] = useState<any[]>([]);
+    const [projectTasks, setProjectTasks] = useState<any[]>([]);
     const { artifacts } = useArtifacts();
 
     useEffect(() => {
         const fetchProjectDetails = async () => {
             if (selectedTask?.projectId) {
                 try {
+                    // Fetch project details
                     const project = await ipcService.getRPC().getProject(selectedTask.projectId);
                     setProjectDetails(project);
                     
+                    // Fetch tasks for this project
+                    const tasks = await ipcService.getRPC().getTasksForProject(selectedTask.projectId);
+                    setProjectTasks(tasks);
+
                     // Check for child project
                     if (selectedTask.props?.childProjectId) {
                         const childProject = await ipcService.getRPC().getProject(selectedTask.props.childProjectId);
@@ -70,25 +76,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
         };
 
         fetchProjectDetails();
-    }, [tasks, ipcService, selectedTask]);
-    
-    // Filter tasks to only show unique tasks from the current project
-    const projectTasks = React.useMemo(() => {
-        if (tasks) {
-            const projectId = selectedTask?.projectId;
-            if (!projectId) return tasks;
-            
-            // Create a map to deduplicate tasks by ID
-            const taskMap = new Map();
-            tasks.forEach(t => {
-                if (t.projectId === projectId && !taskMap.has(t.id)) {
-                    taskMap.set(t.id, t);
-                }
-            });
-            
-            return Array.from(taskMap.values());
-        }
-    }, [selectedTask, tasks]);
+    }, [ipcService, selectedTask]);
 
     return (
         <Dialog 
