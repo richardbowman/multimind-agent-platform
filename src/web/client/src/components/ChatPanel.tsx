@@ -33,6 +33,7 @@ import { useChannels } from '../contexts/ChannelContext.tsx';
 import { useFilteredTasks } from '../contexts/FilteredTaskContext.tsx';
 import { useTheme } from '@mui/material/styles';
 import { ScrollView } from './shared/ScrollView.tsx';
+import { InProgressTasks } from './InProgressTasks';
 
 // Custom link component that opens links in system browser
 export const CustomLink = ({ href, children }: { href?: string, children: React.ReactNode }) => {
@@ -441,54 +442,7 @@ export const ChatPanel: React.FC<ChatPanelProps> = ({ leftDrawerOpen, rightDrawe
                                 }}
                             />
                         )))}
-                    {uniqueTasks && uniqueTasks.length > 0 && (
-                        <Paper
-                            elevation={0}
-                            sx={{
-                                mt: 2,
-                                p: 2,
-                                bgcolor: 'background.paper',
-                                border: '1px solid',
-                                borderColor: 'divider',
-                                borderRadius: 2
-                            }}
-                        >
-                            <Typography
-                                variant="overline"
-                                sx={{
-                                    mb: 1,
-                                    color: 'text.secondary',
-                                    display: 'block'
-                                }}
-                            >
-                                In Progress Tasks
-                            </Typography>
-                            <Box sx={{ display: 'flex', flexDirection: 'column', gap: 1 }}>
-                                {uniqueTasks.map(task => (
-                                    <Paper
-                                        key={task.id}
-                                        elevation={0}
-                                        sx={{
-                                            display: 'flex',
-                                            alignItems: 'center',
-                                            gap: 1,
-                                            p: 1,
-                                            bgcolor: 'background.default',
-                                            borderRadius: 1,
-                                            border: '1px solid',
-                                            borderColor: 'divider'
-                                        }}
-                                    >
-                                        <Spinner />
-                                        <Typography variant="body2" sx={{ color: 'text.primary' }}>
-                                            {task.description}
-                                        </Typography>
-                                    </Paper>
-                                ))
-                                }
-                            </Box>
-                        </Paper>
-                    )}
+                    <InProgressTasks tasks={uniqueTasks} />
                     <div ref={messagesEndRef} />
                 </ScrollView>
             )}
