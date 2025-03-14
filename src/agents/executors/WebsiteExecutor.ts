@@ -96,4 +96,8 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
     getArtifactType(codeBlockType: string): ArtifactType {
         return ArtifactType.Webpage;
     }
+
+    requestFullContext() {
+        return true;
+    }
 }

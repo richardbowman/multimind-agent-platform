@@ -230,6 +230,7 @@ class ClientMethodsImplementation implements ClientMethods {
     }
 
     onTaskUpdate(task: Task) {
+        console.log('Task update received', task);
         this.tasksContext.replaceTask(task);
     }
 

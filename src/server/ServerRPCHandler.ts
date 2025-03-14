@@ -145,23 +145,27 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         });
 
         // Set up task update notifications
-        this.services.taskManager.on('taskUpdated', ({task}) => {
-            rpc.onTaskUpdate({
-                id: task.id,
-                projectId: task.projectId,
-                description: task.description,
-                type: task.type,
-                assignee: task.assignee,
-                status: task.status,
-                inProgress: task.inProgress || false,
-                complete: task.complete || false,
-                threadId: task.metadata?.threadId || null,
-                createdAt: task.metadata?.createdAt,
-                updatedAt: task.metadata?.updatedAt,
-                dependsOn: task.dependsOn,
-                props: task.props
-            });
-        });
+        const taskHandler = (event) => {
+            return ({task}) => {
+                rpc.onTaskUpdate({
+                    id: task.id,
+                    projectId: task.projectId,
+                    description: task.description,
+                    type: task.type,
+                    assignee: task.assignee,
+                    status: task.status,
+                    inProgress: task.inProgress || false,
+                    complete: task.complete || false,
+                    threadId: task.metadata?.threadId || null,
+                    createdAt: task.metadata?.createdAt,
+                    updatedAt: task.metadata?.updatedAt,
+                    dependsOn: task.dependsOn,
+                    props: task.props
+                });
+            };
+        };
+        this.services.taskManager.on('taskAdded', taskHandler('added'));
+        this.services.taskManager.on('taskUpdated', taskHandler('updated'));
 
         // Set up message receiving for the user client
         // Set up channel creation notifications

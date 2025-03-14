@@ -295,6 +295,13 @@ export class ArtifactManager {
   }
 
   protected async indexArtifact(artifact: Artifact): Promise<void> {
+    // Remove any old version from vector db
+    try {
+      await this.vectorDb.deleteDocuments({ artifactId: artifact.id });
+    } catch (error) {
+      Logger.error('Error deleting artifact from vector database:', error);
+    }
+
     // Skip if mime type indicates non-text content
     const mimeType = artifact.metadata?.mimeType || '';
     if (mimeType.startsWith('image/') || 

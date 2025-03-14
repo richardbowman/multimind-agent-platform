@@ -26,8 +26,13 @@ export abstract class BaseLLMService implements ILLMService {
     }
 
     async generate<T extends ModelMessageResponse>(instructions: string, userPost: ChatPost, history?: ChatPost[], opts?: LLMOptions): Promise<T> {
+        // this checks to see if the threadPosts already contains the userPost, if so, we trim back the threadPosts
+        // because the userpost will get added back in
+        const userPostInHistory = history && history.findIndex(p => p.id === userPost?.id) || -1;
+        const cleanedHistory = userPostInHistory >= 0 ? history?.slice(0, userPostInHistory) : history;
+
         const messages = [
-            ...(history ? this.mapPosts(userPost, history) : []),
+            ...(history ? this.mapPosts(userPost, cleanedHistory) : []),
             {
                 role: "user",
                 content: userPost.message

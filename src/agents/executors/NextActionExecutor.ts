@@ -143,33 +143,10 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             
         // Format searched guides for prompt
         const filtered = searchedGuides.filter(g => procedureGuides.find(p => p.id === g.artifact.id));
-        const searchedGuidesPrompt = searchedGuides.length > 0 ?
-            `# SEARCHED PROCEDURE GUIDES:\n` +
-            filtered.map((guide, i) => 
-                `## Guide ${i+1} (${guide.score.toFixed(2)} relevance):\n` +
-                `###: ${guide.artifact.metadata?.title}\n` +
-                `<guide>${procedureGuides.find(p => p.id === guide.artifact.id)?.content}</guide>\n`
-            ).join('\n\n') :
-            `### SEARCHED PROCEDURE GUIDES:\n*No relevant procedure guides found*`;
-
-        // Format in-use guides for prompt
-        const inUseGuidesPrompt = pastGuideIds.length > 0 ?
-            `# IN-USE PROCEDURE GUIDES:\n` +
-            pastGuideIds.map((id, i) => {
-                const guide = procedureGuides.find(p => p.id === id);
-                return guide ? 
-                    `## Guide ${i+1}:\n` +
-                    `###: ${guide.metadata?.title}\n` +
-                    `<guide>${guide.content}</guide>\n` :
-                    '';
-            }).join('\n\n') :
-            `### IN-USE PROCEDURE GUIDES:\n*No procedure guides in use*`;
+        prompt.addContext({contentType: ContentType.PROCEDURE_GUIDES, guideType: "searched", guides: filtered.map(f => procedureGuides.find(p => p.id === f.artifact.id)).filter(f => !!f)});
+        prompt.addContext({contentType: ContentType.PROCEDURE_GUIDES, guideType: "in-use", guides: pastGuideIds.map(f => procedureGuides.find(p => p.id === f)).filter(f => !!f)});
 
         const completionAction = params.executionMode === 'conversation' ? 'REPLY' : 'DONE';
-
-        // Add both sections to prompt
-        prompt.addContext(searchedGuidesPrompt);
-        prompt.addContext(inUseGuidesPrompt);
             
         prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
             .filter(metadata => metadata.planner)

@@ -345,7 +345,6 @@
         "enabled": true,
         "config": {
           "purpose": "You are planning how to create high-quality content. Break down the content creation into steps of research, outlining, writing and editing.",
-          "finalInstructions": "For an initial request, follow this pattern:\n1. Start with 'goal_confirmation' step to gather relevant information\n2. Use 'check_knowledge' step to gather relevant information\n3. Follow with 'outline' step to structure the content\n4. Then 'writing' to create the sections\n5. Then 'content_combination' to combine their work together\n6. End with an 'editing' step to improve the final content",
           "supportsDelegation": true,
           "plannerType": "nextStep",
           "executors": [
@@ -372,6 +371,9 @@
             },
             {
               "className": "ContentCombinationExecutor"
+            },
+            {
+              "className": "CSVMergeExecutor"
             }
           ]
         }

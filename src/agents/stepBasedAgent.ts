@@ -141,7 +141,7 @@ export abstract class StepBasedAgent extends Agent {
                     projectId: stepTask.projectId,
                     partialPost: statusPost,
                     context: {
-                        threadPosts: posts?.slice(-1),
+                        threadPosts: posts,
                         artifacts
                     }
                 }
@@ -569,6 +569,7 @@ export abstract class StepBasedAgent extends Agent {
                         previousResponses: priorResults,
                         steps: priorSteps,
                         message: userPost?.message,
+                        userPost: userPost,
                         stepGoal: task.description,
                         overallGoal: project.name,
                         executionMode: userPost ? 'conversation' : 'task',
@@ -663,7 +664,7 @@ export abstract class StepBasedAgent extends Agent {
             ...stepResult.response?.data?.artifactId?[stepResult.response?.data?.artifactId]:[]])];
 
         const props = {
-            "project-ids": [stepResult.projectId, projectId],
+            "project-ids": [...stepResult.projectId?[stepResult.projectId]:[], projectId],
             artifactIds: artifactList
         };
         

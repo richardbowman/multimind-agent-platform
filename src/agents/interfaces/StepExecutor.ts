@@ -73,6 +73,7 @@ export abstract class BaseStepExecutor<R extends StepResponse> implements StepEx
                 const tracedinput : GenerateInputParams = {
                     instructions: prompt,
                     threadPosts: params.context?.threadPosts,
+                    userPost: params.userPost,
                     ...input,
                     context: {
                         ...input.context,

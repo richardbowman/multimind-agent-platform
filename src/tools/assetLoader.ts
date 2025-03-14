@@ -1,12 +1,12 @@
 import Logger from "src/helpers/logger";
 import { ArtifactManager } from "./artifactManager";
 import fs from "node:fs";
-import { ArtifactType, DocumentSubtype, SpreadsheetSubType, Artifact } from "./artifact";
+import { ArtifactType, DocumentSubtype, SpreadsheetSubType, Artifact, ArtifactItem } from "./artifact";
 import { createUUID } from "src/types/uuid";
 import path from "node:path";
 import * as yaml from 'js-yaml';
 
-export async function loadTemplates(basePath: string, templatePath: string, artifactManager: ArtifactManager): Promise<Artifact[]> {
+export async function loadTemplates(basePath: string, templatePath: string, artifactManager: ArtifactManager): Promise<(Artifact|ArtifactItem)[]> {
     const templatesDir = path.join(basePath, templatePath);
     if (!fs.existsSync(templatesDir)) {
         Logger.warn(`Templates directory not found at ${templatesDir}`);
@@ -64,6 +64,7 @@ export async function loadTemplates(basePath: string, templatePath: string, arti
 
         try {
             const artifact = await artifactManager.saveArtifact({
+                ...existingTemplate?.id?{id: existingTemplate?.id}:{},
                 type: ArtifactType.Document,
                 content: content,
                 metadata: metadata
@@ -160,6 +161,7 @@ export async function loadProcedureGuides(basePath: string, guidePath: string, a
 
         try {
             await artifactManager.saveArtifact({
+                ...existingGuide?.id?{id: existingGuide?.id}:{},
                 type: artifactType,
                 content: content,
                 metadata: metadata

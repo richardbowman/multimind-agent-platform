@@ -88,7 +88,8 @@ export async function initializeBackend(settingsManager: SettingsManager, option
         Logger.progress("Loading chats", 0.6, "loading");
         const sequelize = new Sequelize({
             dialect: 'sqlite',
-            storage: path.join(getDataPath(), 'chat.db')
+            storage: path.join(getDataPath(), 'chat.db'),
+            logging: msg => Logger.verbose(msg)
         });
 
         const chatStorage = new LocalChatStorage(sequelize);

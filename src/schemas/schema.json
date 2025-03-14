@@ -1921,7 +1921,8 @@
         "BarChartData",
         "ArtifactSelectionResponse",
         "MergePlanResponse",
-        "CreateChannelResponse"
+        "CreateChannelResponse",
+        "WritingSection"
       ],
       "type": "string"
     },
@@ -2251,26 +2252,24 @@
         "description": {
           "type": "string"
         },
-        "keyPoints": {
+        "instructions": {
           "items": {
             "type": "string"
           },
           "type": "array"
         },
-        "researchFindings": {
-          "items": {
-            "$ref": "#/definitions/ResearchFinding"
-          },
-          "type": "array"
+        "taskGoal": {
+          "type": "string"
         },
         "title": {
           "type": "string"
         }
       },
       "required": [
+        "taskGoal",
         "title",
         "description",
-        "keyPoints"
+        "instructions"
       ],
       "type": "object"
     }

@@ -8,6 +8,7 @@ import { ContentType } from "./promptBuilder";
 import { StepResponse, StepResult } from "src/agents/interfaces/StepResult";
 import { Agent } from "src/agents/agents";
 import { Project, Task } from "src/tools/taskManager";
+import { ChatHandle } from "src/types/chatHandle";
 
 export interface ArtifactsExcerptsContent {
     contentType: ContentType.ARTIFACTS_EXCERPTS;
@@ -28,6 +29,12 @@ export interface ArtifactsFullContent {
 export interface ConversationContent {
     contentType: ContentType.CONVERSATION;
     posts: ChatPost[];
+}
+
+export interface ProcedureGuideContent {
+    contentType: ContentType.PROCEDURE_GUIDES;
+    guideType: 'in-use'|'searched';
+    guides: Artifact[]
 }
 
 export interface SearchResultsContent {
@@ -139,6 +146,7 @@ export interface StepsContent {
     contentType: ContentType.STEPS;
     steps: StepTask<StepResponse>[];
     posts?: ChatPost[];
+    handles?: ChatHandle[];
 }
 
 export interface TasksContent {
@@ -173,4 +181,5 @@ export type ContentInput =
     | IntentContent
     | FullGoalsContent
     | StepsContent
-    | TasksContent;
+    | TasksContent
+    | ProcedureGuideContent;

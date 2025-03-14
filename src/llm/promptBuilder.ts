@@ -2,7 +2,7 @@ import { StepResponse, StepResponseType } from "src/agents/interfaces/StepResult
 import { StepBasedAgent } from "src/agents/stepBasedAgent";
 import Logger from "src/helpers/logger";
 import { ModelHelpers } from "./modelHelpers";
-import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelNameContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepResponseContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent, OverallGoalContent, FullGoalsContent, StepsContent, TasksContent, ChannelDetailsContent, StepGoalContent } from "./ContentTypeDefinitions";
+import { AgentCapabilitiesContent, AgentOverviewsContent, ChannelNameContent, ContentInput, ExecuteParamsContent, GoalsContent, IntentContent, StepResponseContent, ArtifactsExcerptsContent, ArtifactsFullContent, ArtifactsTitlesContent, ConversationContent, OverallGoalContent, FullGoalsContent, StepsContent, TasksContent, ChannelDetailsContent, StepGoalContent, ProcedureGuideContent } from "./ContentTypeDefinitions";
 import { InputPrompt } from "src/prompts/structuredInputPrompt";
 import { IntentionsResponse } from "src/schemas/goalAndPlan";
 import { ExecutorType } from "src/agents/interfaces/ExecutorType";
@@ -45,13 +45,15 @@ export enum ContentType {
     GOALS_FULL = "GOALS_FULL",
     STEPS = "STEPS",
     ALL_AGENTS = "ALL_AGENTS",
-    AGENT_HANDLES = "AGENT_HANDLES"
+    AGENT_HANDLES = "AGENT_HANDLES",
+    PROCEDURE_GUIDES = "PROCEDURE_GUIDES"
 }
 
 export enum OutputType {
     JSON_AND_MARKDOWN,
     JSON_WITH_MESSAGE,
-    JSON_WITH_MESSAGE_AND_REASONING
+    JSON_WITH_MESSAGE_AND_REASONING,
+    MULTIPLE_JSON_WITH_MESSAGE
 }
 
 export class GlobalRegistry {
@@ -95,6 +97,8 @@ export class PromptRegistry {
 
         this.registerRenderer(ContentType.GOALS_FULL, this.renderAllGoals.bind(this));
         this.registerRenderer(ContentType.CHANNEL_GOALS, this.renderChannelGoals.bind(this));
+
+        this.registerRenderer(ContentType.PROCEDURE_GUIDES, this.renderProcedureGuides.bind(this));
 
         // Register type-specific step result renderers
         this.registerStepResponseRenderer(StepResponseType.Validation, this.renderValidationResponse.bind(this));
@@ -204,7 +208,7 @@ ${this.modelHelpers.getPurpose()}
         return output;
     }
 
-    private async renderSteps({ steps, posts }: StepsContent): Promise<string> {
+    private async renderSteps({ steps, posts, handles }: StepsContent): Promise<string> {
         const filteredSteps = steps.filter(s => s.props.result && s.props.stepType !== ExecutorType.NEXT_STEP || s.props.result?.response.type === StepResponseType.CompletionMessage);
         
         // If we have posts, group steps by post
@@ -250,7 +254,7 @@ ${this.modelHelpers.getPurpose()}
                 const postSteps = postMap.get(post.id);
                 if (postSteps && postSteps.length > 0) {
                     output += `## POST ${index + 1}:\n`;
-                    output += `- User: ${post.user_id}\n`;
+                    output += `- User: ${handles?.[post.user_id] ?? "(unknown)"}\n`;
                     output += `- Message: ${post.message}\n`;
                     output += `### Steps for this post:\n`;
                     output += postSteps.join('\n') + '\n\n';
@@ -289,7 +293,9 @@ ${this.modelHelpers.getPurpose()}
             return `- STEP ${index + 1} of ${filteredSteps.length} ${index + 1 == filteredSteps.length ? "[LAST COMPLETED STEP]" : ""}:
 Step Type [${step.props.stepType}]
 Step Description: ${step.description}
-Step Result: <stepInformation>${body || stepResult.response.message || stepResult.response.reasoning || stepResult.response.status}</stepInformation>`;
+Step Result: <stepInformation>
+${body || stepResult.response.message || stepResult.response.reasoning || stepResult.response.status}
+</stepInformation>`;
         }));
 
         return "# 📝 STEP HISTORY:\n" + stepProcessors.join('\n') + "\n";
@@ -523,6 +529,20 @@ Step Result: <stepInformation>${body || stepResult.response.message || stepResul
             `${post.user_id}: ${post.message}`
         ).join('\n');
     }
+
+    private renderProcedureGuides({ guideType, guides }: ProcedureGuideContent) : string {
+        // Format in-use guides for prompt
+        return guides.length > 0 ?
+            `# ${guideType === "in-use" ? "IN-USE PROCEDURE GUIDES" : "SEARCHED PROCEDURE GUIDES"}:\n` +
+            guides.map((guide, i) => {
+                return guide ? 
+                    `## Guide ${i+1}:\n` +
+                    `###: ${guide.metadata?.title}\n` +
+                    `<guide>${guide.content}</guide>\n` :
+                    '';
+            }).join('\n\n') :
+            `### ${guideType === "in-use" ? "IN-USE PROCEDURE GUIDES:\n*No procedure guides in use*" : `### SEARCHED PROCEDURE GUIDES:\n*No relevant procedure guides found*`}`;
+    }
 }
 
 export interface OutputInstructionsParams {
@@ -557,6 +577,8 @@ export class PromptBuilder implements InputPrompt {
             this.addInstruction(`# RESPONSE FORMAT\n1. Before you answer, think about how to best interpret the instructions and context you have been provided. Include your thinking wrapped in <thinking> </thinking> tags.
 2. Then, respond with a user-friendly message.
 3. Provide structured data in a fenced code block \`\`\`json containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
+        } else if (outputType === OutputType.MULTIPLE_JSON_WITH_MESSAGE && schema) {
+            this.addInstruction(`# RESPONSE FORMAT\nRespond with a user-friendly message and one or more fenced code blocks \`\`\`json each containing an object that follows this JSON schema:\n\`\`\`json\n${JSON.stringify(schema, null, 2)}\`\`\`\n\n${specialInstructions || ''}`);
         }
         return this;
     }

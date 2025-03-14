@@ -1,22 +1,38 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor, TaskNotification } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, TaskNotification } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
-import { BaseStepExecutor } from '../interfaces/BaseStepExecutor';
+import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
 import { TaskEventType } from '../agents';
 import { StepTask } from '../interfaces/ExecuteStepParams';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
-import { ILLMService } from '../../llm/ILLMService';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
-import { Project, ProjectMetadata, Task, TaskManager, TaskType } from 'src/tools/taskManager';
+import { Project, Task, TaskManager, TaskType } from 'src/tools/taskManager';
 import Logger from 'src/helpers/logger';
 import { getGeneratedSchema } from '../../helpers/schemaUtils';
 import { SchemaType } from '../../schemas/SchemaTypes';
-import { WritingResponse } from '../../schemas/writing';
+import { WritingSection } from '../../schemas/writing';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { TaskCategories } from '../interfaces/taskCategories';
-import { createUUID } from 'src/types/uuid';
+import { TaskStatus } from 'src/schemas/TaskStatus';
+import { ContentType, globalRegistry, OutputType } from 'src/llm/promptBuilder';
+import { StringUtils } from 'src/utils/StringUtils';
+import { UUID } from 'src/types/uuid';
+import { ArtifactType, DocumentSubtype } from 'src/tools/artifact';
+
+export interface DraftContentStepResponse extends StepResponse {
+    type: StepResponseType.DraftContent,
+    data?: {
+        sections: SectionResponse[]
+    }
+}
+
+export interface SectionResponse {
+    sectionGoal: string;
+    sectionOutput: {
+        status?: string;
+        artifactIds?: UUID[];
+    }
+}
 
 /**
  * Executor that manages content writing task assignments and coordination.
@@ -41,22 +57,63 @@ export class AssignWritersExecutor extends BaseStepExecutor<StepResponse> {
         super(params);
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
+
+        globalRegistry.stepResponseRenderers.set(StepResponseType.DraftContent, (stepResponse) => {
+            return stepResponse.data?.sections && JSON.stringify(stepResponse.data?.sections, null, 2);
+        });
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        const schema = await getGeneratedSchema(SchemaType.WritingResponse);
+        const schema = await getGeneratedSchema(SchemaType.WritingSection);
 
-        const prompt = `You are planning content writing tasks.
+        const instructions = this.startModel(params);
+        instructions.addInstruction(`You are planning content writing tasks.
 Break down the content into sections that can be assigned to writers.
-For each section, provide a clear title, description, key points to cover, and relevant research findings.
+For each section, provide a clear title, description, key points to cover, and relevant research findings.`);
+        instructions.addContext({contentType: ContentType.GOALS_FULL, params});
+        params.previousResponses && instructions.addContext({contentType: ContentType.STEP_RESPONSE, responses:params.previousResponses});
 
-${params.previousResponses ? `Use these materials to inform the task planning:\n${JSON.stringify(params.previousResponses, null, 2)}` : ''}`;
+        // Get procedure guides already in use from previous responses
+        const pastGuideIds = params.previousResponses?.flatMap(response => 
+            response.data?.steps?.flatMap(step => 
+                step.procedureGuide?.artifactId ? [step.procedureGuide.artifactId] : []
+            ) || []
+        ) || [];
+        
+        // Get procedure guides from search, excluding any already in use
+        const searchedGuides = (await this.params.artifactManager.searchArtifacts(
+            params.stepGoal, 
+            { 
+                type: ArtifactType.Document, 
+                subtype: DocumentSubtype.Procedure 
+            }, 
+            3 + pastGuideIds.length // Get extra in case we need to filter some out
+        )).filter(guide => !pastGuideIds.includes(guide.artifact.id))
+          .slice(0, 3); // Take top 3 after filtering
+        
+        // Load all guides in a single bulk operation
+        const allGuides = await this.params.artifactManager.bulkLoadArtifacts([
+            ...searchedGuides.map(p => p.artifact.id),
+            ...pastGuideIds
+        ]);
+        
+        // Filter by agent if specified
+        const procedureGuides = this.params.agentName ? 
+            allGuides.filter(a => a.metadata?.agent === this.params.agentName) : 
+            allGuides;
+            
+        // Format searched guides for prompt
+        const filtered = searchedGuides.filter(g => procedureGuides.find(p => p.id === g.artifact.id));
+        instructions.addContext({contentType: ContentType.PROCEDURE_GUIDES, guideType: "searched", guides: filtered.map(f => procedureGuides.find(p => p.id === f.artifact.id)).filter(f => !!f)});
+        instructions.addContext({contentType: ContentType.PROCEDURE_GUIDES, guideType: "in-use", guides: pastGuideIds.map(f => procedureGuides.find(p => p.id === f)).filter(f => !!f)});
+        
+        instructions.addOutputInstructions({outputType: OutputType.MULTIPLE_JSON_WITH_MESSAGE, schema, specialInstructions: "Create a single fenced code block for EACH indepedent section to assign to a writer."});
 
-        const instructions = new StructuredOutputPrompt(schema, prompt);
-        const result = await this.modelHelpers.generate<WritingResponse>({
-            message: params.goal,
-            instructions
+        const rawResult = await instructions.generate({
+            message: params.message||params.stepGoal
         });
+
+        const sections = StringUtils.extractAndParseJsonBlocks(rawResult.message).map(json => StringUtils.mapToTyped<WritingSection>(json, schema));
 
         // Create a new project and writing tasks for each section
         try {
@@ -64,7 +121,7 @@ ${params.previousResponses ? `Use these materials to inform the task planning:\n
             
             const writingProject = await this.taskManager.addProject({
                 id: newProjectId,
-                name: `Writing project: ${params.goal}`,
+                name: `Writing project: ${params.stepGoal}`,
                 tasks: {},
                 metadata: {
                     owner: params.agentId,
@@ -73,39 +130,35 @@ ${params.previousResponses ? `Use these materials to inform the task planning:\n
                 }
             });
 
-            for (const section of result.sections) {
+            for (const section of sections) {
+                const index = sections.indexOf(section);
                 const task = await this.taskManager.addTask(writingProject, {
-                    id: createUUID(),
                     creator: params.agentId,
                     type: TaskType.Standard,
                     category: TaskCategories.Writing,
-                    description: `Write a section for the overall document.
-
-OVERALL GOAL:
-${params.overallGoal||params.goal}.
-
-OVERALL OUTLINE:
-${result.sections.map(s => `- ${s.title}`).join('\n')}
-
-SECTION HEADRR:
+                    description: `TASK GOAL: ${section.taskGoal}
+# YOUR SECTION HEADER (SECTION ${index+1} OF ${sections.length}):
 ${section.title}
 
-SECTION DESCRIPTION
+# YOUR SECTION DESCRIPTION
 ${section.description}
 
-KEY POINTS TO COVER IN YOUR SECTION:
-${section.keyPoints?.map(p => `- ${p}`).join('\n')||"None provided"}
+# INSTRUCTIONS:
+${section.instructions?.map(p => `- ${p}`).join('\n')||"None provided"}
 
-RESEARCH TO SUPPORT YOUR SECTION:
-${section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).join('\n')||"None provided"}`,
-                    order: result.sections.indexOf(section),
+# BROADER OVERALL CONTEXT (OUTSIDE OF SCOPE OF THIS TASK):
+${params.overallGoal||params.goal}.
+
+# OVERALL OUTLINE (JUST FOR CONTEXT ON YOUR SECTION):
+${sections.map((s, i) => `${i+1} of ${sections.length}: ${s.title}${i === index ? "[YOUR SECTION]" : ""}`).join('\n')}`,
                     props: {
+                        order: index,
                         attachedArtifactIds: params.context?.artifacts?.map(a => a.id)
                     }
                 });
 
-                //TODO: need to find way to get other user id
-                await this.taskManager.assignTaskToAgent(task.id, "66025743-45bc-4625-a27f-52aa09dde128");
+                const writer = params.agents.find(a => a.messagingHandle === "@writer")?.userId;
+                writer && await this.taskManager.assignTaskToAgent(task.id, writer);
             }
 
             return {
@@ -114,10 +167,10 @@ ${section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).jo
                 async: true,
                 projectId: writingProject.id,
                 response: {
-                    message: `Created ${result.sections.length} writing tasks:\n\n${
-                        result.sections.map(s => `- ${s.title}`).join('\n')
+                    message: `Created ${sections.length} writing tasks:\n\n${
+                        sections.map(s => `- ${s.title}`).join('\n')
                     }`,
-                    data: result
+                    data: sections
                 }
             };
         } catch (error) {
@@ -126,7 +179,7 @@ ${section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).jo
         }
     }
 
-    async processTaskResult(params: Partial<ExecuteParams>, task: Task): Promise<any> {
+    async processTaskResult(params: Partial<ExecuteParams>, task: Task): Promise<SectionResponse> {
         if (task.status !== TaskStatus.Completed) {
             return null;
         }
@@ -137,23 +190,13 @@ ${section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).jo
         // Create schema for result extraction
         const schema = await getGeneratedSchema(SchemaType.WritingResponse);
 
-        // Create prompt for result processing
-        const instructions = this.startModel(params, "processTaskResult");
-        instructions.addInstruction(`Analyze the completed writing task and extract key insights that should be included in the final document.
-            The original goal for this section was: ${task.description}
-            
-            Return the structured writing response with any additional insights or improvements.`);
-        instructions.addOutputInstructions({outputType: OutputType.JSON, schema});
-
-        const rawResponse = await instructions.generate({
-            message: `Task Response Data: ${JSON.stringify(responseData, null, 2)}`
-        });
-
         try {
-            const response = StringUtils.extractAndParseJsonBlock(rawResponse.message, schema);
             return {
-                section: response,
-                traceId: rawResponse.metadata?._id
+                sectionGoal: task.description,
+                sectionOutput: {
+                    status: responseData.response.message,
+                    artifactIds: responseData.artifactIds?.filter(item => !task.props?.attachedArtifactIds?.includes(item))
+                }
             };
         } catch (error) {
             Logger.error('Error processing writing task result:', error);
@@ -176,13 +219,17 @@ ${section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).jo
 
         // Generate final document structure
         const finalDocument = {
-            sections: processedResults.filter(r => r !== null).map(r => r.section)
+            sections: processedResults.filter(r => r !== null)
         };
+
+        // Get section artifacts
+        const artifacts = finalDocument.sections.map(s => s.sectionOutput.artifactIds).flat().filter(a => !!a);
 
         // Generate a summary using the LLM
         const prompt = this.modelHelpers.createPrompt();
-        prompt.addInstruction(`Explain that the writing project is complete in a concise chat message including
-            statistics about the results (sections completed, total word count, etc)`);
+        prompt.addInstruction(`Explain that the writers finished their sections in a concise status message for the agent including
+statistics about the results (sections completed, total word count, etc). The final combined document has not been created, 
+a separate combining step is required.`);
 
         prompt.addContext({
             contentType: ContentType.TASKS,
@@ -190,17 +237,18 @@ ${section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).jo
         });
 
         const rawResponse = await this.modelHelpers.generateMessage({
-            message: `Writing project ID: ${project.id}`,
+            message: `Section results created: ${JSON.stringify(finalDocument, null, 2)}`,
             instructions: prompt
         });
 
         return {
-            type: StepResultType.FinalResponse,
             finished: true,
             async: false,
             replan: ReplanType.Allow,
+            artifactIds: artifacts,
             response: {
-                message: rawResponse.message,
+                type: StepResponseType.DraftContent,
+                status: rawResponse.message,
                 data: finalDocument
             }
         };
@@ -234,7 +282,7 @@ ${section.researchFindings?.map(f => `- ${f.finding}\n  Source: ${f.source}`).jo
                     `Completed ${completedCount} of ${totalCount} sections\n\n` +
                     `A final document will be generated when all sections are complete.`;
 
-                await this.chatClient.updatePost(statusPost.id, progressMessage, {
+                await this.params.chatClient.updatePost(statusPost.id, progressMessage, {
                     partial: true
                 });
             }

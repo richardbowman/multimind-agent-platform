@@ -11,6 +11,7 @@ import { ExecutorType } from './ExecutorType';
 export interface ExecuteParams {
     readonly agentId: UUID;
     readonly message?: string;
+    readonly userPost?: ChatPost;
     readonly stepGoal: string;
     readonly overallGoal?: string;
     readonly goal: string;

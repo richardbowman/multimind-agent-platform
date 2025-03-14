@@ -19,13 +19,13 @@ import { asError } from "src/types/types";
 
 
 export interface ChunksStepResponse extends StepResponse {
-    type: StepResponseType.Chunks;
+    type: StepResponseType.Excerpts;
     data?: {
         chunks: SearchResult[]
     };
 }
 
-@StepExecutorDecorator(ExecutorType.SEARCH_ARTIFACT, 'Retrieve relevant artifact chunks using vector search')
+@StepExecutorDecorator(ExecutorType.SEARCH_ARTIFACT, 'Search within an artifact to find relevant excerpts')
 export class SearchArtifactExecutor implements StepExecutor<ChunksStepResponse> {
     private artifactManager: ArtifactManager;
     private vectorDB: IVectorDatabase;
@@ -51,7 +51,7 @@ export class SearchArtifactExecutor implements StepExecutor<ChunksStepResponse> 
             return {
                 finished: true,
                 response: {
-                    type: StepResponseType.Chunks,
+                    type: StepResponseType.Excerpts,
                     message: 'No artifacts provided in context to search',
                     data: {
                         chunks: []
@@ -99,8 +99,8 @@ ${JSON.stringify(schema, null, 2)}
                 finished: true,
                 replan: ReplanType.Allow,
                 response: {
-                    type: StepResponseType.Chunks,
-                    status: `Found ${searchResults.length} relevant chunks using vector search`,
+                    type: StepResponseType.Excerpts,
+                    status: `Found ${searchResults.length} relevant excerpts using vector search`,
                     data: {
                         chunks: searchResults
                     }
@@ -111,7 +111,7 @@ ${JSON.stringify(schema, null, 2)}
                 finished: true,
                 replan: ReplanType.Allow,
                 response: {
-                    type: StepResponseType.Chunks,
+                    type: StepResponseType.Excerpts,
                     status: `Failed to retrieve search results. Error: ${asError(error).message}`
                 }
             };

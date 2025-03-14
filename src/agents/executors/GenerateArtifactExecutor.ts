@@ -7,7 +7,7 @@ import { ArtifactManager } from 'src/tools/artifactManager';
 import { Artifact, ArtifactType } from 'src/tools/artifact';
 import Logger from '../../helpers/logger';
 import { TaskManager } from 'src/tools/taskManager';
-import { PromptBuilder, ContentType, OutputType } from 'src/llm/promptBuilder';
+import { PromptBuilder, ContentType, OutputType, globalRegistry } from 'src/llm/promptBuilder';
 import { ArtifactGenerationResponse } from 'src/schemas/ArtifactGenerationResponse';
 import { StringUtils } from 'src/utils/StringUtils';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
@@ -52,6 +52,16 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
         this.modelHelpers = params.modelHelpers;
         this.artifactManager = params.artifactManager!;
         this.taskManager = params.taskManager;
+
+        globalRegistry.stepResponseRenderers.set(StepResponseType.GeneratedArtifact, async (response : StepResponse) => {
+            if (response.data?.requestFullContext) {
+                const artifactId = response.data?.generatedArtifactId;
+                const artifact : Artifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
+                return (artifact ? `\`\`\`\n${artifact.content.toString()}\n\`\`\`\n` : undefined) ?? "[NO LOADED ARTIFACTS]";
+            } else {
+                return "";
+            }
+        });
     }
 
     protected async createBasePrompt(params: ExecuteParams): Promise<ModelConversation> {
@@ -69,8 +79,11 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
 - For NEW documents: Use operation="create" and omit artifactIndex
 - For EXISTING documents: Use operation="replace", "append" or "edit" and provide "artifactIndex" field with the list number of the Attached Artifacts list from above.
 - For EDIT operations: Use merge conflict syntax to specify changes:
-  <<<<<<< SEARCH
-  text to find and replace
+<<<<<<< SEARCH
+text to find and replace
+=======
+new replacement text
+>>>>>>> REPLACE`);
 
         promptBuilder.addContext({contentType: ContentType.ABOUT})
         promptBuilder.addContext({contentType: ContentType.GOALS_FULL, params});
@@ -200,7 +213,11 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
                     replan: ReplanType.Allow,
                     response: {
                         type: StepResponseType.GeneratedArtifact,
-                        status: result.message
+                        status: result.message,
+                        data: {
+                            generatedArtifactId: artifact?.id,
+                            requestFullContext: this.requestFullContext()
+                        }
                     }
                 };
             }
@@ -216,6 +233,10 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
                 }
             };
         }
+    }
+
+    requestFullContext() {
+        return false;
     }
 
     protected async getSupportedSubtypesContent(artifactType: string): Promise<string | undefined> {

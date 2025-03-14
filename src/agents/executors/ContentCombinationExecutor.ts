@@ -4,17 +4,20 @@ import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
 import { ExecutorType } from "../interfaces/ExecutorType";
-import { StepExecutor } from "../interfaces/StepExecutor";
-import { StepResult } from "../interfaces/StepResult";
-import { Artifact } from "src/tools/artifact";
+import { BaseStepExecutor, StepExecutor } from "../interfaces/StepExecutor";
+import { StepResponse, StepResult } from "../interfaces/StepResult";
+import { Artifact, ArtifactType } from "src/tools/artifact";
 import { createUUID } from "src/types/uuid";
+import { DraftContentStepResponse } from "./AssignWritersExecutor";
+import { CreateArtifact } from "src/schemas/ModelResponse";
 
 @StepExecutorDecorator(ExecutorType.CONTENT_COMBINATION, 'Combine written sections into final content')
-export class ContentCombinationExecutor implements StepExecutor {
+export class ContentCombinationExecutor extends BaseStepExecutor<StepResponse> {
     private artifactManager: ArtifactManager;
     private taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.artifactManager = params.artifactManager!;
         this.taskManager = params.taskManager;
     }
@@ -51,35 +54,19 @@ export class ContentCombinationExecutor implements StepExecutor {
 
         if (writingSteps.length > 0) {
             const lastWritingStep = writingSteps[0];
-            
+            const stepResponse = lastWritingStep.props.result?.response as DraftContentStepResponse;
+
             // Process subProjectResults from the last writing step
-            if (lastWritingStep.props.result?.response.subProjectResults) {
-                for (const subResult of lastWritingStep.props.result.response.subProjectResults) {
-                    if (subResult.structure) {
-                        // Add main section
-                        sections.push({
-                            heading: subResult.structure?.heading || 'Untitled Section',
-                            content: subResult.message,
-                            level: 1,
-                            citations: subResult.citations || []
-                        });
-
-                        // Add any subheadings
-                        if (subResult.structure?.subheadings) {
-                            sections.push(...subResult.structure.subheadings.map(sh => ({
-                                heading: sh.title,
-                                content: sh.content,
-                                level: 2,
-                                citations: subResult.citations || []
-                            })));
-                        }
-
-                        // Accumulate token usage
-                        if (subResult._usage) {
-                            totalTokenUsage.inputTokens += subResult._usage.inputTokens || 0;
-                            totalTokenUsage.outputTokens += subResult._usage.outputTokens || 0;
-                        }
-                    }
+            for (const section of stepResponse.data?.sections||[]) {
+                if (section.sectionOutput.artifactIds) {
+                    const artifacts = await this.artifactManager.bulkLoadArtifacts(section.sectionOutput.artifactIds);
+                    
+                    sections.push(...artifacts.map(artifact => ({
+                        heading: artifact.metadata?.title || 'Untitled Section',
+                        content: artifact.content.toString(),
+                        level: 1,
+                        citations: []
+                    })));
                 }
             }
         }
@@ -117,9 +104,9 @@ export class ContentCombinationExecutor implements StepExecutor {
             ?.props?.result?.response?.data?.title || project.name;
 
         // Create artifact
-        const content: Artifact = {
+        const content: Partial<Artifact> = {
             content: formattedContent,
-            type: "content",
+            type: ArtifactType.Document,
             metadata: {
                 goal: project.name,
                 projectId: project.id,
