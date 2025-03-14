@@ -68,7 +68,7 @@ export namespace StringUtils {
      * @param schema The JSON schema to validate against
      * @throws Error if validation fails
      */
-    export function validateJsonAgainstSchema(json: any, schema: JSONSchema): void {
+    export function validateJsonAgainstSchema<T>(json: any, schema: JSONSchema): asserts json is T {
         // Initialize JSON schema validator with custom date-time format
         const ajv = new Ajv({
             allErrors: true,
@@ -131,6 +131,18 @@ export namespace StringUtils {
      * @returns Array of parsed JSON objects
      * @throws SyntaxError if JSON parsing fails
      */
+    /**
+     * Maps a JSON object to a typed object after validating against a schema
+     * @param json The JSON object to map
+     * @param schema The JSON schema to validate against
+     * @returns The typed object if validation succeeds
+     * @throws Error if validation fails
+     */
+    export function mapToTyped<T>(json: any, schema: JSONSchema): T {
+        validateJsonAgainstSchema<T>(json, schema);
+        return json as T;
+    }
+
     export function extractAndParseJsonBlock<T extends Object>(text: string, schema?: JSONSchema): T {
         if (!hasJsonBlock(text)) {
             throw new Error("No JSON blocks found in response");
