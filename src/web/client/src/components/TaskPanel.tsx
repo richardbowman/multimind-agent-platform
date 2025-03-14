@@ -35,6 +35,7 @@ export const TaskPanel: React.FC<TaskPanelProps> = () => {
     const [localSelectedTask, setLocalSelectedTask] = useState<any>(null);
     const [localDialogOpen, setLocalDialogOpen] = useState(false);
     const [viewMode, setViewMode] = useState<'user' | 'agent' | 'steps'>('user');
+    const [parentTask, setParentTask] = useState<any>(null);
 
     return (
         <Box sx={{ p: 2, height: '100%', overflowY: 'hidden', display: 'flex', flexDirection: 'column' }}>
@@ -134,10 +135,16 @@ export const TaskPanel: React.FC<TaskPanelProps> = () => {
 
             <TaskDialog
                 open={localDialogOpen}
-                onClose={() => setLocalDialogOpen(false)}
+                onClose={() => {
+                    setLocalDialogOpen(false);
+                    // Clear parent task when dialog closes
+                    setParentTask(null);
+                }}
                 selectedTask={localSelectedTask}
                 setSelectedTask={setLocalSelectedTask}
                 tasks={filteredTasks}
+                parentTask={parentTask}
+                setParentTask={setParentTask}
             />
         </Box>
     );
