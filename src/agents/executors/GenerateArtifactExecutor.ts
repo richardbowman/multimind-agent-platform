@@ -53,13 +53,16 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
         this.artifactManager = params.artifactManager!;
         this.taskManager = params.taskManager;
 
-        globalRegistry.stepResponseRenderers.set(StepResponseType.GeneratedArtifact, async (response : StepResponse) => {
-            if (response.data?.requestFullContext) {
+        globalRegistry.stepResponseRenderers.set(StepResponseType.GeneratedArtifact, async (response : StepResponse, all: StepResponse[]) => {
+            const lastGenArtifactStep = all.findLast(r => r?.type === StepResponseType.GeneratedArtifact);
+            const isLast = response === lastGenArtifactStep;
+
+            if (response.data?.requestFullContext && isLast) {
                 const artifactId = response.data?.generatedArtifactId;
                 const artifact : Artifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
-                return (artifact ? `\`\`\`\n${artifact.content.toString()}\n\`\`\`\n` : undefined) ?? "[NO LOADED ARTIFACTS]";
+                return (artifact ? `[${artifact.metadata?.title}](/artifact/${artifact.id})\n\`\`\`\n${artifact.content.toString()}\n\`\`\`\n` : undefined) ?? "[NO LOADED ARTIFACTS]";
             } else {
-                return "";
+                return "[${artifact.metadata?.title}](/artifact/${artifact.id})\n";
             }
         });
     }
@@ -69,16 +72,16 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
 
         // Add core instructions
         promptBuilder.addInstruction("In this step, you are generating or modifying a document based on the goal. When you respond, provide a short description of the document you have generated (don't write your message in future tense, you should say 'I successfully created/appended/replaced a document containing...').");
-        promptBuilder.addInstruction(`You have these options:
-1. Create a NEW document (leave artifactId blank and set operation to "create")
-2. Completely revise an EXISTING document (specify "artifactIndex" and set operation to "replace")
-3. Add to an EXISTING document (specify "artifactIndex" and set operation to "append")
-4. Edit an EXISTING document using merge conflict style syntax (specify "artifactIndex" and set operation to "edit")`);
+        promptBuilder.addInstruction(`You can perform these 'operations':
+1. create: Create a NEW document
+2. replace: Completely revise an EXISTING document - you must re-type the ENTIRE replacement (you can't say "... this section stays the same...")
+3. edit: Update specific parts of an EXISTING document using merge conflict style syntax
+4. append: Append to an EXISTING document
+`);
 
         promptBuilder.addInstruction(`IMPORTANT RULES:
-- For NEW documents: Use operation="create" and omit artifactIndex
-- For EXISTING documents: Use operation="replace", "append" or "edit" and provide "artifactIndex" field with the list number of the Attached Artifacts list from above.
-- For EDIT operations: Use merge conflict syntax to specify changes:
+- For 'replace', 'edit', 'append', specify artifactIndex.
+- For 'edit' operations: Use merge conflict syntax to specify changes:
 <<<<<<< SEARCH
 text to find and replace
 =======
@@ -146,6 +149,7 @@ new replacement text
                     content: result.content,
                     metadata: {
                         title: result.title,
+                        blockType: md[0].type?.toLowerCase(),
                         operation: result.operation || 'create',
                         projectId: params.projectId,
                         ...(await this.prepareArtifactMetadata(result))
