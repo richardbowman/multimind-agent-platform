@@ -83,7 +83,7 @@ export const ChatDetailsDialog: React.FC<ChatDetailsDialogProps> = ({
                                     <Typography variant="subtitle2" sx={{ fontWeight: 'bold' }}>
                                         {key}
                                     </Typography>
-                                    {isProjectIds && tasks?.length > 1 ? (
+                                    {isProjectIds ? (
                                         <Button
                                             variant="text"
                                             sx={{
@@ -95,9 +95,6 @@ export const ChatDetailsDialog: React.FC<ChatDetailsDialogProps> = ({
                                                 }
                                             }}
                                             onClick={() => {
-                                                // Ensure value is treated as string since project IDs are strings
-                                                const projectId = String(value);
-                                                
                                                 onTaskClick({
                                                     projectId: value,
                                                     description: `Tasks for project ${value}`,
