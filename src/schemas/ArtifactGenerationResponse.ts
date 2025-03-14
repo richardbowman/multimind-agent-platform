@@ -1,6 +1,6 @@
 export interface ArtifactGenerationResponse {
-    /** Index of document to modify (only required for replace/append operations) */
-    artifactIndex?: number;
+    /** Index of document to modify (required for replace/append operations, must be null/undefined for create) */
+    artifactIndex?: number | null;
 
     /** Operation to perform: "create" for new documents, "replace" or "append" for existing ones */
     operation: 'create' | 'replace' | 'append';

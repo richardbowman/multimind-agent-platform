@@ -156,7 +156,7 @@ new replacement text
                     }
                 };
 
-                if (result.artifactIndex && result.artifactIndex > 0 && (result.operation === 'append' || result.operation === 'replace') && params.context?.artifacts) {
+                if (result.operation !== 'create' && result.artifactIndex != null && result.artifactIndex > 0 && params.context?.artifacts) {
                     try {
                         artifactUpdate.id = params.context?.artifacts[result.artifactIndex - 1].id;
                         const existingArtifact = await this.artifactManager.loadArtifact(artifactUpdate.id);
