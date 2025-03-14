@@ -53,8 +53,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     // Check for child project
                     if (selectedTask.props?.childProjectId) {
                         const childProject = await ipcService.getRPC().getProject(selectedTask.props.childProjectId);
+                        console.log('Fetched child project:', childProject);
                         setChildProjectDetails(childProject);
-                        setChildTasks(childProject.tasks);
+                        const tasks = await ipcService.getRPC().getTasks({ projectId: selectedTask.props.childProjectId });
+                        console.log('Fetched child tasks:', tasks);
+                        setChildTasks(tasks);
                     } else {
                         setChildProjectDetails(null);
                         setChildTasks([]);
@@ -192,11 +195,19 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                             size="small"
                                             sx={{ alignSelf: 'flex-start' }}
                                             onClick={async () => {
+                                                console.log('Child tasks:', childTasks);
+                                                console.log('Selected task:', selectedTask);
+                                                console.log('Child project details:', childProjectDetails);
+                                                
                                                 if (setParentTask && childTasks.length > 0) {
                                                     setParentTask(selectedTask);
                                                     setSelectedTask(childTasks[0]);
                                                 } else {
-                                                    console.error('No child tasks found');
+                                                    console.error('No child tasks found', {
+                                                        childTasks,
+                                                        selectedTask,
+                                                        childProjectDetails
+                                                    });
                                                 }
                                             }}
                                         >
