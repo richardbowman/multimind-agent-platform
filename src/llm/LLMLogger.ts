@@ -15,12 +15,21 @@ export class LLMCallLogger extends EventEmitter {
         this.serviceName = serviceName;
         const logDir = path.join(getDataPath(), 'llm');
         // Initialize SQLite database
-       const dbPath = path.join(logDir, 'logs.db');
-       this.sequelize = new Sequelize({
-           dialect: 'sqlite',
-           storage: dbPath,
-           logging: msg => Logger.verbose(msg)
-       });
+        const dbPath = path.join(logDir, 'logs.db');
+        this.sequelize = new Sequelize({
+            dialect: 'sqlite',
+            storage: dbPath,
+            logging: msg => Logger.verbose(msg)
+        });
+
+        // Ensure log directory exists
+        fs.mkdirSync(logDir, { recursive: true });
+        
+        // Initialize the model
+        LLMLogModel.initialize(this.sequelize);
+        
+        // Sync the database
+        this.sequelize.sync();
     }
 
     async logCall(
