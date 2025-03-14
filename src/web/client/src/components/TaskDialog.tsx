@@ -218,6 +218,38 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                         </Button>
                                     </Box>
                                 )}
+                                {selectedTask.metadata?.childProjectId && (
+                                    <Box sx={{ 
+                                        p: 2,
+                                        mb: 1,
+                                        display: 'flex',
+                                        flexDirection: 'column',
+                                        bgcolor: 'background.paper',
+                                        borderRadius: 1,
+                                        border: '1px solid',
+                                        borderColor: 'divider'
+                                    }}>
+                                        <Typography variant="h6" sx={{ mb: 1 }}>
+                                            Child Project
+                                        </Typography>
+                                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                                            This task has a linked child project.
+                                        </Typography>
+                                        <Button
+                                            variant="contained"
+                                            size="small"
+                                            sx={{ alignSelf: 'flex-start' }}
+                                            onClick={() => {
+                                                if (setParentTask) {
+                                                    setParentTask(selectedTask);
+                                                    setSelectedTask(childTasks[0]);
+                                                }
+                                            }}
+                                        >
+                                            View Child Project
+                                        </Button>
+                                    </Box>
+                                )}
                                 {projectDetails && (
                                     <Box sx={{ 
                                         p: 2,
