@@ -40,7 +40,9 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
             (asset.metadata.description?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false);
 
         const matchesType = selectedTypes.length === 0 ||
-            (asset.metadata.type && selectedTypes.includes(asset.metadata.type));
+            (asset.metadata.type && selectedTypes.some(type => 
+                type.toLowerCase() === asset.metadata.type?.toLowerCase()
+            ));
 
         return matchesSearch && matchesType;
     });
@@ -89,7 +91,7 @@ export const ArtifactSelectionDialog: React.FC<ArtifactSelectionDialogProps> = (
                     {/* Type Filters */}
                     <Typography variant="subtitle1" gutterBottom>Types</Typography>
                     <Box sx={{ display: 'flex', flexDirection: 'column' }}>
-                        {Object.values(ArtifactType).map(type => (
+                        {Object.values(ArtifactType).filter(type => type !== ArtifactType.Unknown).map(type => (
                             <FormControlLabel
                                 key={type}
                                 control={
