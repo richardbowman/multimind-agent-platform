@@ -1,4 +1,5 @@
 import React from 'react';
+import { ScrollView } from './shared/ScrollView';
 import { 
     Dialog,
     DialogTitle,
@@ -113,11 +114,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     <Box sx={{ 
                         width: '30%',
                         height: '70vh',
-                        overflowY: 'auto',
                         p: 1,
                         borderRight: '1px solid',
                         borderColor: 'divider'
                     }}>
+                        <ScrollView>
                         <Typography 
                             variant="h6" 
                             sx={{ 
@@ -131,20 +132,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         >
                             Project Tasks
                         </Typography>
-                        <List sx={{ 
-                            overflowY: 'auto',
-                            height: 'calc(70vh - 48px)', // Subtract the height of the title
-                            '&::-webkit-scrollbar': {
-                                width: '6px'
-                            },
-                            '&::-webkit-scrollbar-track': {
-                                bgcolor: 'background.default'
-                            },
-                            '&::-webkit-scrollbar-thumb': {
-                                bgcolor: 'divider',
-                                borderRadius: '3px'
-                            }
-                        }}>
+                        <List>
                             {projectTasks.map(task => (
                                 <TaskCard
                                     key={task.id}
@@ -159,9 +147,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     <Box sx={{ 
                         width: '70%',
                         height: '70vh',
-                        overflowY: 'auto',
                         pl: 2
                     }}>
+                        <ScrollView>
                         {selectedTask && (
                             <Stack spacing={2} sx={{ mt: 1 }}>
                                 {(parentTask || selectedTask.props?.childProjectId) && (
@@ -364,6 +352,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                 ))}
                             </Stack>
                         )}
+                        </ScrollView>
                     </Box>
                 </Box>
             </DialogContent>
