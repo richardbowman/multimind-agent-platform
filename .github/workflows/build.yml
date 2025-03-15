@@ -86,7 +86,7 @@ jobs:
           echo "Attempting certificate import..."
 
           echo "Verifying certificate with openssl..."
-          openssl pkcs12 -info -in certificate.p12 -legacy -passin pass:"${{ secrets.CERTIFICATE_PASSWORD }}" -noout
+          openssl pkcs12 -info -in certificate.p12 -passin pass:"${{ secrets.CERTIFICATE_PASSWORD }}" -noout
           if [ $? -eq 0 ]; then
             echo "Certificate verified successfully with openssl"
           else
