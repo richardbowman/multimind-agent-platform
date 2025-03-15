@@ -116,20 +116,24 @@ export const ChatMessage: React.FC<ChatMessageProps> = ({
     const [attachmentsExpanded, setAttachmentsExpanded] = useState(false);
     const { artifacts: allArtifacts } = useArtifacts();
     const ipcService = useIPCService();
-    const [uniqueArtifacts, setUniqueArtifacts] = useState(() => {
+    const [uniqueArtifacts, setUniqueArtifacts] = useState<Array<string>>([]);
+
+    // Watch for changes in message's artifact IDs
+    useEffect(() => {
         const ids = message.props?.artifactIds || [];
-        return Array.from(new Set(ids.filter(a => a)));
-    });
+        setUniqueArtifacts(Array.from(new Set(ids.filter(a => a))));
+    }, [message.props?.artifactIds]);
     const [selectedArtifact, setSelectedArtifact] = useState<ArtifactItem | null>(null);
     const [loadedArtifact, setLoadedArtifact] = useState<Artifact | null>(null);
 
     const handleRemoveArtifact = async (artifactId: string) => {
         try {
-            // Remove from local state first for immediate UI update
-            setUniqueArtifacts(prev => prev.filter(id => id !== artifactId));
-            
             // Update message metadata via IPC
             await ipcService.getRPC().removeMessageAttachment(message.id, artifactId);
+            
+            // Update local state using current message props
+            const updatedIds = (message.props?.artifactIds || []).filter(id => id !== artifactId);
+            setUniqueArtifacts(Array.from(new Set(updatedIds.filter(a => a))));
         } catch (err) {
             console.error('Error removing artifact:', err);
             // Revert if update fails
