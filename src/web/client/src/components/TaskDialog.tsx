@@ -37,8 +37,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     selectedTask, 
     setSelectedTask,
     tasks: initialTasks,
-    parentTask,
-    setParentTask
 }) => {
     const { handles } = useDataContext();
     const ipcService = useIPCService();
@@ -152,7 +150,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         <ScrollView>
                         {selectedTask && (
                             <Stack spacing={2} sx={{ mt: 1 }}>
-                                {(parentTask || selectedTask.props?.childProjectId) && (
+                                {(selectedTask.projectId || selectedTask.props?.childProjectId) && (
                                     <Box sx={{ 
                                         p: 2,
                                         mb: 1,
@@ -163,26 +161,23 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                         border: '1px solid',
                                         borderColor: 'divider'
                                     }}>
-                                        {parentTask && (
+                                        {selectedTask.projectId && (
                                             <>
                                                 <Typography variant="h6" sx={{ mb: 1 }}>
-                                                    Parent Task
-                                                </Typography>
-                                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                                    {parentTask?.description || 'No description available'}
+                                                    Parent Project
                                                 </Typography>
                                                 <Button
                                                     variant="outlined"
                                                     size="small"
                                                     sx={{ mt: 1, alignSelf: 'flex-start' }}
-                                                    onClick={() => {
-                                                        if (setParentTask) {
-                                                            setSelectedTask(parentTask);
-                                                            setParentTask(null);
+                                                    onClick={async () => {
+                                                        const parentProject = await ipcService.getRPC().getProject(selectedTask.projectId);
+                                                        if (parentProject?.tasks) {
+                                                            setSelectedTask(parentProject.tasks[0]);
                                                         }
                                                     }}
                                                 >
-                                                    Back to Parent Task
+                                                    View Parent Project
                                                 </Button>
                                             </>
                                         )}
@@ -203,8 +198,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                         console.log('Selected task:', selectedTask);
                                                         console.log('Child project details:', childProjectDetails);
                                                         
-                                                        if (setParentTask && childTasks.length > 0) {
-                                                            setParentTask(selectedTask);
+                                                        if (childTasks.length > 0) {
                                                             setSelectedTask(childTasks[0]);
                                                         } else {
                                                             console.error('No child tasks found', {
