@@ -181,7 +181,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                 </Button>
                                             </>
                                         )}
-                                        {selectedTask.props?.childProjectId && childTasks.length > 0 && !parentTask && (
+                                        {selectedTask.props?.childProjectId && childTasks.length > 0 && (
                                             <>
                                                 <Typography variant="h6" sx={{ mb: 1 }}>
                                                     Child Project
