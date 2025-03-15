@@ -2,7 +2,7 @@ import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorPara
 import { BaseStepExecutor, TaskNotification } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from '../interfaces/StepResult';
-import { TaskEventType } from '../agents';
+import { TaskEventType } from "../../shared/TaskEventType";
 import { StepTask } from '../interfaces/ExecuteStepParams';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';

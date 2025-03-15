@@ -20,8 +20,9 @@ import { Artifact, ArtifactItem } from "src/tools/artifact";
 import ical from "ical";
 import { GoalTemplate } from "src/schemas/goalTemplateSchema";
 import { createChatHandle, ChatHandle, isChatHandle } from "src/types/chatHandle";
-import { LLMLogEntry } from "src/llm/LLMLogger";
 import JSON5 from 'json5';
+import { TaskEventType } from "src/shared/TaskEventType";
+import { LLMLogEntry } from "src/llm/LLMLogModel";
 
 export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods {
     constructor(private services: BackendServicesWithWindows) {
@@ -145,7 +146,7 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
         });
 
         // Set up task update notifications
-        const taskHandler = (event) => {
+        const taskHandler = (event : TaskEventType) => {
             return ({task}) => {
                 rpc.onTaskUpdate({
                     id: task.id,
@@ -161,11 +162,11 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                     updatedAt: task.metadata?.updatedAt,
                     dependsOn: task.dependsOn,
                     props: task.props
-                });
+                }, event);
             };
         };
-        this.services.taskManager.on('taskAdded', taskHandler('added'));
-        this.services.taskManager.on('taskUpdated', taskHandler('updated'));
+        this.services.taskManager.on('taskAdded', taskHandler(TaskEventType.Created));
+        this.services.taskManager.on('taskUpdated', taskHandler(TaskEventType.Updated));
 
         // Set up message receiving for the user client
         // Set up channel creation notifications

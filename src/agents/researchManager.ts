@@ -1,19 +1,13 @@
 import Logger from "src/helpers/logger";
-import { Task, TaskType } from "src/tools/taskManager";
-import { Task, TaskType } from "src/tools/taskManager";
+import { Task } from "src/tools/taskManager";
 import { AgentConstructorParams } from './interfaces/AgentConstructorParams';
 import { StepBasedAgent } from './stepBasedAgent';
-import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ResearchDecompositionExecutor } from './executors/ResearchDecompositionExecutor';
 import { ResearchAggregationExecutor } from './executors/ResearchAggregationExecutor';
 import { ResearchGoalsExecutor } from "./executors/ResearchGoalsExecutor";
 import { TaskCategories } from "./interfaces/taskCategories";
+import { TaskEventType } from "../shared/TaskEventType";
 import { StepTask } from "./interfaces/ExecuteStepParams";
-import { StepResultType } from "./interfaces/StepResult";
-import { ExecutorType } from "./interfaces/ExecutorType";
-import { TaskEventType } from "./agents";
-import { StepTask } from "./interfaces/ExecuteStepParams";
-import { StepResultType } from "./interfaces/StepResult";
 import { ExecutorType } from "./interfaces/ExecutorType";
 import { CSVProcessingExecutor } from "./executors/CSVProcessingExecutor";
 

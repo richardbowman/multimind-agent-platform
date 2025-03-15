@@ -21,14 +21,8 @@ import { ChatHandle } from "src/types/chatHandle";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { ModelType } from "src/llm/LLMServiceFactory";
+import { TaskEventType } from "../shared/TaskEventType";
 
-
-export enum TaskEventType {
-    Assigned = "assigned",
-    Completed = "completed",
-    Ready = "ready",
-    Cancelled = "cancelled"
-}
 
 export interface ActionMetadata {
     activityType: string;

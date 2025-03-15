@@ -1,5 +1,6 @@
 import 'reflect-metadata';
-import { Agent, PlannerParams, TaskEventType } from './agents';
+import { Agent, PlannerParams } from './agents';
+import { TaskEventType } from "../shared/TaskEventType";
 import { getExecutorMetadata } from './decorators/executorDecorator';
 import { ChatPost, isValidChatPost, Message } from '../chat/chatClient';
 import { HandlerParams } from './agents';
@@ -17,11 +18,9 @@ import { ExecuteStepParams, StepTask } from './interfaces/ExecuteStepParams';
 import { ModelHelpers } from 'src/llm/modelHelpers';
 import { ExecutorType } from './interfaces/ExecutorType';
 import { asUUID, UUID } from 'src/types/uuid';
-import { ArrayUtils } from 'src/utils/ArrayUtils';
 import { Artifact } from 'src/tools/artifact';
 import Logger from '../helpers/logger';
 import { ExecutorConstructorParams } from './interfaces/ExecutorConstructorParams';
-import { LLMContext } from 'src/llm/ILLMService';
 
 interface ExecutorCapability {
     stepType: string;

@@ -1,5 +1,4 @@
 import { ChannelData, CreateChannelHandlerParams, CreateChannelParams } from 'src/shared/channelTypes';
-import { LLMLogEntry, LogParam } from '../llm/LLMLogger';
 import { ClientMessage, ClientProject } from "./types";
 import { ClientThread } from "./types";
 import { EmbedderModelInfo } from 'src/llm/ILLMService';
@@ -10,6 +9,8 @@ import { Artifact, ArtifactItem } from 'src/tools/artifact';
 import { GoalTemplate } from 'src/schemas/goalTemplateSchema';
 import { Task } from 'src/tools/taskManager';
 import { Settings } from 'src/tools/settings';
+import { TaskEventType } from "src/shared/TaskEventType";
+import { LLMLogEntry } from 'src/llm/LLMLogModel';
 
 export interface LogEntry {
     timestamp: string;
@@ -154,11 +155,16 @@ export interface BackendStatus {
     modelsPath: string;
 }
 
+export interface LogParam {
+    type: 'llm' | 'system' | 'api',
+    entry: any;
+}
+
 export interface ClientMethods {
     onMessage(messages: ClientMessage[]): void;
     onLogUpdate(update: LogParam): void;
     onBackendStatus(status: BackendStatus): void;
-    onTaskUpdate(task: Task): void;
+    onTaskUpdate(task: Task, type: TaskEventType): void;
     onProjectUpdate(project: ClientProject): void;
     onFilesAttached(artifacts: Artifact[]): void;
     

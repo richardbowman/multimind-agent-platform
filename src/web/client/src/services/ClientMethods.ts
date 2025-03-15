@@ -12,6 +12,7 @@ import { Task } from '../../../../tools/taskManager';
 import { BaseRPCService } from '../../../../shared/BaseRPCService';
 import { LogParam } from '../../../../llm/LLMLogger';
 import { ChannelData } from '../../../../shared/channelTypes';
+import { TaskEventType } from "../../../../shared/TaskEventType";
 import { TaskContextType } from '../contexts/TaskContext';
 
 
@@ -229,8 +230,8 @@ class ClientMethodsImplementation implements ClientMethods {
         }
     }
 
-    onTaskUpdate(task: Task) {
-        console.log('Task update received', task);
+    onTaskUpdate(task: Task, type: TaskEventType) {
+        console.log('Task ${type} event occured', task);
         this.tasksContext.replaceTask(task);
     }
 

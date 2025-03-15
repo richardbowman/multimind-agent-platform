@@ -1,7 +1,8 @@
 import { Task, Project } from 'src/tools/taskManager';
 import { ExecuteParams } from './ExecuteParams';
 import { StepResponse, StepResult } from './StepResult';
-import { GenerateInputParams, TaskEventType } from '../agents';
+import { GenerateInputParams } from '../agents';
+import { TaskEventType } from "../../shared/TaskEventType";
 import { ChatPost } from 'src/chat/chatClient';
 import { StepTask } from './ExecuteStepParams';
 import { LLMContext } from 'src/llm/ILLMService';

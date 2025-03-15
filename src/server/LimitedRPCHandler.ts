@@ -15,6 +15,7 @@ import { createWriteStream, WriteStream } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import { getDataPath } from "src/helpers/paths";
 import path from 'node:path';
+import { LogEntry } from "./LogReader";
 
 interface ClientError {
     message: string;
