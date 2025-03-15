@@ -544,10 +544,11 @@ export const CommandInput: React.FC<CommandInputProps> = ({
             {(pendingFiles.length > 0 || pendingArtifacts.length > 0) && (
                 <div style={{
                     display: 'flex',
+                    flexWrap: 'wrap',
                     gap: '8px',
                     marginTop: '8px',
-                    overflowX: 'auto',
-                    padding: '8px 0'
+                    padding: '8px 0',
+                    maxWidth: '100%'
                 }}>
                     {pendingFiles.map((file, index) => {
                         const previewUrl = file.metadata?.mimeType?.startsWith('image/')
