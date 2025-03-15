@@ -38,8 +38,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          token: ${{ secrets.GH_PAT }}
-      
+           token: ${{ secrets.GH_PAT }}
+           ssh-key: ${{ secrets.DEPLOY_KEY }}
+           persist-credentials: true      
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
