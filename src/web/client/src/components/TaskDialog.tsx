@@ -211,9 +211,19 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                     size="small"
                                                     sx={{ alignSelf: 'flex-start' }}
                                                     onClick={async () => {
+                                                        console.log('Child tasks:', childTasks);
+                                                        console.log('Selected task:', selectedTask);
+                                                        console.log('Child project details:', childProjectDetails);
+                                                        
                                                         if (setParentTask && childTasks.length > 0) {
                                                             setParentTask(selectedTask);
                                                             setSelectedTask(childTasks[0]);
+                                                        } else {
+                                                            console.error('No child tasks found', {
+                                                                childTasks,
+                                                                selectedTask,
+                                                                childProjectDetails
+                                                            });
                                                         }
                                                     }}
                                                 >
@@ -221,48 +231,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                 </Button>
                                             </>
                                         )}
-                                    </Box>
-                                )}
-                                {selectedTask.props?.childProjectId && childTasks.length > 0 && !parentTask && (
-                                    <Box sx={{ 
-                                        p: 2,
-                                        mb: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        bgcolor: 'background.paper',
-                                        borderRadius: 1,
-                                        border: '1px solid',
-                                        borderColor: 'divider'
-                                    }}>
-                                        <Typography variant="h6" sx={{ mb: 1 }}>
-                                            Child Project
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
-                                            This task has a linked child project.
-                                        </Typography>
-                                        <Button
-                                            variant="contained"
-                                            size="small"
-                                            sx={{ alignSelf: 'flex-start' }}
-                                            onClick={async () => {
-                                                console.log('Child tasks:', childTasks);
-                                                console.log('Selected task:', selectedTask);
-                                                console.log('Child project details:', childProjectDetails);
-                                                
-                                                if (setParentTask && childTasks.length > 0) {
-                                                    setParentTask(selectedTask);
-                                                    setSelectedTask(childTasks[0]);
-                                                } else {
-                                                    console.error('No child tasks found', {
-                                                        childTasks,
-                                                        selectedTask,
-                                                        childProjectDetails
-                                                    });
-                                                }
-                                            }}
-                                        >
-                                            View Child Project
-                                        </Button>
                                     </Box>
                                 )}
                                 {projectDetails && (
