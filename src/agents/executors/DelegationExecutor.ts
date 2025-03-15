@@ -26,6 +26,46 @@ export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
         this.taskManager = params.taskManager!;
     }
 
+    async onChildProjectComplete(stepTask: StepTask<StepResponse>, project: Project): Promise<StepResult<StepResponse>> {
+        // Check if all delegated tasks are complete
+        const completedTasks = Object.values(project.tasks).filter(t => t.status === TaskStatus.Completed);
+        const totalTasks = Object.keys(project.tasks).length;
+
+        if (completedTasks.length < totalTasks) {
+            return {
+                finished: false,
+                async: true,
+                projectId: project.id,
+                response: {
+                    status: `Delegation progress: ${completedTasks.length}/${totalTasks} tasks completed`
+                }
+            };
+        }
+
+        // Generate a summary of the completed delegation
+        const prompt = this.modelHelpers.createPrompt();
+        prompt.addInstruction(`Summarize the results of the completed delegation in a concise status message for the agent. 
+            Include statistics about the results (tasks completed, success rate, etc).`);
+
+        prompt.addContext({
+            contentType: ContentType.TASKS,
+            tasks: completedTasks
+        });
+
+        const rawResponse = await this.modelHelpers.generateMessage({
+            message: `Delegation results: ${JSON.stringify(completedTasks, null, 2)}`,
+            instructions: prompt
+        });
+
+        return {
+            finished: true,
+            async: false,
+            response: {
+                status: rawResponse.message
+            }
+        };
+    }
+
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const supportedAgents = params.agents?.filter(a => a?.supportsDelegation);
         if (supportedAgents?.length === 0) {
