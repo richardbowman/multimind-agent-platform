@@ -88,9 +88,8 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                 type: ArtifactType.Document,
                 subtype: DocumentSubtype.Procedure
             },
-            3 + pastGuideIds.length // Get extra in case we need to filter some out
-        )).filter(guide => !pastGuideIds.includes(guide.artifact.id))
-            .slice(0, 3); // Take top 3 after filtering
+            10
+        )).filter(guide => !pastGuideIds.includes(guide.artifact.id));
 
         // Load all guides in a single bulk operation
         const allGuides = await this.artifactManager.bulkLoadArtifacts([

@@ -7,7 +7,7 @@ import { StepTask } from './ExecuteStepParams';
 import { LLMContext } from 'src/llm/ILLMService';
 import { ExecutorConstructorParams } from './ExecutorConstructorParams';
 import { InputPrompt } from 'src/prompts/structuredInputPrompt';
-import { ModelResponse, ModelResponseMetadata } from 'src/schemas/ModelResponse';
+import { ModelMessageResponse, ModelResponse, ModelResponseMetadata } from 'src/schemas/ModelResponse';
 import { WithMetadata } from 'typescript';
 import { WithTokens } from 'src/llm/modelHelpers';
 import { createUUID } from 'src/types/uuid';
@@ -33,7 +33,7 @@ export interface StepExecutor<R extends StepResponse> {
     onChildProjectComplete?(stepTask: StepTask<R>, project: Project): Promise<StepResult<R>>;
 }
 
-export type ModelConversationResponse = WithTokens<WithMetadata<ModelResponse, ModelResponseMetadata>>;
+export type ModelConversationResponse = WithTokens<WithMetadata<ModelMessageResponse, ModelResponseMetadata>>;
 
 export interface ModelConversation extends InputPrompt {
     generate(input: Partial<GenerateInputParams>) : Promise<ModelConversationResponse>;

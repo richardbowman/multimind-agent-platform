@@ -20,6 +20,7 @@ import { LoadingButton } from '@mui/lab';
 import { TaskCard } from './TaskCard';
 import { AttachmentCard } from './shared/AttachmentCard';
 import { useArtifacts } from '../contexts/ArtifactContext';
+import { useIPCService } from '../contexts/IPCContext';
 
 interface TaskDialogProps {
     open: boolean;
@@ -39,9 +40,9 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     tasks: initialTasks,
 }) => {
     const { handles } = useDataContext();
+    const ipcService = useIPCService();
     const { tasks, markTaskComplete, saveTask } = useTasks();
     const [projectDetails, setProjectDetails] = useState<any>(null);
-    const [childProjectDetails, setChildProjectDetails] = useState<any>(null);
     const [projectTasks, setProjectTasks] = useState<any[]>([]);
     const { artifacts } = useArtifacts();
 
@@ -56,7 +57,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 setProjectDetails(null);
 
                 // Fetch project details
-                const project = await saveTask(selectedTask); // This will trigger context updates
+                const project = await ipcService.getRPC().getProject(projectId);
                 setProjectDetails(project);
 
                 // Fetch tasks for this project
@@ -128,6 +129,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                             ))}
                             
                         </List>
+                        </ScrollView>
                     </Box>
                     <Box sx={{ 
                         width: '70%',
@@ -161,9 +163,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                         const parentTask = tasks.find(t => t.id === projectDetails.metadata.parentTaskId);
                                                         if (parentTask) {
                                                             setSelectedTask(parentTask);
-                                                        }
-                                                        if (parentProject?.tasks) {
-                                                            setSelectedTask(parentProject.tasks[0]);
                                                         }
                                                     }}
                                                 >

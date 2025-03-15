@@ -135,10 +135,15 @@ export abstract class StepBasedAgent extends Agent {
                 
                 const artifacts = artifactIds && await this.mapRequestedArtifacts(artifactIds);  // don't think is the right list to rehydrate from really
 
+                const stepProject = await this.projects.getProject(stepTask?.projectId);
+                const projectTask = stepProject.metadata.parentTaskId && await this.projects.getTaskById(stepProject.metadata.parentTaskId);
+
+
                 const params : ExecuteStepParams<StepResponse> = {
                     task: stepTask,
                     userPost,
                     projectId: stepTask.projectId,
+                    projectTask: projectTask !== null ? projectTask: undefined,
                     partialPost: statusPost,
                     context: {
                         threadPosts: posts,
@@ -303,7 +308,7 @@ export abstract class StepBasedAgent extends Agent {
         };
 
         if (this.planner === null) {
-            const goal = plannerParams.userPost ? `Reply to incoming message: ${plannerParams.userPost?.message}` : `Plan for task: '${params.task?.description}' as part of project '${project.name}'`;
+            const goal = plannerParams.userPost ? `Reply to incoming message: ${plannerParams.userPost?.message}` : `Plan for task: '${params.projectTask?.description}' as part of project '${project.name}'`;
             const newTask: AddTaskParams = {
                 type: TaskType.Step,
                 description: goal,
@@ -445,7 +450,7 @@ export abstract class StepBasedAgent extends Agent {
             const execParams: ExecuteNextStepParams = {
                 projectId,
                 userPost: post,
-                task: task,
+                projectTask: task,
                 context: {
                     ...context,
                     projects: [parentProject],
@@ -602,7 +607,7 @@ export abstract class StepBasedAgent extends Agent {
     }
 
     protected async handleStepCompletion(params: ExecuteStepParams<StepResponse>, stepResult: StepResult<StepResponse>) {
-        const { task, userPost } = params;
+        const { task, userPost, projectTask } = params;
         const { projectId } = task;
         const project = this.projects.getProject(projectId);
         
@@ -702,6 +707,7 @@ export abstract class StepBasedAgent extends Agent {
                     await this.planSteps({
                     projectId,
                     userPost,
+                    projectTask,
                     task,
                     context: {
                         ...params.context,

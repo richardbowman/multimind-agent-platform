@@ -67,18 +67,16 @@ export class WebScrapeExecutor implements StepExecutor<ScrapeStepResponse> {
         }
 
         // If we found a previous scrape step, only include URLs selected after that point
-        if (lastScrapeIndex >= 0) {
-            const newUrls = new Set<string>();
-            // Look through responses after the last scrape step
-            for (let i = lastScrapeIndex + 1; i < params.previousResponses.length; i++) {
-                const response = params.previousResponses[i];
-                if (response.data?.selectedUrls) {
-                    response.data.selectedUrls.forEach(url => newUrls.add(url));
-                }
+        const newUrls = new Set<string>();
+        // Look through responses after the last scrape step
+        for (let i = lastScrapeIndex + 1; i < (params.previousResponses?.length??0); i++) {
+            const response = params.previousResponses![i];
+            if (response.data?.selectedUrls) {
+                response.data.selectedUrls.forEach(url => newUrls.add(url));
             }
-            // Filter to only URLs selected after last scrape
-            selectedUrls = [...selectedUrls, ...newUrls];
         }
+        // Filter to only URLs selected after last scrape
+        selectedUrls = [...selectedUrls, ...newUrls];
 
         const isNews = params.previousResponses?.some(r =>
             r.data?.searchResults?.some(s => s.category === SearchCategory.News)
