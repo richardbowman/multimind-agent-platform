@@ -165,7 +165,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                             Parent Task
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            {parentTask.description}
+                                            {parentTask?.description || 'No description available'}
                                         </Typography>
                                         <Button
                                             variant="outlined"
@@ -197,7 +197,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                             Parent Task
                                         </Typography>
                                         <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            {parentTask.description}
+                                            {parentTask?.description || 'No description available'}
                                         </Typography>
                                         <Button
                                             variant="outlined"
