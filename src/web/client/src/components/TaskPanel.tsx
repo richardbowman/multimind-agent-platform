@@ -133,19 +133,21 @@ export const TaskPanel: React.FC<TaskPanelProps> = () => {
                 ))}
             </List>
 
-            <TaskDialog
-                open={localDialogOpen}
-                onClose={() => {
-                    setLocalDialogOpen(false);
-                    // Clear parent task when dialog closes
-                    setParentTask(null);
-                }}
-                selectedTask={localSelectedTask}
-                setSelectedTask={setLocalSelectedTask}
-                tasks={filteredTasks}
-                parentTask={parentTask}
-                setParentTask={setParentTask}
-            />
+            {localSelectedTask && (
+                <TaskDialog
+                    open={localDialogOpen}
+                    onClose={() => {
+                        setLocalDialogOpen(false);
+                        // Clear parent task when dialog closes
+                        setParentTask(null);
+                    }}
+                    selectedTask={localSelectedTask}
+                    setSelectedTask={setLocalSelectedTask}
+                    tasks={filteredTasks}
+                    parentTask={parentTask}
+                    setParentTask={setParentTask}
+                />
+            )}
         </Box>
     );
 };
