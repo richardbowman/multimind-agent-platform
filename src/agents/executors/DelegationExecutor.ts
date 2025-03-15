@@ -23,24 +23,7 @@ export class DelegationExecutor implements StepExecutor<StepResponse> {
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        const schema = {
-            type: 'object',
-            properties: {
-                projectName: { type: 'string' },
-                projectGoal: { type: 'string' },
-                tasks: {
-                    type: 'array',
-                    items: {
-                        type: 'object',
-                        properties: {
-                            description: { type: 'string' },
-                            assignee: { type: 'string' } // Agent handle
-                        }
-                    }
-                },
-                responseMessage: { type: 'string' }
-            }
-        };
+        import { delegationSchema, DelegationSchema } from '../../schemas/DelegationSchema';
         
         const supportedAgents = params.agents?.filter(a => a?.supportsDelegation);
         if (supportedAgents?.length === 0) {
@@ -67,17 +50,17 @@ export class DelegationExecutor implements StepExecutor<StepResponse> {
             should not refer back to the message or goals, it should be self-contained. For instance, if the goal contains an artifact name or URL, make sure to restate it.`);
 
         const structuredPrompt = new StructuredOutputPrompt(
-            schema,
+            delegationSchema,
             prompt.build()
         );
 
         try {
-            const responseJSON = await this.modelHelpers.generate({
+            const responseJSON = await this.modelHelpers.generate<DelegationSchema>({
                 message: params.stepGoal,
                 instructions: structuredPrompt
             });
 
-            const { projectName, projectGoal, tasks, responseMessage } = responseJSON;
+            const { projectName, projectGoal, tasks, responseMessage }: DelegationSchema = responseJSON;
 
             // Create the project
             const project = await this.taskManager.createProject({
