@@ -84,6 +84,16 @@ jobs:
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           
           echo "Attempting certificate import..."
+
+          echo "Verifying certificate with openssl..."
+          openssl pkcs12 -info -in certificate.p12 -legacy -passin pass:"${{ secrets.CERTIFICATE_PASSWORD }}" -noout
+          if [ $? -eq 0 ]; then
+            echo "Certificate verified successfully with openssl"
+          else
+            echo "Failed to verify certificate with openssl"
+            exit 1
+          fi
+           
           security import certificate.p12 -k build.keychain -P "${{ secrets.CERTIFICATE_PASSWORD }}" -T /usr/bin/codesign
           security set-key-partition-list -S apple-tool:,apple:,codesign: -s -k "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           rm certificate.p12
