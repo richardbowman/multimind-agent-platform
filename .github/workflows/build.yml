@@ -71,6 +71,11 @@ jobs:
       - name: Import Apple Certificates (Test)
         run: |
           echo "${{ secrets.MAC_CERTIFICATE }}" | base64 --decode > certificate.p12
+          echo "Certificate file contents (first 100 chars):"
+          head -c 100 certificate.p12
+          echo ""
+          echo "Certificate file size:"
+          ls -lh certificate.p12
           security create-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
           security default-keychain -s build.keychain
           security unlock-keychain -p "${{ secrets.KEYCHAIN_PASSWORD }}" build.keychain
