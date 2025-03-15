@@ -164,7 +164,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                     }}>
                         {selectedTask && (
                             <Stack spacing={2} sx={{ mt: 1 }}>
-                                {parentTask && selectedTask.props?.childProjectId && childTasks.length > 0 && (
+                                {(parentTask || selectedTask.props?.childProjectId) && (
                                     <Box sx={{ 
                                         p: 2,
                                         mb: 1,
@@ -175,57 +175,52 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                         border: '1px solid',
                                         borderColor: 'divider'
                                     }}>
-                                        <Typography variant="h6" sx={{ mb: 1 }}>
-                                            Parent Task
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            {parentTask?.description || 'No description available'}
-                                        </Typography>
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            sx={{ mt: 1, alignSelf: 'flex-start' }}
-                                            onClick={() => {
-                                                if (setParentTask) {
-                                                    setSelectedTask(parentTask);
-                                                    setParentTask(null);
-                                                }
-                                            }}
-                                        >
-                                            Back to Parent Task
-                                        </Button>
-                                    </Box>
-                                )}
-                                {selectedTask.props?.childProjectId && childTasks.length > 0 && (
-                                    <Box sx={{ 
-                                        p: 2,
-                                        mb: 1,
-                                        display: 'flex',
-                                        flexDirection: 'column',
-                                        bgcolor: 'background.paper',
-                                        borderRadius: 1,
-                                        border: '1px solid',
-                                        borderColor: 'divider'
-                                    }}>
-                                        <Typography variant="h6" sx={{ mb: 1 }}>
-                                            Parent Task
-                                        </Typography>
-                                        <Typography variant="body2" sx={{ color: 'text.secondary' }}>
-                                            {parentTask?.description || 'No description available'}
-                                        </Typography>
-                                        <Button
-                                            variant="outlined"
-                                            size="small"
-                                            sx={{ mt: 1, alignSelf: 'flex-start' }}
-                                            onClick={() => {
-                                                if (setParentTask) {
-                                                    setSelectedTask(parentTask);
-                                                    setParentTask(null);
-                                                }
-                                            }}
-                                        >
-                                            Back to Parent Task
-                                        </Button>
+                                        {parentTask && (
+                                            <>
+                                                <Typography variant="h6" sx={{ mb: 1 }}>
+                                                    Parent Task
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ color: 'text.secondary' }}>
+                                                    {parentTask?.description || 'No description available'}
+                                                </Typography>
+                                                <Button
+                                                    variant="outlined"
+                                                    size="small"
+                                                    sx={{ mt: 1, alignSelf: 'flex-start' }}
+                                                    onClick={() => {
+                                                        if (setParentTask) {
+                                                            setSelectedTask(parentTask);
+                                                            setParentTask(null);
+                                                        }
+                                                    }}
+                                                >
+                                                    Back to Parent Task
+                                                </Button>
+                                            </>
+                                        )}
+                                        {selectedTask.props?.childProjectId && childTasks.length > 0 && !parentTask && (
+                                            <>
+                                                <Typography variant="h6" sx={{ mb: 1 }}>
+                                                    Child Project
+                                                </Typography>
+                                                <Typography variant="body2" sx={{ color: 'text.secondary', mb: 1 }}>
+                                                    This task has a linked child project.
+                                                </Typography>
+                                                <Button
+                                                    variant="contained"
+                                                    size="small"
+                                                    sx={{ alignSelf: 'flex-start' }}
+                                                    onClick={async () => {
+                                                        if (setParentTask && childTasks.length > 0) {
+                                                            setParentTask(selectedTask);
+                                                            setSelectedTask(childTasks[0]);
+                                                        }
+                                                    }}
+                                                >
+                                                    View Child Project
+                                                </Button>
+                                            </>
+                                        )}
                                     </Box>
                                 )}
                                 {selectedTask.props?.childProjectId && childTasks.length > 0 && !parentTask && (
