@@ -14,7 +14,7 @@ import {
     ListItemText
 } from '@mui/material';
 import { useDataContext } from '../contexts/DataContext';
-import { useIPCService } from '../contexts/IPCContext';
+import { useTasks } from '../contexts/TaskContext';
 import { useEffect, useState } from 'react';
 import { LoadingButton } from '@mui/lab';
 import { TaskCard } from './TaskCard';
@@ -39,7 +39,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     tasks: initialTasks,
 }) => {
     const { handles } = useDataContext();
-    const ipcService = useIPCService();
+    const { tasks, markTaskComplete, saveTask } = useTasks();
     const [projectDetails, setProjectDetails] = useState<any>(null);
     const [childProjectDetails, setChildProjectDetails] = useState<any>(null);
     const [projectTasks, setProjectTasks] = useState<any[]>([]);
@@ -56,7 +56,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 setProjectDetails(null);
 
                 // Fetch project details
-                const project = await ipcService.getRPC().getProject(projectId);
+                const project = await saveTask(selectedTask); // This will trigger context updates
                 setProjectDetails(project);
 
                 // Fetch tasks for this project
@@ -158,8 +158,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                     size="small"
                                                     sx={{ mt: 1, alignSelf: 'flex-start' }}
                                                     onClick={async () => {
-                                                        const parentTask = await ipcService.getRPC().getTaskById(projectDetails.metadata.parentTaskId);
-                                                        const parentProject = await ipcService.getRPC().getProject(parentTask.projectId);
+                                                        const parentTask = tasks.find(t => t.id === projectDetails.metadata.parentTaskId);
+                                                        if (parentTask) {
+                                                            setSelectedTask(parentTask);
+                                                        }
                                                         if (parentProject?.tasks) {
                                                             setSelectedTask(parentProject.tasks[0]);
                                                         }
@@ -182,11 +184,10 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                     size="small"
                                                     sx={{ alignSelf: 'flex-start' }}
                                                     onClick={async () => {
-                                                        const childProject = await ipcService.getRPC().getProject(selectedTask.props.childProjectId);
-                                                        if (childProject?.tasks) {
-                                                            setSelectedTask(childProject.tasks[0]);
-                                                            setProjectDetails(childProject);
-                                                            setProjectTasks(childProject.tasks);
+                                                        const childTasks = tasks.filter(t => t.projectId === selectedTask.props.childProjectId);
+                                                        if (childTasks.length > 0) {
+                                                            setSelectedTask(childTasks[0]);
+                                                            setProjectTasks(childTasks);
                                                         }
                                                     }}
                                                 >
@@ -338,7 +339,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         color="error"
                         onClick={async () => {
                             try {
-                                await ipcService.getRPC().cancelTask(selectedTask.id);
+                                await markTaskComplete(selectedTask.id, false); // Use context method
                                 setSelectedTask({
                                     ...selectedTask,
                                     status: 'cancelled',
@@ -359,7 +360,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         color={selectedTask.complete ? "secondary" : "primary"}
                         onClick={async () => {
                             try {
-                                await ipcService.getRPC().markTaskComplete(selectedTask.id, !selectedTask.complete);
+                                await markTaskComplete(selectedTask.id, !selectedTask.complete);
 
                                 setSelectedTask({
                                     ...selectedTask,
