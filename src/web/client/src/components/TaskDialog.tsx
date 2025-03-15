@@ -112,6 +112,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 <Box sx={{ display: 'flex', gap: 2 }}>
                     <Box sx={{ 
                         width: '30%',
+                        height: '70vh',
                         overflowY: 'auto',
                         p: 1,
                         borderRight: '1px solid',
@@ -130,7 +131,20 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                         >
                             Project Tasks
                         </Typography>
-                        <List sx={{ overflowY: 'auto' }}>
+                        <List sx={{ 
+                            overflowY: 'auto',
+                            height: 'calc(70vh - 48px)', // Subtract the height of the title
+                            '&::-webkit-scrollbar': {
+                                width: '6px'
+                            },
+                            '&::-webkit-scrollbar-track': {
+                                bgcolor: 'background.default'
+                            },
+                            '&::-webkit-scrollbar-thumb': {
+                                bgcolor: 'divider',
+                                borderRadius: '3px'
+                            }
+                        }}>
                             {projectTasks.map(task => (
                                 <TaskCard
                                     key={task.id}
