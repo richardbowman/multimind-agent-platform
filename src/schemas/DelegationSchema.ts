@@ -1,32 +1,16 @@
-import { getGeneratedSchema } from '../llm/modelHelpers';
+import { getGeneratedSchema } from "src/helpers/schemaUtils";
+import { SchemaType } from "./SchemaTypes";
 
 export interface DelegationTask {
     description: string;
     assignee: string; // Agent handle
 }
 
-export interface DelegationSchema {
+export interface DelegationResponse {
     projectName: string;
     projectGoal: string;
     tasks: DelegationTask[];
     responseMessage: string;
 }
 
-export const delegationSchema = getGeneratedSchema<DelegationSchema>({
-    type: 'object',
-    properties: {
-        projectName: { type: 'string' },
-        projectGoal: { type: 'string' },
-        tasks: {
-            type: 'array',
-            items: {
-                type: 'object',
-                properties: {
-                    description: { type: 'string' },
-                    assignee: { type: 'string' }
-                }
-            }
-        },
-        responseMessage: { type: 'string' }
-    }
-});
+export const DelegationSchema = getGeneratedSchema(SchemaType.DelegationResponse);

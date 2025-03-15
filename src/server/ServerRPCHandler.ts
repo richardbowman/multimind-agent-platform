@@ -382,6 +382,10 @@ export class ServerRPCHandler extends LimitedRPCHandler implements ServerMethods
                 Object.values(p.tasks).sort((a, b) => (a.order ?? Infinity) - (b.order ?? Infinity)));
         }
     }
+
+    async getTaskById(taskId: UUID): Promise<Readonly<Task>|null> {
+        return this.services.taskManager.getTaskById(taskId);   
+    }
     
     async getArtifact(id: UUID): Promise<Artifact|undefined> {
         const artifact = await this.services.artifactManager.loadArtifact(id);

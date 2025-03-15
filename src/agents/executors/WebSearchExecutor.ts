@@ -4,66 +4,71 @@ import { SearchQueryResponse } from "src/schemas/SearchQueryResponse";
 import { StepExecutorDecorator } from "../decorators/executorDecorator";
 import { ExecuteParams } from "../interfaces/ExecuteParams";
 import { ExecutorConstructorParams } from "../interfaces/ExecutorConstructorParams";
-import { StepExecutor } from "../interfaces/StepExecutor";
-import { ReplanType, StepResponse, StepResponseType, StepResult, StepResultType } from "../interfaces/StepResult";
+import { BaseStepExecutor } from "../interfaces/StepExecutor";
+import { ReplanType, StepResponse, StepResponseType, StepResult } from "../interfaces/StepResult";
 import { getGeneratedSchema } from "src/helpers/schemaUtils";
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { SchemaType } from "src/schemas/SchemaTypes";
 import { ExecutorType } from "../interfaces/ExecutorType";
+import { OutputType } from "src/llm/promptBuilder";
+import { StringUtils } from "src/utils/StringUtils";
 
 @StepExecutorDecorator(ExecutorType.WEB_SEARCH, 'Performs web searches and generates search queries')
-export class WebSearchExecutor implements StepExecutor<StepResponse> {
+export class WebSearchExecutor extends BaseStepExecutor<StepResponse> {
     private searchHelper: SearchHelper;
     private modelHelpers: ModelHelpers;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.searchHelper = SearchHelper.create(params.settings, params.artifactManager);;
         this.modelHelpers = params.modelHelpers;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        const { searchQuery, category } = await this.generateSearchQuery(params.goal, params.stepGoal, params.previousResponses);
-        const searchResults = await this.searchHelper.search(searchQuery, category);
+        const { search, message } = await this.generateSearchQuery(params);
+        const searchResults = await this.searchHelper.search(search.searchQuery, search.category);
 
         return {
             finished: true,
-            type: 'search_results',
             replan: ReplanType.Allow,
             response: {
-                status: `Query found ${searchResults.length} possible links (still need to select best links and download page content)`,
+                status: `Notes on query generation: ${message}. Query found ${searchResults.length} possible links (still need to select best links and download page content)`,
+                type: StepResponseType.SearchResults,
                 data: {
-                    type: StepResponseType.SearchResults,
                     searchResults,
-                    query: searchQuery
+                    query: search.searchQuery
                 }
             }
         };
     }
 
-    private async generateSearchQuery(goal: string, task: string, previousResponses?: any): Promise<SearchQueryResponse> {
+    private async generateSearchQuery(params: ExecuteParams): Promise<{search: SearchQueryResponse, message: string}> {
+        const { goal, stepGoal, previousResponses } = params;
         const schema = await getGeneratedSchema(SchemaType.SearchQueryResponse);
 
-        const previousFindings = previousResponses?.data?.analysis?.keyFindings || [];
-        const previousGaps = previousResponses?.data?.analysis?.gaps || [];
+        const previousFindings = previousResponses?.map(r => r.data?.analysis?.keyFindings) || [];
+        const previousGaps = previousResponses?.map(r => r.data?.analysis?.gaps) || [];
 
-        const systemPrompt = `You are a research assistant. Our overall goal is ${goal}.
-    Consider these specific goals we're trying to achieve: ${task}
-    
-    Previous Research Findings:
-    ${previousFindings.map((f: any) => `- ${f.finding}`).join('\n')}
-    
-    Identified Gaps:
-    ${previousGaps.map((g: string) => `- ${g}`).join('\n')}
-    
-    Generate a broad web search query without special keywords or operators based on the task and previous findings.
-    Focus on filling knowledge gaps and expanding on existing findings.`;
+        const prompt = this.startModel(params);
+        prompt.addInstruction(`You are a research assistant. Our overall goal is ${goal}.  
+Previous Research Findings:
+${previousFindings.filter(f => !!f).map((f: any) => `- ${f.finding}`).join('\n')}
 
-        const instructions = new StructuredOutputPrompt(schema, systemPrompt);
-        const response = await this.modelHelpers.generate<SearchQueryResponse>({
-            message: `Task: ${task}`,
-            instructions
+Identified Gaps:
+${previousGaps.filter(f => !!f).map((g: string) => `- ${g}`).join('\n')}
+
+Generate a broad web search query without special keywords or operators based on the task and previous findings.
+Focus on filling knowledge gaps and expanding on existing findings.`);
+        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE, schema});
+
+        const rawResponse = await prompt.generate({
+            message: `Task: ${stepGoal}`,
         });
+        const search = StringUtils.extractAndParseJsonBlock<SearchQueryResponse>(rawResponse, schema);
+        const message = StringUtils.extractNonCodeContent(rawResponse);
 
-        return response;
+        return {
+            search, 
+            message
+        };
     }
 }

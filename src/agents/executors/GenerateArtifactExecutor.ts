@@ -56,13 +56,17 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
         globalRegistry.stepResponseRenderers.set(StepResponseType.GeneratedArtifact, async (response : StepResponse, all: StepResponse[]) => {
             const lastGenArtifactStep = all.findLast(r => r?.type === StepResponseType.GeneratedArtifact);
             const isLast = response === lastGenArtifactStep;
+            const artifactId = response.data?.generatedArtifactId;
+            const artifact : Artifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
 
-            if (response.data?.requestFullContext && isLast) {
-                const artifactId = response.data?.generatedArtifactId;
-                const artifact : Artifact = artifactId && await this.artifactManager.loadArtifact(artifactId);
-                return (artifact ? `[${artifact.metadata?.title}](/artifact/${artifact.id})\n\`\`\`\n${artifact.content.toString()}\n\`\`\`\n` : undefined) ?? "[NO LOADED ARTIFACTS]";
+            if (artifact) {
+                if (response.data?.requestFullContext && isLast) {
+                    return `[${artifact.metadata?.title}](/artifact/${artifact.id})\n\`\`\`\n${artifact.content.toString()}\n\`\`\`\n`
+                } else {
+                    return `[${artifact.metadata?.title}](/artifact/${artifact.id})\n`;
+                }
             } else {
-                return "[${artifact.metadata?.title}](/artifact/${artifact.id})\n";
+                return `Artifact ${artifactId} not found.`
             }
         });
     }
@@ -75,12 +79,12 @@ export abstract class GenerateArtifactExecutor extends BaseStepExecutor<Artifact
         promptBuilder.addInstruction(`You can perform these 'operations':
 1. create: Create a NEW document
 2. replace: Completely revise an EXISTING document - you must re-type the ENTIRE replacement (you can't say "... this section stays the same...")
-3. edit: Update specific parts of an EXISTING document using merge conflict style syntax
-4. append: Append to an EXISTING document
+3. patch: Update specific parts of an EXISTING document using merge conflict style syntax
+4. append: Append to the end of an EXISTING document
 `);
 
         promptBuilder.addInstruction(`IMPORTANT RULES:
-- For 'replace', 'edit', 'append', specify artifactIndex.
+- For 'replace', 'patch', 'append', specify artifactIndex.
 - For 'edit' operations: Use merge conflict syntax to specify changes:
 <<<<<<< SEARCH
 text to find and replace
@@ -172,7 +176,7 @@ new replacement text
                                 artifactUpdate.content = `${existingArtifact?.content || ""}\n${result.content}`;
                             } else if (result.operation === 'replace') {
                                 artifactUpdate.content = result.content;
-                            } else if (result.operation === 'edit') {
+                            } else if (result.operation === 'patch') {
                                 // Handle merge conflict style editing
                                 const existingContent = existingArtifact?.content || "";
                                 const editContent = result.content;

@@ -42,7 +42,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
     const ipcService = useIPCService();
     const [projectDetails, setProjectDetails] = useState<any>(null);
     const [childProjectDetails, setChildProjectDetails] = useState<any>(null);
-    const [childTasks, setChildTasks] = useState<any[]>([]);
     const [projectTasks, setProjectTasks] = useState<any[]>([]);
     const { artifacts } = useArtifacts();
 
@@ -55,8 +54,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
             try {
                 // Reset project details while loading
                 setProjectDetails(null);
-                setChildProjectDetails(null);
-                setChildTasks([]);
+
                 // Fetch project details
                 const project = await ipcService.getRPC().getProject(projectId);
                 setProjectDetails(project);
@@ -68,17 +66,6 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                 // If no selected task yet, select the first task
                 if (!selectedTask && tasks.length > 0) {
                     setSelectedTask(tasks[0]);
-                }
-
-                // Check for child project
-                if (selectedTask?.props?.childProjectId) {
-                    const childProject = await ipcService.getRPC().getProject(selectedTask.props.childProjectId);
-                    console.log('Fetched child project:', childProject);
-                    setChildProjectDetails(childProject);
-                    setChildTasks(childProject.tasks || []);
-                } else {
-                    setChildProjectDetails(null);
-                    setChildTasks([]);
                 }
             } catch (error) {
                 console.error('Failed to fetch project details:', error);
@@ -161,7 +148,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                         border: '1px solid',
                                         borderColor: 'divider'
                                     }}>
-                                        {selectedTask.projectId && (
+                                        {projectDetails?.metadata?.parentTaskId && (
                                             <>
                                                 <Typography variant="h6" sx={{ mb: 1 }}>
                                                     Parent Project
@@ -171,7 +158,8 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                     size="small"
                                                     sx={{ mt: 1, alignSelf: 'flex-start' }}
                                                     onClick={async () => {
-                                                        const parentProject = await ipcService.getRPC().getProject(selectedTask.projectId);
+                                                        const parentTask = await ipcService.getRPC().getTaskById(projectDetails.metadata.parentTaskId);
+                                                        const parentProject = await ipcService.getRPC().getProject(parentTask.projectId);
                                                         if (parentProject?.tasks) {
                                                             setSelectedTask(parentProject.tasks[0]);
                                                         }
@@ -181,7 +169,7 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                 </Button>
                                             </>
                                         )}
-                                        {selectedTask.props?.childProjectId && childTasks.length > 0 && (
+                                        {selectedTask.props?.childProjectId && (
                                             <>
                                                 <Typography variant="h6" sx={{ mb: 1 }}>
                                                     Child Project
@@ -194,18 +182,11 @@ export const TaskDialog: React.FC<TaskDialogProps> = ({
                                                     size="small"
                                                     sx={{ alignSelf: 'flex-start' }}
                                                     onClick={async () => {
-                                                        console.log('Child tasks:', childTasks);
-                                                        console.log('Selected task:', selectedTask);
-                                                        console.log('Child project details:', childProjectDetails);
-                                                        
-                                                        if (childTasks.length > 0) {
-                                                            setSelectedTask(childTasks[0]);
-                                                        } else {
-                                                            console.error('No child tasks found', {
-                                                                childTasks,
-                                                                selectedTask,
-                                                                childProjectDetails
-                                                            });
+                                                        const childProject = await ipcService.getRPC().getProject(selectedTask.props.childProjectId);
+                                                        if (childProject?.tasks) {
+                                                            setSelectedTask(childProject.tasks[0]);
+                                                            setProjectDetails(childProject);
+                                                            setProjectTasks(childProject.tasks);
                                                         }
                                                     }}
                                                 >

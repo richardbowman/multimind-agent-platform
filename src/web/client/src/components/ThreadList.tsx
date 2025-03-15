@@ -63,6 +63,14 @@ export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
                                 bgcolor: currentThreadId === null ? 'primary.main' : 'background.paper',
                                 '&:hover': {
                                     bgcolor: currentThreadId === null ? 'primary.dark' : 'action.hover'
+                                },
+                                '&.Mui-selected': {
+                                    bgcolor: 'primary.main',
+                                    '&.Mui-selected': {
+                                        '&:hover': {
+                                            bgcolor: 'primary.dark'
+                                        }
+                                    }
                                 }
                             }}
                         >
@@ -96,6 +104,14 @@ export const ThreadList: React.FC<ThreadListProps> = ({ channelId }) => {
                                     bgcolor: currentThreadId === thread.rootMessage.id ? 'primary.main' : 'background.paper',
                                     '&:hover': {
                                         bgcolor: currentThreadId === thread.rootMessage.id ? 'primary.dark' : 'action.hover'
+                                    },
+                                    '&.Mui-selected': {
+                                        bgcolor: 'primary.main',
+                                        '&.Mui-selected': {
+                                            '&:hover': {
+                                                bgcolor: 'primary.dark'
+                                            }
+                                        }
                                     }
                                 }}
                             >

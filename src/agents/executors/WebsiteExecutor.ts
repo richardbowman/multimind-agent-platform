@@ -41,8 +41,9 @@ export class WebsiteExecutor extends GenerateArtifactExecutor {
   <script src='../website-libs/website-libs.min.js'></script>
   <script type="text/babel">
     // The generated code must properly initialize React and MUI components;
-    const { React, ReactDOM, ReactDOMClient, MaterialUI... } = WebsiteLibs;
+    const { React, ReactDOM, ReactDOMClient, MaterialUI, MaterialIcons... } = WebsiteLibs;
     const { CssBaseline, Container, Container, Button... } = MaterialUI;
+    const { Add } = MaterialIcons;
     // use MUI themes
     const theme = WebsiteLibs.getTheme('themeName');
     const ThemeProvider = WebsiteLibs.ThemeProvider;

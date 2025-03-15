@@ -535,13 +535,9 @@
             {
               "className": "CSVProcessingExecutor"
             },
-
-            /*{
-              "className": "GoalConfirmationExecutor"
-            },
             {
-              "className": "AnswerQuestionsExecutor"
-            },*/
+              "className": "DelegationExecutor"
+            },
             {
               className: "UnderstandGoalsExecutor"
             }

@@ -1,17 +1,13 @@
 import { NextActionResponse } from '../../schemas/NextActionResponse';
-import { PlanStepsResponse } from '../../schemas/PlanStepsResponse';
-import { AddTaskParams, Task, TaskType } from '../../tools/taskManager';
-import { StructuredOutputPrompt } from "src/llm/ILLMService";
+import { AddTaskParams, TaskType } from '../../tools/taskManager';
 import { TaskManager } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { ModelHelpers } from 'src/llm/modelHelpers';
-import { ILLMService } from 'src/llm/ILLMService';
 import { getGeneratedSchema } from 'src/helpers/schemaUtils';
 import { SchemaType } from 'src/schemas/SchemaTypes';
 import { EXECUTOR_METADATA_KEY, StepExecutorDecorator } from '../decorators/executorDecorator';
 import { ChatClient } from 'src/chat/chatClient';
 import { ContentType, OutputType } from 'src/llm/promptBuilder';
-import { StepTask } from '../interfaces/ExecuteStepParams';
 import { ModelType } from 'src/llm/LLMServiceFactory';
 import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { ExecutorType } from '../interfaces/ExecutorType';
@@ -33,7 +29,7 @@ export type WithReasoning<T extends ModelResponse> = T & {
 export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
     readonly allowReplan: boolean = false;
     readonly alwaysComplete: boolean = true;
-    
+
     private projects: TaskManager;
     private userId?: string;
     private modelHelpers: ModelHelpers;
@@ -52,21 +48,9 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
         this.artifactManager = params.artifactManager;
         this.agentName = params.agentName;
     }
-    
+
     public async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        // Get channel data including any project goals
-        const channelData = params.context?.channelId ? await this.chatClient.getChannelData(params.context?.channelId) : undefined;
-
         const agentList = params.agents?.filter(a => a?.userId !== this.userId);
-
-        // Get agent descriptions from settings for channel members
-        const agentOptions = (channelData?.members || [])
-            .filter(memberId => this.userId !== memberId)
-            .map(memberId => {
-                return params.agents[memberId];
-            });
-
-
         const executorMetadata = Array.from(this.stepExecutors.entries())
             .map(([key, executor]) => {
                 const metadata = Reflect.getMetadata(EXECUTOR_METADATA_KEY, executor.constructor);
@@ -79,75 +63,53 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
             .filter(metadata => metadata.planner); // Only include executors marked for planner
 
         const schema = await getGeneratedSchema(SchemaType.NextActionResponse);
-
         const project = this.projects.getProject(params.projectId);
-        const tasks = project ? this.projects.getProjectTasks(project.id) : [];
-
-        const formatCompletedTasks = (tasks: Task[]) => {
-            return tasks.map(t => {
-                const type = t.type === TaskType.Step ? `**Step Type**: ${(t as StepTask<StepResponse>).props.stepType}` : '**Task Type**: ${t.type}';
-                return `- ${type}: ${t.description}`;
-            }).join('\n');
-        };
-
-        const completedTasks = tasks.filter(t => t.complete);
-        const currentTasks = tasks.filter(t => !t.complete);
-
-        const completedSteps = completedTasks.length > 0 ?
-            formatCompletedTasks(completedTasks) :
-            `*No completed tasks yet*`;
-
-        const stepDescriptions = executorMetadata
-            .filter(metadata => metadata.planner)
-            .map(({ key, description }) => `[${key}]: ${description}`)
-            .join("\n");
-
         const prompt = this.startModel(params);
 
         prompt.addContext(ContentType.PURPOSE);
         prompt.addContext({ contentType: ContentType.INTENT, params })
-        prompt.addContext({ contentType: ContentType.AGENT_HANDLES, agents: agentList||[]});
+        prompt.addContext({ contentType: ContentType.AGENT_HANDLES, agents: agentList || [] });
         prompt.addContext({ contentType: ContentType.GOALS_FULL, params })
 
         params.context?.artifacts && prompt.addContext({ contentType: ContentType.ARTIFACTS_TITLES, artifacts: params.context?.artifacts });
-        params.steps && prompt.addContext({contentType: ContentType.STEPS, steps: params.steps, posts: params.context?.threadPosts});
+        params.steps && prompt.addContext({ contentType: ContentType.STEPS, steps: params.steps, posts: params.context?.threadPosts });
 
         // Get procedure guides already in use from previous responses
-        const pastGuideIds = params.previousResponses?.flatMap(response => 
-            response.data?.steps?.flatMap(step => 
+        const pastGuideIds = params.previousResponses?.flatMap(response =>
+            response.data?.steps?.flatMap(step =>
                 step.procedureGuide?.artifactId ? [step.procedureGuide.artifactId] : []
             ) || []
         ) || [];
-        
+
         // Get procedure guides from search, excluding any already in use
         const searchedGuides = (await this.artifactManager.searchArtifacts(
-            params.stepGoal, 
-            { 
-                type: ArtifactType.Document, 
-                subtype: DocumentSubtype.Procedure 
-            }, 
+            params.stepGoal,
+            {
+                type: ArtifactType.Document,
+                subtype: DocumentSubtype.Procedure
+            },
             3 + pastGuideIds.length // Get extra in case we need to filter some out
         )).filter(guide => !pastGuideIds.includes(guide.artifact.id))
-          .slice(0, 3); // Take top 3 after filtering
-        
+            .slice(0, 3); // Take top 3 after filtering
+
         // Load all guides in a single bulk operation
         const allGuides = await this.artifactManager.bulkLoadArtifacts([
             ...searchedGuides.map(p => p.artifact.id),
             ...pastGuideIds
         ]);
-        
+
         // Filter by agent if specified
-        const procedureGuides = this.agentName ? 
-            allGuides.filter(a => a.metadata?.agent === this.agentName) : 
+        const procedureGuides = this.agentName ?
+            allGuides.filter(a => a.metadata?.agent === this.agentName) :
             allGuides;
-            
+
         // Format searched guides for prompt
         const filtered = searchedGuides.filter(g => procedureGuides.find(p => p.id === g.artifact.id));
-        prompt.addContext({contentType: ContentType.PROCEDURE_GUIDES, guideType: "searched", guides: filtered.map(f => procedureGuides.find(p => p.id === f.artifact.id)).filter(f => !!f)});
-        prompt.addContext({contentType: ContentType.PROCEDURE_GUIDES, guideType: "in-use", guides: pastGuideIds.map(f => procedureGuides.find(p => p.id === f)).filter(f => !!f)});
+        prompt.addContext({ contentType: ContentType.PROCEDURE_GUIDES, guideType: "searched", guides: filtered.map(f => procedureGuides.find(p => p.id === f.artifact.id)).filter(f => !!f) });
+        prompt.addContext({ contentType: ContentType.PROCEDURE_GUIDES, guideType: "in-use", guides: pastGuideIds.map(f => procedureGuides.find(p => p.id === f)).filter(f => !!f) });
 
         const completionAction = params.executionMode === 'conversation' ? 'REPLY' : 'DONE';
-            
+
         prompt.addContext(`### AVAILABLE ACTION TYPES:\n${executorMetadata
             .filter(metadata => metadata.planner)
             .map(({ key, description }) => `[${key}]: ${description}`)
@@ -163,48 +125,39 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
 - If you need to continue working, determine the next Action Type from the AVAILABLE ACTION TYPES to continue to achieve the goal.
 - Consider Procedure Guides for help on step order required to be successful. If you use a guide, use the 'procedureGuideTitle' field to share the title.`);
 
-        prompt.addContext({contentType: ContentType.FINAL_INSTRUCTIONS});
+        prompt.addContext({ contentType: ContentType.FINAL_INSTRUCTIONS });
 
-        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
+        prompt.addOutputInstructions({ outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema });
 
-        // Try once more with the same prompt
-        const responseText = await prompt.generate({
-            message: params.message||params.stepGoal,
-            instructions: prompt,
-            modelType: ModelType.ADVANCED_REASONING
-        });
+        const response: WithReasoning<Partial<NextActionResponse>> = await withRetry(
+            async () => {
+                const result = await prompt.generate({
+                    message: params.message || params.stepGoal,
+                    instructions: prompt,
+                    modelType: ModelType.ADVANCED_REASONING
+                });
 
-        let response: WithReasoning<NextActionResponse>;
-         // Use retry helper for more robust error handling
-         response = await withRetry(
-             async () => {
-                 const result = await prompt.generate({
-                     message: params.message||params.stepGoal,
-                     instructions: prompt,
-                     modelType: ModelType.ADVANCED_REASONING
-                 });
-                 
-                 return {
-                     ...StringUtils.hasJsonBlock(result.message) && StringUtils.extractAndParseJsonBlock<NextActionResponse>(result.message, schema) || {},
-                     reasoning: StringUtils.extractXmlBlock(result.message, "thinking"),
-                     message: StringUtils.extractNonCodeContent(result.message, ["thinking"], ["json"])
-                 };
-             },
-             (result) => !!result && (!!result.nextAction || !!result.message), // Validate we got a proper response
-             {
-                 maxRetries: 3,
-                 initialDelayMs: 100,
-                 backoffFactor: 2,
-                 timeoutMs: 20000
-             }
-         );
+                return {
+                    ...StringUtils.hasJsonBlock(result.message) && StringUtils.extractAndParseJsonBlock<NextActionResponse>(result.message, schema) || {},
+                    reasoning: StringUtils.extractXmlBlock(result.message, "thinking"),
+                    message: StringUtils.extractNonCodeContent(result.message, ["thinking"], ["json"])
+                };
+            },
+            (result) => !!result && (!!result.nextAction || !!result.message), // Validate we got a proper response
+            {
+                maxRetries: 3,
+                initialDelayMs: 100,
+                backoffFactor: 2,
+                timeoutMs: 20000
+            }
+        );
 
         Logger.verbose(`NextActionResponse: ${JSON.stringify(response, null, 2)}`);
 
         // Create new task for the next action
         if (response.nextAction && response.nextAction !== completionAction) {
             // Find the procedure guide if one is being followed
-            const procedureGuide = response.procedureGuideTitle !== "none" 
+            const procedureGuide = response.procedureGuideTitle !== "none"
                 ? procedureGuides.find(g => g.metadata?.title === response.procedureGuideTitle)
                 : undefined;
 
@@ -212,7 +165,6 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                 type: TaskType.Step,
                 description: response.taskDescription || response.nextAction,
                 creator: this.userId,
-                order: currentTasks.length, // Add to end of current tasks
                 props: {
                     stepType: response.nextAction,
                     ...(procedureGuide && { procedureGuideId: procedureGuide.id })
@@ -231,21 +183,22 @@ export class NextActionExecutor extends BaseStepExecutor<StepResponse> {
                         steps: response.nextAction ? [{
                             actionType: response.nextAction,
                             context: response.taskDescription,
-                            ...(response.procedureGuideTitle !== "none" && { 
+                            ...(response.procedureGuideTitle !== "none" && {
                                 procedureGuide: {
                                     title: response.procedureGuideTitle,
                                     // Only include artifactId if we found a matching guide
                                     ...(procedureGuides.some(g => g.metadata?.title === response.procedureGuideTitle) && {
                                         artifactId: procedureGuides.find(g => g.metadata?.title === response.procedureGuideTitle)?.id
                                     }
-                                )}
+                                    )
+                                }
                             })
                         }] : []
                     }
                 }
-            };            
-        } else if ((response.nextAction && response.nextAction === completionAction) || 
-                  (!response.nextAction && response.message)) {
+            };
+        } else if ((response.nextAction && response.nextAction === completionAction) ||
+            (!response.nextAction && response.message)) {
             return {
                 finished: true,
                 artifactIds: params.context?.artifacts?.map(a => a.id),

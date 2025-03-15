@@ -89,7 +89,7 @@ export class UnderstandGoalsExecutor extends BaseStepExecutor<StepResponse> {
         const schema = await getGeneratedSchema(SchemaType.IntakeQuestionsResponse);
         const prompt = this.startModel(params);
 
-        prompt.addInstruction(`In this step of the process, you are reviewing if we have sufficient information to move forward on achieving the goal.
+        prompt.addInstruction(`You are a tool step called by the agent. Tell the agent if we have sufficient information to move forward on achieving the goal.
 If you would like to think about the problem to start, use <thinking> tags.
 
 ${params.executionMode === 'conversation' ? `Then, once you have decided if you want to more information from the user, respond with a message that
@@ -122,7 +122,7 @@ answers from the user.` : `You will also set a flag telling the workflow whether
 
         return {
             finished: true,
-            replan: shouldContinue ? ReplanType.Allow : ReplanType.None,
+            replan: ReplanType.Allow,
             goal: attributes?.goalRestatement,
             response: {
                 type: StepResponseType.GoalAssessment,

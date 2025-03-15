@@ -1,7 +1,7 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
-import { ReplanType, StepResult } from '../interfaces/StepResult';
+import { ReplanType, StepResponse, StepResponseType, StepResult } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "src/llm/ILLMService";
 import { ModelHelpers } from '../../llm/modelHelpers';
 import { StepExecutorDecorator } from '../decorators/executorDecorator';
@@ -13,6 +13,8 @@ import { SchemaType } from '../../schemas/SchemaTypes';
 import Logger from '../../helpers/logger';
 import { ExecutorType } from '../interfaces/ExecutorType';
 import { Artifact } from 'src/tools/artifact';
+import { ContentType } from 'src/llm/promptBuilder';
+import { StringUtils } from 'src/utils/StringUtils';
 
 /**
  * Executor that searches and analyzes existing knowledge in the vector database.
@@ -27,11 +29,12 @@ import { Artifact } from 'src/tools/artifact';
  * - Provides structured research reports with sources and relevance scores
  */
 @StepExecutorDecorator(ExecutorType.CHECK_KNOWLEDGE, 'Check my existing knowledgebase (useful to do upfront)')
-export class KnowledgeCheckExecutor implements StepExecutor {
+export class KnowledgeCheckExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private vectorDB: IVectorDatabase;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
         this.vectorDB = params.vectorDB!;
         this.modelHelpers.setFinalInstructions(`Use only the provided search results to answer. Do not make up any information.`);
@@ -39,21 +42,24 @@ export class KnowledgeCheckExecutor implements StepExecutor {
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
         const mode = params.mode as ('quick' | 'detailed') || 'quick';
-        return this.executeQuick(params.stepGoal||params.message||params.goal, params.goal, params.step, params.projectId, params.previousResponses, params.context?.artifacts);
+        return this.executeQuick(params);
     }
 
-    private async executeQuick(stepInstructions: string, goal: string, stepType: string, projectId: string, previousResponses?: any, artifacts?: Artifact[]): Promise<StepResult<StepResponse>> {
-        const querySchema = await   getGeneratedSchema(SchemaType.QuickQueriesResponse);
+    private async executeQuick(params: ExecuteParams): Promise<StepResult<StepResponse>> {
+        const { stepGoal, goal, stepType, projectId, previousResponses, artifacts } = params;        
+        const querySchema = await getGeneratedSchema(SchemaType.QuickQueriesResponse);
 
-        const queryPrompt = `Agent Purpose: ${this.modelHelpers.getPurpose()}. Given the overall goal and the user's request, generate 2-3 different search queries that will help find relevant information.
-        Overall Goal : ${goal}
-        `;
 
-        const queryInstructions = new StructuredOutputPrompt(querySchema, queryPrompt);
-        const queryResult = await this.modelHelpers.generate<{queries: string[]}>({
+        const queryInstructions = this.startModel(params);
+        queryInstructions.addContext({contentType: ContentType.ABOUT});
+        queryInstructions.addContext({contentType: ContentType.OVERALL_GOAL, goal});
+
+        const queryModelResponse = await queryInstructions.generate({
             message: goal,
             instructions: queryInstructions
         });
+        const queryResult = StringUtils.extractAndParseJsonBlock<{queries: string[]}>(queryModelResponse, querySchema);
+        const queryMessage = StringUtils.extractNonCodeContent(queryModelResponse);
 
         // Execute searches using our vector DB
         let searchResults : SearchResult[] = [];
@@ -81,7 +87,8 @@ export class KnowledgeCheckExecutor implements StepExecutor {
         // only include relevant items
         searchResults = searchResults.filter(s => s.score > 0.5);
 
-        const analysisPrompt = `You are a step in an agent. Agent's purpose: ${this.modelHelpers.getPurpose()}. You are helping search for existing information for: "${goal}"
+        const analysisInstructions = this.startModel(params);
+        analysisInstructions.addInstruction(`You are a step in an agent. You are helping search for existing information contained in MultiMind's artifact knowledgebase.
 
 ATTACHED KNOWLEDGE BASE ARTIFACTS:
 ${artifacts?.map(a => `Artifact ID: ${a.id}
@@ -104,33 +111,17 @@ Analyze relevant results (skipping irrelevant results):
 2. You do not have direct access to Internet resources or searches. You are searching your internal knowledge base.
 3. ONLY SUMMARIZE FINDINGS PROVIDED ABOVE. DO NOT MAKE UP INFORMATION USING GENERAL KNOWLEDGE. `;
 
-        // const schema = await getGeneratedSchema(SchemaType.ResearchResponse);
-        // const analysisInstructions = new StructuredOutputPrompt(schema, analysisPrompt);
-        const analysis = await this.modelHelpers.generate({
-            message: stepInstructions,
-            instructions: analysisPrompt
+        const analysisSchema = await getGeneratedSchema(SchemaType.ResearchResponse);
+        const analysisModelResponse = await analysisInstructions.generate({
+            message: params.message||params.stepGoal
         });
 
-//         const responseMessage = `## Existing Knowlegdebase Results (Quick)
-
-// ### Search Queries Used
-// ${queryResult.queries.map(q => `- "${q}"`).join('\n')}
-
-// ### Key Findings
-// ${analysis.keyFindings?.map(f => `
-// - **Finding:** ${f.finding}
-//   - *Sources:* ${f.sources.join(', ')}
-//   - *Relevance:* ${f.relevance}`).join('\n')||"(None found)"}
-
-// ### Information Gaps
-// ${analysis.gaps.map(gap => `- ${gap}`).join('\n')}`;
-
         return {
-            type: "research",
             finished: true,
             replan: ReplanType.Allow,
             response: {
-                status: analysis.message,
+                type: StepResponseType.SearchResults,
+                status: analysisModelResponse.message,
                 data: {
                     queries: queryResult.queries,
                     searchResults

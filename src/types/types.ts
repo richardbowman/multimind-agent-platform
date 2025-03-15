@@ -1,6 +1,6 @@
 import { error } from "node:console";
 
-export const isObject = (obj: any): boolean => {
+export const isObject = (obj: any): obj is Record<string, unknown> => {
     return obj && typeof obj === 'object' && !Array.isArray(obj);
 };
 

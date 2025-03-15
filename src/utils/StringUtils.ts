@@ -4,6 +4,8 @@ import { JSONSchema } from 'openai/lib/jsonschema';
 import { LinkRef } from 'src/helpers/scrapeHelper';
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
+import { ModelMessageResponse } from 'src/schemas/ModelResponse';
+import { isObject } from 'src/types/types';
 
 export interface CodeBlock {
     readonly type: string;
@@ -143,7 +145,12 @@ export namespace StringUtils {
         return json as T;
     }
 
-    export function extractAndParseJsonBlock<T extends Object>(text: string, schema?: JSONSchema): T {
+    export function extractAndParseJsonBlock<T extends Object>(text: string|ModelMessageResponse, schema?: JSONSchema): T {
+        if (isObject(text) && text.message) {
+            text = text.message;
+        } else {
+            text = text.toString();
+        }
         if (!hasJsonBlock(text)) {
             throw new Error("No JSON blocks found in response");
         }
@@ -216,8 +223,13 @@ export namespace StringUtils {
      * @param xmlTagsToRemove Optional array of XML tags to remove from the content
      * @returns String with all content outside of code blocks and specified XML blocks
      */
-    export function extractNonCodeContent(text: string, xmlTagsToRemove: string[] = [], codeBlockTypesToRemove: string[] = []): string {
-        let cleanedText = text;
+    export function extractNonCodeContent(text: string|ModelMessageResponse, xmlTagsToRemove: string[] = [], codeBlockTypesToRemove: string[] = []): string {
+        let cleanedText;
+        if (isObject(text) && text.message) {
+            cleanedText = text.message;
+        } else {
+            cleanedText = text.toString();
+        }
 
         // Remove specified XML blocks if any
         if (xmlTagsToRemove.length > 0) {

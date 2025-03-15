@@ -81,7 +81,7 @@ export class PromptRegistry {
 
         this.registerRenderer(ContentType.ARTIFACTS_TITLES, this.renderArtifactTitles.bind(this));
         this.registerRenderer(ContentType.ARTIFACTS_EXCERPTS, this.renderArtifactExcerpts.bind(this));
-        this.registerRenderer(ContentType.ARTIFACTS_FULL, this.renderArtifacts.bind(this));
+        this.registerRenderer(ContentType.ARTIFACTS_FULL, this.renderArtifactExcerpts.bind(this));
 
         this.registerRenderer(ContentType.CONVERSATION, this.renderConversation.bind(this));
 
@@ -227,7 +227,7 @@ ${this.modelHelpers.getPurpose()}
                 if (stepResult.response.type) {
                     const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type)||globalRegistry.stepResponseRenderers.get(stepResult.response.type);
                     if (typeRenderer) {
-                        body = await typeRenderer(stepResult.response);
+                        body = await typeRenderer(stepResult.response, steps.map(s => s.props.result?.response).filter(r => !!r));
                     }
                 }
                 
@@ -287,7 +287,7 @@ ${this.modelHelpers.getPurpose()}
             if (stepResult.response.type) {
                 const typeRenderer = this.stepResponseRenderers.get(stepResult.response.type)||globalRegistry.stepResponseRenderers.get(stepResult.response.type);
                 if (typeRenderer) {
-                    body = await typeRenderer(stepResult.response);
+                    body = await typeRenderer(stepResult.response, steps.map(s => s.response));
                 }
             }
             return `- STEP ${index + 1} of ${filteredSteps.length} ${index + 1 == filteredSteps.length ? "[LAST COMPLETED STEP]" : ""}:
@@ -307,7 +307,7 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
             if (stepResponse.type) {
                 const typeRenderer = this.stepResponseRenderers.get(stepResponse.type!)||globalRegistry.stepResponseRenderers.get(stepResponse.type);;
                 if (typeRenderer) {
-                    body = await typeRenderer(stepResponse);
+                    body = await typeRenderer(stepResponse, responses);
                 }
             }
             // Default renderer for unknown types
@@ -344,39 +344,7 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
         return this.contentRenderers.get(contentType)||globalRegistry.contentRenderers.get(contentType);
     }
 
-    private renderArtifacts({ artifacts }: ArtifactsFullContent): string {
-        if (!artifacts || artifacts.length === 0) return '';
-        return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
-            let content = typeof artifact.content === 'string'
-                ? artifact.content
-                : `[Binary data - ${artifact.content.length} bytes]`;
-
-            let metadataInfo = '';
-            if (artifact.metadata) {
-                if (artifact.metadata.url) {
-                    metadataInfo += `\n- URL: ${artifact.metadata.url}`;
-                }
-                if (artifact.metadata.publishedDate) {
-                    metadataInfo += `\n- Published: ${new Date(artifact.metadata.publishedDate).toLocaleDateString()}`;
-                }
-                if (artifact.metadata.contentDate) {
-                    metadataInfo += `\n- Content Date: ${new Date(artifact.metadata.contentDate).toLocaleDateString()}`;
-                }
-                // Add CSV metadata if available
-                if (artifact.type === ArtifactType.Spreadsheet && artifact.metadata.rowCount !== undefined) {
-                    metadataInfo += `\n- Rows: ${artifact.metadata.rowCount}`;
-                }
-                // Add CSV metadata if available
-                if (artifact.type === ArtifactType.Spreadsheet && artifact.metadata.csvHeaders) {
-                    metadataInfo += `\n- Columns: ${artifact.metadata.csvHeaders.join(', ')}`;
-                }
-            }
-
-            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'}${metadataInfo}\n$\`\`\`${artifact.type}\n${content}\n\`\`\`\n`;
-        }).join('\n\n');
-    }
-
-    private renderArtifactExcerpts({ artifacts }: ArtifactsExcerptsContent): string {
+    private renderArtifactExcerpts({ contentType, artifacts }: ArtifactsExcerptsContent|ArtifactsFullContent): string {
         if (!artifacts || artifacts.length === 0) return '📁 Attached Artifacts: NONE ATTACHED';
         return "📁 Attached Artifacts:\n\n" + artifacts.map((artifact, index) => {
             const size = typeof artifact.content === 'string'
@@ -388,10 +356,13 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
                 : `[Binary data - ${size}]`;
 
             // Use summary from metadata if available
-            if (artifact.metadata?.summary) {
-                content = ` - High-Level Overview: ${artifact.metadata.summary}`;
+            let wrappedContent = `[${artifact.metadata?.title || 'Untitled'}](/artifact/${artifact.id})\n`;
+            if (contentType === ContentType.ARTIFACTS_FULL) {
+                wrappedContent += `\`\`\`${artifact.metadata.blockType}\n${artifact.content, 1000}\n\`\`\``; 
+            } else if (artifact.metadata?.summary) {
+                wrappedContent += ` - High-Level Overview: ${artifact.metadata.summary}`;
             } else {
-                content = `\`\`\`${artifact.type}\n${StringUtils.truncateWithEllipsis(content, 1000, `[truncated to 1000 characters out of total size: ${size}]`)}\n\`\`\``;
+                wrappedContent += `\`\`\`${artifact.metadata.blockType}\n${StringUtils.truncateWithEllipsis(content, 1000, `[truncated to 1000 characters out of total size: ${size}]`)}\n\`\`\``;
             }
 
             let metadataInfo = '';
@@ -415,7 +386,7 @@ ${body || stepResult.response.message || stepResult.response.reasoning || stepRe
                 }
             }
 
-            return `Artifact Index:${index + 1} (${artifact.type}): ${artifact.metadata?.title || 'Untitled'} [Size: ${size}]${metadataInfo}\n${content}\n`;
+            return `Artifact Index:${index + 1} (${artifact.type}): [Size: ${size}]\n${wrappedContent}\n${metadataInfo}`;
         }).join('\n\n');
     }
 
