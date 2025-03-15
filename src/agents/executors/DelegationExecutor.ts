@@ -1,5 +1,5 @@
 import { ExecutorConstructorParams } from '../interfaces/ExecutorConstructorParams';
-import { StepExecutor } from '../interfaces/StepExecutor';
+import { BaseStepExecutor, StepExecutor } from '../interfaces/StepExecutor';
 import { ExecuteParams } from '../interfaces/ExecuteParams';
 import { StepResponse, StepResult, StepResultType } from '../interfaces/StepResult';
 import { StructuredOutputPrompt } from "../../llm/ILLMService";
@@ -9,28 +9,31 @@ import { Task, TaskManager, TaskType } from '../../tools/taskManager';
 import Logger from '../../helpers/logger';
 import { createUUID } from 'src/types/uuid';
 import { Agent } from '../agents';
-import { ContentType } from 'src/llm/promptBuilder';
+import { ContentType, OutputType } from 'src/llm/promptBuilder';
 import { ExecutorType } from '../interfaces/ExecutorType';
+import { DelegationResponse as DelegationResponse, DelegationSchema } from 'src/schemas/DelegationSchema';
+import { StringUtils } from 'src/utils/StringUtils';
+import { json } from 'sequelize';
 
 @StepExecutorDecorator(ExecutorType.DELEGATION, 'Create projects with tasks delegated to agents in the channel')
-export class DelegationExecutor implements StepExecutor<StepResponse> {
+export class DelegationExecutor extends BaseStepExecutor<StepResponse> {
     private modelHelpers: ModelHelpers;
     private taskManager: TaskManager;
 
     constructor(params: ExecutorConstructorParams) {
+        super(params);
         this.modelHelpers = params.modelHelpers;
         this.taskManager = params.taskManager!;
     }
 
     async execute(params: ExecuteParams): Promise<StepResult<StepResponse>> {
-        import { delegationSchema, DelegationSchema } from '../../schemas/DelegationSchema';
-        
         const supportedAgents = params.agents?.filter(a => a?.supportsDelegation);
         if (supportedAgents?.length === 0) {
             throw new Error("No agents with delegation enabled in channel.");
         }
 
-        const prompt = this.modelHelpers.createPrompt();
+        const prompt = this.startModel(params);
+        const schema = await DelegationSchema;
         prompt.addInstruction( `Create a project with tasks that should be delegated to all agents in the channel. 
             For each task, specify which agent should handle it based on their capabilities.
             Output should include:
@@ -48,19 +51,15 @@ export class DelegationExecutor implements StepExecutor<StepResponse> {
             - MAKE SURE THE TASK DESCRIPTION is completely stand-alone and contains ALL details provided.
             - The agent will not receive any other information except for what is in the task description so the task description
             should not refer back to the message or goals, it should be self-contained. For instance, if the goal contains an artifact name or URL, make sure to restate it.`);
-
-        const structuredPrompt = new StructuredOutputPrompt(
-            delegationSchema,
-            prompt.build()
-        );
+        prompt.addOutputInstructions({outputType: OutputType.JSON_WITH_MESSAGE_AND_REASONING, schema});
 
         try {
-            const responseJSON = await this.modelHelpers.generate<DelegationSchema>({
-                message: params.stepGoal,
-                instructions: structuredPrompt
+            const rawResponse = await prompt.generate({
+                message: params.stepGoal
             });
 
-            const { projectName, projectGoal, tasks, responseMessage }: DelegationSchema = responseJSON;
+            const json = StringUtils.extractAndParseJsonBlock<DelegationResponse>(rawResponse, schema);
+            const { projectName, projectGoal, tasks, responseMessage }: DelegationResponse = json;
 
             // Create the project
             const project = await this.taskManager.createProject({
