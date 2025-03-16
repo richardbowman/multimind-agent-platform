@@ -33,11 +33,17 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
             this.db = new Database(dbPath);
             sqliteVec.load(this.db);
             
-            const { vec_version } = this.db
-            .prepare("select vec_version() as vec_version;")
-            .get();
+            const { sqlite_version, vec_version } = this.db
+                .prepare("select sqlite_version() as sqlite_version, vec_version() as vec_version;")
+                .get();
+            
+            // Create virtual table for vectors
+            this.db.exec(`
+                CREATE VIRTUAL TABLE IF NOT EXISTS vec_items 
+                USING vec0(embedding float[${this.dimensions}], text TEXT, metadata TEXT)
+            `);
           
-            Logger.info(`SQLite-vec index initialized for collection: ${name} at ${dbPath} vec_version=${vec_version}`);
+            Logger.info(`SQLite-vec index initialized for collection: ${name} at ${dbPath} sqlite_version=${sqlite_version}, vec_version=${vec_version}`);
         });
     }
 
@@ -49,31 +55,16 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
 
         await syncQueue.enqueue(async () => {
             const insertStmt = this.db!.prepare(`
-                INSERT OR REPLACE INTO vectors (id, vector, metadata, text)
-                VALUES (?, ?, ?, ?)
-            `);
-
-            const insertIndexStmt = this.db!.prepare(`
-                INSERT OR REPLACE INTO vec_index (rowid, vector, text, metadata)
+                INSERT OR REPLACE INTO vec_items (rowid, embedding, text, metadata)
                 VALUES (?, ?, ?, ?)
             `);
 
             const transaction = this.db!.transaction((items) => {
                 for (let i = 0; i < items.length; i++) {
                     const { id, vector, metadata, text } = items[i];
-                    
-                    // Insert into main vectors table
                     insertStmt.run(
-                        id,
-                        Buffer.from(new Float32Array(vector).buffer),
-                        JSON.stringify(metadata),
-                        text
-                    );
-
-                    // Insert into vector index
-                    insertIndexStmt.run(
-                        id,
-                        vector,
+                        BigInt(id),
+                        new Float32Array(vector),
                         text,
                         JSON.stringify(metadata)
                     );
@@ -111,21 +102,22 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
                     rowid as id,
                     text,
                     metadata,
-                    vec_distance(vector, ?) as score
-                FROM vec_index
-                ${conditions ? `WHERE ${conditions}` : ''}
-                ORDER BY score ASC
+                    distance
+                FROM vec_items
+                WHERE embedding MATCH ?
+                ${conditions ? `AND ${conditions}` : ''}
+                ORDER BY distance ASC
                 LIMIT ?
             `;
 
             const stmt = this.db!.prepare(query);
-            const results = stmt.all([Buffer.from(new Float32Array(queryVector).buffer), ...params, nResults]);
+            const results = stmt.all([new Float32Array(queryVector), ...params, nResults]);
 
             return results.map(result => ({
                 id: result.id,
                 text: result.text,
                 metadata: JSON.parse(result.metadata),
-                score: result.score
+                score: result.distance
             }));
         });
     }
@@ -192,9 +184,12 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
         await syncQueue.enqueue(async () => {
             if (!this.db) throw new Error("Database not initialized");
 
-            // Drop and recreate tables
-            this.db!.prepare('DROP TABLE IF EXISTS vectors').run();
-            this.db!.prepare('DROP TABLE IF EXISTS vec_index').run();
+            // Drop and recreate virtual table
+            this.db!.prepare('DROP TABLE IF EXISTS vec_items').run();
+            this.db!.exec(`
+                CREATE VIRTUAL TABLE vec_items 
+                USING vec0(embedding float[${this.dimensions}], text TEXT, metadata TEXT)
+            `);
             
             Logger.info("Cleared SQLite-vec collection");
         });
@@ -220,15 +215,9 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
 
             const params = Object.values(where);
 
-            // Delete from main table
+            // Delete from virtual table
             this.db!.prepare(`
-                DELETE FROM vectors
-                WHERE ${conditions}
-            `).run(params);
-
-            // Delete from index
-            this.db!.prepare(`
-                DELETE FROM vec_index
+                DELETE FROM vec_items
                 WHERE ${conditions}
             `).run(params);
         });
@@ -238,7 +227,7 @@ class SQLiteVecService extends EventEmitter implements IVectorDatabase {
         return syncQueue.enqueue(async () => {
             if (!this.db) throw new Error("Database not initialized");
 
-            const countResult = this.db!.prepare('SELECT COUNT(*) as count FROM vectors').get();
+            const countResult = this.db!.prepare('SELECT COUNT(*) as count FROM vec_items').get();
             const sizeResult = this.db!.prepare('SELECT page_count * page_size as size FROM pragma_page_count(), pragma_page_size()').get();
 
             return {
