@@ -90,6 +90,25 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
             const type = artifact.type;
             const subtype = artifact.metadata?.subtype || 'Other';
             
+            // First remove the artifact from any existing location
+            Object.entries(updatedFolders).forEach(([existingType, typeGroup]) => {
+                Object.entries(typeGroup.subtypes).forEach(([existingSubtype, artifacts]) => {
+                    const index = artifacts.findIndex(a => a.id === artifact.id);
+                    if (index !== -1) {
+                        artifacts.splice(index, 1);
+                        // Clean up empty subtype groups
+                        if (artifacts.length === 0) {
+                            delete typeGroup.subtypes[existingSubtype];
+                        }
+                    }
+                });
+                
+                // Clean up empty type groups
+                if (Object.keys(typeGroup.subtypes).length === 0) {
+                    delete updatedFolders[existingType];
+                }
+            });
+            
             // Initialize type group if it doesn't exist
             if (!updatedFolders[type]) {
                 updatedFolders[type] = {
@@ -104,16 +123,8 @@ export const GlobalArtifactViewer: React.FC<DrawerPage> = ({ drawerOpen, onDrawe
                 updatedFolders[type].subtypes[subtype] = [];
             }
             
-            // Check if this is an existing artifact
-            const existingIndex = updatedFolders[type].subtypes[subtype].findIndex(a => a.id === artifact.id);
-            
-            if (existingIndex !== -1) {
-                // Update existing artifact
-                updatedFolders[type].subtypes[subtype][existingIndex] = artifact;
-            } else {
-                // Add new artifact
-                updatedFolders[type].subtypes[subtype].push(artifact);
-            }
+            // Add the artifact to its new location
+            updatedFolders[type].subtypes[subtype].push(artifact);
             
             return updatedFolders;
         });
